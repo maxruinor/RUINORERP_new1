@@ -184,7 +184,10 @@ namespace RUINORERP.UI.Network
                 {   
                     OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
                 }
-                catch { }
+                catch (Exception innerEx)
+                {
+                    LogException(innerEx, $"OnErrorOccurred再次失败: {innerEx.Message}");
+                }
             }
         }
 
@@ -227,7 +230,10 @@ namespace RUINORERP.UI.Network
                 {
                     OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
                 }
-                catch { }
+                catch (Exception innerEx)
+                {
+                    LogException(innerEx, $"OnErrorOccurred再次失败: {innerEx.Message}");
+                }
             }
         }
 
@@ -270,7 +276,10 @@ namespace RUINORERP.UI.Network
                 {
                     OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
                 }
-                catch { }
+                catch (Exception innerEx)
+                {
+                    LogException(innerEx, $"OnErrorOccurred再次失败: {innerEx.Message}");
+                }
             }
         }
 
@@ -379,7 +388,10 @@ namespace RUINORERP.UI.Network
                 {
                     OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
                 }
-                catch { }
+                catch (Exception innerEx)
+                {
+                    LogException(innerEx, $"OnErrorOccurred再次失败: {innerEx.Message}");
+                }
             }
         }
 

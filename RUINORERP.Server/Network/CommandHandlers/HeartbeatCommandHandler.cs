@@ -30,6 +30,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly ISessionService _sessionService;
         private readonly HeartbeatBatchProcessor _batchProcessor;
         private readonly HeartbeatPerformanceMonitor _performanceMonitor;
+        private static readonly ILogger _staticLogger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("HeartbeatCommandHandler");
 
 
         /// <summary>
@@ -467,14 +468,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 if (expiredSessions.Count > 0)
                 {
-                    // 使用静态日志记录，因为这是静态方法
-                    Console.WriteLine($"清理了 {expiredSessions.Count} 个过期的心跳记录");
+                    _staticLogger.LogInformation("清理了 {Count} 个过期的心跳记录", expiredSessions.Count);
                 }
             }
             catch (Exception ex)
             {
-                // 使用静态日志记录，因为这是静态方法
-                Console.WriteLine($"清理过期心跳记录时发生异常: {ex.Message}");
+                _staticLogger.LogError(ex, "清理过期心跳记录时发生异常");
             }
         }
 

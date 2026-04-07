@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting; // ✅ 添加图表命名空间
 using RUINORERP.Model.Base.StatusManager.PerformanceMonitoring;
 using RUINORERP.Server.Network.Services;
 using RUINORERP.Server.Network.Monitoring; // ✅ 添加监控命名空间
@@ -32,6 +33,9 @@ namespace RUINORERP.Server.Controls
         private int _memoryWarningThresholdMB = 500;
         private readonly List<MemoryDataPoint> _memoryHistory = new List<MemoryDataPoint>();
         private const int MaxHistoryPoints = 60;
+        
+        // ✅ 新增：图表控件
+        private Chart _memoryChart;
 
         /// <summary>
         /// 构造函数
@@ -122,19 +126,49 @@ namespace RUINORERP.Server.Controls
                 Font = new Font(this.Font, FontStyle.Bold)
             };
 
-            // 使用ListView模拟简单图表
-            var chartListView = new ListView
+            // ✅ 使用真正的Chart控件替代ListView
+            _memoryChart = new Chart
             {
-                Name = "lvMemoryChart",
+                Name = "chartMemoryTrend",
                 Dock = DockStyle.Fill,
-                View = View.Details,
-                GridLines = true,
-                BackColor = Color.WhiteSmoke
+                BackColor = Color.White,
+                BorderlineColor = Color.LightGray,
+                BorderlineDashStyle = ChartDashStyle.Solid
             };
-            chartListView.Columns.Add("时间", 80);
-            chartListView.Columns.Add("内存(MB)", 80);
-            chartListView.Columns.Add("趋势", 200);
-            chartListView.Columns.Add("状态", 60);
+
+            // 创建图表区域
+            var chartArea = new ChartArea("MemoryArea")
+            {
+                AxisX = { Title = "时间", LabelStyle = { Format = "HH:mm:ss" } },
+                AxisY = { Title = "内存(MB)", Minimum = 0 }
+            };
+            
+            // 添加警戒线
+            var stripLine = new StripLine
+            {
+                Interval = 0,
+                StripWidth = 0,
+                BorderWidth = 2,
+                BorderColor = Color.Red,
+                Text = $"警告阈值: {_memoryWarningThresholdMB}MB",
+                BackColor = Color.FromArgb(50, Color.Red)
+            };
+            chartArea.AxisY.StripLines.Add(stripLine);
+            
+            _memoryChart.ChartAreas.Add(chartArea);
+
+            // 创建系列
+            var series = new Series("MemoryUsage")
+            {
+                ChartType = SeriesChartType.Spline, // 平滑曲线
+                Color = Color.Blue,
+                BorderWidth = 2,
+                XValueType = ChartValueType.DateTime,
+                YValueType = ChartValueType.Double,
+                IsValueShownAsLabel = false
+            };
+            
+            _memoryChart.Series.Add(series);
 
             // 阈值设置
             var settingsPanel = new Panel
@@ -169,6 +203,14 @@ namespace RUINORERP.Server.Controls
                 if (int.TryParse(txtThreshold.Text, out int threshold))
                 {
                     _memoryWarningThresholdMB = threshold;
+                    
+                    // ✅ 更新图表警戒线
+                    if (_memoryChart.ChartAreas.Count > 0 && _memoryChart.ChartAreas[0].AxisY.StripLines.Count > 0)
+                    {
+                        var line = _memoryChart.ChartAreas[0].AxisY.StripLines[0];
+                        line.Text = $"警告阈值: {threshold}MB";
+                    }
+                    
                     RefreshData();
                 }
             };
@@ -177,7 +219,7 @@ namespace RUINORERP.Server.Controls
             settingsPanel.Controls.Add(txtThreshold);
             settingsPanel.Controls.Add(btnApplyThreshold);
 
-            panel.Controls.Add(chartListView);
+            panel.Controls.Add(_memoryChart); // ✅ 添加Chart控件
             panel.Controls.Add(settingsPanel);
             panel.Controls.Add(lblTitle);
 
@@ -364,59 +406,40 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void UpdateMemoryChart(List<ClientPerformanceInfo> clientInfos)
         {
-            var chartListView = this.Controls.Find("lvMemoryChart", true).FirstOrDefault() as ListView;
-            if (chartListView == null)
+            // ✅ 使用真正的Chart控件
+            if (_memoryChart == null || _memoryChart.Series.Count == 0)
                 return;
 
+            var series = _memoryChart.Series[0];
+            series.Points.Clear();
+
             // 从所有客户端收集最新的内存数据
-            foreach (var client in clientInfos)
+            foreach (var client in clientInfos.OrderByDescending(c => c.LastReportTime).Take(20))
             {
-                var dataPoint = new MemoryDataPoint
+                // 估算内存使用（实际应从原始Metric数据获取）
+                var memoryMB = client.TotalMetrics * 0.001; // 简化估算
+                
+                var point = new DataPoint
                 {
-                    Time = client.LastReportTime,
-                    MemoryBytes = client.TotalMetrics * 1024 // 估算值，实际应从原始数据获取
+                    XValue = client.LastReportTime.ToOADate(),
+                    YValues = new[] { memoryMB }
                 };
-
-                // 添加到历史记录
-                _memoryHistory.Add(dataPoint);
-            }
-
-            // 限制历史记录数量
-            while (_memoryHistory.Count > MaxHistoryPoints)
-            {
-                _memoryHistory.RemoveAt(0);
-            }
-
-            // 更新图表显示
-            chartListView.Items.Clear();
-            foreach (var point in _memoryHistory.OrderByDescending(p => p.Time).Take(20))
-            {
-                var item = new ListViewItem(point.Time.ToString("HH:mm:ss"));
-                item.SubItems.Add(point.MemoryMB.ToString("F1"));
-
-                // 生成简单的趋势条
-                var barLength = (int)(point.MemoryMB / 10);
-                barLength = Math.Min(barLength, 20);
-                var bar = new string('█', barLength);
-                item.SubItems.Add(bar);
-
-                // 状态标记
-                if (point.MemoryMB > _memoryWarningThresholdMB)
+                
+                // 根据阈值设置颜色
+                if (memoryMB > _memoryWarningThresholdMB)
                 {
-                    item.BackColor = Color.LightPink;
-                    item.SubItems.Add("⚠️");
+                    point.Color = Color.Red;
                 }
-                else if (point.MemoryMB > _memoryWarningThresholdMB * 0.8)
+                else if (memoryMB > _memoryWarningThresholdMB * 0.8)
                 {
-                    item.BackColor = Color.LightYellow;
-                    item.SubItems.Add("⚡");
+                    point.Color = Color.Orange;
                 }
                 else
                 {
-                    item.SubItems.Add("✓");
+                    point.Color = Color.Green;
                 }
-
-                chartListView.Items.Add(item);
+                
+                series.Points.Add(point);
             }
         }
 

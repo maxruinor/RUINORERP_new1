@@ -26,6 +26,7 @@ namespace RUINORERP.Server.Network.Models
     /// </summary>
     public class SessionInfo : AppSession
     {
+        private static readonly ILogger _logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("SessionInfo");
         /// <summary>
         /// 客户端IP地址
         /// </summary>
@@ -126,7 +127,7 @@ namespace RUINORERP.Server.Network.Models
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("发送数据时出错：DataQueue AddSendData" + ex.Message);
+                _logger?.LogWarning(ex, "发送数据时出错：DataQueue AddSendData");
             }
         }
  
@@ -184,25 +185,13 @@ namespace RUINORERP.Server.Network.Models
                 Status = SessionStatus.Disconnected;
                 IsConnected = false;
                 // 添加主动断开连接警告日志
-                try
-                {
-                    System.Diagnostics.Debug.WriteLine($"[主动断开连接] 网络错误导致会话断开: SessionID={SessionID}, Error={ex.Message}");
-                }
-                catch {}
+                _logger?.LogWarning($"[主动断开连接] 网络错误导致会话断开: SessionID={SessionID}, Error={ex.Message}");
             }
             catch (Exception ex)
             {
                 // 其他错误
                 LastError = $"发送数据时发生异常: {ex.Message}";
-                try
-                {
-                    // 尝试记录日志
-                    System.Diagnostics.Debug.WriteLine($"Session {SessionID} 发送数据失败: {ex.Message}");
-                }
-                catch
-                {
-                    // 忽略日志记录错误
-                }
+                _logger?.LogWarning(ex, $"Session {SessionID} 发送数据失败");
             }
         }
         
@@ -245,14 +234,7 @@ namespace RUINORERP.Server.Network.Models
             catch (Exception ex)
             {
                 LastError = $"处理数据队列时发生异常: {ex.Message}";
-                try
-                {
-                    System.Diagnostics.Debug.WriteLine($"Session {SessionID} 处理队列失败: {ex.Message}");
-                }
-                catch
-                {
-                    // 忽略日志记录错误
-                }
+                _logger?.LogError(ex, $"Session {SessionID} 处理队列失败");
             }
         }
         

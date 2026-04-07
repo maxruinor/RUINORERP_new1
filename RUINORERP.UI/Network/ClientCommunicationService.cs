@@ -94,8 +94,8 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 心跳相关字段（优化后）
-        private readonly int _heartbeatIntervalMs = 10000; // 固定心跳间隔15秒，符合主流ERP系统实践
-        private readonly int _heartbeatTimeoutMs = 20000; // 心跳超时时间30秒，给予适当响应时间
+        private readonly int _heartbeatIntervalMs = 10000; // 固定心跳间隔10秒，符合主流ERP系统实践
+        private readonly int _heartbeatTimeoutMs = 20000; // 心跳超时时间20秒（实际使用5秒=间隔/2）
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
@@ -115,6 +115,15 @@ namespace RUINORERP.UI.Network
         private readonly ConcurrentQueue<ClientQueuedCommand> _queuedCommands = new();
         private readonly SemaphoreSlim _queueLock = new SemaphoreSlim(1, 1);
         private bool _isProcessingQueue = false;
+        
+        // 队列统计计数器 - 避免遍历队列
+        private int _responseCommandCount = 0;
+        private int _oneWayCommandCount = 0;
+        
+        // 心跳资源收集缓存 - 降低采样频率
+        private ClientResourceUsage _cachedResourceUsage;
+        private DateTime _lastResourceCollectionTime = DateTime.MinValue;
+        private const int RESOURCE_COLLECTION_INTERVAL_MS = 60000; // 1分钟收集一次
 
         /// <summary>
         /// 是否正在重连
@@ -270,8 +279,8 @@ namespace RUINORERP.UI.Network
             }
 
             // 订阅事件
-            _socketClient.Received -= OnReceived;
-            _socketClient.Received += OnReceived;
+            _socketClient.Received -= OnReceivedHandler;
+            _socketClient.Received += OnReceivedHandler;
 
             _connectionManager.ConnectionStateChanged -= OnConnectionStateChanged;
             _connectionManager.ConnectionStateChanged += OnConnectionStateChanged;
@@ -319,7 +328,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-
+                _logger?.LogWarning(ex, "获取队列统计信息时发生异常");
                 return (false, 0);
             }
         }
@@ -386,7 +395,7 @@ namespace RUINORERP.UI.Network
                 }
                 catch (Exception uiEx)
                 {
-
+                    _logger?.LogWarning(uiEx, "更新重连失败UI时发生异常");
                 }
 
                 // 清空队列中的待处理命令，避免长时间等待
@@ -399,12 +408,12 @@ namespace RUINORERP.UI.Network
                 }
                 catch (Exception ex)
                 {
-
+                    _logger?.LogError(ex, "触发重连失败事件时发生异常");
                 }
             }
             catch (Exception ex)
             {
-
+                _logger?.LogCritical(ex, "OnReconnectFailed发生未预期异常");
             }
         }
 
@@ -449,12 +458,12 @@ namespace RUINORERP.UI.Network
                 }
                 catch (Exception uiEx)
                 {
-
+                    _logger?.LogWarning(uiEx, "更新重连尝试UI时发生异常");
                 }
             }
             catch (Exception ex)
             {
-
+                _logger?.LogError(ex, "OnReconnectAttempt发生未预期异常");
             }
         }
 
@@ -515,7 +524,7 @@ namespace RUINORERP.UI.Network
                 }
                 catch (Exception uiEx)
                 {
-
+                    _logger?.LogWarning(uiEx, "更新重连成功UI时发生异常");
                 }
 
                 // 重连成功后，立即启动队列处理
@@ -526,7 +535,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-
+                _logger?.LogError(ex, "OnReconnectSucceeded发生未预期异常");
             }
         }
 
@@ -568,6 +577,8 @@ namespace RUINORERP.UI.Network
             if (!Volatile.Read(ref _isHeartbeatRunning))
                 return;
 
+            Task heartbeatTaskToWait = null;
+            
             lock (_heartbeatLock)
             {
                 // 双重检查，确保线程安全
@@ -579,10 +590,40 @@ namespace RUINORERP.UI.Network
                 // 取消心跳任务
                 _heartbeatCts?.Cancel();
 
-                // 安全地等待任务完成，避免阻塞
-                SafeWaitForHeartbeatTaskCompletion();
+                // 获取需要等待的任务引用
+                heartbeatTaskToWait = _heartbeatTask;
+                _heartbeatTask = null;
+            }
 
-
+            // 在锁外异步等待任务完成，避免死锁
+            if (heartbeatTaskToWait != null && !heartbeatTaskToWait.IsCompleted)
+            {
+                try
+                {
+                    // 使用短时间等待，避免长时间阻塞
+                    var timeoutTask = Task.Delay(2000);
+                    var completedTask = Task.WhenAny(heartbeatTaskToWait, timeoutTask).Result;
+                    
+                    if (completedTask == timeoutTask)
+                    {
+                        _logger?.LogWarning("心跳任务停止超时，强制终止");
+                    }
+                }
+                catch (AggregateException ae)
+                {
+                    // 处理可能的异常
+                    foreach (var ex in ae.InnerExceptions)
+                    {
+                        if (!(ex is OperationCanceledException))
+                        {
+                            _logger?.LogDebug(ex, "心跳任务异常结束");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogDebug(ex, "等待心跳任务完成时发生异常");
+                }
             }
         }
 
@@ -590,7 +631,7 @@ namespace RUINORERP.UI.Network
         /// 安全地等待心跳任务完成
         /// 避免长时间阻塞，确保资源正确释放
         /// </summary>
-        private void SafeWaitForHeartbeatTaskCompletion()
+        private async Task SafeWaitForHeartbeatTaskCompletionAsync()
         {
             if (_heartbeatTask == null)
                 return;
@@ -601,11 +642,12 @@ namespace RUINORERP.UI.Network
                 if (!_heartbeatTask.IsCompleted)
                 {
                     // 使用短时间等待，避免长时间阻塞
-                    bool completed = _heartbeatTask.Wait(TimeSpan.FromSeconds(2));
-
-                    if (!completed)
+                    var timeoutTask = Task.Delay(2000);
+                    var completedTask = await Task.WhenAny(_heartbeatTask, timeoutTask);
+                    
+                    if (completedTask == timeoutTask)
                     {
-
+                        _logger?.LogWarning("心跳任务停止超时，强制终止");
                     }
                 }
             }
@@ -616,13 +658,13 @@ namespace RUINORERP.UI.Network
                 {
                     if (ex is not OperationCanceledException)
                     {
-
+                        _logger?.LogWarning(ex, "等待心跳任务完成时发生异常");
                     }
                 }
             }
             catch (Exception ex)
             {
-
+                _logger?.LogWarning(ex, "等待心跳任务完成时发生未预期异常");
             }
             finally
             {
@@ -648,7 +690,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-
+                _logger?.LogWarning(ex, "释放心跳资源时发生异常");
             }
         }
 
@@ -806,7 +848,7 @@ namespace RUINORERP.UI.Network
                     ClientTime = DateTime.Now,
                     ClientStatus = "Normal",
                     SessionToken = sessionToken,
-                    ResourceUsage = CollectClientResourceUsage()
+                    ResourceUsage = GetCachedResourceUsage() // 使用缓存的资源信息，降低采样频率
                 };
 
                 // 只在必要时添加用户操作信息以减少数据传输
@@ -839,9 +881,8 @@ namespace RUINORERP.UI.Network
                 // 这样可以避免重试时使用相同ID导致请求冲突
                 heartbeatRequest.RequestId = GenerateUniqueRequestId();
 
-                // 使用较短的心跳超时时间（15秒），避免长时间等待
-                // 心跳应该快速响应，如果15秒无响应，说明网络可能有问题
-                int heartbeatTimeout = Math.Min(_heartbeatTimeoutMs, 15000);
+                // 使用较短的心跳超时时间（5秒），应该小于心跳间隔的50%，快速检测故障
+                int heartbeatTimeout = Math.Min(_heartbeatTimeoutMs, _heartbeatIntervalMs / 2);
 
                 // 创建链接的取消令牌源，用于提前取消
                 using (var heartbeatCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
@@ -911,6 +952,10 @@ namespace RUINORERP.UI.Network
 
         // 请求ID计数器，用于生成唯一ID
         private long _requestIdCounter = 0;
+        
+        // 重试随机数生成器 - 用于添加随机抖动避免雪崩
+        private static readonly Random _retryRandom = new Random();
+        private static readonly object _retryRandomLock = new object();
 
         /// <summary>
         /// 收集客户端资源使用情况
@@ -939,6 +984,23 @@ namespace RUINORERP.UI.Network
                 _logger?.LogError(ex, "收集客户端资源使用情况时发生异常");
                 return ClientResourceUsage.Create(); // 返回默认值
             }
+        }
+        
+        /// <summary>
+        /// 获取缓存的资源使用情况，降低采样频率
+        /// </summary>
+        /// <returns>缓存的客户端资源使用信息</returns>
+        private ClientResourceUsage GetCachedResourceUsage()
+        {
+            var now = DateTime.Now;
+            if ((now - _lastResourceCollectionTime).TotalMilliseconds < RESOURCE_COLLECTION_INTERVAL_MS)
+            {
+                return _cachedResourceUsage;
+            }
+            
+            _cachedResourceUsage = CollectClientResourceUsage();
+            _lastResourceCollectionTime = now;
+            return _cachedResourceUsage;
         }
 
         /// <summary>
@@ -1025,7 +1087,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-
+                _logger?.LogError(ex, "强制断开连接时发生异常");
                 return false;
             }
         }
@@ -1158,12 +1220,35 @@ namespace RUINORERP.UI.Network
         /// <returns>是否支持重试</returns>
         private bool IsRetryableException(Exception ex)
         {
-            // 网络异常、超时异常等通常支持重试
-            return ex is TimeoutException ||
-                   ex is System.Net.Sockets.SocketException ||
-                   ex is System.IO.IOException ||
-                    ex.Message.Contains("connection") ||
-                     ex.Message.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0; // 服务器错误支持重试
+            // 优先使用异常类型判断，更可靠
+            if (ex is TimeoutException ||
+                ex is System.Net.Sockets.SocketException socketEx && IsNetworkRelatedSocketError((System.Net.Sockets.SocketError)socketEx.ErrorCode) ||
+                ex is System.IO.IOException)
+            {
+                return true;
+            }
+            
+            // 仅在必要时检查消息文本（避免字符串匹配的不稳定性）
+            if (ex is InvalidOperationException && 
+                (ex.Message.IndexOf("connection", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 ex.Message.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// 判断Socket错误码是否与网络相关
+        /// </summary>
+        private bool IsNetworkRelatedSocketError(System.Net.Sockets.SocketError errorCode)
+        {
+            return errorCode == System.Net.Sockets.SocketError.ConnectionReset ||
+                   errorCode == System.Net.Sockets.SocketError.ConnectionAborted ||
+                   errorCode == System.Net.Sockets.SocketError.NetworkDown ||
+                   errorCode == System.Net.Sockets.SocketError.NetworkUnreachable ||
+                   errorCode == System.Net.Sockets.SocketError.TimedOut;
         }
 
         /// <summary>
@@ -1367,7 +1452,7 @@ namespace RUINORERP.UI.Network
         /// 处理接收到的数据
         /// </summary>
         /// <param name="packet">接收到的数据包</param>
-        private async void OnReceived(PacketModel packet)
+        private async Task OnReceivedAsync(PacketModel packet)
         {
             try
             {
@@ -1384,9 +1469,6 @@ namespace RUINORERP.UI.Network
                         _applicationContext.CurUserInfo.SessionId = packet.SessionId;
                     }
                 }
-
-
-
 
                 // 验证数据包有效性
                 if (!packet.IsValid())
@@ -1450,17 +1532,34 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 // 2. 作为服务器主动推送的命令处理（推送模式）
                 if (IsServerPushCommand(packet))
                 {
-                    await HandleServerPushCommandAsync(packet);
+                    // 确保在后台线程执行，避免阻塞UI
+                    await Task.Run(() => HandleServerPushCommandAsync(packet)).ConfigureAwait(false);
                     return;
                 }
 
                 // 3. 作为通用命令处理
-                await HandleGeneralCommandAsync(packet);
+                await HandleGeneralCommandAsync(packet).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理接收到的数据时发生错误");
                 _clientEventManager.OnErrorOccurred(new Exception($"处理接收到的数据时发生错误: {ex.Message}", ex));
+            }
+        }
+
+        /// <summary>
+        /// 事件处理包装器 - 捕获async void异常逃逸
+        /// </summary>
+        private async void OnReceivedHandler(PacketModel packet)
+        {
+            try
+            {
+                await OnReceivedAsync(packet);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "OnReceivedAsync未捕获的异常");
+                _clientEventManager.OnErrorOccurred(new Exception($"处理接收数据时发生未预期错误: {ex.Message}", ex));
             }
         }
 
@@ -1593,6 +1692,12 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             // 从队列中取出所有命令进行清理
             while (_queuedCommands.TryDequeue(out var queuedCommand))
             {
+                // 递减计数器（出队时）
+                if (queuedCommand.IsResponseCommand)
+                    Interlocked.Decrement(ref _responseCommandCount);
+                else
+                    Interlocked.Decrement(ref _oneWayCommandCount);
+                    
                 if (queuedCommand.CreatedAt < queueCut)
                 {
                     // 超时命令，取消并记录
@@ -1611,7 +1716,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             // 将未超时的命令重新加入队列
             foreach (var command in tempQueue)
             {
-                _queuedCommands.Enqueue(command);
+                EnqueueCommandSafe(command);
             }
 
             if (removedCount > 0)
@@ -2057,7 +2162,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     var tcs = new TaskCompletionSource<bool>();
 
                     // 将请求加入队列
-                    _queuedCommands.Enqueue(new ClientQueuedCommand
+                    var queuedCommand = new ClientQueuedCommand
                     {
                         CommandId = commandId,
                         Data = request,
@@ -2067,7 +2172,8 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         CreatedAt = DateTime.UtcNow,
                         IsResponseCommand = false,
                         TimeoutMs = 20000
-                    });
+                    };
+                    EnqueueCommandSafe(queuedCommand);
 
                     // 启动队列处理（如果未启动）
                     _ = Task.Run(ProcessCommandQueueAsync);
@@ -2244,18 +2350,21 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 // 第三步：释放计时器（避免定时任务继续运行）
                 SafeDisposeTimers();
 
-                // 第四步：断开Socket连接（释放网络资源）
-                SafeDisconnectSocket();
+                // 第四步：断开Socket连接（释放网络资源）- 异步执行
+                _ = SafeDisconnectSocketAsync();
 
                 // 第五步：清理队列和取消待处理任务（避免任务无限等待）
                 SafeClearQueuesAndCancelTasks();
 
                 // 第六步：释放资源锁（释放同步原语）
                 SafeDisposeLocks();
+                
+                // 第七步：异步等待心跳任务完成
+                _ = SafeWaitForHeartbeatTaskCompletionAsync();
             }
             catch (Exception ex)
             {
-
+                _logger?.LogError(ex, "Dispose过程中发生异常");
             }
         }
 
@@ -2277,7 +2386,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
 
                 if (_socketClient != null)
                 {
-                    _socketClient.Received -= OnReceived;
+                    _socketClient.Received -= OnReceivedHandler;
                 }
             }
             catch (Exception ex)
@@ -2320,19 +2429,22 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         /// <summary>
         /// 安全断开Socket连接
         /// </summary>
-        private void SafeDisconnectSocket()
+        private async Task SafeDisconnectSocketAsync()
         {
             try
             {
                 if (_socketClient != null)
                 {
                     // 异步断开连接，避免阻塞
-                    var disconnectTask = Task.Run(async () => await _socketClient.Disconnect());
-
-                    // 等待最多3秒
-                    if (!disconnectTask.Wait(TimeSpan.FromSeconds(3)))
+                    var disconnectTask = _socketClient.Disconnect();
+                    
+                    // 使用异步等待，最多3秒
+                    var timeoutTask = Task.Delay(3000);
+                    var completedTask = await Task.WhenAny(disconnectTask, timeoutTask);
+                    
+                    if (completedTask == timeoutTask)
                     {
-
+                        _logger?.LogWarning("断开Socket连接超时");
                     }
                 }
             }
@@ -2469,8 +2581,16 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     {
                         retryCount++;
 
-                        // 指数退避等待
-                        int backoffMs = (int)Math.Pow(2, retryCount) * 1000; // 1秒, 2秒, 4秒...
+                        // 指数退避等待，添加随机抖动避免雪崩效应
+                        int baseBackoffMs = (int)Math.Pow(2, retryCount) * 1000; // 1秒, 2秒, 4秒...
+                        int jitter;
+                        lock (_retryRandomLock)
+                        {
+                            jitter = _retryRandom.Next(-500, 500); // ±500ms随机抖动
+                        }
+                        int backoffMs = Math.Max(100, baseBackoffMs + jitter); // 最小100ms
+                        
+                        _logger?.LogDebug("第{RetryCount}次重试，等待{BackoffMs}ms", retryCount, backoffMs);
                         await Task.Delay(backoffMs, ct);
 
                         // 继续重试
@@ -2515,7 +2635,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             });
 
             // 将请求加入队列
-            _queuedCommands.Enqueue(new ClientQueuedCommand
+            var queuedCommand = new ClientQueuedCommand
             {
                 CommandId = commandId,
                 Data = request,
@@ -2526,7 +2646,8 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 TimeoutMs = timeoutMs,
                 CreatedAt = DateTime.UtcNow,
                 CompletionSource = null // 响应命令不需要简单的bool完成源
-            });
+            };
+            EnqueueCommandSafe(queuedCommand);
 
 
 
@@ -2621,6 +2742,12 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 while (_queuedCommands.TryDequeue(out var command))
                 {
                     commandsToProcess.Add(command);
+                    
+                    // 递减计数器（出队时）
+                    if (command.IsResponseCommand)
+                        Interlocked.Decrement(ref _responseCommandCount);
+                    else
+                        Interlocked.Decrement(ref _oneWayCommandCount);
 
                     // 限制单次处理数量，避免长时间阻塞
                     if (commandsToProcess.Count >= 50)
@@ -2647,7 +2774,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         if (!isConnectedNow)
                         {
                             // 连接仍然断开，重新加入队列
-                            _queuedCommands.Enqueue(command);
+                            EnqueueCommandSafe(command);
                             // 触发重连尝试（使用更智能的重连策略）
                             if (!_isReconnecting)
                             {
@@ -2698,7 +2825,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         if (!isConnectedNow)
                         {
                             // 连接仍然断开，重新加入队列
-                            _queuedCommands.Enqueue(command);
+                            EnqueueCommandSafe(command);
                             // 触发重连尝试（使用更智能的重连策略）
                             if (!_isReconnecting)
                             {
@@ -2751,31 +2878,10 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         /// <returns>队列统计信息</returns>
         public (int TotalQueued, int ResponseCommands, int OneWayCommands, int PendingResponses, bool IsProcessing) GetQueueStatistics()
         {
-            var responseCommands = 0;
-            var oneWayCommands = 0;
-
-            // 遍历队列获取统计信息（不影响性能的方式）
-            var tempCommands = new List<ClientQueuedCommand>();
-            while (_queuedCommands.TryDequeue(out var command))
-            {
-                if (command.IsResponseCommand)
-                    responseCommands++;
-                else
-                    oneWayCommands++;
-
-                tempCommands.Add(command);
-            }
-
-            // 重新加入队列
-            foreach (var command in tempCommands)
-            {
-                _queuedCommands.Enqueue(command);
-            }
-
             return (
                 TotalQueued: _queuedCommands.Count,
-                ResponseCommands: responseCommands,
-                OneWayCommands: oneWayCommands,
+                ResponseCommands: Volatile.Read(ref _responseCommandCount),
+                OneWayCommands: Volatile.Read(ref _oneWayCommandCount),
                 PendingResponses: _pendingRequests.Count,
                 IsProcessing: _isProcessingQueue
             );
@@ -2790,11 +2896,32 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             var clearedCount = 0;
             while (_queuedCommands.TryDequeue(out var command))
             {
+                // 递减计数器
+                if (command.IsResponseCommand)
+                    Interlocked.Decrement(ref _responseCommandCount);
+                else
+                    Interlocked.Decrement(ref _oneWayCommandCount);
+                    
                 command.CompletionSource?.TrySetCanceled();
                 command.ResponseCompletionSource?.TrySetCanceled();
                 clearedCount++;
             }
 
+            _logger?.LogInformation("已清空命令队列，原因：{Reason}，清除数量：{Count}", reason, clearedCount);
+        }
+        
+        /// <summary>
+        /// 安全地将命令加入队列并更新计数器
+        /// </summary>
+        private void EnqueueCommandSafe(ClientQueuedCommand command)
+        {
+            _queuedCommands.Enqueue(command);
+            
+            // 更新计数器
+            if (command.IsResponseCommand)
+                Interlocked.Increment(ref _responseCommandCount);
+            else
+                Interlocked.Increment(ref _oneWayCommandCount);
         }
 
 

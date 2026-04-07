@@ -26,6 +26,11 @@ namespace RUINORERP.UI.Network
         private readonly ILogger<SuperSocketClient> _logger;
         private NetworkHealthCheckService _healthCheckService;
         private volatile bool _networkHealthWarningShown;
+        
+        // IsConnected缓存机制 - 减少频繁的系统调用
+        private volatile bool _cachedIsConnected = false;
+        private DateTime _lastConnectionCheckTime = DateTime.MinValue;
+        private const int CONNECTION_CHECK_CACHE_MS = 100; // 缓存100ms
 
         /// <summary>
         /// 连接状态变更事件 - 供上层订阅以同步状态
@@ -96,61 +101,55 @@ namespace RUINORERP.UI.Network
         public string SessionID { get; set; }
         /// <summary>
         /// 获取客户端是否已连接到服务器
-        /// 优化版：减少不必要的检查，提高性能，避免频繁触发状态变更事件
+        /// 优化版：添加缓存机制，减少频繁的系统调用，提高性能
         /// </summary>
         public bool IsConnected
         {
             get
             {
-                try
+                var now = DateTime.Now;
+                var elapsed = (now - _lastConnectionCheckTime).TotalMilliseconds;
+                
+                // 如果缓存有效，直接返回
+                if (elapsed < CONNECTION_CHECK_CACHE_MS)
                 {
-                    // 1. 快速检查客户端和Socket实例
-                    if (_client == null || _client.Socket == null)
-                    {
-                        // 静默返回，不记录日志（避免日志风暴）
-                        return false;
-                    }
-
-                    // 2. 直接检查Socket.Connected属性（最快的方式）
-                    bool socketConnected = _client.Socket.Connected;
-
-                    // 3. 快速返回，不进行复杂的Poll检查（避免性能问题）
-                    // 复杂的检查在发送数据前进行即可
-                    if (socketConnected)
-                    {
-                        // 检查状态标志是否与Socket状态一致
-                        if (!_isConnected)
-                        {
-                            _logger?.LogDebug("连接状态同步：Socket.Connected=true但_isConnected=false，正在同步状态");
-                            _isConnected = true;
-                            ConnectionStateChanged?.Invoke(true);
-                        }
-                        return true;
-                    }
-                    else
-                    {
-                        // Socket.Connected为false
-                        if (_isConnected)
-                        {
-                            _logger?.LogDebug("连接状态同步：Socket.Connected=false，正在同步状态");
-                            _isConnected = false;
-                            ConnectionStateChanged?.Invoke(false);
-                        }
-                        return false;
-                    }
+                    return _cachedIsConnected;
                 }
-                catch (Exception ex)
+                
+                // 否则重新检查
+                bool connected = CheckConnectionInternal();
+                
+                // 只有状态变化时才更新缓存和触发事件
+                if (connected != _cachedIsConnected)
                 {
-                    // 减少日志级别，避免日志风暴
-                    _logger?.LogDebug(ex, "检查连接状态时发生异常");
-                    // 在出现异常时，认为连接已断开
-                    if (_isConnected)
-                    {
-                        _isConnected = false;
-                        ConnectionStateChanged?.Invoke(false);
-                    }
+                    _cachedIsConnected = connected;
+                    _lastConnectionCheckTime = now;
+                    ConnectionStateChanged?.Invoke(connected);
+                }
+                
+                return connected;
+            }
+        }
+        
+        /// <summary>
+        /// 内部连接检查方法 - 执行实际的系统调用
+        /// </summary>
+        private bool CheckConnectionInternal()
+        {
+            try
+            {
+                // 1. 快速检查客户端和Socket实例
+                if (_client == null || _client.Socket == null)
+                {
                     return false;
                 }
+
+                // 2. 直接检查Socket.Connected属性（P/Invoke调用）
+                return _client.Socket.Connected;
+            }
+            catch
+            {
+                return false;
             }
         }
         

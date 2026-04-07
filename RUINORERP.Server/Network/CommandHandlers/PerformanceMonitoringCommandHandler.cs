@@ -86,6 +86,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private async Task<IResponse> HandlePerformanceDataUploadAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 var request = cmd.Packet.Request as PerformanceDataUploadRequest;
@@ -99,9 +100,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     request.ClientId = cmd.Packet.ExecutionContext.UserId.ToString();
                 }
 
+                LogInfo($"开始处理性能数据上传: 客户端 {request.ClientId}, 机器 {request.MachineName}, IP {request.ClientIpAddress}");
+
                 var response = _storageService.StorePerformanceData(request);
 
-                LogInfo($"接收性能数据: 客户端 {request.ClientId}, {response.ProcessedMetricCount} 条指标");
+                stopwatch.Stop();
+                LogInfo($"完成处理性能数据上传: 客户端 {request.ClientId}, {response.ProcessedMetricCount} 条指标, 总耗时 {stopwatch.ElapsedMilliseconds}ms");
 
                 CheckAndTriggerAlerts(request);
 
@@ -109,7 +113,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
-                LogError("处理性能数据上报失败", ex);
+                stopwatch.Stop();
+                LogError($"处理性能数据上报失败: 耗时 {stopwatch.ElapsedMilliseconds}ms", ex);
                 return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, "处理性能数据上报失败");
             }
         }
@@ -253,8 +258,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                         CheckMetricAlert(metricType.Value, metricJson, config);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        LogWarning($"检查单个指标告警时发生异常，跳过该指标: {ex.Message}");
                     }
                 }
             }
@@ -278,8 +284,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return (PerformanceMonitorType)typeValue;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                LogDebug($"解析指标类型失败，返回null: {ex.Message}");
             }
             return null;
         }

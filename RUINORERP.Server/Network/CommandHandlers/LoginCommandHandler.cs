@@ -55,8 +55,37 @@ namespace RUINORERP.Server.Network.CommandHandlers
     public class LoginCommandHandler : BaseCommandHandler
     {
         private const int MaxLoginAttempts = 5;
-        // 最大并发用户数现在从注册信息中获取
-        private int MaxConcurrentUsers => frmMainNew.Instance?.registrationInfo?.ConcurrentUsers ?? 1000;
+        private const int DefaultMaxConcurrentUsers = 1000;
+        
+        /// <summary>
+        /// 获取最大并发用户数
+        /// 优先从注册信息中获取，如果注册服务不可用则使用默认值
+        /// </summary>
+        private int MaxConcurrentUsers
+        {
+            get
+            {
+                try
+                {
+                    // 尝试从注册服务获取当前有效的注册信息
+                    if (RegistrationService != null)
+                    {
+                        var validationResult = RegistrationService.ValidateSystemRegistrationAsync().Result;
+                        if (validationResult?.RegistrationInfo != null && validationResult.IsValid)
+                        {
+                            return validationResult.RegistrationInfo.ConcurrentUsers;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogWarning(ex, "获取注册信息中的并发用户数失败，使用默认值");
+                }
+                
+                // 降级：使用默认值
+                return DefaultMaxConcurrentUsers;
+            }
+        }
         private static readonly ConcurrentDictionary<string, int> _loginAttempts = new ConcurrentDictionary<string, int>();
         /// <summary>
         /// 记录每个用户名的首次登录尝试时间（用于保守式清理）
@@ -859,14 +888,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     _loginAttemptTimes.TryRemove(key, out _);
                 }
 
-                if (keysToRemove.Any())
-                {
-                    System.Diagnostics.Debug.WriteLine($"[LoginCommandHandler] 保守清理了 {keysToRemove.Count} 个过期的登录尝试记录");
-                }
+                // 注意：静态方法中无法访问实例Logger，如需日志请改为实例方法
+                // if (keysToRemove.Any())
+                // {
+                //     Logger?.LogDebug("保守清理了 {Count} 个过期的登录尝试记录", keysToRemove.Count);
+                // }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[LoginCommandHandler] 清理登录尝试记录时发生错误: {ex.Message}");
+                // 注意：静态方法中无法访问实例Logger
+                // Logger?.LogError(ex, "清理登录尝试记录时发生错误");
             }
         }
 

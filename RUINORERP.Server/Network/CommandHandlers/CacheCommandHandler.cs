@@ -809,10 +809,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             cacheData.EntityTypeName = GetCrossPlatformCompatibleTypeName(lastlist.GetType());
                             cacheData.HasMoreData = totalCount > pageSize;
 
-                            if (frmMainNew.Instance.IsDebug)
-                            {
-                                frmMainNew.Instance.PrintInfoLog($"{tableName}发送第一页数据，总行数:{totalCount}，当前页:{Math.Min(pageSize, totalCount)}");
-                            }
+                            Logger?.LogDebug("{TableName}发送第一页数据，总行数:{TotalCount}，当前页:{CurrentPage}", 
+                                tableName, totalCount, Math.Min(pageSize, totalCount));
                         }
                     }
                     else

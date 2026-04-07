@@ -30,13 +30,13 @@ namespace RUINORERP.Server.Network.Core
     public class PacketPipelineFilter : FixedHeaderPipelineFilter<ServerPackageInfo>
     {
         private static readonly int HeaderLength = 18; // 与PacketSerializer保持一致
+        private static readonly ILogger _logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("PacketPipelineFilter");
 
         // 无参数构造函数，用于SuperSocket的反射创建
         public PacketPipelineFilter()
             : base(HeaderLength)
         {
         }
-        int datakey = 0;
 
         /// <summary>
         /// 业务上通过包头18个里面的内容 解释出 还有多少len是一个完整的包。
@@ -61,31 +61,27 @@ namespace RUINORERP.Server.Network.Core
 
             try
             {
-                //                bodyLength = EncryptedProtocol.AnalyzeClientPackHeader(headCopy2);
                 bodyLength = UnifiedEncryptionProtocol.AnalyzeClientPacketHeader(headCopy2);
+                return bodyLength;  // 成功则立即返回
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-
+                _logger?.LogWarning(ex, "第一次尝试解析包头失败，尝试备用方法");
             }
 
-
-            // 3. 为第一个解密方法创建副本1
+            // 备用解析逻辑
             byte[] headCopy3 = (byte[])originalHead.Clone();
-            int dataKey3 = 0;
 
             try
             {
-                //                int bodyLength3 = PacketSpec.Security.EncryptedProtocol.AnalyzeClientPackHeader(headCopy3);
-                int bodyLength3 = PacketSpec.Security.UnifiedEncryptionProtocol.AnalyzeClientPacketHeader(headCopy3);
+                bodyLength = UnifiedEncryptionProtocol.AnalyzeClientPacketHeader(headCopy3);
+                return bodyLength;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-
+                _logger?.LogError(ex, "所有包头解析方法均失败");
+                throw new InvalidDataException("无法解析数据包头部", ex);
             }
-            return bodyLength;
         }
 
         /// <summary>
@@ -112,24 +108,10 @@ namespace RUINORERP.Server.Network.Core
                 if (packet.IsValid())
                 {
 
-                    //为了方便调试把心跳判断一下
-                    if (packet.CommandId.Category == PacketSpec.Commands.CommandCategory.System && packet.CommandId.FullCode == SystemCommands.Heartbeat)
-                    {
-
-                    }
-                    else if (packet.CommandId.Category == PacketSpec.Commands.CommandCategory.System && packet.CommandId.FullCode == SystemCommands.WelcomeAck)
-                    {
-
-
-                    }
-                    else
-                    {
-
-                    }
                     // 如果没有请求ID，或者对应的任务已完成，则视为服务器主动推送的命令
                     if (!packet.Extensions.ContainsKey("RequestId"))
                     {
-
+                        // 服务器推送命令，正常处理
                     }
                     // 创建并返回ServerPackageInfo对象，包含所有必要的信息
                     return new ServerPackageInfo
@@ -142,15 +124,14 @@ namespace RUINORERP.Server.Network.Core
                 else
                 {
                     // 数据包无效，记录详细信息
-                    System.Diagnostics.Debug.WriteLine("接收到无效的数据包");
+                    _logger?.LogWarning("接收到无效的数据包");
                     return null;
                 }
             }
             catch (Exception ex)
             {
                 // 记录详细的异常信息
-                System.Diagnostics.Debug.WriteLine($"解码数据包时发生异常: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"异常堆栈: {ex.StackTrace}");
+                _logger?.LogError(ex, "解码数据包时发生异常");
                 // 记录异常但不抛出，避免影响其他处理
                 return null;
             }

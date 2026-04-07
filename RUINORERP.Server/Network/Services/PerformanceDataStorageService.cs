@@ -79,6 +79,7 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         public PerformanceDataUploadResponse StorePerformanceData(PerformanceDataUploadRequest request)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var response = new PerformanceDataUploadResponse
             {
                 ServerReceiveTime = DateTime.Now
@@ -86,6 +87,8 @@ namespace RUINORERP.Server.Network.Services
 
             try
             {
+                _logger.LogDebug($"开始处理性能数据: 客户端 {request.ClientId}, 机器 {request.MachineName}, IP {request.ClientIpAddress}, 数据包大小 {request.PerformanceDataJson?.Length ?? 0} 字节");
+
                 if (!string.IsNullOrEmpty(request.PerformanceDataJson))
                 {
                     var packet = JsonConvert.DeserializeObject<PerformanceDataPacket>(request.PerformanceDataJson);
@@ -101,15 +104,25 @@ namespace RUINORERP.Server.Network.Services
                             response.TotalStoredMetrics = store.TotalCount;
                         }
 
-                        _logger.LogInformation($"接收性能数据: 客户端 {request.ClientId}, 机器 {request.MachineName}, {metrics.Count} 条指标");
+                        stopwatch.Stop();
+                        _logger.LogInformation($"接收性能数据完成: 客户端 {request.ClientId}, 机器 {request.MachineName}, {metrics.Count} 条指标, 耗时 {stopwatch.ElapsedMilliseconds}ms");
                     }
+                    else
+                    {
+                        _logger.LogWarning($"性能数据反序列化失败: 客户端 {request.ClientId}");
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning($"性能数据为空: 客户端 {request.ClientId}");
                 }
 
                 response.IsSuccess = true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"存储性能数据失败: 客户端 {request.ClientId}");
+                stopwatch.Stop();
+                _logger.LogError(ex, $"存储性能数据失败: 客户端 {request.ClientId}, 耗时 {stopwatch.ElapsedMilliseconds}ms");
                 response.IsSuccess = false;
                 response.ErrorMessage = $"存储失败: {ex.Message}";
             }

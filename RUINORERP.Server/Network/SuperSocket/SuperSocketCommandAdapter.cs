@@ -162,10 +162,10 @@ namespace RUINORERP.Server.Network.SuperSocket
             // 网络监控：接收数据包
             if (IsNetworkMonitorEnabled && package?.Packet != null && ShouldMonitorCommand(package.Packet.CommandId))
             {
-                // 简化日志输出，移除重复的条件判断
-                frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()},RequestID={package.Packet.Request?.RequestId}" +
-                    $"{package.Packet.Response?.RequestId}" +
-                    $" PacketId={package.Packet.PacketId}");
+                _logger?.LogDebug("[网络监控] 接收数据包: SessionId={SessionId}, CommandId={CommandId}, RequestId={RequestId}, PacketId={PacketId}",
+                    session.SessionID, package.Packet.CommandId.ToString(), 
+                    package.Packet.Request?.RequestId ?? package.Packet.Response?.RequestId,
+                    package.Packet.PacketId);
             }
 
             if (package == null)
@@ -182,18 +182,17 @@ namespace RUINORERP.Server.Network.SuperSocket
                 if (package.Packet.ExecutionContext.ExpectedResponseTypeName == "IResponse" && IsNetworkMonitorEnabled && ShouldMonitorCommand(package.Packet.CommandId))
                 {
                     _logger?.LogDebug("[网络监控] 接收数据包的返回类型没有指定: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
-                    session.SessionID, package.Packet.CommandId.ToString(), package.Packet.PacketId);
-                    frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包的返回类型没有指定: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()},RequestID={package.Packet.Request.RequestId} PacketId={package.Packet.PacketId}");
+                        session.SessionID, package.Packet.CommandId.ToString(), package.Packet.PacketId);
                 }
 
                 if (package.Packet.CommandId == LockCommands.Lock)
                 {
-
+                    // 锁命令特殊处理逻辑（如需要）
                 }
 
                 if (package.Packet.CommandId == SystemCommands.WelcomeAck)
                 {
-
+                    // 欢迎确认命令特殊处理逻辑（如需要）
                 }
 
                 // 检查是否是响应包（带有RequestId的响应包）
@@ -227,9 +226,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                             // 在调试模式下显示提示给管理员
                             _logger?.LogWarning("[数据过大] 会话 {SessionId} 的 {CommandId} 命令请求数据大小为 {Size} 字节，超过阈值 {Threshold} 字节",
                                 session.SessionID, package.Packet.CommandId.ToString(), requestSize, DATA_SIZE_THRESHOLD);
-
-                            // 打印到主界面，方便管理员查看
-                            frmMainNew.Instance.PrintInfoLog($"[调试提示] 会话 {session.SessionID} 的 {package.Packet.CommandId.ToString()} 命令请求数据过大: {requestSize} 字节 > {DATA_SIZE_THRESHOLD} 字节");
                         }
                     }
                 }
@@ -283,10 +279,8 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
 
                 // 更新会话的最后活动时间
-                sessionInfo.UpdateActivity(); // 使用专门的UpdateActivity方法更新活动时间
+                sessionInfo.UpdateActivity();
                 SessionService.UpdateSession(sessionInfo);
-                SessionService.UpdateSession(sessionInfo);
-                // 同时调用专门的UpdateSessionActivity方法确保活动时间被正确更新
                 SessionService.UpdateSessionActivity(session.SessionID);
                 IResponse result;
                 try
@@ -345,9 +339,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     _logger?.LogDebug("[网络监控] 命令处理完成: SessionId={SessionId}, CommandId={CommandId}, Success={Success}",
                         session.SessionID, package.Packet.CommandId.ToString(), result.IsSuccess);
-
-                    // 打印到主界面
-                    frmMainNew.Instance.PrintInfoLog($"[网络监控] 命令处理完成: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()}, Success={result.IsSuccess}");
                 }
 
                 // 使用新的 CancellationToken.None 来确保响应能够发送，即使命令处理超时
@@ -550,11 +541,8 @@ namespace RUINORERP.Server.Network.SuperSocket
                     // 网络监控：发送响应
                     if (IsNetworkMonitorEnabled && ShouldMonitorCommand(package.CommandId))
                     {
-                        _logger?.LogDebug($"[网络监控] 发送响应: SessionId={package.SessionId}, CommandId={package.CommandId.ToString()}, PacketId={package.PacketId}"
-                            );
-
-                        // 打印到主界面
-                        frmMainNew.Instance.PrintInfoLog($"[网络监控] 发送响应: SessionId={package.SessionId}, CommandId={package.CommandId.ToString()}, PacketId={package.PacketId}");
+                        _logger?.LogDebug("[网络监控] 发送响应: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
+                            package.SessionId, package.CommandId.ToString(), package.PacketId);
                     }
 
                     await (session as SessionInfo).SendAsync(encryptedData.ToArray(), cancellationToken);

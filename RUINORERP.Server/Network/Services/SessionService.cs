@@ -1659,17 +1659,15 @@ namespace RUINORERP.Server.Network.Services
                 int totalSessions = sessionIds.Count;
                 int closedSessions = 0;
 
-                Parallel.ForEach(sessionIds, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, sessionId =>
+                // 并行异步关闭会话，避免同步阻塞
+                var tasks = sessionIds.Select(async sessionId =>
                 {
                     if (_sessions.TryGetValue(sessionId, out var session))
                     {
                         try
                         {
-                            var closeTask = session.CloseAsync(CloseReason.ServerShutdown);
-                            if (closeTask.AsTask().Wait(100))
-                            {
-                                Interlocked.Increment(ref closedSessions);
-                            }
+                            await session.CloseAsync(CloseReason.ServerShutdown).ConfigureAwait(false);
+                            Interlocked.Increment(ref closedSessions);
                         }
                         catch (Exception ex)
                         {
@@ -1677,6 +1675,9 @@ namespace RUINORERP.Server.Network.Services
                         }
                     }
                 });
+
+                // 等待所有关闭任务完成，设置合理的超时时间
+                Task.WhenAll(tasks).Wait(TimeSpan.FromSeconds(5));
 
                 _sessions?.Clear();
 

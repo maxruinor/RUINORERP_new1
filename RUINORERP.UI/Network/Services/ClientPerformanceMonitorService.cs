@@ -243,27 +243,50 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         private async Task SendPerformanceDataAsync(PerformanceDataUploadRequest request)
         {
-            try
+            const int maxRetries = 2;
+            int retryCount = 0;
+                    
+            while (retryCount <= maxRetries)
             {
-                // 使用现有通信接口发送请求
-                var response = await _communicationService.SendCommandWithResponseAsync<PerformanceDataUploadResponse>(
-                    SystemCommands.PerformanceDataUpload,
-                    request,
-                    CancellationToken.None,
-                    10000);
-
-                if (response?.IsSuccess == true)
+                try
                 {
-                    _logger?.LogDebug($"性能数据上报成功: {request.MetricCount} 条指标");
+                    // 使用现有的通信接口发送请求，设置30秒超时
+                    var response = await _communicationService.SendCommandWithResponseAsync<PerformanceDataUploadResponse>(
+                        SystemCommands.PerformanceDataUpload,
+                        request,
+                        CancellationToken.None,
+                        20000); // 从10秒增加到20秒，给大数据包足够的处理时间
+        
+                    if (response?.IsSuccess == true)
+                    {
+                        _logger?.LogDebug($"性能数据上报成功: {request.MetricCount} 条指标");
+                        return; // 成功则退出
+                    }
+                    else
+                    {
+                        _logger?.LogWarning($"性能数据上报失败: {response?.ErrorMessage}");
+                        if (++retryCount > maxRetries) break;
+                    }
                 }
-                else
+                catch (TimeoutException ex)
                 {
-                    _logger?.LogWarning($"性能数据上报失败: {response?.ErrorMessage}");
+                    retryCount++;
+                    _logger?.LogWarning(ex, $"性能数据上报超时 (尝试 {retryCount}/{maxRetries + 1})");
+                            
+                    if (retryCount > maxRetries)
+                    {
+                        _logger?.LogError(ex, "性能数据上报最终失败，已达到最大重试次数");
+                        throw; // 最后一次重试失败，抛出异常
+                    }
+                            
+                    // 指数退避等待：2秒、4秒
+                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "发送性能数据请求失败");
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "发送性能数据请求失败");
+                    throw; // 非超时异常直接抛出
+                }
             }
         }
 

@@ -33,6 +33,9 @@ namespace RUINORERP.Server.Controls
         private readonly HeartbeatBatchProcessor _heartbeatBatchProcessor;
         private readonly HeartbeatPerformanceMonitor _heartbeatPerformanceMonitor;
         private readonly ILogger<ServerMonitorControl> _logger;
+        // ✅ 新增：性能监控相关服务
+        private readonly PerformanceDataStorageService _performanceDataStorageService;
+        private PerformanceMonitorControl _performanceMonitorControl;
         // 不再使用独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
         private readonly System.Windows.Forms.Timer _refreshTimer;
 
@@ -59,6 +62,10 @@ namespace RUINORERP.Server.Controls
             _heartbeatBatchProcessor = Startup.GetFromFac<HeartbeatBatchProcessor>();
             _heartbeatPerformanceMonitor = Startup.GetFromFac<HeartbeatPerformanceMonitor>();
             _logger = Startup.GetFromFac<ILogger<ServerMonitorControl>>();
+            
+            // ✅ 新增：获取性能监控相关服务
+            _performanceDataStorageService = Startup.GetFromFac<PerformanceDataStorageService>();
+            
             // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
             // 初始化定时器
@@ -68,6 +75,9 @@ namespace RUINORERP.Server.Controls
 
             // 初始化UI
             InitializeUI();
+            
+            // ✅ 新增：初始化性能监控Tab页
+            InitializePerformanceMonitorTab();
 
             // 立即启动定时器刷新数据（不依赖Load事件）
             _refreshTimer.Start();
@@ -93,6 +103,10 @@ namespace RUINORERP.Server.Controls
             _heartbeatBatchProcessor = Startup.GetFromFac<HeartbeatBatchProcessor>();
             _heartbeatPerformanceMonitor = Startup.GetFromFac<HeartbeatPerformanceMonitor>();
             _logger = Startup.GetFromFac<ILogger<ServerMonitorControl>>();
+            
+            // ✅ 新增：获取性能监控相关服务
+            _performanceDataStorageService = Startup.GetFromFac<PerformanceDataStorageService>();
+            
             // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
             // 初始化定时器
@@ -102,9 +116,75 @@ namespace RUINORERP.Server.Controls
 
             // 初始化UI
             InitializeUI();
+            
+            // ✅ 新增：初始化性能监控Tab页
+            InitializePerformanceMonitorTab();
 
             // 立即启动定时器刷新数据（不依赖Load事件）
             _refreshTimer.Start();
+        }
+
+        /// <summary>
+        /// ✅ 初始化性能监控Tab页
+        /// </summary>
+        private void InitializePerformanceMonitorTab()
+        {
+            try
+            {
+                // 创建新的TabPage
+                var tabPerformanceMonitor = new System.Windows.Forms.TabPage
+                {
+                    Text = "性能监控",
+                    Name = "tabPerformanceMonitor"
+                };
+
+                // 创建PerformanceMonitorControl实例
+                _performanceMonitorControl = new PerformanceMonitorControl
+                {
+                    Dock = System.Windows.Forms.DockStyle.Fill,
+                    Name = "performanceMonitorControl"
+                };
+
+                // 注入服务
+                if (_performanceDataStorageService != null)
+                {
+                    _performanceMonitorControl.SetStorageService(_performanceDataStorageService);
+                    _logger.LogInformation("已为PerformanceMonitorControl注入PerformanceDataStorageService");
+                }
+
+                // ✅ 注入锁管理器（用于单据锁定监控）
+                try
+                {
+                    var lockManager = Startup.GetFromFac<ServerLockManager>();
+                    if (lockManager != null)
+                    {
+                        _performanceMonitorControl.SetLockManager(lockManager);
+                        _logger.LogInformation("已为PerformanceMonitorControl注入ServerLockManager");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "获取ServerLockManager失败，单据锁定监控可能不可用");
+                }
+
+                // 将控件添加到TabPage
+                tabPerformanceMonitor.Controls.Add(_performanceMonitorControl);
+
+                // 将TabPage添加到TabControl
+                if (tabControl1 != null)
+                {
+                    tabControl1.TabPages.Add(tabPerformanceMonitor);
+                    _logger.LogInformation("已成功添加性能监控Tab页");
+                }
+                else
+                {
+                    _logger.LogError("tabControl1为null，无法添加性能监控Tab页");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "初始化性能监控Tab页失败");
+            }
         }
 
         private void InitializeUI()

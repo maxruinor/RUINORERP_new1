@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Server.Network.CommandHandlers
 {
     /// <summary>
-    /// 锁定命令处理器 - 处理客户端的锁定请求
+    /// 锁定命令处理器 - 处理客户端的锁定请求1
     /// 包括单据锁定、解锁、强制解锁等操作
     /// </summary>
     [CommandHandler("LockCommandHandler", priority: 30)]

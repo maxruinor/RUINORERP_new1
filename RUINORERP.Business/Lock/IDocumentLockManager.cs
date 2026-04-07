@@ -35,7 +35,7 @@ namespace RUINORERP.Business.Lock
         Task<bool> IsLockedAsync(string lockKey);
         
         /// <summary>
-        /// 获取锁定信息
+        /// 获取锁定信息1
         /// </summary>
         /// <param name="lockKey">锁定键</param>
         /// <returns>锁定信息，如果未锁定则返回null</returns>

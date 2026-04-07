@@ -220,7 +220,6 @@ namespace RUINORERP.UI.Network.Services
                 return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("系统繁忙，请稍后重试");
             }
 
-            bool lockAcquired = true;
             try
             {
                 // 检查连接状态????
@@ -270,10 +269,15 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 检查信号量是否被占用，避免重复释放
-                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                // 确保释放锁
+                try
                 {
                     _fileOperationLock.Release();
+                }
+                catch (SemaphoreFullException)
+                {
+                    // 锁已经被释放,忽略
+                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
                 }
             }
         }
@@ -299,7 +303,6 @@ namespace RUINORERP.UI.Network.Services
                 return FileDownloadResponse.CreateFailure("系统繁忙，请稍后重试");
             }
 
-            bool lockAcquired = true;
             try
             {
                 // 检查连接状态
@@ -345,11 +348,15 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 检查信号量是否被占用，避免重复释放
-                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                // 确保释放锁
+                try
                 {
                     _fileOperationLock.Release();
-                    lockAcquired = false;
+                }
+                catch (SemaphoreFullException)
+                {
+                    // 锁已经被释放,忽略
+                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
                 }
             }
         }
@@ -373,7 +380,6 @@ namespace RUINORERP.UI.Network.Services
                 return FileDeleteResponse.CreateFailure("系统繁忙，请稍后重试");
             }
 
-            bool lockAcquired = true;
             try
             {
                 // 检查连接状态
@@ -423,11 +429,15 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 检查信号量是否被占用，避免重复释放
-                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                // 确保释放锁
+                try
                 {
                     _fileOperationLock.Release();
-                    lockAcquired = false;
+                }
+                catch (SemaphoreFullException)
+                {
+                    // 锁已经被释放,忽略
+                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
                 }
             }
         }
@@ -448,15 +458,14 @@ namespace RUINORERP.UI.Network.Services
                 throw new ArgumentException("文件ID不能为空", nameof(request.FileStorageInfo.FileId));
 
             // 使用信号量确保同一时间只有一个文件操作请求，带30秒超时
-            bool lockAcquired = false;
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            {
+                _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
+                return FileInfoResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
+            }
+
             try
             {
-                if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
-                {
-                    _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
-                    return FileInfoResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
-                }
-                lockAcquired = true;
 
                 // 检查连接状态
                 if (!_communicationService.ConnectionManager.IsConnected)
@@ -505,10 +514,15 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 确保只在成功获取锁的情况下才尝试释放，避免重复释放
-                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                // 确保释放锁
+                try
                 {
                     _fileOperationLock.Release();
+                }
+                catch (SemaphoreFullException)
+                {
+                    // 锁已经被释放,忽略
+                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
                 }
             }
         }
@@ -526,15 +540,14 @@ namespace RUINORERP.UI.Network.Services
                 throw new ArgumentNullException(nameof(request));
 
             // 使用信号量确保同一时间只有一个文件操作请求，带30秒超时
-            bool lockAcquired = false;
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            {
+                _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
+                return FileListResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
+            }
+
             try
             {
-                if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
-                {
-                    _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
-                    return FileListResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
-                }
-                lockAcquired = true;
 
                 // 检查连接状态
                 if (!_communicationService.ConnectionManager.IsConnected)
@@ -583,10 +596,15 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 确保只在成功获取锁的情况下才尝试释放，避免重复释放
-                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                // 确保释放锁
+                try
                 {
                     _fileOperationLock.Release();
+                }
+                catch (SemaphoreFullException)
+                {
+                    // 锁已经被释放,忽略
+                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
                 }
             }
         }
@@ -599,15 +617,14 @@ namespace RUINORERP.UI.Network.Services
         public async Task<StorageUsageInfoData> GetStorageUsageInfoAsync(CancellationToken ct = default)
         {
             // 使用信号量确保同一时间只有一个文件操作请求，带30秒超时
-            bool lockAcquired = false;
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            {
+                _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
+                return new StorageUsageInfoData();
+            }
+
             try
             {
-                if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
-                {
-                    _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
-                    return new StorageUsageInfoData();
-                }
-                lockAcquired = true;
 
                 // 检查连接状态
                 if (!_communicationService.ConnectionManager.IsConnected)
@@ -651,10 +668,15 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 确保只在成功获取锁的情况下才尝试释放，避免重复释放
-                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                // 确保释放锁
+                try
                 {
                     _fileOperationLock.Release();
+                }
+                catch (SemaphoreFullException)
+                {
+                    // 锁已经被释放,忽略
+                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
                 }
             }
         }

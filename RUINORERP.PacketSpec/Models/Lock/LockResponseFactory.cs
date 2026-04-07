@@ -13,7 +13,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
     {
 
         /// <summary>
-        /// 创建成功响应
+        /// 创建成功响应1
         /// </summary>
         /// <param name="message">成功消息</param>
         /// <param name="lockInfo">锁定信息（可选）</param>

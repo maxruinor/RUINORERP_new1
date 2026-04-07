@@ -7097,7 +7097,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 检查锁定状态并更新UI
+        /// 检查锁定状态并更新UI1
         /// 作为核心入口点，处理所有锁定状态检测和UI更新逻辑
         /// </summary>
         /// <param name="billId">单据ID</param>
@@ -7302,7 +7302,8 @@ namespace RUINORERP.UI.BaseForm
                 var lockService = Startup.GetFromFac<Network.Services.ClientLockManagementService>();
                 if (lockService != null)
                 {
-                    var response = await lockService.CheckLockStatusAsync(billId);
+                    // ✅ 传递当前菜单ID，确保权限验证完整
+                    var response = await lockService.CheckLockStatusAsync(billId, CurMenuInfo?.MenuID ?? 0);
                     if (response.IsSuccess && response.LockInfo != null && !response.LockInfo.IsExpired)
                     {
                         return response.LockInfo;
@@ -7326,13 +7327,19 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                // 使用ClientLockManagementService更新缓存
-                var lockService = Startup.GetFromFac<Network.Services.ClientLockManagementService>();
-                if (lockService != null && lockInfo != null)
+                if (lockInfo == null)
+                    return;
+
+                // ✅ 获取缓存服务并实际更新
+                var cacheService = Startup.GetFromFac<Network.Services.ClientLocalLockCacheService>();
+                if (cacheService != null)
                 {
-                    // 更新缓存，设置合理的过期时间
+                    // 更新缓存属性
                     lockInfo.LastUpdateTime = DateTime.Now;
                     lockInfo.ExpireTime = DateTime.Now.AddMinutes(10); // 10分钟缓存
+                    
+                    // ✅ 调用UpdateCacheItem实际更新缓存
+                    cacheService.UpdateCacheItem(lockInfo);
                 }
             }
             catch (Exception ex)

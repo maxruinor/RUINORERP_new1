@@ -9,11 +9,12 @@ using System.Windows.Forms;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.BaseForm;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
     /// <summary>
-    /// 锁管理命令处理器 v2.0.0
+    /// 锁管理命令处理器 v2.0.1
     /// 负责处理与分布式锁相关的命令，包括锁请求、释放、状态查询等
     /// 
     /// 更新说明：
@@ -184,15 +185,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         // 如果有当前锁定信息，可以显示给用户
                         if (lockResponse.LockInfo != null)
                         {
-                            string lockTimeStr = lockResponse.LockInfo.LockTime.ToString("yyyy-MM-dd HH:mm:ss");
-                            string lockDuration = CalculateLockDuration(lockResponse.LockInfo.LockTime);
-
-                            string message = $"🔒 单据已被锁定\n\n" +
-                                            $"📋 单据编号: {lockResponse.LockInfo.BillNo ?? "未知"}\n" +
-                                            $"👤 锁定用户: {lockResponse.LockInfo.LockedUserName}\n" +
-                                            $"⏰ 锁定时间: {lockTimeStr}\n" +
-                                            $"⏱️ 已锁定时长: {lockDuration}\n" +
-                                            $"💡 提示: 您可以点击按钮请求解锁";
+                            string message = LockInfoFormatter.FormatLockInfoMessage(lockResponse.LockInfo);
 
                             // 在UI线程显示提示（优化版，更清晰直观）
                             InvokeOnUiThread(() =>
@@ -309,31 +302,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
         /// <summary>
         /// 计算锁定时长
+        /// v2.1.1: 委托给公共工具类,避免代码重复
         /// </summary>
         /// <param name="lockTime">锁定时间</param>
         /// <returns>格式化的锁定时长字符串</returns>
         private string CalculateLockDuration(DateTime lockTime)
         {
-            try
-            {
-                var duration = DateTime.Now - lockTime;
-                if (duration.TotalHours >= 1)
-                {
-                    return $"{(int)duration.TotalHours}小时{duration.Minutes}分钟";
-                }
-                else if (duration.TotalMinutes >= 1)
-                {
-                    return $"{duration.Minutes}分钟";
-                }
-                else
-                {
-                    return $"{duration.Seconds}秒";
-                }
-            }
-            catch
-            {
-                return "未知";
-            }
+            return LockInfoFormatter.CalculateLockDuration(lockTime);
         }
 
         /// <summary>

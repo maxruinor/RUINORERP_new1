@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.UI.Network.Services
 {
     /// <summary>
-    /// 锁状态通知服务
+    /// 锁状态通知服务1
     /// 用于在锁命令处理器和UI窗体之间传递锁状态变化
     /// 实现观察者模式，支持多个窗体订阅锁状态变化
     /// v2.1.0优化版本:增加网络延迟容错、状态同步保证和去重机制

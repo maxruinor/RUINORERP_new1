@@ -7,7 +7,7 @@ using RUINORERP.UI.Network.Services;
 namespace RUINORERP.UI.Forms
 {
     /// <summary>
-    /// 锁定信息详情窗体
+    /// 锁定信息详情窗体1
     /// 优化版本：使用设计器生成的Tab布局，同时提供刷新和解锁功能
     /// </summary>
     public partial class LockInfoDetailForm : Form
@@ -202,8 +202,9 @@ namespace RUINORERP.UI.Forms
         {
             try
             {
-                // 从缓存服务刷新最新的锁定信息
-                var updatedLockInfo = await _lockCacheService.GetLockInfoAsync(_lockInfo.BillID);
+                // 强制从服务器获取最新状态,而不是使用缓存
+                var updatedLockInfo = await _lockCacheService.GetLockInfoAsync(_lockInfo.BillID, forceRefresh: true);
+
                 if (updatedLockInfo != null)
                 {
                     // 更新本地对象

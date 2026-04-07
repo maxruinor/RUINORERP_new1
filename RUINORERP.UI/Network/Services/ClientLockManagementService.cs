@@ -219,9 +219,20 @@ namespace RUINORERP.UI.Network.Services
             if (_isDisposed)
                 throw new ObjectDisposedException(nameof(ClientLockManagementService));
 
+            // 边界条件检查：验证单据ID有效性
+            if (billId <= 0)
+            {
+                _logger.LogWarning("检查锁状态请求参数无效: 单据ID={BillId}", billId);
+                return LockResponseFactory.CreateFailedResponse("单据ID无效");
+            }
+
             try
             {                // 获取当前单据的锁
                 var billLock = _billLocks.GetOrAdd(billId, _ => new SemaphoreSlim(1, 1));
+
+                // 诊断日志：记录锁的初始状态
+                _logger.LogDebug("检查锁状态 - BillID={BillId}, CurrentCount={CurrentCount}, Waiters=未知", 
+                    billId, billLock.CurrentCount);
 
                 // 使用超时机制，避免长时间阻塞
                 if (!await billLock.WaitAsync(_operationTimeout, cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token))
@@ -299,8 +310,17 @@ namespace RUINORERP.UI.Network.Services
                 }
                 finally
                 {
-                    billLock.Release();
-                    // 清理长时间未使用的锁（可选优化）
+                    // 确保锁被释放
+                    try
+                    {
+                        billLock.Release();
+                    }
+                    catch (SemaphoreFullException)
+                    {
+                        // 锁已经被释放,忽略
+                        _logger.LogDebug("锁已释放,无需重复释放: BillID={BillId}", billId);
+                    }
+                    // 延迟清理未使用的锁,避免影响等待中的线程
                     CleanupUnusedLock(billId, billLock);
                 }
             }
@@ -493,8 +513,17 @@ namespace RUINORERP.UI.Network.Services
                 }
                 finally
                 {
-                    billLock.Release();
-                    // 清理长时间未使用的锁（可选优化）
+                    // 确保锁被释放
+                    try
+                    {
+                        billLock.Release();
+                    }
+                    catch (SemaphoreFullException)
+                    {
+                        // 锁已经被释放,忽略
+                        _logger.LogDebug("锁已释放,无需重复释放: BillID={BillId}", billId);
+                    }
+                    // 延迟清理未使用的锁,避免影响等待中的线程
                     CleanupUnusedLock(billId, billLock);
                 }
             }
@@ -598,10 +627,7 @@ namespace RUINORERP.UI.Network.Services
 
                     if (response.IsSuccess)
                     {
-                        // 解锁成功后，从细粒度锁字典中移除
-                        _billLocks.TryRemove(billId, out _);
-
-                        // 创建解锁状态通知
+                        // 创建解锁状态通知（在移除锁之前）
                         var unlockedInfo = removedLock ?? new LockInfo
                         {
                             BillID = billId,
@@ -612,6 +638,9 @@ namespace RUINORERP.UI.Network.Services
 
                         // 实时通知UI状态更新
                         _notificationService?.NotifyLockStatusChanged(billId, unlockedInfo, LockStatusChangeType.Unlocked);
+                        
+                        // 延迟清理细粒度锁（不在这里立即移除，让finally中的CleanupUnusedLock处理）
+                        // _billLocks.TryRemove(billId, out _);  // ❌ 删除这行，避免竞态条件
                     }
                     else
                     {
@@ -629,7 +658,16 @@ namespace RUINORERP.UI.Network.Services
                 }
                 finally
                 {
-                    billLock.Release();
+                    // 确保锁被释放
+                    try
+                    {
+                        billLock.Release();
+                    }
+                    catch (SemaphoreFullException)
+                    {
+                        // 锁已经被释放,忽略
+                        _logger.LogDebug("锁已释放,无需重复释放: BillID={BillId}", billId);
+                    }
                 }
             }
             catch (Exception ex)
@@ -893,8 +931,8 @@ namespace RUINORERP.UI.Network.Services
                                         // 锁已过期，从_activeLocks中移除
                                         _activeLocks.TryRemove(billId, out _);
                                         _clientCache.ClearCache(billId);
-                                        // 移除对应的细粒度锁
-                                        _billLocks.TryRemove(billId, out _);
+                                        // 延迟清理细粒度锁（让CleanupUnusedLock处理）
+                                        // _billLocks.TryRemove(billId, out _);  // ❌ 删除这行
                                     }
                                     finally
                                     {
@@ -998,7 +1036,7 @@ namespace RUINORERP.UI.Network.Services
                     long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
                     string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
 
-                    // 创建锁信息
+                    // 创建锁信息1
                     LockInfo lockInfo = new LockInfo();
                     lockInfo.BillID = billId;
                     lockInfo.MenuID = menuId;
@@ -1045,7 +1083,18 @@ namespace RUINORERP.UI.Network.Services
                 }
                 finally
                 {
-                    billLock.Release();
+                    // 确保锁被释放
+                    try
+                    {
+                        billLock.Release();
+                    }
+                    catch (SemaphoreFullException)
+                    {
+                        // 锁已经被释放,忽略
+                        _logger.LogDebug("锁已释放,无需重复释放: BillID={BillId}", billId);
+                    }
+                    // 延迟清理未使用的锁,避免影响等待中的线程
+                    CleanupUnusedLock(billId, billLock);
                 }
             }
             catch (Exception ex)
@@ -1178,7 +1227,7 @@ namespace RUINORERP.UI.Network.Services
                 var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
                     LockCommands.GetLockStatuList, lockRequest, _cancellationTokenSource.Token);
 
-                // 验证响应
+                // 验证响应1
                 if (response == null)
                 {
                     _logger?.LogError("从服务器同步锁状态列表失败: 服务器响应为空");
@@ -1470,8 +1519,8 @@ namespace RUINORERP.UI.Network.Services
                 {
                     _logger?.LogDebug("同意解锁请求成功 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
                     
-                    // 从细粒度锁字典中移除
-                    _billLocks.TryRemove(billId, out _);
+                    // 延迟清理细粒度锁（不在这里立即移除，避免竞态条件）
+                    // _billLocks.TryRemove(billId, out _);  // ❌ 删除这行
                 }
                 else
                 {
@@ -1507,6 +1556,13 @@ namespace RUINORERP.UI.Network.Services
 
             if (lockRequest.LockInfo == null)
                 throw new ArgumentException("LockInfo不能为空", nameof(lockRequest));
+
+            // 边界条件检查：验证单据ID有效性
+            if (lockRequest.LockInfo.BillID <= 0)
+            {
+                _logger.LogWarning("解锁请求参数无效: 单据ID={BillId}", lockRequest.LockInfo.BillID);
+                return LockResponseFactory.CreateFailedResponse("单据ID无效");
+            }
 
             if (_isDisposed)
                 throw new ObjectDisposedException(nameof(ClientLockManagementService));
@@ -1552,8 +1608,8 @@ namespace RUINORERP.UI.Network.Services
 
                     if (response.IsSuccess)
                     {
-                        // 解锁成功后，从细粒度锁字典中移除
-                        _billLocks.TryRemove(lockRequest.LockInfo.BillID, out _);
+                        // 延迟清理细粒度锁（不在这里立即移除，让finally中的CleanupUnusedLock处理）
+                        // _billLocks.TryRemove(lockRequest.LockInfo.BillID, out _);  // ❌ 删除这行
                     }
                     else
                     {
@@ -1564,7 +1620,18 @@ namespace RUINORERP.UI.Network.Services
                 }
                 finally
                 {
-                    billLock.Release();
+                    // 确保锁被释放
+                    try
+                    {
+                        billLock.Release();
+                    }
+                    catch (SemaphoreFullException)
+                    {
+                        // 锁已经被释放,忽略
+                        _logger.LogDebug("锁已释放,无需重复释放: BillID={BillId}", lockRequest.LockInfo.BillID);
+                    }
+                    // 延迟清理未使用的锁,避免影响等待中的线程
+                    CleanupUnusedLock(lockRequest.LockInfo.BillID, billLock);
                 }
             }
             catch (Exception ex)
@@ -1660,16 +1727,91 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 清理未使用的锁
-        /// 根据实际使用情况，选择性地清理不再需要的锁对象
+        /// 根据实际使用情况,选择性地清理不再需要的锁对象
+        /// 优化策略:延迟清理,避免影响等待中的线程
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <param name="lockObj">锁对象</param>
         private void CleanupUnusedLock(long billId, SemaphoreSlim lockObj)
         {
-            // 这里可以实现更复杂的清理策略
-            // 例如：基于使用频率、时间等因素决定是否清理
-            // 当前实现为简单示例，实际使用时可以根据需要调整
-            // 注意：由于锁对象可能被多个线程使用，需要谨慎清理
+            // 检查锁是否可用(CurrentCount==1表示无人持有)
+            if (lockObj.CurrentCount == 1)
+            {
+                // 延迟5秒后清理,给可能的等待者时间获取锁
+                Task.Delay(TimeSpan.FromSeconds(5)).ContinueWith(_ =>
+                {
+                    try
+                    {
+                        // 再次检查是否仍可用且未被复用
+                        if (lockObj.CurrentCount == 1)
+                        {
+                            // 尝试移除,如果成功则释放资源
+                            if (_billLocks.TryRemove(billId, out var removed) && removed == lockObj)
+                            {
+                                try 
+                                { 
+                                    lockObj.Dispose(); 
+                                    _logger.LogDebug("清理未使用的细粒度锁: BillID={BillId}", billId);
+                                } 
+                                catch (ObjectDisposedException) 
+                                { 
+                                    // 已被其他线程释放,忽略
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "清理细粒度锁时发生异常: BillID={BillId}", billId);
+                    }
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
+            }
+        }
+
+        /// <summary>
+        /// 强制清理所有异常锁（调试用）
+        /// 用于清除CurrentCount=0但无等待者的异常锁
+        /// </summary>
+        public void ForceCleanupAbnormalLocks()
+        {
+            try
+            {
+                var abnormalCount = 0;
+                foreach (var kvp in _billLocks.ToArray())
+                {
+                    var billId = kvp.Key;
+                    var lockObj = kvp.Value;
+                    
+                    // CurrentCount=0表示锁被持有，但如果没有活跃锁且没有等待者，则是异常状态
+                    if (lockObj.CurrentCount == 0 && !_activeLocks.ContainsKey(billId))
+                    {
+                        if (_billLocks.TryRemove(billId, out var removed))
+                        {
+                            try
+                            {
+                                removed.Dispose();
+                                abnormalCount++;
+                                _logger.LogWarning("强制清理异常锁: BillID={BillId}, CurrentCount={CurrentCount}", 
+                                    billId, lockObj.CurrentCount);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "清理异常锁时出错: BillID={BillId}", billId);
+                            }
+                        }
+                    }
+                }
+                
+                if (abnormalCount > 0)
+                {
+                    _logger.LogWarning("强制清理完成 - 清理异常锁数量: {Count}, 剩余锁数量: {Remaining}", 
+                        abnormalCount, _billLocks.Count);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "强制清理异常锁时发生异常");
+            }
         }
 
         #endregion

@@ -12,6 +12,7 @@ namespace RUINORERP.UI.Network.Services
     /// <summary>
     /// 锁恢复管理器
     /// 负责处理客户端异常断开时的锁释放机制
+    /// 优化：减少网络请求频率，使用批量检查
     /// </summary>
     public class LockRecoveryManager : IDisposable
     {
@@ -19,15 +20,15 @@ namespace RUINORERP.UI.Network.Services
         private readonly ClientLocalLockCacheService _lockCache;
         private readonly ILogger<LockRecoveryManager> _logger;
 
-        // 客户端心跳检测
-        private readonly Timer _heartbeatTimer;
-        private readonly Timer _lockRecoveryTimer;
-        private readonly object _heartbeatLock = new object();
-
-        // 客户端持有的锁信息
-        private readonly Dictionary<long, LockInfo> _heldLocks;
-        private DateTime _lastHeartbeat;
+        private readonly Timer _healthCheckTimer;
+        private readonly object _healthCheckLock = new object();
+        private DateTime _lastHealthCheck;
         private bool _isShuttingDown;
+
+        /// <summary>
+        /// 健康检查间隔（2分钟）
+        /// </summary>
+        private static readonly TimeSpan HealthCheckInterval = TimeSpan.FromMinutes(2);
 
         /// <summary>
         /// 构造函数
@@ -41,253 +42,116 @@ namespace RUINORERP.UI.Network.Services
             _lockCache = lockCache ?? throw new ArgumentNullException(nameof(lockCache));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            _heldLocks = new Dictionary<long, LockInfo>();
-            _lastHeartbeat = DateTime.Now;
+            _lastHealthCheck = DateTime.Now;
 
-            // 启动心跳定时器 - 每30秒发送一次心跳
-            _heartbeatTimer = new Timer(SendHeartbeat, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
-
-            // 启动锁恢复定时器 - 每30秒检查一次孤儿锁，提高检查频率
-            _lockRecoveryTimer = new Timer(RecoverOrphanedLocks, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+            // 启动健康检查定时器 - 每2分钟执行一次，包括心跳和孤儿锁检查
+            _healthCheckTimer = new Timer(PerformHealthCheck, null, TimeSpan.FromMinutes(1), HealthCheckInterval);
 
             // 订阅应用程序退出事件
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
-            _logger.LogDebug("锁恢复管理器已初始化");
+            _logger.LogDebug("锁恢复管理器已初始化（优化版：2分钟健康检查间隔）");
         }
 
         /// <summary>
-        /// 注册持有的锁
-        /// </summary>
-        /// <param name="BillID">单据ID</param>
-        /// <param name="sessionId">会话ID</param>
-        public void RegisterHeldLock(long BillID, string sessionId)
-        {
-            try
-            {
-                lock (_heartbeatLock)
-                {
-                    _heldLocks[BillID] = new LockInfo
-                    {
-                        BillID = BillID,
-                        SessionId = sessionId,
-                        LockTime = DateTime.Now,
-                        LastHeartbeat = DateTime.Now,
-                        Type = LockType.Exclusive
-                    };
-                }
-
-                _logger.LogDebug($"注册持有的锁: 单据 {BillID}, 会话 {sessionId}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"注册持有的锁失败: 单据 {BillID}");
-            }
-        }
-
-        /// <summary>
-        /// 注销持有的锁
-        /// </summary>
-        /// <param name="BillID">单据ID</param>
-        public void UnregisterHeldLock(long BillID)
-        {
-            try
-            {
-                lock (_heartbeatLock)
-                {
-                    if (_heldLocks.Remove(BillID))
-                    {
-                        _logger.LogDebug($"注销持有的锁: 单据 {BillID}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"注销持有的锁失败: 单据 {BillID}");
-            }
-        }
-
-        /// <summary>
-        /// 获取所有持有的锁
-        /// </summary>
-        /// <returns>持有的锁列表</returns>
-        public List<LockInfo> GetHeldLocks()
-        {
-            lock (_heartbeatLock)
-            {
-                return new List<LockInfo>(_heldLocks.Values);
-            }
-        }
-
-        /// <summary>
-        /// 发送心跳
+        /// 执行健康检查（合并心跳和孤儿锁检查）
         /// </summary>
         /// <param name="state">状态对象</param>
-        private async void SendHeartbeat(object state)
+        private async void PerformHealthCheck(object state)
         {
             if (_isShuttingDown)
                 return;
 
-            try
+            if (!IsUserLoggedIn())
             {
-                if (MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo.UserInfo == null)
-                {
-                    return;
-                }
-
-                var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                if (currentUserId == 0)
-                {
-                    _logger.LogDebug("用户未登录，跳过心跳发送");
-                    return;
-                }
-
-                // 获取当前持有的所有锁
-                var heldLocks = GetHeldLocks();
-                if (heldLocks.Count == 0)
-                {
-                    _logger.LogDebug("当前没有持有锁，跳过心跳发送");
-                    return;
-                }
-
-                bool allLocksValid = true;
-                var invalidLocks = new List<long>();
-
-                foreach (var heldLock in heldLocks)
-                {
-                    // 检查锁是否仍然有效
-                    var lockResponse = await _lockService.CheckLockStatusAsync(heldLock.BillID);
-
-                    if (lockResponse == null || !lockResponse.IsSuccess ||
-                        lockResponse.LockInfo?.SessionId != heldLock.SessionId)
-                    {
-                        allLocksValid = false;
-                        invalidLocks.Add(heldLock.BillID);
-                        _logger.LogWarning($"心跳检测发现无效锁: 单据 {heldLock.BillID}, 会话 {heldLock.SessionId}");
-                    }
-                    else
-                    {
-                        // 更新最后心跳时间
-                        lock (_heartbeatLock)
-                        {
-                            if (_heldLocks.TryGetValue(heldLock.BillID, out var lockInfo))
-                            {
-                                lockInfo.LastHeartbeat = DateTime.Now;
-                            }
-                        }
-                    }
-                }
-
-                // 如果有无效锁，从本地列表中移除
-                if (invalidLocks.Count > 0)
-                {
-                    foreach (var BillID in invalidLocks)
-                    {
-                        UnregisterHeldLock(BillID);
-                        _lockCache.ClearCache(BillID);
-                    }
-                }
-
-                _lastHeartbeat = DateTime.Now;
-
-                if (allLocksValid && heldLocks.Count > 0)
-                {
-                    _logger.LogDebug($"心跳成功: {heldLocks.Count} 个锁仍然有效");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "发送心跳时发生错误");
-            }
-        }
-
-        /// <summary>
-        /// 恢复孤儿锁
-        /// </summary>
-        /// <param name="state">状态对象</param>
-        private async void RecoverOrphanedLocks(object state)
-        {
-            if (_isShuttingDown)
+                _logger.LogDebug("用户未登录，跳过健康检查");
                 return;
+            }
 
             try
             {
-                if (MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo.UserInfo == null)
+                _logger.LogDebug("开始执行锁健康检查...");
+                
+                // 获取本地缓存中的所有活跃锁
+                var activeLocks = _lockCache.GetAllLockInfos()
+                    .Where(l => l.IsLocked && !l.IsExpired)
+                    .ToList();
+
+                if (activeLocks.Count == 0)
                 {
+                    _logger.LogDebug("当前没有活跃锁，跳过健康检查");
                     return;
                 }
 
-                var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                if (currentUserId == 0)
-                    return;
+                _logger.LogDebug("开始检查 {LockCount} 个活跃锁的状态", activeLocks.Count);
 
-                // 获取所有本地持有的锁
-                List<LockInfo> allHeldLocks;
-                lock (_heartbeatLock)
-                {
-                    allHeldLocks = _heldLocks.Values.ToList();
-                }
+                // 批量检查锁状态
+                var lockBillIds = activeLocks.Select(l => l.BillID).ToList();
+                var lockResponses = await _lockService.BatchCheckLockStatusAsync(lockBillIds);
 
-                if (allHeldLocks.Count == 0)
-                {
-                    _logger.LogDebug("当前没有持有锁，跳过锁状态检查");
-                    return;
-                }
+                var healthyCount = 0;
+                var invalidCount = 0;
 
-                _logger.LogDebug($"开始检查 {allHeldLocks.Count} 个锁的状态");
-
-                // 对每个锁进行状态验证和同步
-                foreach (var heldLock in allHeldLocks)
+                foreach (var lockInfo in activeLocks)
                 {
                     try
                     {
-                        // 检查锁是否仍然有效
-                        var lockResponse = await _lockService.CheckLockStatusAsync(heldLock.BillID);
-
-                        if (lockResponse == null || !lockResponse.IsSuccess)
+                        if (lockResponses.TryGetValue(lockInfo.BillID, out var response) &&
+                            response.IsSuccess && response.LockInfo != null)
                         {
-                            // 锁已不存在，从本地移除
-                            UnregisterHeldLock(heldLock.BillID);
-                            _lockCache.ClearCache(heldLock.BillID);
-                            _logger.LogDebug($"锁已不存在，已从本地移除: 单据 {heldLock.BillID}");
-                        }
-                        else if (lockResponse.LockInfo?.LockedUserId == currentUserId)
-                        {
-                            // 锁仍然属于当前用户，更新本地缓存和心跳时间
-                            _lockCache.UpdateCache(lockResponse.LockInfo);
-                            
-                            lock (_heartbeatLock)
+                            // 检查锁是否仍然有效
+                            if (response.LockInfo.IsLocked && 
+                                response.LockInfo.LockedUserId == lockInfo.LockedUserId &&
+                                response.LockInfo.SessionId == lockInfo.SessionId)
                             {
-                                if (_heldLocks.TryGetValue(heldLock.BillID, out var lockInfo))
-                                {
-                                    lockInfo.LastHeartbeat = DateTime.Now;
-                                    // 同步服务器端的锁信息到本地
-                                    lockInfo.SessionId = lockResponse.LockInfo.SessionId;
-                                    lockInfo.ExpireTime = lockResponse.LockInfo.ExpireTime;
-                                }
+                                healthyCount++;
+                                _logger.LogDebug("锁状态验证通过: 单据 {BillId}", lockInfo.BillID);
                             }
-                            _logger.LogDebug($"锁状态验证通过，已同步: 单据 {heldLock.BillID}");
+                            else
+                            {
+                                invalidCount++;
+                                _logger.LogWarning("锁已失效: 单据 {BillId}，原因：锁已被释放或被其他用户持有", lockInfo.BillID);
+                                _lockCache.ClearCache(lockInfo.BillID);
+                            }
                         }
                         else
                         {
-                            // 锁被其他用户持有，清除本地缓存
-                            UnregisterHeldLock(heldLock.BillID);
-                            _lockCache.ClearCache(heldLock.BillID);
-                            _logger.LogWarning($"锁已被其他用户持有，已清除本地缓存: 单据 {heldLock.BillID}, 持有用户: {lockResponse.LockInfo?.LockedUserName}");
+                            invalidCount++;
+                            _logger.LogWarning("锁状态检查失败: 单据 {BillId}", lockInfo.BillID);
+                            _lockCache.ClearCache(lockInfo.BillID);
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"检查锁状态失败: 单据 {heldLock.BillID}");
+                        _logger.LogError(ex, "检查锁状态时发生异常: 单据 {BillId}", lockInfo.BillID);
                     }
                 }
 
-                _logger.LogDebug("锁状态检查和同步完成");
+                _lastHealthCheck = DateTime.Now;
+                _logger.LogDebug("锁健康检查完成: 健康={HealthyCount}, 失效={InvalidCount}, 总数={TotalCount}", 
+                    healthyCount, invalidCount, activeLocks.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "恢复孤儿锁时发生错误");
+                _logger.LogError(ex, "执行锁健康检查时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 检查用户是否已登录
+        /// </summary>
+        /// <returns>是否已登录</returns>
+        private bool IsUserLoggedIn()
+        {
+            try
+            {
+                return MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo != null &&
+                       MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID > 0;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -326,68 +190,60 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
-                var heldLocks = GetHeldLocks();
-                if (heldLocks.Count == 0)
+                var activeLocks = _lockCache.GetAllLockInfos()
+                    .Where(l => l.IsLocked && !l.IsExpired)
+                    .ToList();
+
+                if (activeLocks.Count == 0)
                 {
                     _logger.LogDebug("没有需要释放的锁");
                     return;
                 }
 
-                _logger.LogDebug($"开始释放所有锁: {heldLocks.Count} 个, 原因: {reason}");
+                _logger.LogDebug("开始释放所有锁: {Count} 个, 原因: {Reason}", activeLocks.Count, reason);
 
                 var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                
+                // 批量释放锁
+                var lockBillIds = activeLocks.Select(l => l.BillID).ToList();
                 var releaseTasks = new List<Task>();
 
-                foreach (var heldLock in heldLocks)
+                foreach (var billId in lockBillIds)
                 {
                     var unlockTask = Task.Run(async () =>
                     {
                         try
                         {
-                            // 尝试正常解锁
-                            var response = await _lockService.UnlockBillAsync(heldLock.BillID);
-
+                            var response = await _lockService.UnlockBillAsync(billId);
                             if (response?.IsSuccess == true)
                             {
-                                _logger.LogDebug($"成功释放锁: 单据 {heldLock.BillID}, 原因: {reason}");
+                                _logger.LogDebug("成功释放锁: 单据 {BillId}, 原因: {Reason}", billId, reason);
                             }
                             else
                             {
-                                // 如果正常解锁失败，尝试强制解锁
-                                var forceResponse = await _lockService.UnlockBillAsync(heldLock.BillID);
-                                if (forceResponse?.IsSuccess == true)
-                                {
-                                    _logger.LogWarning($"强制释放锁: 单据 {heldLock.BillID}, 原因: {reason}");
-                                }
-                                else
-                                {
-                                    _logger.LogError($"释放锁失败: 单据 {heldLock.BillID}, 原因: {reason}");
-                                }
+                                _logger.LogWarning("释放锁失败: 单据 {BillId}, 原因: {Reason}, 错误: {Error}", 
+                                    billId, reason, response?.Message ?? "未知");
                             }
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, $"释放锁时发生异常: 单据 {heldLock.BillID}");
+                            _logger.LogError(ex, "释放锁时发生异常: 单据 {BillId}", billId);
                         }
                     });
-
                     releaseTasks.Add(unlockTask);
                 }
 
                 // 等待所有释放操作完成，最多等待30秒
                 await Task.WhenAll(releaseTasks).ConfigureAwait(false);
 
-                // 清空本地锁列表
-                lock (_heartbeatLock)
-                {
-                    _heldLocks.Clear();
-                }
+                // 清空本地缓存
+                _lockCache.ClearAllCache();
 
-                _logger.LogDebug($"所有锁释放完成: 原因: {reason}");
+                _logger.LogDebug("所有锁释放完成: 原因: {Reason}", reason);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"释放所有锁时发生错误: {reason}");
+                _logger.LogError(ex, "释放所有锁时发生错误: {Reason}", reason);
             }
         }
 
@@ -395,55 +251,27 @@ namespace RUINORERP.UI.Network.Services
         /// 检查锁健康状态
         /// </summary>
         /// <returns>健康状态信息</returns>
-        public async Task<LockHealthStatus> CheckLockHealthAsync()
+        public LockHealthStatus GetLockHealthStatus()
         {
             try
             {
-                var heldLocks = GetHeldLocks();
-                var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-
-
-                var healthyLocks = new List<long>();
-                var unhealthyLocks = new List<long>();
-                var orphanedLocks = heldLocks.FindAll(l => l.IsOrphaned).ConvertAll(l => l.BillID);
-
-                foreach (var heldLock in heldLocks)
-                {
-                    try
-                    {
-                        var lockResponse = await _lockService.CheckLockStatusAsync(heldLock.BillID);
-
-                        if (lockResponse?.IsSuccess == true &&
-                            lockResponse.LockInfo?.LockedUserId == currentUserId &&
-                            lockResponse.LockInfo?.SessionId == heldLock.SessionId)
-                        {
-                            healthyLocks.Add(heldLock.BillID);
-                        }
-                        else
-                        {
-                            unhealthyLocks.Add(heldLock.BillID);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"检查锁健康状态失败: 单据 {heldLock.BillID}");
-                        unhealthyLocks.Add(heldLock.BillID);
-                    }
-                }
+                var activeLocks = _lockCache.GetAllLockInfos()
+                    .Where(l => l.IsLocked && !l.IsExpired)
+                    .ToList();
 
                 return new LockHealthStatus
                 {
-                    TotalHeldLocks = heldLocks.Count,
-                    HealthyLocks = healthyLocks.Count,
-                    UnhealthyLocks = unhealthyLocks.Count,
-                    OrphanedLocks = orphanedLocks.Count,
-                    LastHeartbeat = _lastHeartbeat,
-                    Status = unhealthyLocks.Count == 0 ? "健康" : "异常"
+                    TotalHeldLocks = activeLocks.Count,
+                    HealthyLocks = activeLocks.Count,
+                    UnhealthyLocks = 0,
+                    OrphanedLocks = activeLocks.Count(l => l.IsOrphaned),
+                    LastHeartbeat = _lastHealthCheck,
+                    Status = "正常"
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "检查锁健康状态时发生错误");
+                _logger.LogError(ex, "获取锁健康状态时发生错误");
                 return new LockHealthStatus { Status = "检查失败" };
             }
         }
@@ -454,15 +282,17 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>恢复统计</returns>
         public LockRecoveryStatistics GetRecoveryStatistics()
         {
-            var heldLocks = GetHeldLocks();
+            var activeLocks = _lockCache.GetAllLockInfos()
+                .Where(l => l.IsLocked && !l.IsExpired)
+                .ToList();
 
             return new LockRecoveryStatistics
             {
-                HeldLocksCount = heldLocks.Count,
-                OrphanedLocksCount = heldLocks.Count(l => l.IsOrphaned),
-                LastHeartbeat = _lastHeartbeat,
-                HeartbeatInterval = TimeSpan.FromSeconds(30),
-                RecoveryInterval = TimeSpan.FromMinutes(1)
+                HeldLocksCount = activeLocks.Count,
+                OrphanedLocksCount = activeLocks.Count(l => l.IsOrphaned),
+                LastHeartbeat = _lastHealthCheck,
+                HeartbeatInterval = HealthCheckInterval,
+                RecoveryInterval = HealthCheckInterval
             };
         }
 
@@ -476,8 +306,7 @@ namespace RUINORERP.UI.Network.Services
                 _isShuttingDown = true;
 
                 // 清理定时器
-                _heartbeatTimer?.Dispose();
-                _lockRecoveryTimer?.Dispose();
+                _healthCheckTimer?.Dispose();
 
                 // 取消事件订阅
                 AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;

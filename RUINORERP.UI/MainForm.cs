@@ -1197,6 +1197,9 @@ namespace RUINORERP.UI
             {
                 System.Diagnostics.Debug.WriteLine($"客户端表结构初始化成功，共注册了 {tableSchemaManager.GetAllTableNames().Count} 个表");
             }
+            
+            // 初始化BillLockHelper静态服务引用(v2.1.1)
+            BaseForm.BillLockHelper.Initialize();
             this.Text = "企业数字化集成ERP ver3.2" + "-" + Program.ERPVersion;
             //MessageBox.Show("登录成功后，请要系统设置中添加公司基本资料。");
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))

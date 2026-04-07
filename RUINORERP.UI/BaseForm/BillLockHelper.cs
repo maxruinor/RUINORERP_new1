@@ -19,11 +19,36 @@ namespace RUINORERP.UI.BaseForm
     /// 3. 自动处理用户信息和会话
     /// 4. 提供友好的错误提示
     /// 
-    /// 版本: 1.0.0
+    /// 版本: 1.0.01
     /// 创建时间: 2025-01-25
+    /// v2.1.1: 添加静态服务引用,避免频繁DI获取
     /// </summary>
     public static class BillLockHelper
     {
+        #region 私有字段
+
+        // 静态缓存服务引用,避免每次调用都通过DI获取
+        private static Network.Services.ClientLocalLockCacheService _cacheService;
+        private static Network.Services.ClientLockManagementService _lockService;
+
+        /// <summary>
+        /// 初始化服务引用(应在应用启动时调用一次)
+        /// </summary>
+        public static void Initialize()
+        {
+            try
+            {
+                _cacheService = Startup.GetFromFac<Network.Services.ClientLocalLockCacheService>();
+                _lockService = Startup.GetFromFac<Network.Services.ClientLockManagementService>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"BillLockHelper初始化失败: {ex.Message}");
+            }
+        }
+
+        #endregion
+
         #region 公共方法
 
         /// <summary>
@@ -58,8 +83,8 @@ namespace RUINORERP.UI.BaseForm
                     return LockResponseFactory.CreateFailedResponse("单据编号不能为空");
                 }
 
-                // 获取锁管理服务
-                var lockService = Startup.GetFromFac<Network.Services.ClientLockManagementService>();
+                // 获取锁管理服务 - 使用静态引用避免DI开销
+                var lockService = _lockService ?? Startup.GetFromFac<Network.Services.ClientLockManagementService>();
                 if (lockService == null)
                 {
                     logger?.LogError("锁定单据失败: 锁管理服务未初始化");
@@ -106,8 +131,8 @@ namespace RUINORERP.UI.BaseForm
                     return LockResponseFactory.CreateFailedResponse("单据ID无效");
                 }
 
-                // 获取锁管理服务
-                var lockService = Startup.GetFromFac<Network.Services.ClientLockManagementService>();
+                // 获取锁管理服务 - 使用静态引用避免DI开销
+                var lockService = _lockService ?? Startup.GetFromFac<Network.Services.ClientLockManagementService>();
                 if (lockService == null)
                 {
                     logger?.LogError("解锁单据失败: 锁管理服务未初始化");
@@ -156,8 +181,8 @@ namespace RUINORERP.UI.BaseForm
                     return null;
                 }
 
-                // 获取锁管理服务
-                var lockService = Startup.GetFromFac<Network.Services.ClientLockManagementService>();
+                // 获取锁管理服务 - 使用静态引用避免DI开销
+                var lockService = _lockService ?? Startup.GetFromFac<Network.Services.ClientLockManagementService>();
                 if (lockService == null)
                 {
                     logger?.LogError("检查锁状态失败: 锁管理服务未初始化");
@@ -203,8 +228,8 @@ namespace RUINORERP.UI.BaseForm
                     return LockResponseFactory.CreateFailedResponse("单据ID无效");
                 }
 
-                // 获取锁管理服务
-                var lockService = Startup.GetFromFac<Network.Services.ClientLockManagementService>();
+                // 获取锁管理服务 - 使用静态引用避免DI开销
+                var lockService = _lockService ?? Startup.GetFromFac<Network.Services.ClientLockManagementService>();
                 if (lockService == null)
                 {
                     logger?.LogError("刷新锁状态失败: 锁管理服务未初始化");
@@ -234,8 +259,8 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 批量检查锁状态（性能优化）
-        /// 减少网络请求次数，提高批量操作效率
+        /// 批量检查锁状态（委托给服务层）
+        /// 使用ClientLockManagementService.BatchCheckLockStatusAsync实现
         /// </summary>
         /// <param name="billIds">单据ID数组</param>
         /// <param name="logger">日志记录器(可选)</param>
@@ -251,65 +276,48 @@ namespace RUINORERP.UI.BaseForm
                     return new Dictionary<long, LockInfo>();
                 }
 
-                // 限制批量查询大小，避免内存溢出
+                // 限制批量查询大小
                 var limitedIds = billIds.Take(100).ToArray();
                 
                 logger?.LogDebug("批量检查锁状态: 单据数量={Count}", limitedIds.Length);
                 
-                // 使用并行处理进行批量查询
-                var tasks = limitedIds.Select(async billId =>
+                // 获取锁管理服务
+                var lockService = Startup.GetFromFac<Network.Services.ClientLockManagementService>();
+                if (lockService == null)
                 {
-                    try
-                    {
-                        var lockInfo = await CheckBillLockStatusAsync(billId, 0, logger);
-                        return (billId, lockInfo);
-                    }
-                    catch (Exception ex)
-                    {
-                        logger?.LogWarning(ex, "批量检查单个单据失败: BillID={BillId}", billId);
-                        return (billId, (LockInfo)null);
-                    }
-                });
+                    logger?.LogError("批量检查锁状态失败: 锁管理服务未初始化");
+                    return new Dictionary<long, LockInfo>();
+                }
+
+                // 委托给服务层批量处理
+                var responses = await lockService.BatchCheckLockStatusAsync(limitedIds.ToList());
                 
-                var results = await Task.WhenAll(tasks);
-                
-                var successResults = results
-                    .Where(r => r.Item2 != null)
-                    .ToDictionary(r => r.Item1, r => r.Item2);
+                // 转换为字典返回
+                var result = new Dictionary<long, LockInfo>();
+                foreach (var kvp in responses)
+                {
+                    if (kvp.Value.IsSuccess && kvp.Value.LockInfo != null)
+                    {
+                        result[kvp.Key] = kvp.Value.LockInfo;
+                    }
+                }
 
                 logger?.LogDebug("批量检查锁状态完成: 成功数量={SuccessCount}, 总数={TotalCount}", 
-                    successResults.Count, limitedIds.Length);
+                    result.Count, limitedIds.Length);
 
-                return successResults;
+                return result;
             }
             catch (Exception ex)
             {
                 logger?.LogError(ex, "批量检查锁状态时发生异常: BillIDs={BillIds}", string.Join(",", billIds ?? Array.Empty<long>()));
-                
-                // 降级到单次查询
-                var fallbackResults = new Dictionary<long, LockInfo>();
-                foreach (var billId in billIds.Take(20))
-                {
-                    try
-                    {
-                        var lockInfo = await CheckBillLockStatusAsync(billId, 0, logger);
-                        if (lockInfo != null)
-                        {
-                            fallbackResults[billId] = lockInfo;
-                        }
-                    }
-                    catch (Exception innerEx)
-                    {
-                        logger?.LogWarning(innerEx, "批量检查降级查询失败: BillID={BillId}", billId);
-                    }
-                }
-                
-                return fallbackResults;
+                return new Dictionary<long, LockInfo>();
             }
         }
 
         /// <summary>
         /// 判断单据是否可编辑
+        /// 优化：优先使用本地缓存，减少网络请求
+        /// v2.1.1: 使用静态服务引用,避免频繁DI获取
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <param name="currentUserId">当前用户ID</param>
@@ -322,8 +330,25 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                var lockInfo = await CheckBillLockStatusAsync(billId, 0, logger);
-                
+                LockInfo lockInfo = null;
+
+                // 优先检查本地缓存 - 使用静态引用避免DI开销
+                if (_cacheService != null)
+                {
+                    var cachedInfo = await _cacheService.GetLockInfoAsync(billId);
+                    if (cachedInfo != null && !cachedInfo.IsExpired)
+                    {
+                        lockInfo = cachedInfo;
+                        logger?.LogDebug("使用本地缓存判断编辑权限: BillID={BillId}", billId);
+                    }
+                }
+
+                // 缓存未命中或已过期，则查询网络
+                if (lockInfo == null)
+                {
+                    lockInfo = await CheckBillLockStatusAsync(billId, 0, logger);
+                }
+
                 if (lockInfo == null)
                 {
                     // 未锁定,可编辑
@@ -344,7 +369,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 其他用户锁定,不可编辑
-                logger?.LogDebug("单据由其他用户锁定,不可编辑: BillID={BillId}, LockedUserID={LockedUserID}, CurrentUserID={CurrentUserID}", 
+                logger?.LogDebug("单据由其他用户锁定,不可编辑: BillID={BillId}, LockedUserID={LockedUserID}, CurrentUserID={CurrentUserID}",
                     billId, lockInfo.LockedUserId, currentUserId);
                 return false;
             }
@@ -358,53 +383,24 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 格式化锁定信息用于显示
+        /// v2.1.1: 委托给公共工具类,避免代码重复
         /// </summary>
         /// <param name="lockInfo">锁信息</param>
         /// <returns>格式化的锁定信息字符串</returns>
         public static string FormatLockInfoMessage(LockInfo lockInfo)
         {
-            if (lockInfo == null)
-                return "锁信息为空";
-
-            var lockTimeStr = lockInfo.LockTime.ToString("yyyy-MM-dd HH:mm:ss");
-            var lockDuration = CalculateLockDuration(lockInfo.LockTime);
-
-            return $"单据已被锁定\n\n" +
-                   $"📋 单据编号: {lockInfo.BillNo ?? "未知"}\n" +
-                   $"🆔 单据ID: {lockInfo.BillID}\n" +
-                   $"👤 锁定用户: {lockInfo.LockedUserName}\n" +
-                   $"⏰ 锁定时间: {lockTimeStr}\n" +
-                   $"⏱️ 已锁定时长: {lockDuration}\n" +
-                   $"💡 提示: 您可以点击按钮请求解锁";
+            return LockInfoFormatter.FormatLockInfoMessage(lockInfo);
         }
 
         /// <summary>
         /// 计算锁定时长
+        /// v2.1.1: 委托给公共工具类,避免代码重复
         /// </summary>
         /// <param name="lockTime">锁定时间</param>
         /// <returns>格式化的锁定时长字符串</returns>
         public static string CalculateLockDuration(DateTime lockTime)
         {
-            try
-            {
-                var duration = DateTime.Now - lockTime;
-                if (duration.TotalHours >= 1)
-                {
-                    return $"{(int)duration.TotalHours}小时{duration.Minutes}分钟";
-                }
-                else if (duration.TotalMinutes >= 1)
-                {
-                    return $"{duration.Minutes}分钟";
-                }
-                else
-                {
-                    return $"{duration.Seconds}秒";
-                }
-            }
-            catch
-            {
-                return "未知";
-            }
+            return LockInfoFormatter.CalculateLockDuration(lockTime);
         }
 
         #endregion

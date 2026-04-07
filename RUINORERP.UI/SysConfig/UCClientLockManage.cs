@@ -151,7 +151,7 @@ namespace RUINORERP.UI.SysConfig
         {
             try
             {
-                // 直接使用公共方法获取所有锁定信息，避免反射访问私有字段
+                // 直接使用公共方法获取所有锁定信息，避免反射访问私有字段1
                 return _lockCacheService.GetAllLockInfos();
             }
             catch (Exception ex)

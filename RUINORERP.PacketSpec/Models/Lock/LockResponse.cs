@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using RUINORERP.PacketSpec.Models.Core;
@@ -13,7 +13,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
     public class LockResponse : ResponseBase
     {
         /// <summary>
-        /// 锁定信息
+        /// 锁定信息1
         /// 包含锁定的详细数据
         /// </summary>
         public LockInfo LockInfo { get; set; } = new LockInfo();

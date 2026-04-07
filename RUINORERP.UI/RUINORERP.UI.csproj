@@ -1014,6 +1014,7 @@
     <Compile Include="Forms\DuplicateLoginDialog.Designer.cs">
       <DependentUpon>DuplicateLoginDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="BaseForm\LockInfoFormatter.cs" />
     <Compile Include="HelpSystem\Components\DefaultHelpContentGenerator.cs" />
     <Compile Include="HelpSystem\Components\FieldNameRecognizer.cs" />
     <Compile Include="HelpSystem\Components\HelpPanel.cs">

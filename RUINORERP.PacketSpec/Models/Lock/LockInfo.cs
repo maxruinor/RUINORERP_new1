@@ -1,4 +1,4 @@
-using RUINORERP.Global;
+﻿using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
 using System;
 using System.Runtime.Serialization;
@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 namespace RUINORERP.PacketSpec.Models.Lock
 {
     /// <summary>
-    /// 统一锁定信息类
+    /// 统一锁定信息类1
     /// </summary>
     public class LockInfo
     {

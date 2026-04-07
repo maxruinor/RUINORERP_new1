@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Models.Core;
+﻿using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -27,7 +27,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
     public class LockRequest : RequestBase
     {
         /// <summary>
-        /// 锁定信息
+        /// 锁定信息1
         /// 包含所有核心锁定数据
         /// </summary>
         public LockInfo LockInfo { get; set; } = new LockInfo();

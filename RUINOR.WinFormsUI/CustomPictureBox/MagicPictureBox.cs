@@ -2401,7 +2401,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             OriginalFileName = originalInfo.OriginalFileName, // 保留原始文件名
                             FileSize = GetImageFileSize(this.Image), // 更新文件大小
                             CreateTime = originalInfo.CreateTime,
-                            Metadata = originalInfo.Metadata,
+                            Metadata = originalInfo.Metadata != null ? new Dictionary<string, string>(originalInfo.Metadata) : new Dictionary<string, string>(),
                             FileType = originalInfo.FileType,
 
                         };
@@ -2413,7 +2413,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             OriginalFileName = originalInfo.OriginalFileName,
                             FileSize = GetImageFileSize(this.Image),
                             CreateTime = originalInfo.CreateTime,
-                            Metadata = originalInfo.Metadata,
+                            Metadata = originalInfo.Metadata != null ? new Dictionary<string, string>(originalInfo.Metadata) : new Dictionary<string, string>(),
                             FileType = originalInfo.FileType,
                             FileExtension = originalInfo.FileExtension,
 
@@ -2428,7 +2428,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         OriginalFileName = originalInfo.OriginalFileName,
                         FileSize = GetImageFileSize(this.Image),
                         CreateTime = originalInfo.CreateTime,
-                        Metadata = originalInfo.Metadata,
+                        Metadata = originalInfo.Metadata != null ? new Dictionary<string, string>(originalInfo.Metadata) : new Dictionary<string, string>(),
                         FileType = originalInfo.FileType,
                         FileExtension = originalInfo.FileExtension,
 

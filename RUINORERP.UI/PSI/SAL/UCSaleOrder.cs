@@ -1062,14 +1062,10 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 if (EditEntity.PayStatus == (int)PayStatus.部分预付)
                 {
-                    //如果订金大于零时，则不能是未付款
-                    if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
+                    // 验证部分预付时订金不能为0
+                    if (EditEntity.Deposit <= 0)
                     {
-
-                    }
-                    else
-                    {
-                        MessageBox.Show("部分预付时，请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("部分预付时，订金不能为0。请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return false;
                     }
 
@@ -1078,8 +1074,16 @@ namespace RUINORERP.UI.PSI.SAL
                         MessageBox.Show("部分预付时，订金不能大于等于总金额。请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return false;
                     }
-
-
+                }
+                
+                // 验证全额预付时订金不能为0
+                if (EditEntity.PayStatus == (int)PayStatus.全额预付)
+                {
+                    if (EditEntity.Deposit <= 0)
+                    {
+                        MessageBox.Show("全额预付时，订金不能为0。请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return false;
+                    }
                 }
             }
 

@@ -25,17 +25,15 @@ namespace RUINORERP.Server.Helpers
             // 确保根存储目录存在
             if (!string.IsNullOrEmpty(_serverConfig.FileStoragePath))
             {
-                var resolvedPath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
-
                 // 安全检查：确保存储路径不在程序运行目录或其子目录中
-                if (IsPathInProgramDirectory(resolvedPath))
+                if (IsPathInProgramDirectory(_serverConfig.FileStoragePath))
                 {
-                    throw new InvalidOperationException($"文件存储路径 '{resolvedPath}' 不能设置在程序运行目录或其子目录中。请选择其他目录以防止重新部署时误删文件。");
+                    throw new InvalidOperationException($"文件存储路径 '{_serverConfig.FileStoragePath}' 不能设置在程序运行目录或其子目录中。请选择其他目录以防止重新部署时误删文件。");
                 }
 
-                if (!Directory.Exists(resolvedPath))
+                if (!Directory.Exists(_serverConfig.FileStoragePath))
                 {
-                    Directory.CreateDirectory(resolvedPath);
+                    Directory.CreateDirectory(_serverConfig.FileStoragePath);
                 }
             }
 
@@ -43,7 +41,7 @@ namespace RUINORERP.Server.Helpers
         }
 
         /// <summary>
-        /// 获取存储路径(解析环境变量后的绝对路径)
+        /// 获取存储路径
         /// </summary>
         /// <returns>存储路径</returns>
         public static string GetStoragePath()
@@ -51,21 +49,17 @@ namespace RUINORERP.Server.Helpers
             if (_serverConfig == null || string.IsNullOrEmpty(_serverConfig.FileStoragePath))
                 return string.Empty;
 
-            return ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
+            return _serverConfig.FileStoragePath;
         }
         
         /// <summary>
-        /// 解析路径中的环境变量
+        /// 解析路径（保留方法兼容性，不再解析环境变量）
         /// </summary>
-        /// <param name="path">包含环境变量的路径</param>
-        /// <returns>解析后的实际路径</returns>
+        /// <param name="path">路径</param>
+        /// <returns>原路径</returns>
         public static string ResolveEnvironmentVariables(string path)
         {
-            if (string.IsNullOrEmpty(path))
-                return path;
-                
-            // 解析路径中的环境变量（如 %APPDATA%）
-            return System.Environment.ExpandEnvironmentVariables(path);
+            return path;
         }
         
      
@@ -102,8 +96,7 @@ namespace RUINORERP.Server.Helpers
             try
             {
                 // 计算根目录使用情况
-                var resolvedRootPath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
-                var rootDir = new DirectoryInfo(resolvedRootPath);
+                var rootDir = new DirectoryInfo(_serverConfig.FileStoragePath);
                 if (rootDir.Exists)
                 {
                     usageInfo.TotalSize = GetDirectorySize(rootDir);
@@ -243,10 +236,8 @@ namespace RUINORERP.Server.Helpers
                 if (_serverConfig == null || string.IsNullOrEmpty(_serverConfig.FileStoragePath))
                     return absolutePath;
 
-                var resolvedRootPath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
-                
                 // 确保路径格式一致
-                var rootUri = new Uri(resolvedRootPath.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
+                var rootUri = new Uri(_serverConfig.FileStoragePath.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
                 var fileUri = new Uri(absolutePath);
                 
                 // 如果文件路径在根目录下，返回相对路径
@@ -285,10 +276,8 @@ namespace RUINORERP.Server.Helpers
                 if (_serverConfig == null || string.IsNullOrEmpty(_serverConfig.FileStoragePath))
                     return relativePath;
 
-                var resolvedRootPath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
-                
                 // 组合根目录和相对路径
-                var absolutePath = Path.Combine(resolvedRootPath, relativePath);
+                var absolutePath = Path.Combine(_serverConfig.FileStoragePath, relativePath);
                 
                 // 规范化路径（移除多余的..和.）
                 return Path.GetFullPath(absolutePath);

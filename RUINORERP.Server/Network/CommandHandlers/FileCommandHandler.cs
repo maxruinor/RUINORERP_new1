@@ -55,26 +55,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly HasAttachmentSyncService _hasAttachmentSyncService;
         private readonly ImageCacheService _imageCacheService;
         /// <summary>
-        /// 解析路径中的环境变量
-        /// 支持 %ENV_VAR% 的格式
+        /// 解析路径（不再解析环境变量，保留方法兼容性）
         /// </summary>
-        /// <param name="path">包含环境变量的路径</param>
-        /// <returns>解析后的实际路径</returns>
+        /// <param name="path">路径</param>
+        /// <returns>原路径</returns>
         private string ResolveEnvironmentVariables(string path)
         {
-            if (string.IsNullOrEmpty(path))
-                return path;
-
-            try
-            {
-                // 统一使用System.Environment.ExpandEnvironmentVariables
-                return System.Environment.ExpandEnvironmentVariables(path);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "解析环境变量失败，使用原始路径: {Path}", path);
-                return path;
-            }
+            return path;
         }
 
 
@@ -95,7 +82,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             _sessionService = sessionService;
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;
-            // 统一路径初始化逻辑
+            // 统一路径初始化逻辑1
             try
             {
                 _serverConfig = Startup.GetFromFac<ServerGlobalConfig>();

@@ -491,22 +491,10 @@ namespace RUINORERP.Server
                 // 创建一个可变的配置对象，用于存储最新配置
                 var serverConfig = monitor.CurrentValue;
 
-                // 解析路径中的环境变量，确保路径正确
-                if (!string.IsNullOrEmpty(serverConfig.FileStoragePath))
-                {
-                    serverConfig.FileStoragePath = Environment.ExpandEnvironmentVariables(serverConfig.FileStoragePath);
-                }
-
                 // 订阅配置变更事件，实时更新单例实例属性
                 // 注意：由于是单例注册，OnChange只会被调用一次，不会造成内存泄漏
                 monitor.OnChange(newConfig =>
                 {
-                    // 解析新配置的环境变量
-                    if (!string.IsNullOrEmpty(newConfig.FileStoragePath))
-                    {
-                        newConfig.FileStoragePath = Environment.ExpandEnvironmentVariables(newConfig.FileStoragePath);
-                    }
-                    
                     // 使用反射更新实例属性而非替换引用
                     foreach (var property in typeof(ServerGlobalConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance))
                     {

@@ -300,7 +300,7 @@ namespace RUINORERP.Business.Config
             // 验证服务器配置中的文件存储路径
             if (config is ServerGlobalConfig serverConfig)
             {
-                // 验证FileStoragePath是否为空
+                // 验证FileStoragePath是否为空1
                 if (string.IsNullOrEmpty(serverConfig.FileStoragePath))
                 {
                     result.AddError("FileStoragePath", "文件存储路径(FileStoragePath)不能为空");

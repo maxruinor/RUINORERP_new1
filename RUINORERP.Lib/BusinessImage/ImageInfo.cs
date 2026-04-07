@@ -10,6 +10,14 @@ namespace RUINORERP.Lib.BusinessImage
     public class ImageInfo
     {
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        public ImageInfo()
+        {
+            Metadata = new Dictionary<string, string>();
+        }
+
+        /// <summary>
         /// 图片ID
         /// </summary>
         public long FileId { get; set; }

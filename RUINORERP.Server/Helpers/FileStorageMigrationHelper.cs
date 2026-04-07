@@ -17,7 +17,7 @@ namespace RUINORERP.Server.Helpers
     public static class FileStorageMigrationHelper
     {
         /// <summary>
-        /// 迁移所有文件存储路径为相对路径
+        /// 迁移所有文件存储路径为相对路径1
         /// </summary>
         /// <param name="serverConfig">服务器配置</param>
         /// <param name="fileStorageInfoController">文件信息控制器</param>
@@ -40,8 +40,6 @@ namespace RUINORERP.Server.Helpers
 
             try
             {
-                var resolvedRootPath = FileStorageHelper.ResolveEnvironmentVariables(serverConfig.FileStoragePath);
-
                 // 获取所有文件记录
                 var fileInfos = await fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active);
 
@@ -57,7 +55,7 @@ namespace RUINORERP.Server.Helpers
                 {
                     if (fileInfoObj is tb_FS_FileStorageInfo fileInfo)
                     {
-                        await ProcessFileRecord(fileInfo, resolvedRootPath, fileStorageInfoController, result, logger);
+                        await ProcessFileRecord(fileInfo, serverConfig.FileStoragePath, fileStorageInfoController, result, logger);
                     }
                 }
 

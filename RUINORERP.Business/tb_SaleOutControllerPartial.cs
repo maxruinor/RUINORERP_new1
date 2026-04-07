@@ -480,14 +480,16 @@ namespace RUINORERP.Business
                     );
 
                     // 批量预加载价格记录（1 次查询替代 N 次）
+                    // 使用 ToLookup 支持同一产品多条历史价格记录（业务员对同一产品可能有多次不同价格）
                     var prodDetailIds = entity.tb_SaleOutDetails.Select(c => c.ProdDetailID).Distinct().ToList();
                     var priceRecordList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_PriceRecord>()
                         .Where(c => c.Employee_ID == entity.tb_saleorder.Employee_ID &&
                                     prodDetailIds.Contains(c.ProdDetailID))
+                        .OrderByDescending(c => c.SaleDate) // 按时间倒序，方便获取最新价格
                         .ToListAsync();
 
-                    var priceRecordDict = priceRecordList.ToDictionary(p => p.ProdDetailID);
+                    var priceRecordLookup = priceRecordList.ToLookup(p => p.ProdDetailID);
                     #endregion
 
                     // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
@@ -537,11 +539,16 @@ namespace RUINORERP.Business
                             //注意这里的人应该是业务员的ID。销售订单的录入人，不是审核人。也不是出库单的人。
 
                             tb_PriceRecord priceRecord = null;
-                            // ✅ 从预加载的字典中获取，不再访问数据库（死锁优化）
-                            if (!priceRecordDict.TryGetValue(child.ProdDetailID, out priceRecord))
+                            // ✅ 从预加载的 Lookup 中获取最新价格（按时间倒序，第一条即为最新）
+                            var priceRecordsForProduct = priceRecordLookup[child.ProdDetailID];
+                            if (priceRecordsForProduct == null || !priceRecordsForProduct.Any())
                             {
                                 priceRecord = new tb_PriceRecord();
                                 priceRecord.ProdDetailID = child.ProdDetailID;
+                            }
+                            else
+                            {
+                                priceRecord = priceRecordsForProduct.First();
                             }
                             priceRecord.Employee_ID = entity.tb_saleorder.Employee_ID;
                             if (priceRecord.SalePrice != child.TransactionPrice)
@@ -1195,7 +1202,7 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        _logger.LogWarning($"销售出库单审核：事务状态异常，可能已提交或回滚，当前状态: {transactionState}");
+                        _logger.LogWarning($"销售出库单审核：事务状态异常，可能已提交或回滚,或在事务启动前就进入异常代码块了，当前状态: {transactionState}");
                     }
                 }
                 catch (Exception rollbackEx)

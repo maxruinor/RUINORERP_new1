@@ -48,9 +48,6 @@ namespace RUINORERP.Business
             // 文件存储配置验证
             RuleFor(x => x.FileStoragePath).NotEmpty().WithMessage("文件存储路径不能为空");
             RuleFor(x => x.FileStoragePath).Must(BeValidPathFormat).WithMessage("无效的文件存储路径格式");
-            RuleFor(x => x.FileStoragePath).Must(BeValidPathWithEnvironmentVariable)
-                .When(x => x.FileStoragePath.Contains("%"))
-                .WithMessage("文件存储路径中的环境变量格式无效");
             RuleFor(x => x.FileStoragePath).Must(NotBeInProgramDirectory)
                 .WithMessage("文件存储路径不能设置在程序运行目录或其子目录中，以防止重新部署时误删文件");
 
@@ -132,19 +129,6 @@ namespace RUINORERP.Business
             }
 
             return true;
-        }
-
-        // 环境变量格式验证
-        private bool BeValidPathWithEnvironmentVariable(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                return false;
-
-            // 检查环境变量格式是否正确 %VAR_NAME%
-            var envVarPattern = new Regex(@"%[a-zA-Z0-9_]+%");
-            var matches = envVarPattern.Matches(path);
-
-            return matches.Count > 0;
         }
 
         // 相对路径验证

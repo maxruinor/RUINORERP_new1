@@ -1098,7 +1098,7 @@ namespace RUINORERP.Server.Controls
                 case nameof(ServerGlobalConfig.EnableLogging):
                     return true;
                 case nameof(ServerGlobalConfig.FileStoragePath):
-                    return "D:\\RUINORERP\\FileStorage";
+                    return @"D:\RUINORERP_FileStorage";
                 case nameof(ServerGlobalConfig.MaxFileSizeMB):
                     return 10;
 
@@ -1108,7 +1108,7 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
-        /// 获取系统全局配置特定属性的默认值
+        /// 获取系统全局配置特定属性的默认值1
         /// </summary>
         private object GetSystemGlobalConfigDefaultValue(string propertyName, Type propertyType)
         {

@@ -1422,7 +1422,7 @@ namespace RUINORERP.Server
                 // 已在ServerConfigValidator中实现，因此此处保持额外的保障逻辑
                 PrintInfoLog("正在执行额外的文件存储路径验证...");
                 IConfigManagerService configManagerService = Startup.GetFromFac<IConfigManagerService>();
-                // 环境变量路径解析（作为额外的验证保障）
+                // 环境变量路径解析（作为额外的验证保障）1
                 string resolvedPath = configManagerService.ResolveEnvironmentVariables(serverConfig.FileStoragePath);
 
                 if (!string.IsNullOrEmpty(resolvedPath))

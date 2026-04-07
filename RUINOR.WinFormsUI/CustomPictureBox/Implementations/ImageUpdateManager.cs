@@ -57,6 +57,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
 
             lock (_lockObject)
             {
+                // 确保 Metadata 字典已初始化
+                if (imageInfo.Metadata == null)
+                {
+                    imageInfo.Metadata = new Dictionary<string, string>();
+                }
+
                 // 无论是否有哈希值，都标记为需要更新
                 imageInfo.Metadata["UpdateMarker"] = ImageProcessingConstants.UpdateMarker;
                 imageInfo.Status = ImageStatus.PendingUpload;
@@ -112,6 +118,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
         /// <returns>是否有更新标记</returns>
         private bool HasUpdateMarker(ImageInfo imageInfo)
         {
+            // 确保 Metadata 字典不为 null
+            if (imageInfo.Metadata == null)
+                return false;
+
             return imageInfo.Metadata.TryGetValue("UpdateMarker", out var marker) && marker == ImageProcessingConstants.UpdateMarker;
         }
 
@@ -149,7 +159,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
 
             lock (_lockObject)
             {
-                imageInfo.Metadata.Clear();
+                // 确保 Metadata 字典已初始化后再清空
+                if (imageInfo.Metadata != null)
+                {
+                    imageInfo.Metadata.Clear();
+                }
+                else
+                {
+                    imageInfo.Metadata = new Dictionary<string, string>();
+                }
+                
                 if (!string.IsNullOrEmpty(imageInfo.HashValue))
                 {
                     _imagesNeedingUpdate.Remove(imageInfo.HashValue);
@@ -166,7 +185,15 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             {
                 foreach (var imageInfo in _imagesNeedingUpdate.Values)
                 {
-                    imageInfo.Metadata.Clear();
+                    // 确保 Metadata 字典已初始化后再清空
+                    if (imageInfo.Metadata != null)
+                    {
+                        imageInfo.Metadata.Clear();
+                    }
+                    else
+                    {
+                        imageInfo.Metadata = new Dictionary<string, string>();
+                    }
                 }
                 _imagesNeedingUpdate.Clear();
             }

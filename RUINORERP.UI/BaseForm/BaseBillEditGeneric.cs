@@ -5463,29 +5463,28 @@ namespace RUINORERP.UI.BaseForm
                     details = new List<C>(detailentity);
 
                     // 明细中有产品的才去判断需要产品ID大于0的记录
-                    bool ContainDetail = false;
-                    if (typeof(C).ContainsProperty(prodDetailIDName))
+                    bool containDetail = typeof(C).ContainsProperty(prodDetailIDName);
+
+                    // 内部过滤：移除无效明细（ProdDetailID <= 0），不向用户显示提示
+                    if (containDetail)
                     {
-                        ContainDetail = true;
+                        details = details.Where(t =>
+                        {
+                            var prop = t.GetType().GetProperty(prodDetailIDName);
+                            if (prop != null)
+                            {
+                                var value = prop.GetValue(t);
+                                if (value != null && long.TryParse(value.ToString(), out long prodDetailId))
+                                {
+                                    return prodDetailId > 0;
+                                }
+                            }
+                            return false;
+                        }).ToList();
                     }
 
-                    // 统计有效明细数量（ProdDetailID大于0）
-                    int validDetailCount = details.Count(t =>
-                    {
-                        var prop = t.GetType().GetProperty(prodDetailIDName);
-                        if (prop != null)
-                        {
-                            var value = prop.GetValue(t);
-                            if (value != null)
-                            {
-                                return long.TryParse(value.ToString(), out long prodDetailId) && prodDetailId > 0;
-                            }
-                        }
-                        return false;
-                    });
-
-                    // 必须要有子表的合法数据，否则无法修复性保存
-                    if (validDetailCount == 0 && ContainDetail)
+                    // 过滤后无有效数据，提示用户
+                    if (details.Count == 0 && containDetail)
                     {
                         MessageBox.Show(
                             "修复性保存要求必须有子表的合法数据。\n\n" +

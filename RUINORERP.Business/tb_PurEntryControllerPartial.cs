@@ -260,7 +260,7 @@ namespace RUINORERP.Business
 
                 #region 【优化】批量预加载采购价格记录，避免循环内查询（事务外）
                 // 使用 ToLookup 支持同一产品多条历史价格记录
-                if (entity.tb_purorder != null && entity.tb_purorder.Employee_ID.HasValue && prodDetailIds.Count > 0)
+                if (entity.tb_purorder != null && entity.tb_purorder.Employee_ID > 0 && prodDetailIds.Count > 0)
                 {
                     var priceRecordList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_PriceRecord>()
@@ -458,7 +458,7 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
                 }
-                
+
                 // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
                 invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
 
@@ -663,7 +663,7 @@ namespace RUINORERP.Business
 
                 #region 【优化】批量预加载采购价格记录，避免循环内查询（事务外）
                 // 使用 ToLookup 支持同一产品多条历史价格记录
-                if (entity.tb_purorder != null && entity.tb_purorder.Employee_ID.HasValue && prodDetailIds.Count > 0)
+                if (entity.tb_purorder != null && entity.tb_purorder.Employee_ID > 0 && prodDetailIds.Count > 0)
                 {
                     var priceRecordList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_PriceRecord>()
@@ -797,7 +797,7 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
                 }
-                
+
                 // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
                 invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
 

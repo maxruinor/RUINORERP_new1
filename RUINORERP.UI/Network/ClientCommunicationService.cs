@@ -2090,8 +2090,14 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 {
                     if (packet.ExecutionContext.Token == null)
                     {
+                        // 记录详细日志以便排查问题
+                        _logger?.LogWarning("Token附加失败: CommandId={CommandId}, TokenInfo={TokenInfo}, TokenManager={TokenManagerStatus}",
+                            commandId.ToString(),
+                            _tokenManager?.TokenStorage != null ? "已初始化" : "未初始化",
+                            _tokenManager != null ? "可用" : "不可用");
+                        
                         // 附加令牌
-                        throw new Exception($"发送请求失败: 没有合法授权令牌,指令：{commandId.ToString()}");
+                        throw new Exception($"发送请求失败: 没有合法授权令牌, 指令：{commandId.ToString()}");
                     }
                 }
                 if (packet.CommandId == SystemCommands.Heartbeat)
@@ -2569,7 +2575,15 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 }
                 catch (Exception ex)
                 {
-                    _clientEventManager.OnErrorOccurred(new Exception($"带响应命令发送失败: {ex.Message}", ex));
+                    // 记录详细的错误日志，包括完整的堆栈跟踪
+                    _logger?.LogError(ex, "发送带响应命令失败: CommandId={CommandId}, RequestId={RequestId}, RetryCount={RetryCount}, Error={ErrorMessage}",
+                        commandId.ToString(), request?.RequestId, retryCount, ex.Message);
+                    
+                    // 触发错误事件，包含更详细的信息
+                    _clientEventManager.OnErrorOccurred(new Exception(
+                        $"带响应命令发送失败: CommandId={commandId.Name}, RequestId={request?.RequestId}, 错误信息={ex.Message}",
+                        ex));
+                    
                     // 如果是操作取消异常，重新抛出1
                     if (ex is OperationCanceledException)
                     {

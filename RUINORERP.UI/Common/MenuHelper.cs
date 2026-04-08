@@ -390,7 +390,7 @@ namespace RUINORERP.UI.Common
             }
             appContext.log.ModName = pr.MenuType + "=>" + pr.CaptionCN;
             appContext.log.Path = pr.ClassPath;
-            appContext.log.ActionName = "可取按钮动作等，或注入？";
+            appContext.log.ActionName = "加载菜单";
             switch (pr.MenuType)
             {
                 case "行为菜单":

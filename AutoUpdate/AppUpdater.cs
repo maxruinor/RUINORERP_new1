@@ -1,5 +1,4 @@
 using System;
-using System.Web;
 using System.IO;
 using System.Net;
 using System.Xml;
@@ -10,7 +9,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using System.Linq;
-using System.Xml.Serialization;
 
 namespace AutoUpdate
 {
@@ -57,11 +55,7 @@ namespace AutoUpdate
         #region 成员变量定义
         private string _updaterUrl;
         private bool disposed = false;
-        private IntPtr handle;
         private Component component = new Component();
-        [System.Runtime.InteropServices.DllImport("Kernel32")]
-        private extern static Boolean CloseHandle(IntPtr handle);
-
 
         public string UpdaterUrl
         {
@@ -75,33 +69,26 @@ namespace AutoUpdate
         /// </summary>
         public AppUpdater()
         {
-            this.handle = handle;
             // 初始化SkipVersionManager
             skipVersionManager = new SkipVersionManager();
         }
+        
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        private void Dispose(bool disposing)
+        
+        protected virtual void Dispose(bool disposing)
         {
-            if (!this.disposed)
+            if (!disposed)
             {
                 if (disposing)
                 {
-
-                    component.Dispose();
+                    component?.Dispose();
                 }
-                CloseHandle(handle);
-                handle = IntPtr.Zero;
+                disposed = true;
             }
-            disposed = true;
-        }
-
-        ~AppUpdater()
-        {
-            Dispose(false);
         }
 
 
@@ -150,19 +137,12 @@ namespace AutoUpdate
             // 获取版本号
             this.NewVersion = serverXmlFiles.GetNodeValue("AutoUpdater/Application/Version").ToString();
 
-            // 检查版本是否被跳过
-            if (!string.IsNullOrEmpty(appId) && skipVersionManager.IsVersionSkipped(this.NewVersion, appId))
-            {
-                updateFileList = new Hashtable();
-                return 0; // 版本已被跳过，返回0表示没有更新
-            }
-
-            // 检查是否为强制更新
+            // 检查版本是否被跳过（支持强制更新）
             bool forceUpdate = IsCommandLineArgumentPresent("--force");
             if (!forceUpdate && !string.IsNullOrEmpty(appId) && skipVersionManager.IsVersionSkipped(this.NewVersion, appId))
             {
                 updateFileList = new Hashtable();
-                return 0; // 不是强制更新且版本被跳过，返回0表示没有更新
+                return 0;
             }
 
             int k = 0;
@@ -418,65 +398,37 @@ namespace AutoUpdate
             //下载从服务器返回的版本信息xml文件
             string serverXmlFile = System.IO.Path.Combine(downpath, "AutoUpdaterList.xml");
 
-            WebResponse response = null;
-            Stream stream = null;
-            StreamReader reader = null;
-
             try
             {
-
                 HttpWebRequest request = WebRequest.Create(UpdaterUrl) as HttpWebRequest;
                 request.Method = "GET";
                 request.Accept = "*/*";
                 request.UserAgent = "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET4.0C; .NET4.0E)";
                 request.KeepAlive = false;
-                request.Timeout = 36000;//超时时间
-                // 接收返回的页面
-                response = request.GetResponse() as HttpWebResponse;
- 
-                stream = response.GetResponseStream();
-
-                // 【优化】增大缓冲区到 64KB，提升下载速度
-                byte[] buffer = new byte[65536]; // 64KB 缓冲区（原来是 1KB）
-
-
-
-
-                Stream outStream = File.Create(serverXmlFile);
-                Stream inStream = response.GetResponseStream();
-
-                int l;
-                do
+                request.Timeout = 36000;
+                
+                using (WebResponse response = request.GetResponse())
+                using (Stream inStream = response.GetResponseStream())
+                using (Stream outStream = File.Create(serverXmlFile))
                 {
-                    l = inStream.Read(buffer, 0, buffer.Length);
-                    if (l > 0)
-                        outStream.Write(buffer, 0, l);
+                    // 【优化】增大缓冲区到 64KB，提升下载速度
+                    byte[] buffer = new byte[65536];
+                    int bytesRead;
+                    
+                    while ((bytesRead = inStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        outStream.Write(buffer, 0, bytesRead);
+                    }
                 }
-                while (l > 0);
-
-                outStream.Close();
-                inStream.Close();
             }
             catch (WebException e)
             {
                 System.Diagnostics.Debug.WriteLine("下载失败，请联系系统管理员获取更多信息：" + e);
-                // MessageBox.Show("下载失败，请联系系统管理员获取更多信息：" + e, "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
             }
             catch (IOException e)
             {
                 System.Diagnostics.Debug.WriteLine("下载失败，请联系系统管理员获取更多信息：" + e);
-                //  MessageBox.Show("下载失败，请联系系统管理员获取更多信息：" + e, "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
             }
-            finally
-            {
-                if (reader != null) reader.Close();
-                if (stream != null) stream.Close();
-                if (response != null) response.Close();
-            }
-
-
         }
 
 

@@ -16,6 +16,13 @@ namespace AutoUpdate
     /// </summary>
     public class SelfUpdateHelper
     {
+        #region 常量定义
+        private const int PROCESS_EXIT_WAIT_MS = 2000;      // 进程退出后额外等待时间
+        private const int FILE_HANDLE_RELEASE_WAIT_MS = 5000; // 文件句柄释放等待时间
+        private const int UPDATER_STARTUP_WAIT_MS = 1000;   // 更新器启动确认等待时间
+        private const int MAX_WAIT_ATTEMPTS = 10;           // 最大等待尝试次数
+        private const int WAIT_INTERVAL_MS = 500;           // 每次等待间隔
+        #endregion
         /// <summary>
         /// 启动AutoUpdateUpdater来更新AutoUpdate程序自身
         /// </summary>
@@ -76,9 +83,9 @@ namespace AutoUpdate
                 WriteLog("AutoUpdateLog.txt", $"创建配置文件成功: {configFilePath}");
                 WriteLog("AutoUpdateLog.txt", $"配置内容: sourceDir={newFilesPath}, targetDir={targetDir}, exeName={Path.GetFileName(updaterExePath)}");
                 
-                // 【新增】在启动 AutoUpdateUpdater 之前，额外等待确保当前进程完全释放资源
-                WriteLog("AutoUpdateLog.txt", "[启动更新器] 等待2秒，确保当前进程资源完全释放...");
-                Thread.Sleep(2000);
+                // 在启动 AutoUpdateUpdater 之前，确保当前进程完全释放资源
+                WriteLog("AutoUpdateLog.txt", "[启动更新器] 等待进程资源完全释放...");
+                Thread.Sleep(PROCESS_EXIT_WAIT_MS);
                 
                 // 强制垃圾回收
                 GC.Collect();
@@ -101,8 +108,8 @@ namespace AutoUpdate
                 {
                     WriteLog("AutoUpdateLog.txt", "AutoUpdateUpdater已成功启动");
                     
-                    // 【新增】等待 AutoUpdateUpdater 进程确认启动
-                    Thread.Sleep(1000);
+                    // 等待 AutoUpdateUpdater 进程确认启动
+                    Thread.Sleep(UPDATER_STARTUP_WAIT_MS);
                     
                     return true;
                 }
@@ -264,13 +271,9 @@ namespace AutoUpdate
             // 等待主进程退出，采用逐步等待策略
             WriteLog(logFilePath, "等待主进程退出...");
             
-            // 尝试等待多次，每次间隔检查进程状态
-            int maxWaitAttempts = 10;
-            int waitInterval = 500; // 500毫秒
-            
-            for (int i = 0; i < maxWaitAttempts; i++)
+            for (int i = 0; i < MAX_WAIT_ATTEMPTS; i++)
             {
-                Thread.Sleep(waitInterval);
+                Thread.Sleep(WAIT_INTERVAL_MS);
                 
                 // 检查主进程是否已经退出
                 string currentProcessName = Path.GetFileNameWithoutExtension(exeName);
@@ -281,7 +284,7 @@ namespace AutoUpdate
                 
                 if (runningProcesses.Length == 0)
                 {
-                    WriteLog(logFilePath, $"主进程已退出，等待时间: {(i + 1) * waitInterval}ms");
+                    WriteLog(logFilePath, $"主进程已退出，等待时间: {(i + 1) * WAIT_INTERVAL_MS}ms");
                     break;
                 }
                 else
@@ -289,7 +292,7 @@ namespace AutoUpdate
                     WriteLog(logFilePath, $"等待主进程退出... 剩余进程数: {runningProcesses.Length}, 尝试次数: {i + 1}");
                 }
                 
-                if (i == maxWaitAttempts - 1)
+                if (i == MAX_WAIT_ATTEMPTS - 1)
                 {
                     WriteLog(logFilePath, "警告: 主进程未完全退出，但将继续执行更新");
                 }

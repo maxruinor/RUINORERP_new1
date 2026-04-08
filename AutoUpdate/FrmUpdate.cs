@@ -1150,8 +1150,13 @@ namespace AutoUpdate
             }
             Next++;
             btnNext.Enabled = true;
-            //lbState.Text = "准备就绪，即将开始下载文件";
-            InvalidateControl();
+            
+            // 【修复】确保在UI线程中调用InvalidateControl
+            this.Invoke(new Action(() =>
+            {
+                InvalidateControl();
+            }));
+            
             this.Cursor = Cursors.Default;
         }
         //创建目录
@@ -2194,9 +2199,13 @@ namespace AutoUpdate
                     pbDownFile.Maximum = 100;
                 }
 
+                // 强制刷新进度条确保显示
+                pbDownFile.Value = 0;
+                pbDownFile.Refresh();
+                lbState.Refresh();
+
                 // 更新UI状态
                 lbState.Text = "正在准备更新文件，请稍候...";
-                pbDownFile.Visible = true;
                 SafeSetProgressValue(0);
                 Application.DoEvents();
                 
@@ -2234,23 +2243,47 @@ namespace AutoUpdate
                 // 【优化】在复制文件前优雅地终止主进程
                 KillProcessBeforeApply();
                 
+                // 计算总文件数用于进度显示
+                int totalFilesToCopy = 0;
+                foreach (var versionDir in versionDirList)
+                {
+                    string versionPath = Path.Combine(tempUpdatePath, versionDir);
+                    if (Directory.Exists(versionPath))
+                    {
+                        totalFilesToCopy += Directory.GetFiles(versionPath, "*", SearchOption.AllDirectories).Length;
+                    }
+                }
+                
+                // 如果没有文件，至少显示进度
+                if (totalFilesToCopy == 0) totalFilesToCopy = 1;
+                
                 // 计算总进度
                 int totalVersions = versionDirList.Count;
                 int currentVersionProgress = 0;
+                int processedFiles = 0;
 
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
                     // 更新整体进度
                     currentVersionProgress++;
-                    int overallProgress = (currentVersionProgress * 100) / Math.Max(totalVersions, 1);
-                    lbState.Text = $"正在复制版本 {currentVersionProgress}/{totalVersions} 的文件...";
-                    SafeSetProgressValue(Math.Min(overallProgress, 100));
+                    
+                    // 计算当前版本的文件数
+                    string sourcePath = Path.Combine(tempUpdatePath, versionDirList[i]);
+                    int versionFileCount = 0;
+                    if (Directory.Exists(sourcePath))
+                    {
+                        versionFileCount = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Length;
+                    }
+                    processedFiles += versionFileCount;
+                    
+                    int overallProgress = (processedFiles * 90) / totalFilesToCopy; // 预留10%给后续操作
+                    lbState.Text = $"正在复制文件... ({processedFiles}/{totalFilesToCopy})";
+                    SafeSetProgressValue(Math.Min(overallProgress, 90));
                     pbDownFile.Refresh();
                     Application.DoEvents();
                     
                     // 使用Path.Combine安全构建路径，避免双反斜杠问题
-                    string sourcePath = Path.Combine(tempUpdatePath, versionDirList[i]);
-                    AppendAllText($"[LastCopy] 处理版本 {i + 1}/{versionDirList.Count}: {versionDirList[i]}");
+                    AppendAllText($"[LastCopy] 处理版本 {i + 1}/{totalVersions}: {versionDirList[i]}");
                     AppendAllText($"[LastCopy] 源路径: {sourcePath}");
 
                     // 确保源路径存在

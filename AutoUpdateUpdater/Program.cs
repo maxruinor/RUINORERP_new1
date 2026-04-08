@@ -13,6 +13,15 @@ namespace AutoUpdateUpdater
     /// </summary>
     static class Program
     {
+        #region 常量定义
+        private const int PROCESS_WAIT_TIMEOUT_MS = 30000;   // 进程等待超时时间（增加到30秒）
+        private const int EXTRA_WAIT_AFTER_EXIT_MS = 2000;   // 进程退出后额外等待
+        private const int FILE_HANDLE_RELEASE_WAIT_MS = 5000; // 文件句柄释放等待
+        private const int FORCE_UNLOCK_WAIT_MS = 2000;       // 强制解锁后等待
+        private const int SAFE_RETRY_DELAY_BASE_MS = 1000;   // 安全操作重试基础延迟
+        private const int CONFIG_READ_RETRY_COUNT = 3;       // 配置读取重试次数
+        private const int CONFIG_READ_RETRY_DELAY_MS = 500;  // 配置读取重试延迟
+        #endregion
         /// <summary>
         /// 应用程序的主入口点
         /// </summary>
@@ -87,7 +96,9 @@ namespace AutoUpdateUpdater
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"更新过程中发生错误：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                WriteLog("AutoUpdateUpdaterLog.txt", $"更新失败: {ex.Message}\n堆栈跟踪: {ex.StackTrace}");
+                MessageBox.Show($"更新过程中发生错误：{ex.Message}\n\n详细信息已记录到日志文件。", 
+                    "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         
@@ -152,24 +163,23 @@ namespace AutoUpdateUpdater
                 {
                     string processName = Path.GetFileNameWithoutExtension(exeName);
                     
-                    // 【增强】增加等待时间到20秒，确保进程完全退出
+                    // 【增强】增加等待时间到30秒，确保进程完全退出
                     WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 开始等待AutoUpdate进程完全退出...");
-                    if (!WaitAndKillProcess(processName, 20000))
+                    if (!WaitAndKillProcess(processName, PROCESS_WAIT_TIMEOUT_MS))
                     {
                         WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 警告: 进程关闭超时，但将继续尝试更新");
-                        // 不再直接返回false，而是继续尝试更新
                     }
-                    
-                    // 【新增】额外等待，确保文件句柄完全释放
-                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 额外等待5秒，确保文件句柄释放...");
-                    Thread.Sleep(5000);
-                    
-                    // 【新增】验证文件是否可访问
+                                    
+                    // 额外等待，确保文件句柄完全释放
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 额外等待{FILE_HANDLE_RELEASE_WAIT_MS / 1000}秒，确保文件句柄释放...");
+                    Thread.Sleep(FILE_HANDLE_RELEASE_WAIT_MS);
+                                    
+                    // 验证文件是否可访问
                     if (!IsFileAccessible(targetFile))
                     {
                         WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 警告: 目标文件仍被锁定，尝试强制解锁");
                         ForceUnlockFile(targetFile);
-                        Thread.Sleep(2000);
+                        Thread.Sleep(FORCE_UNLOCK_WAIT_MS);
                     }
                     
                     // 备份原文件（带重试机制）
@@ -267,7 +277,7 @@ namespace AutoUpdateUpdater
                     {
                         WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程已完全退出: {processName}, 检查次数: {checkCount}");
                         // 额外等待确保资源完全释放
-                        Thread.Sleep(2000);
+                        Thread.Sleep(EXTRA_WAIT_AFTER_EXIT_MS);
                         return true;
                     }
                     
@@ -315,14 +325,14 @@ namespace AutoUpdateUpdater
                 if (finalCheck.Length == 0)
                 {
                     WriteLog("AutoUpdateUpdaterLog.txt", "[进程管理] 最终检查：进程已完全退出");
-                    Thread.Sleep(2000);
+                    Thread.Sleep(EXTRA_WAIT_AFTER_EXIT_MS);
                     return true;
                 }
                 else
                 {
                     WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 警告: 等待超时，仍有 {finalCheck.Length} 个进程在运行");
                     
-                    // 【新增】即使超时也尝试最后一次强制终止
+                    // 即使超时也尝试最后一次强制终止
                     foreach (var process in finalCheck)
                     {
                         try
@@ -673,7 +683,7 @@ namespace AutoUpdateUpdater
         }
 
         /// <summary>
-        /// 【修复】读取配置文件获取主程序路径
+        /// 读取配置文件获取主程序路径
         /// 增加重试机制和错误处理
         /// </summary>
         private static string GetMainAppPathFromConfig(string currentDir)
@@ -682,7 +692,7 @@ namespace AutoUpdateUpdater
             string defaultAppExe = "企业数字化集成ERP.exe";
 
             // 重试3次
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < CONFIG_READ_RETRY_COUNT; i++)
             {
                 try
                 {
@@ -706,13 +716,13 @@ namespace AutoUpdateUpdater
                     else
                     {
                         WriteLog("AutoUpdateUpdaterLog.txt", $"[配置读取] 配置文件不存在，等待后重试... (尝试{i + 1})");
-                        Thread.Sleep(500); // 等待500ms后重试
+                        Thread.Sleep(CONFIG_READ_RETRY_DELAY_MS);
                     }
                 }
                 catch (Exception ex)
                 {
                     WriteLog("AutoUpdateUpdaterLog.txt", $"[配置读取] 异常: {ex.Message} (尝试{i + 1})");
-                    Thread.Sleep(500);
+                    Thread.Sleep(CONFIG_READ_RETRY_DELAY_MS);
                 }
             }
 
@@ -722,7 +732,7 @@ namespace AutoUpdateUpdater
 
         /// <summary>
         /// 启动ERP系统应用程序
-        /// 【修复】增加等待AutoUpdate进程退出的逻辑，确保资源完全释放
+        /// 增加等待AutoUpdate进程退出的逻辑，确保资源完全释放
         /// </summary>
         private static void StartERPApplication()
         {
@@ -730,13 +740,13 @@ namespace AutoUpdateUpdater
             {
                 WriteLog("AutoUpdateUpdaterLog.txt", "开始启动ERP系统应用程序...");
 
-                // 【新增】等待AutoUpdate进程完全退出
+                // 等待AutoUpdate进程完全退出
                 WaitForAutoUpdateExit();
 
                 // 获取当前目录
                 string currentDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
-                // 【修复】使用新的配置读取方法，增加重试机制
+                // 使用新的配置读取方法，增加重试机制
                 string mainAppExe = GetMainAppPathFromConfig(currentDir);
 
                 // 确保路径是完整的绝对路径
@@ -790,16 +800,15 @@ namespace AutoUpdateUpdater
         }
         
         /// <summary>
-        /// 【修复】等待AutoUpdate进程退出
+        /// 等待AutoUpdate进程退出
         /// 确保AutoUpdate完全退出后再启动主程序，避免"程序已经在运行中"错误
-        /// 【关键修改】增加更长的等待时间和更激进的进程关闭策略
         /// </summary>
         private static void WaitForAutoUpdateExit()
         {
             try
             {
                 string[] autoUpdateProcessNames = new[] { "AutoUpdate", "AutoUpdate.vshost" };
-                int maxWaitTime = 20000; // 最大等待20秒（增加等待时间）
+                int maxWaitTime = PROCESS_WAIT_TIMEOUT_MS;
                 int waitInterval = 300;
                 int elapsedTime = 0;
                 int checkCount = 0;
@@ -825,7 +834,7 @@ namespace AutoUpdateUpdater
                             runningProcesses = processes;
                             WriteLog("AutoUpdateUpdaterLog.txt", $"[等待退出] 检测到进程仍在运行: {processName} (数量: {processes.Length}), 检查次数: {checkCount}");
                             
-                            // 【新增】主动尝试关闭进程
+                            // 主动尝试关闭进程
                             foreach (var process in processes)
                             {
                                 try
@@ -855,7 +864,7 @@ namespace AutoUpdateUpdater
                     {
                         WriteLog("AutoUpdateUpdaterLog.txt", $"[等待退出] AutoUpdate进程已完全退出，检查次数: {checkCount}");
                         // 额外等待确保Mutex等资源完全释放
-                        Thread.Sleep(2000);
+                        Thread.Sleep(EXTRA_WAIT_AFTER_EXIT_MS);
                         WriteLog("AutoUpdateUpdaterLog.txt", "[等待退出] 继续启动主程序");
                         return;
                     }
@@ -866,7 +875,7 @@ namespace AutoUpdateUpdater
                 
                 WriteLog("AutoUpdateUpdaterLog.txt", "[等待退出] 警告: 等待AutoUpdate进程退出超时，将继续启动主程序");
                 // 即使超时也等待一段时间，确保资源释放
-                Thread.Sleep(2000);
+                Thread.Sleep(EXTRA_WAIT_AFTER_EXIT_MS);
             }
             catch (Exception ex)
             {
@@ -899,15 +908,14 @@ namespace AutoUpdateUpdater
                     if (attempt < maxRetries)
                     {
                         // 指数退避策略：1秒、2秒、4秒、8秒、16秒
-                        int waitTime = (int)Math.Pow(2, attempt - 1) * 1000;
+                        int waitTime = (int)Math.Pow(2, attempt - 1) * SAFE_RETRY_DELAY_BASE_MS;
                         WriteLog("AutoUpdateUpdaterLog.txt", $"[文件操作] 等待 {waitTime}ms 后重试...");
                         Thread.Sleep(waitTime);
                         
-                        // 【新增】每次重试前检查文件是否可访问
+                        // 检测到文件锁定，尝试强制解锁
                         if (ioEx.Message.Contains("正由另一进程使用") || ioEx.Message.Contains("being used by another process"))
                         {
                             WriteLog("AutoUpdateUpdaterLog.txt", $"[文件操作] 检测到文件锁定，尝试强制解锁");
-                            // 这里可以添加额外的解锁逻辑
                         }
                     }
                     else

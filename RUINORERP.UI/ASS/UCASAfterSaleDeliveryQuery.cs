@@ -1,43 +1,44 @@
+using AutoMapper;
+using Microsoft.Extensions.Logging;
+using Netron.NetronLight;
+using Newtonsoft.Json;
+using NPOI.SS.Formula.Functions;
+using RUINOR.Core;
+using RUINORERP.AutoMapper;
+using RUINORERP.Business;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.SS;
+using RUINORERP.UI.UControls;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
+using RulesEngine;
+using RulesEngine.Models;
+using SqlSugar;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core.CustomTypeProviders;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Global;
-using RUINORERP.Business;
-using RUINORERP.AutoMapper;
-using AutoMapper;
-using RUINORERP.Common.CollectionExtension;
-using SqlSugar;
-using RUINORERP.Common.Extensions;
-using System.Collections;
-using RUINORERP.Model.Base;
-using RUINORERP.Business.Security;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using RUINORERP.Business.Processor;
-using Microsoft.Extensions.Logging;
-using RulesEngine.Models;
-using System.Linq.Dynamic.Core;
-using Newtonsoft.Json;
-using System.IO;
-using Rule = RulesEngine.Models.Rule;
-using RUINORERP.Model.CommonModel;
-using System.Linq.Expressions;
-using RUINORERP.UI.WorkFlowDesigner.Entities;
 using WorkflowCore.Interface;
-using RUINORERP.UI.SS;
-using RulesEngine;
-using System.Linq.Dynamic.Core.CustomTypeProviders;
-using Netron.NetronLight;
-using RUINORERP.UI.UControls;
+using Rule = RulesEngine.Models.Rule;
 
 namespace RUINORERP.UI.ASS
 {
@@ -131,7 +132,10 @@ namespace RUINORERP.UI.ASS
             if (rs.Succeeded)
             {
                 MainForm.Instance.PrintInfoLog($"结案操作成功！", Color.Red);
-                MainForm.Instance.logger.LogInformation($"结案操作成功！");
+                for (int i = 0; i < needCloseCases.Count; i++)
+                {
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_AfterSaleDelivery>("结案成功", needCloseCases[i]);
+                }
                 base.Query(QueryDtoProxy);
             }
             else

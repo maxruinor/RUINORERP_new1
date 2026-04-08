@@ -1,46 +1,46 @@
+using AutoMapper;
+using DevAge.Windows.Forms;
+using Krypton.Toolkit;
+using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
+using RUINOR.Core;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.Dto;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.PSI.PUR;
+using RUINORERP.UI.Report;
+using RUINORERP.UI.UCSourceGrid;
+using SqlSugar;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.WebSockets;
 using System.Windows.Forms;
-using RUINORERP.Common;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Business;
-using RUINORERP.UI.UCSourceGrid;
-using System.Reflection;
-using System.Collections.Concurrent;
-using RUINORERP.Common.CollectionExtension;
 using static RUINORERP.UI.Common.DataBindingHelper;
 using static RUINORERP.UI.Common.GUIUtils;
-using RUINORERP.Model.Dto;
-using DevAge.Windows.Forms;
-using RUINORERP.Common.Helper;
-using RUINORERP.Global.CustomAttribute;
-using RUINORERP.Global;
-using RUINORERP.UI.Report;
-using RUINORERP.UI.BaseForm;
-
-using Microsoft.Extensions.Logging;
-using RUINOR.Core;
-using RUINORERP.UI.Network.Services;
-using SqlSugar;
-using System.Linq.Expressions;
-using AutoMapper;
-using RUINORERP.Business.AutoMapper;
-using RUINORERP.Business.Security;
-using RUINORERP.Business.Processor;
-using Krypton.Toolkit;
-using RUINORERP.UI.PSI.PUR;
-using System.Web.WebSockets;
-using RUINORERP.Common.Extensions;
-using RUINORERP.Business.CommService;
-using RUINORERP.Model.CommonModel;
-using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.ASS
 {
@@ -535,10 +535,10 @@ namespace RUINORERP.UI.ASS
             ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
             if (rs.Succeeded)
             {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
+                for (int i = 0; i < needCloseCases.Count; i++)
+                {
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_RepairMaterialPickup>("结案成功", needCloseCases[i]);
+                }
                 //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
                 //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                 //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);

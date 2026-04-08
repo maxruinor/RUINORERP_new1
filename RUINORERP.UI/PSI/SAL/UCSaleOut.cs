@@ -1181,6 +1181,11 @@ namespace RUINORERP.UI.PSI.SAL
             ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
             if (rs.Succeeded)
             {
+                for (int i = 0; i < needCloseCases.Count; i++)
+                {
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOut>("结案成功", needCloseCases[i]);
+                }
+                
                 //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
                 //{
 

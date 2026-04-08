@@ -740,15 +740,12 @@ namespace RUINORERP.UI.ASS
                 ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
                 if (rs.Succeeded)
                 {
-                    //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                    //{
-
-                    //}
+             
                     //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_AfterSaleDelivery>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                await    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_AfterSaleDelivery>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
                     Refreshs();
                 }
                 else

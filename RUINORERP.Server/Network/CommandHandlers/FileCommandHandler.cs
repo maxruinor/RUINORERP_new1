@@ -322,18 +322,18 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 existingFile.FileId, existingFile.OriginalFileName);
 
                             // 复用已有文件，创建业务关联（跳过文件保存）
-                            var fileStorageInfo = existingFile;
+                            var reusedFileStorageInfo = existingFile;
                             
                             // 保存业务关联
-                            var ownerTable = uploadRequest.OwnerTableName ?? "Unknown";
-                            if (ownerTable.Trim().Length > 0 && uploadRequest.BusinessId.HasValue && uploadRequest.BusinessId.Value > 0)
+                            var reusedOwnerTable = uploadRequest.OwnerTableName ?? "Unknown";
+                            if (reusedOwnerTable.Trim().Length > 0 && uploadRequest.BusinessId.HasValue && uploadRequest.BusinessId.Value > 0)
                             {
                                 var businessRelation = new tb_FS_BusinessRelation
                                 {
-                                    OwnerTableName = ownerTable,
+                                    OwnerTableName = reusedOwnerTable,
                                     BusinessNo = uploadRequest.BusinessNo ?? string.Empty,
                                     BusinessId = uploadRequest.BusinessId.Value,
-                                    FileId = fileStorageInfo.FileId,
+                                    FileId = reusedFileStorageInfo.FileId,
                                     IsMainFile = (i == 0),
                                     RelatedField = uploadRequest.RelatedField ?? "MainFile",
                                     Created_at = DateTime.Now,
@@ -351,7 +351,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 else
                                 {
                                     _logger?.Debug("业务关联创建成功(复用文件): FileId={FileId}, BusinessId={BusinessId}",
-                                        fileStorageInfo.FileId, uploadRequest.BusinessId);
+                                        reusedFileStorageInfo.FileId, uploadRequest.BusinessId);
 
                                     if (_hasAttachmentSyncService != null)
                                     {
@@ -372,7 +372,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 }
                             }
                             
-                            responseData.FileStorageInfos.Add(fileStorageInfo);
+                            responseData.FileStorageInfos.Add(reusedFileStorageInfo);
                             continue; // 跳过文件保存，直接处理下一个
                         }
 

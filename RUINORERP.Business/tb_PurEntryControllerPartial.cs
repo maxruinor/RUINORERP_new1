@@ -731,6 +731,7 @@ namespace RUINORERP.Business
                 List<tb_BOM_SDetail> BOM_SDetails = new List<tb_BOM_SDetail>();
                 List<tb_BOM_S> BOMs = new List<tb_BOM_S>();
                 List<tb_PriceRecord> PriceRecords = new List<tb_PriceRecord>();
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
 
                 // 处理分组数据，更新库存记录的各字段
                 foreach (var group in inventoryGroups)

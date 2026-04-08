@@ -1,30 +1,31 @@
-﻿using System;
+﻿using AutoMapper;
+using NPOI.SS.Formula.Functions;
+using RUINOR.Core;
+using RUINORERP.AutoMapper;
+using RUINORERP.Business;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.Model;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using SqlSugar;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Global;
-using RUINORERP.Business;
-using RUINORERP.AutoMapper;
-using AutoMapper;
-using RUINORERP.Common.CollectionExtension;
-using SqlSugar;
-using RUINORERP.Common.Extensions;
-using System.Collections;
-using RUINORERP.Model.Base;
-using RUINORERP.Business.Security;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using RUINORERP.Business.Processor;
-using RUINORERP.Business.CommService;
-using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -260,10 +261,10 @@ namespace RUINORERP.UI.MRP.MP
             ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
             if (rs.Succeeded)
             {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
+                for (int i = 0; i < needCloseCases.Count; i++)
+                {
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_RepairMaterialPickup>("结案成功", needCloseCases[i]);
+                }
                 //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
                 //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                 //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);

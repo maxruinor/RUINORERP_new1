@@ -3893,14 +3893,14 @@ namespace RUINORERP.UI.BaseForm
                     var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
 
                     string billNo = editEntity.GetPropertyValue(EntityInfo.NoField).ToString();
-
+                    await MainForm.Instance.auditLogHelper.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
                     // 统一状态同步 - 结案操作
                     var updateData = ConvertToTodoUpdate(rs.ReturnObject as T, TodoUpdateType.StatusChanged);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "结案");
                     }
-
+                 
                     // 结案凭证图片也使用队列模式，与保存/审核类似
                     if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
@@ -3933,12 +3933,11 @@ namespace RUINORERP.UI.BaseForm
                         // 图片同步已整合到FileBusinessService中
                     }
 
-
                     //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                    await MainForm.Instance.auditLogHelper.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                  
                     Refreshs();
                 }
                 else

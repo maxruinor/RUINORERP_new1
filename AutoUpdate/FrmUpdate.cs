@@ -3971,55 +3971,106 @@ namespace AutoUpdate
         /// </summary>
         private void FallbackToTraditionalUpdate(string currentExePath, string currentExeName, string tempUpdatePath)
         {
-            try
+            int maxRetries = 3;
+            bool updateSuccess = false;
+            
+            for (int attempt = 1; attempt <= maxRetries && !updateSuccess; attempt++)
             {
-                if (!File.Exists(Path.Combine(tempUpdatePath, currentExeName)))
+                try
                 {
-                    AppendErrorText("[降级更新] 临时目录中不存在更新文件，跳过自身更新");
-                    return;
+                    if (!File.Exists(Path.Combine(tempUpdatePath, currentExeName)))
+                    {
+                        AppendErrorText("[降级更新] 临时目录中不存在更新文件，跳过自身更新");
+                        return;
+                    }
+
+                    AppendAllText($"[降级更新] 开始使用传统方式更新自身文件（尝试{attempt}/{maxRetries})...");
+
+                    string tempFilename = currentExePath + ".temp";
+                    string backupFilename = currentExePath + ".backup";
+
+                    // 1. 先复制到临时文件
+                    File.Copy(Path.Combine(tempUpdatePath, currentExeName), tempFilename, true);
+                    AppendAllText("[降级更新] 已复制到临时文件");
+
+                    // 2. 备份原文件
+                    if (File.Exists(currentExePath))
+                    {
+                        try
+                        {
+                            // 如果备份文件存在，先删除
+                            if (File.Exists(backupFilename))
+                            {
+                                File.Delete(backupFilename);
+                            }
+                            File.Copy(currentExePath, backupFilename, true);
+                            AppendAllText("[降级更新] 已备份原文件");
+                        }
+                        catch (IOException)
+                        {
+                            // 文件被锁定，尝试重命名
+                            string lockedBackup = backupFilename + ".locked";
+                            File.Move(currentExePath, lockedBackup);
+                            AppendAllText($"[降级更新] 原文件被锁定，已重命名: {lockedBackup}");
+                        }
+                    }
+
+                    // 3. 删除原文件（带重试）
+                    if (File.Exists(currentExePath))
+                    {
+                        try
+                        {
+                            File.Delete(currentExePath);
+                            AppendAllText("[降级更新] 已删除原文件");
+                        }
+                        catch (IOException)
+                        {
+                            // 文件被锁定，尝试重命名
+                            string lockedFile = currentExePath + ".locked_" + DateTime.Now.Ticks;
+                            File.Move(currentExePath, lockedFile);
+                            AppendAllText($"[降级更新] 原文件被锁定，已重命名为: {lockedFile}");
+                        }
+                    }
+
+                    // 4. 移动临时文件到目标位置
+                    if (File.Exists(currentExePath))
+                    {
+                        File.Delete(currentExePath);
+                    }
+                    File.Move(tempFilename, currentExePath);
+                    AppendAllText("[降级更新] 自身文件更新成功");
+                    updateSuccess = true;
+
+                    // 5. 清理备份文件
+                    if (File.Exists(backupFilename))
+                    {
+                        try { File.Delete(backupFilename); } catch { }
+                    }
+
+                    AppendAllText("[降级更新] 清理完成");
                 }
-
-                AppendAllText("[降级更新] 开始使用传统方式更新自身文件...");
-
-                string tempFilename = currentExePath + ".temp";
-                string backupFilename = currentExePath + ".backup";
-
-                // 1. 先复制到临时文件
-                File.Copy(Path.Combine(tempUpdatePath, currentExeName), tempFilename, true);
-                AppendAllText("[降级更新] 已复制到临时文件");
-
-                // 2. 备份原文件
-                if (File.Exists(currentExePath))
+                catch (Exception ex)
                 {
-                    File.Copy(currentExePath, backupFilename, true);
-                    AppendAllText("[降级更新] 已备份原文件");
+                    AppendErrorText($"[降级更新] 尝试{attempt}失败: {ex.Message}");
+                    if (attempt < maxRetries)
+                    {
+                        AppendAllText($"[降级更新] 等待{attempt}秒后重试...");
+                        Thread.Sleep(1000 * attempt);
+                    }
                 }
-
-                // 3. 删除原文件
-                File.Delete(currentExePath);
-                AppendAllText("[降级更新] 已删除原文件");
-
-                // 4. 移动临时文件到目标位置
-                File.Move(tempFilename, currentExePath);
-                AppendAllText("[降级更新] 自身文件更新成功");
-
-                // 5. 清理备份文件
-                if (File.Exists(backupFilename))
-                {
-                    File.Delete(backupFilename);
-                }
-
-                AppendAllText("[降级更新] 清理完成");
             }
-            catch (Exception ex)
+            
+            if (!updateSuccess)
             {
-                AppendErrorText($"[降级更新] 传统更新方式也失败: {ex.Message}\n{ex.StackTrace}");
+                AppendErrorText("[降级更新] 所有尝试都失败，尝试恢复备份");
                 // 尝试恢复备份
                 try
                 {
                     string backupFilename = currentExePath + ".backup";
                     if (File.Exists(backupFilename))
                     {
+                        // 尝试删除当前文件
+                        try { File.Delete(currentExePath); } catch { }
                         File.Copy(backupFilename, currentExePath, true);
                         AppendAllText("[降级更新] 已恢复备份文件");
                     }

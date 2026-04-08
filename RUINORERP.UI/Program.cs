@@ -198,7 +198,10 @@ namespace RUINORERP.UI
             {
                 foreach (var arg in args)
                 {
-                    if (arg == "--updated" || arg.Contains("updated"))
+                    // 【修复】精确匹配，支持多种格式
+                    if (arg.Equals("--updated", StringComparison.OrdinalIgnoreCase) ||
+                        arg.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase) ||
+                        arg.Equals("/updated", StringComparison.OrdinalIgnoreCase))
                     {
                         JustUpdated = true;
                         System.Diagnostics.Debug.WriteLine("[启动参数] 检测到刚刚完成更新，将跳过更新检测");
@@ -412,9 +415,11 @@ namespace RUINORERP.UI
             string processName = Process.GetCurrentProcess().ProcessName;
             int currentProcessId = Process.GetCurrentProcess().Id;
             
-            // 【修复】检测是否从更新程序启动
+            // 【修复】检测是否从更新程序启动 - 精确匹配
             string[] args = Environment.GetCommandLineArgs();
-            bool isFromUpdater = args.Any(arg => arg.Contains("updated"));
+            bool isFromUpdater = args.Any(arg => 
+                arg.Equals("--updated", StringComparison.OrdinalIgnoreCase) ||
+                arg.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase));
 
             // 查找同名的运行中进程
             Process[] processes = Process.GetProcessesByName(processName)

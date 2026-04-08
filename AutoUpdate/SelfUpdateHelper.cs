@@ -37,10 +37,8 @@ namespace AutoUpdate
                 if (string.IsNullOrEmpty(newFilesPath) || !Directory.Exists(newFilesPath))
                 {
                     WriteLog("AutoUpdateLog.txt", $"新文件路径不存在或为空: {newFilesPath}，跳过更新");
-                    // 如果没有新文件，直接启动ERP主程序
-                    string targetDirNoUpdate = Path.GetDirectoryName(updaterExePath);
-                    StartERPApplication(targetDirNoUpdate);
-                    return false; // 返回false表示不需要更新
+                    // 【修复】只返回false，让调用方决定下一步操作，不直接启动ERP
+                    return false;
                 }
                 
                 // 查找AutoUpdateUpdater.exe

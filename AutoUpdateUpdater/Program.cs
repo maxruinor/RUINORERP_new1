@@ -22,6 +22,11 @@ namespace AutoUpdateUpdater
         private const int CONFIG_READ_RETRY_COUNT = 3;       // 配置读取重试次数
         private const int CONFIG_READ_RETRY_DELAY_MS = 500;  // 配置读取重试延迟
         #endregion
+        
+        // 【新增】防止重复启动标志
+        private static bool _erpStartupInitiated = false;
+        private static readonly object _startupLock = new object();
+        
         /// <summary>
         /// 应用程序的主入口点
         /// </summary>
@@ -734,9 +739,21 @@ namespace AutoUpdateUpdater
         /// 启动ERP系统应用程序
         /// 增加等待AutoUpdate进程退出的逻辑，确保资源完全释放
         /// 【增强】添加重试机制和错误标记文件
+        /// 【新增】防止重复启动
         /// </summary>
         private static void StartERPApplication()
         {
+            // 【新增】防止重复启动
+            lock (_startupLock)
+            {
+                if (_erpStartupInitiated)
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", "[警告] ERP启动已被触发，忽略重复调用");
+                    return;
+                }
+                _erpStartupInitiated = true;
+            }
+            
             string currentDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             int maxRetries = 3;
             bool startupSuccess = false;

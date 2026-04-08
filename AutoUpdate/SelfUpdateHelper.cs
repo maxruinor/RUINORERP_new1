@@ -76,6 +76,16 @@ namespace AutoUpdate
                 WriteLog("AutoUpdateLog.txt", $"创建配置文件成功: {configFilePath}");
                 WriteLog("AutoUpdateLog.txt", $"配置内容: sourceDir={newFilesPath}, targetDir={targetDir}, exeName={Path.GetFileName(updaterExePath)}");
                 
+                // 【新增】在启动 AutoUpdateUpdater 之前，额外等待确保当前进程完全释放资源
+                WriteLog("AutoUpdateLog.txt", "[启动更新器] 等待2秒，确保当前进程资源完全释放...");
+                Thread.Sleep(2000);
+                
+                // 强制垃圾回收
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                WriteLog("AutoUpdateLog.txt", "[启动更新器] 已执行垃圾回收");
+                
                 // 启动AutoUpdateUpdater（无参数，通过配置文件传递）
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
@@ -90,6 +100,10 @@ namespace AutoUpdate
                 if (updateProcess != null)
                 {
                     WriteLog("AutoUpdateLog.txt", "AutoUpdateUpdater已成功启动");
+                    
+                    // 【新增】等待 AutoUpdateUpdater 进程确认启动
+                    Thread.Sleep(1000);
+                    
                     return true;
                 }
                 return false;

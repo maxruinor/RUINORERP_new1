@@ -8,7 +8,6 @@ using System.Xml;
 using System.Net;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Reflection;
 using System.IO.Compression;
@@ -408,76 +407,8 @@ namespace AutoUpdate
         int _Next = 0;
         public int Next { get { return _Next; } set { _Next = value; } }
 
-        /// <summary>
-        /// 初始化进度条，确保Maximum > 0
-        /// </summary>
-        private void InitializeProgressBar()
-        {
-            if (pbDownFile.Maximum <= 0)
-            {
-                pbDownFile.Minimum = 0;
-                pbDownFile.Maximum = 100;
-                pbDownFile.Value = 0;
-            }
-        }
-
-        /// <summary>
-        /// 安全设置进度条值，自动处理边界和初始化
-        /// </summary>
-        private void SafeSetProgressValue(int value)
-        {
-            try
-            {
-                // 确保进度条控件有效
-                if (pbDownFile == null || pbDownFile.IsDisposed)
-                {
-                    return;
-                }
-                
-                // 确保Minimum和Maximum设置合理
-                if (pbDownFile.Maximum <= pbDownFile.Minimum)
-                {
-                    pbDownFile.Minimum = 0;
-                    pbDownFile.Maximum = 100;
-                    pbDownFile.Value = 0;
-                }
-                
-                // 确保输入值在合理范围内
-                if (value < 0)
-                    value = 0;
-                
-                // 如果目标值大于当前Maximum，需要先调整顺序
-                if (value > pbDownFile.Maximum)
-                {
-                    // 先把Value设为0
-                    pbDownFile.Value = 0;
-                    // 再设置新的Maximum
-                    pbDownFile.Maximum = value;
-                    // 最后设置Value
-                    pbDownFile.Value = value;
-                }
-                else if (value < pbDownFile.Minimum)
-                {
-                    value = pbDownFile.Minimum;
-                    pbDownFile.Value = value;
-                }
-                else
-                {
-                    pbDownFile.Value = value;
-                }
-            }
-            catch (Exception ex)
-            {
-                AppendAllText($"[进度条] 设置值失败: {ex.Message}");
-                AppendAllText($"[进度条] 异常详情: {ex.StackTrace}");
-            }
-        }
-
         // 日志文件路径 - 使用统一的AutoUpdateLog.txt
         private string UpdateLogfilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "AutoUpdateLog.txt");
-        
-        // 主程序监控的更新状态文件路径（与MainForm保持一致）
-        private string MainProgramStatusFilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UpdateLog.txt");
         /// <summary>
         /// 写入日志信息，更新时会在当前目录创建一个文本文件进行记录
         /// 第一次写入时创建文件
@@ -663,21 +594,6 @@ namespace AutoUpdate
                 btnNext.Enabled = true;
                 btnskipCurrentVersion.Visible = SkipCurrentVersion;
 
-                // 检查是否有可回滚的版本，如果有则显示还原按钮
-                try
-                {
-                    if (appUpdater != null && appUpdater.CanRollback())
-                    {
-                        btnRollback.Visible = true;
-                        btnRollback.Enabled = true;
-                        AppendAllText("[回滚] 检测到可回滚版本，显示还原按钮");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    AppendAllText($"检查回滚版本失败: {ex.Message}");
-                }
-
                 AppendAllText($"更新文件列表显示完成: {updateFiles.Count}个文件");
             }
             catch (Exception ex)
@@ -812,7 +728,7 @@ namespace AutoUpdate
 
                 // 更新状态显示
                 lbState.Text = string.Format("正在准备回滚到版本 {0}...", targetVersion);
-                SafeSetProgressValue(0);
+                pbDownFile.Value = 0;
                 pbDownFile.Visible = true;
                 Application.DoEvents();
 
@@ -828,12 +744,12 @@ namespace AutoUpdate
 
                     // 执行回滚操作
                     lbState.Text = string.Format("正在回滚到版本 {0}...", targetVersion);
-                    SafeSetProgressValue(30);
+                    pbDownFile.Value = 30;
                     Application.DoEvents();
 
                     rollbackSuccess = appUpdater.RollbackToVersion(targetVersion);
 
-                    SafeSetProgressValue(100);
+                    pbDownFile.Value = 100;
 
                     // 记录回滚日志
                     string logMessage = string.Format("回滚操作{0}完成，目标版本: {1}", rollbackSuccess ? "" : "未", targetVersion);
@@ -952,7 +868,8 @@ namespace AutoUpdate
 
         private void btnCancel_Click(object sender, System.EventArgs e)
         {
-            WriteMainProgramStatus("取消更新");
+
+            File.WriteAllText(UpdateLogfilePath, "取消更新");
             this.Close();
             Application.ExitThread();
             Application.Exit();
@@ -960,9 +877,21 @@ namespace AutoUpdate
 
         private void btnNext_Click(object sender, System.EventArgs e)
         {
+            //if (Next == 2)
+            //{
+            //    InvalidateControl();
+            //    return;
+            //}
+            //if (Next == 1)
+            //{
+            //    LastCopy();
+            //    Next++;
+            //    return;
+            //}
+
             if (availableUpdate > 0)
             {
-                WriteMainProgramStatus("正在更新");
+                File.WriteAllText(UpdateLogfilePath, "正在更新");
 
                 btnNext.Enabled = false;
                 try
@@ -998,35 +927,17 @@ namespace AutoUpdate
                 AppendAllText($"当前工作目录: {Directory.GetCurrentDirectory()}");
                 AppendAllText($"完整路径检查: {Path.GetFullPath(mainAppExe)}");
 
-                // 【优化】确保使用绝对路径
-                string mainAppFullPath = mainAppExe;
-                if (!Path.IsPathRooted(mainAppExe))
+                if (System.IO.File.Exists(mainAppExe))
                 {
-                    mainAppFullPath = Path.GetFullPath(mainAppExe);
-                    AppendAllText($"转换为主程序绝对路径: {mainAppFullPath}");
-                }
-
-                if (System.IO.File.Exists(mainAppFullPath))
-                {
-                    AppendAllText($"主程序文件存在，准备启动: {mainAppFullPath}");
-                    Process.Start(mainAppFullPath);
+                    AppendAllText($"主程序文件存在，准备启动: {mainAppExe}");
+                    Process.Start(mainAppExe);
                     AppendAllText("主程序启动成功");
                 }
                 else
                 {
-                    // 尝试在当前目录下查找
-                    string tryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, mainAppExe);
-                    if (System.IO.File.Exists(tryPath))
-                    {
-                        AppendAllText($"在应用程序目录下找到主程序: {tryPath}");
-                        Process.Start(tryPath);
-                    }
-                    else
-                    {
-                        string errorMsg = "系统找不到指定的文件路径: " + mainAppExe;
-                        AppendAllText($"错误: {errorMsg}");
-                        MessageBox.Show(errorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
+                    string errorMsg = "系统找不到指定的文件路径: " + mainAppExe;
+                    AppendAllText($"错误: {errorMsg}");
+                    MessageBox.Show(errorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
                 this.Close();
@@ -1043,101 +954,119 @@ namespace AutoUpdate
             this.Cursor = Cursors.WaitCursor;
             try
             {
-                // 【优化】下载前不再终止主进程，让主进程在更新时才终止
-                // 进程终止已移至LastCopy方法中执行
-                AppendAllText("[下载流程] 开始下载更新文件，主程序保持运行");
+                //下载前 停止主程序进程
+                mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
+                Process[] allProcess = Process.GetProcesses();
+                foreach (Process p in allProcess)
+                {
+                    // MessageBox.Show(p.ProcessName.ToLower());
+                    if (p.ProcessName.ToLower() + ".exe" == mainAppExe.ToLower())
+                    {
+                        for (int i = 0; i < p.Threads.Count; i++)
+                            p.Threads[i].Dispose();
+                        p.Kill();
+                        Thread.Sleep(500);
+                        isRun = true;
+                        //break;
+                    }
+                }
 
                 List<string> contents = new List<string>();
-                List<Task> downloadTasks = new List<Task>();
-                int totalFiles = this.lvUpdateList.Items.Count;
-                int completedFiles = 0;
 
-                // 【优化】使用信号量控制并发下载数量，默认为8个并发
-                int maxConcurrency = 8;
-                SemaphoreSlim semaphore = new SemaphoreSlim(maxConcurrency);
-
-                // 【优化】使用并行下载提升速度
+                WebClient wcClient = new WebClient();
                 for (int i = 0; i < this.lvUpdateList.Items.Count; i++)
                 {
-                    // 【修复】捕获循环变量，避免闭包问题
-                    int currentIndex = i;
-                    string UpdateFile = lvUpdateList.Items[currentIndex].Text.Trim();
+                    string UpdateFile = lvUpdateList.Items[i].Text.Trim();
+                    //获取版本号，并创建目录
                     string VerNo = string.Empty;
-                    ListViewItem listViewItem = lvUpdateList.Items[currentIndex];
+                    ListViewItem listViewItem = lvUpdateList.Items[i];
                     if (listViewItem.SubItems.Count > 1)
                     {
                         VerNo = listViewItem.SubItems[1].Text.Trim();
                     }
-                    string updateFileUrl = updateUrl + lvUpdateList.Items[currentIndex].Text.Trim();
-                    string tempPath = Path.Combine(tempUpdatePath, VerNo, UpdateFile);
-
-                    // 创建下载任务
-                    Task downloadTask = Task.Run(async () =>
+                    try
                     {
-                        await semaphore.WaitAsync();
-                        try
+                        string updateFileUrl = updateUrl + lvUpdateList.Items[i].Text.Trim();
+                        long fileLength = 0;
+                        string content = System.DateTime.Now.ToString() + "准备下载" + updateFileUrl;
+                        WebRequest webReq = WebRequest.Create(updateFileUrl);
+                        WebResponse webRes = webReq.GetResponse();
+                        fileLength = webRes.ContentLength;
+                        content += "fileLength:" + fileLength;
+                        lbState.Text = "开始下载更新文件,请稍候...";
+                        pbDownFile.Value = 0;
+                        if ((int)fileLength < 0)
                         {
-                            int completedCount = Interlocked.Increment(ref completedFiles) - 1;
-                            
-                            // 【优化】使用BeginInvoke异步更新UI，避免阻塞下载线程
-                            this.BeginInvoke(new Action(() =>
+                            MessageBox.Show("服务器文件" + updateFileUrl);
+                            continue;
+                        }
+                        pbDownFile.Maximum = (int)fileLength;
+                        Stream srm = webRes.GetResponseStream();
+                        StreamReader srmReader = new StreamReader(srm);
+                        byte[] bufferbyte = new byte[fileLength];
+                        int allByte = (int)bufferbyte.Length;
+                        int startByte = 0;
+                        while (fileLength > 0)
+                        {
+                            try
                             {
-                                lbState.Text = $"正在下载: {UpdateFile} ({completedCount + 1}/{totalFiles})...";
-                                SafeSetProgressValue((int)((completedCount * 100.0) / totalFiles));
-                            }));
+                                Application.DoEvents();
+                                int downByte = srm.Read(bufferbyte, startByte, allByte);
+                                if (downByte == 0) { break; }
+                                ;
+                                startByte += downByte;
+                                allByte -= downByte;
+                                pbDownFile.Value += downByte;
 
-                            // 调用下载方法（同步版本）
-                            bool downloadSuccess = DownloadFileWithRetry(updateFileUrl, tempPath, 3);
+                                float part = (float)startByte / 1024;
+                                float total = (float)bufferbyte.Length / 1024;
+                                int percent = Convert.ToInt32((part / total) * 100);
 
-                            if (downloadSuccess)
+                                this.lvUpdateList.Items[i].SubItems[2].Text = percent.ToString() + "%";
+                            }
+                            catch (Exception exStr)
                             {
-                                string fileHash = AppUpdater.CalculateFileHash(tempPath);
-                                string content = $"{System.DateTime.Now} 下载完成: {UpdateFile}";
-                                if (!string.IsNullOrEmpty(fileHash))
-                                {
-                                    content += $", MD5: {fileHash}";
-                                }
 
-                                lock (filesList)
-                                {
-                                    filesList.Add(new KeyValuePair<string, string>(AppDomain.CurrentDomain.BaseDirectory + UpdateFile, tempPath));
-                                }
-
-                                lock (versionDirList)
-                                {
-                                    if (!versionDirList.Contains(VerNo))
-                                    {
-                                        versionDirList.Add(VerNo);
-                                    }
-                                }
-
-                                lock (contents)
-                                {
-                                    contents.Add(content);
-                                }
-                                PrintInfoLog(content);
-
-                                // 【优化】使用BeginInvoke异步更新进度，【修复】使用捕获的currentIndex
-                                this.BeginInvoke(new Action(() =>
-                                {
-                                    if (currentIndex < this.lvUpdateList.Items.Count)
-                                    {
-                                        this.lvUpdateList.Items[currentIndex].SubItems[2].Text = "100%";
-                                    }
-                                }));
+                                MessageBox.Show($"下载文件时失败:\r\n{UpdateFile}" + exStr.Message.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                         }
-                        finally
+
+                        string tempPath = Path.Combine(tempUpdatePath, VerNo, UpdateFile);
+
+                        filesList.Add(new KeyValuePair<string, string>(AppDomain.CurrentDomain.BaseDirectory + UpdateFile, tempPath));
+
+                        if (!versionDirList.Contains(VerNo))
                         {
-                            semaphore.Release();
+                            versionDirList.Add(VerNo);
                         }
-                    });
 
-                    downloadTasks.Add(downloadTask);
+                        CreateDirtory(tempPath);
+                        FileStream fs = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write);
+                        fs.Write(bufferbyte, 0, bufferbyte.Length);
+                        srm.Close();
+                        srmReader.Close();
+                        fs.Close();
+
+                        // 计算下载文件的哈希值并验证
+                        string fileHash = AppUpdater.CalculateFileHash(tempPath);
+                        if (!string.IsNullOrEmpty(fileHash))
+                        {
+                            content += $" 状态:下载完毕, MD5: {fileHash}";
+                        }
+                        else
+                        {
+                            content += " 状态:下载完毕, 哈希值计算失败";
+                        }
+
+                        contents.Add(System.DateTime.Now.ToString() + " " + content);
+                        PrintInfoLog(System.DateTime.Now.ToString() + " " + content);
+                    }
+                    catch (WebException ex)
+                    {
+                        MessageBox.Show($"下载文件失败:\r\n{UpdateFile}" + ex.Message.ToString(), "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                    }
                 }
-
-                // 等待所有下载任务完成
-                Task.WhenAll(downloadTasks).Wait();
 
                 AppendAllLines(contents);
 
@@ -1194,8 +1123,8 @@ namespace AutoUpdate
                 // 写入日志文件
                 System.IO.File.AppendAllText(logFilePath, logEntry);
 
-                // 【优化】移除每次都调用MaintainLogFileSize()，改为定期检查
-                // MaintainLogFileSize();
+                // 限制日志文件大小，超过1MB时清理旧日志
+                MaintainLogFileSize();
             }
             catch (Exception ex)
             {
@@ -1240,8 +1169,8 @@ namespace AutoUpdate
                 // 写入日志文件
                 System.IO.File.AppendAllText(logFilePath, logEntry);
 
-                // 【优化】移除每次都调用MaintainLogFileSize()，改为定期检查
-                // MaintainLogFileSize();
+                // 限制日志文件大小，超过1MB时清理旧日志
+                MaintainLogFileSize();
             }
             catch (Exception logEx)
             {
@@ -1310,6 +1239,10 @@ namespace AutoUpdate
         /// </summary>
         private void MaintainLogFileSize()
         {
+            // 只有在调试模式下才维护日志文件
+            if (!IsDebugMode)
+                return;
+
             try
             {
                 const long MaxLogSize = 1024 * 1024; // 1MB
@@ -1343,33 +1276,6 @@ namespace AutoUpdate
                     System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 日志维护失败: {ex.Message}");
                 }
                 catch { }
-            }
-        }
-
-        /// <summary>
-        /// 写入主程序监控的状态文件，通知更新进度
-        /// </summary>
-        /// <param name="status">状态值：取消更新、正在更新、升级完成、跳过当前版本</param>
-        private void WriteMainProgramStatus(string status)
-        {
-            try
-            {
-                string statusFilePath = MainProgramStatusFilePath;
-                
-                // 确保目录存在
-                string directory = Path.GetDirectoryName(statusFilePath);
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-                
-                // 写入状态
-                File.WriteAllText(statusFilePath, status);
-                AppendAllText($"[状态通知] 已写入主程序状态文件: {statusFilePath}, 状态: {status}");
-            }
-            catch (Exception ex)
-            {
-                AppendAllText($"[状态通知] 写入主程序状态文件失败: {ex.Message}");
             }
         }
 
@@ -1454,20 +1360,12 @@ namespace AutoUpdate
             // 初始化进度条（只在有文件需要复制时）
             if (files.Length > 0 && pbDownFile != null)
             {
-                try
-                {
-                    pbDownFile.Visible = true;
-                    pbDownFile.Minimum = 0;
-                    pbDownFile.Maximum = files.Length;
-                    SafeSetProgressValue(0);
-                    Application.DoEvents();
-                    AppendAllText($"[CopyFile] 初始化进度条，最大值: {files.Length}");
-                }
-                catch (Exception ex)
-                {
-                    // 【修复】进度条初始化失败不影响文件复制
-                    AppendAllText($"[CopyFile] 警告: 进度条初始化失败: {ex.Message}，将继续复制文件");
-                }
+                pbDownFile.Visible = true;
+                pbDownFile.Minimum = 0;
+                pbDownFile.Maximum = files.Length;
+                pbDownFile.Value = 0;
+                Application.DoEvents();
+                AppendAllText($"[CopyFile] 初始化进度条，最大值: {files.Length}");
             }
 
             // 优化文件处理顺序：先处理压缩文件，再处理普通文件
@@ -1487,10 +1385,8 @@ namespace AutoUpdate
 
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    //【关键修复】修改逻辑：只有当使用AutoUpdateUpdater辅助进程时才跳过复制
-                    //当selfUpdateStarted=true时，表示使用独立更新器，此时应跳过
-                    //当selfUpdateStarted=false时（如LastCopy流程），应复制文件
-                    if (file == Path.Combine(sourcePath, currentexeName) && selfUpdateStarted)
+                    //但只有在非自我更新模式下才跳过，自我更新模式会通过辅助进程处理
+                    if (file == Path.Combine(sourcePath, currentexeName) && !selfUpdateStarted)
                     {
                         //MessageBox.Show("正在更新自身");
                         AppendAllText($"[CopyFile] 跳过自身更新文件，将由自我更新流程处理: {file}");
@@ -1593,20 +1489,12 @@ namespace AutoUpdate
                     }
                     #endregion
 
-                    // 【修复】更新进度条，但错误不影响文件复制
-                    try
+                    // 更新进度条
+                    if (pbDownFile != null)
                     {
-                        if (pbDownFile != null)
-                        {
-                            SafeSetProgressValue(i + 1);
-                            pbDownFile.Update();
-                            Application.DoEvents();
-                        }
-                    }
-                    catch (Exception progressEx)
-                    {
-                        // 进度条更新失败不影响文件复制
-                        AppendAllText($"[CopyFile] 警告: 进度条更新失败: {progressEx.Message}");
+                        pbDownFile.Value = i + 1;
+                        pbDownFile.Update();
+                        Application.DoEvents();
                     }
                 }
                 catch (Exception ex)
@@ -1649,32 +1537,8 @@ namespace AutoUpdate
                     AppendAllText($"[CopyFile] 子目录已存在: {destSubDir}");
                 }
 
-                // 【修复】保存当前进度条状态，防止递归调用修改后影响当前循环
-                int savedMaximum = pbDownFile.Maximum;
-                int savedValue = pbDownFile.Value;
-
                 // 递归复制子目录
                 CopyFile(dirs[i], destSubDir);
-
-                // 【修复】恢复进度条状态
-                if (pbDownFile != null)
-                {
-                    // 安全恢复：先确保Value在合理范围内，再设置Maximum
-                    // 如果savedValue > savedMaximum，先把Value降到不超过savedMaximum
-                    if (savedValue > savedMaximum)
-                    {
-                        savedValue = savedMaximum;
-                        AppendAllText($"[CopyFile] 调整保存的进度值: {savedValue} (防止超过最大值)");
-                    }
-                    
-                    // 先临时把Value设为0，避免设置Maximum时触发异常
-                    pbDownFile.Value = 0;
-                    // 再设置Maximum
-                    pbDownFile.Maximum = savedMaximum;
-                    // 最后用安全方法设置实际Value
-                    SafeSetProgressValue(savedValue);
-                    AppendAllText($"[CopyFile] 恢复进度条状态: Maximum={savedMaximum}, Value={savedValue}");
-                }
 
             }
 
@@ -1748,20 +1612,12 @@ namespace AutoUpdate
             // 初始化进度条（只在有文件需要复制时）
             if (files.Length > 0 && pbDownFile != null)
             {
-                try
-                {
-                    pbDownFile.Visible = true;
-                    pbDownFile.Minimum = 0;
-                    pbDownFile.Maximum = files.Length;
-                    SafeSetProgressValue(0);
-                    Application.DoEvents();
-                    AppendAllText($"[CopyFile] 初始化进度条，最大值: {files.Length}");
-                }
-                catch (Exception ex)
-                {
-                    // 【修复】进度条初始化失败不影响文件复制
-                    AppendAllText($"[CopyFile] 警告: 进度条初始化失败: {ex.Message}，将继续复制文件");
-                }
+                pbDownFile.Visible = true;
+                pbDownFile.Minimum = 0;
+                pbDownFile.Maximum = files.Length;
+                pbDownFile.Value = 0;
+                Application.DoEvents();
+                AppendAllText($"[CopyFile] 初始化进度条，最大值: {files.Length}");
             }
 
             // 优化文件处理顺序：先处理压缩文件，再处理普通文件
@@ -1781,10 +1637,8 @@ namespace AutoUpdate
 
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    //【关键修复】修改逻辑：只有当使用AutoUpdateUpdater辅助进程时才跳过复制
-                    //当selfUpdateStarted=true时，表示使用独立更新器，此时应跳过
-                    //当selfUpdateStarted=false时（如LastCopy流程），应复制文件
-                    if (file == Path.Combine(sourcePath, currentexeName) && selfUpdateStarted)
+                    //但只有在非自我更新模式下才跳过，自我更新模式会通过辅助进程处理
+                    if (file == Path.Combine(sourcePath, currentexeName) && !selfUpdateStarted)
                     {
                         AppendAllText($"[CopyFile] 跳过自身更新文件，将由自我更新流程处理: {file}");
                         contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + file);
@@ -1897,20 +1751,12 @@ namespace AutoUpdate
                     }
                     #endregion
 
-                    // 【修复】更新进度条，但错误不影响文件复制
-                    try
+                    // 更新进度条
+                    if (pbDownFile != null)
                     {
-                        if (pbDownFile != null)
-                        {
-                            SafeSetProgressValue(i + 1);
-                            pbDownFile.Update();
-                            Application.DoEvents();
-                        }
-                    }
-                    catch (Exception progressEx)
-                    {
-                        // 进度条更新失败不影响文件复制
-                        AppendAllText($"[CopyFile] 警告: 进度条更新失败: {progressEx.Message}");
+                        pbDownFile.Value = i + 1;
+                        pbDownFile.Update();
+                        Application.DoEvents();
                     }
                 }
                 catch (Exception ex)
@@ -1953,34 +1799,10 @@ namespace AutoUpdate
                     AppendAllText($"[CopyFile] 子目录已存在: {destSubDir}");
                 }
 
-                // 【修复】保存当前进度条状态，防止递归调用修改后影响当前循环
-                int savedMaximum = pbDownFile.Maximum;
-                int savedValue = pbDownFile.Value;
-
                 // 递归复制子目录
                 CopyFile(dirs[i], destSubDir);
-
-                // 【修复】恢复进度条状态
-                if (pbDownFile != null)
-                {
-                    // 安全恢复：先确保Value在合理范围内，再设置Maximum
-                    // 如果savedValue > savedMaximum，先把Value降到不超过savedMaximum
-                    if (savedValue > savedMaximum)
-                    {
-                        savedValue = savedMaximum;
-                        AppendAllText($"[CopyFile] 调整保存的进度值: {savedValue} (防止超过最大值)");
-                    }
-                    
-                    // 先临时把Value设为0，避免设置Maximum时触发异常
-                    pbDownFile.Value = 0;
-                    // 再设置Maximum
-                    pbDownFile.Maximum = savedMaximum;
-                    // 最后用安全方法设置实际Value
-                    SafeSetProgressValue(savedValue);
-                    AppendAllText($"[CopyFile] 恢复进度条状态: Maximum={savedMaximum}, Value={savedValue}");
-                }
-
-
+                //PrintInfoLog(System.DateTime.Now.ToString() + "复制目录从" + files[i]);
+                //contents.Add(System.DateTime.Now.ToString() + "复制目录成功:" + dirs[i]);
             }
 
             AppendAllLines(contents);
@@ -2095,20 +1917,6 @@ namespace AutoUpdate
             // 正常模式 - 执行实际的自我更新
             AppendAllText("开始执行自我更新...");
 
-            // 【修复】禁用完成按钮，防止重复点击
-            if (btnFinish != null)
-            {
-                btnFinish.Enabled = false;
-                btnFinish.Text = "更新中...";
-            }
-            
-            // 确保进度条可见
-            if (pbDownFile != null)
-            {
-                pbDownFile.Visible = true;
-                lbState.Visible = true;
-            }
-
             // 执行文件复制，但检查自我更新是否成功
             bool selfUpdateSuccess = false;
             try
@@ -2129,9 +1937,6 @@ namespace AutoUpdate
             System.Diagnostics.Debug.WriteLine($"当前版本: {version}");
             System.Diagnostics.Debug.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
 
-            // 【修复】写入升级完成标记，通知主程序不再重复检测更新
-            WriteMainProgramStatus("升级完成");
-            
             // 无论自我更新是否成功，都要启动主程序
             StartEntryPointExe(NewVersion);
 
@@ -2147,8 +1952,6 @@ namespace AutoUpdate
             // 非调试模式下关闭窗口
             if (!IsDebugMode)
             {
-                // 【新增】等待一小段时间，让用户看到最终状态
-                Thread.Sleep(1000);
                 this.Close();
                 this.Dispose();
             }
@@ -2158,48 +1961,9 @@ namespace AutoUpdate
 
         private void LastCopy()
         {
-            // 【优化】原子化更新事务 - 记录更新状态用于失败回滚
-            List<string> updatedFiles = new List<string>();
-            string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Backup", DateTime.Now.ToString("yyyyMMddHHmmss"));
-            bool updateSuccess = false;
-            
             try
             {
                 AppendAllText("===== 开始执行 LastCopy 文件复制 =====");
-                
-                // 【关键修复】重新显示 panel1 和进度条
-                // 因为下载完成后 InvalidateControl() 隐藏了 panel1
-                if (panel1 != null)
-                {
-                    panel1.Visible = true;
-                    AppendAllText("[LastCopy] 重新显示 panel1");
-                }
-                
-                if (pbDownFile != null)
-                {
-                    pbDownFile.Visible = true;
-                    AppendAllText("[LastCopy] 确保进度条可见");
-                }
-                
-                if (lbState != null)
-                {
-                    lbState.Visible = true;
-                    AppendAllText("[LastCopy] 确保状态标签可见");
-                }
-                
-                // 初始化进度条，确保Maximum已设置
-                if (pbDownFile.Maximum != 100)
-                {
-                    pbDownFile.Minimum = 0;
-                    pbDownFile.Maximum = 100;
-                }
-
-                // 更新UI状态
-                lbState.Text = "正在准备更新文件，请稍候...";
-                pbDownFile.Visible = true;
-                SafeSetProgressValue(0);
-                Application.DoEvents();
-                
                 //更新完成后copy文件，将下载的临时文件夹中的新文件复制到对应目标目录使其生效
 
                 string targetDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -2226,28 +1990,9 @@ namespace AutoUpdate
 
                 AppendAllText($"[LastCopy] htUpdateFile 包含 {htUpdateFile.Count} 个文件记录");
                 AppendAllText($"[LastCopy] versionDirList 包含 {versionDirList.Count} 个版本目录");
-                
-                // 【优化】创建备份目录
-                Directory.CreateDirectory(backupDir);
-                AppendAllText($"[事务更新] 创建备份目录: {backupDir}");
-
-                // 【优化】在复制文件前优雅地终止主进程
-                KillProcessBeforeApply();
-                
-                // 计算总进度
-                int totalVersions = versionDirList.Count;
-                int currentVersionProgress = 0;
 
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
-                    // 更新整体进度
-                    currentVersionProgress++;
-                    int overallProgress = (currentVersionProgress * 100) / Math.Max(totalVersions, 1);
-                    lbState.Text = $"正在复制版本 {currentVersionProgress}/{totalVersions} 的文件...";
-                    SafeSetProgressValue(Math.Min(overallProgress, 100));
-                    pbDownFile.Refresh();
-                    Application.DoEvents();
-                    
                     // 使用Path.Combine安全构建路径，避免双反斜杠问题
                     string sourcePath = Path.Combine(tempUpdatePath, versionDirList[i]);
                     AppendAllText($"[LastCopy] 处理版本 {i + 1}/{versionDirList.Count}: {versionDirList[i]}");
@@ -2280,157 +2025,25 @@ namespace AutoUpdate
                         AppendAllText($"[LastCopy] 警告: 源目录不存在: {sourcePath}");
                     }
                 }
-                
-                // 更新进度到90%
-                lbState.Text = "文件复制完成，正在处理自我更新...";
-                SafeSetProgressValue(90);
-                pbDownFile.Refresh();
-                Application.DoEvents();
-                
                 AppendAllText("文件复制完成，开始执行自我更新流程...");
-
-                // 【关键修复】确保AutoUpdaterList.xml被正确复制到根目录
-                // 这是防止重复更新检测的核心：必须保证本地配置文件是最新的
-                string tempXmlFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
-                string targetXmlFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
-                
-                if (File.Exists(tempXmlFile))
-                {
-                    try
-                    {
-                        // 直接复制，不做任何条件判断，确保本地配置与服务器同步
-                        File.Copy(tempXmlFile, targetXmlFile, true);
-                        AppendAllText($"[关键修复] AutoUpdaterList.xml已强制复制到根目录");
-                        
-                        // 验证复制结果
-                        if (File.Exists(targetXmlFile))
-                        {
-                            var (newVersion, _, _) = ParseXmlInfo(targetXmlFile);
-                            AppendAllText($"[关键修复] 本地版本已更新为: {newVersion}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        AppendAllText($"[关键修复] 复制AutoUpdaterList.xml失败: {ex.Message}");
-                    }
-                }
-                else
-                {
-                    AppendAllText($"[关键修复] 警告：临时目录中找不到AutoUpdaterList.xml");
-                }
-
-                // 【新增】记录版本历史
-                RecordVersionHistory();
-
-                // 【修复】确保配置文件已复制，再启动AutoUpdateUpdater
-                // 这是确保AutoUpdateUpdater能读取最新配置的关键步骤
-                AppendAllText("[配置同步] 开始强制复制配置文件到根目录...");
-                bool configCopied = CopyConfigFileToRoot();
-                if (!configCopied)
-                {
-                    AppendAllText("[配置同步] 警告: 配置文件复制可能未成功，AutoUpdateUpdater将使用默认配置");
-                }
-                else
-                {
-                    // 验证版本一致性
-                    ValidateConfigVersion();
-                }
 
                 // 关键：使用AutoUpdateUpdater来更新AutoUpdate程序自身
                 string currentExePath = Process.GetCurrentProcess().MainModule.FileName;
                 AppendAllText($"[AutoUpdate更新] 当前程序路径: {currentExePath}");
                 AppendAllText($"[AutoUpdate更新] 临时更新路径: {tempUpdatePath}");
 
-                // 【增强】在启动AutoUpdateUpdater之前，确保所有资源释放
-                AppendAllText("[AutoUpdate更新] 开始释放所有资源...");
-                
-                // 关闭所有打开的文件流和资源
-                if (appUpdater != null)
-                {
-                    appUpdater.Dispose();
-                    AppendAllText("[AutoUpdate更新] 已释放AppUpdater资源");
-                }
-                
-                // 关闭调试窗口
-                if (frmDebug != null)
-                {
-                    try
-                    {
-                        frmDebug.Close();
-                        frmDebug.Dispose();
-                        AppendAllText("[AutoUpdate更新] 已关闭调试窗口");
-                    }
-                    catch { }
-                }
-                
-                // 【新增】关闭当前窗口的所有控件，释放文件句柄
-                AppendAllText("[AutoUpdate更新] 关闭所有UI控件...");
-                try
-                {
-                    this.Hide();
-                    foreach (Control control in this.Controls)
-                    {
-                        try
-                        {
-                            control.Dispose();
-                        }
-                        catch { }
-                    }
-                    AppendAllText("[AutoUpdate更新] UI控件已释放");
-                }
-                catch (Exception ex)
-                {
-                    AppendAllText($"[AutoUpdate更新] 释放UI控件时出错: {ex.Message}");
-                }
-                
-                // 强制垃圾回收（多次执行以确保完全清理）
-                AppendAllText("[AutoUpdate更新] 执行垃圾回收...");
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-                AppendAllText("[AutoUpdate更新] 已执行垃圾回收");
-                
-                // 【新增】额外等待，确保所有资源完全释放
-                AppendAllText("[AutoUpdate更新] 等待2秒，确保资源完全释放...");
-                Thread.Sleep(2000);
-
                 selfUpdateStarted = SelfUpdateHelper.StartAutoUpdateUpdater(currentExePath, tempUpdatePath);
 
                 if (selfUpdateStarted)
                 {
-                    // 更新进度到100%
-                    lbState.Text = "更新完成，正在启动主程序...";
-                    SafeSetProgressValue(100);
-                    pbDownFile.Refresh();
-                    Application.DoEvents();
-                    
                     AppendAllText("自我更新辅助进程已成功启动，主进程即将退出...");
                     
-                    // 【修复】再次确保配置文件已复制到根目录（双重保险）
-                    AppendAllText("[配置同步] 退出前再次确保配置文件已复制...");
-                    CopyConfigFileToRoot();
+                    // 在退出前确保配置文件已复制到根目录
+                    EnsureConfigFileCopied();
                     
-                    // 【增强】增加等待时间，确保AutoUpdateUpdater完全启动并接管
-                    AppendAllText("[AutoUpdate更新] 等待5秒，确保AutoUpdateUpdater完全启动并接管...");
-                    Thread.Sleep(5000);
+                    Thread.Sleep(1000); // 给辅助进程一点启动时间
 
-                    // 【增强】关闭所有窗口和控件
-                    AppendAllText("[AutoUpdate更新] 开始关闭所有窗口和控件...");
-                    
-                    // 先隐藏窗口，避免用户看到闪烁
-                    this.Hide();
-                    
-                    // 再次强制垃圾回收
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
-                    
-                    this.Close();
-                    this.Dispose();
-                    
                     // 正常退出主进程，让辅助进程接管更新
-                    AppendAllText("[AutoUpdate更新] 主进程退出");
                     Application.Exit();
                     Environment.Exit(0);
                 }
@@ -2438,9 +2051,8 @@ namespace AutoUpdate
                 {
                     AppendAllText("警告：自我更新辅助进程启动失败，使用传统文件复制方式");
                     
-                    // 【修复】自我更新失败后，使用统一的配置复制方法
-                    AppendAllText("[配置同步] 自我更新失败，确保配置文件正确复制到根目录...");
-                    CopyConfigFileToRoot();
+                    // 自我更新失败后，确保配置文件正确复制到根目录
+                    EnsureConfigFileCopied();
                     
                     // 启动ERP系统
                     StartERPApplication();
@@ -2527,59 +2139,12 @@ namespace AutoUpdate
                     }
 
                     AppendAllText("传统文件复制方式完成");
-                    
-                    // 【优化】标记更新成功
-                    updateSuccess = true;
-                    AppendAllText("[事务更新] 文件复制成功，标记更新状态为成功");
                 }
             }
             catch (Exception ex)
             {
                 string errorMsg = $"更新过程中发生错误: {ex.Message}";
                 AppendAllText(errorMsg);
-
-                // 【优化】事务回滚 - 尝试恢复备份的文件
-                if (Directory.Exists(backupDir))
-                {
-                    try
-                    {
-                        AppendAllText($"[事务回滚] 开始执行更新回滚...");
-                        string targetDir = AppDomain.CurrentDomain.BaseDirectory;
-                        
-                        // 恢复备份的文件
-                        string[] backupFiles = Directory.GetFiles(backupDir, "*.*", SearchOption.AllDirectories);
-                        foreach (string backupFile in backupFiles)
-                        {
-                            try
-                            {
-                                string relativePath = backupFile.Substring(backupDir.Length + 1);
-                                string targetFile = Path.Combine(targetDir, relativePath);
-                                
-                                // 确保目标目录存在
-                                string targetFileDir = Path.GetDirectoryName(targetFile);
-                                if (!Directory.Exists(targetFileDir))
-                                {
-                                    Directory.CreateDirectory(targetFileDir);
-                                }
-                                
-                                File.Copy(backupFile, targetFile, true);
-                                AppendAllText($"[事务回滚] 恢复文件: {relativePath}");
-                            }
-                            catch (Exception rollbackEx)
-                            {
-                                AppendAllText($"[事务回滚] 恢复文件失败: {backupFile}, 错误: {rollbackEx.Message}");
-                            }
-                        }
-                        
-                        AppendAllText($"[事务回滚] 回滚完成，系统已恢复到更新前状态");
-                        errorMsg += "\n\n系统已自动回滚到更新前状态。";
-                    }
-                    catch (Exception rollbackEx)
-                    {
-                        AppendAllText($"[事务回滚] 回滚过程发生错误: {rollbackEx.Message}");
-                        errorMsg += "\n\n回滚失败，请手动检查系统状态。";
-                    }
-                }
 
                 // 显示更专业的错误消息
                 MessageBox.Show(
@@ -2590,25 +2155,6 @@ namespace AutoUpdate
 
                 // 记录异常堆栈信息
                 AppendAllText($"异常详情: {ex.StackTrace}");
-                
-                // 标记更新失败
-                updateSuccess = false;
-            }
-            finally
-            {
-                // 【优化】清理备份目录（如果更新成功）
-                if (updateSuccess && Directory.Exists(backupDir))
-                {
-                    try
-                    {
-                        Directory.Delete(backupDir, true);
-                        AppendAllText($"[事务更新] 清理备份目录: {backupDir}");
-                    }
-                    catch (Exception cleanupEx)
-                    {
-                        AppendAllText($"[事务更新] 清理备份目录失败: {cleanupEx.Message}");
-                    }
-                }
             }
 
             //处理更新自身文件如果autoUpdate有更新 自动更新替换旧文件，防止在更新过程中被占用
@@ -2627,14 +2173,14 @@ namespace AutoUpdate
                 string tempNewFileName = filename + ".new";
                 int retryCount = 0;
                 const int maxRetry = 3;
-                bool selfUpdateSuccess = false;
+                bool updateSuccess = false;
 
                 AppendAllText($"[自我更新] 当前程序路径: {filename}");
                 AppendAllText($"[自我更新] 更新文件路径: {autoupdate.Value}");
                 AppendAllText($"[自我更新] 备份文件路径: {backupFileName}");
                 AppendAllText($"[自我更新] 临时新文件路径: {tempNewFileName}");
 
-                while (retryCount < maxRetry && !selfUpdateSuccess)
+                while (retryCount < maxRetry && !updateSuccess)
                 {
                     try
                     {
@@ -2691,7 +2237,7 @@ namespace AutoUpdate
                         // 验证更新后的文件
                         if (System.IO.File.Exists(filename))
                         {
-                            selfUpdateSuccess = true;
+                            updateSuccess = true;
                             AppendAllText($"[自我更新] 更新成功，新文件已就位: {filename}");
 
                             // 在调试模式下，验证更新后的文件信息
@@ -2748,7 +2294,7 @@ namespace AutoUpdate
                     }
                 }
 
-                if (!selfUpdateSuccess)
+                if (!updateSuccess)
                 {
                     AppendAllText($"[自我更新] 更新失败，已达到最大重试次数");
                 }
@@ -2911,408 +2457,6 @@ namespace AutoUpdate
             return isRun;
         }
 
-        #region 优化：优雅终止进程和下载重试机制
-
-        /// <summary>
-        /// 优雅地终止主进程（带重试机制）
-        /// </summary>
-        /// <param name="processName">进程名（不含.exe）</param>
-        /// <param name="timeoutMs">等待进程退出的超时时间（毫秒）</param>
-        /// <returns>是否成功终止进程</returns>
-        private bool GracefulKillMainProcess(string processName, int timeoutMs = 5000)
-        {
-            try
-            {
-                AppendAllText($"[进程管理] 开始优雅终止进程: {processName}");
-                
-                // 更新UI状态
-                lbState.Text = $"正在关闭 {processName} ...";
-                pbDownFile.Refresh();
-                Application.DoEvents();
-
-                // 获取所有匹配的进程
-                Process[] processes = Process.GetProcessesByName(processName);
-                if (processes.Length == 0)
-                {
-                    AppendAllText($"[进程管理] 进程 {processName} 未运行，无需终止");
-                    return true;
-                }
-
-                foreach (Process p in processes)
-                {
-                    try
-                    {
-                        AppendAllText($"[进程管理] 找到运行中的进程: {p.ProcessName} (PID: {p.Id})");
-                        
-                        // 更新UI
-                        lbState.Text = $"正在关闭 {p.ProcessName} (PID: {p.Id})...";
-                        pbDownFile.Refresh();
-                        Application.DoEvents();
-
-                        // 检查进程是否已经退出
-                        if (p.HasExited)
-                        {
-                            AppendAllText($"[进程管理] 进程已退出");
-                            continue;
-                        }
-
-                        // 1. 尝试发送关闭消息（优雅退出）
-                        if (!p.HasExited && p.MainWindowHandle != IntPtr.Zero)
-                        {
-                            AppendAllText($"[进程管理] 发送关闭消息到主窗口");
-                            p.CloseMainWindow();
-
-                            // 等待进程退出
-                            int waitCount = 0;
-                            int maxWaitCount = timeoutMs / 100;
-                            while (!p.HasExited && waitCount < maxWaitCount)
-                            {
-                                Thread.Sleep(100);
-                                waitCount++;
-                            }
-
-                            if (!p.HasExited)
-                            {
-                                AppendAllText($"[进程管理] 优雅退出超时，强制终止进程");
-                            }
-                            else
-                            {
-                                AppendAllText($"[进程管理] 进程已优雅退出");
-                                continue;
-                            }
-                        }
-
-                        // 2. 强制终止
-                        if (!p.HasExited)
-                        {
-                            AppendAllText($"[进程管理] 强制终止进程");
-                            p.Kill();
-
-                            // 等待进程真正退出
-                            if (!p.WaitForExit(3000))
-                            {
-                                AppendAllText($"[进程管理] 警告: 进程未能及时退出");
-                            }
-                            else
-                            {
-                                AppendAllText($"[进程管理] 进程已终止");
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        AppendAllText($"[进程管理] 终止进程失败: {ex.Message}");
-                    }
-                }
-
-                // 再次检查是否还有进程运行
-                processes = Process.GetProcessesByName(processName);
-                if (processes.Length > 0)
-                {
-                    AppendAllText($"[进程管理] 警告: 仍有 {processes.Length} 个进程未终止");
-                    return false;
-                }
-
-                AppendAllText($"[进程管理] 进程终止完成");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                AppendAllText($"[进程管理] 终止进程时发生异常: {ex.Message}");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 在应用更新前终止主进程（优化后的流程）
-        /// 【修复】增加超时时间和进程终止验证，确保主进程完全退出
-        /// </summary>
-        private void KillProcessBeforeApply()
-        {
-            try
-            {
-                // 初始化进度条，确保Maximum已设置
-                if (pbDownFile.Maximum != 100)
-                {
-                    pbDownFile.Minimum = 0;
-                    pbDownFile.Maximum = 100;
-                }
-
-                // 更新UI状态
-                lbState.Text = "正在检查主程序运行状态...";
-                SafeSetProgressValue(5);
-                pbDownFile.Refresh();
-                Application.DoEvents();
-                
-                if (string.IsNullOrEmpty(mainAppExe))
-                {
-                    mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
-                }
-
-                // 去除.exe后缀（如果有）
-                string processName = mainAppExe;
-                if (processName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                {
-                    processName = processName.Substring(0, processName.Length - 4);
-                }
-
-                AppendAllText($"[流程优化] 开始在应用更新前终止主进程: {processName}");
-                
-                // 更新UI状态
-                lbState.Text = $"正在关闭主程序: {processName}...";
-                SafeSetProgressValue(10);
-                pbDownFile.Refresh();
-                Application.DoEvents();
-
-                // 【修复】使用优雅终止方法，增加超时时间从5秒到10秒
-                bool killSuccess = GracefulKillMainProcess(processName, 10000);
-
-                if (!killSuccess)
-                {
-                    AppendAllText($"[流程优化] 优雅终止失败，尝试强制终止");
-                    
-                    // 更新UI状态
-                    lbState.Text = "正在强制关闭主程序...";
-                    SafeSetProgressValue(15);
-                    pbDownFile.Refresh();
-                    Application.DoEvents();
-                    
-                    // 强制终止
-                    Process[] processes = Process.GetProcessesByName(processName);
-                    foreach (Process p in processes)
-                    {
-                        try
-                        {
-                            p.Kill();
-                            // 【修复】等待进程真正退出
-                            p.WaitForExit(3000);
-                            AppendAllText($"[流程优化] 强制终止进程: {p.ProcessName}");
-                        }
-                        catch (Exception ex)
-                        {
-                            AppendAllText($"[流程优化] 强制终止失败: {ex.Message}");
-                        }
-                    }
-                }
-
-                // 【修复】增加等待时间从500ms到2000ms，确保进程完全退出
-                Thread.Sleep(2000);
-                
-                // 【新增】验证进程是否真正终止
-                Process[] remainingProcesses = Process.GetProcessesByName(processName);
-                if (remainingProcesses.Length > 0)
-                {
-                    AppendAllText($"[流程优化] 警告: 仍有 {remainingProcesses.Length} 个进程未终止，执行强制终止");
-                    foreach (Process p in remainingProcesses)
-                    {
-                        try
-                        {
-                            p.Kill();
-                            p.WaitForExit(3000);
-                            AppendAllText($"[流程优化] 强制终止残留进程: {p.ProcessName} (PID: {p.Id})");
-                        }
-                        catch (Exception ex)
-                        {
-                            AppendAllText($"[流程优化] 强制终止残留进程失败: {ex.Message}");
-                        }
-                    }
-                    // 额外等待确保资源释放
-                    Thread.Sleep(1000);
-                }
-                
-                AppendAllText($"[流程优化] 主进程终止完成");
-                
-                // 更新UI状态
-                lbState.Text = "主程序已关闭，开始复制更新文件...";
-                SafeSetProgressValue(20);
-                pbDownFile.Refresh();
-                Application.DoEvents();
-            }
-            catch (Exception ex)
-            {
-                AppendAllText($"[流程优化] 终止主进程时发生异常: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 带重试机制的文件下载方法
-        /// </summary>
-        /// <param name="url">下载URL</param>
-        /// <param name="destPath">目标文件路径</param>
-        /// <param name="maxRetries">最大重试次数</param>
-        /// <returns>是否下载成功</returns>
-        private bool DownloadFileWithRetry(string url, string destPath, int maxRetries = 3)
-        {
-            Exception lastException = null;
-
-            // 【优化】预先创建目录，避免每次下载都检查
-            string destDir = Path.GetDirectoryName(destPath);
-            if (!Directory.Exists(destDir))
-            {
-                Directory.CreateDirectory(destDir);
-            }
-
-            for (int retry = 1; retry <= maxRetries; retry++)
-            {
-                try
-                {
-                    // 创建下载请求
-                    HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create(url);
-                    webReq.Timeout = 30000;
-                    webReq.ReadWriteTimeout = 30000;
-                    // 【优化】添加连接复用
-                    webReq.KeepAlive = true;
-                    webReq.ServicePoint.ConnectionLimit = 50;
-
-                    using (WebResponse webRes = webReq.GetResponse())
-                    {
-                        long fileLength = webRes.ContentLength;
-                        if (fileLength < 0)
-                        {
-                            continue;
-                        }
-
-                        // 下载文件 - 简化版本，直接流式下载
-                        using (Stream srm = webRes.GetResponseStream())
-                        using (FileStream fs = new FileStream(destPath, FileMode.Create, FileAccess.Write))
-                        {
-                            // 【优化】使用更大的缓冲区 128KB
-                            byte[] buffer = new byte[131072];
-                            int bytesRead;
-                            long totalBytesRead = 0;
-
-                            while ((bytesRead = srm.Read(buffer, 0, buffer.Length)) > 0)
-                            {
-                                fs.Write(buffer, 0, bytesRead);
-                                totalBytesRead += bytesRead;
-                            }
-                        }
-
-                        // 验证下载文件
-                        if (File.Exists(destPath))
-                        {
-                            var fileInfo = new FileInfo(destPath);
-                            if (fileInfo.Length == fileLength || fileLength == 0)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                catch (WebException ex)
-                {
-                    lastException = ex;
-                    // 如果是最后一次尝试，不再等待
-                    if (retry < maxRetries)
-                    {
-                        Thread.Sleep(retry * 500);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    lastException = ex;
-                    if (retry < maxRetries)
-                    {
-                        Thread.Sleep(retry * 500);
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        #endregion
-
-        #region 版本历史记录管理
-
-        /// <summary>
-        /// 记录版本历史
-        /// 在更新成功后记录当前版本信息，用于版本回滚
-        /// </summary>
-        private void RecordVersionHistory()
-        {
-            try
-            {
-                AppendAllText("[版本历史] 开始记录版本历史...");
-
-                // 获取当前版本号
-                string currentVersion = NewVersion;
-                if (string.IsNullOrEmpty(currentVersion))
-                {
-                    // 从配置文件获取当前版本
-                    try
-                    {
-                        currentVersion = updaterXmlFiles.GetNodeValue("//Application/Version");
-                    }
-                    catch
-                    {
-                        currentVersion = "1.0.0.0";
-                    }
-                }
-
-                AppendAllText($"[版本历史] 当前版本: {currentVersion}");
-
-                // 创建版本文件夹管理器
-                VersionFolderManager folderManager = new VersionFolderManager();
-
-                // 创建版本文件夹
-                string folderName = folderManager.CreateVersionFolder(currentVersion);
-                if (string.IsNullOrEmpty(folderName))
-                {
-                    AppendAllText("[版本历史] 创建版本文件夹失败");
-                    return;
-                }
-
-                AppendAllText($"[版本历史] 创建版本文件夹: {folderName}");
-
-                // 复制核心文件到版本文件夹
-                string targetDir = AppDomain.CurrentDomain.BaseDirectory;
-                string[] coreFiles = Directory.GetFiles(targetDir, "*.*")
-                    .Where(file => !file.Contains("UpdaterData") &&
-                                   !file.Contains("Versions") &&
-                                   !file.Contains("Backup") &&
-                                   !file.Contains("temp") &&
-                                   !file.Contains("tmp"))
-                    .ToArray();
-
-                int copiedCount = 0;
-                foreach (string file in coreFiles)
-                {
-                    try
-                    {
-                        folderManager.CopyFileToVersionFolder(file, folderName);
-                        copiedCount++;
-                    }
-                    catch (Exception ex)
-                    {
-                        AppendAllText($"[版本历史] 复制文件失败: {Path.GetFileName(file)}, {ex.Message}");
-                    }
-                }
-
-                AppendAllText($"[版本历史] 已复制 {copiedCount} 个文件到版本文件夹");
-
-                // 获取版本文件列表和校验和
-                List<string> files = folderManager.GetVersionFiles(folderName);
-                string checksum = folderManager.CalculateVersionChecksum(folderName);
-
-                // 记录版本信息
-                VersionHistoryManager historyManager = new VersionHistoryManager();
-                historyManager.RecordNewVersion(currentVersion, folderName, files, checksum);
-
-                AppendAllText($"[版本历史] 版本历史记录成功: {currentVersion}");
-
-                // 清理旧版本（保留最新10个）
-                historyManager.CleanupOldVersions(10);
-                AppendAllText("[版本历史] 旧版本清理完成");
-            }
-            catch (Exception ex)
-            {
-                AppendAllText($"[版本历史] 记录版本历史失败: {ex.Message}");
-                AppendAllText($"[版本历史] 异常详情: {ex.StackTrace}");
-            }
-        }
-
-        #endregion
 
         #region 外部方法
 
@@ -3365,8 +2509,10 @@ namespace AutoUpdate
         public bool CheckHasUpdates()
         {
             //初始化自身load事件
+
             string localXmlFile = Application.StartupPath + "\\AutoUpdaterList.xml";
             string serverXmlFile = string.Empty;
+
 
             try
             {
@@ -3374,28 +2520,10 @@ namespace AutoUpdate
             }
             catch (Exception ex)
             {
-                // 【优化】记录错误但不抛出异常，返回false表示检查失败
-                string errorMsg = $"配置文件错误: {ex.Message}";
-                AppendAllText($"[CheckHasUpdates] {errorMsg}");
-                WriteLog(errorMsg);
-                return false;
+                throw new Exception("配置文件错误" + ex.ToString());
             }
-
             //获取更新地址
-            try
-            {
-                updateUrl = updaterXmlFiles.GetNodeValue("//Url");
-                if (string.IsNullOrEmpty(updateUrl))
-                {
-                    AppendAllText("[CheckHasUpdates] 更新地址为空");
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                AppendAllText($"[CheckHasUpdates] 获取更新地址失败: {ex.Message}");
-                return false;
-            }
+            updateUrl = updaterXmlFiles.GetNodeValue("//Url");
 
             AppUpdater appUpdater = new AppUpdater();
             appUpdater.UpdaterUrl = updateUrl + "/AutoUpdaterList.xml";
@@ -3410,16 +2538,17 @@ namespace AutoUpdate
                     System.IO.Directory.CreateDirectory(updateDataPath);
                 }
 
+                //
+
                 tempUpdatePath = Path.Combine(updateDataPath, "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
+                //tempUpdatePath = Path.Combine(Environment.GetEnvironmentVariable("Temp"), "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
                 appUpdater.DownAutoUpdateFile(tempUpdatePath);
             }
             catch (Exception ex)
             {
-                // 【优化】记录错误但不抛出异常，返回false表示下载失败
-                string errorMsg = $"更新下载失败: {ex.Message}";
-                AppendAllText($"[CheckHasUpdates] {errorMsg}");
-                WriteLog(errorMsg);
-                return false;
+
+                throw new Exception("更新下载失败,请重试" + ex.ToString());
+
             }
 
             //获取更新文件列表
@@ -3627,8 +2756,8 @@ namespace AutoUpdate
                     WebResponse webRes = webReq.GetResponse();
                     fileLength = webRes.ContentLength;
 
+                    pbDownFile.Value = 0;
                     pbDownFile.Maximum = (int)fileLength;
-                    SafeSetProgressValue(0);
 
                     try
                     {
@@ -3645,7 +2774,7 @@ namespace AutoUpdate
                             ;
                             startByte += downByte;
                             allByte -= downByte;
-                            SafeSetProgressValue(pbDownFile.Value + downByte);
+                            pbDownFile.Value += downByte;
 
                             float part = (float)startByte / 1024;
                             float total = (float)bufferbyte.Length / 1024;
@@ -3836,38 +2965,25 @@ namespace AutoUpdate
             }
 
             //return;
-            // 【优化】确保使用绝对路径
-            string mainAppFullPath = mainAppExe;
-            if (!Path.IsPathRooted(mainAppExe))
-            {
-                mainAppFullPath = Path.GetFullPath(mainAppExe);
-                AppendAllText($"[启动优化] 转换为主程序绝对路径: {mainAppFullPath}");
-            }
-
-            if (System.IO.File.Exists(mainAppFullPath))
+            if (System.IO.File.Exists(mainAppExe))
             {
                 try
                 {
                     // 构建启动参数
-                    // 【修复】传递更新完成标记，防止主程序重复检测更新
-                    string arguments = "--updated";
-                    
-                    // 如果有额外参数，追加到后面
-                    if (args != null && args.Length > 0)
-                    {
-                        arguments = arguments + "|" + String.Join("|", args);
-                    }
+                    string arguments = tempUpdatePath;
+                    // 将参数转换为"|"分隔的字符串
+                    arguments = String.Join("|", args);
 
                     // 在调试模式下记录启动参数
                     if (IsDebugMode && frmDebug != null)
                     {
-                        frmDebug.AppendLog($"准备启动主程序: {mainAppFullPath}");
+                        frmDebug.AppendLog($"准备启动主程序: {mainAppExe}");
                         frmDebug.AppendLog($"启动参数: {arguments}");
-                        frmDebug.AppendLog($"工作目录: {Path.GetDirectoryName(mainAppFullPath)}");
+                        frmDebug.AppendLog($"工作目录: {Path.GetDirectoryName(mainAppExe)}");
                     }
 
                     // 创建进程启动信息
-                    ProcessStartInfo startInfo = new ProcessStartInfo(mainAppFullPath, arguments);
+                    ProcessStartInfo startInfo = new ProcessStartInfo(mainAppExe, arguments);
 
                     // 在调试模式下记录进程启动信息
                     if (IsDebugMode && frmDebug != null)
@@ -3887,7 +3003,7 @@ namespace AutoUpdate
                     }
 
                     // 记录日志
-                    AppendAllText($"成功启动主程序: {mainAppFullPath} 参数: {arguments}");
+                    AppendAllText($"成功启动主程序: {mainAppExe} 参数: {arguments}");
 
                     // 在调试模式下添加成功日志
                     if (IsDebugMode && frmDebug != null)
@@ -3913,35 +3029,18 @@ namespace AutoUpdate
             }
             else
             {
-                // 尝试在当前目录下查找
-                string tryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, mainAppExe);
-                if (System.IO.File.Exists(tryPath))
-                {
-                    AppendAllText($"[启动优化] 在应用程序目录下找到主程序: {tryPath}");
-                    try
-                    {
-                        Process.Start(tryPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"启动主程序失败: {ex.Message}", "启动错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-                else
-                {
-                    string errorMsg = $"系统找不到指定的文件路径: {mainAppExe}";
-                    AppendAllText(errorMsg);
+                string errorMsg = $"系统找不到指定的文件路径: {mainAppExe}";
+                AppendAllText(errorMsg);
 
-                    // 在调试模式下记录详细错误信息
-                    if (IsDebugMode && frmDebug != null)
-                    {
-                        frmDebug.AppendLog($"错误: {errorMsg}");
-                        frmDebug.AppendLog($"当前工作目录: {Directory.GetCurrentDirectory()}");
-                        frmDebug.AppendLog($"完整路径检查: {Path.GetFullPath(mainAppExe)}");
-                    }
-
-                    MessageBox.Show(errorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 在调试模式下记录详细错误信息
+                if (IsDebugMode && frmDebug != null)
+                {
+                    frmDebug.AppendLog($"错误: {errorMsg}");
+                    frmDebug.AppendLog($"当前工作目录: {Directory.GetCurrentDirectory()}");
+                    frmDebug.AppendLog($"完整路径检查: {Path.GetFullPath(mainAppExe)}");
                 }
+
+                MessageBox.Show(errorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             //MessageBox.Show(mainAppExe);
 
@@ -4040,7 +3139,7 @@ namespace AutoUpdate
                 }
 
                 // 保留原有功能，确保向后兼容
-                WriteMainProgramStatus("跳过当前版本");
+                File.WriteAllText(UpdateLogfilePath, "跳过当前版本");
 
                 // 设置跳过版本状态
                 mainResult = -9; // 使用标准的跳过版本返回值
@@ -4285,101 +3384,6 @@ namespace AutoUpdate
             catch (Exception ex)
             {
                 AppendAllText($"[配置修复] 配置文件处理失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 【修复】统一配置文件复制方法
-        /// 确保AutoUpdaterList.xml从临时目录正确复制到根目录
-        /// </summary>
-        private bool CopyConfigFileToRoot()
-        {
-            try
-            {
-                string sourceConfigFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
-                string targetConfigFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
-
-                AppendAllText($"[配置复制] 源文件: {sourceConfigFile}");
-                AppendAllText($"[配置复制] 目标文件: {targetConfigFile}");
-
-                if (!File.Exists(sourceConfigFile))
-                {
-                    AppendAllText($"[配置复制] 错误: 源配置文件不存在");
-                    return false;
-                }
-
-                // 无条件强制复制，确保配置最新
-                File.Copy(sourceConfigFile, targetConfigFile, true);
-
-                // 验证复制结果
-                if (File.Exists(targetConfigFile))
-                {
-                    var targetInfo = new FileInfo(targetConfigFile);
-                    var sourceInfo = new FileInfo(sourceConfigFile);
-
-                    if (targetInfo.Length == sourceInfo.Length)
-                    {
-                        AppendAllText($"[配置复制] 成功: 文件大小 {targetInfo.Length} 字节");
-
-                        // 验证版本信息
-                        var (version, _, _) = ParseXmlInfo(targetConfigFile);
-                        AppendAllText($"[配置复制] 配置文件版本: {version}");
-
-                        return true;
-                    }
-                    else
-                    {
-                        AppendAllText($"[配置复制] 警告: 文件大小不匹配");
-                        return false;
-                    }
-                }
-                else
-                {
-                    AppendAllText($"[配置复制] 错误: 复制后文件不存在");
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                AppendAllText($"[配置复制] 异常: {ex.Message}");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 【修复】验证配置文件版本
-        /// 确保本地配置文件与服务器版本一致
-        /// </summary>
-        private bool ValidateConfigVersion()
-        {
-            try
-            {
-                string serverConfigFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
-                string localConfigFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
-
-                if (!File.Exists(serverConfigFile) || !File.Exists(localConfigFile))
-                {
-                    return false;
-                }
-
-                var (serverVersion, _, _) = ParseXmlInfo(serverConfigFile);
-                var (localVersion, _, _) = ParseXmlInfo(localConfigFile);
-
-                if (serverVersion == localVersion)
-                {
-                    AppendAllText($"[版本验证] 配置文件版本一致: {localVersion}");
-                    return true;
-                }
-                else
-                {
-                    AppendAllText($"[版本验证] 警告: 版本不一致 - 服务器:{serverVersion}, 本地:{localVersion}");
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                AppendAllText($"[版本验证] 异常: {ex.Message}");
-                return false;
             }
         }
 

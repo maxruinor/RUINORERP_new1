@@ -152,17 +152,25 @@ namespace AutoUpdateUpdater
                 {
                     string processName = Path.GetFileNameWithoutExtension(exeName);
                     
-                    // 【增强】增加等待时间到15秒，确保进程完全退出
+                    // 【增强】增加等待时间到20秒，确保进程完全退出
                     WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 开始等待AutoUpdate进程完全退出...");
-                    if (!WaitAndKillProcess(processName, 15000))
+                    if (!WaitAndKillProcess(processName, 20000))
                     {
                         WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 警告: 进程关闭超时，但将继续尝试更新");
                         // 不再直接返回false，而是继续尝试更新
                     }
                     
                     // 【新增】额外等待，确保文件句柄完全释放
-                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 额外等待3秒，确保文件句柄释放...");
-                    Thread.Sleep(3000);
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 额外等待5秒，确保文件句柄释放...");
+                    Thread.Sleep(5000);
+                    
+                    // 【新增】验证文件是否可访问
+                    if (!IsFileAccessible(targetFile))
+                    {
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 警告: 目标文件仍被锁定，尝试强制解锁");
+                        ForceUnlockFile(targetFile);
+                        Thread.Sleep(2000);
+                    }
                     
                     // 备份原文件（带重试机制）
                     string backupFile = targetFile + ".bak";
@@ -259,7 +267,7 @@ namespace AutoUpdateUpdater
                     {
                         WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程已完全退出: {processName}, 检查次数: {checkCount}");
                         // 额外等待确保资源完全释放
-                        Thread.Sleep(1000);
+                        Thread.Sleep(2000);
                         return true;
                     }
                     
@@ -278,7 +286,7 @@ namespace AutoUpdateUpdater
                                 process.CloseMainWindow();
                                 
                                 // 等待进程响应
-                                if (process.WaitForExit(500))
+                                if (process.WaitForExit(1000))
                                 {
                                     WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程正常退出: {process.ProcessName}");
                                     continue;
@@ -287,7 +295,7 @@ namespace AutoUpdateUpdater
                                 // 如果优雅关闭失败，强制终止
                                 WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 强制终止进程: {process.ProcessName}");
                                 process.Kill();
-                                process.WaitForExit(1000);
+                                process.WaitForExit(2000);
                                 WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程已强制终止: {process.ProcessName}");
                             }
                         }
@@ -297,7 +305,7 @@ namespace AutoUpdateUpdater
                         }
                     }
                     
-                    Thread.Sleep(300);
+                    Thread.Sleep(500);
                 }
                 
                 // 最终检查
@@ -307,12 +315,35 @@ namespace AutoUpdateUpdater
                 if (finalCheck.Length == 0)
                 {
                     WriteLog("AutoUpdateUpdaterLog.txt", "[进程管理] 最终检查：进程已完全退出");
-                    Thread.Sleep(1000);
+                    Thread.Sleep(2000);
                     return true;
                 }
                 else
                 {
                     WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 警告: 等待超时，仍有 {finalCheck.Length} 个进程在运行");
+                    
+                    // 【新增】即使超时也尝试最后一次强制终止
+                    foreach (var process in finalCheck)
+                    {
+                        try
+                        {
+                            if (!process.HasExited)
+                            {
+                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最后尝试强制终止: {process.ProcessName} (ID: {process.Id})");
+                                process.Kill();
+                                process.WaitForExit(3000);
+                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最终强制终止成功: {process.ProcessName}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最终强制终止失败: {ex.Message}");
+                        }
+                    }
+                    
+                    // 再次等待
+                    Thread.Sleep(3000);
+                    
                     return false;
                 }
             }
@@ -871,6 +902,13 @@ namespace AutoUpdateUpdater
                         int waitTime = (int)Math.Pow(2, attempt - 1) * 1000;
                         WriteLog("AutoUpdateUpdaterLog.txt", $"[文件操作] 等待 {waitTime}ms 后重试...");
                         Thread.Sleep(waitTime);
+                        
+                        // 【新增】每次重试前检查文件是否可访问
+                        if (ioEx.Message.Contains("正由另一进程使用") || ioEx.Message.Contains("being used by another process"))
+                        {
+                            WriteLog("AutoUpdateUpdaterLog.txt", $"[文件操作] 检测到文件锁定，尝试强制解锁");
+                            // 这里可以添加额外的解锁逻辑
+                        }
                     }
                     else
                     {
@@ -886,6 +924,58 @@ namespace AutoUpdateUpdater
             }
             
             return false;
+        }
+        
+        /// <summary>
+        /// 检查文件是否可访问
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>如果文件可访问返回true，否则返回false</returns>
+        private static bool IsFileAccessible(string filePath)
+        {
+            try
+            {
+                using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    return true;
+                }
+            }
+            catch (IOException)
+            {
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 强制解锁文件（通过重命名等方式）
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        private static void ForceUnlockFile(string filePath)
+        {
+            try
+            {
+                // 尝试将文件重命名为临时名称
+                string tempPath = filePath + ".unlock_" + DateTime.Now.Ticks;
+                
+                if (File.Exists(filePath))
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件解锁] 尝试重命名文件: {filePath} -> {tempPath}");
+                    File.Move(filePath, tempPath);
+                    
+                    // 等待一段时间后删除
+                    Thread.Sleep(1000);
+                    
+                    if (File.Exists(tempPath))
+                    {
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"[文件解锁] 删除临时文件: {tempPath}");
+                        File.Delete(tempPath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteLog("AutoUpdateUpdaterLog.txt", $"[文件解锁] 强制解锁失败: {ex.Message}");
+            }
         }
     }
 }

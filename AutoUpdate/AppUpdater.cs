@@ -184,7 +184,6 @@ namespace AutoUpdate
                     oldFileAl.Add(oldVer);
 
                 }
-                //����ɵ���û�С�������
                 int pos = oldFileAl.IndexOf(newFileName);
                 if (pos == -1)
                 {
@@ -434,17 +433,11 @@ namespace AutoUpdate
                 request.Timeout = 36000;//超时时间
                 // 接收返回的页面
                 response = request.GetResponse() as HttpWebResponse;
-
-
-                //HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.UpdaterUrl);
-                ////request.AllowAutoRedirect = false; //�������ض���
-                //request.Timeout = 50000; //���ӳ�ʱʱ������
-
-
-                // response = request.GetResponse();
+ 
                 stream = response.GetResponseStream();
 
-                byte[] buffer = new byte[1024];
+                // 【优化】增大缓冲区到 64KB，提升下载速度
+                byte[] buffer = new byte[65536]; // 64KB 缓冲区（原来是 1KB）
 
 
 

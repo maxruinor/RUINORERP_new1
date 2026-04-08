@@ -14,10 +14,10 @@ namespace AutoUpdateUpdater
     static class Program
     {
         #region 常量定义
-        private const int PROCESS_WAIT_TIMEOUT_MS = 30000;   // 进程等待超时时间（增加到30秒）
-        private const int EXTRA_WAIT_AFTER_EXIT_MS = 2000;   // 进程退出后额外等待
-        private const int FILE_HANDLE_RELEASE_WAIT_MS = 5000; // 文件句柄释放等待
-        private const int FORCE_UNLOCK_WAIT_MS = 2000;       // 强制解锁后等待
+        private const int PROCESS_WAIT_TIMEOUT_MS = 15000;   // 进程等待超时时间（优化为15秒）
+        private const int EXTRA_WAIT_AFTER_EXIT_MS = 1000;   // 进程退出后额外等待
+        private const int FILE_HANDLE_RELEASE_WAIT_MS = 3000; // 文件句柄释放等待（优化为3秒）
+        private const int FORCE_UNLOCK_WAIT_MS = 1000;       // 强制解锁后等待
         private const int SAFE_RETRY_DELAY_BASE_MS = 1000;   // 安全操作重试基础延迟
         private const int CONFIG_READ_RETRY_COUNT = 3;       // 配置读取重试次数
         private const int CONFIG_READ_RETRY_DELAY_MS = 500;  // 配置读取重试延迟
@@ -341,7 +341,7 @@ namespace AutoUpdateUpdater
                             {
                                 WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最后尝试强制终止: {process.ProcessName} (ID: {process.Id})");
                                 process.Kill();
-                                process.WaitForExit(3000);
+                                process.WaitForExit(2000);
                                 WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最终强制终止成功: {process.ProcessName}");
                             }
                         }
@@ -352,7 +352,7 @@ namespace AutoUpdateUpdater
                     }
                     
                     // 再次等待
-                    Thread.Sleep(3000);
+                    Thread.Sleep(2000);
                     
                     return false;
                 }
@@ -733,32 +733,48 @@ namespace AutoUpdateUpdater
         /// <summary>
         /// 启动ERP系统应用程序
         /// 增加等待AutoUpdate进程退出的逻辑，确保资源完全释放
+        /// 【增强】添加重试机制和错误标记文件
         /// </summary>
         private static void StartERPApplication()
         {
-            try
+            string currentDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            int maxRetries = 3;
+            bool startupSuccess = false;
+            
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
             {
-                WriteLog("AutoUpdateUpdaterLog.txt", "开始启动ERP系统应用程序...");
-
-                // 等待AutoUpdate进程完全退出
-                WaitForAutoUpdateExit();
-
-                // 获取当前目录
-                string currentDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-
-                // 使用新的配置读取方法，增加重试机制
-                string mainAppExe = GetMainAppPathFromConfig(currentDir);
-
-                // 确保路径是完整的绝对路径
-                if (!Path.IsPathRooted(mainAppExe))
+                try
                 {
-                    mainAppExe = Path.Combine(currentDir, mainAppExe);
-                    WriteLog("AutoUpdateUpdaterLog.txt", $"转换为绝对路径: {mainAppExe}");
-                }
-                
-                // 检查程序是否存在
-                if (File.Exists(mainAppExe))
-                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"开始启动ERP系统应用程序（尝试{attempt}/{maxRetries}）...");
+
+                    // 等待AutoUpdate进程完全退出
+                    WaitForAutoUpdateExit();
+
+                    // 使用新的配置读取方法，增加重试机制
+                    string mainAppExe = GetMainAppPathFromConfig(currentDir);
+
+                    // 确保路径是完整的绝对路径
+                    if (!Path.IsPathRooted(mainAppExe))
+                    {
+                        mainAppExe = Path.Combine(currentDir, mainAppExe);
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"转换为绝对路径: {mainAppExe}");
+                    }
+                    
+                    // 检查程序是否存在
+                    if (!File.Exists(mainAppExe))
+                    {
+                        string errorMsg = $"ERP主程序文件不存在: {mainAppExe}";
+                        WriteLog("AutoUpdateUpdaterLog.txt", errorMsg);
+                        
+                        if (attempt == maxRetries)
+                        {
+                            // 最后一次尝试失败，创建错误标记文件
+                            CreateStartupErrorFile(currentDir, errorMsg);
+                            MessageBox.Show(errorMsg, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        return;
+                    }
+                    
                     WriteLog("AutoUpdateUpdaterLog.txt", $"找到主程序文件，准备启动: {mainAppExe}");
                     
                     // 启动进程
@@ -776,26 +792,53 @@ namespace AutoUpdateUpdater
                     
                     if (process != null)
                     {
-                        WriteLog("AutoUpdateUpdaterLog.txt", $"ERP系统启动成功，进程ID: {process.Id}");
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"ERP系统启动成功（尝试{attempt}），进程ID: {process.Id}");
+                        
+                        // 等待进程启动
+                        Thread.Sleep(2000);
+                        
+                        // 验证进程是否仍在运行
+                        if (!process.HasExited)
+                        {
+                            WriteLog("AutoUpdateUpdaterLog.txt", "ERP系统正常运行");
+                            startupSuccess = true;
+                            break; // 成功，退出重试循环
+                        }
+                        else
+                        {
+                            WriteLog("AutoUpdateUpdaterLog.txt", $"警告: ERP进程启动后立即退出（尝试{attempt}）");
+                        }
                     }
                     else
                     {
-                        WriteLog("AutoUpdateUpdaterLog.txt", "警告: 启动ERP系统进程返回null");
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"警告: Process.Start返回null（尝试{attempt}）");
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    string errorMsg = $"ERP主程序文件不存在: {mainAppExe}";
+                    string errorMsg = $"启动ERP系统失败（尝试{attempt}/{maxRetries}）: {ex.Message}";
                     WriteLog("AutoUpdateUpdaterLog.txt", errorMsg);
-                    MessageBox.Show(errorMsg, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"异常详情: {ex.StackTrace}");
+                    
+                    if (attempt == maxRetries)
+                    {
+                        // 最后一次尝试失败，创建错误标记文件
+                        CreateStartupErrorFile(currentDir, $"{errorMsg}\n\n{ex.StackTrace}");
+                        MessageBox.Show($"启动ERP系统失败：{ex.Message}\n\n详细信息已记录到日志文件。", 
+                            "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                
+                if (!startupSuccess && attempt < maxRetries)
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"等待3秒后重试...");
+                    Thread.Sleep(3000);
                 }
             }
-            catch (Exception ex)
+            
+            if (!startupSuccess)
             {
-                string errorMsg = $"启动ERP系统失败: {ex.Message}";
-                WriteLog("AutoUpdateUpdaterLog.txt", errorMsg);
-                WriteLog("AutoUpdateUpdaterLog.txt", $"异常详情: {ex.StackTrace}");
-                MessageBox.Show(errorMsg, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                WriteLog("AutoUpdateUpdaterLog.txt", "ERROR: 所有启动尝试都失败！");
             }
         }
         
@@ -983,6 +1026,30 @@ namespace AutoUpdateUpdater
             catch (Exception ex)
             {
                 WriteLog("AutoUpdateUpdaterLog.txt", $"[文件解锁] 强制解锁失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 创建启动错误标记文件
+        /// 让主程序可以检测到启动失败并提示用户
+        /// </summary>
+        /// <param name="targetDir">目标目录</param>
+        /// <param name="errorMessage">错误信息</param>
+        private static void CreateStartupErrorFile(string targetDir, string errorMessage)
+        {
+            try
+            {
+                string errorFile = Path.Combine(targetDir, "StartupError.txt");
+                string errorContent = $"ERP启动失败于 {DateTime.Now}\r\n" +
+                                     $"错误信息: {errorMessage}\r\n" +
+                                     $"请手动启动程序或联系管理员";
+                
+                File.WriteAllText(errorFile, errorContent);
+                WriteLog("AutoUpdateUpdaterLog.txt", $"已创建错误标记文件: {errorFile}");
+            }
+            catch (Exception ex)
+            {
+                WriteLog("AutoUpdateUpdaterLog.txt", $"创建错误标记文件失败: {ex.Message}");
             }
         }
     }

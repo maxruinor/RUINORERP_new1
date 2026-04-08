@@ -1573,7 +1573,49 @@ namespace AutoUpdate
                             AppendAllText($"[CopyFile] 目标文件已存在，大小: {destFileInfo.Length} 字节");
                         }
 
-                        File.Copy(file, destFile, true);
+                        // 【优化】添加文件复制重试机制，解决文件被占用问题
+                        bool copySuccess = false;
+                        int retryCount = 0;
+                        int maxRetries = 3;
+                        while (!copySuccess && retryCount < maxRetries)
+                        {
+                            try
+                            {
+                                File.Copy(file, destFile, true);
+                                copySuccess = true;
+                            }
+                            catch (IOException)
+                            {
+                                // 检查是否是更新程序自身的文件，如果是则跳过重试
+                                string destFileName = Path.GetFileName(destFile);
+                                if (destFileName.Equals("AutoUpdate.exe", StringComparison.OrdinalIgnoreCase) ||
+                                    destFileName.Equals("AutoUpdateUpdater.exe", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    AppendAllText($"[CopyFile] 跳过更新程序自身文件，稍后将由AutoUpdateUpdater处理: {destFileName}");
+                                    copySuccess = true; // 标记为成功，跳过此文件
+                                }
+                                else if (retryCount < maxRetries - 1)
+                                {
+                                    retryCount++;
+                                    AppendAllText($"[CopyFile] 文件被占用，{retryCount}秒后重试...");
+                                    Thread.Sleep(1000 * retryCount);
+                                    
+                                    // 尝试强制关闭占用文件的进程
+                                    TryKillProcessUsingFile(destFile);
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!copySuccess)
+                        {
+                            // 最后一次尝试强制复制
+                            TryForceCopyFile(file, destFile);
+                            copySuccess = File.Exists(destFile);
+                        }
 
                         // 在调试模式下，验证复制后的文件
                         if (IsDebugMode)
@@ -1622,13 +1664,6 @@ namespace AutoUpdate
                     {
                         AppendAllText($"[CopyFile] 异常详情: {ex.StackTrace}");
                     }
-
-                    // 显示更专业的错误消息
-                    MessageBox.Show(
-                        errorMsg + "\n\n文件可能正被其他程序占用，请关闭相关程序后重试。",
-                        "文件更新错误",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
                 }
             }
 
@@ -1877,7 +1912,49 @@ namespace AutoUpdate
                             AppendAllText($"[CopyFile] 目标文件已存在，大小: {destFileInfo.Length} 字节");
                         }
 
-                        File.Copy(file, destFile, true);
+                        // 【优化】添加文件复制重试机制，解决文件被占用问题
+                        bool copySuccess = false;
+                        int retryCount = 0;
+                        int maxRetries = 3;
+                        while (!copySuccess && retryCount < maxRetries)
+                        {
+                            try
+                            {
+                                File.Copy(file, destFile, true);
+                                copySuccess = true;
+                            }
+                            catch (IOException)
+                            {
+                                // 检查是否是更新程序自身的文件，如果是则跳过重试
+                                string destFileName = Path.GetFileName(destFile);
+                                if (destFileName.Equals("AutoUpdate.exe", StringComparison.OrdinalIgnoreCase) ||
+                                    destFileName.Equals("AutoUpdateUpdater.exe", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    AppendAllText($"[CopyFile] 跳过更新程序自身文件，稍后将由AutoUpdateUpdater处理: {destFileName}");
+                                    copySuccess = true; // 标记为成功，跳过此文件
+                                }
+                                else if (retryCount < maxRetries - 1)
+                                {
+                                    retryCount++;
+                                    AppendAllText($"[CopyFile] 文件被占用，{retryCount}秒后重试...");
+                                    Thread.Sleep(1000 * retryCount);
+                                    
+                                    // 尝试强制关闭占用文件的进程
+                                    TryKillProcessUsingFile(destFile);
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!copySuccess)
+                        {
+                            // 最后一次尝试强制复制
+                            TryForceCopyFile(file, destFile);
+                            copySuccess = File.Exists(destFile);
+                        }
 
                         // 在调试模式下，验证复制后的文件
                         if (IsDebugMode)
@@ -1926,13 +2003,6 @@ namespace AutoUpdate
                     {
                         AppendAllText($"[CopyFile] 异常详情: {ex.StackTrace}");
                     }
-
-                    // 显示更专业的错误消息
-                    MessageBox.Show(
-                        errorMsg + "\n\n文件可能正被其他程序占用，请关闭相关程序后重试。",
-                        "文件更新错误",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
                 }
             }
 
@@ -1990,6 +2060,12 @@ namespace AutoUpdate
 
             AppendAllLines(contents);
             AppendAllText($"[CopyFile] 文件复制完成");
+            
+            // 【新增】显示更新成功提示
+            lbState.Text = "更新成功！";
+            SafeSetProgressValue(100);
+            pbDownFile.Refresh();
+            Application.DoEvents();
         }
 
         private void linkLabel1_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
@@ -2137,6 +2213,12 @@ namespace AutoUpdate
             // 【修复】写入升级完成标记，通知主程序不再重复检测更新
             WriteMainProgramStatus("升级完成");
             
+            // 【新增】显示更新成功和启动提示
+            lbState.Text = "更新成功！请等待，系统将自动启动程序...";
+            SafeSetProgressValue(100);
+            pbDownFile.Refresh();
+            Application.DoEvents();
+            
             // 无论自我更新是否成功，都要启动主程序
             StartEntryPointExe(NewVersion);
 
@@ -2171,6 +2253,10 @@ namespace AutoUpdate
             try
             {
                 AppendAllText("===== 开始执行 LastCopy 文件复制 =====");
+                
+                // 【修复】设置标志，告诉CopyFile方法跳过自我更新文件
+                // 由AutoUpdateUpdater完成后重启
+                selfUpdateStarted = true;
                 
                 // 【关键修复】重新显示 panel1 和进度条
                 // 因为下载完成后 InvalidateControl() 隐藏了 panel1
@@ -2425,34 +2511,31 @@ namespace AutoUpdate
                 GC.Collect();
                 AppendAllText("[AutoUpdate更新] 已执行垃圾回收");
                 
-                // 【新增】额外等待，确保所有资源完全释放
-                AppendAllText("[AutoUpdate更新] 等待2秒，确保资源完全释放...");
-                Thread.Sleep(2000);
+                // 【优化】减少等待时间，优化用户体验
+                AppendAllText("[AutoUpdate更新] 正在启动辅助进程...");
 
                 selfUpdateStarted = SelfUpdateHelper.StartAutoUpdateUpdater(currentExePath, tempUpdatePath);
 
                 if (selfUpdateStarted)
                 {
-                    // 更新进度到100%
-                    lbState.Text = "更新完成，正在启动主程序...";
+                    // 更新状态提示 - 用户可看到
+                    lbState.Text = "更新成功！正在启动主程序，请稍候...";
                     SafeSetProgressValue(100);
                     pbDownFile.Refresh();
                     Application.DoEvents();
                     
                     AppendAllText("自我更新辅助进程已成功启动，主进程即将退出...");
                     
-                    // 【修复】再次确保配置文件已复制到根目录（双重保险）
+                    // 确保配置文件已复制到根目录
                     AppendAllText("[配置同步] 退出前再次确保配置文件已复制...");
                     CopyConfigFileToRoot();
                     
-                    // 【增强】增加等待时间，确保AutoUpdateUpdater完全启动并接管
-                    AppendAllText("[AutoUpdate更新] 等待5秒，确保AutoUpdateUpdater完全启动并接管...");
-                    Thread.Sleep(5000);
+                    // 【优化】减少等待时间到2秒
+                    AppendAllText("[AutoUpdate更新] 等待2秒后退出...");
+                    Thread.Sleep(2000);
 
-                    // 【增强】关闭所有窗口和控件
-                    AppendAllText("[AutoUpdate更新] 开始关闭所有窗口和控件...");
-                    
-                    // 先隐藏窗口，避免用户看到闪烁
+                    // 隐藏窗口，避免用户看到闪烁
+                    AppendAllText("[AutoUpdate更新] 正在关闭更新程序...");
                     this.Hide();
                     
                     // 再次强制垃圾回收
@@ -3168,6 +3251,73 @@ namespace AutoUpdate
         }
 
         /// <summary>
+        /// 尝试终止占用指定文件的进程
+        /// </summary>
+        private void TryKillProcessUsingFile(string filePath)
+        {
+            try
+            {
+                string fileName = Path.GetFileName(filePath);
+                int currentProcessId = Process.GetCurrentProcess().Id;
+                Process[] processes = Process.GetProcesses();
+                foreach (Process p in processes)
+                {
+                    try
+                    {
+                        // 排除当前进程和更新程序自身
+                        if (p.Id == currentProcessId)
+                        {
+                            continue;
+                        }
+                        
+                        if (p.MainModule != null && p.MainModule.FileName.Equals(filePath, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // 检查是否是更新程序自身（AutoUpdate.exe）
+                            string processExeName = Path.GetFileName(p.MainModule.FileName);
+                            if (processExeName.Equals("AutoUpdate.exe", StringComparison.OrdinalIgnoreCase) ||
+                                processExeName.Equals("AutoUpdateUpdater.exe", StringComparison.OrdinalIgnoreCase))
+                            {
+                                AppendAllText($"[CopyFile] 跳过终止更新程序自身: {p.ProcessName}");
+                                continue;
+                            }
+                            
+                            AppendAllText($"[CopyFile] 强制终止占用文件的进程: {p.ProcessName}");
+                            p.Kill();
+                            p.WaitForExit(2000);
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[CopyFile] 尝试终止占用进程失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 强制复制文件（使用多次重试和等待）
+        /// </summary>
+        private void TryForceCopyFile(string sourceFile, string destFile)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+                    Thread.Sleep(500);
+                    File.Copy(sourceFile, destFile, true);
+                    AppendAllText($"[CopyFile] 强制复制成功");
+                    return;
+                }
+                catch
+                {
+                    TryKillProcessUsingFile(destFile);
+                }
+            }
+            AppendAllText($"[CopyFile] 强制复制失败");
+        }
+
+        /// <summary>
         /// 带重试机制的文件下载方法
         /// </summary>
         /// <param name="url">下载URL</param>
@@ -3752,77 +3902,56 @@ namespace AutoUpdate
                 {
                     AppendAllText("检测到更新程序需要更新，准备执行自身更新（最后执行）");
 
-                    // 执行自身更新
-                    bool updateSuccess = SelfUpdateHelper.StartAutoUpdateUpdater(
-                        currentExePath,
-                        tempUpdatePath
-                    );
-
-                    if (updateSuccess)
+                    try
                     {
-                        AppendAllText("自身更新辅助进程已启动，等待辅助进程初始化...");
-
-                        // 给辅助进程足够的时间启动和初始化
-                        Thread.Sleep(3000);
-
-                        AppendAllText("主进程准备退出，让辅助进程执行更新");
-
-                        // 清理临时目录（辅助进程会处理后续的复制）
-                        System.IO.Directory.Delete(tempUpdatePath, true);
-
-                        // 确保所有资源释放后再退出
-                        this.Close();
-                        this.Dispose();
-
-                        // 优雅退出应用程序
-                        Application.ExitThread();
-                        Application.Exit();
-                        return;
-                    }
-                    else
-                    {
-                        AppendErrorText("启动自身更新辅助进程失败，将使用传统方式更新");
-
-                        // 使用传统方式更新（仅作为备选方案）
-                        if (System.IO.File.Exists(System.IO.Path.Combine(tempUpdatePath, currentExeName)))
+                        // 验证临时目录存在性
+                        if (string.IsNullOrEmpty(tempUpdatePath) || !Directory.Exists(tempUpdatePath))
                         {
-                            try
+                            AppendErrorText("错误: 临时更新目录不存在或为空，跳过自身更新");
+                            // 不退出，继续启动主程序
+                        }
+                        else
+                        {
+                            // 执行自身更新
+                            bool updateSuccess = SelfUpdateHelper.StartAutoUpdateUpdater(
+                                currentExePath,
+                                tempUpdatePath
+                            );
+
+                            if (updateSuccess)
                             {
-                                string filename = Assembly.GetExecutingAssembly().Location;
-                                string tempFilename = filename + ".temp";
-                                string backupFilename = filename + ".backup";
+                                AppendAllText("自身更新辅助进程已启动，等待辅助进程初始化...");
 
-                                // 更安全的传统更新方式
-                                AppendAllText($"[传统更新] 开始更新自身文件: {filename}");
+                                // 【优化】减少等待时间
+                                Thread.Sleep(1500);
 
-                                // 1. 先复制到临时文件
-                                File.Copy(System.IO.Path.Combine(tempUpdatePath, currentExeName), tempFilename, true);
+                                AppendAllText("主进程准备退出，让辅助进程执行更新");
 
-                                // 2. 备份原文件
-                                if (File.Exists(filename))
-                                {
-                                    File.Copy(filename, backupFilename, true);
-                                }
+                                // 清理临时目录（辅助进程会处理后续的复制）
+                                System.IO.Directory.Delete(tempUpdatePath, true);
 
-                                // 3. 删除原文件
-                                File.Delete(filename);
+                                // 确保所有资源释放后再退出
+                                this.Close();
+                                this.Dispose();
 
-                                // 4. 移动临时文件到目标位置
-                                File.Move(tempFilename, filename);
-
-                                // 5. 清理备份文件（可选）
-                                if (File.Exists(backupFilename))
-                                {
-                                    File.Delete(backupFilename);
-                                }
-
-                                AppendAllText("[传统更新] 自身文件更新成功");
+                                // 优雅退出应用程序
+                                Application.ExitThread();
+                                Application.Exit();
+                                return;
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                AppendErrorText("[传统更新] 自身文件更新失败", ex);
+                                AppendErrorText("启动自身更新辅助进程失败，将使用传统方式更新");
+                                // 降级到传统更新方式
+                                FallbackToTraditionalUpdate(currentExePath, currentExeName, tempUpdatePath);
                             }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendErrorText($"自身更新异常: {ex.Message}\n{ex.StackTrace}");
+                        // 降级到传统更新方式
+                        FallbackToTraditionalUpdate(currentExePath, currentExeName, tempUpdatePath);
                     }
                 }
 
@@ -3834,6 +3963,71 @@ namespace AutoUpdate
             {
                 AppendErrorText("应用更新失败", ex);
                 throw ex;
+            }
+        }
+
+        /// <summary>
+        /// 降级方案：传统方式更新自身文件
+        /// </summary>
+        private void FallbackToTraditionalUpdate(string currentExePath, string currentExeName, string tempUpdatePath)
+        {
+            try
+            {
+                if (!File.Exists(Path.Combine(tempUpdatePath, currentExeName)))
+                {
+                    AppendErrorText("[降级更新] 临时目录中不存在更新文件，跳过自身更新");
+                    return;
+                }
+
+                AppendAllText("[降级更新] 开始使用传统方式更新自身文件...");
+
+                string tempFilename = currentExePath + ".temp";
+                string backupFilename = currentExePath + ".backup";
+
+                // 1. 先复制到临时文件
+                File.Copy(Path.Combine(tempUpdatePath, currentExeName), tempFilename, true);
+                AppendAllText("[降级更新] 已复制到临时文件");
+
+                // 2. 备份原文件
+                if (File.Exists(currentExePath))
+                {
+                    File.Copy(currentExePath, backupFilename, true);
+                    AppendAllText("[降级更新] 已备份原文件");
+                }
+
+                // 3. 删除原文件
+                File.Delete(currentExePath);
+                AppendAllText("[降级更新] 已删除原文件");
+
+                // 4. 移动临时文件到目标位置
+                File.Move(tempFilename, currentExePath);
+                AppendAllText("[降级更新] 自身文件更新成功");
+
+                // 5. 清理备份文件
+                if (File.Exists(backupFilename))
+                {
+                    File.Delete(backupFilename);
+                }
+
+                AppendAllText("[降级更新] 清理完成");
+            }
+            catch (Exception ex)
+            {
+                AppendErrorText($"[降级更新] 传统更新方式也失败: {ex.Message}\n{ex.StackTrace}");
+                // 尝试恢复备份
+                try
+                {
+                    string backupFilename = currentExePath + ".backup";
+                    if (File.Exists(backupFilename))
+                    {
+                        File.Copy(backupFilename, currentExePath, true);
+                        AppendAllText("[降级更新] 已恢复备份文件");
+                    }
+                }
+                catch (Exception restoreEx)
+                {
+                    AppendErrorText($"[降级更新] 恢复备份也失败: {restoreEx.Message}");
+                }
             }
         }
 
@@ -3883,13 +4077,16 @@ namespace AutoUpdate
                 {
                     // 构建启动参数
                     // 【修复】传递更新完成标记，防止主程序重复检测更新
-                    string arguments = "--updated";
+                    // 使用空格分隔参数，与Program.cs的参数解析保持一致
+                    List<string> argList = new List<string> { "--updated" };
                     
-                    // 如果有额外参数，追加到后面
+                    // 如果有额外参数，追加到列表中
                     if (args != null && args.Length > 0)
                     {
-                        arguments = arguments + "|" + String.Join("|", args);
+                        argList.AddRange(args);
                     }
+                    
+                    string arguments = string.Join(" ", argList);
 
                     // 在调试模式下记录启动参数
                     if (IsDebugMode && frmDebug != null)

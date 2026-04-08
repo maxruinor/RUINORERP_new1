@@ -73,7 +73,9 @@ namespace RUINORERP.Server.Network.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "启动时立即检查存储空间失败");
+                    // 记录完整的异常信息，包括堆栈跟踪
+                    _logger.LogError(ex, "启动时立即检查存储空间失败: {ErrorType} - {ErrorMessage}\n{StackTrace}", 
+                        ex.GetType().Name, ex.Message, ex.StackTrace);
                 }
             });
 
@@ -99,7 +101,8 @@ namespace RUINORERP.Server.Network.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "定时检查存储空间失败");
+                    // 记录完整的异常信息，包括堆栈跟踪
+                    _logger.LogError(ex, "定时检查存储空间失败: {ErrorType} - {ErrorMessage}", ex.GetType().Name, ex.Message);
                 }
             });
         }
@@ -128,6 +131,8 @@ namespace RUINORERP.Server.Network.Services
 
                 // 获取文件统计信息
                 var stats = await _fileCleanupService.GetCleanupStatisticsAsync();
+                _logger.LogDebug("文件统计信息获取完成: TotalFiles={TotalFiles}, TotalStorageSize={Size}", 
+                    stats.TotalFiles, stats.TotalStorageSize);
 
                 // 获取存储路径信息
                 string storagePath = FileStorageHelper.GetStoragePath();
@@ -228,7 +233,9 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "检查文件存储空间失败");
+                // 记录完整的异常信息，包括堆栈跟踪
+                _logger.LogError(ex, "检查文件存储空间失败: {ErrorType} - {ErrorMessage}\n{StackTrace}", 
+                    ex.GetType().Name, ex.Message, ex.StackTrace);
             }
         }
 
@@ -260,7 +267,9 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "自动清理失败");
+                // 记录完整的异常信息，包括堆栈跟踪
+                _logger.LogError(ex, "自动清理失败: {ErrorType} - {ErrorMessage}\n{StackTrace}", 
+                    ex.GetType().Name, ex.Message, ex.StackTrace);
             }
         }
 
@@ -325,7 +334,9 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "获取监控信息失败");
+                // 记录完整的异常信息，包括堆栈跟踪
+                _logger.LogError(ex, "获取监控信息失败: {ErrorType} - {ErrorMessage}\n{StackTrace}", 
+                    ex.GetType().Name, ex.Message, ex.StackTrace);
                 throw;
             }
         }

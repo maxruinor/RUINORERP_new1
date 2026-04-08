@@ -1706,6 +1706,11 @@ namespace RUINORERP.UI.Common
             {
                 return;
             }
+
+            if (btnItem.Text == "执行")
+            {
+
+            }
             //超级管理员不管控
             if (MainForm.Instance.AppContext.IsSuperUser)
             {

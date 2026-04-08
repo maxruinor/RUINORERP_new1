@@ -50,6 +50,11 @@ namespace RUINORERP.UI.Report
         private string _originalPrinterName;
 
         /// <summary>
+        /// 原始模板ID（用于检测模板变化）
+        /// </summary>
+        private long _originalTemplateId;
+
+        /// <summary>
         /// 打印配置
         /// </summary>
         public RUINORERP.Model.tb_PrintConfig printConfig { get; set; }
@@ -468,7 +473,12 @@ namespace RUINORERP.UI.Report
                 newSumDataGridView1.DataSource = null;
                 newSumDataGridView1.DataSource = bindingSourcePrintTemplate;
 
-              
+                // 添加行样式事件（用于高亮显示个人配置的模板）
+                newSumDataGridView1.CellFormatting += newSumDataGridView1_CellFormatting;
+                // 添加行绘制事件
+                newSumDataGridView1.RowPrePaint += newSumDataGridView1_RowPrePaint;
+                // 添加模板选择变化事件
+                newSumDataGridView1.SelectionChanged += newSumDataGridView1_SelectionChanged;
 
                 UpdateButtonStates();
             }
@@ -476,6 +486,48 @@ namespace RUINORERP.UI.Report
             {
                 MainForm.Instance.logger.Error("打印配置加载异常", ex);
             }
+        }
+
+        /// <summary>
+        /// DataGridView行预绘制事件（用于高亮显示个人配置的模板）
+        /// </summary>
+        private void newSumDataGridView1_RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
+        {
+            try
+            {
+                if (e.RowIndex < 0 || e.RowIndex >= newSumDataGridView1.Rows.Count)
+                    return;
+
+                var row = newSumDataGridView1.Rows[e.RowIndex];
+                if (row.DataBoundItem is tb_PrintTemplate template)
+                {
+                    // 如果是个人配置模式，且当前模板是个人配置中选中的模板，则高亮显示
+                    if (_isPersonalConfig)
+                    {
+                        var personalConfig = GetMenuPersonalPrintConfig(_currentMenuId);
+                        if (personalConfig?.PrintConfigDict != null && 
+                            personalConfig.PrintConfigDict.TemplateId == template.ID)
+                        {
+                            // 使用浅蓝色背景高亮显示个人配置的模板
+                            row.DefaultCellStyle.BackColor = Color.FromArgb(230, 240, 255);
+                            row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(200, 220, 255);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 忽略样式设置中的异常
+                System.Diagnostics.Debug.WriteLine($"设置行样式时发生异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// DataGridView单元格格式化事件
+        /// </summary>
+        private void newSumDataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            // 可以在这里添加其他单元格格式化逻辑
         }
 
         /// <summary>
@@ -492,19 +544,28 @@ namespace RUINORERP.UI.Report
 
             string printerName = null;
             bool printerSelected = false;
+            long templateId = 0;
 
             if (_isPersonalConfig && personalConfig?.PrintConfigDict != null)
             {
                 printerName = personalConfig.PrintConfigDict.PrinterName;
                 printerSelected = personalConfig.PrintConfigDict.PrinterSelected;
+                templateId = personalConfig.PrintConfigDict.TemplateId;
             }
             else
             {
                 printerName = printConfig.PrinterName;
                 printerSelected = printConfig.PrinterSelected ?? false;
+                // 获取系统默认模板ID
+                if (printConfig.tb_PrintTemplates != null && printConfig.tb_PrintTemplates.Count > 0)
+                {
+                    var defaultTemplate = printConfig.tb_PrintTemplates.FirstOrDefault(t => t.IsDefaultTemplate == true);
+                    templateId = defaultTemplate?.ID ?? 0;
+                }
             }
 
             _originalPrinterName = printerName;
+            _originalTemplateId = templateId;
       
             GroupBoxSelectPrinter.Visible = printerSelected;
 
@@ -512,6 +573,29 @@ namespace RUINORERP.UI.Report
             {
                 cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printerName);
             }
+
+            // 自动选中个人配置中指定的模板
+            if (_isPersonalConfig && templateId > 0 && printConfig.tb_PrintTemplates != null)
+            {
+                for (int i = 0; i < newSumDataGridView1.Rows.Count; i++)
+                {
+                    var row = newSumDataGridView1.Rows[i];
+                    if (row.DataBoundItem is tb_PrintTemplate template && template.ID == templateId)
+                    {
+                        newSumDataGridView1.CurrentCell = row.Cells[0];
+                        newSumDataGridView1_SelectionChanged(null, null);
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 模板选择变化事件处理
+        /// </summary>
+        private void newSumDataGridView1_SelectionChanged(object sender, EventArgs e)
+        {
+            UpdateSaveButtonState();
         }
 
         /// <summary>
@@ -528,7 +612,17 @@ namespace RUINORERP.UI.Report
         private void UpdateSaveButtonState()
         {
             string currentPrinter = cmbPrinterList.SelectedItem?.ToString();
-            bool hasChanged = !string.Equals(_originalPrinterName, currentPrinter, StringComparison.OrdinalIgnoreCase);
+            bool printerChanged = !string.Equals(_originalPrinterName, currentPrinter, StringComparison.OrdinalIgnoreCase);
+            
+            // 获取当前选中的模板ID
+            long currentTemplateId = 0;
+            if (newSumDataGridView1.CurrentRow?.DataBoundItem is tb_PrintTemplate currentTemplate)
+            {
+                currentTemplateId = currentTemplate.ID;
+            }
+            bool templateChanged = currentTemplateId != _originalTemplateId;
+            
+            bool hasChanged = printerChanged || templateChanged;
             
             if (_isPersonalConfig)
             {
@@ -634,6 +728,39 @@ namespace RUINORERP.UI.Report
                 }
 
                 var menuPersonalization = GetMenuPersonalPrintConfig(_currentMenuId);
+                
+                // 获取当前选择的模板信息
+                string selectedTemplateName = string.Empty;
+                long selectedTemplateId = 0;
+                bool isDefaultTemplate = true;
+                
+                if (newSumDataGridView1.CurrentRow?.DataBoundItem is tb_PrintTemplate selectedTemplate)
+                {
+                    selectedTemplateId = selectedTemplate.ID;
+                    selectedTemplateName = selectedTemplate.Template_Name ?? string.Empty;
+                    isDefaultTemplate = selectedTemplate.IsDefaultTemplate ?? false;
+                }
+                else if (printConfig.tb_PrintTemplates != null && printConfig.tb_PrintTemplates.Count > 0)
+                {
+                    var defaultTemplate = printConfig.tb_PrintTemplates.FirstOrDefault(t => t.IsDefaultTemplate == true) ?? printConfig.tb_PrintTemplates[0];
+                    selectedTemplateId = defaultTemplate.ID;
+                    selectedTemplateName = defaultTemplate.Template_Name ?? string.Empty;
+                    isDefaultTemplate = defaultTemplate.IsDefaultTemplate ?? false;
+                }
+
+                string selectedPrinterName = cmbPrinterList.SelectedItem?.ToString() ?? string.Empty;
+                
+                // 显示确认对话框
+                string confirmMessage = $"确定要保存以下个人独有打印配置吗？\n\n" +
+                    $"打印机：{(string.IsNullOrEmpty(selectedPrinterName) ? "未选择" : selectedPrinterName)}\n" +
+                    $"打印模板：{selectedTemplateName}\n" +
+                    $"是否为默认模板：{(isDefaultTemplate ? "是" : "否")}";
+
+                if (MessageBox.Show(confirmMessage, "确认保存", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                {
+                    return;
+                }
+
                 if (menuPersonalization == null)
                 {
                     menuPersonalization = new tb_UIMenuPersonalization
@@ -648,36 +775,16 @@ namespace RUINORERP.UI.Report
 
                 var configData = new MenuPrintConfigData
                 {
-                    PrinterName = cmbPrinterList.SelectedItem?.ToString() ?? string.Empty,
-                    PrinterSelected = cmbPrinterList.SelectedItem != null,
+                    PrinterName = selectedPrinterName,
+                    PrinterSelected = !string.IsNullOrEmpty(selectedPrinterName),
                     Landscape = printConfig.Landscape ?? false,
-                    TemplateId = 0,
-                    TemplateName = string.Empty,
-                    IsDefaultTemplate = true,
+                    TemplateId = selectedTemplateId,
+                    TemplateName = selectedTemplateName,
+                    IsDefaultTemplate = isDefaultTemplate,
                     BizType = printConfig.BizType,
                     BizName = printConfig.BizName ?? string.Empty,
                     LastModified = DateTime.Now
                 };
-
-                tb_PrintTemplate selectedTemplate = null;
-                if (newSumDataGridView1.CurrentRow != null)
-                {
-                    selectedTemplate = newSumDataGridView1.CurrentRow.DataBoundItem as tb_PrintTemplate;
-                }
-
-                if (selectedTemplate != null)
-                {
-                    configData.TemplateId = selectedTemplate.ID;
-                    configData.TemplateName = selectedTemplate.Template_Name ?? string.Empty;
-                    configData.IsDefaultTemplate = selectedTemplate.IsDefaultTemplate ?? false;
-                }
-                else if (printConfig.tb_PrintTemplates != null && printConfig.tb_PrintTemplates.Count > 0)
-                {
-                    var defaultTemplate = printConfig.tb_PrintTemplates.FirstOrDefault(t => t.IsDefaultTemplate == true) ?? printConfig.tb_PrintTemplates[0];
-                    configData.TemplateId = defaultTemplate.ID;
-                    configData.TemplateName = defaultTemplate.Template_Name ?? string.Empty;
-                    configData.IsDefaultTemplate = defaultTemplate.IsDefaultTemplate ?? false;
-                }
 
                 menuPersonalization.PrintConfigDict = configData;
                 menuPersonalization.UsePersonalPrintConfig = true;
@@ -686,6 +793,7 @@ namespace RUINORERP.UI.Report
 
                 _isPersonalConfig = true;
                 _originalPrinterName = configData.PrinterName;
+                _originalTemplateId = configData.TemplateId;
                 UpdateFormTitle();
                 UpdateButtonStates();
 

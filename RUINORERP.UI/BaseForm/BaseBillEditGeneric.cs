@@ -87,6 +87,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -1411,6 +1412,15 @@ namespace RUINORERP.UI.BaseForm
                         continue;
                     }
 
+                    // 上传前压缩图片
+                    byte[] originalSize = imageData;
+                    imageData = CompressImageIfNeeded(imageData);
+                    if (imageData.Length < originalSize.Length)
+                    {
+                        logger.LogInformation("图片压缩完成: {FileName}, 原始大小: {OriginalSize}KB, 压缩后: {CompressedSize}KB",
+                            imageInfo.OriginalFileName, originalSize.Length / 1024, imageData.Length / 1024);
+                    }
+
                     // 检查文件大小限制
                     if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
                     {
@@ -1568,7 +1578,16 @@ namespace RUINORERP.UI.BaseForm
                                 continue;
                             }
 
-                            // 检查文件大小限制
+                            // 上传前压缩图片
+                            byte[] originalSize = imageData;
+                            imageData = CompressImageIfNeeded(imageData);
+                            if (imageData.Length < originalSize.Length)
+                            {
+                                logger.LogInformation("图片压缩完成: {FileName}, 原始大小: {OriginalSize}KB, 压缩后: {CompressedSize}KB",
+                                    imageInfo.OriginalFileName, originalSize.Length / 1024, imageData.Length / 1024);
+                            }
+
+                            // 检查文件大小限制（压缩后）
                             if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
                             {
                                 logger.LogWarning("图片文件过大: {FileName}, Size: {Size}MB", imageInfo.OriginalFileName, imageData.Length / 1024 / 1024);
@@ -2002,6 +2021,95 @@ namespace RUINORERP.UI.BaseForm
                 return;
             entity.FileStorageInfoList.Add(FileStorageInfo);
         }
+        #endregion
+
+        #region 图片压缩辅助方法
+
+        /// <summary>
+        /// 图片最大宽度
+        /// </summary>
+        private const int MaxImageWidth = 1920;
+
+        /// <summary>
+        /// 图片最大高度
+        /// </summary>
+        private const int MaxImageHeight = 1080;
+
+        /// <summary>
+        /// JPEG压缩质量
+        /// </summary>
+        private const int JpegQuality = 85;
+
+        /// <summary>
+        /// 压缩图片（如果超过指定尺寸）
+        /// </summary>
+        /// <param name="imageData">原始图片数据</param>
+        /// <param name="maxWidth">最大宽度</param>
+        /// <param name="maxHeight">最大高度</param>
+        /// <param name="quality">JPEG质量</param>
+        /// <returns>压缩后的图片数据</returns>
+        private byte[] CompressImageIfNeeded(byte[] imageData, int maxWidth = MaxImageWidth, int maxHeight = MaxImageHeight, int quality = JpegQuality)
+        {
+            if (imageData == null || imageData.Length == 0)
+                return imageData;
+
+            try
+            {
+                using (var ms = new MemoryStream(imageData))
+                using (var originalImage = System.Drawing.Image.FromStream(ms, false, false))
+                {
+                    if (originalImage.Width <= maxWidth && originalImage.Height <= maxHeight)
+                        return imageData;
+
+                    var ratio = Math.Min((float)maxWidth / originalImage.Width,
+                                        (float)maxHeight / originalImage.Height);
+                    var newWidth = (int)(originalImage.Width * ratio);
+                    var newHeight = (int)(originalImage.Height * ratio);
+
+                    using (var resized = new Bitmap(newWidth, newHeight))
+                    using (var graphics = Graphics.FromImage(resized))
+                    {
+                        graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                        graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                        graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                        graphics.DrawImage(originalImage, 0, 0, newWidth, newHeight);
+
+                        using (var outputMs = new MemoryStream())
+                        {
+                            var jpegEncoder = GetEncoder(ImageFormat.Jpeg);
+                            if (jpegEncoder != null)
+                            {
+                                var encoderParams = new EncoderParameters(1);
+                                encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+                                resized.Save(outputMs, jpegEncoder, encoderParams);
+                                return outputMs.ToArray();
+                            }
+                            return imageData;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "图片压缩失败，使用原图");
+                return imageData;
+            }
+        }
+
+        /// <summary>
+        /// 获取图片编码器
+        /// </summary>
+        private ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            var codecs = ImageCodecInfo.GetImageEncoders();
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                    return codec;
+            }
+            return null;
+        }
+
         #endregion
 
 

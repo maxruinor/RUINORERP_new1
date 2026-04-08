@@ -407,6 +407,7 @@ namespace RUINORERP.Business
                         transaction.BizType = (int)BizType.销售退回单;
                         transaction.ReferenceId = entity.SaleOutRe_ID;
                         transaction.ReferenceNo = entity.ReturnNo;
+                        transaction.BeforeQuantity = inv.Quantity - child.Quantity; // 变动前的库存数量
                         transaction.QuantityChange = child.Quantity; // 销售退货增加库存
                         transaction.AfterQuantity = inv.Quantity;
                         transaction.UnitCost = realtimeCost; // 使用实时成本
@@ -721,6 +722,7 @@ namespace RUINORERP.Business
                         transaction.BizType = (int)BizType.销售退回单;
                         transaction.ReferenceId = entity.SaleOutRe_ID;
                         transaction.ReferenceNo = entity.ReturnNo;
+                        transaction.BeforeQuantity = inv.Quantity + child.Quantity; // 变动前的库存数量
                         transaction.QuantityChange = -child.Quantity; // 反审核减少库存
                         transaction.AfterQuantity = inv.Quantity;
                         transaction.UnitCost = realtimeCost; // 使用实时成本
@@ -764,6 +766,7 @@ namespace RUINORERP.Business
                                 transaction.BizType = (int)BizType.销售退回单;
                                 transaction.ReferenceId = entity.SaleOutRe_ID;
                                 transaction.ReferenceNo = entity.ReturnNo;
+                                transaction.BeforeQuantity = inv.Quantity - child.Quantity; // 变动前的库存数量
                                 transaction.QuantityChange = child.Quantity; // 翻新耗材反审核增加库存
                                 transaction.AfterQuantity = inv.Quantity;
                                 transaction.UnitCost = realtimeCost; // 使用实时成本

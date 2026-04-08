@@ -35,6 +35,16 @@ namespace RUINORERP.UI.Network.Services
         private static readonly string[] ImageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp" };
 
         /// <summary>
+        /// 最大重试次数
+        /// </summary>
+        private const int MaxRetryCount = 3;
+
+        /// <summary>
+        /// 初始重试延迟（毫秒）
+        /// </summary>
+        private const int InitialRetryDelayMs = 1000;
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="communicationService">通信服务</param>
@@ -220,66 +230,73 @@ namespace RUINORERP.UI.Network.Services
                 return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("系统繁忙，请稍后重试");
             }
 
-            try
+            Exception lastException = null;
+            
+            // 重试循环
+            for (int retryCount = 0; retryCount < MaxRetryCount; retryCount++)
             {
-                // 检查连接状态????
-                if (!_communicationService.ConnectionManager.IsConnected)
-                {
-                    _log?.LogWarning("文件上传失败：未连接到服务器");
-                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("未连接到服务器，请检查网络连接后重试");
-                }
-
-                // 只记录关键信息，移除详细的文件名日志
-                _log?.LogDebug("开始文件上传请求");
-
-                // 发送文件上传命令并获取响应
-                var response = await _communicationService.SendCommandWithResponseAsync<FileUploadResponse>(
-                    FileCommands.FileUpload, request, ct);
-
-                // 检查响应数据是否为空
-                if (response == null)
-                {
-                    _log?.LogError("文件上传失败：服务器返回了空的响应数据");
-                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回了空的响应数据，请联系系统管理员");
-                }
-
-                // 检查响应是否成功
-                if (!response.IsSuccess)
-                {
-                    _log?.LogWarning("文件上传失败: {ErrorMessage}", response.ErrorMessage);
-                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件上传失败: {response.ErrorMessage}");
-                }
-
-                // 只记录关键信息，简化日志内容
-                return response;
-            }
-            catch (OperationCanceledException ex)
-            {
-                return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("文件上传操作已取消");
-            }
-            catch (TimeoutException ex)
-            {
-                _log?.LogWarning(ex, "文件上传请求超时");
-                return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("文件上传请求超时，请检查网络连接后重试");
-            }
-            catch (Exception ex)
-            {
-                _log?.LogError(ex, "文件上传过程中发生未预期的异常");
-                return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("文件上传过程中发生错误，请稍后重试");
-            }
-            finally
-            {
-                // 确保释放锁
                 try
                 {
-                    _fileOperationLock.Release();
+                    // 检查连接状态
+                    if (!_communicationService.ConnectionManager.IsConnected)
+                    {
+                        _log?.LogWarning("文件上传失败：未连接到服务器");
+                        return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("未连接到服务器，请检查网络连接后重试");
+                    }
+
+                    // 只记录关键信息，移除详细的文件名日志
+                    _log?.LogDebug("开始文件上传请求");
+
+                    // 发送文件上传命令并获取响应
+                    var response = await _communicationService.SendCommandWithResponseAsync<FileUploadResponse>(
+                        FileCommands.FileUpload, request, ct);
+
+                    // 检查响应数据是否为空
+                    if (response == null)
+                    {
+                        throw new Exception("服务器返回了空的响应数据");
+                    }
+
+                    // 检查响应是否成功
+                    if (!response.IsSuccess)
+                    {
+                        // 如果是业务错误（如文件格式不支持），不重试
+                        if (response.ErrorMessage?.Contains("格式不支持") == true || 
+                            response.ErrorMessage?.Contains("超过限制") == true)
+                        {
+                            return response;
+                        }
+                        throw new Exception(response.ErrorMessage);
+                    }
+
+                    // 成功，返回结果
+                    return response;
                 }
-                catch (SemaphoreFullException)
+                catch (OperationCanceledException)
                 {
-                    // 锁已经被释放,忽略
-                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
+                    // 取消操作，不重试
+                    throw;
+                }
+                catch (Exception ex) when (retryCount < MaxRetryCount - 1)
+                {
+                    lastException = ex;
+                    var delayMs = InitialRetryDelayMs * (int)Math.Pow(2, retryCount); // 指数退避: 1s, 2s, 4s
+                    _log?.LogWarning("文件上传失败，{Delay}ms后重试 ({Retry}/{Max}): {Error}",
+                        delayMs, retryCount + 1, MaxRetryCount, ex.Message);
+                    
+                    await Task.Delay(delayMs, ct);
                 }
             }
+
+            // 所有重试都失败
+            _log?.LogError(lastException, "文件上传失败，已重试{MaxRetryCount}次", MaxRetryCount);
+            var errorResponse = ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>(
+                $"文件上传失败，已重试{MaxRetryCount}次: {lastException?.Message}");
+            
+            // 释放锁
+            try { _fileOperationLock.Release(); } catch { }
+            
+            return errorResponse;
         }
 
         /// <summary>

@@ -298,11 +298,28 @@ namespace RUINORERP.Server.Network.Services
                     .Where(v => v.FileId == fileInfo.FileId)
                     .ExecuteCommandAsync();
 
-                // 3. 删除物理文件
-                var filePath = FileStorageHelper.ResolveToAbsolutePath(fileInfo.StoragePath);
-                if (File.Exists(filePath))
+                // 3. 删除物理文件 - 修复路径拼接问题
+                string filePath = null;
+                if (!string.IsNullOrEmpty(fileInfo.StoragePath) && !string.IsNullOrEmpty(fileInfo.StorageFileName))
+                {
+                    // StoragePath是目录，StorageFileName是文件名，需要拼接
+                    string relativePath = Path.Combine(fileInfo.StoragePath, fileInfo.StorageFileName);
+                    filePath = FileStorageHelper.ResolveToAbsolutePath(relativePath);
+                }
+                else if (!string.IsNullOrEmpty(fileInfo.StorageFileName))
+                {
+                    // 只有文件名，尝试直接解析
+                    filePath = FileStorageHelper.ResolveToAbsolutePath(fileInfo.StorageFileName);
+                }
+                
+                if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
                 {
                     File.Delete(filePath);
+                    _logger?.LogDebug("物理文件删除成功: {FilePath}", filePath);
+                }
+                else if (!string.IsNullOrEmpty(filePath))
+                {
+                    _logger?.LogWarning("物理文件不存在: {FilePath}", filePath);
                 }
 
                 // 4. 逻辑删除文件元数据

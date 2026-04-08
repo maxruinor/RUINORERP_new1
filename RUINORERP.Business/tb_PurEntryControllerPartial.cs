@@ -385,6 +385,8 @@ namespace RUINORERP.Business
 
 
                 // 处理分组数据，更新库存记录的各字段
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 foreach (var group in inventoryGroups)
                 {
                     var inv = group.Value.Inventory;
@@ -450,6 +452,9 @@ namespace RUINORERP.Business
 
                     #endregion
 
+                    // 记录变动前的库存数量（在更新之前）
+                    int beforeQty = inv.Quantity;
+
                     // 累加数值字段
                     inv.On_the_way_Qty -= group.Value.PurQtySum.ToInt();
                     inv.Quantity += group.Value.PurQtySum.ToInt();
@@ -457,17 +462,6 @@ namespace RUINORERP.Business
                     // 计算衍生字段（如总成本）
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
-                }
-
-                // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
-                invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
-
-                // 处理分组数据，更新库存记录的各字段
-                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
-
-                foreach (var group in inventoryGroups)
-                {
-                    var inv = group.Value.Inventory;
 
                     // 创建库存流水记录
                     tb_InventoryTransaction transaction = new tb_InventoryTransaction();
@@ -476,6 +470,7 @@ namespace RUINORERP.Business
                     transaction.BizType = (int)BizType.采购入库单;
                     transaction.ReferenceId = entity.PurEntryID;
                     transaction.ReferenceNo = entity.PurEntryNo;
+                    transaction.BeforeQuantity = beforeQty; // 变动前的库存数量
                     transaction.QuantityChange = group.Value.PurQtySum.ToInt(); // 采购入库增加库存
                     transaction.AfterQuantity = inv.Quantity;
                     transaction.UnitCost = inv.Inv_Cost;
@@ -492,6 +487,9 @@ namespace RUINORERP.Business
                     }
                     transactionList.Add(transaction);
                 }
+
+                // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
+                invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
@@ -789,6 +787,9 @@ namespace RUINORERP.Business
 
                     #endregion
 
+                    // 记录变动前的库存数量（在更新之前）
+                    int beforeQty = inv.Quantity;
+
                     // 累加数值字段
                     inv.On_the_way_Qty += group.Value.PurQtySum.ToInt();
                     inv.Quantity -= group.Value.PurQtySum.ToInt();
@@ -796,20 +797,6 @@ namespace RUINORERP.Business
                     // 计算衍生字段（如总成本）
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
-                }
-
-                // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
-                invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
-
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
-
-                // 处理分组数据，更新库存记录的各字段
-                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
-
-                foreach (var group in inventoryGroups)
-                {
-                    var inv = group.Value.Inventory;
 
                     // 创建反向库存流水记录
                     tb_InventoryTransaction transaction = new tb_InventoryTransaction();
@@ -818,6 +805,7 @@ namespace RUINORERP.Business
                     transaction.BizType = (int)BizType.采购入库单;
                     transaction.ReferenceId = entity.PurEntryID;
                     transaction.ReferenceNo = entity.PurEntryNo;
+                    transaction.BeforeQuantity = beforeQty; // 变动前的库存数量
                     transaction.QuantityChange = -group.Value.PurQtySum.ToInt(); // 反审核减少库存
                     transaction.AfterQuantity = inv.Quantity;
                     transaction.UnitCost = inv.Inv_Cost;
@@ -834,10 +822,14 @@ namespace RUINORERP.Business
                         transaction.Notes = $"采购入库单反审核：{entity.PurEntryNo}";
                     }
 
-
-
                     transactionList.Add(transaction);
                 }
+
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+
+                // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
+                invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
 
                 if (invUpdateList.Count > 0)
                 {

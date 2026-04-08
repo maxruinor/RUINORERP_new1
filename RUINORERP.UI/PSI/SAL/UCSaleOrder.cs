@@ -68,7 +68,7 @@ namespace RUINORERP.UI.PSI.SAL
     /// 销售订单时：有运费外币，总金额外币，订单外币。反而出库时不用这么多。外币只是用于记账。出库时只要根据本币和外币及汇率。生成应收时自动算出来。1
     /// </summary>
     [MenuAttrAssemblyInfo("销售订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售订单)]
-    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IPublicEntityObject
+    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IPublicEntityObject, IToolStripMenuInfoAuth
     {
         public UCSaleOrder()
         {
@@ -91,6 +91,13 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
         }
+        public override void AddExcludeMenuList()
+        {
+            //通过付款单来联动结案
+            base.AddExcludeMenuList(MenuItemEnums.结案);
+            base.AddExcludeMenuList(MenuItemEnums.反结案);
+        }
+
 
         IEntityCacheManager cacheManager = Startup.GetFromFac<IEntityCacheManager>();
 

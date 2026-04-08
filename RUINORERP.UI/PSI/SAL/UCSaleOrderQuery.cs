@@ -360,6 +360,7 @@ namespace RUINORERP.UI.PSI.SAL
                     tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                     //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
                     tb_SaleOut saleOut = await ctr.SaleOrderToSaleOut(item);
+                    
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOut) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();

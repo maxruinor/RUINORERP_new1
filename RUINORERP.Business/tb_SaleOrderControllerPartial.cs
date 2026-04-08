@@ -47,14 +47,14 @@ namespace RUINORERP.Business
         public async Task<ReturnResults<tb_SaleOrder>> SaveWithDetailsAsync(tb_SaleOrder order, List<tb_SaleOrderDetail> details, bool isUpdate)
         {
             ReturnResults<tb_SaleOrder> result = new ReturnResults<tb_SaleOrder>();
-            
+
             var db = _unitOfWorkManage.GetDbClient();
-            
+
             try
             {
                 // 开启事务
                 _unitOfWorkManage.BeginTran();
-                
+
                 try
                 {
                     // 1. 保存主表
@@ -66,7 +66,7 @@ namespace RUINORERP.Business
                     {
                         await db.Insertable(order).ExecuteReturnSnowflakeIdAsync();
                     }
-                    
+
                     // 2. 处理明细
                     if (order.SOrder_ID > 0 && details != null && details.Any())
                     {
@@ -74,15 +74,15 @@ namespace RUINORERP.Business
                         var existingDetails = await db.Queryable<tb_SaleOrderDetail>()
                             .Where(fk => fk.SOrder_ID == order.SOrder_ID)
                             .ToListAsync();
-                        
+
                         //// 获取主键
                         //string pkName = "SaleOrderDetail_ID";
-                        
+
                         // 2.2 分类处理
                         var existingIds = existingDetails.Select(d => d.SaleOrderDetail_ID).ToHashSet();
                         var currentIds = details.Where(d => d.SaleOrderDetail_ID > 0)
                                                .Select(d => d.SaleOrderDetail_ID).ToHashSet();
-                        
+
                         // 删除已移除的明细
                         var idsToDelete = existingIds.Except(currentIds).ToList();
                         if (idsToDelete.Any())
@@ -91,14 +91,14 @@ namespace RUINORERP.Business
                                 .In(idsToDelete.ToArray())
                                 .ExecuteCommandAsync();
                         }
-                        
+
                         // 更新现有明细
                         var detailsToUpdate = details.Where(d => d.SaleOrderDetail_ID > 0 && existingIds.Contains(d.SaleOrderDetail_ID)).ToList();
                         if (detailsToUpdate.Any())
                         {
                             await db.Updateable(detailsToUpdate).ExecuteCommandAsync();
                         }
-                        
+
                         // 新增新明细
                         var detailsToAdd = details.Where(d => d.SaleOrderDetail_ID == 0).ToList();
                         if (detailsToAdd.Any())
@@ -110,10 +110,10 @@ namespace RUINORERP.Business
                             await db.Insertable(detailsToAdd).ExecuteCommandAsync();
                         }
                     }
-                    
+
                     // 提交事务
                     _unitOfWorkManage.CommitTran();
-                    
+
                     result.Succeeded = true;
                     result.ReturnObject = order;
                 }
@@ -130,7 +130,7 @@ namespace RUINORERP.Business
                 result.Succeeded = false;
                 result.ErrorMsg = ex.Message;
             }
-            
+
             return result;
         }
 
@@ -153,7 +153,7 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
-            
+
             // 【事务优化】保存关键数据到方法级变量，用于财务独立事务处理
             bool needProcessFinance = false;
             long? orderId = null;
@@ -161,12 +161,12 @@ namespace RUINORERP.Business
             bool isFromPlatform = false;
             long? paytypeId = null;
             decimal totalAmount = 0;
-            
+
             try
             {
                 // 【事务优化】第一步：预处理阶段（无事务）- 验证和计算
                 #region 预处理阶段
-                
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
 
@@ -185,7 +185,7 @@ namespace RUINORERP.Business
                     var key = (child.ProdDetailID, child.Location_ID);
                     int currentSaleQty = child.Quantity;
                     DateTime currentOutboundTime = DateTime.Now;
-                    
+
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
                         tb_Inventory inv = invExistEntityList.Find(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
@@ -223,12 +223,12 @@ namespace RUINORERP.Business
                     inv.Sale_Qty += group.Value.SaleQtySum;
                     invList.Add(inv);
                 }
-                
+
                 // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
                 invList = invList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
-                
+
                 #endregion
-                
+
                 // 付款状态验证（在事务外执行）
                 var validationError = ValidateOrderPaymentStatus((object)entity.Paytype_ID, (object)entity.PayStatus);
                 if (validationError != null)
@@ -241,14 +241,14 @@ namespace RUINORERP.Business
                     }
                     return rmrs;
                 }
-                
+
                 // 【事务优化】保存关键数据，用于后续财务独立处理
                 orderId = entity.SOrder_ID;
                 orderNo = entity.SOrderNo;
                 isFromPlatform = entity.IsFromPlatform;
                 paytypeId = entity.Paytype_ID;
                 totalAmount = entity.TotalAmount;
-                
+
                 // 【事务优化】检查是否需要财务独立处理
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule() && entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
@@ -273,7 +273,7 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
                 BusinessHelper.Instance.ApproverEntity(entity);
-                
+
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                 {
                     it.DataStatus,
@@ -283,7 +283,7 @@ namespace RUINORERP.Business
                     it.Approver_by,
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
-                
+
                 _unitOfWorkManage.CommitTran();
                 _logger.LogInformation($"销售订单{entity.SOrderNo}审核：主事务提交成功");
 
@@ -320,14 +320,14 @@ namespace RUINORERP.Business
                 {
                     _logger.LogCritical(rollbackEx, $"销售订单审核：事务回滚失败");
                 }
-                
+
                 rmrs.Succeeded = false;
                 rmrs.ErrorMsg = $"审核失败：{ex.Message}";
                 _logger.Error(ex, "销售订单审核异常");
                 return rmrs;
             }
         }
-        
+
         /// <summary>
         /// 【事务优化】销售订单审核后的财务独立事务处理
         /// 将预收款单生成、审核等操作从主事务中分离，减少主事务持有时间
@@ -587,7 +587,7 @@ namespace RUINORERP.Business
                 _logger.LogError(ex, $"销售订单{orderNo}审核：收款单 {paymentRecordId} 补偿删除失败");
             }
         }
-           
+
 
 
         /// <summary>
@@ -1348,7 +1348,7 @@ namespace RUINORERP.Business
                 {
                     var key = (child.ProdDetailID, child.Location_ID);
                     int currentSaleQty = child.Quantity;
-                                                             // 若字典中不存在该产品，初始化记录
+                    // 若字典中不存在该产品，初始化记录
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
                         #region 库存表的更新 ，
@@ -1387,7 +1387,7 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
                 }
-                
+
                 // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
                 invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
 
@@ -1784,7 +1784,7 @@ namespace RUINORERP.Business
                 decimal totalOrderQty = saleorder.TotalQty;
                 decimal totalDeliveredQty = saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty);
                 decimal currentOutQty = entity.TotalQty;
-                                
+
                 // 检查是否超量出库
                 if (totalDeliveredQty + currentOutQty > totalOrderQty)
                 {
@@ -1804,7 +1804,7 @@ namespace RUINORERP.Business
                     }
                     entity.TotalQty = (int)currentOutQty;
                 }
-                                
+
                 // 查询该订单已审核出库单的累计运费
                 decimal deliveredFreightIncome = 0;
                 if (saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count > 0)
@@ -1813,13 +1813,13 @@ namespace RUINORERP.Business
                         .Where(o => o.DataStatus >= (int)DataStatus.确认)
                         .Sum(o => o.FreightIncome);
                 }
-                                
+
                 // 计算剩余未出库数量对应的运费
                 decimal remainingFreight = saleorder.FreightIncome - deliveredFreightIncome;
-                                
+
                 // 判断是否为最后一次出库 (剩余数量全部出库)
                 bool isLastOutbound = (totalDeliveredQty + currentOutQty >= totalOrderQty);
-                                
+
                 if (isLastOutbound)
                 {
                     // 最后一次出库：使用剩余运费，避免四舍五入误差累积
@@ -1832,15 +1832,15 @@ namespace RUINORERP.Business
                     decimal currentRatio = totalOrderQty > 0 ? currentOutQty / totalOrderQty : 0;
                     entity.FreightIncome = saleorder.FreightIncome * currentRatio;
                 }
-                                
+
                 entity.FreightIncome = entity.FreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
-                                
+
                 // 如果运费收入大于 0，同时设置运费成本
                 if (entity.FreightIncome > 0)
                 {
                     entity.FreightCost = entity.FreightIncome;
                     tipsMsg.Add($"当前出库单分摊运费收入：{entity.FreightIncome}");
-                                    
+
                     // 如果是最后一次出库，添加提示信息
                     if (isLastOutbound)
                     {
@@ -1854,7 +1854,7 @@ namespace RUINORERP.Business
                 if (entity.FreightIncome > 0)
                 {
                     //根据系统设置中的分摊规则来分配运费收入到明细。
-                
+
                     if (_appContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
                     {
                         // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 当前出库总数量） 
@@ -1867,13 +1867,13 @@ namespace RUINORERP.Business
                                 item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
                                 item.FreightAllocationRules = _appContext.SysConfig.FreightAllocationRules;
                             }
-                                            
+
                             // 如果是最后一次出库，确保分摊总和等于主表运费
                             if (isLastOutbound)
                             {
                                 decimal allocatedTotal = NewDetails.Sum(d => d.AllocatedFreightIncome);
                                 decimal difference = entity.FreightIncome - allocatedTotal;
-                                                
+
                                 // 如果存在差额且绝对值大于容差，调整最后一行
                                 if (Math.Abs(difference) > authorizeController.GetAmountCalculationTolerance() && NewDetails.Count > 0)
                                 {
@@ -1893,24 +1893,17 @@ namespace RUINORERP.Business
 
                 BusinessHelper.Instance.InitEntity(entity);
 
-                if (entity.SOrder_ID.HasValue && entity.SOrder_ID > 0)
-                {
-                    entity.CustomerVendor_ID = saleorder.CustomerVendor_ID;
-                    entity.SaleOrderNo = saleorder.SOrderNo;
-                    entity.PlatformOrderNo = saleorder.PlatformOrderNo;
-                    entity.IsFromPlatform = saleorder.IsFromPlatform;
-                }
+
+                entity.SOrder_ID = saleorder.SOrder_ID;
+                entity.SaleOrderNo = saleorder.SOrderNo;
+                entity.CustomerVendor_ID = saleorder.CustomerVendor_ID;
+                entity.SaleOrderNo = saleorder.SOrderNo;
+                entity.PlatformOrderNo = saleorder.PlatformOrderNo;
+                entity.IsFromPlatform = saleorder.IsFromPlatform;
+
                 IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                 entity.SaleOutNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售出库单, CancellationToken.None);
-                //if (NewDetails.Count != details.Count)
-                //{
-                //    //已经出库过，第二次不包括 运费
-                //    entity.TotalQty = NewDetails.Sum(c => c.Quantity);
-                //    entity.TotalCost = NewDetails.Sum(c => c.Cost * c.Quantity);
-                //    entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
-                //    entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
-                //    entity.TotalUntaxedAmount = NewDetails.Sum(c => c.SubtotalUntaxedAmount);
-                //}
+               
                 entity.tb_saleorder = saleorder;
 
                 entity.TotalCost = NewDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);

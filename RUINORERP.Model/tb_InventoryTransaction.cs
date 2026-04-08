@@ -123,6 +123,21 @@ namespace RUINORERP.Model
                 SetProperty(ref _ReferenceNo, value);
             }
         }
+        private int _BeforeQuantity = ((0));
+        /// <summary>
+        /// 变前数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BeforeQuantity", ColDesc = "变前数量")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "BeforeQuantity", DecimalDigits = 0, IsNullable = false, ColumnDescription = "变前数量")]
+        public int BeforeQuantity
+        {
+            get { return _BeforeQuantity; }
+            set
+            {
+                SetProperty(ref _BeforeQuantity, value);
+            }
+        }
+
 
         private int _QuantityChange= ((0));
         /// <summary>

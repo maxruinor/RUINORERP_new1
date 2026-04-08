@@ -175,6 +175,7 @@ namespace RUINORERP.Business
                     transactionFrom.BizType = (int)BizType.产品转换单;
                     transactionFrom.ReferenceId = entity.ConversionID;
                     transactionFrom.ReferenceNo = entity.ConversionNo;
+                    transactionFrom.BeforeQuantity = invForm.Quantity + TransferQty; // 变动前的库存数量
                     transactionFrom.QuantityChange = -TransferQty; // 源产品减少库存
                     transactionFrom.AfterQuantity = invForm.Quantity;
                     transactionFrom.UnitCost = realtimeCostFrom; // 使用实时成本
@@ -190,6 +191,7 @@ namespace RUINORERP.Business
                     transactionTo.BizType = (int)BizType.产品转换单;
                     transactionTo.ReferenceId = entity.ConversionID;
                     transactionTo.ReferenceNo = entity.ConversionNo;
+                    transactionTo.BeforeQuantity = invTo.Quantity - TransferQty; // 变动前的库存数量
                     transactionTo.QuantityChange = TransferQty; // 目标产品增加库存
                     transactionTo.AfterQuantity = invTo.Quantity;
                     transactionTo.UnitCost = realtimeCostTo; // 使用实时成本
@@ -429,6 +431,7 @@ namespace RUINORERP.Business
                     transactionFrom.BizType = (int)BizType.产品转换单;
                     transactionFrom.ReferenceId = entity.ConversionID;
                     transactionFrom.ReferenceNo = entity.ConversionNo;
+                    transactionFrom.BeforeQuantity = invForm.Quantity - TransferQty; // 变动前的库存数量
                     transactionFrom.QuantityChange = TransferQty; // 反审核时源产品增加库存
                     transactionFrom.AfterQuantity = invForm.Quantity;
                     transactionFrom.UnitCost = realtimeCostFrom; // 使用实时成本
@@ -444,6 +447,7 @@ namespace RUINORERP.Business
                     transactionTo.BizType = (int)BizType.产品转换单;
                     transactionTo.ReferenceId = entity.ConversionID;
                     transactionTo.ReferenceNo = entity.ConversionNo;
+                    transactionTo.BeforeQuantity = invTo.Quantity + TransferQty; // 变动前的库存数量
                     transactionTo.QuantityChange = -TransferQty; // 反审核时目标产品减少库存
                     transactionTo.AfterQuantity = invTo.Quantity;
                     transactionTo.UnitCost = realtimeCostTo; // 使用实时成本

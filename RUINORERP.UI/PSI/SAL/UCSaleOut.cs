@@ -389,6 +389,10 @@ namespace RUINORERP.UI.PSI.SAL
                     txtExchangeRate.Visible = false;
                     entity.RefundStatus = null;
                 }
+                if (entity.SOrder_ID.HasValue && entity.SOrder_ID.Value>0)
+                {
+                    txtSaleOrder.ReadOnly = true;
+                }
             }
             if (entity.ApprovalStatus.HasValue)
             {
@@ -454,9 +458,9 @@ namespace RUINORERP.UI.PSI.SAL
 
             entity.PropertyChanged += async (sender, s2) =>
             {
-                bool isOrderChanged = (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) 
-                    && entity.SOrder_ID.HasValue 
-                    && entity.SOrder_ID > 0 
+                bool isOrderChanged = (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
+                    && entity.SOrder_ID.HasValue
+                    && entity.SOrder_ID > 0
                     && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.SOrder_ID);
 
                 if (isOrderChanged)
@@ -614,7 +618,7 @@ namespace RUINORERP.UI.PSI.SAL
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             InitDataTocmbbox();
-            
+
             grid1.BorderStyle = BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
 
@@ -904,12 +908,12 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         // 计算金额差额
                         decimal difference = Math.Abs(EditEntity.TotalAmount - EditEntity.tb_saleorder.TotalAmount);
-                        
+
                         // 如果差额小于1元，提示用户选择是否继续
                         if (difference < 1m)
                         {
                             DialogResult result = MessageBox.Show($"出库总金额{EditEntity.TotalAmount}与订单总金额{EditEntity.tb_saleorder.TotalAmount}存在微小差异({difference:F2}元)，是否继续执行？", "金额差异确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                            
+
                             if (result == DialogResult.No)
                             {
                                 return false; // 用户选择不继续，返回false
@@ -1083,7 +1087,7 @@ namespace RUINORERP.UI.PSI.SAL
                         {
                             var ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
                             var autoAuditResult = await ctr.AutoAuditSalesOutAsync(EditEntity);
-                            
+
                             if (autoAuditResult.Succeeded)
                             {
                                 // 在UI线程中刷新显示
@@ -1106,14 +1110,14 @@ namespace RUINORERP.UI.PSI.SAL
                                 {
                                     string errorTitle = "自动审核失败";
                                     string errorContent = autoAuditResult.ErrorMsg;
-                                    
+
                                     // 判断是否为库存不足相关错误
                                     if (errorContent.Contains("库存") || errorContent.Contains("负库存") || errorContent.Contains("Quantity"))
                                     {
                                         errorTitle = "自动审核失败 - 库存不足";
                                         errorContent = $"审核失败：{errorContent}\n\n请检查库存数量或联系管理员处理。";
                                     }
-                                    
+
                                     MessageBox.Show(errorContent, errorTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                     MainForm.Instance.PrintInfoLog($"销售出库单【{EditEntity.SaleOutNo}】{errorTitle}:{autoAuditResult.ErrorMsg}", Color.Red);
                                 });
@@ -1191,11 +1195,11 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 // 结案失败时弹出明确的错误提示
                 string errorMsg = string.IsNullOrEmpty(rs.ErrorMsg) ? "未知错误" : rs.ErrorMsg;
-                KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！", 
-                    "结案失败", 
-                    Krypton.Toolkit.KryptonMessageBoxButtons.OK, 
+                KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！",
+                    "结案失败",
+                    Krypton.Toolkit.KryptonMessageBoxButtons.OK,
                     Krypton.Toolkit.KryptonMessageBoxIcon.Error);
-                
+
                 MainForm.Instance.PrintInfoLog($"结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
                 return false;
             }

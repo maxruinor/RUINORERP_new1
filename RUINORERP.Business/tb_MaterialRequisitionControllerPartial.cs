@@ -406,6 +406,7 @@ namespace RUINORERP.Business
                         transaction.BizType = (int)BizType.生产领料单;
                         transaction.ReferenceId = entity.MR_ID;
                         transaction.ReferenceNo = entity.MaterialRequisitionNO;
+                        transaction.BeforeQuantity = inv.Quantity + child.ActualSentQty; // 变动前的库存数量
                         transaction.QuantityChange = -child.ActualSentQty; // 生产领料减少库存
                         transaction.AfterQuantity = inv.Quantity;
                         transaction.UnitCost = realtimeCost; // 使用实时成本
@@ -591,6 +592,7 @@ namespace RUINORERP.Business
                     transaction.BizType = (int)BizType.生产领料单;
                     transaction.ReferenceId = entity.MR_ID;
                     transaction.ReferenceNo = entity.MaterialRequisitionNO;
+                    transaction.BeforeQuantity = inv.Quantity - child.ActualSentQty; // 变动前的库存数量
                     transaction.QuantityChange = child.ActualSentQty; // 反审核增加库存
                     transaction.AfterQuantity = inv.Quantity;
                     transaction.UnitCost = realtimeCost; // 使用实时成本

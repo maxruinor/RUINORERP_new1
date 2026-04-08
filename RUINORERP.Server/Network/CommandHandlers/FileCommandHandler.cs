@@ -309,6 +309,73 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         var contentHash = FileManagementHelper.CalculateContentHash(FileStorageInfo.FileData);
                         _logger?.Debug("文件哈希计算完成: {ContentHash}, 文件大小: {FileSize} bytes", contentHash, FileStorageInfo.FileData.Length);
 
+                        // 检查是否存在相同Hash的文件，实现去重
+                        var existingFiles = await _fileStorageInfoController.QueryByNavAsync(
+                            c => c.HashValue == contentHash 
+                                && c.FileStatus == (int)FileStatus.Active 
+                                && c.isdeleted == false);
+
+                        if (existingFiles != null && existingFiles.Count > 0)
+                        {
+                            var existingFile = existingFiles[0] as tb_FS_FileStorageInfo;
+                            _logger?.LogInformation("检测到重复文件，复用已有文件: FileId={FileId}, OriginalFileName={FileName}",
+                                existingFile.FileId, existingFile.OriginalFileName);
+
+                            // 复用已有文件，创建业务关联（跳过文件保存）
+                            var fileStorageInfo = existingFile;
+                            
+                            // 保存业务关联
+                            var ownerTable = uploadRequest.OwnerTableName ?? "Unknown";
+                            if (ownerTable.Trim().Length > 0 && uploadRequest.BusinessId.HasValue && uploadRequest.BusinessId.Value > 0)
+                            {
+                                var businessRelation = new tb_FS_BusinessRelation
+                                {
+                                    OwnerTableName = ownerTable,
+                                    BusinessNo = uploadRequest.BusinessNo ?? string.Empty,
+                                    BusinessId = uploadRequest.BusinessId.Value,
+                                    FileId = fileStorageInfo.FileId,
+                                    IsMainFile = (i == 0),
+                                    RelatedField = uploadRequest.RelatedField ?? "MainFile",
+                                    Created_at = DateTime.Now,
+                                    Created_by = uploadRequest.Created_by ?? executionContext.UserId
+                                };
+
+                                var relationResult = await _businessRelationController.SaveOrUpdate(businessRelation);
+                                if (!relationResult.Succeeded)
+                                {
+                                    string errorMsg = $"业务关联保存失败: {FileStorageInfo.OriginalFileName}，错误: {relationResult.ErrorMsg}";
+                                    _logger?.LogWarning(errorMsg);
+                                    hasError = true;
+                                    errorMessages.Add(errorMsg);
+                                }
+                                else
+                                {
+                                    _logger?.Debug("业务关联创建成功(复用文件): FileId={FileId}, BusinessId={BusinessId}",
+                                        fileStorageInfo.FileId, uploadRequest.BusinessId);
+
+                                    if (_hasAttachmentSyncService != null)
+                                    {
+                                        try
+                                        {
+                                            await _hasAttachmentSyncService.SyncOnFileUploadAsync(
+                                                uploadRequest.OwnerTableName,
+                                                uploadRequest.BusinessId.Value,
+                                                uploadRequest.BusinessNo,
+                                                cancellationToken,
+                                                useTransaction: false);
+                                        }
+                                        catch (Exception syncEx)
+                                        {
+                                            _logger?.LogWarning(syncEx, "同步HasAttachment标志失败");
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            responseData.FileStorageInfos.Add(fileStorageInfo);
+                            continue; // 跳过文件保存，直接处理下一个
+                        }
+
                         // 保存文件（使用文件流方式，减少内存使用）
                         try
                         {
@@ -463,9 +530,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     // 回滚事务
                     _unitOfWorkManage.RollbackTran();
-                    string errorMsg = $"文件删除事务处理失败: {ex.Message}";
+                    string errorMsg = $"文件上传事务处理失败: {ex.Message}";
                     _logger?.LogError(ex, errorMsg);
-                    return FileDeleteResponse.CreateFailure(errorMsg, new List<string> { errorMsg });
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>(errorMsg);
                 }
             }
             catch (Exception ex)

@@ -137,6 +137,7 @@ namespace RUINORERP.Business
                         transaction.BizType = (int)BizType.其他入库单;
                         transaction.ReferenceId = entity.MainID;
                         transaction.ReferenceNo = entity.BillNo;
+                        transaction.BeforeQuantity = inv.Quantity - child.Qty; // 变动前的库存数量
                         transaction.QuantityChange = child.Qty; // 库存入库增加库存
                         transaction.AfterQuantity = inv.Quantity;
                         transaction.UnitCost = inv.Inv_Cost;
@@ -267,6 +268,7 @@ namespace RUINORERP.Business
                         transaction.BizType = (int)BizType.其他入库单;
                         transaction.ReferenceId = entity.MainID;
                         transaction.ReferenceNo = entity.BillNo;
+                        transaction.BeforeQuantity = inv.Quantity + child.Qty; // 变动前的库存数量
                         transaction.QuantityChange = -child.Qty; // 反审核减少库存
                         transaction.AfterQuantity = inv.Quantity;
                         transaction.UnitCost = inv.Inv_Cost;

@@ -36,6 +36,9 @@ namespace AutoUpdateUpdater
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             
+            // 【新增】检测上次的启动错误标记文件
+            CheckAndDisplayPreviousError();
+            
             // 记录启动日志
             WriteLog("AutoUpdateUpdaterLog.txt", $"AutoUpdateUpdater启动，参数数量: {args.Length}");
             
@@ -85,7 +88,22 @@ namespace AutoUpdateUpdater
                     CleanupConfigFile(configFilePath);
                     WriteLog("AutoUpdateUpdaterLog.txt", "AutoUpdate更新成功，准备启动ERP主程序");
                     
-                    // 更新成功后直接启动ERP主程序，而不是AutoUpdate.exe
+                    // 【新增】清理临时更新目录
+                    try
+                    {
+                        if (Directory.Exists(sourceDir))
+                        {
+                            Directory.Delete(sourceDir, true);
+                            WriteLog("AutoUpdateUpdaterLog.txt", $"已清理临时更新目录: {sourceDir}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"清理临时目录失败: {ex.Message}");
+                        // 不影响主流程
+                    }
+                    
+                    // 更新成功后直接启动ERP主程序
                     StartERPApplication();
                     
                     Application.Exit();
@@ -1067,6 +1085,38 @@ namespace AutoUpdateUpdater
             catch (Exception ex)
             {
                 WriteLog("AutoUpdateUpdaterLog.txt", $"创建错误标记文件失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 检测并显示上次的启动错误
+        /// </summary>
+        private static void CheckAndDisplayPreviousError()
+        {
+            try
+            {
+                string currentDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                string errorFilePath = Path.Combine(currentDir, "StartupError.txt");
+                
+                if (File.Exists(errorFilePath))
+                {
+                    string errorContent = File.ReadAllText(errorFilePath);
+                    
+                    MessageBox.Show(
+                        $"检测到上次ERP启动失败！\n\n{errorContent}\n\n请检查系统环境或联系管理员。",
+                        "启动失败",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                    
+                    // 删除错误标记文件
+                    File.Delete(errorFilePath);
+                    WriteLog("AutoUpdateUpdaterLog.txt", "已删除启动错误标记文件");
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteLog("AutoUpdateUpdaterLog.txt", $"检查启动错误标记文件失败: {ex.Message}");
             }
         }
     }

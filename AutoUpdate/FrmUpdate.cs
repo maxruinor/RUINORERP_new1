@@ -1492,12 +1492,10 @@ namespace AutoUpdate
 
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    //【关键修复】修改逻辑：只有当使用AutoUpdateUpdater辅助进程时才跳过复制
-                    //当selfUpdateStarted=true时，表示使用独立更新器，此时应跳过
-                    //当selfUpdateStarted=false时（如LastCopy流程），应复制文件
-                    if (file == Path.Combine(sourcePath, currentexeName) && selfUpdateStarted)
+                    //【修复】比较文件名，而不是完整路径
+                    string fileName = Path.GetFileName(file);
+                    if (fileName.Equals(currentexeName, StringComparison.OrdinalIgnoreCase) && selfUpdateStarted)
                     {
-                        //MessageBox.Show("正在更新自身");
                         AppendAllText($"[CopyFile] 跳过自身更新文件，将由自我更新流程处理: {file}");
                         contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + file);
                         continue;
@@ -1821,10 +1819,9 @@ namespace AutoUpdate
 
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    //【关键修复】修改逻辑：只有当使用AutoUpdateUpdater辅助进程时才跳过复制
-                    //当selfUpdateStarted=true时，表示使用独立更新器，此时应跳过
-                    //当selfUpdateStarted=false时（如LastCopy流程），应复制文件
-                    if (file == Path.Combine(sourcePath, currentexeName) && selfUpdateStarted)
+                    //【修复】比较文件名，而不是完整路径
+                    string fileName2 = Path.GetFileName(file);
+                    if (fileName2.Equals(currentexeName, StringComparison.OrdinalIgnoreCase) && selfUpdateStarted)
                     {
                         AppendAllText($"[CopyFile] 跳过自身更新文件，将由自我更新流程处理: {file}");
                         contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + file);
@@ -3884,8 +3881,8 @@ namespace AutoUpdate
                 // 第一步：复制所有其他文件（除了自动更新程序自身）
                 AppendAllText("正在复制其他更新文件...");
                 
-                // 设置标志，告诉CopyFile方法跳过自我更新文件
-                selfUpdateStarted = false;
+                // 【修复】设置标志为true，让CopyFile跳过AutoUpdate.exe
+                selfUpdateStarted = true;
                 CopyFile(tempUpdatePath, AppDomain.CurrentDomain.BaseDirectory);
 
                 // 确保配置文件被正确更新到根目录
@@ -3920,21 +3917,18 @@ namespace AutoUpdate
 
                             if (updateSuccess)
                             {
-                                AppendAllText("自身更新辅助进程已启动，等待辅助进程初始化...");
+                                AppendAllText("自身更新辅助进程已启动");
 
-                                // 【优化】减少等待时间
-                                Thread.Sleep(1500);
+                                // 【修复】不等待，立即退出，让AutoUpdateUpdater独立工作
+                                AppendAllText("主进程准备退出");
 
-                                AppendAllText("主进程准备退出，让辅助进程执行更新");
+                                // 【修复】不删除tempUpdatePath，由AutoUpdateUpdater清理
+                                // System.IO.Directory.Delete(tempUpdatePath, true);
 
-                                // 清理临时目录（辅助进程会处理后续的复制）
-                                System.IO.Directory.Delete(tempUpdatePath, true);
-
-                                // 确保所有资源释放后再退出
+                                // 优雅退出应用程序
                                 this.Close();
                                 this.Dispose();
 
-                                // 优雅退出应用程序
                                 Application.ExitThread();
                                 Application.Exit();
                                 return;

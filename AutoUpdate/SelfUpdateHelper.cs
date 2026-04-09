@@ -83,7 +83,7 @@ namespace AutoUpdate
                 
                 // 在启动 AutoUpdateUpdater 之前，确保当前进程完全释放资源
                 WriteLog("AutoUpdateLog.txt", "[启动更新器] 等待进程资源完全释放...");
-                Thread.Sleep(PROCESS_EXIT_WAIT_MS);
+                Thread.Sleep(500);  // 【优化】从2000ms减少到500ms
                 
                 // 强制垃圾回收
                 GC.Collect();

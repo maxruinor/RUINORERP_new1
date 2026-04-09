@@ -182,19 +182,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EnhancedVersionManager.cs" />
-    <Compile Include="frmDebugInfo.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmDebugInfo.Designer.cs">
-      <DependentUpon>frmDebugInfo.cs</DependentUpon>
-    </Compile>
     <Compile Include="SelfUpdateHelper.cs" />
     <Compile Include="SkipVersionManager.cs" />
+    <Compile Include="SmartSnapshotManager.cs" />
     <Compile Include="UpdateConfig.cs" />
-    <Compile Include="VersionHistoryManager.cs" />
-    <Compile Include="VersionFolderManager.cs" />
-    <Compile Include="VersionRollbackManager.cs" />
+    <Compile Include="VersionSnapshot.cs" />
     <Compile Include="ZipArchiveExtensions.cs" />
     <Content Include="App.ico" />
     <Content Include="AutoUpdaterList.xml">
@@ -218,9 +210,6 @@
     <Compile Include="XmlFiles.cs">
       <SubType>Code</SubType>
     </Compile>
-    <EmbeddedResource Include="frmDebugInfo.resx">
-      <DependentUpon>frmDebugInfo.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="FrmUpdate.resx">
       <DependentUpon>FrmUpdate.cs</DependentUpon>
       <SubType>Designer</SubType>

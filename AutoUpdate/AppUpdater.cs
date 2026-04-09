@@ -25,27 +25,6 @@ namespace AutoUpdate
             get { return skipVersionManager ?? (skipVersionManager = new SkipVersionManager()); }
         }
 
-        // 添加VersionHistoryManager实例
-        private VersionHistoryManager versionHistoryManager;
-        public VersionHistoryManager VersionHistoryManager
-        {
-            get { return versionHistoryManager ?? (versionHistoryManager = new VersionHistoryManager()); }
-        }
-
-        // 添加VersionRollbackManager实例
-        private VersionRollbackManager versionRollbackManager;
-        public VersionRollbackManager VersionRollbackManager
-        {
-            get { return versionRollbackManager ?? (versionRollbackManager = new VersionRollbackManager(this.UpdaterUrl, this.AppId)); }
-        }
-
-        // 添加EnhancedVersionManager实例
-        private EnhancedVersionManager enhancedVersionManager;
-        public EnhancedVersionManager EnhancedVersionManager
-        {
-            get { return enhancedVersionManager ?? (enhancedVersionManager = new EnhancedVersionManager(Environment.CurrentDirectory, this.UpdaterUrl, this.AppId)); }
-        }
-
         private string _appId = "";
         public string AppId
         {
@@ -257,70 +236,14 @@ namespace AutoUpdate
         }
 
         /// <summary>
-        /// 执行版本更新并记录历史
-        /// </summary>
-        /// <returns>更新是否成功</returns>
-        public bool UpdateAndRecordHistory()
-        {
-            try
-            {
-                // 先获取新版本信息
-                Hashtable updateFileList;
-                int updateResult = CheckForUpdate(null, null, out updateFileList, this.AppId);
-
-                // 如果有更新并且未被跳过
-                if (updateResult > 0)
-                {
-                    // 记录更新前的版本历史
-                    string folderName = $"{this.NewVersion}_{DateTime.Now.ToString("yyyyMMddHHmmss")}";
-                    VersionHistoryManager.RecordNewVersion(this.NewVersion, folderName);
-                    Debug.WriteLine($"已记录版本更新历史: {this.NewVersion}");
-
-                    // 此处应调用实际的更新方法
-                    // bool updateSuccess = PerformActualUpdate();
-                    // 由于没有看到PerformActualUpdate方法，这里返回true表示成功
-                    return true;
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"执行更新并记录历史失败: {ex.Message}");
-                return false;
-            }
-        }
-
-        /// <summary>
         /// 处理压缩更新包
         /// </summary>
         /// <param name="packagePath">压缩包路径</param>
         /// <returns>处理是否成功</returns>
         public bool ProcessCompressedUpdate(string packagePath)
         {
-            try
-            {
-                // 创建版本条目
-                VersionEntry version = new VersionEntry
-                {
-                    Version = Path.GetFileNameWithoutExtension(packagePath), // 假设文件名包含版本信息
-                    InstallTime = DateTime.Now
-                };
-
-                // 使用EnhancedVersionManager处理压缩包
-                bool result = EnhancedVersionManager.ProcessCompressedUpdateStatic(packagePath, version);
-
-                if (result)
-                {
-                    Debug.WriteLine($"压缩更新包处理成功: {packagePath}");
-                    return true;
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"处理压缩更新包失败: {ex.Message}");
-                return false;
-            }
+            Debug.WriteLine("警告: ProcessCompressedUpdate 已废弃");
+            return false;
         }
 
         /// <summary>
@@ -329,38 +252,30 @@ namespace AutoUpdate
         /// <returns>如果有压缩更新包返回true，否则返回false</returns>
         public bool CheckForCompressedUpdate()
         {
-            // 检查服务器是否有新版本的压缩包
-            // 这里可以实现与服务器的通信逻辑
-            // 目前返回true作为示例
-            return EnhancedVersionManager.CheckForUpdates(this.NewVersion);
+            return false;
         }
 
         /// <summary>
-        /// 获取可回滚的版本列表
+        /// 检查是否可以回滚到之前的版本
         /// </summary>
-        /// <returns>可回滚的版本列表</returns>
-        public List<VersionEntry> GetRollbackVersions()
-        {
-            return VersionRollbackManager.GetRollbackVersions();
-        }
-
-        /// <summary>
-        /// 回滚到指定版本
-        /// </summary>
-        /// <param name="version">目标版本号</param>
-        /// <returns>回滚是否成功</returns>
-        public bool RollbackToVersion(string version)
-        {
-            return VersionRollbackManager.RollbackToVersion(version);
-        }
-
-        /// <summary>
-        /// 检查是否可以回滚（是否存在历史版本）
-        /// </summary>
-        /// <returns>如果可以回滚则返回true，否则返回false</returns>
+        /// <returns>如果可以回滚返回true，否则返回false</returns>
         public bool CanRollback()
         {
-            return VersionRollbackManager.CanRollback();
+            try
+            {
+                string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Backup");
+                if (!Directory.Exists(backupDir))
+                {
+                    return false;
+                }
+
+                string[] backupDirs = Directory.GetDirectories(backupDir);
+                return backupDirs.Length > 0;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>

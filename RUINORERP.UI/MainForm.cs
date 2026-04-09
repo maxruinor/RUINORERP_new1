@@ -854,7 +854,7 @@ namespace RUINORERP.UI
 
 
                         // 检查是否有可回滚的版本
-                        bool hasRollbackVersions = Update.CheckHasRollbackVersions();
+                        bool hasRollbackVersions =false;
 
                         if (hasRollbackVersions)
                         {

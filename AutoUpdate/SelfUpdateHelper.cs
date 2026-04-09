@@ -329,8 +329,27 @@ namespace AutoUpdate
                     {
                         WriteLog(logFilePath, $"更新完成，准备重启: {mainExePath}");
                         
-                        // 5. 更新版本记录
-                        UpdateVersionRecord(targetDir, sourceDir);
+                        // 5. 【新版本】创建智能快照
+                        try
+                        {
+                            string currentVersion = File.ReadAllText(
+                                Path.Combine(targetDir, "CurrentVersion.txt"), Encoding.UTF8);
+                            
+                            WriteLog(logFilePath, $"[快照] 开始创建应用快照: {currentVersion}");
+                            var snapshotManager = new SmartSnapshotManager();
+                            var snapshot = snapshotManager.CreateSmartSnapshot(currentVersion, "自我更新");
+                            
+                            if (snapshot != null)
+                            {
+                                WriteLog(logFilePath, $"[快照] 创建成功: {snapshot.SnapshotFolderName}, " +
+                                                    $"类型: {(snapshot.IsFullSnapshot ? "完整" : "增量")}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteLog(logFilePath, $"[快照] 创建失败: {ex.Message}");
+                            // 快照创建失败不影响更新流程
+                        }
                         
                         // 6. 启动ERP系统（如果存在）
                         StartERPApplication(targetDir);
@@ -779,48 +798,6 @@ namespace AutoUpdate
             }
             
             return string.Empty;
-        }
-
-        /// <summary>
-        /// 更新版本记录
-        /// </summary>
-        /// <param name="targetDir">目标目录</param>
-        /// <param name="sourceDir">源目录</param>
-        private static void UpdateVersionRecord(string targetDir, string sourceDir)
-        {
-            try
-            {
-                // 获取当前版本信息
-                string currentVersion = File.ReadAllText(Path.Combine(targetDir, "CurrentVersion.txt"), Encoding.UTF8);
-                
-                // 创建版本文件夹管理器
-                VersionFolderManager folderManager = new VersionFolderManager();
-                VersionHistoryManager historyManager = new VersionHistoryManager();
-                
-                // 创建版本文件夹
-                string folderName = folderManager.CreateVersionFolder(currentVersion);
-                
-                // 复制更新后的核心文件到版本文件夹
-                string[] coreFiles = Directory.GetFiles(targetDir, "AutoUpdate.*")
-                    .Where(file => Path.GetExtension(file) == ".exe" || Path.GetExtension(file) == ".dll" || Path.GetExtension(file) == ".config")
-                    .ToArray();
-                
-                foreach (string file in coreFiles)
-                {
-                    folderManager.CopyFileToVersionFolder(file, folderName);
-                }
-                
-                // 获取版本文件列表和校验和
-                List<string> files = folderManager.GetVersionFiles(folderName);
-                string checksum = folderManager.CalculateVersionChecksum(folderName);
-                
-                // 记录版本信息
-                historyManager.RecordNewVersion(currentVersion, folderName, files, checksum);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"更新版本记录失败: {ex.Message}");
-            }
         }
 
     }

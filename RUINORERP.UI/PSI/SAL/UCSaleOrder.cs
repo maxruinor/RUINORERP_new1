@@ -1160,7 +1160,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                 AmountCalculate(details);
 
-                #endregion
+            
                 if (NeedValidated && (EditEntity.FreightIncome > 0 && EditEntity.TotalAmount != detailentity.Sum(c => c.SubtotalTransAmount) + EditEntity.FreightIncome))
                 {
                     MessageBox.Show("销售总金额需要包含运费。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);

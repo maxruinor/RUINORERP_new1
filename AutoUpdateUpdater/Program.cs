@@ -113,6 +113,22 @@ namespace AutoUpdateUpdater
                     // 更新失败或不需要更新，清理配置文件
                     CleanupConfigFile(configFilePath);
                     WriteLog("AutoUpdateUpdaterLog.txt", "更新失败或不需要更新，清理配置文件");
+                    
+                    // 【新增】清理临时更新目录（无论成功失败都要清理）
+                    try
+                    {
+                        if (Directory.Exists(sourceDir))
+                        {
+                            Directory.Delete(sourceDir, true);
+                            WriteLog("AutoUpdateUpdaterLog.txt", $"已清理临时更新目录: {sourceDir}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"清理临时目录失败: {ex.Message}");
+                        // 不影响主流程
+                    }
+                    
                     // 确保ERP主程序被启动
                     StartERPApplication();
                 }
@@ -122,6 +138,24 @@ namespace AutoUpdateUpdater
                 WriteLog("AutoUpdateUpdaterLog.txt", $"更新失败: {ex.Message}\n堆栈跟踪: {ex.StackTrace}");
                 MessageBox.Show($"更新过程中发生错误：{ex.Message}\n\n详细信息已记录到日志文件。", 
                     "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                
+                // 【新增】异常情况下也尝试清理临时目录
+                try
+                {
+                    string currentDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                    string configFilePath = Path.Combine(currentDir, "AutoUpdateUpdaterConfig.json");
+                    UpdateConfig config = LoadConfigFromFile(configFilePath);
+                    
+                    if (config.IsValid() && Directory.Exists(config.SourceDir))
+                    {
+                        Directory.Delete(config.SourceDir, true);
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"异常处理后已清理临时更新目录: {config.SourceDir}");
+                    }
+                }
+                catch (Exception cleanupEx)
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"异常处理后清理临时目录失败: {cleanupEx.Message}");
+                }
             }
         }
         

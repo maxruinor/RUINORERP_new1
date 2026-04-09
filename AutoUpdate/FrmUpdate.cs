@@ -3625,6 +3625,20 @@ namespace AutoUpdate
                     AppendErrorText($"[降级更新] 恢复备份也失败: {restoreEx.Message}");
                 }
             }
+            
+            // 【新增】无论成功失败，都要清理临时目录
+            try
+            {
+                if (Directory.Exists(tempUpdatePath))
+                {
+                    Directory.Delete(tempUpdatePath, true);
+                    AppendAllText($"[降级更新] 已清理临时目录: {tempUpdatePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendErrorText($"[降级更新] 清理临时目录失败: {ex.Message}");
+            }
         }
 
 

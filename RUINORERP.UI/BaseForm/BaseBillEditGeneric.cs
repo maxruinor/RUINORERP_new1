@@ -9409,6 +9409,35 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
+        #region 辅助方法
+
+        /// <summary>
+        /// 获取产品重复录入的友好提示信息
+        /// </summary>
+        /// <param name="prodDetailID">产品明细ID</param>
+        /// <param name="customPrefix">自定义前缀（如"包装清单中"、"翻新物料明细中"等），默认为"明细中"</param>
+        /// <returns>包含SKU和产品名称的提示信息</returns>
+        protected string GetDuplicateProductMessage(long prodDetailID, string customPrefix = "明细中")
+        {
+            try
+            {
+                var prod = MainForm.Instance.View_ProdDetailList?.FirstOrDefault(c => c.ProdDetailID == prodDetailID);
+                if (prod != null)
+                {
+                    return $"{customPrefix}，SKU:{prod.SKU}, 品名:{prod.CNName}\r\n相同的产品不能多行录入，如有需要请另建单据保存！";
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogWarning(ex, "获取产品信息失败，将使用默认提示信息");
+            }
+            
+            // 降级处理：如果缓存中没有找到产品信息，返回原始提示信息
+            return $"{customPrefix}，相同的产品不能多行录入，如有需要请另建单据保存！";
+        }
+
+        #endregion
+
     }
 }
 

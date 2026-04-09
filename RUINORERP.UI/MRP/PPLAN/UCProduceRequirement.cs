@@ -1020,7 +1020,8 @@ namespace RUINORERP.UI.MRP.MP
                 var aa = TargetDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (NeedValidated && aa.Count > 0)
                 {
-                    System.Windows.Forms.MessageBox.Show("分析目标明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string message = GetDuplicateProductMessage(aa[0], "分析目标明细中");
+                    System.Windows.Forms.MessageBox.Show(message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
 
@@ -1067,7 +1068,18 @@ namespace RUINORERP.UI.MRP.MP
                 var pur = PurDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (NeedValidated && pur.Count > 0)
                 {
-                    System.Windows.Forms.MessageBox.Show("采购产品建议中，相同的产品不能多行录入\r\n，库位或需求日期不一致要拆分为两个需求分析单!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // 从缓存中获取第一个重复产品的信息
+                    var prod = MainForm.Instance.View_ProdDetailList?.FirstOrDefault(c => c.ProdDetailID == pur[0]);
+                    string message;
+                    if (prod != null)
+                    {
+                        message = $"采购产品建议中，SKU:{prod.SKU}, 品名:{prod.CNName}\r\n相同的产品不能多行录入，库位或需求日期不一致要拆分为两个需求分析单！";
+                    }
+                    else
+                    {
+                        message = "采购产品建议中，相同的产品不能多行录入\r\n，库位或需求日期不一致要拆分为两个需求分析单！";
+                    }
+                    System.Windows.Forms.MessageBox.Show(message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
 

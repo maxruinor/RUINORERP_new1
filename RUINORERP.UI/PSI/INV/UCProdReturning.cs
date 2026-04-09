@@ -410,7 +410,8 @@ namespace RUINORERP.UI.PSI.INV
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (NeedValidated && aa.Count > 0)
                 {
-                    System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string message = GetDuplicateProductMessage(aa[0]);
+                    System.Windows.Forms.MessageBox.Show(message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Qty);

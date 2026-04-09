@@ -947,10 +947,6 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
 
-            if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.Deposit != EditEntity.TotalAmount && EditEntity.Deposit == 0)
-            {
-                EditEntity.Deposit = EditEntity.TotalAmount;
-            }
             if (EditEntity.PayStatus == (int)PayStatus.未付款 && EditEntity.Deposit != 0)
             {
                 EditEntity.Deposit = 0;
@@ -1318,7 +1314,7 @@ namespace RUINORERP.UI.PSI.SAL
                 // 检查预收订金是否超过订单本币总金额
                 if (NeedValidated && EditEntity.Deposit > 0 && EditEntity.TotalAmount > 0)
                 {
-                    // 超额检查：订金 > 总金额
+                    // 超额检查：订金 > 总金额（仅提示，允许用户选择是否继续）
                     if (EditEntity.Deposit > EditEntity.TotalAmount)
                     {
                         decimal overAmount = EditEntity.Deposit - EditEntity.TotalAmount;
@@ -1327,12 +1323,11 @@ namespace RUINORERP.UI.PSI.SAL
                                        $"预收订金金额：{EditEntity.Deposit:N2} 元\n" +
                                        $"超额金额：{overAmount:N2} 元\n\n" +
                                        $"点击【是】将保持超额订金金额\n" +
-                                       $"点击【否】将自动调整为订单本币总金额";
+                                       $"点击【否】将取消保存";
 
                         if (MessageBox.Show(this, message, "超额付款确认", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                         {
-                            EditEntity.Deposit = EditEntity.TotalAmount;
-                            MainForm.Instance.uclog.AddLog($"预收订金已自动调整为订单本币总金额: {EditEntity.TotalAmount:N2} 元");
+                            return false;
                         }
                     }
                     // 差额检查：订金 < 总金额（与全额预付不符）- 逻辑错误，不能保存
@@ -1710,21 +1705,53 @@ namespace RUINORERP.UI.PSI.SAL
 
         private void cmbPayStatus_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // 选择"全额预付"时，自动设置订金 = 订单总金额
+            // 选择付款状态时，提示用户注意订金金额的设置（不自动修改订金）
             if (EditEntity != null && cmbPayStatus.SelectedValue is int payStatus)
             {
-                if (payStatus == (int)PayStatus.全额预付 && EditEntity.TotalAmount > 0)
+                if (payStatus == (int)PayStatus.全额预付)
                 {
-                    EditEntity.Deposit = EditEntity.TotalAmount;
-
-                    // 更新控件显示
-                    if (txtDeposit != null)
+                    if (EditEntity.TotalAmount > 0)
                     {
-                        txtDeposit.Text = EditEntity.Deposit.ToString();
+                        if (EditEntity.Deposit < EditEntity.TotalAmount)
+                        {
+                            MessageBox.Show($"当前付款状态为【全额预付】，订金金额应与订单总金额一致！\n\n" +
+                                           $"订单总金额：{EditEntity.TotalAmount:N2} 元\n" +
+                                           $"当前订金金额：{EditEntity.Deposit:N2} 元\n\n" +
+                                           $"请修改订金金额为订单总金额",
+                                "全额预付提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                        else if (EditEntity.Deposit > EditEntity.TotalAmount)
+                        {
+                            decimal overAmount = EditEntity.Deposit - EditEntity.TotalAmount;
+                            MessageBox.Show($"当前付款状态为【全额预付】，订金金额已超过订单总金额！\n\n" +
+                                           $"订单总金额：{EditEntity.TotalAmount:N2} 元\n" +
+                                           $"当前订金金额：{EditEntity.Deposit:N2} 元\n" +
+                                           $"超额金额：{overAmount:N2} 元\n\n" +
+                                           $"请确认是否需要修改",
+                                "超额提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
                     }
-
-                    // 显示自动调整提示
-                    MainForm.Instance.uclog.AddLog($"已选择【全额预付】，订金自动设置为订单总金额: {EditEntity.TotalAmount:N2} 元");
+                }
+                else if (payStatus == (int)PayStatus.部分预付)
+                {
+                    if (EditEntity.TotalAmount > 0 && EditEntity.Deposit >= EditEntity.TotalAmount)
+                    {
+                        MessageBox.Show($"当前付款状态为【部分预付】，订金金额不能大于等于订单总金额！\n\n" +
+                                       $"订单总金额：{EditEntity.TotalAmount:N2} 元\n" +
+                                       $"当前订金金额：{EditEntity.Deposit:N2} 元\n\n" +
+                                       $"请修改订金金额",
+                            "部分预付提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+                else if (payStatus == (int)PayStatus.未付款)
+                {
+                    if (EditEntity.Deposit > 0)
+                    {
+                        MessageBox.Show($"当前付款状态为【未付款】，订金金额必须为零！\n\n" +
+                                       $"当前订金金额：{EditEntity.Deposit:N2} 元\n\n" +
+                                       $"请将订金修改为0",
+                            "未付款提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
                 }
             }
         }

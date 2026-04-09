@@ -946,7 +946,10 @@ namespace RUINORERP.UI.PSI.SAL
                 }
             }
 
-
+            if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.TotalAmount > 0 &&EditEntity.Deposit==0)
+            {
+                EditEntity.Deposit = EditEntity.TotalAmount;
+            }
             if (EditEntity.PayStatus == (int)PayStatus.未付款 && EditEntity.Deposit != 0)
             {
                 EditEntity.Deposit = 0;
@@ -1156,22 +1159,6 @@ namespace RUINORERP.UI.PSI.SAL
                 );
 
                 AmountCalculate(details);
-
-                #region 订单金额与状态关系的提示
-                // 根据订金金额自动设置付款状态
-                if (EditEntity.Deposit > 0)
-                {
-                    if (EditEntity.Deposit >= EditEntity.TotalAmount && EditEntity.PayStatus != (int)PayStatus.全额预付)
-                    {
-                        EditEntity.PayStatus = (int)PayStatus.全额预付;
-                        MainForm.Instance.uclog.AddLog($"订金金额 ({EditEntity.Deposit}) 大于等于总金额 ({EditEntity.TotalAmount})，已自动设置为【全额预付】");
-                    }
-                    else if (EditEntity.Deposit < EditEntity.TotalAmount && EditEntity.PayStatus != (int)PayStatus.部分预付)
-                    {
-                        EditEntity.PayStatus = (int)PayStatus.部分预付;
-                        MainForm.Instance.uclog.AddLog($"订金金额 ({EditEntity.Deposit}) 小于总金额 ({EditEntity.TotalAmount})，已自动设置为【部分预付】");
-                    }
-                }
 
                 #endregion
                 if (NeedValidated && (EditEntity.FreightIncome > 0 && EditEntity.TotalAmount != detailentity.Sum(c => c.SubtotalTransAmount) + EditEntity.FreightIncome))
@@ -1705,33 +1692,35 @@ namespace RUINORERP.UI.PSI.SAL
 
         private void cmbPayStatus_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // 选择付款状态时，提示用户注意订金金额的设置（不自动修改订金）
+            // 选择付款状态时，根据付款状态处理订金金额
             if (EditEntity != null && cmbPayStatus.SelectedValue is int payStatus)
             {
+                // 全额预付：只有当订金为空或0时，才自动设为订单总金额
                 if (payStatus == (int)PayStatus.全额预付)
                 {
                     if (EditEntity.TotalAmount > 0)
                     {
-                        if (EditEntity.Deposit < EditEntity.TotalAmount)
+                        // 检查订金是否为空或0
+                        decimal currentDeposit = 0;
+                        if (txtDeposit != null && !string.IsNullOrWhiteSpace(txtDeposit.Text))
                         {
-                            MessageBox.Show($"当前付款状态为【全额预付】，订金金额应与订单总金额一致！\n\n" +
-                                           $"订单总金额：{EditEntity.TotalAmount:N2} 元\n" +
-                                           $"当前订金金额：{EditEntity.Deposit:N2} 元\n\n" +
-                                           $"请修改订金金额为订单总金额",
-                                "全额预付提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            decimal.TryParse(txtDeposit.Text, out currentDeposit);
                         }
-                        else if (EditEntity.Deposit > EditEntity.TotalAmount)
+
+                        // 只有订金为空或0时才自动赋值，否则保留用户输入（支持超付）
+                        if (currentDeposit == 0)
                         {
-                            decimal overAmount = EditEntity.Deposit - EditEntity.TotalAmount;
-                            MessageBox.Show($"当前付款状态为【全额预付】，订金金额已超过订单总金额！\n\n" +
-                                           $"订单总金额：{EditEntity.TotalAmount:N2} 元\n" +
-                                           $"当前订金金额：{EditEntity.Deposit:N2} 元\n" +
-                                           $"超额金额：{overAmount:N2} 元\n\n" +
-                                           $"请确认是否需要修改",
-                                "超额提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            EditEntity.Deposit = EditEntity.TotalAmount;
+                            txtDeposit.Text = EditEntity.Deposit.ToString();
+                            MainForm.Instance.uclog.AddLog($"已选择【全额预付】，订金自动设置为订单总金额: {EditEntity.TotalAmount:N2} 元");
+                        }
+                        else
+                        {
+                            MainForm.Instance.uclog.AddLog($"已选择【全额预付】，保留用户输入的订金金额: {currentDeposit:N2} 元");
                         }
                     }
                 }
+                // 部分预付：提示用户订金不能>=总金额
                 else if (payStatus == (int)PayStatus.部分预付)
                 {
                     if (EditEntity.TotalAmount > 0 && EditEntity.Deposit >= EditEntity.TotalAmount)
@@ -1743,6 +1732,7 @@ namespace RUINORERP.UI.PSI.SAL
                             "部分预付提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
+                // 未付款：提示用户订金必须为0
                 else if (payStatus == (int)PayStatus.未付款)
                 {
                     if (EditEntity.Deposit > 0)

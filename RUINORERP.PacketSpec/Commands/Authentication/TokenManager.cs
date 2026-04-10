@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 namespace RUINORERP.PacketSpec.Commands.Authentication
@@ -18,12 +18,14 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     public class TokenManager
     {
         private readonly ITokenService _tokenService;
+        private readonly TokenServiceOptions _options;  // 新增：配置选项
         public ITokenStorage TokenStorage { get; }
 
-        public TokenManager(ITokenService tokenService, ITokenStorage tokenStorage)
+        public TokenManager(ITokenService tokenService, ITokenStorage tokenStorage, TokenServiceOptions options)
         {
             _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
             TokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));
+            _options = options ?? throw new ArgumentNullException(nameof(options));  // 新增
         }
 
         /// <summary>
@@ -44,8 +46,8 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                 {
                     AccessToken = accessToken,
                     RefreshToken = refreshToken,
-                    ExpiresAt = DateTime.Now.AddHours(8), // 访问令牌8小时过期
-                    RefreshTokenExpiresAt = DateTime.Now.AddDays(7) // 刷新令牌7天过期
+                    ExpiresAt = DateTime.Now.AddHours(_options.DefaultExpiryHours),  // ✅ 使用配置
+                    RefreshTokenExpiresAt = DateTime.Now.AddDays(_options.RefreshTokenExpiryDays)  // ✅ 使用配置
                 };
 
                 // 存储Token信息
@@ -62,13 +64,13 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
 
         /// <summary>
         /// 验证Token有效性
-        /// 注意：返回bool表示验证是否成功
         /// </summary>
-        public async Task<bool> ValidateTokenAsync(string token)
+        /// <param name="token">要验证的Token</param>
+        /// <returns>Token是否有效</returns>
+        public Task<bool> ValidateTokenAsync(string token)
         {
-            // 包装同步方法为异步调用，并提取验证结果
-            var result = await Task.Run(() => _tokenService.ValidateToken(token));
-            return result?.IsValid == true;
+            var result = _tokenService.ValidateToken(token);
+            return Task.FromResult(result?.IsValid == true);
         }
 
         /// <summary>

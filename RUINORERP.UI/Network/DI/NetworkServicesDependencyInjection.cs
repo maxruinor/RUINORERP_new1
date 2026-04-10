@@ -165,7 +165,6 @@ namespace RUINORERP.UI.Network.DI
 
             // 注册Token刷新服务
             builder.RegisterType<TokenRefreshService>().AsSelf().SingleInstance();
-            builder.RegisterType<SilentTokenRefresher>().AsSelf().SingleInstance();
 
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();

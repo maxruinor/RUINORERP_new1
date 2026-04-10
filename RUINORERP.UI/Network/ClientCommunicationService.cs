@@ -1515,9 +1515,36 @@ namespace RUINORERP.UI.Network
                 // 获取令牌并验证有效性
                 var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
 
-                // 简化条件判断并设置访问令牌
-                if (tokenInfo?.AccessToken != null)
+                // ✅ 检查Token是否存在且未过期
+                if (tokenInfo != null && !string.IsNullOrEmpty(tokenInfo.AccessToken))
                 {
+                    // 检查是否即将过期(提前5分钟)
+                    if (tokenInfo.IsExpired() || tokenInfo.WillExpireSoon(TimeSpan.FromMinutes(5)))
+                    {
+                        _logger?.LogInformation("Token已过期或即将过期,尝试刷新");
+                        
+                        // 尝试静默刷新Token
+                        var refreshService = Startup.GetFromFac<ITokenRefreshService>();
+                        if (refreshService != null)
+                        {
+                            try
+                            {
+                                var newToken = await refreshService.RefreshTokenAsync();
+                                if (newToken != null)
+                                {
+                                    executionContext.Token = newToken;
+                                    _logger?.LogInformation("Token刷新成功");
+                                    return;
+                                }
+                            }
+                            catch (Exception refreshEx)
+                            {
+                                _logger?.LogWarning(refreshEx, "Token刷新失败,将使用过期Token(可能导致请求失败)");
+                            }
+                        }
+                    }
+                    
+                    // 使用现有Token(可能已过期,由服务端处理)
                     executionContext.Token = tokenInfo;
                 }
             }

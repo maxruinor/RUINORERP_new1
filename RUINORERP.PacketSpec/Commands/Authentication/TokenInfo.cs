@@ -61,5 +61,15 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             // 添加1分钟的缓冲时间，避免临界情况
             return RefreshTokenExpiresAt.AddMinutes(-1) < DateTime.Now;
         }
+
+        /// <summary>
+        /// 检查Token是否即将过期
+        /// </summary>
+        /// <param name="threshold">提前预警时间</param>
+        /// <returns>是否即将过期</returns>
+        public bool WillExpireSoon(TimeSpan threshold)
+        {
+            return ExpiresAt > DateTime.Now && (ExpiresAt - DateTime.Now) < threshold;
+        }
     }
 }

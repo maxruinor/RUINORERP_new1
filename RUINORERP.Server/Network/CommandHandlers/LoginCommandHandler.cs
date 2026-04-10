@@ -132,6 +132,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         protected IRegistrationService RegistrationService { get; set; }
 
+        /// <summary>
+        /// Token服务配置选项
+        /// </summary>
+        protected TokenServiceOptions TokenOptions { get; set; }
+
 
         //public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
         //{
@@ -154,7 +159,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                   ITokenService tokenService, TokenManager tokenManager,
                                   ServerMessageService _MessageService,
                                   SystemManagementService _managementService,
-                                  IRegistrationService _registrationService
+                                  IRegistrationService _registrationService,
+                                  TokenServiceOptions tokenOptions
 
             ) : base(_Logger)
         {
@@ -165,6 +171,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             MessageService = _MessageService;
             managementService = _managementService;
             RegistrationService = _registrationService ?? throw new ArgumentNullException(nameof(_registrationService));
+            TokenOptions = tokenOptions ?? throw new ArgumentNullException(nameof(tokenOptions));
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
                 AuthenticationCommands.Login,
@@ -430,19 +437,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 string newRefreshToken;
                 try
                 {
-                    // 使用新的RefreshTokens方法获取令牌对
-                    if (TokenService is JwtTokenService jwtTokenService)
-                    {
-                        var tokens = jwtTokenService.RefreshTokens(refreshToken);
-                        newAccessToken = tokens.AccessToken;
-                        newRefreshToken = tokens.RefreshToken;
-                    }
-                    else
-                    {
-                        // 兼容旧版本，使用RefreshToken方法
-                        newAccessToken = TokenService.RefreshToken(refreshToken);
-                        newRefreshToken = newAccessToken; // 旧版本下刷新令牌与访问令牌相同
-                    }
+                    var tokens = TokenService.RefreshTokens(refreshToken);
+                    newAccessToken = tokens.AccessToken;
+                    newRefreshToken = tokens.RefreshToken;
                 }
                 catch (Exception ex)
                 {
@@ -456,7 +453,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     Message = "Token刷新成功",
                     NewAccessToken = newAccessToken,
                     NewRefreshToken = newRefreshToken, // 现在使用独立的刷新令牌
-                    ExpireTime = DateTime.Now.AddHours(8)
+                    ExpireTime = DateTime.Now.AddHours(TokenOptions.DefaultExpiryHours)  // ✅ 使用配置
                 };
 
                 return response;
@@ -554,10 +551,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     await SessionService.RemoveSessionAsync(sessionId);
                 }
-                // 撤销Token
-                if (executionContext.Token?.AccessToken != null && !string.IsNullOrEmpty(executionContext.Token?.AccessToken))
+                
+                // 撤销 Token（包含 AccessToken 和 RefreshToken）
+                var token = executionContext.Token;
+                if (token != null)
                 {
-                    TokenService.RevokeToken(executionContext.Token?.AccessToken);
+                    if (!string.IsNullOrEmpty(token.AccessToken))
+                    {
+                        await TokenService.RevokeTokenAsync(token.AccessToken);
+                    }
+                    if (!string.IsNullOrEmpty(token.RefreshToken))
+                    {
+                        await TokenService.RevokeTokenAsync(token.RefreshToken);
+                    }
                 }
 
                 // 创建响应
@@ -951,8 +957,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
-        /// 刷新Token - 使用TokenManager提供Token刷新机制
-        /// 刷新Token：由于安全考虑，Token通常有有效期。当Token即将过期时，客户端可以使用刷新Token来获取新的访问Token，而无需用户重新登录
+        /// 刷新Token - 使用TokenService提供Token刷新机制
         /// </summary>
         private async Task<(bool Success, string AccessToken, string ErrorMessage)> RefreshTokenAsync(string refreshToken, string currentToken)
         {
@@ -960,26 +965,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
             try
             {
-                // 使用TokenService进行Token刷新
-                if (TokenService is JwtTokenService jwtTokenService)
-                {
-                    // 使用新的RefreshTokens方法获取令牌对
-                    var tokens = jwtTokenService.RefreshTokens(refreshToken);
+                var tokens = TokenService.RefreshTokens(refreshToken);
 
-                    if (!string.IsNullOrEmpty(tokens.AccessToken))
-                    {
-                        return (true, tokens.AccessToken, null);
-                    }
-                }
-                else
+                if (!string.IsNullOrEmpty(tokens.AccessToken))
                 {
-                    // 兼容旧版本，使用RefreshToken方法
-                    var newToken = TokenService.RefreshToken(refreshToken);
-
-                    if (!string.IsNullOrEmpty(newToken))
-                    {
-                        return (true, newToken, null);
-                    }
+                    return (true, tokens.AccessToken, null);
                 }
 
                 return (false, null, "无法生成有效的刷新令牌");

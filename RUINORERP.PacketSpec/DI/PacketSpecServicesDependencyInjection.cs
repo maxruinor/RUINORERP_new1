@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
@@ -35,32 +35,31 @@ namespace RUINORERP.PacketSpec.DI
             }
             else
             {
-                // 默认配置
+                // 从配置文件读取
                 services.Configure<TokenServiceOptions>(options =>
                 {
-                    if (configureOptions != null)
+                    var secretKey = configuration["TokenService:SecretKey"];
+                    if (string.IsNullOrEmpty(secretKey))
                     {
-                        configureOptions(options);
+                        throw new InvalidOperationException("Token服务配置错误：必须在配置文件中配置 TokenService:SecretKey，建议使用至少32位的随机字符串");
                     }
-                    else
+                    options.SecretKey = secretKey;
+                    
+                    if (int.TryParse(configuration["TokenService:DefaultExpiryHours"], out var expiryHours))
                     {
-                        options.SecretKey = configuration["TokenService:SecretKey"] ?? "your-default-secret-key";
-                        options.DefaultExpiryHours = 8;
-                        // 移除对已删除属性的引用
+                        options.DefaultExpiryHours = expiryHours;
                     }
-                    // 验证配置
+                    
                     options.Validate();
-
                 });
-
-                // 显式注册 TokenServiceOptions 实例（用于直接依赖注入）
-                services.AddSingleton(provider =>
-                {
-                    var options = provider.GetService<IOptions<TokenServiceOptions>>().Value;
-                    return options;
-                });
-
             }
+
+            // 显式注册 TokenServiceOptions 实例（用于直接依赖注入）
+            services.AddSingleton(provider =>
+            {
+                var options = provider.GetService<IOptions<TokenServiceOptions>>().Value;
+                return options;
+            });
         }
 
         /// <summary>
@@ -174,14 +173,24 @@ namespace RUINORERP.PacketSpec.DI
                 {
                     // 使用配置文件中的设置
                     var configuration = context.Resolve<IConfiguration>();
-                    options.SecretKey = configuration["TokenService:SecretKey"] ?? "your-default-secret-key";
+                    var secretKey = configuration["TokenService:SecretKey"];
+                    
+                    if (string.IsNullOrEmpty(secretKey))
+                    {
+                        throw new InvalidOperationException("Token服务配置错误：必须在配置文件中配置 TokenService:SecretKey，建议使用至少32位的随机字符串");
+                    }
+                    
+                    options.SecretKey = secretKey;
+                    
                     if (int.TryParse(configuration["TokenService:DefaultExpiryHours"], out var defaultExpiryHours))
                     {
                         options.DefaultExpiryHours = defaultExpiryHours;
                     }
-                    // 移除对已删除属性的引用
                 }
 
+                // 验证配置
+                options.Validate();
+                
                 return options;
             }).As<TokenServiceOptions>().SingleInstance();
 

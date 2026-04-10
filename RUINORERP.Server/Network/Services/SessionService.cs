@@ -83,9 +83,9 @@ namespace RUINORERP.Server.Network.Services
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
             _statistics = SessionStatistics.Create(maxSessionCount);
 
-            // 优化：将清理定时器改为每2分钟执行一次，减少系统开销
+            // 优化：将清理定时器改为每5分钟执行一次，减少系统开销
             // 同时避免过于频繁的清理操作影响正常业务
-            _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(2));
+            _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
             _logger.LogInformation("SessionService初始化完成");
         }

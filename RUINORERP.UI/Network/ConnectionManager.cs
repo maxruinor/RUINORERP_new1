@@ -234,7 +234,8 @@ namespace RUINORERP.UI.Network
                 }
                 else
                 {
-                    _logger?.LogWarning("连接服务器失败 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
+                    //1.连接失败 这种是否有必要记录？
+                    //_logger?.LogWarning("连接服务器失败 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
                 }
 
                 return connected;

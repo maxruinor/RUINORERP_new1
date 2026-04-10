@@ -1557,9 +1557,10 @@ namespace RUINORERP.UI.Network.Services
             if (lockRequest.LockInfo == null)
                 throw new ArgumentException("LockInfo不能为空", nameof(lockRequest));
 
-            // 边界条件检查：验证单据ID有效性
+            // 边界条件检查：验证单据ID有效性1
             if (lockRequest.LockInfo.BillID <= 0)
             {
+                //这时不需要记录到日志。
                 _logger.LogWarning("解锁请求参数无效: 单据ID={BillId}", lockRequest.LockInfo.BillID);
                 return LockResponseFactory.CreateFailedResponse("单据ID无效");
             }

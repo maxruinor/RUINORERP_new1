@@ -8939,7 +8939,7 @@ namespace RUINORERP.UI.BaseForm
                 UnlockType = UnlockType.ByBizName,
                 LockInfo = new LockInfo { MenuID = CurMenuInfo.MenuID }
             };
-
+            //清空前面的锁是按业务名来的。不能按单据ID来。
             var lockResponse = await Startup.GetFromFac<ClientLockManagementService>().UnlockBillAsync(lockRequest);
             if (lockResponse != null && lockResponse.IsSuccess)
             {

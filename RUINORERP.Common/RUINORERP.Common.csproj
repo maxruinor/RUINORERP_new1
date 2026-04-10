@@ -11,9 +11,19 @@
 </PropertyGroup>
 <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
   <PlatformTarget>AnyCPU</PlatformTarget>
+  <DebugType>full</DebugType>
+  <DebugSymbols>true</DebugSymbols>
+  <Optimize>True</Optimize>
 </PropertyGroup>
 <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
   <PlatformTarget>AnyCPU</PlatformTarget>
+  <Optimize>True</Optimize>
+</PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <Optimize>False</Optimize>
+</PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+  <Optimize>False</Optimize>
 </PropertyGroup>
 <ItemGroup>
   <Compile Remove="BusinessImage\**" />

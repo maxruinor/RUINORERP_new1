@@ -317,7 +317,7 @@ namespace RUINORERP.UI
 
                 if (!connectResult)
                 {
-                    MainForm.Instance?.logger?.LogWarning("无法连接到服务器 {ServerIP}:{ServerPort}", serverIP, serverPort);
+                    //MainForm.Instance?.logger?.LogWarning("无法连接到服务器 {ServerIP}:{ServerPort}", serverIP, serverPort);
                     MainForm.Instance?.ShowStatusText($"无法连接到服务器 {serverIP}:{serverPort}");
                     // 连接失败,但不阻止登录界面显示,用户可以修改配置后重试
                     return;

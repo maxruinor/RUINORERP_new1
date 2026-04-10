@@ -112,13 +112,11 @@ namespace RUINORERP.Server.Controls
                 int unlockedCount = 0;
                 foreach (var lockInfo in lockInfos)
                 {
-                    // 检查是否锁定状态为false（已过期）
-                    if (!lockInfo.IsLocked)
+                    // 检查是否已过期(使用IsExpired属性更准确)
+                    if (lockInfo.IsExpired)
                     {
                         await _lockManagerService.ForceUnlockDocumentAsync(lockInfo.BillID);
-                        {
-                            unlockedCount++;
-                        }
+                        unlockedCount++;
                     }
                 }
 
@@ -384,8 +382,8 @@ namespace RUINORERP.Server.Controls
                 {
                     if (row.DataBoundItem is LockInfo lockInfo)
                     {
-                        // 为已释放的锁定项设置不同的背景色
-                        if (!lockInfo.IsLocked)
+                        // 为已过期的锁定项设置不同的背景色
+                        if (lockInfo.IsExpired)
                         {
                             row.DefaultCellStyle.BackColor = Color.LightPink;
                         }

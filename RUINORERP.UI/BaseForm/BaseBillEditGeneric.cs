@@ -2194,7 +2194,7 @@ namespace RUINORERP.UI.BaseForm
                 long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 
                 //解锁这个业务的自己名下的其它单
-                _ = Task.Run(async () => await UNLockByBizName(userid));
+                _ = Task.Run(async () => await UNLockByBizNameAsync(userid));
             }
             else
             {
@@ -8925,22 +8925,27 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 重新加载前要清空前面的锁
+        /// 按业务类型批量解锁当前用户的所有单据锁,避免锁资源泄露
         /// </summary>
-        /// <param name="userid"></param>
-        /// <returns></returns>
-        public async Task<bool> UNLockByBizName(long userid)
+        /// <param name="userid">用户ID</param>
+        /// <returns>是否成功</returns>
+        public async Task<bool> UNLockByBizNameAsync(long userid)
         {
             CommBillData cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
-
-            LockRequest lockRequest = new LockRequest
+            
+            // 获取当前单据的业务类型
+            BizType currentBizType = cbd?.BizType ?? BizType.默认数据;
+            if (currentBizType == BizType.默认数据)
             {
-                RequesterUserId = userid,
-                RequesterUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                UnlockType = UnlockType.ByBizName,
-                LockInfo = new LockInfo { MenuID = CurMenuInfo.MenuID }
-            };
-            //清空前面的锁是按业务名来的。不能按单据ID来。
-            var lockResponse = await Startup.GetFromFac<ClientLockManagementService>().UnlockBillAsync(lockRequest);
+                logger?.LogWarning("无法获取当前单据的业务类型");
+                return false;
+            }
+
+            // 使用新的专用方法按业务类型解锁
+            var lockResponse = await Startup.GetFromFac<ClientLockManagementService>()
+                .UnlockByBizTypeAsync(userid, currentBizType, 
+                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
+            
             if (lockResponse != null && lockResponse.IsSuccess)
             {
                 if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
@@ -8948,14 +8953,15 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.uclog.AddLog($"单据【{cbd.BizName}】批量解锁成功", UILogType.成功提示消息);
                 }
                 UpdateLockUI(false);
+                return true;
             }
             else
             {
                 string errorMsg = lockResponse?.Message ?? "解锁失败";
-                logger?.LogError($"【{cbd.BizName}】批量解锁失败：{errorMsg}");
-                MainForm.Instance.uclog.AddLog($"【{cbd.BizName}】批量解锁失败：{errorMsg}", UILogType.错误);
+                logger?.LogError($"【{cbd.BizName}】批量解锁失败:{errorMsg}");
+                MainForm.Instance.uclog.AddLog($"【{cbd.BizName}】批量解锁失败:{errorMsg}", UILogType.错误);
+                return false;
             }
-            return true;
         }
 
 

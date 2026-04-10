@@ -189,6 +189,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     validation.LockRequest = request;
                 }
+                //优先处理
                 if (validation.LockRequest.UnlockType == UnlockType.ByBizName)
                 {
                     // 释放锁定

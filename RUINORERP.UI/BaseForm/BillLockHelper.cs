@@ -140,7 +140,6 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 执行解锁
-                logger?.LogDebug("开始解锁单据: BillID={BillId}", billId);
                 var response = await lockService.UnlockBillAsync(billId);
 
                 if (response.IsSuccess)

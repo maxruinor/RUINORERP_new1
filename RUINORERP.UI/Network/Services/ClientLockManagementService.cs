@@ -231,7 +231,7 @@ namespace RUINORERP.UI.Network.Services
                 var billLock = _billLocks.GetOrAdd(billId, _ => new SemaphoreSlim(1, 1));
 
                 // 诊断日志：记录锁的初始状态
-                _logger.LogDebug("检查锁状态 - BillID={BillId}, CurrentCount={CurrentCount}, Waiters=未知", 
+                _logger.LogDebug("检查锁状态 - BillID={BillId}, CurrentCount={CurrentCount}, Waiters=未知",
                     billId, billLock.CurrentCount);
 
                 // 使用超时机制，避免长时间阻塞
@@ -638,7 +638,7 @@ namespace RUINORERP.UI.Network.Services
 
                         // 实时通知UI状态更新
                         _notificationService?.NotifyLockStatusChanged(billId, unlockedInfo, LockStatusChangeType.Unlocked);
-                        
+
                         // 延迟清理细粒度锁（不在这里立即移除，让finally中的CleanupUnusedLock处理）
                         // _billLocks.TryRemove(billId, out _);  // ❌ 删除这行，避免竞态条件
                     }
@@ -1104,7 +1104,7 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-     
+
         /// <summary>
         /// 批量检查锁状态（性能优化版）
         /// 使用并行处理减少网络请求延迟，提高批量操作效率
@@ -1121,12 +1121,12 @@ namespace RUINORERP.UI.Network.Services
                 return new Dictionary<long, LockResponse>();
 
             var stopwatch = Stopwatch.StartNew();
-            
+
             try
             {
                 // 限制批量查询大小，避免内存溢出
                 var limitedIds = billIds.Take(100).ToList();
-                
+
                 // 使用并行处理进行批量查询
                 var tasks = limitedIds.Select(async billId =>
                 {
@@ -1141,9 +1141,9 @@ namespace RUINORERP.UI.Network.Services
                         return (billId, LockResponseFactory.CreateFailedResponse($"检查失败: {ex.Message}"));
                     }
                 });
-                
+
                 var results = await Task.WhenAll(tasks);
-                
+
                 var successResults = results
                     .Where(r => r.Item2 != null)
                     .ToDictionary(r => r.Item1, r => r.Item2);
@@ -1156,7 +1156,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "批量检查锁状态时发生异常: BillIDs={BillIds}", string.Join(",", billIds));
-                
+
                 // 降级到单次查询
                 var fallbackResults = new Dictionary<long, LockResponse>();
                 foreach (var billId in billIds.Take(20))
@@ -1172,7 +1172,7 @@ namespace RUINORERP.UI.Network.Services
                         fallbackResults[billId] = LockResponseFactory.CreateFailedResponse($"降级查询失败: {innerEx.Message}");
                     }
                 }
-                
+
                 return fallbackResults;
             }
             finally
@@ -1241,16 +1241,16 @@ namespace RUINORERP.UI.Network.Services
 
                 if (response.IsSuccess)
                 {
-                    _logger?.LogDebug("从服务器同步锁状态列表成功 - 锁数量: {LockCount}, 耗时: {ElapsedMs}ms", 
+                    _logger?.LogDebug("从服务器同步锁状态列表成功 - 锁数量: {LockCount}, 耗时: {ElapsedMs}ms",
                         response.LockInfoList?.Count ?? 0, stopwatch.ElapsedMilliseconds);
-                    
+
                     // 批量更新本地缓存
                     if (response.LockInfoList != null && response.LockInfoList.Any())
                     {
                         // 数据验证和过滤
                         var validLockInfos = new List<LockInfo>();
                         var invalidCount = 0;
-                        
+
                         foreach (var lockInfo in response.LockInfoList)
                         {
                             try
@@ -1273,7 +1273,7 @@ namespace RUINORERP.UI.Network.Services
                                 // 过滤掉过期的锁信息
                                 if (lockInfo.IsExpired)
                                 {
-                                    _logger?.LogDebug("跳过过期的锁信息: BillID={BillID}, BillNo={BillNo}", 
+                                    _logger?.LogDebug("跳过过期的锁信息: BillID={BillID}, BillNo={BillNo}",
                                         lockInfo.BillID, lockInfo.BillNo);
                                     continue;
                                 }
@@ -1286,7 +1286,7 @@ namespace RUINORERP.UI.Network.Services
                                 invalidCount++;
                             }
                         }
-                        
+
                         if (validLockInfos.Any())
                         {
                             // 使用批量更新方法提高性能
@@ -1495,7 +1495,7 @@ namespace RUINORERP.UI.Network.Services
                 lockInfo.LockedUserId = currentUserId;
                 lockInfo.LockedUserName = currentUserName;
                 lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
-                
+
                 // 创建同意解锁请求
                 var lockRequest = new LockRequest
                 {
@@ -1507,7 +1507,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 从活跃锁列表中移除
                 _activeLocks.TryRemove(billId, out _);
-                
+
                 // 清除本地缓存
                 _clientCache.ClearCache(billId);
 
@@ -1518,7 +1518,7 @@ namespace RUINORERP.UI.Network.Services
                 if (response.IsSuccess)
                 {
                     _logger?.LogDebug("同意解锁请求成功 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
-                    
+
                     // 延迟清理细粒度锁（不在这里立即移除，避免竞态条件）
                     // _billLocks.TryRemove(billId, out _);  // ❌ 删除这行
                 }
@@ -1526,7 +1526,7 @@ namespace RUINORERP.UI.Network.Services
                 {
                     _logger?.LogWarning("同意解锁请求失败 - 单据ID: {BillId}, 菜单ID: {MenuId}, 错误信息: {ErrorMessage}",
                         billId, menuId, response?.Message ?? "未知错误");
-                        
+
                     // 如果失败，恢复锁状态
                     _activeLocks.TryAdd(billId, lockInfo);
                 }
@@ -1557,11 +1557,11 @@ namespace RUINORERP.UI.Network.Services
             if (lockRequest.LockInfo == null)
                 throw new ArgumentException("LockInfo不能为空", nameof(lockRequest));
 
-            // 边界条件检查：验证单据ID有效性1
-            if (lockRequest.LockInfo.BillID <= 0)
+            // 边界条件检查:验证单据ID有效性
+            // 注意:当UnlockType为ByBizName时,BillID可以为0,表示按业务类型批量解锁
+            if (lockRequest.LockInfo.BillID <= 0 && lockRequest.UnlockType != UnlockType.ByBizName)
             {
-                //这时不需要记录到日志。
-                _logger.LogWarning("解锁请求参数无效: 单据ID={BillId}", lockRequest.LockInfo.BillID);
+                // 非ByBizName类型的解锁请求必须提供有效的BillID
                 return LockResponseFactory.CreateFailedResponse("单据ID无效");
             }
 
@@ -1749,13 +1749,13 @@ namespace RUINORERP.UI.Network.Services
                             // 尝试移除,如果成功则释放资源
                             if (_billLocks.TryRemove(billId, out var removed) && removed == lockObj)
                             {
-                                try 
-                                { 
-                                    lockObj.Dispose(); 
+                                try
+                                {
+                                    lockObj.Dispose();
                                     _logger.LogDebug("清理未使用的细粒度锁: BillID={BillId}", billId);
-                                } 
-                                catch (ObjectDisposedException) 
-                                { 
+                                }
+                                catch (ObjectDisposedException)
+                                {
                                     // 已被其他线程释放,忽略
                                 }
                             }
@@ -1782,7 +1782,7 @@ namespace RUINORERP.UI.Network.Services
                 {
                     var billId = kvp.Key;
                     var lockObj = kvp.Value;
-                    
+
                     // CurrentCount=0表示锁被持有，但如果没有活跃锁且没有等待者，则是异常状态
                     if (lockObj.CurrentCount == 0 && !_activeLocks.ContainsKey(billId))
                     {
@@ -1792,7 +1792,7 @@ namespace RUINORERP.UI.Network.Services
                             {
                                 removed.Dispose();
                                 abnormalCount++;
-                                _logger.LogWarning("强制清理异常锁: BillID={BillId}, CurrentCount={CurrentCount}", 
+                                _logger.LogWarning("强制清理异常锁: BillID={BillId}, CurrentCount={CurrentCount}",
                                     billId, lockObj.CurrentCount);
                             }
                             catch (Exception ex)
@@ -1802,16 +1802,69 @@ namespace RUINORERP.UI.Network.Services
                         }
                     }
                 }
-                
+
                 if (abnormalCount > 0)
                 {
-                    _logger.LogWarning("强制清理完成 - 清理异常锁数量: {Count}, 剩余锁数量: {Remaining}", 
+                    _logger.LogWarning("强制清理完成 - 清理异常锁数量: {Count}, 剩余锁数量: {Remaining}",
                         abnormalCount, _billLocks.Count);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "强制清理异常锁时发生异常");
+            }
+        }
+
+        #endregion
+
+        #region 按业务类型批量解锁
+
+        /// <summary>
+        /// 按业务类型批量解锁当前用户的所有单据锁
+        /// 用于打开新单据前清理同业务类型的其他单据锁,避免锁资源泄露
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <param name="bizType">业务类型</param>
+        /// <param name="userName">用户名(可选)</param>
+        /// <returns>解锁响应</returns>
+        public async Task<LockResponse> UnlockByBizTypeAsync(long userId, BizType bizType, string userName = null)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            // 参数验证
+            if (userId <= 0)
+            {
+                _logger.LogWarning("按业务类型解锁参数无效: UserId={UserId}", userId);
+                return LockResponseFactory.CreateFailedResponse("用户ID无效");
+            }
+
+            try
+            {
+                // 构造解锁请求
+                var lockRequest = new LockRequest
+                {
+                    UnlockType = UnlockType.ByBizName,
+                    RequesterUserId = userId,
+                    RequesterUserName = userName ?? string.Empty,
+                    LockInfo = new LockInfo
+                    {
+                        BillID = 0, // ByBizName模式下BillID可为0
+                        bizType = bizType
+                    }
+                };
+
+                // 调用现有的UnlockBillAsync(LockRequest)方法
+                return await UnlockBillAsync(lockRequest);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "按业务类型解锁异常: UserId={UserId}, BizType={BizType}", userId, bizType);
+                return new LockResponse
+                {
+                    IsSuccess = false,
+                    Message = $"按业务类型解锁异常: {ex.Message}"
+                };
             }
         }
 

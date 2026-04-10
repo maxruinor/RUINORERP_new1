@@ -16,7 +16,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         Expired,        // 过期解锁
         SessionEnd,     // 会话结束解锁
         RequestResponse,// 请求响应解锁
-        ByBizName       // 按业务名称解锁
+        ByBizName       // 按业务名称解锁(批量解锁指定业务类型下的所有单据)
     }
 
     /// <summary>

@@ -548,16 +548,18 @@ namespace RUINORERP.UI.Report
 
             if (_isPersonalConfig && personalConfig?.PrintConfigDict != null)
             {
+                // 优先使用个人配置
                 printerName = personalConfig.PrintConfigDict.PrinterName;
                 printerSelected = personalConfig.PrintConfigDict.PrinterSelected;
                 templateId = personalConfig.PrintConfigDict.TemplateId;
             }
             else
             {
-                printerName = printConfig.PrinterName;
-                printerSelected = printConfig.PrinterSelected ?? false;
+                // 回退到系统配置
+                printerName = printConfig?.PrinterName;
+                printerSelected = printConfig?.PrinterSelected ?? false;
                 // 获取系统默认模板ID
-                if (printConfig.tb_PrintTemplates != null && printConfig.tb_PrintTemplates.Count > 0)
+                if (printConfig?.tb_PrintTemplates != null && printConfig.tb_PrintTemplates.Count > 0)
                 {
                     var defaultTemplate = printConfig.tb_PrintTemplates.FirstOrDefault(t => t.IsDefaultTemplate == true);
                     templateId = defaultTemplate?.ID ?? 0;
@@ -571,11 +573,15 @@ namespace RUINORERP.UI.Report
 
             if (printerSelected && !string.IsNullOrEmpty(printerName))
             {
-                cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printerName);
+                int index = cmbPrinterList.FindString(printerName);
+                if (index >= 0)
+                {
+                    cmbPrinterList.SelectedIndex = index;
+                }
             }
 
             // 自动选中个人配置中指定的模板
-            if (_isPersonalConfig && templateId > 0 && printConfig.tb_PrintTemplates != null)
+            if (templateId > 0 && printConfig?.tb_PrintTemplates != null)
             {
                 for (int i = 0; i < newSumDataGridView1.Rows.Count; i++)
                 {
@@ -624,15 +630,18 @@ namespace RUINORERP.UI.Report
             
             bool hasChanged = printerChanged || templateChanged;
             
+            // 根据当前配置模式更新按钮状态
             if (_isPersonalConfig)
             {
-                btnSavePersonalConfig.Enabled = hasChanged;
-                btnSaveGlobalConfig.Enabled = hasChanged;
+                // 个人配置模式：可以修改个人配置，也可以恢复系统配置
+                btnSavePersonalConfig.Enabled = hasChanged; // 修改个人配置
+                btnRevertToGlobalConfig.Enabled = true;      // 随时可以恢复系统配置
             }
             else
             {
-                btnSaveGlobalConfig.Enabled = hasChanged;
-                btnSavePersonalConfig.Enabled = hasChanged;
+                // 系统配置模式：可以保存为个人配置
+                btnSavePersonalConfig.Enabled = hasChanged; // 保存为个人配置
+                btnRevertToGlobalConfig.Enabled = false;     // 已经是系统配置，无需恢复
             }
         }
 
@@ -697,14 +706,14 @@ namespace RUINORERP.UI.Report
         {
             if (_isPersonalConfig)
             {
-                btnSavePersonalConfig.Enabled = false;
-                btnSavePersonalConfig.Values.Text = "已为个人独有";
+                // 个人配置模式：显示已保存状态，允许恢复系统配置
+                btnSavePersonalConfig.Values.Text = "保存个人配置";
                 btnRevertToGlobalConfig.Enabled = true;
                 btnRevertToGlobalConfig.Values.Text = "恢复系统配置";
             }
             else
             {
-                btnSavePersonalConfig.Enabled = true;
+                // 系统配置模式：允许保存为个人配置
                 btnSavePersonalConfig.Values.Text = "保存为个人配置";
                 btnRevertToGlobalConfig.Enabled = false;
                 btnRevertToGlobalConfig.Values.Text = "使用系统配置";
@@ -794,8 +803,11 @@ namespace RUINORERP.UI.Report
                 _isPersonalConfig = true;
                 _originalPrinterName = configData.PrinterName;
                 _originalTemplateId = configData.TemplateId;
+                
                 UpdateFormTitle();
                 UpdateButtonStates();
+                // 重新加载打印机设置以反映新的个人配置
+                LoadPrinterSettings(menuPersonalization);
 
                 MessageBox.Show("已成功保存为个人独有配置！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -822,16 +834,27 @@ namespace RUINORERP.UI.Report
 
                 if (MessageBox.Show("确定要恢复使用系统配置吗？恢复后将删除个人独有配置。", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
+                    // 禁用个人配置标志
                     menuPersonalization.UsePersonalPrintConfig = false;
-                    menuPersonalization.PrintConfigJson = null;
+                    // 清空打印配置数据（PrintConfigDict 是计算属性，会自动同步到 PrintConfigJson）
                     menuPersonalization.PrintConfigDict = null;
 
                     await MainForm.Instance.AppContext.Db.Updateable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteCommandAsync();
 
                     _isPersonalConfig = false;
-                    _originalPrinterName = printConfig.PrinterName;
+                    // 重新加载系统配置
+                    _originalPrinterName = printConfig?.PrinterName;
+                    _originalTemplateId = 0;
+                    if (printConfig?.tb_PrintTemplates != null && printConfig.tb_PrintTemplates.Count > 0)
+                    {
+                        var defaultTemplate = printConfig.tb_PrintTemplates.FirstOrDefault(t => t.IsDefaultTemplate == true);
+                        _originalTemplateId = defaultTemplate?.ID ?? 0;
+                    }
+                    
                     UpdateFormTitle();
                     UpdateButtonStates();
+                    // 重新加载打印机设置以反映系统配置
+                    LoadPrinterSettings(null);
 
                     MessageBox.Show("已成功恢复使用系统配置！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -848,15 +871,23 @@ namespace RUINORERP.UI.Report
         /// </summary>
         public tb_PrintConfig GetEffectivePrintConfig()
         {
-            if (_isPersonalConfig && printConfig != null)
+            if (printConfig == null)
+            {
+                return null;
+            }
+
+            if (_isPersonalConfig)
             {
                 var menuPersonalization = GetMenuPersonalPrintConfig(_currentMenuId);
                 if (menuPersonalization?.PrintConfigDict != null)
                 {
                     var personalConfig = menuPersonalization.PrintConfigDict;
-                    printConfig.PrinterName = personalConfig.PrinterName;
-                    printConfig.PrinterSelected = personalConfig.PrinterSelected;
-                    printConfig.Landscape = personalConfig.Landscape;
+                    // 创建副本以避免修改原始配置
+                    var effectiveConfig = (tb_PrintConfig)printConfig.Clone();
+                    effectiveConfig.PrinterName = personalConfig.PrinterName;
+                    effectiveConfig.PrinterSelected = personalConfig.PrinterSelected;
+                    effectiveConfig.Landscape = personalConfig.Landscape;
+                    return effectiveConfig;
                 }
             }
             return printConfig;
@@ -949,14 +980,14 @@ namespace RUINORERP.UI.Report
             PrintReport(RptMode.ToPDF);
         }
 
-        private void btnSavePersonalConfig_Click(object sender, EventArgs e)
+        private async void btnSavePersonalConfig_Click(object sender, EventArgs e)
         {
-            SaveAsPersonalConfigAsync();
+            await SaveAsPersonalConfigAsync();
         }
 
-        private void btnRevertToSystem_Click(object sender, EventArgs e)
+        private async void btnRevertToSystem_Click(object sender, EventArgs e)
         {
-            RevertToSystemConfigAsync();
+            await RevertToSystemConfigAsync();
         }
 
         private void ShowCustomExportDialog(FastReport.Report report)

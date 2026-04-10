@@ -29,7 +29,15 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             RuleFor(x => x.UsedQty).GreaterThan(0).WithMessage("配方明细，用量：要大于零。");
-            RuleFor(x => x.UnitCost).GreaterThan(0).WithMessage("配方明细，单位成本：要大于零。");
+            
+            // 预估成本可以为0(新物料首次创建时未录入)
+            // 审核时如果为0会自动填充为自产成本
+            // 只需要验证精度,不验证必须>0
+            RuleFor(x => x.UnitCost).PrecisionScale(19, 4, true).WithMessage("预估成本：小数位不能超过4位。");
+            
+            // 实时成本可以为NULL(尚未采购/生产)
+            RuleFor(x => x.RealTimeCost).PrecisionScale(19, 4, true).When(x => x.RealTimeCost.HasValue)
+                .WithMessage("实时成本：小数位不能超过4位。");
         }
     }
 }

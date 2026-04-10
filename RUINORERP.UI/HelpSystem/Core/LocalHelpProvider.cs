@@ -287,14 +287,35 @@ namespace RUINORERP.UI.HelpSystem.Core
                 return null;
             }
 
-            // 生成帮助键
-            string helpKey = GenerateHelpKey(context);
+            // 优先使用传入的helpKey（来自SmartHelpResolver）
+            string helpKey = context.HelpKey;
+
+            // 调试输出
+            System.Diagnostics.Debug.WriteLine($"[LocalHelpProvider] 传入的HelpKey: {helpKey}");
+            System.Diagnostics.Debug.WriteLine($"[LocalHelpProvider] 上下文 - Level: {context.Level}, ControlName: {context.ControlName}, EntityType: {context.EntityType?.Name}, FieldName: {context.FieldName}");
+
+            // 如果没有传入helpKey，则根据上下文生成
+            if (string.IsNullOrEmpty(helpKey))
+            {
+                helpKey = GenerateHelpKey(context);
+                System.Diagnostics.Debug.WriteLine($"[LocalHelpProvider] 生成的HelpKey: {helpKey}");
+            }
 
             // 查找帮助文件
             string filePath = null;
             lock (_indexLock)
             {
+                System.Diagnostics.Debug.WriteLine($"[LocalHelpProvider] 索引中查找: {helpKey}");
                 _helpIndex.TryGetValue(helpKey, out filePath);
+                System.Diagnostics.Debug.WriteLine($"[LocalHelpProvider] 查找结果: {filePath ?? "null"}");
+
+                // 如果精确匹配失败，尝试模糊匹配（去掉前缀或添加前缀）
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[LocalHelpProvider] 执行模糊匹配...");
+                    filePath = TryFuzzyMatch(helpKey);
+                    System.Diagnostics.Debug.WriteLine($"[LocalHelpProvider] 模糊匹配结果: {filePath ?? "null"}");
+                }
             }
 
             if (string.IsNullOrEmpty(filePath))
@@ -526,6 +547,66 @@ namespace RUINORERP.UI.HelpSystem.Core
             }
         }
 
+        /// <summary>
+        /// 尝试模糊匹配帮助键
+        /// 当精确匹配失败时，尝试多种匹配策略
+        /// </summary>
+        /// <param name="helpKey">原始帮助键</param>
+        /// 匹配到的文件路径，未找到则返回null
+        private string TryFuzzyMatch(string helpKey)
+        {
+            if (string.IsNullOrEmpty(helpKey)) return null;
+
+            lock (_indexLock)
+            {
+                // 策略1: 去掉前缀匹配
+                // Fields.tb_SaleOrder.CustomerVendor_ID -> tb_SaleOrder.CustomerVendor_ID
+                if (helpKey.StartsWith("Fields."))
+                {
+                    string withoutPrefix = helpKey.Substring("Fields.".Length);
+                    if (_helpIndex.TryGetValue(withoutPrefix, out string filePath))
+                        return filePath;
+                }
+                
+                // Controls.UCSaleOrder.cmbCustomerVendor_ID -> cmbCustomerVendor_ID
+                if (helpKey.StartsWith("Controls."))
+                {
+                    string withoutPrefix = helpKey.Substring("Controls.".Length);
+                    if (_helpIndex.TryGetValue(withoutPrefix, out string filePath))
+                        return filePath;
+                }
+
+                // 策略2: 只匹配最后一部分（字段名或控件名）
+                string lastPart = helpKey;
+                int lastDot = helpKey.LastIndexOf('.');
+                if (lastDot > 0)
+                {
+                    lastPart = helpKey.Substring(lastDot + 1);
+                    foreach (var kvp in _helpIndex)
+                    {
+                        if (kvp.Key.EndsWith(lastPart, StringComparison.OrdinalIgnoreCase))
+                            return kvp.Value;
+                    }
+                }
+
+                // 策略3: 包含匹配
+                foreach (var kvp in _helpIndex)
+                {
+                    if (kvp.Key.Contains(helpKey) || helpKey.Contains(kvp.Key))
+                        return kvp.Value;
+                }
+
+                // 策略4: 忽略大小写匹配
+                foreach (var kvp in _helpIndex)
+                {
+                    if (string.Equals(kvp.Key, helpKey, StringComparison.OrdinalIgnoreCase))
+                        return kvp.Value;
+                }
+            }
+
+            return null;
+        }
+
         #endregion
 
         #region 私有方法 - 相关度计算
@@ -719,6 +800,9 @@ namespace RUINORERP.UI.HelpSystem.Core
 
             try
             {
+                // 保存原始markdown用于调试
+                string originalMarkdown = markdown;
+
                 // 简单的Markdown到HTML转换
                 // 注意: 这是一个简化版本,仅支持基本的Markdown语法
 
@@ -744,15 +828,182 @@ namespace RUINORERP.UI.HelpSystem.Core
                 // 链接
                 markdown = Regex.Replace(markdown, @"\[([^\]]+)\]\(([^)]+)\)", "<a href=\"$2\">$1</a>");
 
-                // 段落
-                markdown = Regex.Replace(markdown, @"^(?!<[hup])\s*(.+)$", "<p>$1</p>", RegexOptions.Multiline);
+                // 表格转换
+                markdown = ConvertTables(markdown);
 
-                return markdown;
+                // 段落
+                markdown = Regex.Replace(markdown, @"^(?!<[hupol])\s*(.+)$", "<p>$1</p>", RegexOptions.Multiline);
+
+                // 添加样式包装
+                string html = WrapWithStyle(markdown);
+
+                return html;
             }
             catch
             {
                 return markdown; // 转换失败,返回原文本
             }
+        }
+
+        /// <summary>
+        /// 转换Markdown表格为HTML表格
+        /// </summary>
+        private string ConvertTables(string markdown)
+        {
+            // 匹配表格: | 列1 | 列2 | ... | --- | --- | ... |
+            var tableRegex = new Regex(@"(\|.+\|\r?\n)(\|[-: ]+\|[\r?\n]?)+", RegexOptions.Multiline);
+            
+            return tableRegex.Replace(markdown, match =>
+            {
+                var lines = match.Value.Split('\n').Where(l => !string.IsNullOrWhiteSpace(l)).ToArray();
+                if (lines.Length < 2) return match.Value;
+
+                var sb = new StringBuilder();
+                sb.AppendLine("<table>");
+                
+                // 表头
+                var headers = lines[0].Trim('|').Split('|').Select(h => h.Trim()).ToArray();
+                sb.AppendLine("<thead><tr>");
+                foreach (var header in headers)
+                {
+                    sb.Append($"<th>{header}</th>");
+                }
+                sb.AppendLine("</tr></thead>");
+                
+                // 数据行
+                sb.AppendLine("<tbody>");
+                for (int i = 2; i < lines.Length; i++)
+                {
+                    var cells = lines[i].Trim('|').Split('|').Select(c => c.Trim()).ToArray();
+                    sb.AppendLine("<tr>");
+                    foreach (var cell in cells)
+                    {
+                        sb.Append($"<td>{cell}</td>");
+                    }
+                    sb.AppendLine("</tr>");
+                }
+                sb.AppendLine("</tbody>");
+                sb.AppendLine("</table>");
+                
+                return sb.ToString();
+            });
+        }
+
+        /// <summary>
+        /// 用样式包装HTML内容
+        /// </summary>
+        private string WrapWithStyle(string bodyContent)
+        {
+            return $@"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""UTF-8"">
+    <style>
+        body {{
+            font-family: 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+            margin: 0;
+        }}
+        .help-container {{
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }}
+        h1 {{
+            color: #1a73e8;
+            border-bottom: 2px solid #1a73e8;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }}
+        h2 {{
+            color: #202124;
+            margin-top: 25px;
+            border-left: 4px solid #1a73e8;
+            padding-left: 10px;
+        }}
+        h3 {{
+            color: #5f6368;
+        }}
+        p {{
+            margin: 10px 0;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }}
+        th, td {{
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }}
+        th {{
+            background-color: #1a73e8;
+            color: white;
+            font-weight: bold;
+        }}
+        tr:nth-child(even) {{
+            background-color: #f9f9f9;
+        }}
+        tr:hover {{
+            background-color: #f1f1f1;
+        }}
+        code {{
+            background-color: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            color: #d63384;
+        }}
+        pre {{
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }}
+        pre code {{
+            background: none;
+            padding: 0;
+            color: inherit;
+        }}
+        ul, ol {{
+            padding-left: 25px;
+        }}
+        li {{
+            margin: 5px 0;
+        }}
+        a {{
+            color: #1a73e8;
+            text-decoration: none;
+        }}
+        a:hover {{
+            text-decoration: underline;
+        }}
+        strong {{
+            color: #202124;
+        }}
+        .info-box {{
+            background-color: #e8f0fe;
+            border-left: 4px solid #1a73e8;
+            padding: 10px 15px;
+            margin: 10px 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class=""help-container"">
+        {bodyContent}
+    </div>
+</body>
+</html>";
         }
 
         #endregion

@@ -1,7 +1,6 @@
 using Autofac.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Debug;
 using RUINORERP.Model;
 using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.Server.Workflow.Steps;
@@ -54,8 +53,7 @@ namespace RUINORERP.Server.Workflow
             var serviceProvider = services.BuildServiceProvider();
 
             //config logging
-            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            loggerFactory.AddProvider(new DebugLoggerProvider());
+            //var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
 
             // return serviceProvider;
         }

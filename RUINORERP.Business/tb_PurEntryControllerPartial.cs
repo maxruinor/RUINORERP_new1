@@ -413,9 +413,9 @@ namespace RUINORERP.Business
                         }
                         CommService.CostCalculations.CostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UntaxedUnitPrice, UntaxedShippingCost);
 
+                        // ✅ P0修复: 采购入库时直接更新BOM的RealTimeCost(使用采购单价而非库存成本)
                         var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-                        // 递归更新所有上级BOM的成本
-                        await ctrbom.UpdateParentBOMsAsync(group.Key.ProdDetailID, inv.Inv_Cost);
+                        await UpdateBOMRealTimeCostAfterPurchaseAsync(group.Key.ProdDetailID, group.Value.UntaxedUnitPrice, ctrbom);
 
 
 
@@ -1112,6 +1112,88 @@ namespace RUINORERP.Business
                                     .Includes(a => a.tb_PurEntryDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_producttype)
                                  .ToListAsync();
             return list as List<T>;
+        }
+
+        /// <summary>
+        /// ✅ P0修复: 采购入库后直接更新BOM的RealTimeCost(使用采购单价)
+        /// </summary>
+        /// <param name="prodDetailId">产品详情ID</param>
+        /// <param name="purchaseUnitCost">采购不含税单价</param>
+        /// <param name="bomController">BOM控制器实例</param>
+        private async Task UpdateBOMRealTimeCostAfterPurchaseAsync(long prodDetailId, decimal purchaseUnitCost, tb_BOM_SController<tb_BOM_S> bomController)
+        {
+            try
+            {
+                // 1. 查询所有包含该产品的BOM明细
+                var bomDetails = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_BOM_SDetail>()
+                    .Where(d => d.ProdDetailID == prodDetailId)
+                    .ToListAsync();
+
+                if (bomDetails == null || bomDetails.Count == 0)
+                {
+                    return; // 该产品未被任何BOM引用
+                }
+
+                // 2. 直接更新RealTimeCost和SubtotalRealTimeCost
+                foreach (var detail in bomDetails)
+                {
+                    detail.RealTimeCost = purchaseUnitCost;  // ✅ 直接使用采购单价
+                    detail.SubtotalRealTimeCost = purchaseUnitCost * detail.UsedQty;
+                }
+
+                // 3. 批量更新BOM明细
+                await _unitOfWorkManage.GetDbClient()
+                    .Updateable(bomDetails)
+                    .UpdateColumns(d => new { d.RealTimeCost, d.SubtotalRealTimeCost })
+                    .ExecuteCommandAsync();
+
+                _logger.LogInformation($"✅ 采购入库更新BOM实时成本: 产品ID={prodDetailId}, 采购单价={purchaseUnitCost:F4}, 影响{bomDetails.Count}条BOM明细");
+
+                // 4. 递归更新上级BOM的总成本(基于新的RealTimeCost重新计算)
+                var affectedBomIds = bomDetails.Select(d => d.BOM_ID).Distinct().ToList();
+                foreach (var bomId in affectedBomIds)
+                {
+                    var parentBOM = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_BOM_S>()
+                        .Where(b => b.BOM_ID == bomId)
+                        .FirstAsync();
+
+                    if (parentBOM != null)
+                    {
+                        // 重新计算主表汇总字段
+                        var allDetails = await _unitOfWorkManage.GetDbClient()
+                            .Queryable<tb_BOM_SDetail>()
+                            .Where(d => d.BOM_ID == bomId)
+                            .ToListAsync();
+
+                        parentBOM.TotalMaterialCost = allDetails.Sum(d => d.SubtotalUnitCost);
+                        parentBOM.SelfProductionAllCosts = parentBOM.TotalMaterialCost 
+                            + parentBOM.TotalSelfManuCost 
+                            + parentBOM.SelfApportionedCost;
+                        parentBOM.OutProductionAllCosts = parentBOM.TotalMaterialCost 
+                            + parentBOM.TotalOutManuCost 
+                            + parentBOM.OutApportionedCost;
+
+                        await _unitOfWorkManage.GetDbClient()
+                            .Updateable(parentBOM)
+                            .UpdateColumns(b => new { 
+                                b.TotalMaterialCost, 
+                                b.SelfProductionAllCosts, 
+                                b.OutProductionAllCosts 
+                            })
+                            .ExecuteCommandAsync();
+
+                        // 5. 递归处理上一级BOM
+                        await bomController.UpdateParentBOMsAsync(parentBOM.ProdDetailID, parentBOM.SelfProductionAllCosts);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"❌ 采购入库更新BOM实时成本失败: 产品ID={prodDetailId}, 采购单价={purchaseUnitCost}");
+                // 不抛出异常,避免影响采购入库主流程
+            }
         }
 
 

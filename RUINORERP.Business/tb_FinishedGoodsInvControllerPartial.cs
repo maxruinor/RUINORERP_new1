@@ -75,6 +75,33 @@ namespace RUINORERP.Business
                 }
                 #endregion
 
+                // ✅ P1修复: 批量预加载BOM明细(性能优化 - 避免循环中查询数据库)
+                var bomDetailDict = new Dictionary<long, tb_BOM_SDetail>();
+                if (entity.MOID > 0 && entity.tb_FinishedGoodsInvDetails != null)
+                {
+                    var prodDetailIds = entity.tb_FinishedGoodsInvDetails.Select(d => d.ProdDetailID).Distinct().ToList();
+                    if (prodDetailIds.Any())
+                    {
+                        // 需要查询制令单的BOM_ID
+                        var mo = await _unitOfWorkManage.GetDbClient()
+                            .Queryable<tb_ManufacturingOrder>()
+                            .Where(m => m.MOID == entity.MOID)
+                            .FirstAsync();
+                        
+                        if (mo != null && mo.BOM_ID > 0)
+                        {
+                            var bomDetails = await _unitOfWorkManage.GetDbClient()
+                                .Queryable<tb_BOM_SDetail>()
+                                .Where(d => prodDetailIds.Contains(d.ProdDetailID) && d.BOM_ID == mo.BOM_ID)
+                                .ToListAsync();
+                            
+                            bomDetailDict = bomDetails.ToDictionary(d => d.ProdDetailID);
+                            
+                            _logger.LogDebug($"✅ 缴库单审核预加载BOM明细: {bomDetails.Count}条记录");
+                        }
+                    }
+                }
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
@@ -160,7 +187,46 @@ namespace RUINORERP.Business
                     //定制订单时不影响标准配方的产品成本。这里是特别处理了。定制单使用了标准配方的BOM时。缴库只交数量不影响成本！！
                     if (!entity.tb_manufacturingorder.IsCustomizedOrder)
                     {
-                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.Qty, child.UnitCost);
+                        // ✅ 核心规则：缴库单审核时，必须直接取用 BOM 配方明细中的 RealTimeCost 作为成品入库成本
+                        // 禁止从制令单中读取或继承成本值（制令单只是BOM成本的静态快照）
+                        decimal effectiveCost = child.UnitCost; // 默认使用制令单成本(兼容旧数据)
+                        
+                        // ✅ P1优化: 使用预加载的BOM明细字典(避免循环中查询数据库)
+                        if (bomDetailDict.TryGetValue(child.ProdDetailID, out var bomDetail))
+                        {
+                            // 优先级: RealTimeCost > UnitCost
+                            if (bomDetail.RealTimeCost.HasValue && bomDetail.RealTimeCost.Value > 0)
+                            {
+                                effectiveCost = bomDetail.RealTimeCost.Value;  // ✅ 直接使用BOM实时成本
+                            }
+                            else if (bomDetail.UnitCost > 0)
+                            {
+                                effectiveCost = bomDetail.UnitCost;
+                            }
+                        }
+                        
+                        // ✅ P0修复: 成本波动检测(超过20%时记录警告)
+                        if (inv.Quantity > 0 && inv.Inv_Cost > 0)
+                        {
+                            decimal costChangeRate = Math.Abs((inv.Inv_Cost - effectiveCost) / inv.Inv_Cost);
+                            if (costChangeRate > 0.2m)
+                            {
+                                _logger.LogWarning(
+                                    $"⚠️ 产品{child.ProdDetailID}成本波动超过20%: " +
+                                    $"原库存成本={inv.Inv_Cost:F4}, " +
+                                    $"新缴库成本={effectiveCost:F4}, " +
+                                    $"波动率={costChangeRate:P2}, " +
+                                    $"缴库单号={entity.DeliveryBillNo}");
+                                
+                                // 可选: 根据配置决定是否阻断
+                                // if (_appContext.SysConfig.EnableCostChangeBlock)
+                                // {
+                                //     throw new Exception($"成本波动过大({costChangeRate:P2}),请核实后重新缴库!");
+                                // }
+                            }
+                        }
+                        
+                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.Qty, effectiveCost);
                         var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
                         // 递归更新所有上级BOM的成本
                         await ctrbom.UpdateParentBOMsAsync(inv.ProdDetailID, inv.Inv_Cost);
@@ -572,6 +638,31 @@ namespace RUINORERP.Business
                 }
                 #endregion
 
+                // ✅ P1修复: 反审核前批量预加载BOM明细(性能优化)
+                var bomDetailDict2 = new Dictionary<long, tb_BOM_SDetail>();
+                if (entity.MOID > 0 && entity.tb_FinishedGoodsInvDetails != null)
+                {
+                    var prodDetailIds = entity.tb_FinishedGoodsInvDetails.Select(d => d.ProdDetailID).Distinct().ToList();
+                    if (prodDetailIds.Any())
+                    {
+                        // 需要查询制令单的BOM_ID
+                        var mo = await _unitOfWorkManage.GetDbClient()
+                            .Queryable<tb_ManufacturingOrder>()
+                            .Where(m => m.MOID == entity.MOID)
+                            .FirstAsync();
+                        
+                        if (mo != null && mo.BOM_ID > 0)
+                        {
+                            var bomDetails = await _unitOfWorkManage.GetDbClient()
+                                .Queryable<tb_BOM_SDetail>()
+                                .Where(d => prodDetailIds.Contains(d.ProdDetailID) && d.BOM_ID == mo.BOM_ID)
+                                .ToListAsync();
+                            
+                            bomDetailDict2 = bomDetails.ToDictionary(d => d.ProdDetailID);
+                        }
+                    }
+                }
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
@@ -590,7 +681,22 @@ namespace RUINORERP.Business
                     inv.Notes = "";//后面修改数据库是不需要？
                     inv.LatestOutboundTime = System.DateTime.Now;
                     inv.MakingQty = inv.MakingQty + child.Qty;
-                    CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Qty, child.UnitCost);
+                    
+                    // ✅ P1修复: 反审核时从BOM获取成本(优先级: RealTimeCost > UnitCost)
+                    decimal effectiveCost = child.UnitCost; // 默认值
+                    if (bomDetailDict2.TryGetValue(child.ProdDetailID, out var bomDetail))
+                    {
+                        if (bomDetail.RealTimeCost.HasValue && bomDetail.RealTimeCost.Value > 0)
+                        {
+                            effectiveCost = bomDetail.RealTimeCost.Value;
+                        }
+                        else if (bomDetail.UnitCost > 0)
+                        {
+                            effectiveCost = bomDetail.UnitCost;
+                        }
+                    }
+                    
+                    CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Qty, effectiveCost);
                     inv.Quantity = inv.Quantity - child.Qty;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
@@ -604,6 +710,13 @@ namespace RUINORERP.Business
                 if (InvMainCounter == 0)
                 {
                     _logger.Debug($"{entity.DeliveryBillNo}更新库存结果为0行，请检查数据！");
+                }
+
+                // ✅ 缴库单反审核时，需要回滚上级BOM的成本(将RealTimeCost重置为NULL)
+                foreach (var child in entity.tb_FinishedGoodsInvDetails)
+                {
+                    var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                    await ctrbom.RollbackParentBOMsCostAsync(child.ProdDetailID);
                 }
 
 

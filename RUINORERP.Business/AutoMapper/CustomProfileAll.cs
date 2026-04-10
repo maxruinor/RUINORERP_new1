@@ -221,7 +221,22 @@ namespace RUINORERP.Business.AutoMapper
 
 
             //如果需求分析单已经建好保存后，再修改BOM添加了材料后。按BOM明细到分析单明细中找不到时。则直接由BOM明细生成制令单明细行
-            CreateMap<tb_BOM_SDetail, tb_ManufacturingOrderDetail>();
+            CreateMap<tb_BOM_SDetail, tb_ManufacturingOrderDetail>()
+                .AfterMap((src, dest) =>
+                {
+                    // 制令单明细成本从 BOM 实时成本复制(快照)
+                    // 优先级: RealTimeCost > UnitCost
+                    if (src.RealTimeCost.HasValue && src.RealTimeCost.Value > 0)
+                    {
+                        dest.UnitCost = src.RealTimeCost.Value;
+                        dest.SubtotalUnitCost = src.RealTimeCost.Value * src.UsedQty;
+                    }
+                    else
+                    {
+                        dest.UnitCost = src.UnitCost;
+                        dest.SubtotalUnitCost = src.UnitCost * src.UsedQty;
+                    }
+                });
 
             //库存不足的 生成
             CreateMap<tb_ManufacturingOrderDetail, tb_MaterialRequisitionDetail>();

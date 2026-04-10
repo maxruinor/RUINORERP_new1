@@ -159,7 +159,8 @@ namespace RUINORERP.Business
         /// <summary>
         /// BOM审核，改变本身状态，修改对应母件的详情中的BOMID
         /// 同时修改对应母件的在其它配方中作为子件的成本价格。并且更新对应的总成本价格
-        /// BOM明细成本不能为0，如果是新物料，后面会采购入库时覆盖这个物料成本变为最新成本
+        /// BOM明细预估成本(UnitCost)可以为0(新物料首次创建时未录入)，审核时会自动填充为自产成本
+        /// 实时成本(RealTimeCost)始终更新，反映最新实际成本
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -305,9 +306,31 @@ namespace RUINORERP.Business
                     {
                         if (detail.ProdDetailID == prodDetailId)
                         {
-                            // 更新单位成本和小计
-                            detail.UnitCost = selfProductionCost;
-                            detail.SubtotalUnitCost = detail.UnitCost * detail.UsedQty;
+                            // 更新单位成本(兼容性保留)
+                            // 如果预估成本为0或接近0,说明创建时未手工录入,则用自产成本填充
+                            if (Math.Abs(detail.UnitCost) < 0.0001m)
+                            {
+                                detail.UnitCost = selfProductionCost;
+                                _logger.LogDebug(
+                                    "BOM明细[SubID={SubID}]预估成本为0,自动填充为{Cost}",
+                                    detail.SubID, selfProductionCost
+                                );
+                            }
+                            // 否则保持手工录入的预估成本不变
+
+
+                            // 更新实时成本(始终更新,反映最新实际成本)
+                            detail.RealTimeCost = selfProductionCost;
+
+                            // 重新计算小计(优先使用RealTimeCost)
+                            decimal costForCalculation = detail.RealTimeCost.HasValue && detail.RealTimeCost.Value > 0
+                                ? detail.RealTimeCost.Value
+                                : detail.UnitCost;
+
+                            // 同时更新两个小计字段
+                            detail.SubtotalUnitCost = detail.UnitCost * detail.UsedQty;           // 预估成本小计
+                            detail.SubtotalRealTimeCost = detail.RealTimeCost * detail.UsedQty;   // 实时成本小计
+
                             hasChanges = true;
                         }
                     }
@@ -319,9 +342,9 @@ namespace RUINORERP.Business
                         parentBom.OutProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalOutManuCost + parentBom.OutApportionedCost;
                         parentBom.SelfProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalSelfManuCost + parentBom.SelfApportionedCost;
 
-                        // 保存明细更新
+                        // 保存明细更新(包含RealTimeCost和SubtotalRealTimeCost)
                         await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(parentBom.tb_BOM_SDetails)
-                              .UpdateColumns(it => new { it.UnitCost, it.SubtotalUnitCost })
+                              .UpdateColumns(it => new { it.UnitCost, it.RealTimeCost, it.SubtotalUnitCost, it.SubtotalRealTimeCost })
                               .ExecuteCommandHasChangeAsync();
 
                         // 保存主表更新
@@ -337,6 +360,88 @@ namespace RUINORERP.Business
             finally
             {
                 // 从已处理集合中移除当前产品详情ID，允许在其他分支中再次处理
+                processedProdDetailIds.Remove(prodDetailId);
+            }
+        }
+
+        /// <summary>
+        /// 反审核时回滚上级BOM的成本(将RealTimeCost重置为NULL)
+        /// </summary>
+        /// <param name="prodDetailId">当前BOM对应的产品详情ID</param>
+        /// <param name="processedProdDetailIds">已处理的产品详情ID集合，用于检测循环引用</param>
+        public async Task RollbackParentBOMsCostAsync(long prodDetailId, HashSet<long> processedProdDetailIds = null)
+        {
+            // 初始化已处理集合
+            if (processedProdDetailIds == null)
+            {
+                processedProdDetailIds = new HashSet<long>();
+            }
+
+            // 检查是否存在循环引用
+            if (processedProdDetailIds.Contains(prodDetailId))
+            {
+                _logger.LogWarning("检测到BOM循环引用: ProdDetailID = {0}", prodDetailId);
+                return;
+            }
+
+            processedProdDetailIds.Add(prodDetailId);
+
+            try
+            {
+                // 查询所有直接引用当前产品作为子件的上级BOM
+                var parentBomList = await _appContext.Db.Queryable<tb_BOM_S>()
+                                      .Includes(x => x.tb_BOM_SDetails)
+                                      .Where(x => x.tb_BOM_SDetails.Any(z => z.ProdDetailID == prodDetailId))
+                                      .ToListAsync();
+
+                if (parentBomList == null || parentBomList.Count == 0)
+                {
+                    return;
+                }
+
+                foreach (var parentBom in parentBomList)
+                {
+                    bool hasChanges = false;
+
+                    foreach (var detail in parentBom.tb_BOM_SDetails)
+                    {
+                        if (detail.ProdDetailID == prodDetailId)
+                        {
+                            // 将RealTimeCost重置为NULL(表示需要重新计算)
+                            detail.RealTimeCost = null;
+                            detail.SubtotalRealTimeCost = null;
+
+                            // SubtotalUnitCost保持不变(基于UnitCost)
+                            detail.SubtotalUnitCost = detail.UnitCost * detail.UsedQty;
+
+                            hasChanges = true;
+                        }
+                    }
+
+                    if (hasChanges)
+                    {
+                        // 重新计算BOM总成本(基于预估成本)
+                        parentBom.TotalMaterialCost = parentBom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                        parentBom.OutProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalOutManuCost + parentBom.OutApportionedCost;
+                        parentBom.SelfProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalSelfManuCost + parentBom.SelfApportionedCost;
+
+                        // 保存明细更新
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(parentBom.tb_BOM_SDetails)
+                              .UpdateColumns(it => new { it.RealTimeCost, it.SubtotalRealTimeCost, it.SubtotalUnitCost })
+                              .ExecuteCommandHasChangeAsync();
+
+                        // 保存主表更新
+                        await _unitOfWorkManage.GetDbClient().Updateable(parentBom)
+                              .UpdateColumns(it => new { it.TotalMaterialCost, it.OutProductionAllCosts, it.SelfProductionAllCosts })
+                              .ExecuteCommandHasChangeAsync();
+
+                        // 递归处理上一级BOM
+                        await RollbackParentBOMsCostAsync(parentBom.ProdDetailID, processedProdDetailIds);
+                    }
+                }
+            }
+            finally
+            {
                 processedProdDetailIds.Remove(prodDetailId);
             }
         }
@@ -358,7 +463,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 tb_ProdDetailController<tb_ProdDetail> ctrDetail = _appContext.GetRequiredService<tb_ProdDetailController<tb_ProdDetail>>();
                 tb_BOM_SController<tb_BOM_S> ctrinv = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-             
+
                 //更新产品表回写他的配方号
                 //entity.tb_proddetail.DataStatus = (int)DataStatus.完结;
                 //entity.tb_proddetail.MainID = entity.MainID;
@@ -371,6 +476,9 @@ namespace RUINORERP.Business
                     detail.DataStatus = (int)DataStatus.新建;
                     await ctrDetail.UpdateAsync(detail);
                 }
+
+                // 反审核时需要回滚上级BOM的成本(将RealTimeCost重置为NULL或0)
+                await RollbackParentBOMsCostAsync(entity.ProdDetailID);
 
 
                 //这部分是否能提出到上一级公共部分？

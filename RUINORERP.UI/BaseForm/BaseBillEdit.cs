@@ -1076,16 +1076,65 @@ namespace RUINORERP.UI.BaseForm
                         // 使用新的帮助系统显示当前控件的帮助
                         // 获取当前焦点控件，支持Krypton控件
                         Control focusedControl = RUINORERP.UI.HelpSystem.Extensions.KryptonHelpExtensions.GetActualFocusedControl(this);
+                        
+                        // 调试输出
+                        System.Diagnostics.Debug.WriteLine($"[F1帮助] 获取焦点控件: {focusedControl?.Name ?? "null"}, 类型: {focusedControl?.GetType().Name ?? "null"}");
+                        
                         if (focusedControl != null)
                         {
+                            // 如果是内部控件（如KryptonTextBox内部的文本框），尝试获取外部Krypton控件
+                            focusedControl = GetOuterKryptonControl(focusedControl);
+                            System.Diagnostics.Debug.WriteLine($"[F1帮助] 外部控件: {focusedControl?.Name ?? "null"}, 类型: {focusedControl?.GetType().Name ?? "null"}");
+                            
                             HelpManager.Instance.ShowControlHelp(focusedControl);
                             return true;
                         }
-                        break;
+                        else
+                        {
+                            // 如果没有焦点控件，显示窗体帮助
+                            System.Diagnostics.Debug.WriteLine("[F1帮助] 无焦点控件，显示窗体帮助");
+                            // BaseBillEdit是UserControl，获取其所在的Form
+                            Form parentForm = this.FindForm();
+                            if (parentForm != null)
+                            {
+                                HelpManager.Instance.ShowFormHelp(parentForm);
+                            }
+                            else
+                            {
+                                // 如果没有父窗体，显示总帮助
+                                HelpManager.Instance.ShowHelp(new HelpContext { Level = HelpLevel.Module, ModuleName = "MainHelp" });
+                            }
+                            return true;
+                        }
                 }
 
             }
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        /// <summary>
+        /// 获取外部Krypton控件（如果是内部控件）
+        /// </summary>
+        private Control GetOuterKryptonControl(Control control)
+        {
+            if (control == null) return null;
+
+            // 检查是否是Krypton控件的内部控件
+            Control parent = control.Parent;
+            while (parent != null)
+            {
+                // 如果父控件是Krypton控件且名称与当前控件相似，返回父控件
+                if (parent.GetType().FullName?.StartsWith("ComponentFactory.Krypton") == true ||
+                    parent.GetType().Name.StartsWith("Krypton"))
+                {
+                    // 检查命名模式：内部控件通常是 txtXXX，内部文本框是 InternalTextBox
+                    // 外部Krypton控件名称应该包含类似的标识
+                    return parent;
+                }
+                parent = parent.Parent;
+            }
+
+            return control;
         }
 
         #region 帮助信息提示

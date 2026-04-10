@@ -134,6 +134,7 @@ namespace RUINORERP.Business
                     */
                     //更新库存
                     inv.Quantity = inv.Quantity - ReDetail.Quantity;
+                    //采购退货会影响库存成本,需要同步更新BOM的RealTimeCost
                     if (entity.ProcessWay == (int)PurReProcessWay.需要返回)
                     {
                         inv.On_the_way_Qty = inv.On_the_way_Qty + ReDetail.Quantity;
@@ -141,11 +142,12 @@ namespace RUINORERP.Business
 
                     BusinessHelper.Instance.EditEntity(inv);
 
-                
-
-
-                inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                inv.LatestStorageTime = System.DateTime.Now;
+                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
+                    inv.LatestStorageTime = System.DateTime.Now;
+                    
+                    // 采购退货可能改变库存成本,需要同步更新BOM的RealTimeCost
+                    var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                    await ctrbom.UpdateParentBOMsAsync(inv.ProdDetailID, inv.Inv_Cost);
                 #endregion
 
                 invUpdateList.Add(inv);

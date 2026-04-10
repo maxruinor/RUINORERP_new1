@@ -1691,8 +1691,14 @@ namespace RUINORERP.UI.MRP.BOM
             sgd.GridMasterData = EditEntity;
             //要放到初始化sgd后面
             listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.UsedQty);
-            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.SubtotalUnitCost);
+            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.SubtotalUnitCost);  // 预估成本小计汇总
+            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.SubtotalRealTimeCost);  // 实时成本小计汇总
+            
+            // 预估成本小计公式
             listCols.SetCol_Formula<tb_BOM_SDetail>((a, b) => a.UnitCost * b.UsedQty, c => c.SubtotalUnitCost);
+            // 实时成本小计公式(如果RealTimeCost为null,则使用UnitCost)
+            listCols.SetCol_Formula<tb_BOM_SDetail>((a, b) => (a.RealTimeCost ?? a.UnitCost) * b.UsedQty, c => c.SubtotalRealTimeCost);
+            
             sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Inv_Cost, t => t.UnitCost);
 
             //冗余名称和规格

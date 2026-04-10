@@ -1352,6 +1352,9 @@ namespace RUINORERP.Business
                 ManufacturingOrderItem.Prelevel_BOM_ID = MakingItemBom制令单母件配方.BOM_ID;//TODO要删除
                 ManufacturingOrderItem.BOM_NO = MakingItemBom制令单母件配方.BOM_No;
                 ManufacturingOrderItem.BOM_ID = MakingItemBom制令单母件配方.BOM_ID;
+                
+                // ✅ UnitCost和SubtotalUnitCost已由AutoMapper从BOM.RealTimeCost复制(快照)
+                // 不需要在此处重新计算
 
                 //找次级中间件 在所有BOM中去找，通过目标BOM（成品）的明细对应的产品的BOMID,即下级BOM
                 //tb_BOM_S MediumBomInfo = MediumBomInfoList.FirstOrDefault(c => c.BOM_ID == mItem.tb_proddetail.BOM_ID);
@@ -1363,13 +1366,11 @@ namespace RUINORERP.Business
                     ManufacturingOrderItem.IsKeyMaterial = true;
                     //中间有BOM的制成品,只在子循环中引用
                     ManufacturingOrderItem.CurrentIinventory = BomDetailItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == mpdItem制令单母件.Location_ID).Sum(i => i.Quantity);
-                    ManufacturingOrderItem.UnitCost = BomDetailItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == mpdItem制令单母件.Location_ID).Sum(i => i.Inv_Cost);
-
-                    //默认配方成本
-                    if (ManufacturingOrderItem.UnitCost == 0 && MediumBomInfo != null)
-                    {
-                        ManufacturingOrderItem.UnitCost = System.Math.Max(MediumBomInfo.OutProductionAllCosts, MediumBomInfo.SelfProductionAllCosts);
-                    }
+                    
+                    // ✅ UnitCost已由AutoMapper从BOM.RealTimeCost复制(快照)，不需要重新计算
+                    // 删除原有的复杂成本计算逻辑:
+                    // ManufacturingOrderItem.UnitCost = BomDetailItem.tb_proddetail.tb_Inventories... (已删除)
+                    // if (ManufacturingOrderItem.UnitCost == 0 && MediumBomInfo != null)... (已删除)
                     //找下一级的材料。当前级就不需要。否则将当前级认为是中间半成品。要提供数量
                     if (middlewareNeedLoop)
                     {

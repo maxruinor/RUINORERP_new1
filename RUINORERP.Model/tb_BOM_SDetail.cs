@@ -225,10 +225,10 @@ namespace RUINORERP.Model
 
         private decimal _UnitCost= ((0));
         /// <summary>
-        /// 单位成本
+        /// 预估成本(手工录入的标准成本,用于预算控制)
         /// </summary>
-        [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
+        [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "预估成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "预估成本(手工录入)" )]
         public decimal UnitCost
         { 
             get{return _UnitCost;}
@@ -311,16 +311,47 @@ namespace RUINORERP.Model
 
         private decimal _SubtotalUnitCost = ((0));
         /// <summary>
-        /// 成本小计
+        /// 预估成本小计(= UnitCost * UsedQty)
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalUnitCost", ColDesc = "成本小计")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SubtotalUnitCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "成本小计")]
+        [AdvQueryAttribute(ColName = "SubtotalUnitCost", ColDesc = "预估成本小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SubtotalUnitCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "预估成本小计")]
         public decimal SubtotalUnitCost
         {
             get { return _SubtotalUnitCost; }
             set
             {
                 SetProperty(ref _SubtotalUnitCost, value);
+            }
+        }
+
+        private decimal? _RealTimeCost;
+        /// <summary>
+        /// 实时成本(采购入库/缴库时自动更新,作为缴库单成本依据)
+        /// UnitCost保留作为固定成本(手工录入的标准成本)
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RealTimeCost", ColDesc = "实时成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "RealTimeCost", DecimalDigits = 4, IsNullable = true, ColumnDescription = "实时成本(系统自动更新,允许NULL)")]
+        public decimal? RealTimeCost
+        {
+            get { return _RealTimeCost; }
+            set
+            {
+                SetProperty(ref _RealTimeCost, value);
+            }
+        }
+
+        private decimal? _SubtotalRealTimeCost;
+        /// <summary>
+        /// 实时成本小计(= RealTimeCost * UsedQty,系统自动计算)
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SubtotalRealTimeCost", ColDesc = "实时成本小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SubtotalRealTimeCost", DecimalDigits = 4, IsNullable = true, ColumnDescription = "实时成本小计(自动计算)")]
+        public decimal? SubtotalRealTimeCost
+        {
+            get { return _SubtotalRealTimeCost; }
+            set
+            {
+                SetProperty(ref _SubtotalRealTimeCost, value);
             }
         }
 

@@ -150,7 +150,8 @@ namespace RUINORERP.UI.MRP.BOM
             base.MasterSummaryCols.Add(c => c.TotalMaterialCost);
             base.MasterSummaryCols.Add(c => c.TotalOutManuCost);
             base.MasterSummaryCols.Add(c => c.TotalSelfManuCost);
-            base.ChildSummaryCols.Add(c => c.SubtotalUnitCost);
+            base.ChildSummaryCols.Add(c => c.SubtotalUnitCost);  // 预估成本小计
+            base.ChildSummaryCols.Add(c => c.SubtotalRealTimeCost);  // 实时成本小计
             base.ChildSummaryCols.Add(c => c.UsedQty);
             //base.ChildInvisibleCols.Add(c => c.SubtotalUnitCost);
         }

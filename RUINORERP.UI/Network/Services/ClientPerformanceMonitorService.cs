@@ -215,7 +215,15 @@ namespace RUINORERP.UI.Network.Services
             {
                 if (_communicationService == null || _communicationService.ConnectionManager?.IsConnected != true)
                 {
-                    _logger?.LogWarning("网络连接不可用，性能数据上报失败");
+                    _logger?.LogDebug("网络连接不可用，跳过性能数据上报");
+                    return;
+                }
+
+                // ✅ 检查是否有有效的Token，避免重连后Token未恢复时上报失败
+                var appContext = MainForm.Instance?.AppContext;
+                if (appContext == null || string.IsNullOrEmpty(appContext.SessionId))
+                {
+                    _logger?.LogDebug("会话未初始化或Token无效，跳过性能数据上报");
                     return;
                 }
 
@@ -234,6 +242,13 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (Exception ex)
             {
+                // ✅ 如果是Token相关错误，静默忽略，等待下次上报
+                if (ex.Message.Contains("授权令牌") || ex.Message.Contains("Token"))
+                {
+                    _logger?.LogDebug("Token未就绪，跳过本次性能数据上报");
+                    return;
+                }
+                
                 _logger?.LogError(ex, "性能数据上报异常");
             }
         }

@@ -436,6 +436,22 @@ namespace RUINORERP.UI
                 _reconnectFailureCount = 0;
                 _lastReconnectFailureTime = DateTime.MinValue;
                 
+                // ✅ 重连成功后，重置性能监控状态，确保使用新的Token
+                try
+                {
+                    var performanceMonitorService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ClientPerformanceMonitorService>();
+                    if (performanceMonitorService != null)
+                    {
+                        performanceMonitorService.Reset();
+                        performanceMonitorService.Start();
+                        logger?.LogDebug("性能监控服务已重置并重新启动");
+                    }
+                }
+                catch (Exception perfEx)
+                {
+                    logger?.LogWarning(perfEx, "重置性能监控服务时发生异常");
+                }
+                
                 // 在UI线程上显示恢复提示
                 if (InvokeRequired)
                 {

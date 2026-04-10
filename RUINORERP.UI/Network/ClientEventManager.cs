@@ -45,6 +45,11 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public event Action ReconnectFailed;
 
+        /// <summary>
+        /// 当重连成功时触发的事件
+        /// </summary>
+        public event Action ReconnectSucceeded;
+
         public event Action<string, TimeSpan> RequestCompleted; // 新增：请求完成事件
 
         /// <summary>
@@ -381,6 +386,51 @@ namespace RUINORERP.UI.Network
             {
                 // 记录异常并触发错误事件
                 string errorMessage = "处理重连失败事件时出错";
+                LogException(ex, errorMessage);
+                
+                // 避免在错误处理中又触发异常导致无限循环
+                try
+                {
+                    OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
+                }
+                catch (Exception innerEx)
+                {
+                    LogException(innerEx, $"OnErrorOccurred再次失败: {innerEx.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 触发重连成功事件
+        /// </summary>
+        public void OnReconnectSucceeded()
+        {
+            // 记录重连成功
+            _logger?.LogInformation("触发重连成功事件");
+            
+            // 获取事件处理程序的快照
+            Action handler;
+            lock (_lock)
+            {
+                handler = ReconnectSucceeded;
+            }
+
+            if (handler == null)
+            {
+                _logger?.LogDebug("重连成功事件没有订阅者");
+                return;
+            }
+
+            try
+            {
+                // 触发事件
+                handler.Invoke();
+                _logger?.LogDebug("成功触发重连成功事件");
+            }
+            catch (Exception ex)
+            {
+                // 记录异常并触发错误事件
+                string errorMessage = "处理重连成功事件时出错";
                 LogException(ex, errorMessage);
                 
                 // 避免在错误处理中又触发异常导致无限循环

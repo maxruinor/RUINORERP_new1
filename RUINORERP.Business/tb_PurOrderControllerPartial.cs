@@ -147,6 +147,9 @@ namespace RUINORERP.Business
                                 .FirstAsync();
                             if (PrePayment != null)
                             {
+                                // 定义容差值，用于浮点数比较
+                                const decimal tolerance = 0.01m;
+                                
                                 if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.草稿 || 
                                     PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核)
                                 {
@@ -190,29 +193,52 @@ namespace RUINORERP.Business
                                 }
                                 else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.已生效)
                                 {
-                                    //已生效的预付款，需要先退款才能作废结案
-                                    _unitOfWorkManage.RollbackTran();
-                                    rs.ErrorMsg = $"采购订单存在预付款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接作废结案,请先完成【预付款退款】处理。";
-                                    rs.Succeeded = false;
-                                    return rs;
+                                    //已生效表示审核通过，可以预收付，但还未实际收款
+                                    //检查是否已经有实际收款（余额=预定金额表示未收款，余额<预定金额表示已收款）
+                                    if (Math.Abs(PrePayment.LocalBalanceAmount - PrePayment.LocalPrepaidAmount) <= tolerance)
+                                    {
+                                        // 余额等于预定金额，表示还未实际收款，可以直接删除
+                                        await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
+                                    }
+                                    else
+                                    {
+                                        // 已经有实际收款，需要退款后才能结案
+                                        _unitOfWorkManage.RollbackTran();
+                                        rs.ErrorMsg = $"采购订单存在预付款单{PrePayment.PreRPNO}，且已实际收款{PrePayment.LocalPrepaidAmount - PrePayment.LocalBalanceAmount}元，不能直接作废结案,请先完成【预付款退款】处理。";
+                                        rs.Succeeded = false;
+                                        return rs;
+                                    }
+                                }
+                                else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待核销
+                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.处理中)
+                                {
+                                    //待核销表示已经收款，等待核销；处理中表示部分核销或部分退款
+                                    //这两种状态都需要先退款才能结案
+                                    if (Math.Abs(PrePayment.LocalBalanceAmount) > tolerance)
+                                    {
+                                        // 有余额，需要先退款
+                                        _unitOfWorkManage.RollbackTran();
+                                        rs.ErrorMsg = $"存在预付款单{PrePayment.PreRPNO}，状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus}，本币余额{PrePayment.LocalBalanceAmount}元，不能直接作废结案,请进行【退款】处理。";
+                                        rs.Succeeded = false;
+                                        return rs;
+                                    }
+                                    // 余额为0，理论上不应该出现在这两个状态，但为了容错允许结案
                                 }
                                 else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销
-                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.处理中
-                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.混合结清)
+                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.混合结清
+                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额退款
+                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.结案)
                                 {
-                                    //已核销的预付款，需要撤销核销才能退款
-                                    _unitOfWorkManage.RollbackTran();
-                                    rs.ErrorMsg = $"存在预付款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接作废结案,请撤销核销，再退款处理,或部分退款。";
-                                    rs.Succeeded = false;
-                                    return rs;
-                                }
-                                else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待核销)
-                                {
-                                    //待核销的预付款，可以直接退款
-                                    _unitOfWorkManage.RollbackTran();
-                                    rs.ErrorMsg = $"存在预付款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接作废结案,请进行【退款】处理。";
-                                    rs.Succeeded = false;
-                                    return rs;
+                                    //这些状态表示预付款已经处理完毕，如果余额为0，可以直接结案
+                                    if (Math.Abs(PrePayment.LocalBalanceAmount) > tolerance)
+                                    {
+                                        // 理论上不应该出现这种情况，但为了安全还是检查一下
+                                        _unitOfWorkManage.RollbackTran();
+                                        rs.ErrorMsg = $"存在预付款单，状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus}，但本币余额{PrePayment.LocalBalanceAmount}元不为0，数据异常，请联系管理员。";
+                                        rs.Succeeded = false;
+                                        return rs;
+                                    }
+                                    // 余额为0，允许结案
                                 }
                             }
                         }

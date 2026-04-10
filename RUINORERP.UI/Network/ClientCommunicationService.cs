@@ -485,6 +485,16 @@ namespace RUINORERP.UI.Network
                 // 重置心跳失败计数（仅一次）
                 Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
 
+                // ✅ 触发重连成功事件
+                try
+                {
+                    _clientEventManager?.OnReconnectSucceeded();
+                }
+                catch (Exception eventEx)
+                {
+                    _logger?.LogWarning(eventEx, "触发ReconnectSucceeded事件时发生异常");
+                }
+
                 // 显示重连成功信息到UI
                 try
                 {
@@ -718,6 +728,14 @@ namespace RUINORERP.UI.Network
                     {
                         Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
                         consecutiveTimeouts = 0;
+                        
+                        // ✅ 如果未连接且未在重连，启动重连
+                        if (!_connectionManager.IsReconnecting && !_isReconnecting)
+                        {
+                            _logger?.LogDebug("检测到未连接状态，启动自动重连");
+                            _connectionManager.StartAutoReconnect();
+                        }
+                        
                         continue;
                     }
 
@@ -732,15 +750,32 @@ namespace RUINORERP.UI.Network
                     // 如果有，说明上一个心跳还未完成，跳过本次以避免请求堆积
                     if (_pendingRequests.Values.Any(r => r.CommandId == SystemCommands.Heartbeat.Name))
                     {
-                        _logger?.LogDebug("存在未完成的心跳请求，跳过本次心跳");
+                        _logger?.LogWarning("⚠️ 存在未完成的心跳请求，跳过本次心跳以避免堆积");
                         consecutiveTimeouts++;
 
-                        // 如果连续多次跳过，说明可能存在问题
+                        // ✅ 如果连续多次有待处理请求，说明网络严重异常
                         if (consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS)
                         {
-                            _logger?.LogWarning("连续{Count}次心跳被跳过，可能存在连接问题", consecutiveTimeouts);
-                            // 重置计数，避免过度触发
-                            consecutiveTimeouts = 0;
+                            _logger?.LogError("连续 {Count} 次检测到未完成的心跳请求，可能存在网络阻塞，主动断开并重连", 
+                                consecutiveTimeouts);
+                            
+                            // ✅ 使用取消令牌确保任务可取消
+                            var token = cancellationToken;
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    StopHeartbeat();
+                                    await Disconnect().ConfigureAwait(false);
+                                    _connectionManager.StartAutoReconnect();
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger?.LogError(ex, "处理心跳请求堆积时发生异常");
+                                }
+                            }, token);
+                            
+                            consecutiveTimeouts = 0; // 重置计数
                         }
                         continue;
                     }
@@ -767,12 +802,31 @@ namespace RUINORERP.UI.Network
 
                         if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                         {
-                            // 增加额外检查，确保网络真的有问题
-                            bool isNetworkActuallyDown = !_connectionManager.IsConnected;
-                            if (isNetworkActuallyDown)
+                            _logger?.LogWarning("⚠️ 心跳失败达到阈值 {Threshold}，连续失败次数: {Failures}，主动断开并触发重连", 
+                                HEARTBEAT_FAILURE_THRESHOLD, currentFailures);
+                            
+                            // ✅ 主动断开连接，触发重连机制，使用取消令牌确保任务可取消
+                            var token = cancellationToken;
+                            _ = Task.Run(async () =>
                             {
-                                Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
-                            }
+                                try
+                                {
+                                    // 1. 先停止心跳，避免干扰
+                                    StopHeartbeat();
+                                    
+                                    // 2. 断开连接
+                                    await Disconnect().ConfigureAwait(false);
+                                    
+                                    // 3. 触发重连
+                                    _connectionManager.StartAutoReconnect();
+                                    
+                                    _logger?.LogInformation("✅ 已主动断开并启动重连机制");
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger?.LogError(ex, "主动断开并触发重连时发生异常");
+                                }
+                            }, token);
                         }
                     }
                 }
@@ -786,12 +840,31 @@ namespace RUINORERP.UI.Network
                     int currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
                     if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                     {
-                        // 增加额外检查，确保网络真的有问题
-                        bool isNetworkActuallyDown = !_connectionManager.IsConnected;
-                        if (isNetworkActuallyDown)
+                        _logger?.LogWarning("⚠️ 心跳循环异常且失败达到阈值 {Threshold}，连续失败次数: {Failures}，主动断开并触发重连", 
+                            HEARTBEAT_FAILURE_THRESHOLD, currentFailures);
+                        
+                        // ✅ 主动断开连接，触发重连机制，使用取消令牌确保任务可取消
+                        var token = cancellationToken;
+                        _ = Task.Run(async () =>
                         {
-                            Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
-                        }
+                            try
+                            {
+                                // 1. 先停止心跳，避免干扰
+                                StopHeartbeat();
+                                
+                                // 2. 断开连接
+                                await Disconnect().ConfigureAwait(false);
+                                
+                                // 3. 触发重连
+                                _connectionManager.StartAutoReconnect();
+                                
+                                _logger?.LogInformation("✅ 已从异常处理中主动断开并启动重连机制");
+                            }
+                            catch (Exception disconnectEx)
+                            {
+                                _logger?.LogError(disconnectEx, "从异常处理中主动断开并触发重连时发生异常");
+                            }
+                        }, token);
                     }
                 }
             }
@@ -1198,6 +1271,15 @@ namespace RUINORERP.UI.Network
         {
             add => _clientEventManager.ReconnectFailed += value;
             remove => _clientEventManager.ReconnectFailed -= value;
+        }
+
+        /// <summary>
+        /// 重连成功事件，当客户端重连服务器成功时触发
+        /// </summary>
+        public event Action ReconnectSucceeded
+        {
+            add => _clientEventManager.ReconnectSucceeded += value;
+            remove => _clientEventManager.ReconnectSucceeded -= value;
         }
 
         /// <summary>

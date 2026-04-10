@@ -201,24 +201,49 @@ namespace RUINORERP.UI
         {
             try
             {
-                logger?.LogWarning("客户端重连失败，检查当前登录状态");
+                logger?.LogWarning("⚠️ 客户端重连失败，当前失败次数: {Count}", _reconnectFailureCount + 1);
 
                 // 仅在已登录状态下通知用户网络问题
                 if (CurrentLoginStatus == LoginStatus.LoggedIn)
                 {
-                    logger?.LogWarning("当前为已登录状态，网络连接失败，但系统保持工作状态");
+                    _reconnectFailureCount++;
+                    _lastReconnectFailureTime = DateTime.Now;
+                    
+                    logger?.LogWarning("当前为已登录状态，重连失败第 {Count} 次", _reconnectFailureCount);
 
-                    // 在UI线程上显示网络状态提示
-                    if (InvokeRequired)
+                    // ✅ 检查是否超过最大失败次数
+                    if (_reconnectFailureCount >= MAX_RECONNECT_FAILURES)
                     {
-                        BeginInvoke(new Action(() =>
+                        // 在UI线程上显示退出提示
+                        if (InvokeRequired)
                         {
-                            ShowStatusText("网络连接失败，系统保持工作状态，将自动尝试重连");
-                        }));
+                            BeginInvoke(new Action(() =>
+                            {
+                                ShowExitDialogAfterReconnectFailures();
+                            }));
+                        }
+                        else
+                        {
+                            ShowExitDialogAfterReconnectFailures();
+                        }
                     }
                     else
                     {
-                        ShowStatusText("网络连接失败，系统保持工作状态，将自动尝试重连");
+                        // 在UI线程上显示网络状态提示
+                        if (InvokeRequired)
+                        {
+                            BeginInvoke(new Action(() =>
+                            {
+                                ShowStatusText($"网络连接失败，正在尝试重连...（第{_reconnectFailureCount}次/{MAX_RECONNECT_FAILURES}次）");
+                            }));
+                        }
+                        else
+                        {
+                            ShowStatusText($"网络连接失败，正在尝试重连...（第{_reconnectFailureCount}次/{MAX_RECONNECT_FAILURES}次）");
+                        }
+                        
+                        // ✅ 继续尝试重连
+                        communicationService?.ConnectionManager?.StartAutoReconnect();
                     }
                 }
                 else
@@ -281,6 +306,26 @@ namespace RUINORERP.UI
                         }
                         else
                         {
+                            // ✅ 连接断开时主动启动重连
+                            if (CurrentLoginStatus == LoginStatus.LoggedIn)
+                            {
+                                logger?.LogWarning("检测到连接断开，启动自动重连机制");
+                                communicationService.ConnectionManager.StartAutoReconnect();
+                                
+                                // 在UI线程显示提示
+                                if (InvokeRequired)
+                                {
+                                    BeginInvoke(new Action(() =>
+                                    {
+                                        ShowStatusText("网络已断开，正在尝试重连...");
+                                    }));
+                                }
+                                else
+                                {
+                                    ShowStatusText("网络已断开，正在尝试重连...");
+                                }
+                            }
+                            
                             // 断开连接时暂停上报，避免数据丢失
                             performanceMonitorService.PauseUpload();
                             logger?.LogInformation("客户端性能监控已暂停（连接断开）");
@@ -298,40 +343,115 @@ namespace RUINORERP.UI
 
         /// <summary>
         /// 处理心跳失败达到阈值事件
-        /// 当连续心跳失败次数达到阈值时，仅通知用户，不强制锁定系统
-        /// 这个要全面分析。为什么状态一直是登陆中，并且显示不稳定。实现不可能不稳定。在局域网中。基本都是稳定的
+        /// 当连续心跳失败次数达到阈值时，主动触发重连机制
         /// </summary>
         private void OnHeartbeatFailureThresholdReached()
         {
             try
             {
-                //logger?.LogWarning("心跳失败达到阈值，网络连接不稳定，但系统保持工作状态");
+                logger?.LogWarning("⚠️ 心跳失败达到阈值，网络连接异常");
 
-                // 仅在已登录状态下通知用户
+                // 仅在已登录状态下处理
                 if (CurrentLoginStatus == LoginStatus.LoggedIn)
                 {
-                    // 增加额外的连接状态检查
-                    bool isActuallyConnected = communicationService?.ConnectionManager.IsConnected ?? false;
-                    if (!isActuallyConnected)
+                    // ✅ 不再检查IsConnected，直接触发重连
+                    logger?.LogWarning("启动自动重连机制");
+                    
+                    // 启动重连
+                    communicationService?.ConnectionManager?.StartAutoReconnect();
+                    
+                    // 在UI线程上显示网络状态提示
+                    if (InvokeRequired)
                     {
-                        // 在UI线程上显示网络状态提示
-                        if (InvokeRequired)
+                        BeginInvoke(new Action(() =>
                         {
-                            BeginInvoke(new Action(() =>
-                            {
-                                ShowStatusText("网络连接不稳定，请检查网络，系统保持工作状态");
-                            }));
-                        }
-                        else
-                        {
-                            ShowStatusText("网络连接不稳定，请检查网络，系统保持工作状态");
-                        }
+                            ShowStatusText("网络连接异常，正在尝试重新连接...");
+                        }));
+                    }
+                    else
+                    {
+                        ShowStatusText("网络连接异常，正在尝试重新连接...");
                     }
                 }
             }
             catch (Exception ex)
             {
                 logger?.LogError(ex, "处理心跳失败阈值事件时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 重连多次失败后显示退出对话框
+        /// </summary>
+        private void ShowExitDialogAfterReconnectFailures()
+        {
+            var result = MessageBox.Show(
+                $"网络连接失败，已自动重试 {_reconnectFailureCount} 次未能恢复。\n\n" +
+                "可能的原因：\n" +
+                "• 服务器已关闭或维护\n" +
+                "• 网络连接中断\n" +
+                "• 防火墙阻止连接\n\n" +
+                "是否继续尝试重连？\n" +
+                "点击\"是\"继续尝试，点击\"否\"退出系统。",
+                "网络断开",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+                
+            if (result == DialogResult.No)
+            {
+                logger?.LogWarning("用户选择退出系统");
+                
+                // 清理资源
+                try
+                {
+                    communicationService?.Disconnect().Wait(TimeSpan.FromSeconds(3));
+                }
+                catch { }
+                
+                // 退出系统
+                Application.Exit();
+            }
+            else
+            {
+                logger?.LogInformation("用户选择继续重连，重置失败计数");
+                
+                // ✅ 重置计数，继续重连
+                _reconnectFailureCount = 0;
+                communicationService?.ConnectionManager?.StartAutoReconnect();
+                
+                ShowStatusText("继续尝试重连...");
+            }
+        }
+
+        /// <summary>
+        /// 重连成功事件处理
+        /// </summary>
+        private void OnReconnectSucceeded()
+        {
+            try
+            {
+                logger?.LogInformation("✅ 重连成功，重置失败计数");
+                
+                // ✅ 重置重连失败计数
+                _reconnectFailureCount = 0;
+                _lastReconnectFailureTime = DateTime.MinValue;
+                
+                // 在UI线程上显示恢复提示
+                if (InvokeRequired)
+                {
+                    BeginInvoke(new Action(() =>
+                    {
+                        ShowStatusText("网络已恢复，系统正常工作");
+                    }));
+                }
+                else
+                {
+                    ShowStatusText("网络已恢复，系统正常工作");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "处理重连成功事件时发生异常");
             }
         }
 
@@ -425,6 +545,21 @@ namespace RUINORERP.UI
         /// 登录状态同步锁对象
         /// </summary>
         private readonly object _loginStatusLock = new object();
+
+        /// <summary>
+        /// 重连失败计数器
+        /// </summary>
+        private int _reconnectFailureCount = 0;
+
+        /// <summary>
+        /// 最大重连失败次数，超过此次数后提示用户退出
+        /// </summary>
+        private const int MAX_RECONNECT_FAILURES = 5; // 最多重试5轮
+
+        /// <summary>
+        /// 上次重连失败时间，用于计算冷却时间
+        /// </summary>
+        private DateTime _lastReconnectFailureTime = DateTime.MinValue;
 
         /// <summary>
         /// 获取或设置登录状态，确保线程安全
@@ -528,6 +663,7 @@ namespace RUINORERP.UI
             if (communicationService != null)
             {
                 communicationService.ReconnectFailed += OnReconnectFailed;
+                communicationService.ReconnectSucceeded += OnReconnectSucceeded; // ✅ 新增
                 // 订阅心跳失败阈值事件，当连续心跳失败达到阈值时触发锁定
                 communicationService.HeartbeatFailureThresholdReached += OnHeartbeatFailureThresholdReached;
             }

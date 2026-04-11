@@ -86,7 +86,13 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
+                if (billId <= 0)
+                    return LockResponseFactory.CreateFailedResponse("单据ID无效");
+
                 var service = _lockService ?? Startup.GetFromFac<ClientLockManagementService>();
+                if (service == null)
+                    return LockResponseFactory.CreateFailedResponse("锁定服务未初始化");
+
                 return await service.UnlockBillAsync(billId);
             }
             catch (Exception ex)
@@ -105,7 +111,13 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
+                if (userId <= 0)
+                    return LockResponseFactory.CreateFailedResponse("用户ID无效");
+
                 var service = _lockService ?? Startup.GetFromFac<ClientLockManagementService>();
+                if (service == null)
+                    return LockResponseFactory.CreateFailedResponse("锁定服务未初始化");
+
                 var userName = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.tb_employee?.Employee_Name;
                 return await service.UnlockByBizTypeAsync(userId, bizType, userName);
             }
@@ -123,6 +135,9 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
+                if (billId <= 0)
+                    return null;
+
                 var service = _lockService ?? Startup.GetFromFac<ClientLockManagementService>();
                 var response = await service.CheckLockStatusAsync(billId, menuId);
                 return response?.IsSuccess == true ? response.LockInfo : null;
@@ -144,6 +159,9 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
+                if (billId <= 0)
+                    return false;
+
                 // 优先查缓存
                 if (_cacheService != null)
                 {

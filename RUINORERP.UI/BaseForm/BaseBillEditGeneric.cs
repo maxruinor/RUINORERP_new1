@@ -160,6 +160,63 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
+        #region 安全Invoke辅助方法
+
+        /// <summary>
+        /// 安全地执行Invoke操作，处理窗体已释放的情况
+        /// </summary>
+        /// <param name="action">要执行的操作</param>
+        /// <returns>是否成功执行</returns>
+        protected bool SafeInvoke(Action action)
+        {
+            if (action == null) return false;
+
+            try
+            {
+                // 检查窗体是否已释放
+                if (this.IsDisposed || this.Disposing)
+                {
+                    return false;
+                }
+
+                if (this.InvokeRequired)
+                {
+                    try
+                    {
+                        this.Invoke(action);
+                        return true;
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // 窗体在Invoke调用期间被释放
+                        return false;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // 窗体句柄已销毁
+                        return false;
+                    }
+                }
+                else
+                {
+                    action();
+                    return true;
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // 窗体已被释放
+                return false;
+            }
+            catch (InvalidOperationException)
+            {
+                // 窗体句柄已销毁
+                return false;
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// 是否有未保存的更改（统一使用实体HasChanged属性判断）
         /// </summary>
@@ -674,14 +731,8 @@ namespace RUINORERP.UI.BaseForm
             // 切换到UI线程执行UI更新
             await Task.Run(() =>
             {
-                if (this.InvokeRequired)
-                {
-                    this.Invoke(new Action(() => UpdateAllButtonStates(currentStatus, CurrentStatusType)));
-                }
-                else
-                {
-                    UpdateAllButtonStates(currentStatus, CurrentStatusType);
-                }
+                // 使用 SafeInvoke 确保在UI线程安全执行
+                SafeInvoke(() => UpdateAllButtonStates(currentStatus, CurrentStatusType));
             }).ConfigureAwait(false);
         }
 
@@ -970,15 +1021,22 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="args">锁状态变化事件参数</param>
         private void OnLockStatusChanged(LockStatusChangeEventArgs args)
         {
+            // 使用 SafeInvoke 确保在UI线程安全执行
+            if (!SafeInvoke(() => ProcessLockStatusChange(args)))
+            {
+                // 窗体已释放，忽略此事件
+                return;
+            }
+        }
+
+        /// <summary>
+        /// 处理锁状态变化（在UI线程中执行）
+        /// </summary>
+        /// <param name="args">锁状态变化事件参数</param>
+        private void ProcessLockStatusChange(LockStatusChangeEventArgs args)
+        {
             try
             {
-                // 确保在UI线程执行
-                if (this.InvokeRequired)
-                {
-                    this.Invoke(new Action<LockStatusChangeEventArgs>(OnLockStatusChanged), args);
-                    return;
-                }
-
                 // 边界条件检查：验证参数
                 if (args == null)
                 {
@@ -3803,10 +3861,7 @@ namespace RUINORERP.UI.BaseForm
                 // 更新UI状态和显示状态栏提示
                 if (!IsDisposed && tsBtnLocked != null)
                 {
-                    if (InvokeRequired)
-                        Invoke((MethodInvoker)(() => UpdateLockUI(lockSuccess, result?.LockInfo)));
-                    else
-                        UpdateLockUI(lockSuccess, result?.LockInfo);
+                    SafeInvoke(() => UpdateLockUI(lockSuccess, result?.LockInfo));
 
                     string statusMsg = lockSuccess
                         ? $"成功锁定单据{finalBillNo}"
@@ -4831,16 +4886,25 @@ namespace RUINORERP.UI.BaseForm
         {
             if (entity == null) return;
 
+            // 使用 SafeInvoke 确保在UI线程安全执行
+            if (!SafeInvoke(() => DoHandlePropertyChangedSubscription(entity, subscribe)))
+            {
+                // 窗体已释放，忽略此操作
+                return;
+            }
+        }
+
+        /// <summary>
+        /// 实际处理属性变更订阅（在UI线程中执行）
+        /// </summary>
+        /// <param name="entity">要订阅的实体</param>
+        /// <param name="subscribe">true为订阅，false为取消订阅</param>
+        private void DoHandlePropertyChangedSubscription(BaseEntity entity, bool subscribe)
+        {
             try
             {
                 if (subscribe)
                 {
-                    if (this.InvokeRequired)
-                    {
-                        this.Invoke(new Action(() => HandlePropertyChangedSubscription(entity, true)));
-                        return;
-                    }
-
                     // 订阅PropertyChanged事件
                     entity.PropertyChanged -= Entity_PropertyChanged;
                     entity.PropertyChanged += Entity_PropertyChanged;
@@ -4874,6 +4938,21 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
+            // 使用 SafeInvoke 确保在UI线程安全执行
+            if (!SafeInvoke(() => DoEntityPropertyChanged(sender, e)))
+            {
+                // 窗体已释放，忽略此事件
+                return;
+            }
+        }
+
+        /// <summary>
+        /// 实际处理属性变更事件（在UI线程中执行）
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">属性变更事件参数</param>
+        private void DoEntityPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
             try
             {
                 _isProcessingPropertyChanged = true;
@@ -4881,13 +4960,6 @@ namespace RUINORERP.UI.BaseForm
                 // 忽略ActionStatus属性的变化，因为它只是UI操作意图，不是实际数据变更
                 if (e.PropertyName == nameof(BaseEntity.ActionStatus))
                 {
-                    return;
-                }
-
-                // 确保在UI线程中更新保存按钮状态
-                if (this.InvokeRequired)
-                {
-                    this.Invoke(new Action(() => Entity_PropertyChanged(sender, e)));
                     return;
                 }
 
@@ -6206,17 +6278,7 @@ namespace RUINORERP.UI.BaseForm
             }
 
             // 在UI线程上更新菜单(确保UI操作在UI线程执行)
-            if (this.InvokeRequired)
-            {
-                this.Invoke((MethodInvoker)delegate
-                {
-                    UpdateConvertDocMenu(menuItems, errorMessage);
-                });
-            }
-            else
-            {
-                UpdateConvertDocMenu(menuItems, errorMessage);
-            }
+            SafeInvoke(() => UpdateConvertDocMenu(menuItems, errorMessage));
         }
 
         /// <summary>
@@ -6269,8 +6331,8 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null)
             {
-                // 使用Invoke确保在UI线程显示消息框
-                this.Invoke((MethodInvoker)delegate
+                // 使用 SafeInvoke 确保在UI线程显示消息框
+                SafeInvoke(() =>
                 {
                     MessageBox.Show("请先加载或保存单据后再执行联动操作！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 });
@@ -6338,7 +6400,8 @@ namespace RUINORERP.UI.BaseForm
                 bool shouldContinue = true;
                 if (result != null && result.RequiresUserConfirmation)
                 {
-                    this.Invoke((MethodInvoker)delegate
+                    bool? userConfirmed = null;
+                    SafeInvoke(() =>
                     {
                         var confirmResult = MessageBox.Show(
                             result.ConfirmationMessage ?? "是否确认继续操作？",
@@ -6346,12 +6409,15 @@ namespace RUINORERP.UI.BaseForm
                             MessageBoxButtons.YesNo,
                             MessageBoxIcon.Question);
 
-                        if (confirmResult != DialogResult.Yes)
+                        userConfirmed = (confirmResult == DialogResult.Yes);
+                        
+                        if (!userConfirmed.Value)
                         {
                             MainForm.Instance.uclog.AddLog($"用户取消了单据转换：{sourceDisplayName} -> {targetDisplayName}", Global.UILogType.普通消息);
-                            shouldContinue = false;
                         }
                     });
+                    
+                    shouldContinue = userConfirmed ?? false;
                 }
 
                 if (!shouldContinue)
@@ -6360,73 +6426,46 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 在UI线程处理结果
-                this.Invoke((MethodInvoker)async delegate
+                try
                 {
-                    if (result != null && result.Success)
+                    if (this.IsDisposed || this.Disposing)
                     {
-                        // 如果有警告或信息提示，显示给用户
-                        if (result.HasMessages)
-                        {
-                            string message = result.GetFormattedMessages();
-                            MainForm.Instance.uclog.AddLog($"单据转换完成：{sourceDisplayName} -> {targetDisplayName}，提示：{message}", Global.UILogType.普通消息);
-
-                            // 显示提示信息对话框
-                            MainForm.Instance.ShowStatusText(message);
-                        }
-                        else
-                        {
-                            MainForm.Instance.uclog.AddLog($"单据转换成功：{sourceDisplayName} -> {targetDisplayName}", Global.UILogType.普通消息);
-                        }
-
-                        MenuPowerHelper menuPowerHelper;
-                        menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-
-                        tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                                    && m.EntityName == targetType.Name
-                                    && m.BIBaseForm == "BaseBillEditGeneric`2")
-                        .FirstOrDefault();
-
-                        #region 特殊情况处理
-                        //如果有收付款类型。还是在查找菜单时区别收付款类型
-                        //BizEntityInfo entityInfo = EntityMappingHelper.GetEntityInfoByTableName(tableName);
-                        if (result.Data.ContainsProperty(nameof(ReceivePaymentType)))
-                        {
-                            string Flag = ((SharedFlag)result.Data.GetPropertyValue(nameof(ReceivePaymentType))).ToString();
-                            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == targetType.Name
-                            && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag)
-                             .FirstOrDefault();
-                        }
-                        #endregion
-
-
-                        if (RelatedMenuInfo != null)
-                        {
-                            await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, result.Data);
-                            if (result.Data is BaseEntity baseEntity)
-                            {
-                                baseEntity.HasChanged = true;
-                            }
-                        }
+                        return;
                     }
-                    else if (result != null)
-                    {
-                        // 显示失败消息，包括所有验证信息
-                        string message = result.GetFormattedMessages();
-                        if (string.IsNullOrEmpty(message))
-                        {
-                            message = result.ErrorMessage ?? "未知错误";
-                        }
 
-                        MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceDisplayName} -> {targetDisplayName}，错误：{message}", Global.UILogType.错误);
-                        MessageBox.Show($"单据联动失败: {message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (this.InvokeRequired)
+                    {
+                        try
+                        {
+                            this.Invoke((MethodInvoker)async delegate
+                            {
+                                await ProcessConversionResultAsync(result, sourceDisplayName, targetDisplayName, targetType);
+                            });
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // 窗体在Invoke调用期间被释放
+                            return;
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // 窗体句柄已销毁
+                            return;
+                        }
                     }
                     else
                     {
-                        string errorMsg = "转换结果为空，可能是不支持的目标单据类型";
-                        MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}", Global.UILogType.错误);
-                        MessageBox.Show($"不支持的目标单据类型，请联系管理员配置相应的转换器", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        await ProcessConversionResultAsync(result, sourceDisplayName, targetDisplayName, targetType);
                     }
-                });
+                }
+                catch (ObjectDisposedException)
+                {
+                    // 窗体已被释放
+                }
+                catch (InvalidOperationException)
+                {
+                    // 窗体句柄已销毁
+                }
             }
             catch (InvalidOperationException ex)
             {
@@ -6434,10 +6473,7 @@ namespace RUINORERP.UI.BaseForm
                 string errorMsg = $"操作无效：{ex.Message}";
                 MainForm.Instance.uclog.AddLog($"单据转换操作异常：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}", Global.UILogType.错误);
 
-                this.Invoke((MethodInvoker)delegate
-                {
-                    MessageBox.Show(errorMsg, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                });
+                SafeInvoke(() => MessageBox.Show(errorMsg, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error));
             }
             catch (TargetInvocationException ex)
             {
@@ -6446,10 +6482,7 @@ namespace RUINORERP.UI.BaseForm
                 string errorMsg = $"系统内部错误：{innerErrorMsg}";
                 MainForm.Instance.uclog.AddLog($"单据转换系统异常：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}", Global.UILogType.错误);
 
-                this.Invoke((MethodInvoker)delegate
-                {
-                    MessageBox.Show(errorMsg, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                });
+                SafeInvoke(() => MessageBox.Show(errorMsg, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error));
             }
             catch (Exception ex)
             {
@@ -6457,10 +6490,77 @@ namespace RUINORERP.UI.BaseForm
                 string errorMsg = $"执行单据转换时发生未知错误：{ex.Message}";
                 MainForm.Instance.uclog.AddLog($"单据转换未知异常：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}\n堆栈：{ex.StackTrace}", Global.UILogType.错误);
 
-                this.Invoke((MethodInvoker)delegate
+                SafeInvoke(() => MessageBox.Show(errorMsg, "未知错误", MessageBoxButtons.OK, MessageBoxIcon.Error));
+            }
+        }
+
+        /// <summary>
+        /// 处理转换结果（异步方法，在UI线程中执行）
+        /// </summary>
+        private async Task ProcessConversionResultAsync(dynamic result, string sourceDisplayName, string targetDisplayName, Type targetType)
+        {
+            if (result != null && result.Success)
+            {
+                // 如果有警告或信息提示，显示给用户
+                if (result.HasMessages)
                 {
-                    MessageBox.Show(errorMsg, "未知错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                });
+                    string message = result.GetFormattedMessages();
+                    MainForm.Instance.uclog.AddLog($"单据转换完成：{sourceDisplayName} -> {targetDisplayName}，提示：{message}", Global.UILogType.普通消息);
+
+                    // 显示提示信息对话框
+                    MainForm.Instance.ShowStatusText(message);
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog($"单据转换成功：{sourceDisplayName} -> {targetDisplayName}", Global.UILogType.普通消息);
+                }
+
+                MenuPowerHelper menuPowerHelper;
+                menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+
+                tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                            && m.EntityName == targetType.Name
+                            && m.BIBaseForm == "BaseBillEditGeneric`2")
+                .FirstOrDefault();
+
+                #region 特殊情况处理
+                //如果有收付款类型。还是在查找菜单时区别收付款类型
+                if (result.Data.ContainsProperty(nameof(ReceivePaymentType)))
+                {
+                    string Flag = ((SharedFlag)result.Data.GetPropertyValue(nameof(ReceivePaymentType))).ToString();
+                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == targetType.Name
+                    && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag)
+                     .FirstOrDefault();
+                }
+                #endregion
+
+
+                if (RelatedMenuInfo != null)
+                {
+                    await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, result.Data);
+                    if (result.Data is BaseEntity baseEntity)
+                    {
+                        baseEntity.HasChanged = true;
+                    }
+                }
+            }
+            else if (result != null)
+            {
+                // 显示失败消息，包括所有验证信息
+                string message = result.GetFormattedMessages();
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = result.ErrorMessage ?? "未知错误";
+                }
+
+                MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceDisplayName} -> {targetDisplayName}，错误：{message}", Global.UILogType.错误);
+                MessageBox.Show($"单据联动失败: {message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                string errorMsg = "转换结果为空，可能是不支持的目标单据类型";
+                MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}", Global.UILogType.错误);
+                MessageBox.Show($"不支持的目标单据类型，请联系管理员配置相应的转换器", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -6502,7 +6602,7 @@ namespace RUINORERP.UI.BaseForm
                 if (!validationResult.CanConvert)
                 {
                     // 在UI线程显示错误消息
-                    this.Invoke((MethodInvoker)delegate
+                    SafeInvoke(() =>
                     {
                         string errorMsg = validationResult.ErrorMessage ?? "操作失败";
                         if (validationResult.HasMessages)
@@ -6535,7 +6635,7 @@ namespace RUINORERP.UI.BaseForm
                 if (actionResult.Success)
                 {
                     // 操作成功，显示成功消息
-                    this.Invoke((MethodInvoker)delegate
+                    SafeInvoke(() =>
                     {
                         string successMsg = "操作成功！";
                         if (actionResult.InfoMessages.Any())
@@ -6554,7 +6654,7 @@ namespace RUINORERP.UI.BaseForm
                 else
                 {
                     // 操作失败，显示错误消息
-                    this.Invoke((MethodInvoker)delegate
+                    SafeInvoke(() =>
                     {
                         string errorMsg = actionResult.ErrorMessage ?? "操作失败";
                         if (actionResult.InfoMessages.Any())
@@ -6568,10 +6668,7 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception ex)
             {
                 MainForm.Instance.uclog.AddLog($"执行动作操作失败：{menuItemText}，错误：{ex.Message}", Global.UILogType.错误);
-                this.Invoke((MethodInvoker)delegate
-                {
-                    MessageBox.Show($"执行操作失败：{ex.Message}", "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                });
+                SafeInvoke(() => MessageBox.Show($"执行操作失败：{ex.Message}", "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error));
             }
         }
 
@@ -7477,7 +7574,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (InvokeRequired)
                 {
-                    Invoke((MethodInvoker)(() => UpdateLockUI(isLocked, lockInfo)));
+                    SafeInvoke(() => UpdateLockUI(isLocked, lockInfo));
                     return;
                 }
 
@@ -8774,23 +8871,19 @@ namespace RUINORERP.UI.BaseForm
                     {
                         logger?.LogWarning($"单据 {billId} 未被锁定，无需发送解锁请求");
                         MainForm.Instance.ShowStatusText("📋 单据未被锁定或锁定状态已变更");
-                        if (InvokeRequired)
-                            Invoke((MethodInvoker)(() => MessageBox.Show("单据未被锁定或锁定状态已变更，无需发送解锁请求", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information)));
+                        SafeInvoke(() => MessageBox.Show("单据未被锁定或锁定状态已变更，无需发送解锁请求", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information));
                         return;
                     }
 
                     // 显示确认对话框
                     bool confirmed = false;
-                    if (InvokeRequired)
+                    SafeInvoke(() =>
                     {
-                        Invoke((MethodInvoker)(() =>
-                        {
-                            string message = $"该单据当前被用户 {lockStatus.LockInfo.LockedUserName} 锁定\n" +
-                                           $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n\n" +
-                                           "是否向其发送解锁请求？";
-                            confirmed = MessageBox.Show(message, "请求解锁", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
-                        }));
-                    }
+                        string message = $"该单据当前被用户 {lockStatus.LockInfo.LockedUserName} 锁定\n" +
+                                       $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n\n" +
+                                       "是否向其发送解锁请求？";
+                        confirmed = MessageBox.Show(message, "请求解锁", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+                    });
 
                     if (!confirmed)
                     {
@@ -8807,26 +8900,20 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.uclog.AddLog($"已向锁定用户 {lockStatus.LockInfo.LockedUserName} 发送单据 {billId} 的解锁请求", UILogType.普通消息);
 
                     // 在UI线程上显示提示
-                    if (InvokeRequired)
+                    SafeInvoke(() =>
                     {
-                        Invoke((MethodInvoker)(() =>
-                        {
-                            MessageBox.Show($"解锁请求已成功发送给用户 {lockStatus.LockInfo.LockedUserName}，系统将在用户响应后通知您",
-                                    "请求已发送", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }));
-                    }
+                        MessageBox.Show($"解锁请求已成功发送给用户 {lockStatus.LockInfo.LockedUserName}，系统将在用户响应后通知您",
+                                "请求已发送", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    });
                 }
                 catch (Exception ex)
                 {
                     logger?.LogError(ex, $"发送单据 {billId} 解锁请求失败");
                     MainForm.Instance.uclog.AddLog($"发送解锁请求失败: {ex.Message}", UILogType.错误);
-                    if (InvokeRequired)
+                    SafeInvoke(() =>
                     {
-                        Invoke((MethodInvoker)(() =>
-                        {
-                            MessageBox.Show($"发送解锁请求失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }));
-                    }
+                        MessageBox.Show($"发送解锁请求失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    });
                 }
             });
         }
@@ -8863,51 +8950,24 @@ namespace RUINORERP.UI.BaseForm
                         }
 
                         // 在UI线程执行
-                        if (InvokeRequired)
+                        SafeInvoke(() =>
                         {
-                            Invoke((MethodInvoker)(() =>
+                            if (NeedUpdateUI)
                             {
-                                if (!IsDisposed)
-                                {
-                                    if (NeedUpdateUI)
-                                    {
-                                        UpdateLockUI(false);
-                                    }
-
-                                    // 显示状态栏提示
-                                    if (isSuccess)
-                                    {
-                                        MainForm.Instance.ShowStatusText($"✅ 成功解锁单据{billNo}");
-                                    }
-                                    else
-                                    {
-                                        string errorMsg = lockResponse?.Message ?? "解锁失败";
-                                        MainForm.Instance.ShowStatusText($"❌ 解锁单据{billNo}失败：{errorMsg}");
-                                    }
-                                }
-                            }));
-                        }
-                        else
-                        {
-                            if (!IsDisposed)
-                            {
-                                if (NeedUpdateUI)
-                                {
-                                    UpdateLockUI(false);
-                                }
-
-                                // 显示状态栏提示
-                                if (isSuccess)
-                                {
-                                    MainForm.Instance.ShowStatusText($"✅ 成功解锁单据{billNo}");
-                                }
-                                else
-                                {
-                                    string errorMsg = lockResponse?.Message ?? "解锁失败";
-                                    MainForm.Instance.ShowStatusText($"❌ 解锁单据{billNo}失败：{errorMsg}");
-                                }
+                                UpdateLockUI(false);
                             }
-                        }
+
+                            // 显示状态栏提示
+                            if (isSuccess)
+                            {
+                                MainForm.Instance.ShowStatusText($"✅ 成功解锁单据{billNo}");
+                            }
+                            else
+                            {
+                                string errorMsg = lockResponse?.Message ?? "解锁失败";
+                                MainForm.Instance.ShowStatusText($"❌ 解锁单据{billNo}失败：{errorMsg}");
+                            }
+                        });
                     }
 
                     // 如果是被自己锁定的，才需要记录解锁失败的情况

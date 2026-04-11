@@ -379,7 +379,7 @@
             this.cmbPayStatus.Name = "cmbPayStatus";
             this.cmbPayStatus.Size = new System.Drawing.Size(135, 21);
             this.cmbPayStatus.TabIndex = 99;
-            this.cmbPayStatus.SelectedIndexChanged += new System.EventHandler(this.cmbPayStatus_SelectedIndexChanged);
+           
             // 
             // lblOrderNo
             // 

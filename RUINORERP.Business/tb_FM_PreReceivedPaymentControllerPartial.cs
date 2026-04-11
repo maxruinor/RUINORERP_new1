@@ -245,6 +245,8 @@ namespace RUINORERP.Business
                     .Where(c => c.ReceivePaymentType == entity.ReceivePaymentType)
                     .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.待审核)
                     .Where(c => c.SourceBillId == entity.SourceBillId)
+                    // 排除当前单据本身，避免重复计算
+                    .WhereIF(entity.PreRPID > 0, c => c.PreRPID != entity.PreRPID)
                     .ToListAsync();
 
                 // 将当前正在审核的单据添加到列表中，确保验证时包含当前单据的金额

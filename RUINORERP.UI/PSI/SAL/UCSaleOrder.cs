@@ -1690,62 +1690,6 @@ namespace RUINORERP.UI.PSI.SAL
 
         #endregion
 
-        private void cmbPayStatus_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            // 选择付款状态时，根据付款状态处理订金金额
-            if (EditEntity != null && cmbPayStatus.SelectedValue is int payStatus)
-            {
-                // 全额预付：只有当订金为空或0时，才自动设为订单总金额
-                if (payStatus == (int)PayStatus.全额预付)
-                {
-                    if (EditEntity.TotalAmount > 0)
-                    {
-                        // 检查订金是否为空或0
-                        decimal currentDeposit = 0;
-                        if (txtDeposit != null && !string.IsNullOrWhiteSpace(txtDeposit.Text))
-                        {
-                            decimal.TryParse(txtDeposit.Text, out currentDeposit);
-                        }
-
-                        // 只有订金为空或0时才自动赋值，否则保留用户输入（支持超付）
-                        if (currentDeposit == 0)
-                        {
-                            EditEntity.Deposit = EditEntity.TotalAmount;
-                            txtDeposit.Text = EditEntity.Deposit.ToString();
-                            MainForm.Instance.uclog.AddLog($"已选择【全额预付】，订金自动设置为订单总金额: {EditEntity.TotalAmount:N2} 元");
-                        }
-                        else
-                        {
-                            MainForm.Instance.uclog.AddLog($"已选择【全额预付】，保留用户输入的订金金额: {currentDeposit:N2} 元");
-                        }
-                    }
-                }
-                // 部分预付：提示用户订金不能>=总金额
-                else if (payStatus == (int)PayStatus.部分预付)
-                {
-                    if (EditEntity.TotalAmount > 0 && EditEntity.Deposit >= EditEntity.TotalAmount)
-                    {
-                        MessageBox.Show($"当前付款状态为【部分预付】，订金金额不能大于等于订单总金额！\n\n" +
-                                       $"订单总金额：{EditEntity.TotalAmount:N2} 元\n" +
-                                       $"当前订金金额：{EditEntity.Deposit:N2} 元\n\n" +
-                                       $"请修改订金金额",
-                            "部分预付提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                }
-                // 未付款：提示用户订金必须为0
-                else if (payStatus == (int)PayStatus.未付款)
-                {
-                    if (EditEntity.Deposit > 0)
-                    {
-                        MessageBox.Show($"当前付款状态为【未付款】，订金金额必须为零！\n\n" +
-                                       $"当前订金金额：{EditEntity.Deposit:N2} 元\n\n" +
-                                       $"请将订金修改为0",
-                            "未付款提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                }
-            }
-        }
-
         private void kryptonPanelMainInfo_Paint(object sender, PaintEventArgs e)
         {
 

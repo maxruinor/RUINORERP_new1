@@ -147,12 +147,12 @@ namespace RUINORERP.Repository.UnitOfWorks
                     if (isolationLevel.HasValue)
                     {
                         dbClient.Ado.BeginTran(isolationLevel.Value);
-                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务已开启，隔离级别：{isolationLevel.Value}，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
+                        _logger.LogInformation($"[Transaction-{context.TransactionId}] 事务已开启，隔离级别：{isolationLevel.Value}，线程 ID: {Thread.CurrentThread.ManagedThreadId}，调用栈：{context.CallerMethod}");
                     }
                     else
                     {
                         dbClient.Ado.BeginTran();
-                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务已开启，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
+                        _logger.LogInformation($"[Transaction-{context.TransactionId}] 事务已开启，线程 ID: {Thread.CurrentThread.ManagedThreadId}，调用栈：{context.CallerMethod}");
                     }
                 }
                 // 嵌套事务：使用保存点（SQL Server 支持）
@@ -195,7 +195,7 @@ namespace RUINORERP.Repository.UnitOfWorks
             var context = CurrentTransactionContext;
             if (context == null)
             {
-                _logger.LogWarning("提交请求但无事务上下文");
+                _logger.LogWarning("[CommitTran] 提交请求但无事务上下文");
                 return;
             }
                 
@@ -208,6 +208,8 @@ namespace RUINORERP.Repository.UnitOfWorks
             {
                 if (context.Depth <= 0)
                 {
+                    _logger.LogWarning($"[Transaction-{context.TransactionId}] 提交请求但事务深度为 {context.Depth}，跳过提交");
+                    ResetTransactionState();
                     return;
                 }
                 
@@ -217,6 +219,10 @@ namespace RUINORERP.Repository.UnitOfWorks
                     _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务已标记为回滚，跳过提交");
                     context.Depth--;
                     _tranDepth.Value--;
+                    if (context.Depth == 0)
+                    {
+                        ResetTransactionState();
+                    }
                     return;
                 }
                 
@@ -224,6 +230,8 @@ namespace RUINORERP.Repository.UnitOfWorks
                 context.Depth--;
                 _tranDepth.Value--;
                 context.UpdateActivityTime();
+                
+                _logger.LogDebug($"[Transaction-{context.TransactionId}] 提交操作：Depth={context.Depth}");
                 
                 // 内层提交：仅更新深度
                 if (context.Depth > 0)
@@ -234,8 +242,27 @@ namespace RUINORERP.Repository.UnitOfWorks
                 // 最外层提交
                 try
                 {
-                    dbClient.Ado.CommitTran();
-                    context.Status = TransactionStatus.Committed;
+                    // ✅ 防御性检查：验证事务对象状态
+                    if (dbClient.Ado.Transaction == null)
+                    {
+                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务对象已为空，无法提交");
+                        context.Status = TransactionStatus.Committed;
+                    }
+                    else
+                    {
+                        var transactionConnection = dbClient.Ado.Transaction.Connection;
+                        if (transactionConnection == null || transactionConnection.State != System.Data.ConnectionState.Open)
+                        {
+                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务连接已关闭或无效，无法提交");
+                            context.Status = TransactionStatus.Committed;
+                        }
+                        else
+                        {
+                            dbClient.Ado.CommitTran();
+                            context.Status = TransactionStatus.Committed;
+                            _logger.LogInformation($"[Transaction-{context.TransactionId}] 事务提交成功");
+                        }
+                    }
                     
                     var duration = context.GetDuration().TotalSeconds;
                     if (duration > 10)
@@ -250,6 +277,19 @@ namespace RUINORERP.Repository.UnitOfWorks
                         duration, 
                         true,
                         ExtractTableName(context)); // 从事务上下文中提取表名
+                }
+                catch (InvalidOperationException invEx) when (invEx.Message.Contains("已完成") || invEx.Message.Contains("Zombie"))
+                {
+                    // ✅ 关键修复：捕获 "事务已完成" 异常
+                    _logger.LogWarning(invEx, $"[Transaction-{context.TransactionId}] 事务已完成（可能已被其他地方处理），忽略此异常");
+                    context.Status = TransactionStatus.Committed;
+                    
+                    // ✅ 性能监控：记录事务
+                    TransactionMetrics.RecordTransaction(
+                        "commit", 
+                        context.CallerMethod, 
+                        stopwatch.Elapsed.TotalSeconds, 
+                        true);
                 }
                 catch (Exception commitEx)
                 {
@@ -267,6 +307,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 }
                 finally
                 {
+                    // ✅ 关键修复：无论成功与否，都要重置事务状态
                     ResetTransactionState();
                 }
             }
@@ -311,6 +352,8 @@ namespace RUINORERP.Repository.UnitOfWorks
             {
                 if (context.Depth <= 0)
                 {
+                    _logger.LogWarning($"[Transaction-{context.TransactionId}] 回滚请求但事务深度为 {context.Depth}，跳过回滚");
+                    ResetTransactionState();
                     return;
                 }
         
@@ -322,13 +365,35 @@ namespace RUINORERP.Repository.UnitOfWorks
                 context.Depth--;
                 _tranDepth.Value--;
         
+                _logger.LogDebug($"[Transaction-{context.TransactionId}] 回滚操作：Depth={context.Depth}, ShouldRollback={context.ShouldRollback}");
+        
                 // 最外层回滚
                 if (context.Depth == 0)
                 {
                     try
                     {
-                        dbClient.Ado.RollbackTran();
-                        context.Status = TransactionStatus.RolledBack;
+                        // ✅ 防御性检查：验证事务对象状态
+                        if (dbClient.Ado.Transaction == null)
+                        {
+                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务对象已为空，跳过回滚");
+                            context.Status = TransactionStatus.RolledBack;
+                        }
+                        else
+                        {
+                            // 检查事务是否已经完成（提交或回滚）
+                            var transactionConnection = dbClient.Ado.Transaction.Connection;
+                            if (transactionConnection == null || transactionConnection.State != System.Data.ConnectionState.Open)
+                            {
+                                _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务连接已关闭或无效，跳过回滚");
+                                context.Status = TransactionStatus.RolledBack;
+                            }
+                            else
+                            {
+                                dbClient.Ado.RollbackTran();
+                                context.Status = TransactionStatus.RolledBack;
+                                _logger.LogInformation($"[Transaction-{context.TransactionId}] 事务回滚成功");
+                            }
+                        }
                         
                         // ✅ 性能监控：记录回滚事务
                         TransactionMetrics.RecordTransaction(
@@ -337,6 +402,19 @@ namespace RUINORERP.Repository.UnitOfWorks
                             stopwatch.Elapsed.TotalSeconds, 
                             false,
                             ExtractTableName(context));
+                    }
+                    catch (InvalidOperationException invEx) when (invEx.Message.Contains("已完成") || invEx.Message.Contains("Zombie"))
+                    {
+                        // ✅ 关键修复：捕获 "事务已完成" 异常，这是正常现象（可能已被其他地方回滚）
+                        _logger.LogWarning(invEx, $"[Transaction-{context.TransactionId}] 事务已完成（可能已被其他地方回滚），忽略此异常");
+                        context.Status = TransactionStatus.RolledBack;
+                        
+                        // ✅ 性能监控：记录回滚事务
+                        TransactionMetrics.RecordTransaction(
+                            "rollback", 
+                            context.CallerMethod, 
+                            stopwatch.Elapsed.TotalSeconds, 
+                            false);
                     }
                     catch (Exception rollbackEx)
                     {
@@ -351,6 +429,11 @@ namespace RUINORERP.Repository.UnitOfWorks
                         
                         throw;
                     }
+                    finally
+                    {
+                        // ✅ 关键修复：无论成功与否，都要重置事务状态
+                        ResetTransactionState();
+                    }
                 }
                 // 嵌套事务：回滚到保存点
                 else if (context.SavePointStack.TryPop(out var savePoint))
@@ -358,6 +441,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                     try
                     {
                         dbClient.Ado.ExecuteCommand($"ROLLBACK TRANSACTION {savePoint}");
+                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 保存点回滚成功：{savePoint}");
                     }
                     catch (Exception savePointEx)
                     {
@@ -368,7 +452,7 @@ namespace RUINORERP.Repository.UnitOfWorks
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 回滚操作失败");
+                _logger.LogError(ex, $"[Transaction-{context?.TransactionId.ToString() ?? "Unknown"}] RollbackTran 外层异常");
                 ForceRollback(dbClient);
                 
                 // ✅ 性能监控：记录异常回滚
@@ -382,10 +466,6 @@ namespace RUINORERP.Repository.UnitOfWorks
             }
             finally
             {
-                if (context.Depth <= 0)
-                {
-                    ResetTransactionState();
-                }
                 _rwLock.ExitWriteLock();
             }
         }
@@ -395,17 +475,35 @@ namespace RUINORERP.Repository.UnitOfWorks
         /// </summary>
         private void ForceRollback(ISqlSugarClient dbClient)
         {
+            var context = CurrentTransactionContext;
+            var txId = context?.TransactionId.ToString() ?? "Unknown";
             try
             {
-                if (dbClient.Ado.Transaction != null)
+                if (dbClient.Ado.Transaction == null)
                 {
-                    dbClient.Ado.RollbackTran();
-                    _logger.LogWarning("强制回滚已执行");
+                    _logger.LogWarning($"[Transaction-{txId}] 强制回滚：事务对象已为空");
                 }
+                else
+                {
+                    var transactionConnection = dbClient.Ado.Transaction.Connection;
+                    if (transactionConnection == null || transactionConnection.State != System.Data.ConnectionState.Open)
+                    {
+                        _logger.LogWarning($"[Transaction-{txId}] 强制回滚：事务连接已关闭或无效");
+                    }
+                    else
+                    {
+                        dbClient.Ado.RollbackTran();
+                        _logger.LogWarning($"[Transaction-{txId}] 强制回滚已执行");
+                    }
+                }
+            }
+            catch (InvalidOperationException invEx) when (invEx.Message.Contains("已完成") || invEx.Message.Contains("Zombie"))
+            {
+                _logger.LogWarning(invEx, $"[Transaction-{txId}] 强制回滚：事务已完成，忽略此异常");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "强制回滚失败");
+                _logger.LogError(ex, $"[Transaction-{txId}] 强制回滚失败");
             }
             finally
             {

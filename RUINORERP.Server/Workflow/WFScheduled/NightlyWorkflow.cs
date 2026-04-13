@@ -37,10 +37,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                   (
                   context =>
                   {
-
                       System.Diagnostics.Debug.WriteLine("执行提醒");
-                      //MessageBox.Show("执行提醒" + System.DateTime.Now);
-
                   }
                   )
                   ).OnError(WorkflowErrorHandling.Retry, TimeSpan.FromMinutes(20))

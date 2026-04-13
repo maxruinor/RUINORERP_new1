@@ -41,9 +41,6 @@ using Microsoft.Extensions.Logging.EventLog;
 using SuperSocket.Command;
 using Microsoft.Extensions.Options;
 using RUINORERP.Global;
-#pragma warning disable CS0105 // using 指令以前在此命名空间中出现过
-using RUINORERP.Common.Log4Net;
-#pragma warning restore CS0105 // using 指令以前在此命名空间中出现过
 using RUINORERP.Business.Processor;
 using WorkflowCore.Interface;
 using WorkflowCore.Services.DefinitionStorage;

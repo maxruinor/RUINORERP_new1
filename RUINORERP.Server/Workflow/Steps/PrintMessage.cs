@@ -19,9 +19,8 @@ namespace RUINORERP.Server.Workflow.Steps
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            System.Windows.Forms.MessageBox.Show(Message);
-            _logger.Info("测试1", Message);
-            _logger.LogInformation("测试2", Message);
+            // 服务器端不应使用UI组件,改用日志记录
+            _logger.LogInformation("工作流消息: {Message}", Message);
             System.Diagnostics.Debug.WriteLine(Message);
             return ExecutionResult.Next();
         }

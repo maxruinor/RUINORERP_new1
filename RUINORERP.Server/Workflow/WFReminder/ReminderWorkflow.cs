@@ -11,8 +11,6 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.Workflow.WFApproval.Steps;
 using RUINORERP.Global;
-using System.Windows.Forms;
- 
 using RUINORERP.PacketSpec.Models.Message;
 
 namespace RUINORERP.Server.Workflow.WFReminder
@@ -45,11 +43,9 @@ namespace RUINORERP.Server.Workflow.WFReminder
             .StartWith<ReminderStart>(
                     context =>
                     {
-                          
                         #if DEBUG
                         System.Diagnostics.Debug.WriteLine("Hello");
                         #endif
-                        // MessageBox.Show("开始提示前先提示一下");
                     }
                 )
             .Input(step => step.Description, data => data.RemindSubject)
@@ -66,8 +62,6 @@ namespace RUINORERP.Server.Workflow.WFReminder
                       #if DEBUG
                       System.Diagnostics.Debug.WriteLine("执行提醒");
                       #endif
-                      //MessageBox.Show("执行提醒" + System.DateTime.Now);
-
                   }
                   )
                   .Input(step => step.BizData, data => data)//直接把整个ReminderBizData数据传到步骤中去——OK

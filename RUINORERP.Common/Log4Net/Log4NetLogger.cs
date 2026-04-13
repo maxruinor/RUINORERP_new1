@@ -407,7 +407,7 @@ namespace RUINORERP.Common.Log4Net
 
             if (appContext?.CurUserInfo != null)
             {
-                cache.Operator = appContext.CurUserInfo.Name ?? "已登录用户";
+                cache.Operator = appContext.CurUserInfo.客户端版本;
             }
             else
             {
@@ -469,7 +469,7 @@ namespace RUINORERP.Common.Log4Net
 
             if (appContext?.CurUserInfo != null)
             {
-                cache.Operator = appContext.CurUserInfo.Name ?? "已登录用户";
+                cache.Operator = appContext.CurUserInfo.客户端版本;
             }
             else
             {

@@ -12,6 +12,7 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Business.CommService;
 using RUINORERP.IServices;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Model;
@@ -106,7 +107,8 @@ namespace RUINORERP.Business
                         decimal 已发数 = status.SentQty;
                         decimal 应发数 = status.ShouldSendQty;
 
-                        tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                        // ✅ 修复：移除不必要的外部Controller引用
+                        // tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                         List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
 
@@ -144,9 +146,9 @@ namespace RUINORERP.Business
                             invUpdateList.Add(inv);
                         }
 
-                        DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                        var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                        if (InvMainCounter == 0)
+                        DbHelper<tb_Inventory> dbHelperBatch = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                        var InvMainCounter = await dbHelperBatch.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                        if (InvMainCounter == 0 && invUpdateList.Count > 0)
                         {
                             _logger.Debug($"{entitys[m].MONO}更新库存结果为0行，请检查数据！");
                         }
@@ -218,7 +220,8 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                // ✅ 修复：移除不必要的外部Controller引用，直接使用当前事务的DbClient
+                // tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
 
@@ -298,13 +301,9 @@ namespace RUINORERP.Business
                 //var x = _unitOfWorkManage.GetDbClient().Storageable(units).ToStorage();
                 //x.AsInsertable.ExecuteReturnSnowflakeIdList();//不存在插入
                 //return await x.AsUpdateable.ExecuteCommandAsync();//存在更新
-                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invMain);
-                if (InvMainCounter == 0)
-                {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("在制产品库存更新失败！");
-                }
+                var x = _unitOfWorkManage.GetDbClient().Storageable(invMain).ToStorage();
+                await x.AsInsertable.ExecuteReturnSnowflakeIdAsync(); // 尝试插入，获取新ID
+                await x.AsUpdateable.ExecuteCommandAsync(); // 更新已存在的记录
 
 
                 #endregion
@@ -316,23 +315,23 @@ namespace RUINORERP.Business
                     // ✅ 从预加载字典获取（死锁优化）
                     var key = (item.ProdDetailID, item.Location_ID);
                     invDict.TryGetValue(key, out var inv);
-                    if (invMain != null)
+                    if (inv != null && inv.ProdDetailID > 0)  // ✅ 修复：判断inv而不是invMain，并增加ProdDetailID有效性检查
                     {
                         inv.NotOutQty -= item.ShouldSendQty.ToInt();
+                        BusinessHelper.Instance.EditEntity(inv);
+                        invUpdateList.Add(inv);
                     }
                     else
                     {
                         _unitOfWorkManage.RollbackTran();
-                        throw new Exception($"ProdDetailID:{inv.ProdDetailID}不存在库存信息");
+                        throw new Exception($"ProdDetailID:{item.ProdDetailID}, LocationID:{item.Location_ID} 不存在库存信息");
                     }
-                    BusinessHelper.Instance.EditEntity(inv);
-                    invUpdateList.Add(inv);
                     #endregion
                 }
 
-              
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                if (InvUpdateCounter == 0)
+                if (InvUpdateCounter == 0 && invUpdateList.Count > 0)
                 {
                     _logger.Debug($"制令单明细更新库存结果为0行，请检查数据！");
                 }
@@ -418,7 +417,8 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                // ✅ 修复：移除不必要的外部Controller引用
+                // tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 //更新未发料量
                 #region 审核
@@ -475,13 +475,11 @@ namespace RUINORERP.Business
                 #endregion
 
                 BusinessHelper.Instance.EditEntity(invMain);
-                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invMain);
-                if (InvMainCounter == 0)
-                {
-                    _logger.Debug($"在制产品库存更新库存结果为0行，请检查数据！");
-                }
-               
+                
+                var x2 = _unitOfWorkManage.GetDbClient().Storageable(invMain).ToStorage();
+                await x2.AsInsertable.ExecuteReturnSnowflakeIdAsync();
+                await x2.AsUpdateable.ExecuteCommandAsync();
+                
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (tb_ManufacturingOrderDetail item in entity.tb_ManufacturingOrderDetails)
                 {
@@ -493,11 +491,9 @@ namespace RUINORERP.Business
                     {
                         inv.NotOutQty += item.ShouldSendQty.ToInt();
                         BusinessHelper.Instance.EditEntity(inv);
-
                     }
                     else
                     {
-
                         inv = new tb_Inventory();
                         inv.ProdDetailID = item.ProdDetailID;
                         inv.Location_ID = item.Location_ID;
@@ -523,11 +519,13 @@ namespace RUINORERP.Business
                     rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rs.Succeeded = false;
                     _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    _unitOfWorkManage.RollbackTran();
                     return rs;
                 }
 
-                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                if (InvUpdateCounter == 0)
+                DbHelper<tb_Inventory> dbHelperDetail = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvUpdateCounterDetail = await dbHelperDetail.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (InvUpdateCounterDetail == 0 && invUpdateList.Count > 0)
                 {
                     _logger.Debug($"制令单明细更新库存结果为0行，请检查数据！");
                 }

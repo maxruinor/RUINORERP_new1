@@ -330,7 +330,7 @@ namespace RUINORERP.UI.Network.Services
             // 验证业务ID
             if (businessId <= 0)
             {
-                _logger?.LogWarning("业务ID无效: {BusinessId}, 删除操作可能无法正确执行", businessId);
+                _logger?.LogInformation("业务ID无效: {BusinessId}, 删除操作可能无法正确执行", businessId);
             }
 
             // 收集要删除的文件ID

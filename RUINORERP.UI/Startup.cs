@@ -584,7 +584,7 @@ namespace RUINORERP.UI
                 .AsImplementedInterfaces()
                 .AsSelf()
                 .PropertiesAutowired()
-                .SingleInstance();
+                .InstancePerLifetimeScope();
 
             // 注册状态管理服务
             builder.AddStateManagerWithGlobalRules();
@@ -836,7 +836,7 @@ namespace RUINORERP.UI
             //.EnableInterfaceInterceptors() // 如果需要 AOP 拦截的话
             //.EnableClassInterceptors() // 如果需要 AOP 拦截的话
             .PropertiesAutowired() // 指定属性注入
-            .SingleInstance(); // 单例模式
+            .InstancePerLifetimeScope(); // 改为每个请求一个实例，确保事务一致性
 
 
 

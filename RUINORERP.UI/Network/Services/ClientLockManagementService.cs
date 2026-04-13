@@ -660,12 +660,12 @@ namespace RUINORERP.UI.Network.Services
                                 _logger.LogDebug("解锁时锁已不存在: 单据ID={BillId}, 原因: {Message}",
                                     billId, response.Message);
                             }
-                            else
-                            {
-                                // 其他失败原因记录为警告
-                                _logger.LogWarning("解锁失败，已恢复本地锁状态: 单据ID={BillId}, 原因: {Message}",
-                                    billId, response.Message);
-                            }
+                            //else
+                            //{
+                            //    // 其他失败原因记录为警告
+                            //    _logger.LogWarning("解锁失败，已恢复本地锁状态: 单据ID={BillId}, 原因: {Message}",
+                            //        billId, response.Message);
+                            //}
                         }
                         else
                         {

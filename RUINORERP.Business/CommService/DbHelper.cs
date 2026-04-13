@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Business.CommService
 {
     /// <summary>
-    /// 数据库操作辅助类
+    /// 数据库操作辅助类1
     /// 提供批量新增、更新等核心数据操作功能
     /// 支持事务管理、并发控制、批量处理等企业级特性
     /// </summary>

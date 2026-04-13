@@ -310,7 +310,7 @@ namespace RUINORERP.UI.Network
 
             try
             {
-                _logger?.LogWarning("[主动断开连接] 开始断开与服务器的连接: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                _logger?.LogInformation("[主动断开连接] 开始断开与服务器的连接: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
 
                 bool result = await _socketClient.Disconnect();
                 OnConnectionStateChanged(false);

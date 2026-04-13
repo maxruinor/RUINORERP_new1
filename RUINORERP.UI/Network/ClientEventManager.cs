@@ -336,8 +336,8 @@ namespace RUINORERP.UI.Network
                 handler = ConnectionClosed;
             }
 
-            // 添加主动断开连接警告日志
-            _logger?.LogWarning("[主动断开连接] 连接已关闭");
+            // 记录连接关闭事件
+            _logger?.LogInformation("[连接状态] 连接已关闭");
             
             if (handler == null)
                 return;

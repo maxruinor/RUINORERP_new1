@@ -397,6 +397,8 @@ namespace RUINORERP.Business.Processor
             switch (fieldType)
             {
                 case QueryFieldType.String:
+                    queryField.FieldType = QueryFieldType.String;
+                    queryField.AdvQueryFieldType = AdvQueryProcessType.stringLike;
                     break;
                 case QueryFieldType.Money:
                     break;

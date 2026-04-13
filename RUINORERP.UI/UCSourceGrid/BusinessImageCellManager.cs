@@ -9,7 +9,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.UI.UCSourceGrid
 {
     /// <summary>
-    /// 业务图片单元格管理器
+    /// 业务图片单元格管理器1
     /// 专门用于处理SourceGrid单元格与业务图片的关联管理
     /// </summary>
     public class BusinessImageCellManager

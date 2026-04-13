@@ -65,6 +65,11 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public string ClientIp { get; set; }
 
         /// <summary>
+        /// 客户端计算机名
+        /// </summary>
+        public string ComputerName { get; set; }
+
+        /// <summary>
         /// 客户端系统信息
         /// </summary>
         public ClientSystemInfo SystemInfo { get; set; }

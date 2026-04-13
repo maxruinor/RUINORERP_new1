@@ -1367,44 +1367,41 @@ namespace RUINORERP.UI.PSI.SAL
                 ReturnMainSubResults<tb_SaleOrder> SaveResult = new ReturnMainSubResults<tb_SaleOrder>();
                 if (NeedValidated)
                 {
+                    // 1. 先保存业务数据，获取主键后再同步图片（确保图片与业务正确关联）
                     SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
+
+                    if (!SaveResult.Succeeded)
                     {
-                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                        return false;
+                    }
 
-                        // 保存成功后处理图片（上传新图片 + 删除旧图片）
-                        // 支持两种场景：
-                        // 1. 删除原图后上传新图片
-                        // 2. 仅删除原图不上传新图
-                        if (magicPictureBox订金付款凭证 != null)
+                    // 2. 再处理主表图片同步（此时实体已有主键）
+                    if (magicPictureBox订金付款凭证 != null)
+                    {
+                        var updated = magicPictureBox订金付款凭证.GetImageInfosNeedingUpdate();
+                        var deleted = magicPictureBox订金付款凭证.GetDeletedImages();
+
+                        if (updated.Count > 0 || deleted.Count > 0)
                         {
-                            // 获取需要更新的图片（新上传或修改的图片）
-                            var updatedImages = magicPictureBox订金付款凭证.GetImageInfosNeedingUpdate();
-
-                            // 获取已删除的图片（需要从服务器删除的图片）
-                            var deletedImages = magicPictureBox订金付款凭证.GetDeletedImages();
-
-                            // 如果有图片需要处理（更新或删除）
-                            if (updatedImages.Count > 0 || deletedImages.Count > 0)
+                            MainForm.Instance.PrintInfoLog("正在同步订单凭证图片...");
+                            // 调用基类增强版方法，它会处理上传/删除并返回是否成功
+                            bool imgSuccess = await UploadUpdatedImagesAsync(EditEntity, updated, deleted, c => c.VoucherImage);
+                            if (!imgSuccess)
                             {
-                                // 调用增强版的上传方法，同时处理新增/更新和删除的图片
-                                await UploadUpdatedImagesAsync<tb_SaleOrder>(
-                                    EditEntity,
-                                    updatedImages,
-                                    deletedImages,
-                                    c => c.VoucherImage);
-
-                                // 处理完成后，清空删除列表并重置状态
+                                MainForm.Instance.uclog.AddLog("凭证图片同步失败，但单据已保存成功。", Global.UILogType.警告);
+                            }
+                            else
+                            {
+                                // 成功后立即清理本地状态，防止重复提交
                                 magicPictureBox订金付款凭证.ClearDeletedImagesList();
                                 magicPictureBox订金付款凭证.ResetImageChangeStatus();
+                                MainForm.Instance.PrintInfoLog("凭证图片同步完成。");
                             }
                         }
                     }
-                    else
-                    {
-                        toolStripbtnPrint.Enabled = false;
-                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
-                    }
+
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
                 }
                 return SaveResult.Succeeded;
 
@@ -1445,21 +1442,19 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
 
-            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ApprovalEntity ae = new ApprovalEntity();
-            ae.BillID = pkid;
-            CommBillData cbd = EntityMappingHelper.GetBillData<tb_SaleOrder>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            frm.BindData(ae);
+            // 使用增强后的通用意见窗体（反结案）
+            CommonUI.frmGenericOpinion<tb_SaleOrder> frm = new CommonUI.frmGenericOpinion<tb_SaleOrder>();
+            frm.FormTitle = "销售订单反结案确认";
+            frm.OpinionLabelText = "反结案意见：";
+            frm.BindData(EditEntity, 
+                e => e.SOrderNo, 
+                e => "销售订单", 
+                e => e.CloseCaseOpinions);
+
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
                 List<tb_SaleOrder> EditEntitys = new List<tb_SaleOrder>();
-                EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
+                EditEntity.CloseCaseOpinions = frm.OpinionText;
                 EditEntitys.Add(EditEntity);
                 //已经审核的,结案了的才能反结案
                 List<tb_SaleOrder> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.完结 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue).ToList();
@@ -1481,7 +1476,7 @@ namespace RUINORERP.UI.PSI.SAL
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("反结案", EditEntity, $"反结案意见:{ae.CloseCaseOpinions}");
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("反结案", EditEntity, $"反结案意见:{frm.OpinionText}");
                     Refreshs();
                 }
                 else
@@ -1505,21 +1500,26 @@ namespace RUINORERP.UI.PSI.SAL
 
 
 
-            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ApprovalEntity ae = new ApprovalEntity();
-            ae.BillID = pkid;
-            CommBillData cbd = EntityMappingHelper.GetBillData<tb_SaleOrder>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            frm.BindData(ae);
+            // 使用增强后的通用意见窗体（结案）
+            CommonUI.frmGenericOpinion<tb_SaleOrder> frm = new CommonUI.frmGenericOpinion<tb_SaleOrder>();
+            frm.FormTitle = "销售订单结案确认";
+            frm.OpinionLabelText = "结案意见：";
+            frm.BindData(EditEntity, 
+                e => e.SOrderNo, 
+                e => "销售订单", 
+                e => e.CloseCaseOpinions);
+
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
                 List<tb_SaleOrder> EditEntitys = new List<tb_SaleOrder>();
-                EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
+                EditEntity.CloseCaseOpinions = frm.OpinionText;
+                
+                // 原子性回填图片ID（如果上传成功）
+                if (frm.UploadedFileId.HasValue)
+                {
+                    //EditEntity.CloseImages.Add(frm.UploadedFileId)
+                }
+                
                 EditEntitys.Add(EditEntity);
                 //已经审核的并且通过的情况才能结案
                 List<tb_SaleOrder> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
@@ -1542,7 +1542,7 @@ namespace RUINORERP.UI.PSI.SAL
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
                     EditEntity.AcceptChanges();
-                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("结案", EditEntity, $"结案意见:{frm.OpinionText}");
                     Refreshs();
                 }
                 else

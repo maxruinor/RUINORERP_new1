@@ -2025,16 +2025,21 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveImage(imageInfo.FileId);
                                 MainForm.Instance.PrintInfoLog($"成功上传图片: {imageInfo.FileName ?? imageInfo.OriginalFileName}");
+                                
+                                // 更新单元格模型数据
                                 if (imageInfo.Cell is ImageWebCell webCell)
                                 {
                                     var model = webCell.ImageWebModel;
                                     if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
                                     {
-                                        //对应的单元格的数据也要更新
-                                        model.FileId = uploadResponse.FileStorageInfos.FirstOrDefault()?.FileId ?? 0;
-                                        model.StoragePath = uploadResponse.FileStorageInfos.FirstOrDefault()?.StoragePath ?? "";
-                                        model.StorageFileName = uploadResponse.FileStorageInfos.FirstOrDefault()?.StorageFileName ?? "";
-                                        model.OriginalFileName = uploadResponse.FileStorageInfos.FirstOrDefault()?.OriginalFileName ?? "";
+                                        var uploadedFile = uploadResponse.FileStorageInfos.FirstOrDefault();
+                                        if (uploadedFile != null)
+                                        {
+                                            valueImageWeb.FileId = uploadedFile.FileId;
+                                            valueImageWeb.StoragePath = uploadedFile.StoragePath;
+                                            valueImageWeb.StorageFileName = uploadedFile.StorageFileName;
+                                            valueImageWeb.OriginalFileName = uploadedFile.OriginalFileName;
+                                        }
                                     }
                                 }
 
@@ -3904,25 +3909,31 @@ namespace RUINORERP.UI.BaseForm
                 return false;
             }
 
-            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
-            frm.ShowCloseCaseImage = ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath");
+            // 使用增强后的通用意见窗体
+            CommonUI.frmGenericOpinion<T> frm = new CommonUI.frmGenericOpinion<T>();
+            frm.FormTitle = "结案确认";
+            frm.OpinionLabelText = "结案意见：";
+            
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ApprovalEntity ae = new ApprovalEntity();
-            ae.BillID = pkid;
+
             CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            ae.CloseCaseOpinions = "完成结案";
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            frm.BindData(ae);
-            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+            //ae.BillNo = cbd.BillNo;
+            //ae.bizType = cbd.BizType;
+            //ae.bizName = cbd.BizName;
+
+
+            frm.BindData(EditEntity, 
+                e => cbd.BillNo, 
+                e => "单据", 
+                e => ReflectionHelper.GetPropertyValue(e, "CloseCaseOpinions"));
+
+            if (frm.ShowDialog() == DialogResult.OK)
             {
                 List<T> needCloseCases = new List<T>();
                 if (ReflectionHelper.ExistPropertyName<T>("CloseCaseOpinions"))
                 {
-                    EditEntity.SetPropertyValue("CloseCaseOpinions", frm.txtOpinion.Text);
+                    EditEntity.SetPropertyValue("CloseCaseOpinions", frm.OpinionText);
                 }
 
                 //使用StateManager检查是否可以结案
@@ -3948,7 +3959,7 @@ namespace RUINORERP.UI.BaseForm
                     var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
 
                     string billNo = editEntity.GetPropertyValue(EntityInfo.NoField).ToString();
-                    await MainForm.Instance.auditLogHelper.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                    await MainForm.Instance.auditLogHelper.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{frm.OpinionText}");
                     // 统一状态同步 - 结案操作
                     var updateData = ConvertToTodoUpdate(rs.ReturnObject as T, TodoUpdateType.StatusChanged);
                     if (updateData != null)
@@ -3957,35 +3968,10 @@ namespace RUINORERP.UI.BaseForm
                     }
                  
                     // 结案凭证图片也使用队列模式，与保存/审核类似
-                    if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
+                    if (frm.UploadedFileId.HasValue && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
-                        string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
-                        byte[] bytes = ImageHelper.ImageToByteArray(frm.CloseCaseImage);
-
-                        // 获取主键ID作为BusinessId
-                        long businessId = EditEntity?.GetType().GetProperty("Id")?.GetValue(EditEntity) as long? ?? 0;
-
-                        // 添加到图片状态管理器队列（与保存/审核相同的模式）
-                        var imageInfo = new RUINORERP.Lib.BusinessImage.ImageInfo
-                        {
-                            OriginalFileName = "CloseCaseImage.jpg",
-                            ImageData = bytes,
-                            FileExtension = ".jpg",
-                            FileSize = bytes.Length,
-                            BusinessId = businessId,
-                            OwnerTableName = typeof(T).Name,
-                            RelatedField = "CloseCaseImagePath",
-                            Status = RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload
-                        };
-
-                        RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.AddImage(imageInfo);
-
-                        // 先保存单据基本信息
-                        EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
+                        EditEntity.SetPropertyValue("CloseCaseImagePath", frm.UploadedFileId.Value.ToString());
                         await ctr.BaseSaveOrUpdate(EditEntity);
-
-                        // 重构后：移除ImageService的同步逻辑
-                        // 图片同步已整合到FileBusinessService中
                     }
 
                     //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
@@ -4004,7 +3990,7 @@ namespace RUINORERP.UI.BaseForm
                         Krypton.Toolkit.KryptonMessageBoxButtons.OK,
                         Krypton.Toolkit.KryptonMessageBoxIcon.Error);
 
-                    MainForm.Instance.PrintInfoLog($"{ae.BillNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                    MainForm.Instance.PrintInfoLog($"{EditEntity.GetPropertyValue("BillNo")}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
                     return false;
                 }
                 return true;

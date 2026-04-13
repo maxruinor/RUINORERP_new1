@@ -216,9 +216,20 @@ namespace RUINORERP.UI.ProductEAV
 
                 if (imageDataList.Count > 0)
                 {
-                    // 直接加载服务器图片（覆盖现有图片）
-                    magicPictureBox.LoadImages(imageDataList, imageInfos, true);
-                    lblInfo.Values.Text = $"成功加载 {imageDataList.Count} 张图片";
+                    // 切换回 UI 线程更新控件，避免阻塞
+                    if (InvokeRequired)
+                    {
+                        Invoke(new Action(() => 
+                        {
+                            magicPictureBox.LoadImages(imageDataList, imageInfos, true);
+                            lblInfo.Values.Text = $"成功加载 {imageDataList.Count} 张图片";
+                        }));
+                    }
+                    else
+                    {
+                        magicPictureBox.LoadImages(imageDataList, imageInfos, true);
+                        lblInfo.Values.Text = $"成功加载 {imageDataList.Count} 张图片";
+                    }
 
                     _imagesLoadedFromServer = true;
                     MainForm.Instance.uclog.AddLog($"成功从服务器加载 {imageDataList.Count} 张SKU图片到编辑器");
@@ -305,12 +316,26 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// 取消按钮点击事件
+        /// 取消按钮点击事件 - 确保状态回滚
         /// </summary>
         private void btnCancel_Click(object sender, EventArgs e)
         {
+            // 关键修复：取消时重置 MagicPictureBox 的所有变更状态，防止脏数据污染
+            magicPictureBox.ClearDeletedImagesList();
+            magicPictureBox.ResetImageChangeStatus();
+            
             this.DialogResult = DialogResult.Cancel;
             this.Close();
+        }
+
+        /// <summary>
+        /// 窗体关闭时清理资源，防止内存泄漏
+        /// </summary>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            // 强制清理控件内的图片引用，释放内存
+            magicPictureBox.ClearImage();
         }
 
         /// <summary>

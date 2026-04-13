@@ -142,7 +142,7 @@ namespace RUINORERP.Business
         #region 提交 
 
         /// <summary>
-        /// 提交单据（数据库业务级实现）
+        /// 提交单据（数据库业务级实现）11
         /// </summary>
         /// <param name="entity">待提交的实体</param>
         /// <param name="autoApprove">是否自动审核</param>
@@ -183,26 +183,46 @@ namespace RUINORERP.Business
             int statusValue = (int)status;
             dynamic statusEnum = Enum.ToObject(statusType, statusValue);
 
-            // 检查是否可以提交
-            //if (!StateManager.ValidateBusinessStatusTransitionAsync(statusEnum,))
-            //{
-            //    result.ErrorMsg = $"单据当前状态为【{statusEnum}】，无法提交";
-            //    return result;
-            //}
-
             try
             {
+                // ✅ 保存原始主键值,防止后续操作中被意外修改
+                long originalPrimaryKey = Convert.ToInt64(primaryKeyValue);
+                
                 // 更新实体状态
                 int currentStatusValue = GetSubmitStatus(entity, statusEnum);
-
+            
                 var update = await _unitOfWorkManage.GetDbClient().Updateable<object>()
                              .AS(typeof(T).Name)
                              .SetColumns(statusType.Name, currentStatusValue)
                              .Where(PrimaryKeyColName + "=" + primaryKeyValue).ExecuteCommandAsync();
+                
                 if (update > 0)
                 {
-
-
+                    // ✅ 关键修复:重新从数据库加载最新实体,但必须验证主键一致性
+                    var updatedEntity = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<T>()
+                        .Where(PrimaryKeyColName + "=" + originalPrimaryKey)  // 使用原始主键查询
+                        .FirstAsync();
+                                
+                    if (updatedEntity != null)
+                    {
+                        // ✅ 验证主键是否一致,如果不一致则记录严重错误并使用原始主键
+                        long updatedPrimaryKey = Convert.ToInt64(ReflectionHelper.GetPropertyValue(updatedEntity, PrimaryKeyColName));
+                        if (updatedPrimaryKey != originalPrimaryKey)
+                        {
+                            _logger.LogError($"⚠️【严重错误】提交后数据库中的主键与原始主键不一致! 原始ID={originalPrimaryKey}, 数据库ID={updatedPrimaryKey}, 单据类型={typeof(T).Name}");
+                            // 强制修正:将数据库实体的主键改回原始值,避免ID污染
+                            ReflectionHelper.SetPropertyValue(updatedEntity, PrimaryKeyColName, originalPrimaryKey);
+                        }
+                        
+                        entity = updatedEntity;
+                    }
+                    else
+                    {
+                        // 如果查询不到,说明数据可能被删除,保持原entity不变
+                        _logger.LogWarning($"⚠️ 提交后无法从数据库加载实体,主键={originalPrimaryKey}, 保持原实体不变");
+                    }
+            
                     // 自动审核逻辑
                     if (autoApprove && CanAutoApprove(entity))
                     {
@@ -213,20 +233,27 @@ namespace RUINORERP.Business
                             return result;
                         }
                     }
-
+            
                     // 执行子类特定的提交后逻辑
-                    //更新UI？
                     await AfterSubmit(entity);
-
-
+            
                     result.Succeeded = true;
                 }
                 else
                 {
                     result.Succeeded = false;
+                    result.ErrorMsg = $"状态更新失败,未影响任何行,主键={originalPrimaryKey}";
                 }
-
-                result.Succeeded = true;
+            
+                // ✅ 最终验证:确保返回的实体主键与原始主键一致
+                long finalPrimaryKey = Convert.ToInt64(ReflectionHelper.GetPropertyValue(entity, PrimaryKeyColName));
+                if (finalPrimaryKey != originalPrimaryKey)
+                {
+                    _logger.LogError($"⚠️【严重错误】返回实体的主键与原始主键不一致! 原始ID={originalPrimaryKey}, 返回ID={finalPrimaryKey}");
+                    // 强制修正
+                    ReflectionHelper.SetPropertyValue(entity, PrimaryKeyColName, originalPrimaryKey);
+                }
+                
                 result.ReturnObject = (T)entity;
                 return result;
             }
@@ -470,10 +497,13 @@ namespace RUINORERP.Business
                 else
                 {
                     result.Succeeded = false;
+                    result.ErrorMsg = "状态更新失败";
                 }
 
-                result.Succeeded = true;
-                result.ReturnObject = (T)entity;
+                if (result.Succeeded)
+                {
+                    result.ReturnObject = (T)entity;
+                }
                 return result;
             }
             catch (Exception ex)

@@ -844,21 +844,19 @@ namespace RUINORERP.UI.ASS
                 return false;
             }
 
-            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_AS_AfterSaleApply>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ApprovalEntity ae = new ApprovalEntity();
-            ae.BillID = pkid;
-            CommBillData cbd = EntityMappingHelper.GetBillData<tb_AS_AfterSaleApply>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            frm.BindData(ae);
-            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+            // 使用增强后的通用意见窗体（反结案）
+            CommonUI.frmGenericOpinion<tb_AS_AfterSaleApply> frm = new CommonUI.frmGenericOpinion<tb_AS_AfterSaleApply>();
+            frm.FormTitle = "售后申请单反结案确认";
+            frm.OpinionLabelText = "反结案意见：";
+            frm.BindData(EditEntity, 
+                e => e.ASApplyNo, 
+                e => "售后申请单", 
+                e => e.Notes);
+
+            if (frm.ShowDialog() == DialogResult.OK)
             {
                 List<tb_AS_AfterSaleApply> EditEntitys = new List<tb_AS_AfterSaleApply>();
-                EditEntity.Notes = frm.txtOpinion.Text;
+                EditEntity.Notes = frm.OpinionText;
                 EditEntitys.Add(EditEntity);
                 //已经审核的,结案了的才能反结案
                 List<tb_AS_AfterSaleApply> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.完结 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue).ToList();
@@ -880,7 +878,7 @@ namespace RUINORERP.UI.ASS
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_AfterSaleApply>("反结案", EditEntity, $"反结案意见:{ae.CloseCaseOpinions}");
+                   await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_AfterSaleApply>("反结案", EditEntity, $"反结案意见:{EditEntity.Notes}");
                     Refreshs();
                 }
                 else
@@ -902,21 +900,19 @@ namespace RUINORERP.UI.ASS
                 return false;
             }
 
-            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_AS_AfterSaleApply>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ApprovalEntity ae = new ApprovalEntity();
-            ae.BillID = pkid;
-            CommBillData cbd = EntityMappingHelper.GetBillData<tb_AS_AfterSaleApply>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            frm.BindData(ae);
-            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+            // 使用增强后的通用意见窗体（结案）
+            CommonUI.frmGenericOpinion<tb_AS_AfterSaleApply> frm = new CommonUI.frmGenericOpinion<tb_AS_AfterSaleApply>();
+            frm.FormTitle = "售后申请单结案确认";
+            frm.OpinionLabelText = "结案意见：";
+            frm.BindData(EditEntity, 
+                e => e.ASApplyNo, 
+                e => "售后申请单", 
+                e => e.Notes);
+
+            if (frm.ShowDialog() == DialogResult.OK)
             {
                 List<tb_AS_AfterSaleApply> EditEntitys = new List<tb_AS_AfterSaleApply>();
-                EditEntity.Notes = frm.txtOpinion.Text;
+                EditEntity.Notes = frm.OpinionText;
                 EditEntitys.Add(EditEntity);
                 //已经审核的并且通过的情况才能结案
                 List<tb_AS_AfterSaleApply> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
@@ -935,7 +931,7 @@ namespace RUINORERP.UI.ASS
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                   await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_AfterSaleApply>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                   await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_AfterSaleApply>("结案", EditEntity, $"结案意见:{frm.OpinionText}");
                     Refreshs();
                 }
                 else

@@ -970,12 +970,6 @@
     <Compile Include="ChartFramework\Shared\Utilities\LabelGenerator.cs" />
     <Compile Include="ChartFramework\Shared\Utilities\ListToDataTable.cs" />
     <Compile Include="ChartFramework\Shared\Utilities\VirtualizationDataProxy.cs" />
-    <Compile Include="CommonUI\frmOpinion.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CommonUI\frmOpinion.Designer.cs">
-      <DependentUpon>frmOpinion.cs</DependentUpon>
-    </Compile>
     <Compile Include="CommonUI\frmGenericOpinion.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -4225,9 +4219,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmInputObject.resx">
       <DependentUpon>frmInputObject.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CommonUI\frmOpinion.resx">
-      <DependentUpon>frmOpinion.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmGenericOpinion.resx">
       <DependentUpon>frmGenericOpinion.cs</DependentUpon>

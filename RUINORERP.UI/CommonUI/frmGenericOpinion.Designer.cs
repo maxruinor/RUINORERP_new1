@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmOpinion));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmGenericOpinion<>));
             this.openFileDialog4Img = new System.Windows.Forms.OpenFileDialog();
             this.toolTipBase = new System.Windows.Forms.ToolTip(this.components);
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);

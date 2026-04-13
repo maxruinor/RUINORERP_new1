@@ -6,7 +6,7 @@ using System.Linq;
 namespace RUINORERP.Lib.BusinessImage
 {
     /// <summary>
-    /// 图片状态管理器（简化版）
+    /// 图片状态管理器（简化版）1
     /// 只管理两种状态：待上传、待删除
     /// </summary>
     public class ImageStateManager

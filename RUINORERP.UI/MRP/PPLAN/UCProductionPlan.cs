@@ -816,21 +816,19 @@ namespace RUINORERP.UI.MRP.MP
                 return false;
             }
 
-            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_ProductionPlan>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ApprovalEntity ae = new ApprovalEntity();
-            ae.BillID = pkid;
-            CommBillData cbd = EntityMappingHelper.GetBillData<tb_ProductionPlan>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            frm.BindData(ae);
-            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+            // 使用增强后的通用意见窗体
+            CommonUI.frmGenericOpinion<tb_ProductionPlan> frm = new CommonUI.frmGenericOpinion<tb_ProductionPlan>();
+            frm.FormTitle = "生产计划结案确认";
+            frm.OpinionLabelText = "结案意见：";
+            frm.BindData(EditEntity, 
+                e => e.PPNo, 
+                e => "生产计划", 
+                e => e.CloseCaseOpinions);
+
+            if (frm.ShowDialog() == DialogResult.OK)
             {
                 List<tb_ProductionPlan> EditEntitys = new List<tb_ProductionPlan>();
-                EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
+                EditEntity.CloseCaseOpinions = frm.OpinionText;
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {

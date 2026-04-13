@@ -144,11 +144,21 @@ namespace RUINORERP.UI.CommonUI
         /// </summary>
         private string _originalImageHash;
 
+        /// <summary>
+        /// 结案凭证图片上传后的文件ID
+        /// </summary>
+        public long? UploadedFileId { get; private set; }
+
+        /// <summary>
+        /// 结案凭证图片上传后的存储路径
+        /// </summary>
+        public string UploadedStoragePath { get; private set; }
+
         #endregion
 
         #region 事件处理
 
-        private void btnOk_Click(object sender, EventArgs e)
+        private async void btnOk_Click(object sender, EventArgs e)
         {
             if (!AllowEmptyOpinion && string.IsNullOrEmpty(OpinionText))
             {
@@ -157,12 +167,47 @@ namespace RUINORERP.UI.CommonUI
                 return;
             }
 
-            if (ShowAttachment)
+            if (ShowAttachment && picBoxAttachment.Image != null)
             {
-                string newImageHash = ImageHelper.GetImageHash(picBoxAttachment.Image);
-                if (!newImageHash.Equals(_originalImageHash))
+                string currentHash = ImageHelper.GetImageHash(picBoxAttachment.Image);
+                if (!currentHash.Equals(_originalImageHash))
                 {
-                    AttachmentImage = picBoxAttachment.Image;
+                    try
+                    {
+                        MainForm.Instance.PrintInfoLog("正在上传结案凭证图片...");
+                        var fileService = Startup.GetFromFac<RUINORERP.UI.Network.Services.FileBusinessService>();
+                        
+                        // 获取业务实体ID，如果是新单据可能为0，服务器端会处理关联
+                        long businessId = (Entity as RUINORERP.Model.BaseEntity)?.PrimaryKeyID ?? 0;
+                        
+                        // 将图片转换为二进制并上传
+                        byte[] imageData = ImageHelper.ImageToByteArray(picBoxAttachment.Image);
+                        var response = await fileService.UploadImageAsync(
+                            Entity as RUINORERP.Model.BaseEntity,
+                            $"CloseCase_{DateTime.Now:yyyyMMddHHmmss}.png",
+                            imageData,
+                            "CloseCaseImagePath" // 默认字段名，实际由父窗体通过返回的ID处理
+                        );
+
+                        if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
+                        {
+                            var fileInfo = response.FileStorageInfos[0];
+                            this.UploadedFileId = fileInfo.FileId;
+                            this.UploadedStoragePath = fileInfo.StoragePath;
+                            MainForm.Instance.PrintInfoLog("凭证图片上传成功。");
+                        }
+                        else
+                        {
+                            MessageBox.Show($"图片上传失败: {response.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return; // 阻断提交
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"结案图片上传异常: {ex.Message}", Global.UILogType.错误);
+                        MessageBox.Show($"上传图片时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
                 }
             }
 
@@ -268,6 +313,19 @@ namespace RUINORERP.UI.CommonUI
 
             // 设置错误提供器
             errorProviderForAllInput.DataSource = entity;
+        }
+
+        /// <summary>
+        /// 窗体关闭时清理资源，防止内存泄漏
+        /// </summary>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            if (picBoxAttachment.Image != null)
+            {
+                picBoxAttachment.Image.Dispose();
+                picBoxAttachment.Image = null;
+            }
         }
 
         #endregion

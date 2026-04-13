@@ -336,9 +336,29 @@ namespace RUINORERP.UI.ProductEAV
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
+            // 关键修复：取消时重置主表图片控件的状态，防止脏数据污染
+            if (magicPictureBox产品基本图片 != null)
+            {
+                magicPictureBox产品基本图片.ClearDeletedImagesList();
+                magicPictureBox产品基本图片.ResetImageChangeStatus();
+            }
+            
             bindingSourceEdit.CancelEdit();
             this.DialogResult = DialogResult.Cancel;
             this.Close();
+        }
+
+        /// <summary>
+        /// 窗体关闭时清理资源，防止内存泄漏
+        /// </summary>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            // 强制清理控件内的图片引用，释放内存
+            if (magicPictureBox产品基本图片 != null)
+            {
+                magicPictureBox产品基本图片.ClearImage();
+            }
         }
         private async void btnOk_Click(object sender, EventArgs e)
         {

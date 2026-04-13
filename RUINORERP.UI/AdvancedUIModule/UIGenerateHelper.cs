@@ -249,6 +249,10 @@ namespace RUINORERP.UI.AdvancedUIModule
                         case EnumDataType.Int32:
                         case EnumDataType.UInt32:
                         case EnumDataType.Int64:
+                            if (true)
+                            {
+
+                            }
                             queryField.AdvQueryFieldType = AdvQueryProcessType.defaultSelect;
                             break;
                         case EnumDataType.UInt64:

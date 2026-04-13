@@ -74,34 +74,21 @@ namespace RUINORERP.UI.FM
         {
             base.Cancel();
 
-            // 恢复图片状态
+            // 恢复图片状态 - 直接使用正确的 ImageStateManager
             try
             {
-                // 检查是否已加载 ImageStateManager 类型
-                var imageStateManagerType = Type.GetType("SourceGrid.ImageStateManager, SourceGrid");
-                if (imageStateManagerType != null)
-                {
-                    // 使用反射获取单例实例
-                    var instanceProperty = imageStateManagerType.GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                    if (instanceProperty != null)
-                    {
-                        var instance = instanceProperty.GetValue(null);
-                        if (instance != null)
-                        {
-                            // 使用反射调用 ResetStatus 方法
-                            var resetStatusMethod = imageStateManagerType.GetMethod("ResetStatus");
-                            if (resetStatusMethod != null)
-                            {
-                                resetStatusMethod.Invoke(instance, null);
-                                MainForm.Instance.PrintInfoLog("图片状态已重置");
-                            }
-                        }
-                    }
-                }
+                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.ResetStatus();
+                MainForm.Instance.PrintInfoLog("图片状态已重置");
             }
             catch (Exception ex)
             {
                 MainForm.Instance.PrintInfoLog($"恢复图片状态失败: {ex.Message}");
+            }
+
+            // 清空主表图片控件
+            if (picboxCloseCaseImagePath != null)
+            {
+                picboxCloseCaseImagePath.ClearImage();
             }
 
             // 刷新网格显示
@@ -521,7 +508,6 @@ namespace RUINORERP.UI.FM
                         // 关键修复：为所有图片单元格设置业务ID，包括空单元格
                         // 这样用户后续添加新图片时才能获取到BusinessId
                         BusinessImageCellManager.SetCellBusinessId<tb_FM_ExpenseClaimDetail>(cell, detail.ClaimSubID, c => c.EvidenceImagePath);
-                        // 如果有图片路径，则加载图片
                         if (!string.IsNullOrEmpty(detail.EvidenceImagePath))
                         {
                             try
@@ -952,27 +938,58 @@ namespace RUINORERP.UI.FM
 
                 if (NeedValidated)
                 {
-                    // 在保存单据前先同步图片，确保图片ID能保存到数据库
-                    bool hasImagesToSync = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages().Count > 0 ||
-                                           RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingDeleteImages().Count > 0;
+                    // 1. 处理明细图片同步 (从 ImageStateManager 提取)
+                    var pendingUploads = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
+                    var pendingDeletes = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingDeleteImages();
 
-                    if (hasImagesToSync)
+                    if (pendingUploads.Count > 0 || pendingDeletes.Count > 0)
                     {
-                        MainForm.Instance.PrintInfoLog("正在同步图片...");
-                        List<ImageSyncResult> syncResults = await SyncImagesIfNeeded();
-
-                        // 检查上传是否成功
-                        bool uploadSuccess = syncResults.All(r => r.IsSuccess);
-                        if (!uploadSuccess)
+                        MainForm.Instance.PrintInfoLog("正在同步明细报销凭证图片...");
+                        
+                        // 遍历待上传图片，根据 BusinessId 找到对应的明细实体并更新 EvidenceImagePath
+                        foreach (var img in pendingUploads)
                         {
-                            var failedResults = syncResults.Where(r => !r.IsSuccess).ToList();
-                            string errorMsg = string.Join("; ", failedResults.Select(r => r.ErrorMessage));
-                            MainForm.Instance.uclog.AddLog($"图片同步失败: {errorMsg}");
-                            return false;
+                            var detail = EditEntity.tb_FM_ExpenseClaimDetails?.FirstOrDefault(d => d.ClaimSubID == img.BusinessId);
+                            if (detail != null && img.FileId > 0)
+                            {
+                                // 将图片ID存入业务字段
+                                detail.EvidenceImagePath = img.FileId.ToString(); 
+                            }
                         }
 
+                        // 调用基类统一同步方法
+                        var syncResults = await SyncImagesIfNeeded();
+                        if (syncResults.Any(r => !r.IsSuccess))
+                        {
+                            var failedMsg = string.Join(", ", syncResults.Where(r => !r.IsSuccess).Select(r => r.ErrorMessage));
+                            MainForm.Instance.uclog.AddLog($"部分图片同步失败: {failedMsg}", Global.UILogType.错误);
+                            return false;
+                        }
+                        
+                        // 保存成功后清理状态
+                        RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveProcessedImages();
+                        MainForm.Instance.PrintInfoLog("明细图片同步完成。");
+                    }
 
-                        MainForm.Instance.PrintInfoLog("图片同步完成");
+                    // 2. 处理主表结案图片同步
+                    if (picboxCloseCaseImagePath != null)
+                    {
+                        var updated = picboxCloseCaseImagePath.GetImageInfosNeedingUpdate();
+                        var deleted = picboxCloseCaseImagePath.GetDeletedImages();
+
+                        if (updated.Count > 0 || deleted.Count > 0)
+                        {
+                            MainForm.Instance.PrintInfoLog("正在同步结案凭证图片...");
+                            bool imgSuccess = await UploadUpdatedImagesAsync(EditEntity, updated, deleted, c => c.CloseCaseImagePath);
+                            if (!imgSuccess)
+                            {
+                                MainForm.Instance.uclog.AddLog("结案凭证图片同步失败", Global.UILogType.错误);
+                                return false;
+                            }
+                            picboxCloseCaseImagePath.ClearDeletedImagesList();
+                            picboxCloseCaseImagePath.ResetImageChangeStatus();
+                            MainForm.Instance.PrintInfoLog("结案凭证图片同步完成。");
+                        }
                     }
 
                     SaveResult = await base.Save(EditEntity);
@@ -980,7 +997,6 @@ namespace RUINORERP.UI.FM
                     {
                         EditEntity.AcceptChanges();
                         EditEntity.tb_FM_ExpenseClaimDetails.ForEach(c => c.AcceptChanges());
-
                         MainForm.Instance.PrintInfoLog($"费用报销单保存成功,{EditEntity.ClaimNo}。");
                     }
                     else
@@ -1269,13 +1285,15 @@ namespace RUINORERP.UI.FM
                 cell.Value = null;
                 cell.View = sgd.ViewNormal;
 
-                // 4. 更新业务对象字段（标记为需要更新，实际更新在同步时进行）
+                // 4. 更新业务对象字段 - 置空，让Save时通过ImageStateManager同步
+                // 不再使用魔术字符串，由ImageStateManager统一跟踪状态
                 var rowData = grid1.Rows[rowIndex].RowData;
                 if (rowData is tb_FM_ExpenseClaimDetail detail)
                 {
-                    // 设置业务字段为删除标记，实际清空在同步时执行
-                    detail.EvidenceImagePath = "DELETED_PENDING";
-                    detail.SetPropertyValue("EvidenceImagePath", "DELETED_PENDING");
+                    // 保存原始路径用于恢复，Save失败时可回滚
+                    detail.SetPropertyValue("_originalEvidenceImagePath", detail.EvidenceImagePath);
+                    // 置空，等待Save成功后同步
+                    detail.EvidenceImagePath = string.Empty;
                 }
 
                 // 5. 刷新单元格显示

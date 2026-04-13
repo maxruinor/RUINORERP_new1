@@ -1909,16 +1909,23 @@ namespace RUINORERP.UI.BaseForm
             #endregion
 
             #region 弹出结案意见窗体
-            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
-            frm.FormTitle = "结案确认";
+            // 使用增强后的通用意见窗体（批量结案）
+            CommonUI.frmGenericOpinion<M> frm = new CommonUI.frmGenericOpinion<M>();
+            frm.FormTitle = "批量结案确认";
             frm.OpinionLabelText = "结案意见：";
-            frm.ShowCloseCaseImage = false;
             
-            ApprovalEntity ae = new ApprovalEntity();
-            ae.ApprovalResults = true;
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            ae.CloseCaseOpinions = "批量结案";
-            frm.BindData(ae);
+            // 由于是批量操作，我们只传入第一个实体用于绑定显示，或者不传实体直接设置默认值
+            if (needCloseCases.Count > 0)
+            {
+                frm.BindData(needCloseCases[0], 
+                    e => ReflectionHelper.GetPropertyValue(e, BaseUIHelper.GetEntityPrimaryKey<M>()) != null ? ReflectionHelper.GetPropertyValue(e, "BillNo") : null, 
+                    e => "单据", 
+                    e => ReflectionHelper.GetPropertyValue(e, "CloseCaseOpinions"));
+            }
+            else
+            {
+                 frm.txtOpinion.Text = "批量结案";
+            }
 
             if (frm.ShowDialog() != DialogResult.OK)
             {

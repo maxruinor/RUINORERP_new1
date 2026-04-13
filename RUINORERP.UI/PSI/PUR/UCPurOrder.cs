@@ -1167,20 +1167,18 @@ namespace RUINORERP.UI.PSI.PUR
                 return false;
             }
 
-            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_PurOrder>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ApprovalEntity ae = new ApprovalEntity();
-            ae.BillID = pkid;
+            // 使用增强后的通用意见窗体
+            CommonUI.frmGenericOpinion<tb_PurOrder> frm = new CommonUI.frmGenericOpinion<tb_PurOrder>();
+            frm.FormTitle = "采购订单结案确认";
+            frm.OpinionLabelText = "结案意见：";
+            frm.BindData(EditEntity, 
+                e => e.PurOrderNo, 
+                e => "采购订单", 
+                e => e.CloseCaseOpinions);
 
-            CommBillData cbd = EntityMappingHelper.GetBillData<tb_PurOrder>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            frm.BindData(ae);
-            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+            if (frm.ShowDialog() == DialogResult.OK)
             {
-                EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
+                EditEntity.CloseCaseOpinions = frm.OpinionText;
                 RevertCommand command = new RevertCommand();
                 tb_PurOrder oldobj = CloneHelper.DeepCloneObject_maxnew<tb_PurOrder>(EditEntity);
                 command.UndoOperation = delegate ()
@@ -1203,7 +1201,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                     //审核成功
                     toolStripbtnReview.Enabled = true;
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_PurOrder>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                  await  MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_PurOrder>("结案", EditEntity, $"结案意见:{frm.OpinionText}");
                     return true;
                 }
                 else

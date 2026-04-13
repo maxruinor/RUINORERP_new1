@@ -184,6 +184,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             try
                             {
                                 UpdateUserInfoBatch(sessionInfo, heartbeatRequest.UserOperationInfo);
+                                
+                                // 如果心跳请求中包含计算机名，也更新到会话信息
+                                if (!string.IsNullOrEmpty(heartbeatRequest.ComputerName))
+                                {
+                                    sessionInfo.UserInfo.机器名 = heartbeatRequest.ComputerName;
+                                }
+                                
                                 SessionService.UpdateSessionLight(sessionInfo);
                             }
                             catch { /* 忽略异步更新错误 */ }
@@ -191,8 +198,24 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     }
                     else
                     {
-                        // 轻量级更新
-                        _ = Task.Run(() => SessionService.UpdateSessionLight(sessionInfo));
+                        // 即使没有UserOperationInfo，如果有ComputerName也要更新
+                        if (!string.IsNullOrEmpty(heartbeatRequest.ComputerName))
+                        {
+                            _ = Task.Run(() =>
+                            {
+                                try
+                                {
+                                    sessionInfo.UserInfo.机器名 = heartbeatRequest.ComputerName;
+                                    SessionService.UpdateSessionLight(sessionInfo);
+                                }
+                                catch { /* 忽略异步更新错误 */ }
+                            });
+                        }
+                        else
+                        {
+                            // 轻量级更新
+                            _ = Task.Run(() => SessionService.UpdateSessionLight(sessionInfo));
+                        }
                     }
                     
                     return response;

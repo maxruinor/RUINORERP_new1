@@ -567,20 +567,18 @@ namespace RUINORERP.UI.PSI.PUR
                 return false;
             }
 
-            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_BuyingRequisition>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ApprovalEntity ae = new ApprovalEntity();
-            ae.BillID = pkid;
+            // 使用增强后的通用意见窗体
+            CommonUI.frmGenericOpinion<tb_BuyingRequisition> frm = new CommonUI.frmGenericOpinion<tb_BuyingRequisition>();
+            frm.FormTitle = "请购单结案确认";
+            frm.OpinionLabelText = "结案意见：";
+            frm.BindData(EditEntity, 
+                e => e.PuRequisitionNo, 
+                e => "请购单", 
+                e => e.CloseCaseOpinions);
 
-            CommBillData cbd = EntityMappingHelper.GetBillData<tb_BuyingRequisition>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            frm.BindData(ae);
-            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+            if (frm.ShowDialog() == DialogResult.OK)
             {
-                EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
+                EditEntity.CloseCaseOpinions = frm.OpinionText;
                 RevertCommand command = new RevertCommand();
                 tb_BuyingRequisition oldobj = CloneHelper.DeepCloneObject_maxnew<tb_BuyingRequisition>(EditEntity);
                 command.UndoOperation = delegate ()

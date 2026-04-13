@@ -45,7 +45,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_AuditLogs>(c => c.ActionType);
             //queryFilter.SetQueryField<tb_AuditLogs>(c => c.ActionStatus, QueryFieldType.CmbEnum, typeof(ActionStatus));
             queryFilter.SetQueryField<tb_AuditLogs>(c => c.ActionTime);
-            queryFilter.SetQueryField<tb_AuditLogs>(c => c.ObjectId);
+            queryFilter.SetQueryField<tb_AuditLogs>(c => c.ObjectId, QueryFieldType.String, typeof(string));
             queryFilter.SetQueryField<tb_AuditLogs>(c => c.ObjectNo);
             queryFilter.SetQueryField<tb_AuditLogs>(c => c.ObjectType, QueryFieldType.CmbEnum, typeof(BizType));
             queryFilter.SetQueryField<tb_AuditLogs>(c => c.DataContent);

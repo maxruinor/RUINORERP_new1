@@ -176,6 +176,20 @@ namespace RUINORERP.Server.Network.Services
                 if (heartbeatRequest.UserOperationInfo != null)
                 {
                     UpdateSessionWithUserInfo(sessionInfo, heartbeatRequest.UserOperationInfo);
+                    
+                    // 如果心跳请求中包含计算机名，也更新到会话信息
+                    if (!string.IsNullOrEmpty(heartbeatRequest.ComputerName))
+                    {
+                        sessionInfo.UserInfo.机器名 = heartbeatRequest.ComputerName;
+                    }
+                }
+                else
+                {
+                    // 即使没有UserOperationInfo，如果有ComputerName也要更新
+                    if (!string.IsNullOrEmpty(heartbeatRequest.ComputerName))
+                    {
+                        sessionInfo.UserInfo.机器名 = heartbeatRequest.ComputerName;
+                    }
                 }
 
                 // 轻量级更新会话

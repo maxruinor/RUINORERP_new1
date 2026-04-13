@@ -921,7 +921,8 @@ namespace RUINORERP.UI.Network
                     ClientTime = DateTime.Now,
                     ClientStatus = "Normal",
                     SessionToken = sessionToken,
-                    ResourceUsage = GetCachedResourceUsage() // 使用缓存的资源信息，降低采样频率
+                    ResourceUsage = GetCachedResourceUsage(), // 使用缓存的资源信息，降低采样频率
+                    ComputerName = Environment.MachineName // 添加计算机名
                 };
 
                 // 只在必要时添加用户操作信息以减少数据传输

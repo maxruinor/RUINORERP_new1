@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FluentValidation.Results;
 using HLH.Lib.Security;
@@ -1005,11 +1005,9 @@ namespace RUINORERP.UI.SysConfig
                             page++;
                             totalProcessed += batchPlans.Count;
                             
-                            // 每处理 10 批强制 GC 一次，避免内存累积
+                            // 每处理 10 批输出进度日志
                             if (page % 10 == 0)
                             {
-                                GC.Collect();
-                                GC.WaitForPendingFinalizers();
                                 richTextBoxLog.AppendText($"已处理 {totalProcessed} 条生产计划记录...\r\n");
                             }
                         }

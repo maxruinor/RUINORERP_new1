@@ -649,7 +649,28 @@ namespace RUINORERP.UI.Network.Services
                         {
                             _activeLocks.TryAdd(billId, removedLock);
                             _clientCache.UpdateCacheItem(removedLock);
-                            _logger.LogWarning("解锁失败，已恢复本地锁状态: 单据ID={BillId}, 原因: {Message}",
+                            
+                            // ✅ 根据失败原因区分日志级别
+                            bool isLockNotFound = response.Message?.Contains("未被锁定") == true || 
+                                                 response.Message?.Contains("不存在") == true;
+                            
+                            if (isLockNotFound)
+                            {
+                                // 如果是因为锁不存在而失败，这通常是正常的（可能是重复解锁或锁已过期）
+                                _logger.LogDebug("解锁时锁已不存在: 单据ID={BillId}, 原因: {Message}",
+                                    billId, response.Message);
+                            }
+                            else
+                            {
+                                // 其他失败原因记录为警告
+                                _logger.LogWarning("解锁失败，已恢复本地锁状态: 单据ID={BillId}, 原因: {Message}",
+                                    billId, response.Message);
+                            }
+                        }
+                        else
+                        {
+                            // 没有移除的锁，说明本地也没有这个锁的记录
+                            _logger.LogDebug("解锁时本地无锁记录: 单据ID={BillId}, 服务器响应: {Message}",
                                 billId, response.Message);
                         }
                     }

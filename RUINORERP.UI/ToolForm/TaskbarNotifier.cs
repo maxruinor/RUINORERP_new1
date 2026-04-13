@@ -16,13 +16,14 @@ using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using System;
 
 namespace RUINORERP.UI.ToolForm
 {
     /// <summary>
     /// TaskbarNotifier allows to display MSN style/Skinned instant messaging popups
     /// </summary>
-    public class TaskbarNotifier : System.Windows.Forms.Form
+    public class TaskbarNotifier : System.Windows.Forms.Form, IDisposable
 	{
 		#region TaskbarNotifier Protected Members
 		protected Bitmap BackgroundBitmap = null;
@@ -56,6 +57,7 @@ namespace RUINORERP.UI.ToolForm
 		protected bool bIsMouseDown = false;
 		protected bool bKeepVisibleOnMouseOver = true;			// Added Rev 002
 		protected bool bReShowOnMouseOver = false;				// Added Rev 002
+		protected bool _disposed = false;
 		#endregion
 						
 		#region TaskbarNotifier Public Members
@@ -776,13 +778,44 @@ namespace RUINORERP.UI.ToolForm
         private void InitializeComponent()
         {
             this.SuspendLayout();
-            // 
+            //
             // TaskbarNotifier
-            // 
+            //
             this.ClientSize = new System.Drawing.Size(292, 266);
             this.Name = "TaskbarNotifier";
             this.ResumeLayout(false);
 
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        /// <param name="disposing">是否正在释放托管资源</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    timer?.Dispose();
+                    BackgroundBitmap?.Dispose();
+                    CloseBitmap?.Dispose();
+                    normalTitleFont?.Dispose();
+                    hoverTitleFont?.Dispose();
+                    normalContentFont?.Dispose();
+                    hoverContentFont?.Dispose();
+                }
+                _disposed = true;
+            }
         }
 	}
 }

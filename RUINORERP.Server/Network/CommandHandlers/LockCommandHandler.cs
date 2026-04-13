@@ -471,6 +471,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     LockInfoList = validLockInfos
                 };
                  
+                // ✅ 详细日志记录（仅在Debug级别）
+                _logger.LogDebug("[GetLockStatusList] 锁状态列表响应已准备 - LockCount: {LockCount}, ResponseType: {ResponseType}",
+                    validLockInfos.Count, typeof(LockResponse).Name);
 
                 return response;
             }

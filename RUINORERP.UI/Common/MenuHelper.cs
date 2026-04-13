@@ -384,13 +384,15 @@ namespace RUINORERP.UI.Common
             {
                 return;
             }
-            if (appContext.log == null)
+
+            var ctx = appContext ?? RUINORERP.Model.Context.ApplicationContext.Current;
+            if (ctx.log == null)
             {
-                appContext.log = new Logs();
+                ctx.log = new Logs();
             }
-            appContext.log.ModName = pr.MenuType + "=>" + pr.CaptionCN;
-            appContext.log.Path = pr.ClassPath;
-            appContext.log.ActionName = "加载菜单";
+            ctx.log.ModName = pr.MenuType + "=>" + pr.CaptionCN;
+            ctx.log.Path = pr.ClassPath;
+            ctx.log.ActionName = "加载菜单";
             switch (pr.MenuType)
             {
                 case "行为菜单":

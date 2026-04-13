@@ -240,15 +240,18 @@ namespace RUINORERP.UI
                 // 添加日志过滤规则，使用动态日志级别
                 logBuilder.AddFilter((category, logLevel) =>
                 {
-                    // 为WorkflowCore设置特殊的日志级别控制
-                    if (category.StartsWith("WorkflowCore"))
+                    try
                     {
-                        // 可以在这里专门为WorkflowCore设置不同的级别，或者使用系统统一级别
+                        if (!string.IsNullOrEmpty(category) && category.StartsWith("WorkflowCore", StringComparison.Ordinal))
+                            return logLevel >= CurrentLogLevel;
+
                         return logLevel >= CurrentLogLevel;
                     }
-
-                    // 其他日志使用动态调整的系统统一级别
-                    return logLevel >= CurrentLogLevel;
+                    catch
+                    {
+                        // 保护：发生任何异常时退回到默认行为，避免把异常用于日志路径中
+                        return logLevel >= CurrentLogLevel;
+                    }
                 });
 
                 // 添加自定义的数据库日志提供者

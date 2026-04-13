@@ -9,7 +9,7 @@ using RUINORERP.Server.Helpers;
 namespace RUINORERP.Server.Network.Services
 {
     /// <summary>
-    /// 文件存储监控服务
+    /// 文件存储监控服务1
     /// 监控文件存储空间使用情况,当达到阈值时发送预警
     /// </summary>
     public class FileStorageMonitorService : IDisposable
@@ -95,14 +95,33 @@ namespace RUINORERP.Server.Network.Services
         {
             Task.Run(async () =>
             {
+                var startTime = DateTime.Now;
                 try
                 {
+                    _logger.LogDebug("[FileStorageMonitor] 开始定时检查存储空间");
                     await CheckStorageSpaceAsync();
+                    var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
+                    _logger.LogDebug("[FileStorageMonitor] 定时检查完成，耗时: {ElapsedMs}ms", elapsed);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    _logger.LogWarning(ex, "[FileStorageMonitor] 定时检查被取消");
+                }
+                catch (TimeoutException ex)
+                {
+                    _logger.LogError(ex, "[FileStorageMonitor] 定时检查超时: {ErrorMessage}\n{StackTrace}", 
+                        ex.Message, ex.StackTrace);
+                }
+                catch (SqlSugar.SqlSugarException ex)
+                {
+                    _logger.LogError(ex, "[FileStorageMonitor] 数据库操作失败: {ErrorMessage}\n{StackTrace}\nSQL: {Sql}", 
+                        ex.Message, ex.StackTrace, ex.Sql ?? "N/A");
                 }
                 catch (Exception ex)
                 {
                     // 记录完整的异常信息，包括堆栈跟踪
-                    _logger.LogError(ex, "定时检查存储空间失败: {ErrorType} - {ErrorMessage}", ex.GetType().Name, ex.Message);
+                    _logger.LogError(ex, "[FileStorageMonitor] 定时检查存储空间失败: {ErrorType} - {ErrorMessage}\n{StackTrace}", 
+                        ex.GetType().Name, ex.Message, ex.StackTrace);
                 }
             });
         }
@@ -125,117 +144,142 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         private async Task CheckStorageSpaceAsync()
         {
-            try
+            // ✅ 添加超时保护，避免长时间阻塞
+            using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2)))
             {
-                _logger.LogDebug("开始检查文件存储空间");
-
-                // 获取文件统计信息
-                var stats = await _fileCleanupService.GetCleanupStatisticsAsync();
-                _logger.LogDebug("文件统计信息获取完成: TotalFiles={TotalFiles}, TotalStorageSize={Size}", 
-                    stats.TotalFiles, stats.TotalStorageSize);
-
-                // 获取存储路径信息
-                string storagePath = FileStorageHelper.GetStoragePath();
-                if (string.IsNullOrEmpty(storagePath))
-                {
-                    _logger.LogWarning("文件存储路径未配置,无法检查存储空间");
-                    return;
-                }
-
-                // 检查磁盘空间
-                System.IO.DriveInfo driveInfo;
                 try
                 {
-                    driveInfo = new System.IO.DriveInfo(storagePath);
-                    if (!driveInfo.IsReady)
+                    _logger.LogDebug("[FileStorageMonitor] 开始检查文件存储空间");
+
+                    // 获取文件统计信息（添加超时保护）
+                    var stats = await GetCleanupStatisticsWithTimeoutAsync(cts.Token);
+                    _logger.LogDebug("[FileStorageMonitor] 文件统计信息获取完成: TotalFiles={TotalFiles}, TotalStorageSize={Size}", 
+                        stats.TotalFiles, stats.TotalStorageSize);
+
+                    // 获取存储路径信息
+                    string storagePath = FileStorageHelper.GetStoragePath();
+                    if (string.IsNullOrEmpty(storagePath))
                     {
-                        _logger.LogWarning("磁盘驱动器不可用,Path: {Path}", storagePath);
+                        _logger.LogWarning("[FileStorageMonitor] 文件存储路径未配置,无法检查存储空间");
                         return;
                     }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "获取磁盘信息失败,Path: {Path}", storagePath);
-                    return;
-                }
 
-                long totalDiskSpace = driveInfo.TotalSize;
-                long freeDiskSpace = driveInfo.AvailableFreeSpace;
-                long usedDiskSpace = totalDiskSpace - freeDiskSpace;
+                    // 检查磁盘空间
+                    System.IO.DriveInfo driveInfo;
+                    try
+                    {
+                        driveInfo = new System.IO.DriveInfo(storagePath);
+                        if (!driveInfo.IsReady)
+                        {
+                            _logger.LogWarning("[FileStorageMonitor] 磁盘驱动器不可用,Path: {Path}", storagePath);
+                            return;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "[FileStorageMonitor] 获取磁盘信息失败,Path: {Path}", storagePath);
+                        return;
+                    }
 
-                // 计算使用率
-                double diskUsagePercentage = (double)usedDiskSpace / totalDiskSpace * 100;
+                    long totalDiskSpace = driveInfo.TotalSize;
+                    long freeDiskSpace = driveInfo.AvailableFreeSpace;
+                    long usedDiskSpace = totalDiskSpace - freeDiskSpace;
 
-                _logger.LogInformation(
-                    "磁盘空间检查 - 总空间: {TotalGB:F2}GB, 已用: {UsedGB:F2}GB, 可用: {FreeGB:F2}GB, 使用率: {UsagePercent:F2}%",
-                    totalDiskSpace / 1024.0 / 1024 / 1024,
-                    usedDiskSpace / 1024.0 / 1024 / 1024,
-                    freeDiskSpace / 1024.0 / 1024 / 1024,
-                    diskUsagePercentage
-                );
-
-                // 检查配置的最大存储限制
-                if (_serverConfig.MaxStorageSizeGB > 0)
-                {
-                    long maxStorageBytes = _serverConfig.MaxStorageSizeGB * 1024L * 1024 * 1024;
-                    double fileStorageUsagePercentage = (double)stats.TotalStorageSize / maxStorageBytes * 100;
+                    // 计算使用率
+                    double diskUsagePercentage = (double)usedDiskSpace / totalDiskSpace * 100;
 
                     _logger.LogInformation(
-                        "文件存储检查 - 总文件: {TotalFiles}, 存储大小: {StorageSize:F2}GB, 配置上限: {MaxGB:F2}GB, 使用率: {UsagePercent:F2}%",
-                        stats.TotalFiles,
-                        stats.TotalStorageSize / 1024.0 / 1024 / 1024,
-                        _serverConfig.MaxStorageSizeGB,
-                        fileStorageUsagePercentage
+                        "[FileStorageMonitor] 磁盘空间检查 - 总空间: {TotalGB:F2}GB, 已用: {UsedGB:F2}GB, 可用: {FreeGB:F2}GB, 使用率: {UsagePercent:F2}%",
+                        totalDiskSpace / 1024.0 / 1024 / 1024,
+                        usedDiskSpace / 1024.0 / 1024 / 1024,
+                        freeDiskSpace / 1024.0 / 1024 / 1024,
+                        diskUsagePercentage
                     );
 
-                    // 检查是否超过阈值
-                    if (fileStorageUsagePercentage >= CriticalThreshold)
+                    // 检查配置的最大存储限制
+                    if (_serverConfig.MaxStorageSizeGB > 0)
+                    {
+                        long maxStorageBytes = _serverConfig.MaxStorageSizeGB * 1024L * 1024 * 1024;
+                        double fileStorageUsagePercentage = (double)stats.TotalStorageSize / maxStorageBytes * 100;
+
+                        _logger.LogInformation(
+                            "[FileStorageMonitor] 文件存储检查 - 总文件: {TotalFiles}, 存储大小: {StorageSize:F2}GB, 配置上限: {MaxGB:F2}GB, 使用率: {UsagePercent:F2}%",
+                            stats.TotalFiles,
+                            stats.TotalStorageSize / 1024.0 / 1024 / 1024,
+                            _serverConfig.MaxStorageSizeGB,
+                            fileStorageUsagePercentage
+                        );
+
+                        // 检查是否超过阈值
+                        if (fileStorageUsagePercentage >= CriticalThreshold)
+                        {
+                            _logger.LogWarning(
+                                "[FileStorageMonitor] ⚠️ 文件存储空间紧急警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
+                                fileStorageUsagePercentage,
+                                CriticalThreshold
+                            );
+
+                            // 尝试自动清理
+                            await AutoCleanupAsync("紧急");
+                        }
+                        else if (fileStorageUsagePercentage >= WarningThreshold)
+                        {
+                            _logger.LogWarning(
+                                "[FileStorageMonitor] ⚠️ 文件存储空间警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
+                                fileStorageUsagePercentage,
+                                WarningThreshold
+                            );
+                        }
+                    }
+
+                    // 检查磁盘空间
+                    if (diskUsagePercentage >= CriticalThreshold)
                     {
                         _logger.LogWarning(
-                            "⚠️ 文件存储空间紧急警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
-                            fileStorageUsagePercentage,
+                            "[FileStorageMonitor] ⚠️ 磁盘空间紧急警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
+                            diskUsagePercentage,
                             CriticalThreshold
                         );
 
                         // 尝试自动清理
                         await AutoCleanupAsync("紧急");
                     }
-                    else if (fileStorageUsagePercentage >= WarningThreshold)
+                    else if (diskUsagePercentage >= WarningThreshold)
                     {
                         _logger.LogWarning(
-                            "⚠️ 文件存储空间警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
-                            fileStorageUsagePercentage,
+                            "[FileStorageMonitor] ⚠️ 磁盘空间警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
+                            diskUsagePercentage,
                             WarningThreshold
                         );
                     }
                 }
-
-                // 检查磁盘空间
-                if (diskUsagePercentage >= CriticalThreshold)
+                catch (OperationCanceledException)
                 {
-                    _logger.LogWarning(
-                        "⚠️ 磁盘空间紧急警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
-                        diskUsagePercentage,
-                        CriticalThreshold
-                    );
-
-                    // 尝试自动清理
-                    await AutoCleanupAsync("紧急");
+                    _logger.LogWarning("[FileStorageMonitor] 检查存储空间超时（2分钟）");
+                    throw new TimeoutException("检查存储空间操作超时");
                 }
-                else if (diskUsagePercentage >= WarningThreshold)
+                catch (Exception ex)
                 {
-                    _logger.LogWarning(
-                        "⚠️ 磁盘空间警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
-                        diskUsagePercentage,
-                        WarningThreshold
-                    );
+                    // 记录完整的异常信息，包括堆栈跟踪
+                    _logger.LogError(ex, "[FileStorageMonitor] 检查文件存储空间失败: {ErrorType} - {ErrorMessage}\n{StackTrace}", 
+                        ex.GetType().Name, ex.Message, ex.StackTrace);
+                    throw; // 重新抛出，让上层捕获
                 }
             }
-            catch (Exception ex)
+        }
+
+        /// <summary>
+        /// 带超时保护的统计数据获取
+        /// </summary>
+        private async Task<FileCleanupStatistics> GetCleanupStatisticsWithTimeoutAsync(CancellationToken ct)
+        {
+            try
             {
-                // 记录完整的异常信息，包括堆栈跟踪
-                _logger.LogError(ex, "检查文件存储空间失败: {ErrorType} - {ErrorMessage}\n{StackTrace}", 
-                    ex.GetType().Name, ex.Message, ex.StackTrace);
+                return await _fileCleanupService.GetCleanupStatisticsAsync();
+            }
+            catch (TaskCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("获取清理统计数据超时", ct);
             }
         }
 

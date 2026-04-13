@@ -75,12 +75,14 @@ namespace RUINORERP.UI.Network
         /// <param name="request">请求数据</param>
         /// <param name="ct">取消令牌</param>
         /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="isNonCriticalCommand">是否为非关键命令（如性能数据上报），true则减少日志输出和重试</param>
         /// <returns>指定类型的响应数据</returns>
         Task<TResponse> SendCommandWithResponseAsync<TResponse>(
             CommandId commandId,
             IRequest request,
             CancellationToken ct = default,
-            int timeoutMs = 30000)
+            int timeoutMs = 30000,
+            bool isNonCriticalCommand = false)
             where TResponse : class, IResponse;
 
         /// <summary>

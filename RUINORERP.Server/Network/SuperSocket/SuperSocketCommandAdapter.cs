@@ -476,11 +476,17 @@ namespace RUINORERP.Server.Network.SuperSocket
             // 检查响应数据是否为空，避免空引用异常
             if (result == null)
             {
+                _logger?.LogWarning("[UpdatePacketWithResponse] 响应对象为null - CommandId: {CommandId}, PacketId: {PacketId}",
+                    package.CommandId, package.PacketId);
                 package.Status = PacketStatus.Error;
             }
             else
             {
                 package.Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error;
+                
+                // ✅ 详细日志记录响应类型
+                _logger?.LogDebug("[UpdatePacketWithResponse] 设置响应 - CommandId: {CommandId}, ResponseType: {ResponseType}, IsSuccess: {IsSuccess}",
+                    package.CommandId, result.GetType().Name, result.IsSuccess);
             }
             package.Response = result;
             package.Request = null;

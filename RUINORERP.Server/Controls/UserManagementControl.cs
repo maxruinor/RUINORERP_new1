@@ -14,6 +14,7 @@ using RUINORERP.Server.Network.Models;
 using RUINORERP.Server.Network.Services;
 using RUINORERP.Server.ToolsUI;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -39,8 +40,8 @@ namespace RUINORERP.Server.Controls
         private readonly ISessionService _sessionService;
         private readonly System.Windows.Forms.Timer _updateTimer;
         private readonly ServerMessageService _serverMessageService;
-        // ListView项映射字典，以SessionID为键
-        private readonly Dictionary<string, ListViewItem> _sessionItemMap = new Dictionary<string, ListViewItem>();
+        // ListView项映射字典，以SessionID为键（使用ConcurrentDictionary支持并发访问）
+        private readonly ConcurrentDictionary<string, ListViewItem> _sessionItemMap = new ConcurrentDictionary<string, ListViewItem>();
 
         // 上次完整刷新时间
         private DateTime _lastFullUpdate = DateTime.MinValue;
@@ -400,19 +401,23 @@ namespace RUINORERP.Server.Controls
                 // 使用BeginUpdate/EndUpdate减少UI闪烁
                 listView1.BeginUpdate();
 
-                if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
-                {
-                    // 会话已存在，更新现有项
-                    UpdateSessionItem(existingItem, sessionInfo);
-                }
-                else
-                {
-                    // 新会话，创建新项
-                    var newItem = CreateSessionItem(sessionInfo);
-                    newItem.ToolTipText = sessionInfo.SessionID;
-                    listView1.Items.Add(newItem);
-                    _sessionItemMap[sessionInfo.SessionID] = newItem;
-                }
+                // 使用原子操作AddOrUpdate，避免TryGetValue+TryAdd之间的竞态条件
+                _sessionItemMap.AddOrUpdate(
+                    sessionInfo.SessionID,
+                    // 键不存在时：添加新项
+                    _ =>
+                    {
+                        var newItem = CreateSessionItem(sessionInfo);
+                        newItem.ToolTipText = sessionInfo.SessionID;
+                        listView1.Items.Add(newItem);
+                        return newItem;
+                    },
+                    // 键存在时：更新现有项
+                    (_, existingItem) =>
+                    {
+                        UpdateSessionItem(existingItem, sessionInfo);
+                        return existingItem;
+                    });
 
                 listView1.EndUpdate();
             }
@@ -471,7 +476,7 @@ namespace RUINORERP.Server.Controls
                     // 移除会话项
                     listView1.BeginUpdate();
                     listView1.Items.Remove(item);
-                    _sessionItemMap.Remove(sessionId);
+                    _sessionItemMap.TryRemove(sessionId, out _);
                     listView1.EndUpdate();
 
                     LogStatusChange(sessionData, $"会话项已移除: {sessionInfo} (SessionID: {sessionId})");

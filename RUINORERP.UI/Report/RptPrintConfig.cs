@@ -386,10 +386,6 @@ namespace RUINORERP.UI.Report
                                 // 6. 清理报表资源
                                 TargetReport.Clear();
 
-                                // 7. 显式垃圾回收（谨慎使用）
-                                GC.Collect();
-                                GC.WaitForPendingFinalizers();
-
                                 // 导出报表
                                 TargetReport.Export(pdfExport, dialog.FileName);
 

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;  // ✅ 添加LINQ支持
 using System.Reflection;
 using System.Text;
 
@@ -23,10 +24,29 @@ namespace RUINORERP.Server
         /// <returns></returns>
         public static IHostBuilder UseLog4Net(this IHostBuilder hostBuilder)
         {
-            //初始化
-            ILoggerRepository repository = LogManager.CreateRepository("SuperSocket");//这一行不能去掉
-            var log4netRepository = LogManager.GetRepository("SuperSocket");
+            // ✅ 使用统一的共享日志仓库名称，与客户端保持一致
+            string repositoryName = RUINORERP.Common.Log4Net.Log4NetConfiguration.SHARED_REPOSITORY_NAME;
+            
+            // 检查是否已存在该仓库
+            var existingRepository = LogManager.GetAllRepositories().FirstOrDefault(r => r.Name == repositoryName);
+            ILoggerRepository log4netRepository;
+            
+            if (existingRepository != null)
+            {
+                // 使用现有仓库
+                log4netRepository = existingRepository;
+                System.Diagnostics.Debug.WriteLine($"使用现有日志仓库: {repositoryName}");
+            }
+            else
+            {
+                // 创建新仓库
+                log4netRepository = LogManager.CreateRepository(repositoryName);
+                System.Diagnostics.Debug.WriteLine($"创建新日志仓库: {repositoryName}");
+            }
+            
+            // 配置log4net
             XmlConfigurator.Configure(log4netRepository, new FileInfo("ConfigBySS/log4net.config"));
+            
             return hostBuilder;
         }
 

@@ -1,4 +1,4 @@
-﻿using LiveChartsCore.Kernel.Sketches;
+using LiveChartsCore.Kernel.Sketches;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,7 +24,6 @@ namespace RUINORERP.UI.ChartFramework.Diagnostics
         private void OnStartMeasuring()
         {
             _renderWatch.Restart();
-            GC.Collect(2, GCCollectionMode.Forced, blocking: true);
         }
 
         private void OnFinishMeasuring()

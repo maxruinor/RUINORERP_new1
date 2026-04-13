@@ -2452,8 +2452,6 @@ namespace RUINORERP.UI
                         // 禁用所有UI控件
                         DisableAllUIComponents();
 
-                        System.GC.Collect();
-
                         // 使用Task.Run来启动异步登录操作，避免阻塞UI线程
                         _ = Task.Run(async () =>
                         {
@@ -2552,8 +2550,6 @@ namespace RUINORERP.UI
 
                     // 禁用所有UI控件
                     DisableAllUIComponents();
-
-                    System.GC.Collect();
 
                     // 使用Task.Run来启动异步登录操作，避免阻塞UI线程
                     _ = Task.Run(async () =>
@@ -3262,7 +3258,6 @@ namespace RUINORERP.UI
 
 
                 e.Cancel = false;
-                System.GC.Collect();
                 await Logout();
 
                 var disconnectResult = await communicationService.Disconnect();
@@ -3275,7 +3270,6 @@ namespace RUINORERP.UI
             }
             finally
             {
-                System.GC.Collect();
                 //Application.Exit();
                 Environment.Exit(0); // 强制终止进程
             }

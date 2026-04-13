@@ -1510,7 +1510,11 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 使用null条件运算符简化检查
-                if (_tokenManager?.TokenStorage == null) return;
+                if (_tokenManager?.TokenStorage == null)
+                {
+                    _logger?.LogDebug("TokenManager或TokenStorage未初始化，跳过Token附加");
+                    return;
+                }
 
                 // 获取令牌并验证有效性
                 var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
@@ -1546,6 +1550,11 @@ namespace RUINORERP.UI.Network
                     
                     // 使用现有Token(可能已过期,由服务端处理)
                     executionContext.Token = tokenInfo;
+                    _logger?.LogDebug("Token附加成功");
+                }
+                else
+                {
+                    _logger?.LogDebug("TokenInfo为空或AccessToken为空，无法附加Token");
                 }
             }
             catch (Exception ex)
@@ -2199,13 +2208,25 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 {
                     if (packet.ExecutionContext.Token == null)
                     {
+                        // ✅ 对于非关键命令（如性能数据上报），Token缺失时静默跳过而不是抛出异常
+                        bool isNonCriticalCommand = packet.CommandId == SystemCommands.PerformanceDataUpload ||
+                                                   packet.CommandId == SystemCommands.Heartbeat ||
+                                                   packet.CommandId == SystemCommands.PerformanceMonitorStatus;
+                        
+                        if (isNonCriticalCommand)
+                        {
+                            _logger?.LogDebug("非关键命令 {CommandId} Token未就绪，静默跳过执行", commandId.ToString());
+                            // 对于非关键命令，直接返回而不发送，避免抛出异常
+                            return;
+                        }
+                        
                         // 记录详细日志以便排查问题
                         _logger?.LogWarning("Token附加失败: CommandId={CommandId}, TokenInfo={TokenInfo}, TokenManager={TokenManagerStatus}",
                             commandId.ToString(),
                             _tokenManager?.TokenStorage != null ? "已初始化" : "未初始化",
                             _tokenManager != null ? "可用" : "不可用");
                         
-                        // 附加令牌
+                        // 对于关键命令，仍然抛出异常
                         throw new Exception($"发送请求失败: 没有合法授权令牌, 指令：{commandId.ToString()}");
                     }
                 }
@@ -2651,15 +2672,20 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         /// <param name="command">命令对象</param>
         /// <param name="ct">取消令牌</param>
         /// <param name="timeoutMs">超时时间（毫秒），如果未指定则根据命令类型自动设置</param>
+        /// <param name="isNonCriticalCommand">是否为非关键命令（如性能数据上报），true则减少日志输出和重试</param>
         /// <returns>包含指令信息的响应数据</returns>
         public async Task<TResponse> SendCommandWithResponseAsync<TResponse>(
             CommandId commandId,
             IRequest request,
             CancellationToken ct = default,
-            int timeoutMs = 30000)
+            int timeoutMs = 30000,
+            bool isNonCriticalCommand = false)
             where TResponse : class, IResponse
         {
-            const int maxRetries = 2;
+            // ✅ 对于非关键命令，减少重试次数
+            const int maxRetriesNormal = 2;
+            const int maxRetriesNonCritical = 0; // 非关键命令不重试
+            int maxRetries = isNonCriticalCommand ? maxRetriesNonCritical : maxRetriesNormal;
             int retryCount = 0;
 
             while (true)
@@ -2667,31 +2693,65 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 try
                 {
                     var packet = await SendRequestAsync<IRequest, TResponse>(commandId, request, ct, timeoutMs);
-
+                    
                     if (packet == null)
                     {
+                        _logger?.LogError("[{CommandId}] 未收到服务器响应数据包（可能是网络超时或连接断开）- RequestId: {RequestId}",
+                            commandId.ToString(), request?.RequestId);
                         return ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到服务器响应");
                     }
-
+                    
                     var responseData = packet.Response;
-
+                    
+                    // 详细诊断信息
+                    _logger?.LogDebug("[{CommandId}] 收到响应包 - PacketId: {PacketId}, Status: {Status}, Direction: {Direction}, ResponseType: {ResponseType}, ResponseIsNull: {IsNull}",
+                        commandId.ToString(),
+                        packet.PacketId,
+                        packet.Status,
+                        packet.Direction,
+                        responseData?.GetType().Name ?? "null",
+                        responseData == null);
+                    
                     // 检查响应数据是否为空
                     if (responseData == null)
                     {
+                        _logger?.LogError("[{CommandId}] 服务器响应包的Response属性为空 - PacketId: {PacketId}, Status: {Status}, Direction: {Direction}, RequestId: {RequestId}",
+                            commandId.ToString(), packet.PacketId, packet.Status, packet.Direction, request?.RequestId);
                         return ResponseFactory.CreateSpecificErrorResponse<TResponse>("服务器返回了空响应数据");
                     }
-                    return responseData as TResponse;
+                    
+                    var typedResponse = responseData as TResponse;
+                    if (typedResponse == null)
+                    {
+                        _logger?.LogError("[{CommandId}] 响应类型转换失败 - 期望类型: {ExpectedType}, 实际类型: {ActualType}, PacketId: {PacketId}",
+                            commandId.ToString(),
+                            typeof(TResponse).Name,
+                            responseData.GetType().Name,
+                            packet.PacketId);
+                        return ResponseFactory.CreateSpecificErrorResponse<TResponse>("响应类型不匹配");
+                    }
+                    
+                    return typedResponse;
                 }
                 catch (Exception ex)
                 {
-                    // 记录详细的错误日志，包括完整的堆栈跟踪
-                    _logger?.LogError(ex, "发送带响应命令失败: CommandId={CommandId}, RequestId={RequestId}, RetryCount={RetryCount}, Error={ErrorMessage}",
-                        commandId.ToString(), request?.RequestId, retryCount, ex.Message);
-                    
-                    // 触发错误事件，包含更详细的信息
-                    _clientEventManager.OnErrorOccurred(new Exception(
-                        $"带响应命令发送失败: CommandId={commandId.Name}, RequestId={request?.RequestId}, 错误信息={ex.Message}",
-                        ex));
+                    // ✅ 对于非关键命令，降低日志级别
+                    if (isNonCriticalCommand)
+                    {
+                        _logger?.LogDebug(ex, "非关键命令发送失败: CommandId={CommandId}, RetryCount={RetryCount}, Error={ErrorMessage}",
+                            commandId.ToString(), retryCount, ex.Message);
+                    }
+                    else
+                    {
+                        // 记录详细的错误日志，包括完整的堆栈跟踪
+                        _logger?.LogError(ex, "发送带响应命令失败: CommandId={CommandId}, RequestId={RequestId}, RetryCount={RetryCount}, Error={ErrorMessage}",
+                            commandId.ToString(), request?.RequestId, retryCount, ex.Message);
+                        
+                        // 触发错误事件，包含更详细的信息
+                        _clientEventManager.OnErrorOccurred(new Exception(
+                            $"带响应命令发送失败: CommandId={commandId.Name}, RequestId={request?.RequestId}, 错误信息={ex.Message}",
+                            ex));
+                    }
                     
                     // 如果是操作取消异常，重新抛出1
                     if (ex is OperationCanceledException)

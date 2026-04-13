@@ -213,13 +213,14 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
+                // ✅ 提前检查：网络连接状态
                 if (_communicationService == null || _communicationService.ConnectionManager?.IsConnected != true)
                 {
                     _logger?.LogDebug("网络连接不可用，跳过性能数据上报");
                     return;
                 }
 
-                // ✅ 检查是否有有效的Token，避免重连后Token未恢复时上报失败
+                // ✅ 提前检查：Token有效性（避免进入发送流程后才失败）
                 var appContext = MainForm.Instance?.AppContext;
                 if (appContext == null || string.IsNullOrEmpty(appContext.SessionId))
                 {
@@ -242,14 +243,16 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (Exception ex)
             {
-                // ✅ 如果是Token相关错误，静默忽略，等待下次上报
+                // ✅ async void方法的最后一道防线，确保任何未捕获的异常都不会导致程序崩溃
+                // 对于Token相关错误，降低日志级别为Debug
                 if (ex.Message.Contains("授权令牌") || ex.Message.Contains("Token"))
                 {
-                    _logger?.LogDebug("Token未就绪，跳过本次性能数据上报");
+                    _logger?.LogDebug("Token未就绪，跳过本次性能数据上报: {Message}", ex.Message);
                     return;
                 }
                 
-                _logger?.LogError(ex, "性能数据上报异常");
+                // ✅ 其他错误也降低为Warning级别，因为这是辅助功能
+                _logger?.LogWarning(ex, "性能数据上报异常（非关键错误，已静默处理）");
             }
         }
 
@@ -258,19 +261,21 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         private async Task SendPerformanceDataAsync(PerformanceDataUploadRequest request)
         {
-            const int maxRetries = 2;
+            const int maxRetries = 1; // ✅ 辅助功能，只重试1次
             int retryCount = 0;
                     
             while (retryCount <= maxRetries)
             {
                 try
                 {
-                    // 使用现有的通信接口发送请求，设置30秒超时
+                    // ✅ 使用现有的通信接口发送请求，设置15秒超时（降低超时时间）
+                    // ✅ 传递isNonCriticalCommand=true，减少日志输出和重试
                     var response = await _communicationService.SendCommandWithResponseAsync<PerformanceDataUploadResponse>(
                         SystemCommands.PerformanceDataUpload,
                         request,
                         CancellationToken.None,
-                        20000); // 从10秒增加到20秒，给大数据包足够的处理时间
+                        15000, // 从20秒降低到15秒
+                        true); // ✅ 标记为非关键命令
         
                     if (response?.IsSuccess == true)
                     {
@@ -279,28 +284,39 @@ namespace RUINORERP.UI.Network.Services
                     }
                     else
                     {
-                        _logger?.LogWarning($"性能数据上报失败: {response?.ErrorMessage}");
+                        // ✅ 失败时只记录Debug日志
+                        _logger?.LogDebug($"性能数据上报失败: {response?.ErrorMessage}");
                         if (++retryCount > maxRetries) break;
                     }
                 }
                 catch (TimeoutException ex)
                 {
                     retryCount++;
-                    _logger?.LogWarning(ex, $"性能数据上报超时 (尝试 {retryCount}/{maxRetries + 1})");
+                    // ✅ 超时也只记录Debug日志
+                    _logger?.LogDebug(ex, $"性能数据上报超时 (尝试 {retryCount}/{maxRetries + 1})");
                             
                     if (retryCount > maxRetries)
                     {
-                        _logger?.LogError(ex, "性能数据上报最终失败，已达到最大重试次数");
-                        throw; // 最后一次重试失败，抛出异常
+                        // ✅ 最终失败也不记录Error，只记录Warning
+                        _logger?.LogWarning(ex, "性能数据上报最终失败，已达到最大重试次数");
+                        return; // ✅ 不抛出异常，静默失败
                     }
                             
-                    // 指数退避等待：2秒、4秒
-                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));
+                    // 固定等待2秒
+                    await Task.Delay(TimeSpan.FromSeconds(2));
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "发送性能数据请求失败");
-                    throw; // 非超时异常直接抛出
+                    // ✅ Token相关错误直接返回，不重试
+                    if (ex.Message.Contains("授权令牌") || ex.Message.Contains("Token"))
+                    {
+                        _logger?.LogDebug("Token无效，取消性能数据上报");
+                        return;
+                    }
+                    
+                    // ✅ 其他异常也只记录Warning
+                    _logger?.LogWarning(ex, "发送性能数据请求失败");
+                    return; // ✅ 不抛出异常，静默失败
                 }
             }
         }

@@ -11,7 +11,7 @@ namespace RUINORERP.UI.BusinessService
     /// <summary>
     /// 防重复操作服务类 - 负责处理所有客户端的防重复操作判断
     /// </summary>
-    public class RepeatOperationGuardService
+    public class RepeatOperationGuardService : IDisposable
     {
         /// <summary>
         /// 操作记录项 - 存储操作的相关信息
@@ -22,59 +22,64 @@ namespace RUINORERP.UI.BusinessService
             /// 操作类型（用于MenuItemEnums类型的操作）
             /// </summary>
             public MenuItemEnums? OperationType { get; set; }
-            
+
             /// <summary>
             /// 操作名称（用于自定义string类型的操作）
             /// </summary>
             public string OperationName { get; set; }
-            
+
             /// <summary>
             /// 操作时间
             /// </summary>
             public DateTime OperationTime { get; set; }
-            
+
             /// <summary>
             /// 操作源标识（例如：表单名称、控件名称等）
             /// </summary>
             public string OperationSource { get; set; }
-            
+
             /// <summary>
             /// 实体ID - 用于实体级别的防重复检查
             /// </summary>
             public long EntityId { get; set; }
         }
-        
+
         /// <summary>
         /// 操作记录字典 - 存储最近的操作记录
         /// 使用ConcurrentDictionary确保线程安全
         /// </summary>
         private readonly ConcurrentDictionary<string, OperationRecord> _operationRecords = new ConcurrentDictionary<string, OperationRecord>();
-        
+
         /// <summary>
         /// 日志记录器
         /// </summary>
         private readonly ILogger<RepeatOperationGuardService> _logger;
-        
+
         /// <summary>
         /// 默认防抖时间间隔（毫秒）- 与现有实现保持一致
         /// </summary>
         private const int DEFAULT_DEBOUNCE_INTERVAL_MS = 1500;
-        
+
         /// <summary>
         /// 操作记录清理间隔（毫秒）
         /// </summary>
         private const int OPERATION_RECORD_CLEANUP_INTERVAL_MS = 60000; // 1分钟
-        
+
         /// <summary>
         /// 操作记录最大保留时间（毫秒）
         /// </summary>
         private const int OPERATION_RECORD_MAX_AGE_MS = 30000; // 30秒
-        
+
         /// <summary>
         /// 清理定时器
         /// </summary>
         private readonly Timer _cleanupTimer;
-        
+
+        /// <summary>
+        /// 资源释放标志
+        /// </summary>
+        private bool _disposed;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -82,11 +87,36 @@ namespace RUINORERP.UI.BusinessService
         public RepeatOperationGuardService(ILogger<RepeatOperationGuardService> logger = null)
         {
             _logger = logger;
-            
+
             // 初始化清理定时器
-            _cleanupTimer = new Timer(CleanupOperationRecords, null, 
-                OPERATION_RECORD_CLEANUP_INTERVAL_MS, 
+            _cleanupTimer = new Timer(CleanupOperationRecords, null,
+                OPERATION_RECORD_CLEANUP_INTERVAL_MS,
                 OPERATION_RECORD_CLEANUP_INTERVAL_MS);
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        /// <param name="disposing">是否正在释放托管资源</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _cleanupTimer?.Dispose();
+                }
+                _disposed = true;
+            }
         }
         
         /// <summary>

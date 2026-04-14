@@ -578,38 +578,6 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 更新按钮状态 (优化版 - V2.0)
-        /// 统一使用StateManager获取按钮状态,简化代码逻辑
-        /// </summary>
-        /// <param name="currentStatus">当前状态</param>
-        /// <param name="CurrentStatusType">当前状态类型</param>
-        protected void UpdateAllButtonStates(Enum currentStatus, Type CurrentStatusType)
-        {
-            try
-            {
-                // 获取当前编辑实体
-                var entity = EditEntity;
-                if (entity == null || StateManager == null) return;
-
-                // 直接从StateManager获取所有按钮状态
-                var buttonStates = StateManager.GetUIControlStates(entity);
-
-                // 快速更新按钮状态
-                if (buttonStates != null && buttonStates.Count > 0)
-                {
-                    UpdateToolStripButtons(buttonStates);
-                    // UpdateContextMenuButtons(buttonStates); // 暂时注释,等待BaseContextMenu和FindContextMenuItemByName方法实现
-                    UpdateOtherControls(buttonStates);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "更新按钮状态失败: {Message}", ex.Message);
-                DisableAllButtons();
-            }
-        }
-
-        /// <summary>
         /// 批量更新工具栏按钮状态
         /// 优化：确保状态管理考虑权限设置，权限是基础，状态是在权限基础上的进一步限制
         /// 特殊处理：保存按钮需要根据数据变更状态（HasChanged）来决定是否启用
@@ -737,31 +705,6 @@ namespace RUINORERP.UI.BaseForm
                 logger?.LogError(ex, "禁用按钮失败: {Message}", ex.Message);
             }
         }
-
-
-
-
-
-        /// <summary>
-        /// 异步更新所有按钮状态
-        /// </summary>
-        /// <param name="currentStatus">当前状态</param>
-        /// <returns>异步任务</returns>
-        protected async Task UpdateAllButtonStatesAsync(Enum currentStatus, Type CurrentStatusType)
-        {
-            // 切换到UI线程执行UI更新
-            await Task.Run(() =>
-            {
-                // 使用 SafeInvoke 确保在UI线程安全执行
-                SafeInvoke(() => UpdateAllButtonStates(currentStatus, CurrentStatusType));
-            }).ConfigureAwait(false);
-        }
-
-
-
-
-
-
 
 
 
@@ -5006,6 +4949,7 @@ namespace RUINORERP.UI.BaseForm
         /// 1. 用户拥有保存权限（由StateManager决定）
         /// 2. 页面数据发生变更（HasChanged为true）
         /// 这两个条件必须同时满足，保存按钮才启用
+        /// 注意：此方法通过UpdateAllButtonStates统一处理所有按钮状态，包括保存按钮
         /// </summary>
         private void UpdateSaveButtonStateBasedOnChanges()
         {
@@ -5016,35 +4960,7 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                // 获取保存按钮
-                var btnSave = FindToolStripButtonByName("toolStripButtonSave");
-                if (btnSave == null)
-                {
-                    return;
-                }
-
-                // 条件1：使用StateManager获取是否有保存权限
-                var buttonStates = StateManager.GetUIControlStates(EditEntity);
-                bool hasSavePermission = false;
-
-                // 尝试多种可能的保存按钮名称来检查权限
-                string[] saveButtonNames = new[] { "toolStripButtonSave", "保存", "save", "tsBtnSave" };
-                foreach (string saveButtonName in saveButtonNames)
-                {
-                    if (buttonStates.TryGetValue(saveButtonName, out bool enabled) && enabled)
-                    {
-                        hasSavePermission = true;
-                        break;
-                    }
-                }
-
-                // 条件2：检查数据是否有未保存的变更
-                bool hasUnsavedChanges = EditEntity.HasChanged;
-
-                // 保存按钮必须同时满足：有权限 AND 有变更
-                btnSave.Enabled = hasSavePermission && hasUnsavedChanges;
-
-                // 同时更新其他按钮状态，确保整体一致性
+                // 直接更新所有按钮状态，UpdateToolStripButtons会正确处理保存按钮
                 UpdateAllButtonStates(EditEntity);
             }
             catch (Exception ex)

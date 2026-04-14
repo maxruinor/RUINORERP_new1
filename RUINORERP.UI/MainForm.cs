@@ -2442,8 +2442,13 @@ namespace RUINORERP.UI
                     try
                     {
                         Program.AppContextData.IsOnline = false;
-                        MainForm.Instance.AppContext.CurUserInfo.授权状态 = false;
-                        MainForm.Instance.AppContext.CurUserInfo.在线状态 = false;
+                        
+                        // 安全检查：CurUserInfo可能为null
+                        if (MainForm.Instance?.AppContext?.CurUserInfo != null)
+                        {
+                            MainForm.Instance.AppContext.CurUserInfo.授权状态 = false;
+                            MainForm.Instance.AppContext.CurUserInfo.在线状态 = false;
+                        }
 
                         // 清除UI元素
                         ClearUI();
@@ -2541,8 +2546,13 @@ namespace RUINORERP.UI
                 try
                 {
                     Program.AppContextData.IsOnline = false;
-                    MainForm.Instance.AppContext.CurUserInfo.授权状态 = false;
-                    MainForm.Instance.AppContext.CurUserInfo.在线状态 = false;
+                    
+                    // 安全检查：CurUserInfo可能为null
+                    if (MainForm.Instance?.AppContext?.CurUserInfo != null)
+                    {
+                        MainForm.Instance.AppContext.CurUserInfo.授权状态 = false;
+                        MainForm.Instance.AppContext.CurUserInfo.在线状态 = false;
+                    }
 
                     // 清除UI元素
                     ClearUI();

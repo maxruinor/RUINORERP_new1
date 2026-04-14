@@ -2136,9 +2136,9 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         /// 设置执行上下文的会话和用户信息
         /// 从MainForm.Instance.AppContext中提取SessionId和UserId，空引用安全
         /// </summary>
-        /// <param name="context">执行上下文</param>
+        /// <param name="context">命令上下文</param>
         /// <param name="commandId">命令标识符（用于日志记录）</param>
-        private void SetExecutionContextInfo(ExecutionContext context, CommandId commandId)
+        private void SetExecutionContextInfo(CommandContext context, CommandId commandId)
         {
             if (MainForm.Instance?.AppContext != null)
             {

@@ -1674,57 +1674,79 @@ namespace RUINORERP.UI
 
 
 
+        /// <summary>
+        /// SQL唯一键约束异常处理
+        /// 注意：此方法在AOP错误回调中被调用，不能弹出MessageBox，否则会阻塞事务导致锁表
+        /// 关键点：此方法必须返回 false，让异常继续传播到业务层
+        /// 如果返回 true，SqlSugar 会吞掉异常，导致事务无法正确回滚
+        /// </summary>
+        /// <param name="ex">SqlSugar异常</param>
+        /// <returns>是否已处理（必须返回false让异常传播）</returns>
         private bool SqlsugarSetup_RemindEvent(SqlSugarException ex)
         {
-            if (HandleUniqueConstraintException(ex))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        private string ExtractDuplicateValue(string errorMsg)
-        {
-            // 匹配 "重复键值为 (XXX)" 中的 XXX
-            Match match = Regex.Match(errorMsg, @"重复键值为 \((?<value>.*?)\)");
-            return match.Success ? match.Groups["value"].Value : "";
+            // 处理唯一键约束异常，将错误信息存储到静态属性
+            HandleUniqueConstraintException(ex);
+            
+            // ⚠️ 关键：始终返回 false，让异常继续传播
+            // 这样事务才能正确回滚，不会锁表
+            return false;
         }
 
         /// <summary>
-        /// 输出到控制台
+        /// 存储最近一次唯一键约束错误信息，供业务层获取并显示
         /// </summary>
-        /// <param name="ex"></param>
-        /// <returns></returns>
+        public static string LastUniqueConstraintError { get; set; }
+
+        /// <summary>
+        /// 从错误消息中提取重复键值
+        /// 支持格式：AK_KEY_TB_SALEOUT_TB_SALEO '(值)' 或 重复键值为 (值)
+        /// </summary>
+        /// <param name="errorMsg">错误消息</param>
+        /// <returns>重复的键值</returns>
+        private string ExtractDuplicateValue(string errorMsg)
+        {
+            if (string.IsNullOrEmpty(errorMsg))
+                return string.Empty;
+
+            var match = Regex.Match(errorMsg, @"'(?:[^']|'')+'");
+            if (match.Success)
+            {
+                string value = match.Value.Trim('\'');
+                return value;
+            }
+
+            match = Regex.Match(errorMsg, @"重复键值为 \((?<value>.*?)\)");
+            return match.Success ? match.Groups["value"].Value : string.Empty;
+        }
+
+        /// <summary>
+        /// 处理唯一键约束异常
+        /// 注意：此方法在AOP错误回调中被调用，不能弹出MessageBox
+        /// 只负责解析错误信息并存储，由业务层决定如何展示
+        /// </summary>
+        /// <param name="ex">SqlSugar异常</param>
+        /// <returns>是否为唯一键约束异常</returns>
         private bool HandleUniqueConstraintException(SqlSugarException ex)
         {
-            bool handled = false;
-            string errorMsg = ex.Message.ToLower();
+            string errorMsg = ex.Message;
+
             // 判断是否为唯一约束冲突（中文/英文消息兼容）
-            if (errorMsg.Contains("unique key") || errorMsg.Contains("重复键"))
+            if (errorMsg.Contains("UNIQUE KEY") || errorMsg.Contains("unique key") || errorMsg.Contains("重复键"))
             {
                 try
                 {
-                    // 提取重复的订单编号
-                    string uniquekey = Regex.Match(errorMsg, @"\((.*?)\)").Groups[1].Value;
-                    string value = ExtractDuplicateValue(ex.Message);
+                    string value = ExtractDuplicateValue(errorMsg);
 
                     // 尝试从异常消息中提取表名
                     string tableName = string.Empty;
-                    Match tableMatch = Regex.Match(ex.Message, @"object '(.*?)'");
+                    var tableMatch = Regex.Match(errorMsg, @"object '(?:dbo\.)?(\w+)'");
                     if (tableMatch.Success)
                     {
                         tableName = tableMatch.Groups[1].Value;
-                        // 如果表名包含.dbo.，提取后面的部分
-                        if (tableName.Contains(".dbo."))
-                        {
-                            tableName = tableName.Split(new string[] { ".dbo." }, StringSplitOptions.None)[1];
-                        }
                     }
 
-                    string tableDescription = string.Empty;
                     // 尝试通过IEntityInfoService获取表的中文描述
+                    string tableDescription = string.Empty;
                     try
                     {
                         var entityInfoService = Startup.GetFromFac<RUINORERP.Business.BizMapperService.IEntityMappingService>();
@@ -1737,38 +1759,34 @@ namespace RUINORERP.UI
                             }
                         }
                     }
-                    catch (Exception)
+                    catch
                     {
                         // 如果获取实体信息失败，继续使用原有的错误提示
                     }
 
-                    // 根据是否获取到表描述，显示不同的错误信息
+                    // 根据是否获取到表描述，构建友好的错误信息
                     string message = string.IsNullOrEmpty(tableDescription)
-                        ? $"【{value}】已存在，请检查后重试！"
-                        : $"{tableDescription}中【{value}】已存在，请检查后重试！";
+                        ? $"【{value}】已存在，操作失败，请检查后重试！"
+                        : $"{tableDescription}中【{value}】已存在，操作失败，请检查后重试！";
 
-                    MessageBox.Show(
-                        message,
-                        "唯一性错误",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error
-                    );
+                    // 存储错误信息，供业务层获取
+                    LastUniqueConstraintError = message;
+                    
+                    // 记录日志
+                    System.Diagnostics.Debug.WriteLine($"[唯一键约束] {message}");
+                    
+                    return true;
                 }
-                catch (Exception)
+                catch (Exception parseEx)
                 {
-                    // 如果处理过程中出现异常，显示默认错误提示
-                    string value = ExtractDuplicateValue(ex.Message);
-                    MessageBox.Show(
-                        $"【{value}】已存在，请检查后重试！",
-                        "唯一性错误",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error
-                    );
+                    // 如果解析失败，记录原始错误
+                    LastUniqueConstraintError = $"数据唯一性验证失败：{parseEx.Message}";
+                    System.Diagnostics.Debug.WriteLine($"[唯一键约束解析失败] {parseEx.Message}");
+                    return true;
                 }
-
-                handled = true;
             }
-            return handled;
+            
+            return false;
         }
 
 

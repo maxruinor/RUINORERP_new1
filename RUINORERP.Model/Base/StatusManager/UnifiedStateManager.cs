@@ -1066,6 +1066,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 获取UI控件状态 - 统一接口版本
         /// 使用GlobalStateRulesManager的公共方法获取按钮状态, 避免直接访问内部字段
+        /// 增强：结合数据变更检测来控制保存按钮状态
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <returns>UI控件状态</returns>
@@ -1097,6 +1098,40 @@ namespace RUINORERP.Model.Base.StatusManager
                 foreach (var state in buttonStates)
                 {
                     result[state.Key] = state.Value;
+                }
+
+                // 增强：根据实体有数据变更时，保存按钮应该启用
+                // 仅当单据处于可修改状态且有数据变更时，保存按钮启用
+                if (entity != null)
+                {
+                    // 检查是否为可修改状态（非终态）
+                    bool isFinalStatus = IsFinalStatus(entity);
+                    
+                    // 保存按钮名称：save、保存、tsBtnSave等，这里统一使用"保存"作为按钮键名
+                    string[] saveButtonNames = new[] { "保存", "save", "tsBtnSave" };
+                    
+                    foreach (string saveButtonName in saveButtonNames)
+                    {
+                        if (result.ContainsKey(saveButtonName))
+                        {
+                            // 如果是终态，保存按钮始终禁用
+                            if (isFinalStatus)
+                            {
+                                result[saveButtonName] = false;
+                            }
+                            // 如果不是终态且有数据变更，保存按钮启用
+                            else if (entity.HasChanged)
+                            {
+                                result[saveButtonName] = true;
+                            }
+                            // 如果不是终态但没有数据变更，保存按钮禁用
+                            else
+                            {
+                                result[saveButtonName] = false;
+                            }
+                            break;
+                        }
+                    }
                 }
 
                 return result;

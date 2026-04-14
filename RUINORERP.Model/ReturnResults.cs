@@ -42,7 +42,7 @@ namespace RUINORERP.Model
 
 
     /// <summary>
-    /// 
+    /// 1
     /// </summary>
     /// <typeparam name="T">生成对象的表</typeparam>
     public class ReturnMainSubResults<T>
@@ -58,6 +58,11 @@ namespace RUINORERP.Model
 
         public bool Succeeded { get => succeeded; set => succeeded = value; }
         public string ErrorMsg { get => error; set => error = value; }
+        
+        /// <summary>
+        /// ✅ Issue 1: 用户是否已确认继续操作（用于 NEED_CONFIRM 场景）
+        /// </summary>
+        public bool UserConfirmed { get; set; } = false;
 
     }
     public class ReturnResults<T>

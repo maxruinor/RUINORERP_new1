@@ -146,8 +146,7 @@ namespace RUINORERP.Business
                         {
                             rrs.Succeeded = false;
                             rrs.ErrorMsg = $"领料明细中，有不属于当前制令单的明细!请检查数据后重试！";
-                            MessageBox.Show(rrs.ErrorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            ///没有启动事务时才可以弹窗提示
+                            // ✅ 修复：不再弹出MessageBox，由UI层显示错误信息
                             _logger.Debug(rrs.ErrorMsg);
                             return rrs;
                         }
@@ -173,8 +172,7 @@ namespace RUINORERP.Business
                             if (entity.tb_MaterialRequisitionDetails.Any(c => c.ManufacturingOrderDetailRowID == 0))
                             {
                                 string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】在明细中拥有多行记录，必须使用引用的方式添加。";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                ///没有启动事务时才可以弹窗提示
+                                // ✅ 修复：不再弹出MessageBox，由UI层显示错误信息
                                 //_unitOfWorkManage.RollbackTran();
                                 rrs.ErrorMsg = msg;
                                 _logger.Debug(msg);
@@ -223,7 +221,7 @@ namespace RUINORERP.Business
                                 if (!entity.ReApply)
                                 {
                                     string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量{totalSent}不能大于制令单对应行的应发数量{mochild.ShouldSendQty}。";
-                                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    // ✅ 修复：不再弹出MessageBox，由UI层显示错误信息
                                     rrs.ErrorMsg = msg;
                                     _logger.Debug(msg);
                                     return rrs;

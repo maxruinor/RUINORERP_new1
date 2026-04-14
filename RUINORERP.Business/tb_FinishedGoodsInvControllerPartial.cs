@@ -367,28 +367,28 @@ namespace RUINORERP.Business
                     //如果总缴库数量大于最小制成数量则审核出错。
                     if (PaidQuantity > CanManufactureQtyBybom)
                     {
-                        if (MessageBox.Show("系统检测到缴库数量大于发出的关键物料能生产的最小数量,你确定要审核通过吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
+                        // ✅ 修复：不再弹出MessageBox，而是返回需要用户确认的结果
+                        string msg = $"系统检测到缴库数量大于发出的关键物料能生产的最小数量";
+                        try
                         {
-                            string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的缴库数不能大于制令单中发出物料能生产的最小数量。";
-                            try
+                            object obj = _cacheManager.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
+                            if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                             {
-                                object obj = _cacheManager.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
-                                if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                                {
-                                    //提示哪个关键物料实发数不够生产。
-                                    msg += $"\r\n{prodDetail.SKU}:{prodDetail.CNName}实发数量不够生产{CanManufactureQtyBybom}";
-                                }
+                                //提示哪个关键物料实发数不够生产。
+                                msg += $"\r\n{prodDetail.SKU}:{prodDetail.CNName}实发数量不够生产{CanManufactureQtyBybom}";
                             }
-                            catch (Exception tipEx)
-                            {
-                                _logger.Error(tipEx);
-                            }
-
-                            rs.ErrorMsg = msg;
-                            _unitOfWorkManage.RollbackTran();
-                            _logger.Debug(msg);
-                            return rs;
                         }
+                        catch (Exception tipEx)
+                        {
+                            _logger.Error(tipEx);
+                        }
+
+                        // ✅ 返回需要用户确认的验证结果
+                        return new ReturnResults<T>
+                        {
+                            Succeeded = false,
+                            ErrorMsg = $"NEED_CONFIRM:缴库数量超额确认:{msg}\r\n\r\n你确定要审核通过吗？"
+                        };
                     }
                 }
 

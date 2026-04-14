@@ -4967,45 +4967,42 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 根据数据变更情况更新保存按钮状态
+        /// 优化：使用StateManager.GetUIControlStates获取统一的按钮状态，确保一致性
         /// </summary>
         private void UpdateSaveButtonStateBasedOnChanges()
         {
             try
             {
-                if (EditEntity == null)
+                if (EditEntity == null || StateManager == null)
                 {
                     return;
                 }
 
-                // 获取保存按钮
+                // 使用StateManager获取所有按钮状态，包括保存按钮
+                var buttonStates = StateManager.GetUIControlStates(EditEntity);
+                if (buttonStates == null || buttonStates.Count == 0)
+                {
+                    return;
+                }
+
+                // 获取保存按钮并更新状态
                 var btnSave = FindToolStripButtonByName("toolStripButtonSave");
-                if (btnSave == null)
+                if (btnSave != null)
                 {
-                    return;
+                    // 尝试多种可能的保存按钮名称
+                    string[] saveButtonNames = new[] { "保存", "save", "tsBtnSave" };
+                    foreach (string saveButtonName in saveButtonNames)
+                    {
+                        if (buttonStates.TryGetValue(saveButtonName, out bool enabled))
+                        {
+                            btnSave.Enabled = enabled;
+                            break;
+                        }
+                    }
                 }
 
-                // 检查数据是否已变更
-                bool hasChanges = EditEntity.HasChanged;
-
-                if (!hasChanges)
-                {
-                    // 数据未变更，保存按钮保持禁用
-                    btnSave.Enabled = false;
-                    return;
-                }
-
-                // 数据已变更，检查是否有保存权限和状态是否允许修改
-                var permissionResult = StateManager?.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.保存);
-                if (permissionResult.HasValue && permissionResult.Value.CanExecute)
-                {
-                    // 有权限且状态允许修改，启用保存按钮
-                    btnSave.Enabled = true;
-                }
-                else
-                {
-                    // 无权限或状态不允许修改，禁用保存按钮
-                    btnSave.Enabled = false;
-                }
+                // 同时更新其他按钮状态，确保整体一致性
+                UpdateAllButtonStates(EditEntity);
             }
             catch (Exception ex)
             {
@@ -7188,8 +7185,11 @@ namespace RUINORERP.UI.BaseForm
             }
 
             ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
-            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            rmr = await ctr.BaseSaveOrUpdateWithChild<T>(entity);
+            
+            try
+            {
+                BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                rmr = await ctr.BaseSaveOrUpdateWithChild<T>(entity);
             if (rmr.Succeeded)
             {
                 if (entity is BaseEntity baseEntity)
@@ -7228,10 +7228,78 @@ namespace RUINORERP.UI.BaseForm
                     //TodoSyncManager.Instance.PublishUpdate(updateData);
                 }
                 await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
+                }
+                else
+                {
+                    // ✅ Issue 1 修复：检查是否有 NEED_CONFIRM 错误码，需要用户确认
+                    if (rmr.ErrorMsg != null && rmr.ErrorMsg.StartsWith("NEED_CONFIRM:"))
+                    {
+                        var parts = rmr.ErrorMsg.Split(new[] { ':' }, 3);
+                        if (parts.Length == 3)
+                        {
+                            string title = parts[1];
+                            string message = parts[2];
+                            
+                            // 弹出确认对话框
+                            DialogResult confirmResult = MessageBox.Show(
+                                message,
+                                title,
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Question,
+                                MessageBoxDefaultButton.Button2
+                            );
+                            
+                            if (confirmResult == DialogResult.Yes)
+                            {
+                                // 用户确认，记录日志并返回成功标志，由调用方决定是否继续
+                                MainForm.Instance.uclog.AddLog($"用户确认继续操作: {title}", UILogType.普通消息);
+                                // 设置一个特殊标志，表示用户已确认
+                                rmr.UserConfirmed = true;
+                                return rmr;
+                            }
+                            else
+                            {
+                                // 用户取消
+                                MainForm.Instance.uclog.AddLog("用户取消操作", UILogType.普通消息);
+                                return rmr;
+                            }
+                        }
+                    }
+                    
+                    // ✅ 关键修复：检查是否有唯一键约束错误
+                    if (!string.IsNullOrEmpty(MainForm.LastUniqueConstraintError))
+                    {
+                        MainForm.Instance.uclog.AddLog(
+                            MainForm.LastUniqueConstraintError, 
+                            UILogType.错误
+                        );
+                        // 清除已处理的错误信息，避免重复显示
+                        MainForm.LastUniqueConstraintError = null;
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
+                    }
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
+                // ✅ 关键修复：在事务外捕获异常并显示友好提示
+                if (RUINORERP.UI.Common.DatabaseExceptionHandler.TryShowUniqueConstraintError(ex))
+                {
+                    return new ReturnMainSubResults<T>()
+                    {
+                        Succeeded = false,
+                        ErrorMsg = MainForm.LastUniqueConstraintError ?? ex.Message
+                    };
+                }
+                
+                // 记录其他异常
+                MainForm.Instance.uclog.AddLog($"保存异常：{ex.Message}", UILogType.错误);
+                logger?.LogError(ex, "保存单据异常");
+                
+                // 重新抛出异常，让调用方决定如何处理
+                throw;
             }
 
             return rmr;

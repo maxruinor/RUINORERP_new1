@@ -33,7 +33,7 @@ namespace RUINORERP.Business
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");
 
             RuleFor(x => x.tb_SaleOutDetails).NotNull().WithMessage("明细:不能为空。");
-            RuleFor(x => x.tb_SaleOutDetails).Must(list => list.Count > 0).WithMessage("明细不能为空。");
+            RuleFor(x => x.tb_SaleOutDetails).Must(list => list != null && list.Count > 0).WithMessage("销售明细不能为空。");
 
             RuleFor(x => x.IsFromPlatform)
              .Custom((value, context) =>
@@ -54,14 +54,12 @@ namespace RUINORERP.Business
                  }
              });
 
-            RuleFor(x => x.tb_SaleOutDetails).Must(list => list.Count > 0).WithMessage("销售明细不能为空。");
-
-            RuleFor(x => x.TotalAmount).GreaterThan(0).When(x => x.tb_SaleOutDetails.Any(s => s.Gift == false)).WithMessage("总金额：明细中有非赠品产品时，总金额要大于零。");//可非全赠品时 总金额要大于0.订单。
+            RuleFor(x => x.TotalAmount).GreaterThan(0).When(x => x.tb_SaleOutDetails != null && x.tb_SaleOutDetails.Any(s => s.Gift == false)).WithMessage("总金额：明细中有非赠品产品时，总金额要大于零。");//可非全赠品时 总金额要大于0.订单。
            
             RuleFor(x => x.TotalAmount).GreaterThanOrEqualTo(0).WithMessage("总金额：要大于零。");
-            RuleFor(x => x.TotalAmount).GreaterThanOrEqualTo(x => x.tb_SaleOutDetails.Sum(c => (c.TransactionPrice) * c.Quantity) + x.FreightIncome - x.TotalCommissionAmount).WithMessage("总金额：等于成交价*数量+运费-佣金");
+            RuleFor(x => x.TotalAmount).GreaterThanOrEqualTo(x => x.tb_SaleOutDetails != null ? x.tb_SaleOutDetails.Sum(c => (c.TransactionPrice) * c.Quantity) + x.FreightIncome - x.TotalCommissionAmount : 0).WithMessage("总金额：等于成交价*数量+运费-佣金");
             //成本包含了运费成本，也要大于等于成本小计
-            RuleFor(x => x.TotalCost).Equal(x => x.tb_SaleOutDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity) + x.FreightCost).WithMessage("总成本：等于（成本+加定制成本）*数量。包含运费成本");
+            RuleFor(x => x.TotalCost).Equal(x => x.tb_SaleOutDetails != null ? x.tb_SaleOutDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity) + x.FreightCost : 0).WithMessage("总成本：等于（成本+加定制成本）*数量。包含运费成本");
 
             RuleFor(x => x.PlatformOrderNo).NotEmpty().When(c => c.IsFromPlatform).WithMessage("平台单时，平台订单号不能为空。");
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");

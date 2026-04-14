@@ -148,6 +148,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             if (prodDetail == null || string.IsNullOrEmpty(prodDetail.ImagesPath))
             {
+                MainForm.Instance.uclog.AddLog($"[LoadImagesAsync] SKU无图片路径，SKU: {prodDetail?.SKU ?? "N/A"}, ImagesPath: {prodDetail?.ImagesPath ?? "null"}");
                 return;
             }
 
@@ -166,6 +167,9 @@ namespace RUINORERP.UI.ProductEAV
             finally
             {
                 lblInfo.Values.Text = "提示：支持拖拽上传、Ctrl+V粘贴截图、双击查看大图";
+                // 显示当前图片数量供调试
+                var currentImages = magicPictureBox.GetImages();
+                MainForm.Instance.uclog.AddLog($"[LoadImagesAsync] 完成，当前MagicPictureBox中有 {currentImages?.Count ?? 0} 张图片");
             }
         }
 
@@ -295,6 +299,8 @@ namespace RUINORERP.UI.ProductEAV
                 int updateCount = updatedImages?.Count ?? 0;
                 int deleteCount = deletedImages?.Count ?? 0;
                 int totalCount = currentImages?.Count ?? 0;
+
+                MainForm.Instance.uclog.AddLog($"[btnOK_Click] SKU: {prodDetail.SKU}, 待上传: {updateCount} 张, 待删除: {deleteCount} 张, 当前总数: {totalCount} 张");
 
                 if (updateCount > 0 || deleteCount > 0)
                 {

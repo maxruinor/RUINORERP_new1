@@ -1799,7 +1799,7 @@ namespace RUINORERP.Business
                             .ToExpression(); 
              */
 
-            List<string> qlist = Common.Helper.RuinorExpressionHelper.ExpressionListToStringList(QueryConditions);
+            List<string> qlist = RuinorExpressionHelper.ExpressionListToStringList(QueryConditions);
             return keyValues;
         }
 

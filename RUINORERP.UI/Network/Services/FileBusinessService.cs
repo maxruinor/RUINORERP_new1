@@ -95,7 +95,30 @@ namespace RUINORERP.UI.Network.Services
                     RelatedField = relatedField
                 };
 
+                _logger?.LogInformation("[FileBusinessService] 开始上传文件: OwnerTableName={OwnerTableName}, BusinessId={BusinessId}, RelatedField={RelatedField}, FileName={FileName}",
+                    uploadRequest.OwnerTableName, uploadRequest.BusinessId, uploadRequest.RelatedField, fileName);
+
                 var response = await fileService.UploadFileAsync(uploadRequest);
+
+                // 记录响应结果
+                if (response != null)
+                {
+                    _logger?.LogInformation("[FileBusinessService] 文件上传响应: IsSuccess={IsSuccess}, Message={Message}, FileCount={FileCount}",
+                        response.IsSuccess, response.Message, response.FileStorageInfos?.Count ?? 0);
+                    
+                    if (response.FileStorageInfos != null)
+                    {
+                        foreach (var fsi in response.FileStorageInfos)
+                        {
+                            _logger?.LogInformation("[FileBusinessService] 上传后的文件信息: FileId={FileId}, OriginalFileName={OriginalFileName}",
+                                fsi.FileId, fsi.OriginalFileName);
+                        }
+                    }
+                }
+                else
+                {
+                    _logger?.LogError("[FileBusinessService] 文件上传响应为空");
+                }
 
                 if (response == null)
                 {
@@ -146,12 +169,25 @@ namespace RUINORERP.UI.Network.Services
                                     _logger?.LogInformation("已将文件ID更新到实体字段: {FieldName}={FileId}", relatedField, fileIds[0]);
                                 }
                             }
+                            else
+                            {
+                                _logger?.LogWarning("[FileBusinessService] 上传成功但没有返回有效的FileId，fileIds列表为空");
+                            }
+                        }
+                        else
+                        {
+                            _logger?.LogWarning("[FileBusinessService] 实体中不存在属性: {PropertyName}", relatedField);
                         }
                     }
                     catch (Exception ex)
                     {
                         _logger?.LogWarning(ex, "更新实体关联字段失败: FieldName={FieldName}", relatedField);
                     }
+                }
+                else
+                {
+                    _logger?.LogWarning("[FileBusinessService] 未更新实体字段: relatedField={RelatedField}, entity={Entity}",
+                        relatedField, entity?.GetType().Name ?? "null");
                 }
 
                 return response;

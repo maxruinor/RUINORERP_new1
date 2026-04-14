@@ -1374,41 +1374,64 @@ namespace RUINORERP.UI.PSI.SAL
                 ReturnMainSubResults<tb_SaleOrder> SaveResult = new ReturnMainSubResults<tb_SaleOrder>();
                 if (NeedValidated)
                 {
-                    // 1. 先保存业务数据，获取主键后再同步图片（确保图片与业务正确关联）
-                    SaveResult = await base.Save(EditEntity);
-
-                    if (!SaveResult.Succeeded)
+                    try
                     {
-                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
-                        return false;
-                    }
+                        // 1. 先保存业务数据，获取主键后再同步图片（确保图片与业务正确关联）
+                        SaveResult = await base.Save(EditEntity);
 
-                    // 2. 再处理主表图片同步（此时实体已有主键）
-                    if (magicPictureBox订金付款凭证 != null)
-                    {
-                        var updated = magicPictureBox订金付款凭证.GetImageInfosNeedingUpdate();
-                        var deleted = magicPictureBox订金付款凭证.GetDeletedImages();
-
-                        if (updated.Count > 0 || deleted.Count > 0)
+                        if (!SaveResult.Succeeded)
                         {
-                            MainForm.Instance.PrintInfoLog("正在同步订单凭证图片...");
-                            // 调用基类增强版方法，它会处理上传/删除并返回是否成功
-                            bool imgSuccess = await UploadUpdatedImagesAsync(EditEntity, updated, deleted, c => c.VoucherImage);
-                            if (!imgSuccess)
+                            // ✅ 关键修复：检查是否有唯一键约束错误
+                            if (DatabaseExceptionHandler.TryShowUniqueConstraintError())
                             {
-                                MainForm.Instance.uclog.AddLog("凭证图片同步失败，但单据已保存成功。", Global.UILogType.警告);
+                                MainForm.Instance.PrintInfoLog($"保存失败。", Color.Red);
+                                return false;
                             }
-                            else
+                            
+                            MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                            return false;
+                        }
+
+                        // 2. 再处理主表图片同步（此时实体已有主键）
+                        if (magicPictureBox订金付款凭证 != null)
+                        {
+                            var updated = magicPictureBox订金付款凭证.GetImageInfosNeedingUpdate();
+                            var deleted = magicPictureBox订金付款凭证.GetDeletedImages();
+
+                            if (updated.Count > 0 || deleted.Count > 0)
                             {
-                                // 成功后立即清理本地状态，防止重复提交
-                                magicPictureBox订金付款凭证.ClearDeletedImagesList();
-                                magicPictureBox订金付款凭证.ResetImageChangeStatus();
-                                MainForm.Instance.PrintInfoLog("凭证图片同步完成。");
+                                MainForm.Instance.PrintInfoLog("正在同步订单凭证图片...");
+                                // 调用基类增强版方法，它会处理上传/删除并返回是否成功
+                                bool imgSuccess = await UploadUpdatedImagesAsync(EditEntity, updated, deleted, c => c.VoucherImage);
+                                if (!imgSuccess)
+                                {
+                                    MainForm.Instance.uclog.AddLog("凭证图片同步失败，但单据已保存成功。", Global.UILogType.警告);
+                                }
+                                else
+                                {
+                                    // 成功后立即清理本地状态，防止重复提交
+                                    magicPictureBox订金付款凭证.ClearDeletedImagesList();
+                                    magicPictureBox订金付款凭证.ResetImageChangeStatus();
+                                    MainForm.Instance.PrintInfoLog("凭证图片同步完成。");
+                                }
                             }
                         }
-                    }
 
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
+                    }
+                    catch (Exception ex)
+                    {
+                        // ✅ 关键修复：捕获并显示唯一键约束错误
+                        if (RUINORERP.UI.Common.DatabaseExceptionHandler.TryShowUniqueConstraintError(ex))
+                        {
+                            return false;
+                        }
+                        
+                        // 其他异常处理
+                        MainForm.Instance.uclog.AddLog($"保存异常：{ex.Message}", UILogType.错误);
+                        logger.LogError(ex, "保存销售订单异常");
+                        return false;
+                    }
                 }
                 return SaveResult.Succeeded;
 

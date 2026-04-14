@@ -3283,13 +3283,24 @@ namespace RUINORERP.UI.ProductEAV
         /// <returns>需要更新的图片列表</returns>
         private List<Tuple<byte[], ImageInfo>> GetSKUImagesNeedingUpdate(tb_ProdDetail detail)
         {
-            // 检查缓存中是否有待上传的图片
+            // 检查缓存中是否有待上传的图片 - 使用对象引用作为key
             if (skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail] != null)
             {
-                return skuImageDataCache[detail];
+                var images = skuImageDataCache[detail];
+                MainForm.Instance.uclog.AddLog($"[GetSKUImagesNeedingUpdate] 通过对象引用找到缓存，SKU: {detail.SKU}, 图片数: {images.Count}");
+                return images;
+            }
+
+            // 如果通过对象引用找不到，尝试通过ProdDetailID查找（适用于已保存的SKU）
+            if (detail.ProdDetailID > 0 && skuImageDataCacheById.ContainsKey(detail.ProdDetailID))
+            {
+                var images = skuImageDataCacheById[detail.ProdDetailID];
+                MainForm.Instance.uclog.AddLog($"[GetSKUImagesNeedingUpdate] 通过ID找到缓存，SKU: {detail.SKU}, ID: {detail.ProdDetailID}, 图片数: {images.Count}");
+                return images;
             }
 
             // 如果没有缓存数据，返回null
+            MainForm.Instance.uclog.AddLog($"[GetSKUImagesNeedingUpdate] 未找到缓存，SKU: {detail.SKU}, ID: {detail.ProdDetailID}, 缓存键数量: {skuImageDataCache.Count}");
             return null;
         }
 
@@ -3300,13 +3311,16 @@ namespace RUINORERP.UI.ProductEAV
         /// <returns>需要删除的图片列表</returns>
         private List<ImageInfo> GetSKUImagesToDelete(tb_ProdDetail detail)
         {
-            // 检查缓存中是否有待删除的图片
+            // 检查缓存中是否有待删除的图片 - 使用对象引用作为key
             if (skuImageDeletedCache.ContainsKey(detail) && skuImageDeletedCache[detail] != null)
             {
-                return skuImageDeletedCache[detail];
+                var images = skuImageDeletedCache[detail];
+                MainForm.Instance.uclog.AddLog($"[GetSKUImagesToDelete] 通过对象引用找到删除缓存，SKU: {detail.SKU}, 删除数: {images.Count}");
+                return images;
             }
 
             // 如果没有缓存数据，返回null
+            MainForm.Instance.uclog.AddLog($"[GetSKUImagesToDelete] 未找到删除缓存，SKU: {detail.SKU}, ID: {detail.ProdDetailID}");
             return null;
         }
 
@@ -3342,12 +3356,20 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     billNo = prodDetailEntity.SKU ?? prodDetailEntity.ProdDetailID.ToString();
                     billId = prodDetailEntity.ProdDetailID;
+                    MainForm.Instance.uclog.AddLog($"[UploadUpdatedImagesAsync] SKU实体: SKU={billNo}, ProdDetailID={billId}, PrimaryKeyID={prodDetailEntity.PrimaryKeyID}");
                 }
                 else
                 {
                     // 如果不是预期类型，尝试通过反射获取
                     billId = Convert.ToInt64(entity.GetPropertyValue("ProdDetailID"));
                     billNo = entity.GetPropertyValue("SKU")?.ToString() ?? billId.ToString();
+                    MainForm.Instance.uclog.AddLog($"[UploadUpdatedImagesAsync] 非SKU实体: ID={billId}, No={billNo}");
+                }
+
+                if (billId <= 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"[UploadUpdatedImagesAsync] 错误: 业务ID无效 (billId={billId})", Global.UILogType.错误);
+                    return false;
                 }
 
                 // ========== 第一步：处理已删除的图片 ==========

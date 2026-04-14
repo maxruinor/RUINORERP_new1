@@ -2420,12 +2420,10 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "支付金额自动分配失败");
+                // ✅ 修复：不再弹出MessageBox，由UI层显示错误信息
                 // 添加用户友好的错误提示
                 string errorMessage = $"支付金额自动分配过程中发生错误：{ex.Message}";
-                if (_logger == null) // 如果没有日志记录器，显示错误消息
-                {
-                    MessageBox.Show(errorMessage, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                _logger?.LogError(errorMessage);
                 return false;
             }
         }
@@ -3094,7 +3092,9 @@ namespace RUINORERP.Business
             }
             if (!results.IsValid)
             {
-                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // ✅ 修复：不再弹出MessageBox，由UI层显示错误信息
+                // 静态方法中无法访问实例字段，暂时移除日志记录
+                // TODO: 考虑将此方法改为实例方法或通过参数传递logger
             }
             return results.IsValid;
         }

@@ -658,10 +658,9 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 根据全局提交修改模式设置已新建状态的按钮规则
             // 灵活模式：允许修改；严格模式：不允许修改
-            // 支持多次提交:新建状态下允许重新提交
-            // 新建状态：允许撤回提交（仅制单人）
+            // 新建状态：提交成功后禁用提交按钮，只允许审核和撤销提交
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
-            AddStandardButtonRules(DataStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: true);
+            AddStandardButtonRules(DataStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: true);
 
             /// 确认状态：不允许修改和删除, 允许反审核, 可以结案或执行
             AddStandardButtonRules(DataStatus.确认, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: true, antiClosedEnabled: false, cancelSubmitEnabled: false);

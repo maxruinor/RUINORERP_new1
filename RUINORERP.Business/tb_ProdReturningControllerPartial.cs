@@ -139,13 +139,12 @@ namespace RUINORERP.Business
                         ).Sum(c => c.Qty);
                         if (inQty > entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Qty)
                         {
-
-                            string msg = $"归还单:{entity.tb_prodborrowing.BorrowNo}的【{prodName}】的归还数量不能大于借出中对应行的数量，\r\n\" " +
+                            string msg = $"归还单:{entity.tb_prodborrowing.BorrowNo}的【{prodName}】的归还数量不能大于借出中对应行的数量，\r\n" +
                                 $"或存在当前借出单重复录入了归还单。";
                             _unitOfWorkManage.RollbackTran();
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            // ✅ 修复：不再弹出MessageBox，而是返回错误信息
                             _logger.Debug(msg);
-                            rs.ErrorMsg=msg;
+                            rs.ErrorMsg = msg;
                             return rs;
                         }
                         else
@@ -584,9 +583,12 @@ namespace RUINORERP.Business
                 {
                     msg.Append(item).Append("\r\n");
                 }
+                // ✅ 修复：不再弹出MessageBox，提示信息可以通过返回值或日志传递
                 if (tipsMsg.Count > 0)
                 {
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    _logger.LogWarning($"转单提示: {msg.ToString()}");
+                    // 可以将提示信息存储到实体的某个字段，或者通过返回结果传递
+                    entity.Notes = $"【转单提示】{msg.ToString()}";
                 }
                 entity.tb_ProdReturningDetails = NewDetails;
                 entity.TotalAmount = NewDetails.Sum(c => c.SubtotalPirceAmount);

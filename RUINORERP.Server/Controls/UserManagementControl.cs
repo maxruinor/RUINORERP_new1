@@ -221,7 +221,7 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                // 获取所有已验证的会话（包括未授权的）
+                // 获取所有已认证的会话（与统计保持一致）
                 var sessions = _sessionService.GetAllUserSessions().ToList();
                 int loadedCount = 0;
                 int skippedCount = 0;
@@ -230,8 +230,8 @@ namespace RUINORERP.Server.Controls
                 {
                     try
                     {
-                        // 只添加已验证的会话（已完成握手验证）
-                        if (!session.IsVerified)
+                        // 跳过无效会话
+                        if (!IsSessionValid(session))
                         {
                             skippedCount++;
                             continue;
@@ -248,7 +248,7 @@ namespace RUINORERP.Server.Controls
                 }
 
                 // 记录加载结果
-                LogStatusChange(null, $"初始加载完成：加载 {loadedCount} 个会话，跳过 {skippedCount} 个未验证会话");
+                LogStatusChange(null, $"初始加载完成：加载 {loadedCount} 个会话，跳过 {skippedCount} 个无效会话");
 
                 // 初始化统计信息
                 UpdateStatistics();
@@ -923,7 +923,7 @@ namespace RUINORERP.Server.Controls
                 // 获取会话统计信息
                 var statistics = _sessionService.GetStatistics();
 
-                // 获取所有用户会话
+                // 获取所有用户会话（已认证）
                 var allSessions = _sessionService.GetAllUserSessions().ToList();
                 var authenticatedSessions = allSessions.Where(s => s.IsAuthenticated).ToList();
 
@@ -931,6 +931,9 @@ namespace RUINORERP.Server.Controls
                 lbl在线用户数.Text = $"在线用户: {allSessions.Count}";
                 lbl总会话数.Text = $"总会话: {statistics.TotalConnections}";
                 lbl已认证用户数.Text = $"已认证用户: {authenticatedSessions.Count}";
+                
+                // 添加诊断日志，帮助排查数量不一致问题
+                Log(LogLevel.Debug, $"[统计更新] ListView显示={_sessionItemMap.Count}, GetAllUserSessions返回={allSessions.Count}, 总会话数={_sessionService.ActiveSessionCount}");
             }
             catch (Exception ex)
             {
@@ -969,6 +972,7 @@ namespace RUINORERP.Server.Controls
                     // 限制获取会话的时间，避免长时间阻塞
                     using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
                     {
+                        // 获取已认证的会话（与统计保持一致）
                         currentSessions = _sessionService.GetAllUserSessions().ToList();
                     }
                 }
@@ -1144,10 +1148,10 @@ namespace RUINORERP.Server.Controls
 
             try
             {
-                // 只显示已验证的会话（已完成握手验证）
-                if (!sessionInfo.IsVerified)
+                // 只显示已认证的会话（与统计保持一致）
+                if (!sessionInfo.IsAuthenticated)
                 {
-                    LogStatusChange(null, $"等待验证的新会话: {sessionInfo.ClientIp}");
+                    LogStatusChange(null, $"等待认证的新会话: {sessionInfo.ClientIp}");
                     return;
                 }
 

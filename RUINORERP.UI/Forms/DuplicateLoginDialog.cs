@@ -152,7 +152,7 @@ namespace RUINORERP.UI.Forms
                 pnlButtons.Visible = false;
                 pnlProgress.Visible = true;
                 kryptonProgressBar1.Style = ProgressBarStyle.Marquee;
-                lblProgressStatus.Values.Text = "正在强制对方下线，请稍候...";
+                lblProgressStatus.Values.Text = "正在强制对方下线,请稍候...";
                 this.Refresh();
 
                 // 调用服务端强制下线
@@ -170,7 +170,20 @@ namespace RUINORERP.UI.Forms
                     // 恢复按钮显示
                     pnlProgress.Visible = false;
                     pnlButtons.Visible = true;
-                    MessageBox.Show("强制对方下线失败，请稍后重试。", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    
+                    // 增强: 提供更详细的错误信息和重试建议
+                    MessageBox.Show(
+                        "强制对方下线失败。\n\n" +
+                        "可能的原因:\n" +
+                        "1. 对方已主动退出登录\n" +
+                        "2. 网络连接异常\n" +
+                        "3. 服务器处理超时\n\n" +
+                        "建议:\n" +
+                        "- 检查网络连接后重试\n" +
+                        "- 如多次失败,请联系系统管理员",
+                        "操作失败", 
+                        MessageBoxButtons.OK, 
+                        MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
@@ -178,7 +191,15 @@ namespace RUINORERP.UI.Forms
                 // 恢复按钮显示
                 pnlProgress.Visible = false;
                 pnlButtons.Visible = true;
-                MessageBox.Show($"操作失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                
+                // 增强: 显示具体异常信息便于排查
+                MessageBox.Show(
+                    $"操作失败:\n{ex.Message}\n\n" +
+                    $"异常类型: {ex.GetType().Name}\n\n" +
+                    "请截图保存此信息并联系技术支持。", 
+                    "错误", 
+                    MessageBoxButtons.OK, 
+                    MessageBoxIcon.Error);
             }
         }
 

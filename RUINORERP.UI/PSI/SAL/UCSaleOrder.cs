@@ -946,7 +946,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
             }
 
-            if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.TotalAmount > 0 &&EditEntity.Deposit==0)
+            if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.TotalAmount > 0 && EditEntity.Deposit <= EditEntity.TotalAmount)
             {
                 EditEntity.Deposit = EditEntity.TotalAmount;
             }
@@ -981,146 +981,13 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.PlatformOrderNo = EditEntity.PlatformOrderNo.Trim();//去空格
             }
 
-            //如果订单 选择了未付款，但是又选择了非账期的即实收账方式。则审核不通过。
-            //如果订单选择了 非未付款，但又选择了账期也不能通过。
-            if (NeedValidated)
-            {
-                // 先检查是否需要定制订单确认
-                if (NeedCustomizedOrderConfirmation(EditEntity))
-                {
-                    // 弹出确认对话框
-                    var result = MessageBox.Show(
-                        "备注中包含'定制'二字，但未标记为定制单。\n\n是否确认为定制订单？\n\n点击'是'将标记为定制订单，点击'否'将保持现状。",
-                        "定制订单确认",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Question,
-                        MessageBoxDefaultButton.Button1);
-
-                    if (result == DialogResult.Yes)
-                    {
-                        // 用户确认是定制订单，标记为定制单
-                        EditEntity.IsCustomizedOrder = true;
-                        MainForm.Instance.uclog.AddLog("已确认为定制订单");
-                    }
-                    else
-                    {
-                        // 用户确认不是定制订单，保持现状
-                        MainForm.Instance.uclog.AddLog("用户确认不是定制订单，保持现状");
-                    }
-                }
-
-
-                if (EditEntity.SOrderNo.Trim().Length == 0)
-                {
-                    MessageBox.Show("订单编号由系统自动生成，如果不小心清除，请重新生成单据的订单编号。");
-                    return false;
-                }
-
-                if (EditEntity.ProjectGroup_ID.HasValue && EditEntity.ProjectGroup_ID.Value <= 0)
-                {
-                    EditEntity.ProjectGroup_ID = null;
-                }
-
-                if (EditEntity.Paytype_ID > 0)
-                {
-                    var paytype = EditEntity.Paytype_ID;
-                    var paymethod = cacheManager.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID);
-                    if (paymethod != null && paymethod.ToString() != "System.Object")
-                    {
-                        if (paymethod is tb_PaymentMethod pm)
-                        {
-                            if (EditEntity.PayStatus == (int)PayStatus.未付款)
-                            {
-                                if (pm.Cash || pm.Paytype_Name != DefaultPaymentMethod.账期.ToString())
-                                {
-                                    MessageBox.Show("未付款时，付款方式错误,请选择【账期】。");
-                                    return false;
-                                }
-                            }
-                            else
-                            {
-                                //如果是账期，但是又选择的是非 未付款
-                                if (pm.Paytype_Name == DefaultPaymentMethod.账期.ToString())
-                                {
-                                    MessageBox.Show("付款方式错误,全部预付或部分预付时，请选择付款时使用的方式。");
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-                }
-                if (EditEntity.Account_id.HasValue && EditEntity.Account_id.Value == -1)
-                {
-                    EditEntity.Account_id = null;
-                }
-                if (EditEntity.PayStatus == (int)PayStatus.未付款)
-                {
-                    //如果订金大于零时，则不能是未付款
-                    if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
-                    {
-                        MessageBox.Show("未付款时，订金不能大于零。");
-                        return false;
-                    }
-                    if (EditEntity.Paytype_ID == 0)
-                    {
-
-                    }
-                }
-                if (EditEntity.PayStatus == (int)PayStatus.部分预付)
-                {
-                    // 验证部分预付时订金不能为0
-                    if (EditEntity.Deposit <= 0)
-                    {
-                        MessageBox.Show("部分预付时，订金不能为0。请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return false;
-                    }
-
-                    if (EditEntity.Deposit >= EditEntity.TotalAmount)
-                    {
-                        MessageBox.Show("部分预付时，订金不能大于等于总金额。请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return false;
-                    }
-                }
-                
-                // ✅ 关键修改: 全额预付时,如果定金为0则自动设置为订单总金额
-                if (EditEntity.PayStatus == (int)PayStatus.全额预付)
-                {
-                    if (EditEntity.Deposit <= 0 && EditEntity.TotalAmount > 0)
-                    {
-                        // 定金为0时,自动将订单总金额赋值给定金
-                        EditEntity.Deposit = EditEntity.TotalAmount;
-                        EditEntity.Deposit = Math.Round(EditEntity.Deposit, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
-                        MainForm.Instance.uclog.AddLog($"全额预付模式下,定金已自动设置为订单总金额: {EditEntity.Deposit:N2}");
-                    }
-                    else if (EditEntity.Deposit > 0)
-                    {
-                        // 定金大于0时,执行原有的验证逻辑
-                        // 验证全额预付时订金不能大于总金额(仅提示,允许继续)
-                        if (EditEntity.Deposit > EditEntity.TotalAmount)
-                        {
-                            decimal overAmount = EditEntity.Deposit - EditEntity.TotalAmount;
-                            string message = $"预收订金金额大于订单本币总金额,当前为超额付款!\n\n" +
-                                           $"订单本币总金额:{EditEntity.TotalAmount:N2} 元\n" +
-                                           $"预收订金金额:{EditEntity.Deposit:N2} 元\n" +
-                                           $"超额金额:{overAmount:N2} 元\n\n" +
-                                           $"点击【是】将保持超额订金金额\n" +
-                                           $"点击【否】将取消保存";
-
-                            if (MessageBox.Show(this, message, "超额付款确认", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
 
 
             if (chk平台单.Checked && !string.IsNullOrEmpty(txtPlatformOrderNo.Text))
             {
                 //检测平台单号。重复性提示
                 tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                tb_SaleOrder saleOrder = ctr.ExistFieldValueWithReturn(c => c.PlatformOrderNo == txtPlatformOrderNo.Text.Trim());
+                tb_SaleOrder saleOrder = ctr.ExistFieldValueWithReturn(c => c.PlatformOrderNo == txtPlatformOrderNo.Text.Trim() && c.DataStatus!=(int)DataStatus.作废);
                 if (NeedValidated && saleOrder != null)
                 {
                     string empName = UIHelper.ShowGridColumnsNameValue(typeof(tb_SaleOrder), "Employee_ID", saleOrder.Employee_ID);
@@ -1133,7 +1000,7 @@ namespace RUINORERP.UI.PSI.SAL
                         //检查是不是同一个业务员，如果不是，则提示不能保存。
                         if (saleOrder.Employee_ID != EditEntity.Employee_ID)
                         {
-                            MessageBox.Show("平台单号重复，但是业务员不同，不能保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            MessageBox.Show("平台单号重复，但是业务员不同，不能保存。\r\n 可先作废重复的订单，再来保存", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             return false;
                         }
                     }
@@ -1154,6 +1021,8 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
+
+                AmountCalculate(details);
 
                 details.ForEach(
                     c =>
@@ -1180,10 +1049,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 );
 
-                // ✅ 关键修改: 优先执行订单总金额计算,确保后续验证逻辑基于最新的计算结果
-                AmountCalculate(details);
 
-            
                 if (NeedValidated && (EditEntity.FreightIncome > 0 && EditEntity.TotalAmount != detailentity.Sum(c => c.SubtotalTransAmount) + EditEntity.FreightIncome))
                 {
                     MessageBox.Show("销售总金额需要包含运费。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1260,7 +1126,148 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
+                #region 预付状态与订单的检查
+                //如果订单 选择了未付款，但是又选择了非账期的即实收账方式。则审核不通过。
+                //如果订单选择了 非未付款，但又选择了账期也不能通过。
+                if (NeedValidated)
+                {
 
+
+                    // 先检查是否需要定制订单确认
+                    if (NeedCustomizedOrderConfirmation(EditEntity))
+                    {
+                        // 弹出确认对话框
+                        var result = MessageBox.Show(
+                            "备注中包含'定制'二字，但未标记为定制单。\n\n是否确认为定制订单？\n\n点击'是'将标记为定制订单，点击'否'将保持现状。",
+                            "定制订单确认",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question,
+                            MessageBoxDefaultButton.Button1);
+
+                        if (result == DialogResult.Yes)
+                        {
+                            // 用户确认是定制订单，标记为定制单
+                            EditEntity.IsCustomizedOrder = true;
+                            MainForm.Instance.uclog.AddLog("已确认为定制订单");
+                        }
+                        else
+                        {
+                            // 用户确认不是定制订单，保持现状
+                            MainForm.Instance.uclog.AddLog("用户确认不是定制订单，保持现状");
+                        }
+                    }
+
+
+                    if (EditEntity.SOrderNo.Trim().Length == 0)
+                    {
+                        MessageBox.Show("订单编号由系统自动生成，如果不小心清除，请重新生成单据的订单编号。");
+                        return false;
+                    }
+
+                    if (EditEntity.ProjectGroup_ID.HasValue && EditEntity.ProjectGroup_ID.Value <= 0)
+                    {
+                        EditEntity.ProjectGroup_ID = null;
+                    }
+
+
+                    if (EditEntity.Paytype_ID > 0)
+                    {
+                        var paytype = EditEntity.Paytype_ID;
+                        var paymethod = cacheManager.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID);
+                        if (paymethod != null && paymethod.ToString() != "System.Object")
+                        {
+                            if (paymethod is tb_PaymentMethod pm)
+                            {
+                                if (EditEntity.PayStatus == (int)PayStatus.未付款)
+                                {
+                                    if (pm.Cash || pm.Paytype_Name != DefaultPaymentMethod.账期.ToString())
+                                    {
+                                        MessageBox.Show("未付款时，付款方式错误,请选择【账期】。");
+                                        return false;
+                                    }
+                                }
+                                else
+                                {
+                                    //如果是账期，但是又选择的是非 未付款
+                                    if (pm.Paytype_Name == DefaultPaymentMethod.账期.ToString())
+                                    {
+                                        MessageBox.Show("付款方式错误,全部预付或部分预付时，请选择付款时使用的方式。");
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
+                    if (EditEntity.Account_id.HasValue && EditEntity.Account_id.Value == -1)
+                    {
+                        EditEntity.Account_id = null;
+                    }
+
+                    if (EditEntity.PayStatus == (int)PayStatus.未付款)
+                    {
+                        //如果订金大于零时，则不能是未付款
+                        if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
+                        {
+                            MessageBox.Show("未付款时，订金不能大于零。");
+                            return false;
+                        }
+                        if (EditEntity.Paytype_ID == 0)
+                        {
+
+                        }
+                    }
+                    if (EditEntity.PayStatus == (int)PayStatus.部分预付)
+                    {
+                        // 验证部分预付时订金不能为0
+                        if (EditEntity.Deposit <= 0)
+                        {
+                            MessageBox.Show("部分预付时，订金不能为0。请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return false;
+                        }
+
+                        if (EditEntity.Deposit >= EditEntity.TotalAmount)
+                        {
+                            MessageBox.Show("部分预付时，订金不能大于等于总金额。请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return false;
+                        }
+                    }
+
+                    // ✅ 关键修改: 全额预付时,如果定金为0则自动设置为订单总金额
+                    if (EditEntity.PayStatus == (int)PayStatus.全额预付)
+                    {
+                        if (EditEntity.Deposit <= 0 && EditEntity.TotalAmount > 0)
+                        {
+                            // 定金为0时,自动将订单总金额赋值给定金
+                            EditEntity.Deposit = EditEntity.TotalAmount;
+                            EditEntity.Deposit = Math.Round(EditEntity.Deposit, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+                            MainForm.Instance.uclog.AddLog($"全额预付模式下,定金已自动设置为订单总金额: {EditEntity.Deposit:N2}");
+                        }
+                        else if (EditEntity.Deposit > 0)
+                        {
+                            // 定金大于0时,执行原有的验证逻辑
+                            // 验证全额预付时订金不能大于总金额(仅提示,允许继续)
+                            if (EditEntity.Deposit > EditEntity.TotalAmount)
+                            {
+                                decimal overAmount = EditEntity.Deposit - EditEntity.TotalAmount;
+                                string message = $"预收订金金额大于订单本币总金额,当前为超额付款!\n\n" +
+                                               $"订单本币总金额:{EditEntity.TotalAmount:N2} 元\n" +
+                                               $"预收订金金额:{EditEntity.Deposit:N2} 元\n" +
+                                               $"超额金额:{overAmount:N2} 元\n\n" +
+                                               $"点击【是】将保持超额订金金额\n" +
+                                               $"点击【否】将取消保存";
+
+                                if (MessageBox.Show(this, message, "超额付款确认", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                #endregion
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
@@ -1333,7 +1340,7 @@ namespace RUINORERP.UI.PSI.SAL
                                        $"当前订金金额:{EditEntity.Deposit:N2} 元\n" +
                                        $"差额金额:{diffAmount:N2} 元\n\n" +
                                        $"请修改为与订单总金额一致,或更改付款状态为【部分预付】!";
-                                        
+
                         MessageBox.Show(message, "金额不足", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return false;
                     }
@@ -1446,9 +1453,9 @@ namespace RUINORERP.UI.PSI.SAL
             CommonUI.frmGenericOpinion<tb_SaleOrder> frm = new CommonUI.frmGenericOpinion<tb_SaleOrder>();
             frm.FormTitle = "销售订单反结案确认";
             frm.OpinionLabelText = "反结案意见：";
-            frm.BindData(EditEntity, 
-                e => e.SOrderNo, 
-                e => "销售订单", 
+            frm.BindData(EditEntity,
+                e => e.SOrderNo,
+                e => "销售订单",
                 e => e.CloseCaseOpinions);
 
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
@@ -1504,22 +1511,22 @@ namespace RUINORERP.UI.PSI.SAL
             CommonUI.frmGenericOpinion<tb_SaleOrder> frm = new CommonUI.frmGenericOpinion<tb_SaleOrder>();
             frm.FormTitle = "销售订单结案确认";
             frm.OpinionLabelText = "结案意见：";
-            frm.BindData(EditEntity, 
-                e => e.SOrderNo, 
-                e => "销售订单", 
+            frm.BindData(EditEntity,
+                e => e.SOrderNo,
+                e => "销售订单",
                 e => e.CloseCaseOpinions);
 
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
                 List<tb_SaleOrder> EditEntitys = new List<tb_SaleOrder>();
                 EditEntity.CloseCaseOpinions = frm.OpinionText;
-                
+
                 // 原子性回填图片ID（如果上传成功）
                 if (frm.UploadedFileId.HasValue)
                 {
                     //EditEntity.CloseImages.Add(frm.UploadedFileId)
                 }
-                
+
                 EditEntitys.Add(EditEntity);
                 //已经审核的并且通过的情况才能结案
                 List<tb_SaleOrder> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();

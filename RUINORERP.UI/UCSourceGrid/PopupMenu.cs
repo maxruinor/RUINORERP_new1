@@ -950,7 +950,6 @@ namespace RUINORERP.UI.UCSourceGrid
 
                             // 设置ImageInfo状态为待上传
                             imageInfo.FileId = tempImageId;
-                            imageInfo.ImageId = tempImageId;
 
                             // 获取业务ID、业务表名和关联字段
                             var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
@@ -1166,7 +1165,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         // 尝试从ImageStateManager获取新图片数据
                         var pendingUploadImages = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
-                        var newImageInfo = pendingUploadImages.FirstOrDefault(img => img.ImageId == tempImageId);
+                        var newImageInfo = pendingUploadImages.FirstOrDefault(img => img.FileId == tempImageId);
                         if (newImageInfo != null && newImageInfo.ImageData != null)
                         {
                             // 使用预览图片功能显示新图片

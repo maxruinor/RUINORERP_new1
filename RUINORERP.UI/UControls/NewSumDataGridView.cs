@@ -4307,12 +4307,11 @@ namespace RUINORERP.UI.UControls
 
             if (string.IsNullOrEmpty(XmlFileName) && UseCustomColumnDisplay && this.DataSource != null && this.Rows.Count > 0)
             {
-
-                MessageBox.Show("用于控制列显示的配置文件名XmlFileName不能为空。");
+                System.Diagnostics.Debug.WriteLine($"[{this.Name}] 提示：XmlFileName未设置，将使用默认列配置。");
             }
             if ((FieldNameList == null || FieldNameList.Count == 0) && UseCustomColumnDisplay && this.DataSource != null && this.Rows.Count > 0)
             {
-                MessageBox.Show("用于控制列显示的集合不能为空。");
+                System.Diagnostics.Debug.WriteLine($"[{this.Name}] 提示：FieldNameList未设置，将使用默认列配置。");
             }
             SetSelectedColumn(UseSelectedColumn);
             if (UseCustomColumnDisplay)

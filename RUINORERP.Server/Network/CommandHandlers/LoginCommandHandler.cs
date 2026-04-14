@@ -49,7 +49,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 {
     /// <summary>
     /// 统一登录命令处理器 - 整合了命令模式和处理器模式的登录处理
-    /// 包含重复登录检查、人数限制、黑名单验证、Token验证和刷新机制
+    /// 包含重复登录检查、人数限制、黑名单验证、Token验证和刷新机制1
     /// </summary>
     [CommandHandler("LoginCommandHandler", priority: 100)]
     public class LoginCommandHandler : BaseCommandHandler
@@ -279,12 +279,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return ResponseFactory.CreateSpecificErrorResponse(executionContext, new Exception("用户名和密码不能为空"));
                 }
 
-                // 检查并发用户数限制
-                if (SessionService.ActiveSessionCount >= MaxConcurrentUsers)
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "当前系统用户数已达到上限，请稍后再试");
-                }
-
                 // 获取或创建会话信息
                 var sessionInfo = SessionService.GetSession(executionContext.SessionId);
                 
@@ -304,20 +298,30 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         return ResponseFactory.CreateSpecificErrorResponse(executionContext, "创建会话失败");
                     }
                 }
-                sessionInfo.ClientIp = loginRequest.ClientIp;
-                if (string.IsNullOrEmpty(sessionInfo.ClientIp))
+                // ✅ 优化：统一使用服务器端从Socket获取的IP，防止客户端伪造
+                string realIp = GetClientIp(sessionInfo);
+                
+                // 安全检查：确保能获取到真实IP
+                if (string.IsNullOrEmpty(realIp) || realIp == "0.0.0.0")
                 {
-                    sessionInfo.ClientIp = GetClientIp(sessionInfo);
+                    logger?.LogWarning($"[安全风险] 无法获取客户端真实IP, SessionID={sessionInfo.SessionID}, Username={loginRequest.Username}");
+                    // 记录审计日志但不阻断登录（避免误杀正常用户）
                 }
-                // 检查黑名单
-                if (IsUserBlacklisted(loginRequest.Username, loginRequest.ClientIp))
+                
+                sessionInfo.ClientIp = realIp;
+                logger?.LogInformation($"[IP获取] SessionID={sessionInfo.SessionID}, ClientIp={sessionInfo.ClientIp}, Source=RemoteEndPoint");
+                
+                // 检查黑名单（使用服务器端获取的真实IP）
+                if (IsUserBlacklisted(loginRequest.Username, sessionInfo.ClientIp))
                 {
+                    logger?.LogWarning($"[登录失败] 用户或IP在黑名单中: Username={loginRequest.Username}, ClientIp={sessionInfo.ClientIp}");
                     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "用户或IP在黑名单中");
                 }
 
                 // 检查登录尝试次数
                 if (GetLoginAttempts(loginRequest.Username) >= MaxLoginAttempts)
                 {
+                    logger?.LogWarning($"[登录失败] 登录尝试次数过多: Username={loginRequest.Username}, Attempts={GetLoginAttempts(loginRequest.Username)}");
                     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "登录尝试次数过多，请稍后再试");
                 }
 
@@ -326,11 +330,29 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (userInfo == null)
                 {
                     IncrementLoginAttempts(loginRequest.Username);
+                    
+                    // ✅ 优化：失败5次后自动封禁IP 1小时（使用服务器端获取的真实IP）
+                    if (GetLoginAttempts(loginRequest.Username) >= MaxLoginAttempts)
+                    {
+                        BlacklistManager.BanIp(sessionInfo.ClientIp, TimeSpan.FromHours(1));
+                        logger?.LogWarning($"[自动封禁] IP地址 {sessionInfo.ClientIp} 因登录失败次数过多被封禁1小时，Username={loginRequest.Username}");
+                    }
+                    
+                    logger?.LogWarning($"[登录失败] 用户名或密码错误: Username={loginRequest.Username}, ClientIp={sessionInfo.ClientIp}, Attempts={GetLoginAttempts(loginRequest.Username)}");
                     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "用户名或密码错误");
                 }
 
                 // 重置登录尝试次数
                 ResetLoginAttempts(loginRequest.Username);
+
+                // 验证凭据成功后，再检查并发用户数限制（针对已认证用户）
+                // 注意：这里检查的是已认证的唯一用户数，而不是总会话数
+                var authenticatedUserCount = SessionService.GetAllUserSessions().Select(s => s.UserId).Distinct().Count();
+                if (authenticatedUserCount >= MaxConcurrentUsers)
+                {
+                    logger?.LogWarning($"[登录失败] 并发用户数已达上限: CurrentCount={authenticatedUserCount}, MaxCount={MaxConcurrentUsers}, Username={loginRequest.Username}");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, $"当前系统用户数已达到上限({MaxConcurrentUsers}人)，请稍后再试");
+                }
 
                 // 检查用户登录状态，分析重复登录情况
                 var (hasExistingSessions, authorizedSessions, duplicateResult) = CheckUserLoginStatus(loginRequest.Username, executionContext.SessionId);
@@ -338,15 +360,35 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 处理重复登录情况
                 if (duplicateResult.HasDuplicateLogin)
                 {
-                    // 优化：无论是否有重复登录，都继续登录流程
-                    // 服务器直接返回登录成功，重复登录信息由客户端后续处理
-                    // 对于本地重复登录且允许多会话的情况，自动处理
-                    if (duplicateResult.Type == DuplicateLoginType.LocalOnly && duplicateResult.AllowMultipleLocalSessions)
+                    // 根据重复登录类型记录日志
+                    switch (duplicateResult.Type)
                     {
-                        logger?.LogDebug($"用户 {loginRequest.Username} 本地重复登录，允许多会话，继续登录流程");
+                        case DuplicateLoginType.LocalOnly:
+                            // 本地重复登录 - 同一台机器
+                            if (duplicateResult.AllowMultipleLocalSessions)
+                            {
+                                logger?.LogInformation($"[登录] 用户 {loginRequest.Username} 本地重复登录，允许多会话");
+                            }
+                            else
+                            {
+                                logger?.LogWarning($"[登录] 用户 {loginRequest.Username} 本地重复登录，但不允许多会话");
+                            }
+                            break;
+                            
+                        case DuplicateLoginType.RemoteOnly:
+                        case DuplicateLoginType.Both:
+                            // 远程重复登录 - 需要客户端决定是否强制下线
+                            logger?.LogWarning($"[登录] 用户 {loginRequest.Username} 存在远程重复登录: 远程会话数={duplicateResult.ExistingSessions.Count(s => !s.IsLocal)}, 将会话信息返回给客户端处理");
+                            break;
+                            
+                        default:
+                            logger?.LogDebug($"[登录] 用户 {loginRequest.Username} 重复登录类型: {duplicateResult.Type}");
+                            break;
                     }
-
-
+                    
+                    // 注意: 服务器不主动踢人，而是将重复登录信息返回给客户端
+                    // 由客户端决定是否调用HandleDuplicateLoginAsync强制对方下线
+                    // 这样设计可以避免服务器端误操作，给用户选择权
                 }
 
                 // 更新会话信息
@@ -367,6 +409,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 如果注册已过期，拒绝登录
                 if (registrationStatus == RegistrationStatus.Expired)
                 {
+                    logger?.LogWarning($"[登录失败] 系统注册已过期: Username={loginRequest.Username}");
                     return ResponseFactory.CreateSpecificErrorResponse(executionContext, 
                         "系统注册已过期，请联系软件提供商续费。续费方式：请联系软件提供商");
                 }
@@ -398,6 +441,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         ["MaxConcurrentUsers"] = MaxConcurrentUsers.ToString(),
                         ["CurrentActiveUsers"] = SessionService.ActiveSessionCount.ToString()
                     });
+
+                // 记录登录成功日志
+                logger?.LogInformation($"[登录成功] Username={loginRequest.Username}, UserId={userInfo.User_ID}, SessionId={sessionInfo.SessionID}, ClientIp={sessionInfo.ClientIp}, HasDuplicateLogin={duplicateResult.HasDuplicateLogin}, RegistrationStatus={registrationStatus}");
 
                 return loginResponse;
 
@@ -478,31 +524,78 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     TargetUserId = request.AdditionalData["TargetUserId"].ToString();
                 }
+                        
+                // 新增: 记录强制下线请求的详细信息
+                logger?.LogInformation($"[强制下线请求] 来源SessionId={executionContext.SessionId}, 目标SessionId={TargetUserId}");
+                        
                 // 查找目标用户会话
                 var targetSession = SessionService.GetSession(TargetUserId);
                 if (targetSession == null)
                 {
+                    // 增强: 记录更详细的失败信息
+                    logger?.LogWarning($"[强制下线失败] 目标用户不在线或会话已失效: TargetSessionId={TargetUserId}");
                     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "目标用户不在线");
                 }
-
-                //发送提示强制下线
-
-                await MessageService.SendMessageToUserAsync(targetSession, message: "您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。", MessageType.System, 1500);
-
-                //客户端通知强制下线 5 秒后断开连接
-                await managementService.ForceLogoutAsync(targetSession, 1000);
-
-                // 添加主动断开连接警告日志
-                logger?.LogWarning($"[主动断开连接] 用户账号在另一地点登录，强制下线: SessionID={targetSession.SessionID}, UserName={targetSession.UserName}");
-                
+                        
+                logger?.LogInformation($"[强制下线] 找到目标会话: UserName={targetSession.UserName}, ClientIp={targetSession.ClientIp}");
+        
+                // 发送提示消息
+                try
+                {
+                    await MessageService.SendMessageToUserAsync(targetSession, 
+                        message: "您的账号在另一地点登录,您已被强制下线。如非本人操作,请及时修改密码。", 
+                        MessageType.System, 1500);
+                    logger?.LogInformation($"[强制下线] 已向目标用户发送下线提示消息");
+                }
+                catch (Exception msgEx)
+                {
+                    // 新增: 即使消息发送失败也继续执行断开连接
+                    logger?.LogError(msgEx, $"[强制下线警告] 发送提示消息失败,但将继续执行断开连接: SessionId={targetSession.SessionID}");
+                }
+        
+                // 客户端通知强制下线
+                try
+                {
+                    await managementService.ForceLogoutAsync(targetSession, 1000);
+                    logger?.LogInformation($"[强制下线] 已发送ForceLogout指令");
+                }
+                catch (Exception forceEx)
+                {
+                    // 新增: 记录ForceLogout失败的详细信息
+                    logger?.LogError(forceEx, $"[强制下线失败] ForceLogoutAsync调用失败: SessionId={targetSession.SessionID}, Error={forceEx.Message}");
+                    // 继续尝试DisconnectSessionAsync
+                }
+                        
                 // 通知客户端强制下线
-                await SessionService.DisconnectSessionAsync(targetSession.SessionID, $"您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。");
-
+                try
+                {
+                    bool disconnectResult = await SessionService.DisconnectSessionAsync(
+                        targetSession.SessionID, 
+                        "您的账号在另一地点登录,您已被强制下线。如非本人操作,请及时修改密码。");
+                            
+                    if (disconnectResult)
+                    {
+                        logger?.LogInformation($"[强制下线成功] 会话已成功断开: SessionId={targetSession.SessionID}, UserName={targetSession.UserName}");
+                    }
+                    else
+                    {
+                        logger?.LogError($"[强制下线失败] DisconnectSessionAsync返回失败: SessionId={targetSession.SessionID}");
+                        return ResponseFactory.CreateSpecificErrorResponse(executionContext, "强制下线执行失败");
+                    }
+                }
+                catch (Exception disconnectEx)
+                {
+                    // 新增: 详细记录DisconnectSessionAsync的异常
+                    logger?.LogError(disconnectEx, $"[强制下线异常] DisconnectSessionAsync抛出异常: SessionId={targetSession.SessionID}, Error={disconnectEx.Message}, StackTrace={disconnectEx.StackTrace}");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, $"强制下线异常: {disconnectEx.Message}");
+                }
+        
                 return ResponseFactory.CreateSpecificSuccessResponse(executionContext, "用户已成功强制下线");
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "处理强制用户下线命令时出错");
+                // 增强: 记录完整的异常堆栈和上下文
+                logger?.LogError(ex, $"[强制下线严重错误] 处理强制用户下线命令时发生未预期异常: TargetUserId={request.AdditionalData?["TargetUserId"]}, SourceSessionId={executionContext.SessionId}, ExceptionType={ex.GetType().Name}, Message={ex.Message}, StackTrace={ex.StackTrace}");
                 return SystemCommandResponse.CreateForceLogoutFailure($"处理失败: {ex.Message}", "FORCE_LOGOUT_ERROR");
             }
         }
@@ -632,17 +725,38 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private async Task<tb_UserInfo> ValidateUserCredentialsAsync(LoginRequest loginRequest, CancellationToken cancellationToken)
         {
-            //防止暴力破解攻击,时间侧信道攻击防护,降低服务器负载 这是一个 安全最佳实践 ，在身份验证系统中很常见，目的是提高系统的安全性而不是处理超时情况。
-            await Task.Delay(500, cancellationToken);
-            //password = EncryptionHelper.AesDecryptByHashKey(enPwd, username);
-            string EnPassword = EncryptionHelper.AesEncryptByHashKey(loginRequest.Password, loginRequest.Username);
+            try
+            {
+                //防止暴力破解攻击,时间侧信道攻击防护,降低服务器负载 这是一个 安全最佳实践 ，在身份验证系统中很常见，目的是提高系统的安全性而不是处理超时情况。
+                await Task.Delay(500, cancellationToken);
+                
+                logger?.LogDebug($"[凭据验证] 开始验证用户: Username={loginRequest.Username}, ClientIp={loginRequest.ClientIp}");
+                
+                //password = EncryptionHelper.AesDecryptByHashKey(enPwd, username);
+                string EnPassword = EncryptionHelper.AesEncryptByHashKey(loginRequest.Password, loginRequest.Username);
 
-            var user = await Program.AppContextData.Db.CopyNew().Queryable<tb_UserInfo>()
-                     .Where(u => u.UserName == loginRequest.Username && u.Password == EnPassword)
-               .Includes(x => x.tb_employee)
-                     .Includes(x => x.tb_User_Roles)
-                     .SingleAsync();
-            return user;
+                var user = await Program.AppContextData.Db.CopyNew().Queryable<tb_UserInfo>()
+                         .Where(u => u.UserName == loginRequest.Username && u.Password == EnPassword)
+                   .Includes(x => x.tb_employee)
+                         .Includes(x => x.tb_User_Roles)
+                         .SingleAsync();
+                
+                if (user != null)
+                {
+                    logger?.LogDebug($"[凭据验证] 验证成功: UserId={user.User_ID}, UserName={user.UserName}");
+                }
+                else
+                {
+                    logger?.LogDebug($"[凭据验证] 验证失败: 用户名或密码不匹配, Username={loginRequest.Username}");
+                }
+                
+                return user;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, $"[凭据验证异常] 验证用户凭据时发生异常: Username={loginRequest.Username}");
+                throw; // 重新抛出异常，让上层处理
+            }
         }
 
         /// <summary>
@@ -735,21 +849,61 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private (bool hasExistingSessions, IEnumerable<SessionInfo> authorizedSessions, DuplicateLoginResult duplicateResult)
             CheckUserLoginStatus(string username, string currentSessionId)
         {
-            // 获取指定用户名的所有已认证会话
-            var userSessions = SessionService.GetUserSessions(username);
+            try
+            {
+                // 获取指定用户名的所有已认证会话
+                var userSessions = SessionService.GetUserSessions(username);
 
-            // 过滤出已授权的会话
-            var authorizedSessions = userSessions.Where(s => IsSessionAuthorized(s)).ToList();
+                // 过滤出已授权的会话
+                var authorizedSessions = userSessions.Where(s => IsSessionAuthorized(s)).ToList();
 
-            // 分类会话：本地会话和远程会话
-            var localSessions = authorizedSessions.Where(s => IsLocalDuplicateLogin(currentSessionId, s)).ToList();
-            var remoteSessions = authorizedSessions.Where(s => !IsLocalDuplicateLogin(currentSessionId, s)).ToList();
+                if (!authorizedSessions.Any())
+                {
+                    // 没有其他会话，直接返回
+                    return (false, authorizedSessions, new DuplicateLoginResult { HasDuplicateLogin = false });
+                }
 
-            // 分析重复登录情况
-            var duplicateResult = AnalyzeDuplicateLoginType(authorizedSessions, localSessions, remoteSessions, currentSessionId);
+                // 获取当前会话的IP地址（用于判断是否为本地重复登录）
+                var currentSession = SessionService.GetSession(currentSessionId);
+                string currentClientIp = currentSession?.ClientIp ?? string.Empty;
 
-            // 返回分析结果
-            return (remoteSessions.Any(), authorizedSessions, duplicateResult);
+                // 分类会话：本地会话和远程会话（一次性遍历完成）
+                var localSessions = new List<SessionInfo>();
+                var remoteSessions = new List<SessionInfo>();
+                
+                foreach (var session in authorizedSessions)
+                {
+                    // 如果IP地址相同，则认为是同一台机器的登录
+                    bool isLocal = string.Equals(currentClientIp, session.ClientIp, StringComparison.OrdinalIgnoreCase);
+                    
+                    if (isLocal)
+                    {
+                        localSessions.Add(session);
+                    }
+                    else
+                    {
+                        remoteSessions.Add(session);
+                    }
+                }
+
+                // 分析重复登录情况
+                var duplicateResult = AnalyzeDuplicateLoginType(authorizedSessions, localSessions, remoteSessions, currentSessionId);
+
+                // 记录诊断日志
+                if (duplicateResult.HasDuplicateLogin)
+                {
+                    logger?.LogDebug($"[重复登录检测] Username={username}, LocalCount={localSessions.Count}, RemoteCount={remoteSessions.Count}, Type={duplicateResult.Type}");
+                }
+
+                // 返回分析结果
+                return (remoteSessions.Any(), authorizedSessions, duplicateResult);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, $"[重复登录检测异常] 检查用户登录状态时发生异常: Username={username}");
+                // 异常情况下返回无重复登录，避免阻断正常登录流程
+                return (false, Enumerable.Empty<SessionInfo>(), new DuplicateLoginResult { HasDuplicateLogin = false });
+            }
         }
 
         /// <summary>
@@ -1000,21 +1154,35 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
         /// <summary>
-        /// 统一的客户端IP获取方法，优先从请求数据中获取，其次从会话中获取
+        /// 获取客户端真实IP地址(从服务器端Socket获取，防止伪造)
         /// </summary>
-        /// <param name="command">命令对象</param>
-        /// <param name="loginRequest">登录请求对象</param>
+        /// <param name="appSession">会话对象</param>
         /// <returns>客户端IP地址</returns>
         private string GetClientIp(IAppSession appSession)
         {
-            // 4. 如果SessionInfo中没有IP，尝试从RemoteEndPoint获取
-            if (appSession != null && appSession.RemoteEndPoint != null)
+            try
             {
-                var ipEndpoint = appSession.RemoteEndPoint as System.Net.IPEndPoint;
-                if (ipEndpoint != null)
+                // 从RemoteEndPoint获取真实IP（服务器端视角）
+                if (appSession != null && appSession.RemoteEndPoint != null)
                 {
-                    return ipEndpoint.Address.ToString();
+                    var ipEndpoint = appSession.RemoteEndPoint as System.Net.IPEndPoint;
+                    if (ipEndpoint != null)
+                    {
+                        string ip = ipEndpoint.Address.ToString();
+                        
+                        // 记录IP类型用于调试
+                        if (ipEndpoint.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                        {
+                            logger?.LogDebug($"[IP获取] 检测到IPv6客户端: {ip}, SessionID={appSession.SessionID}");
+                        }
+                        
+                        return ip;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogWarning(ex, "获取客户端IP地址失败");
             }
 
             // 如果无法获取IP，则返回默认值

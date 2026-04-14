@@ -2187,29 +2187,47 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 
                 packet.ExecutionContext.RequestId = request.RequestId;
                 packet.CommandId = commandId;
-                packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;
-                packet.ExecutionContext.UserId = MainForm.Instance.AppContext.CurUserInfo.UserID;
-                if (ResponseTypeName == null)
+                
+                // 根据命令类型设置上下文信息
+                if (packet.CommandId == AuthenticationCommands.Login)
                 {
-                    //默认给基类。因为服务器处理时只是会在最后响应时才看是否真的需要响应。因为处理中会响应错误信息。
-                    packet.ExecutionContext.NeedResponse = false;
-                    packet.ExecutionContext.ExpectedResponseTypeName = nameof(RUINORERP.PacketSpec.Models.Core.ResponseBase);
+                    // 登录命令：不需要SessionId、UserId和Token
+                    _logger?.LogDebug("登录命令，跳过SessionId/UserId/Token设置");
                 }
                 else
                 {
-                    //  CommandContext用于传递响应类型信息
-                    packet.ExecutionContext.ExpectedResponseTypeName = ResponseTypeName;
-                    packet.ExecutionContext.NeedResponse = true;
-                }
-
-
-                await AutoAttachTokenAsync(packet.ExecutionContext);
-                //除登录登出命令，其他命令都需要附加令牌
-                if (packet.CommandId != AuthenticationCommands.Login)
-                {
+                    // 非登录命令：需要设置SessionId、UserId和Token
+                    
+                    // 1. 安全地设置SessionId和UserId，避免空引用异常
+                    if (MainForm.Instance?.AppContext != null)
+                    {
+                        packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;
+                        
+                        // 检查CurUserInfo是否为null
+                        if (MainForm.Instance.AppContext.CurUserInfo != null)
+                        {
+                            packet.ExecutionContext.UserId = MainForm.Instance.AppContext.CurUserInfo.UserID;
+                        }
+                        else
+                        {
+                            _logger?.LogWarning("CurUserInfo为空，无法设置UserId: CommandId={CommandId}", commandId.ToString());
+                            packet.ExecutionContext.UserId = 0; // 设置默认值
+                        }
+                    }
+                    else
+                    {
+                        _logger?.LogWarning("MainForm.Instance或AppContext为空，无法设置SessionId和UserId: CommandId={CommandId}", commandId.ToString());
+                        packet.ExecutionContext.SessionId = string.Empty;
+                        packet.ExecutionContext.UserId = 0;
+                    }
+                    
+                    // 2. 自动附加Token
+                    await AutoAttachTokenAsync(packet.ExecutionContext);
+                    
+                    // 3. 授权检查：除登录命令外，其他命令都需要授权令牌
                     if (packet.ExecutionContext.Token == null)
                     {
-                        // ✅ 对于非关键命令（如性能数据上报），Token缺失时静默跳过而不是抛出异常
+                        // ✅ 对于非关键命令（如性能数据上报、心跳），Token缺失时静默跳过而不是抛出异常
                         bool isNonCriticalCommand = packet.CommandId == SystemCommands.PerformanceDataUpload ||
                                                    packet.CommandId == SystemCommands.Heartbeat ||
                                                    packet.CommandId == SystemCommands.PerformanceMonitorStatus;
@@ -2227,17 +2245,23 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                             _tokenManager?.TokenStorage != null ? "已初始化" : "未初始化",
                             _tokenManager != null ? "可用" : "不可用");
                         
-                        // 对于关键命令，仍然抛出异常
+                        // 对于关键命令（包括登出），仍然抛出异常
                         throw new Exception($"发送请求失败: 没有合法授权令牌, 指令：{commandId.ToString()}");
                     }
                 }
-                if (packet.CommandId == SystemCommands.Heartbeat)
+                
+                // 设置响应类型信息（所有命令都需要）
+                if (ResponseTypeName == null)
                 {
-
+                    //默认给基类。因为服务器处理时只是会在最后响应时才看是否真的需要响应。因为处理中会响应错误信息。
+                    packet.ExecutionContext.NeedResponse = false;
+                    packet.ExecutionContext.ExpectedResponseTypeName = nameof(RUINORERP.PacketSpec.Models.Core.ResponseBase);
                 }
-                if (packet.CommandId == AuthenticationCommands.Login)
+                else
                 {
-
+                    //  CommandContext用于传递响应类型信息
+                    packet.ExecutionContext.ExpectedResponseTypeName = ResponseTypeName;
+                    packet.ExecutionContext.NeedResponse = true;
                 }
 
                 // 序列化和加密数据包

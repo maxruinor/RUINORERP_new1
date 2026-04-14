@@ -130,7 +130,10 @@ namespace RUINORERP.UI.Network.Services
 
                     //接收来自服务器的Token并保存
                     await _tokenManager.TokenStorage.SetTokenAsync(response.Token);
-                    MainForm.Instance.AppContext.SessionId = response.SessionId;
+                    if (MainForm.Instance?.AppContext != null)
+                    {
+                        MainForm.Instance.AppContext.SessionId = response.SessionId;
+                    }
 
                 }
                 else
@@ -414,12 +417,19 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                if (!_communicationService.ConnectionManager.IsConnected || _duplicateLoginResult == null || _duplicateLoginResult.ExistingSessions == null || _duplicateLoginResult.ExistingSessions.Count == 0)
+                if (!_communicationService.ConnectionManager.IsConnected || 
+                    _duplicateLoginResult == null || 
+                    _duplicateLoginResult.ExistingSessions == null || 
+                    _duplicateLoginResult.ExistingSessions.Count == 0)
                 {
-
+                    _logger?.LogWarning("[强制下线] 前置条件不满足: Connected={IsConnected}, HasSessions={HasSessions}", 
+                        _communicationService.ConnectionManager.IsConnected,
+                        _duplicateLoginResult?.ExistingSessions?.Count > 0);
                     return false;
                 }
 
+                var targetSessionId = _duplicateLoginResult.ExistingSessions[0].SessionId.ToString();
+                _logger?.LogInformation($"[强制下线请求] 准备发送DuplicateLogin命令: TargetSessionId={targetSessionId}");
 
                 var request = new LoginRequest()
                 {
@@ -429,26 +439,47 @@ namespace RUINORERP.UI.Network.Services
                     AdditionalData = new System.Collections.Generic.Dictionary<string, object>
                     {
                         ["Action"] = "你的账号在其它地方登录。当前连接即将断开。请保存数据。",
-                        ["TargetUserId"] = _duplicateLoginResult.ExistingSessions[0].SessionId.ToString()
+                        ["TargetUserId"] = targetSessionId
                     }
                 };
 
 
                 var response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
                     AuthenticationCommands.DuplicateLogin, request, ct, 20000);
+                
                 if (response != null)
                 {
-                    return response.IsSuccess;
+                    if (response.IsSuccess)
+                    {
+                        _logger?.LogInformation($"[强制下线成功] 服务器返回成功: TargetSessionId={targetSessionId}");
+                        return true;
+                    }
+                    else
+                    {
+                        _logger?.LogWarning($"[强制下线失败] 服务器返回失败: TargetSessionId={targetSessionId}, Message={response.ErrorMessage ?? "未知错误"}");
+                        return false;
+                    }
                 }
                 else
                 {
+                    _logger?.LogError($"[强制下线失败] 服务器返回空响应: TargetSessionId={targetSessionId}");
                     return false;
                 }
 
             }
+            catch (TimeoutException ex)
+            {
+                _logger?.LogError(ex, $"[强制下线超时] 等待服务器响应的过程中超时");
+                return false;
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger?.LogWarning(ex, $"[强制下线取消] 操作被取消");
+                return false;
+            }
             catch (Exception ex)
             {
-
+                _logger?.LogError(ex, $"[强制下线异常] 处理强制下线请求时发生异常: Type={ex.GetType().Name}, Message={ex.Message}");
                 return false;
             }
         }

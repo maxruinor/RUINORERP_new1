@@ -202,7 +202,15 @@ namespace RUINORERP.UI.Network.Services
 
                 _logger.LogDebug("开始释放所有锁: {Count} 个, 原因: {Reason}", activeLocks.Count, reason);
 
-                var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                var currentUserId = 0L;
+                if (MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo != null)
+                {
+                    currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                }
+                else
+                {
+                    _logger.LogWarning("无法获取当前用户信息，使用默认值0");
+                }
                 
                 // 批量释放锁
                 var lockBillIds = activeLocks.Select(l => l.BillID).ToList();

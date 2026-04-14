@@ -51,6 +51,10 @@ namespace RUINORERP.Server.Network.Services
         private readonly CacheSubscriptionManager _subscriptionManager; // 使用统一的订阅管理器
         private readonly HeartbeatPerformanceMonitor _heartbeatPerformanceMonitor; // 心跳性能监控器
 
+        // ✅ DDoS防护：连接频率跟踪（IP -> 连接计数器）
+        private readonly ConcurrentDictionary<string, ConnectionRateTracker> _connectionRates;
+        private readonly Timer _rateCleanupTimer; // 定期清理过期的连接记录
+
         // 存储待处理的请求任务，用于匹配响应
         private static readonly ConcurrentDictionary<string, TaskCompletionSource<PacketModel>> _pendingRequests =
             new ConcurrentDictionary<string, TaskCompletionSource<PacketModel>>();
@@ -82,12 +86,17 @@ namespace RUINORERP.Server.Network.Services
             MaxSessionCount = maxSessionCount;
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
             _statistics = SessionStatistics.Create(maxSessionCount);
+            
+            // ✅ DDoS防护：初始化连接频率跟踪
+            _connectionRates = new ConcurrentDictionary<string, ConnectionRateTracker>();
+            // 每10分钟清理一次过期的连接记录，避免内存泄漏
+            _rateCleanupTimer = new Timer(CleanupConnectionRates, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
 
             // 优化：将清理定时器改为每5分钟执行一次，减少系统开销
             // 同时避免过于频繁的清理操作影响正常业务
             _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
-            _logger.LogInformation("SessionService初始化完成");
+            _logger.LogInformation("SessionService初始化完成（含DDoS防护）");
         }
 
         #endregion
@@ -276,7 +285,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                return query.ToList();
+                var result = query.ToList();
+                
+                // 添加诊断日志，帮助排查会话数量不一致问题
+                _logger.LogDebug($"[GetAllUserSessions] 总会话数={_sessions.Count}, 已认证会话数={result.Count}, 排除会话=[{string.Join(",", excludeSessionIds ?? Array.Empty<string>())}]");
+                
+                return result;
             }
             catch (Exception ex)
             {
@@ -464,6 +478,45 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
+                // ✅ DDoS防护：获取客户端IP并检查连接频率
+                string clientIp = GetClientIp(session);
+                
+                bool shouldCloseConnection = false; // 标记是否需要关闭连接
+                
+                if (!string.IsNullOrEmpty(clientIp) && clientIp != "0.0.0.0")
+                {
+                    // 记录连接并检查是否超限
+                    var tracker = _connectionRates.GetOrAdd(clientIp, _ => new ConnectionRateTracker());
+                    lock (tracker)
+                    {
+                        tracker.RecordConnection();
+                        
+                        // ✅ 如果1分钟内连接超过60次，自动封禁30分钟（DDoS防护）
+                        const int maxConnectionsPerMinute = 60;
+                        if (tracker.IsExceedingLimit(maxConnectionsPerMinute, TimeSpan.FromMinutes(1)))
+                        {
+                            BlacklistManager.BanIp(clientIp, TimeSpan.FromMinutes(30));
+                            _logger.LogWarning($"[自动封禁-DDoS] IP {clientIp} 因高频连接被封禁30分钟 (1分钟内{tracker.ConnectionCount}次连接)");
+                            shouldCloseConnection = true; // 标记需要关闭
+                        }
+                    }
+                    
+                    // ⚠️ 修复：在lock块外执行await操作
+                    if (shouldCloseConnection)
+                    {
+                        await session.CloseAsync(CloseReason.ServerShutdown);
+                        return;
+                    }
+                }
+                
+                // ✅ 优化：获取客户端IP并检查黑名单（在网络层早期拦截）
+                if (!string.IsNullOrEmpty(clientIp) && BlacklistManager.IsIpBanned(clientIp))
+                {
+                    _logger.LogWarning($"[黑名单拦截] IP地址已被封禁，拒绝连接: {clientIp}");
+                    await session.CloseAsync(CloseReason.ServerShutdown);
+                    return;
+                }
+
                 // 检查是否已达到最大会话数
                 if (ActiveSessionCount >= MaxSessionCount)
                 {
@@ -885,12 +938,17 @@ namespace RUINORERP.Server.Network.Services
                 username = sessionInfo.UserName ?? "未知";
 
                 // 添加主动断开连接警告日志
-                _logger.LogWarning($"[主动断开连接] 准备断开会话: SessionID={sessionId}, UserName={username}, 原因={reason}");
+                _logger.LogWarning($"[主动断开连接] 准备断开会话: SessionID={sessionId}, UserName={username}, ClientIp={sessionInfo.ClientIp}, IsConnected={sessionInfo.IsConnected}, 原因={reason}");
 
                 try
                 {
+                    // 记录关闭前的会话状态
+                    _logger.LogDebug($"[断开会话] CloseAsync调用前: SessionID={sessionId}, IsConnected={sessionInfo.IsConnected}");
+                    
                     // 主动关闭SuperSocket连接
                     await sessionInfo.CloseAsync(CloseReason.ServerShutdown);
+                    
+                    _logger.LogDebug($"[断开会话] CloseAsync调用后: SessionID={sessionId}, IsConnected={sessionInfo.IsConnected}");
                 }
                 catch (Exception ex)
                 {
@@ -900,10 +958,17 @@ namespace RUINORERP.Server.Network.Services
 
                 // 移除会话记录，确保资源释放
                 success = RemoveSession(sessionId);
+                
+                // 验证会话是否真正被移除
+                bool isRemoved = !_sessions.ContainsKey(sessionId);
 
-                if (success)
+                if (success && isRemoved)
                 {
                     _logger.LogInformation($"会话已成功断开并移除: SessionID={sessionId}, 用户={username}, 原因={reason}");
+                }
+                else if (success && !isRemoved)
+                {
+                    _logger.LogWarning($"会话移除返回值成功但会话仍存在: SessionID={sessionId}, 用户={username}");
                 }
                 else
                 {
@@ -1343,12 +1408,15 @@ namespace RUINORERP.Server.Network.Services
                         // 增强线程安全性：使用锁保护会话访问
                         lock (session)
                         {
-                            // 检查1: 活动超时（60分钟无活动），增加超时时间避免误判
+                            // 检查1: 活动超时（60分钟无活动）
                             var inactiveTime = currentTime - session.LastActivityTime;
                             if (inactiveTime.TotalMinutes > 60)
                             {
-                                // 对于已认证的会话，给予更长的宽限期
-                                if (session.IsAuthenticated && inactiveTime.TotalMinutes < 120)
+                                // 对于已认证的会话，给予更长的宽限期（可配置）
+                                // TODO: 建议将120分钟改为配置项，生产环境建议60-90分钟
+                                const int authenticatedSessionTimeout = 90; // 已认证会话超时时间（分钟）
+                                
+                                if (session.IsAuthenticated && inactiveTime.TotalMinutes < authenticatedSessionTimeout)
                                 {
                                     _logger.LogDebug($"[活动超时警告] SessionID={session.SessionID}, IP={session.ClientIp}, 无活动时间={inactiveTime.TotalMinutes:F1}分钟");
                                 }
@@ -1654,6 +1722,8 @@ namespace RUINORERP.Server.Network.Services
             if (!_disposed)
             {
                 _cleanupTimer?.Dispose();
+                _rateCleanupTimer?.Dispose(); // ✅ DDoS防护：清理连接频率定时器
+                _connectionRates.Clear(); // ✅ DDoS防护：清空连接记录
 
                 var sessionIds = _sessions.Keys.ToList();
                 int totalSessions = sessionIds.Count;
@@ -1721,6 +1791,130 @@ namespace RUINORERP.Server.Network.Services
         }
 
         #endregion
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 获取客户端真实IP地址(优先使用服务器端Socket信息)
+        /// </summary>
+        /// <param name="session">会话对象</param>
+        /// <returns>客户端IP地址</returns>
+        private string GetClientIp(IAppSession session)
+        {
+            try
+            {
+                if (session?.RemoteEndPoint != null)
+                {
+                    var ipEndpoint = session.RemoteEndPoint as System.Net.IPEndPoint;
+                    if (ipEndpoint != null)
+                    {
+                        string ip = ipEndpoint.Address.ToString();
+                        
+                        // 记录IP类型用于调试
+                        if (ipEndpoint.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                        {
+                            _logger.LogDebug($"[IP获取] 检测到IPv6客户端: {ip}, SessionID={session.SessionID}");
+                        }
+                        else
+                        {
+                            _logger.LogDebug($"[IP获取] IPv4客户端: {ip}, SessionID={session.SessionID}");
+                        }
+                        
+                        return ip;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "获取客户端IP地址失败");
+            }
+            
+            return "0.0.0.0"; // 使用0.0.0.0表示未知IP
+        }
+
+        /// <summary>
+        /// 清理过期的连接频率记录（避免内存泄漏）
+        /// </summary>
+        private void CleanupConnectionRates(object state)
+        {
+            try
+            {
+                var now = DateTime.Now;
+                var expiredKeys = _connectionRates
+                    .Where(kvp => kvp.Value.LastConnection < now.AddMinutes(-5)) // 5分钟无活动则清理
+                    .Select(kvp => kvp.Key)
+                    .ToList();
+
+                foreach (var key in expiredKeys)
+                {
+                    _connectionRates.TryRemove(key, out _);
+                }
+
+                if (expiredKeys.Count > 0)
+                {
+                    _logger.LogDebug($"[DDoS防护] 清理{expiredKeys.Count}个过期的连接记录，剩余{_connectionRates.Count}个");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[DDoS防护] 清理连接记录失败");
+            }
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// ✅ DDoS防护：连接频率跟踪器
+    /// </summary>
+    public class ConnectionRateTracker
+    {
+        /// <summary>
+        /// 连接次数
+        /// </summary>
+        public int ConnectionCount { get; set; }
+        
+        /// <summary>
+        /// 首次连接时间
+        /// </summary>
+        public DateTime FirstConnection { get; set; }
+        
+        /// <summary>
+        /// 最后连接时间
+        /// </summary>
+        public DateTime LastConnection { get; set; }
+
+        /// <summary>
+        /// 记录一次连接
+        /// </summary>
+        public void RecordConnection()
+        {
+            ConnectionCount++;
+            LastConnection = DateTime.Now;
+            if (FirstConnection == default)
+                FirstConnection = DateTime.Now;
+        }
+
+        /// <summary>
+        /// 检查是否超过限制
+        /// </summary>
+        /// <param name="maxConnections">最大连接数</param>
+        /// <param name="timeWindow">时间窗口</param>
+        /// <returns>是否超限</returns>
+        public bool IsExceedingLimit(int maxConnections, TimeSpan timeWindow)
+        {
+            var windowStart = DateTime.Now - timeWindow;
+            
+            // 如果最后连接时间超出时间窗口，重置计数器
+            if (LastConnection < windowStart)
+            {
+                ConnectionCount = 0;
+                FirstConnection = DateTime.Now;
+                return false;
+            }
+            
+            return ConnectionCount > maxConnections;
+        }
     }
 }
 

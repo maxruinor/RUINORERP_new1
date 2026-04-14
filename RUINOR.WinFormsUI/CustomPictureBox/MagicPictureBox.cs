@@ -1376,13 +1376,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         deletedImageInfo.Status = ImageStatus.PendingDelete;
 
                         // 如果图片还没有ImageId，生成一个
-                        if (deletedImageInfo.ImageId == 0)
+                        if (deletedImageInfo.FileId == 0)
                         {
-                            deletedImageInfo.ImageId = GenerateUniqueId();
+                            deletedImageInfo.FileId = GenerateUniqueId();
                         }
 
                         // 将图片添加到ImageStateManager
-                        ImageStateManager.Instance.AddImage(this, deletedImageInfo.ImageId, deletedImageInfo.OriginalFileName, null, deletedImageInfo.Status, deletedImageInfo.BusinessId,deletedImageInfo.OwnerTableName, deletedImageInfo.StoragePath);
+                        ImageStateManager.Instance.AddImage(this, deletedImageInfo.FileId, deletedImageInfo.OriginalFileName, null, deletedImageInfo.Status, deletedImageInfo.BusinessId,deletedImageInfo.OwnerTableName, deletedImageInfo.StoragePath);
 
                         System.Diagnostics.Debug.WriteLine($"单图模式:标记图片为已删除: {deletedImageInfo.OriginalFileName}, FileId: {deletedImageInfo.FileId}");
                     }
@@ -1429,13 +1429,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     multiDeletedImageInfo.Status = ImageStatus.PendingDelete;
 
                     // 如果图片还没有ImageId，生成一个
-                    if (multiDeletedImageInfo.ImageId == 0)
+                    if (multiDeletedImageInfo.FileId == 0)
                     {
-                        multiDeletedImageInfo.ImageId = GenerateUniqueId();
+                        multiDeletedImageInfo.FileId = GenerateUniqueId();
                     }
 
                     // 将图片添加到ImageStateManager
-                    ImageStateManager.Instance.AddImage(this, multiDeletedImageInfo.ImageId, multiDeletedImageInfo.OriginalFileName, null, multiDeletedImageInfo.Status, multiDeletedImageInfo.BusinessId, multiDeletedImageInfo.OwnerTableName, multiDeletedImageInfo.StoragePath);
+                    ImageStateManager.Instance.AddImage(this, multiDeletedImageInfo.FileId, multiDeletedImageInfo.OriginalFileName, null, multiDeletedImageInfo.Status, multiDeletedImageInfo.BusinessId, multiDeletedImageInfo.OwnerTableName, multiDeletedImageInfo.StoragePath);
 
                     System.Diagnostics.Debug.WriteLine($"多图模式:标记图片为已删除: {multiDeletedImageInfo.OriginalFileName}, FileId: {multiDeletedImageInfo.FileId}");
                 }
@@ -1502,13 +1502,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         imageInfo.Status = ImageStatus.PendingDelete;
 
                         // 如果图片还没有ImageId，生成一个
-                        if (imageInfo.ImageId == 0)
+                        if (imageInfo.FileId == 0)
                         {
-                            imageInfo.ImageId = GenerateUniqueId();
+                            imageInfo.FileId = GenerateUniqueId();
                         }
 
                         // 将图片添加到ImageStateManager
-                        ImageStateManager.Instance.AddImage(this, imageInfo.ImageId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId, imageInfo.OwnerTableName, imageInfo.StoragePath);
+                        ImageStateManager.Instance.AddImage(this, imageInfo.FileId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId, imageInfo.OwnerTableName, imageInfo.StoragePath);
 
                         System.Diagnostics.Debug.WriteLine($"ClearImage: 标记图片为已删除: {imageInfo.OriginalFileName}, FileId: {imageInfo.FileId}");
                     }
@@ -3042,13 +3042,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 imageInfo.ModifiedAt = DateTime.Now;
 
                 // 如果图片还没有ImageId，生成一个
-                if (imageInfo.ImageId == 0)
+                if (imageInfo.FileId == 0)
                 {
-                    imageInfo.ImageId = GenerateUniqueId();
+                    imageInfo.FileId = GenerateUniqueId();
                 }
 
                 // 将图片添加到ImageStateManager
-                ImageStateManager.Instance.AddImage(this, imageInfo.ImageId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId,imageInfo.OwnerTableName, imageInfo.StoragePath);
+                ImageStateManager.Instance.AddImage(this, imageInfo.FileId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId,imageInfo.OwnerTableName, imageInfo.StoragePath);
             }
         }
 
@@ -3288,7 +3288,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             // 过滤出当前控件相关的图片
             var deletedImages = pendingDeleteImages.Where(img => img.Cell == this).ToList();
             // 移除这些图片
-            var imageIds = deletedImages.Select(img => img.ImageId).ToList();
+            var imageIds = deletedImages.Select(img => img.FileId).ToList();
             ImageStateManager.Instance.RemoveProcessedImages(imageIds);
         }
 
@@ -3318,7 +3318,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
             // 从ImageStateManager中移除当前控件相关的所有图片
             var allImages = ImageStateManager.Instance.GetImagesByCell(this);
-            var imageIds = allImages.Select(img => img.ImageId).ToList();
+            var imageIds = allImages.Select(img => img.FileId).ToList();
             ImageStateManager.Instance.RemoveProcessedImages(imageIds);
 
             // 确保显示当前图片

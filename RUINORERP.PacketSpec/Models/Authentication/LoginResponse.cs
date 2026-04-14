@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Commands.Authentication;
+﻿using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Authentication;
 using RUINORERP.PacketSpec.Models.Common;
@@ -55,7 +55,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         public List<string> Permissions { get; set; } = new List<string>();
         
         /// <summary>
-        /// 是否存在重复登录
+        /// 是否存在重复登录1
         /// </summary>
         public bool HasDuplicateLogin { get; set; }
         

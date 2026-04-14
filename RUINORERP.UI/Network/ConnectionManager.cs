@@ -170,12 +170,11 @@ namespace RUINORERP.UI.Network
             await _connectionLock.WaitAsync(cancellationToken);
             try
             {
-                // 保存服务器信息 - 必须在判断之前更新，确保后续判断使用的是新地址
-                _serverAddress = serverAddress;
-                _serverPort = serverPort;
-
                 // 如果已经连接到同一服务器，先验证Socket是否真的可用
-                if (IsConnected && _serverAddress == serverAddress && _serverPort == serverPort)
+                // 注意：这里使用传入的参数进行比较，而不是已保存的_serverAddress/_serverPort
+                if (IsConnected && 
+                    string.Equals(_serverAddress, serverAddress, StringComparison.OrdinalIgnoreCase) && 
+                    _serverPort == serverPort)
                 {
                     _logger?.LogDebug("检查连接到目标服务器 {ServerAddress}:{ServerPort} 的状态", serverAddress, serverPort);
 
@@ -213,11 +212,15 @@ namespace RUINORERP.UI.Network
                 }
 
                 // 尝试连接
-
                 bool connected = await _socketClient.ConnectAsync(serverAddress, serverPort, cancellationToken);
 
                 if (connected)
                 {
+                    // 仅在连接成功后更新服务器信息
+                    // 这样可以确保重连机制使用的是已确认成功的地址
+                    _serverAddress = serverAddress;
+                    _serverPort = serverPort;
+
                     _logger?.LogDebug("成功连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
 
                     // 清除重连状态标志
@@ -234,8 +237,7 @@ namespace RUINORERP.UI.Network
                 }
                 else
                 {
-                    //1.连接失败 这种是否有必要记录？
-                    //_logger?.LogWarning("连接服务器失败 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
+                    _logger?.LogWarning("连接服务器失败 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
                 }
 
                 return connected;

@@ -79,7 +79,26 @@ namespace RUINORERP.Lib.BusinessImage
         }
 
         /// <summary>
-        /// 添加图片1
+        /// 生成默认ID
+        /// 当FileId无效时使用文件名的哈希值作为唯一标识
+        /// </summary>
+        /// <param name="imageInfo">图片信息</param>
+        /// <returns>默认ID</returns>
+        private static long GenerateDefaultId(ImageInfo imageInfo)
+        {
+            if (!string.IsNullOrEmpty(imageInfo.OriginalFileName))
+            {
+                return Math.Abs(imageInfo.OriginalFileName.GetHashCode());
+            }
+            if (!string.IsNullOrEmpty(imageInfo.StorageFileName))
+            {
+                return Math.Abs(imageInfo.StorageFileName.GetHashCode());
+            }
+            return DateTime.Now.Ticks;
+        }
+
+        /// <summary>
+        /// 添加图片
         /// </summary>
         /// <param name="imageInfo">图片信息</param>
         public void AddImage(ImageInfo imageInfo)
@@ -88,7 +107,7 @@ namespace RUINORERP.Lib.BusinessImage
             {
                 if (imageInfo != null)
                 {
-                    long key = imageInfo.FileId > 0 ? imageInfo.FileId : imageInfo.ImageId;
+                    long key = imageInfo.FileId > 0 ? imageInfo.FileId : GenerateDefaultId(imageInfo);
                     if (key > 0)
                     {
                         bool isUpdate = _images.ContainsKey(key);
@@ -223,7 +242,6 @@ namespace RUINORERP.Lib.BusinessImage
             var imageInfo = new ImageInfo
             {
                 FileId = imageId,
-                ImageId = imageId,
                 OriginalFileName = fileName,
                 FileName = fileName,
                 OwnerTableName = OwnerTableName,
@@ -260,7 +278,7 @@ namespace RUINORERP.Lib.BusinessImage
         {
             lock (_lock)
             {
-                var toRemove = _images.Values.Where(img => img.Cell == cell).Select(img => img.FileId > 0 ? img.FileId : img.ImageId).ToList();
+                var toRemove = _images.Values.Where(img => img.Cell == cell).Select(img => img.FileId > 0 ? img.FileId : img.FileId).ToList();
                 foreach (var id in toRemove)
                 {
                     _images.Remove(id);

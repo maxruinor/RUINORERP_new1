@@ -336,13 +336,17 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     if (newSumDataGridView产品.CurrentCell.Value != null && newSumDataGridView产品.CurrentCell.Value.GetType() == typeof(byte[]))
                     {
-                        System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])newSumDataGridView产品.CurrentCell.Value);
-                        Image image = Image.FromStream(buf, true);
-                        if (image != null)
+                        using (System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])newSumDataGridView产品.CurrentCell.Value))
+                        using (Image image = Image.FromStream(buf, true))
                         {
-                            frmPictureViewer frmShow = new frmPictureViewer();
-                            frmShow.PictureBoxViewer.Image = image;
-                            frmShow.ShowDialog();
+                            if (image != null)
+                            {
+                                using (frmPictureViewer frmShow = new frmPictureViewer())
+                                {
+                                    frmShow.PictureBoxViewer.Image = (Image)image.Clone();
+                                    frmShow.ShowDialog();
+                                }
+                            }
                         }
                     }
 
@@ -630,6 +634,7 @@ namespace RUINORERP.UI.ProductEAV
 
         /// <summary>
         /// 添加SKU图片子项（显示图片信息）
+        /// 优化：显示图片数量和状态标识
         /// </summary>
         private async void AddSKUImageSubItem(TreeListViewItem itemRow, View_ProdDetail row)
         {
@@ -644,20 +649,13 @@ namespace RUINORERP.UI.ProductEAV
                     var prodDetail = new tb_ProdDetail { ProdDetailID = row.ProdDetailID };
                     var downloadResponse = await fileService.DownloadImageAsync<tb_ProdDetail>(prodDetail, c => c.ImagesPath);
 
-                    if (downloadResponse != null && downloadResponse.IsSuccess)
+                    if (downloadResponse != null && downloadResponse.IsSuccess && 
+                        downloadResponse.FileStorageInfos != null && downloadResponse.FileStorageInfos.Count > 0)
                     {
-                        int imageCount = 0;
-                     
-                            if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
-                            {
-                                imageCount += downloadResponse.FileStorageInfos.Count;
-                            }
+                        int imageCount = downloadResponse.FileStorageInfos.Count;
                         
-
-                        if (imageCount > 0)
-                        {
-                            imageText = $"图片({imageCount}) ✓";
-                        }
+                        // 查询时只显示数量，不显示状态标识
+                        imageText = $"{imageCount}张";
                     }
                 }
             }
@@ -666,6 +664,7 @@ namespace RUINORERP.UI.ProductEAV
                 MainForm.Instance.uclog.AddLog($"获取SKU图片数量失败: {ex.Message}", Global.UILogType.警告);
             }
 
+            // 设置文本
             itemRow.SubItems.Add(imageText);
         }
         // 从数据源获取类型排序优先级
@@ -1708,13 +1707,17 @@ namespace RUINORERP.UI.ProductEAV
             {
                 if (newSumDataGridView产品组合.CurrentCell.Value != null)
                 {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])newSumDataGridView产品组合.CurrentCell.Value);
-                    Image image = Image.FromStream(buf, true);
-                    if (image != null)
+                    using (System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])newSumDataGridView产品组合.CurrentCell.Value))
+                    using (Image image = Image.FromStream(buf, true))
                     {
-                        frmPictureViewer frmShow = new frmPictureViewer();
-                        frmShow.PictureBoxViewer.Image = image;
-                        frmShow.ShowDialog();
+                        if (image != null)
+                        {
+                            using (frmPictureViewer frmShow = new frmPictureViewer())
+                            {
+                                frmShow.PictureBoxViewer.Image = (Image)image.Clone();
+                                frmShow.ShowDialog();
+                            }
+                        }
                     }
                 }
             }

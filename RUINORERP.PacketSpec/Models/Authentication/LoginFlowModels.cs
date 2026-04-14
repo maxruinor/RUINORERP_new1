@@ -24,7 +24,7 @@ namespace RUINORERP.PacketSpec.Models.Authentication
     }
 
     /// <summary>
-    /// 重复登录信息
+    /// 重复登录信息1
     /// </summary>
     [Serializable]
     public class DuplicateLoginInfo

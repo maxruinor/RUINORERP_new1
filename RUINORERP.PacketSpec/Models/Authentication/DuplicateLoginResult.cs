@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace RUINORERP.PacketSpec.Models.Authentication
 {
     /// <summary>
-    /// 重复登录分析结果
+    /// 重复登录分析结果1
     /// </summary>
     [Serializable]
     public class DuplicateLoginResult

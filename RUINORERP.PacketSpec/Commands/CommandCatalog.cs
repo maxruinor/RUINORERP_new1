@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -178,7 +178,7 @@ namespace RUINORERP.PacketSpec.Commands
         public const ushort Authentication_LoginValidation = 0x0107;
 
         /// <summary>
-        /// 重复登录通知 - 通知用户账号在其他地方登录
+        /// 重复登录通知 - 通知用户账号在其他地方登录1
         /// </summary>
         public const ushort Authentication_DuplicateLoginNotification = 0x0108;
 
@@ -210,7 +210,7 @@ namespace RUINORERP.PacketSpec.Commands
         public const ushort Authentication_Connected = 0x0110;
 
         /// <summary>
-        /// 重复登录时的处理方式 - 处理用户重复登录的命令T掉
+        /// 重复登录时的处理方式 - 处理用户重复登录的命令T掉1
         /// </summary>
         public const ushort Authentication_DuplicateLogin = 0x0111;
         #endregion

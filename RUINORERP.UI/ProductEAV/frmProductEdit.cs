@@ -488,6 +488,43 @@ namespace RUINORERP.UI.ProductEAV
                 }
             }
 
+            // 上传新SKU的图片（关键修复：新增SKU时添加的图片）
+            if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
+            {
+                // 找出新保存的SKU（有ProdDetailID且在缓存中有图片数据）
+                var savedNewSKUs = new List<tb_ProdDetail>();
+                
+                foreach (var detail in EditEntity.tb_ProdDetails)
+                {
+                    if (detail.ProdDetailID > 0)
+                    {
+                        // 检查这个SKU是否在缓存中有图片（说明是新添加的）
+                        var cachedKey = skuImageDataCache.Keys
+                            .FirstOrDefault(k => k.SKU == detail.SKU && k.ProdDetailID == 0);
+                        
+                        if (cachedKey != null && skuImageDataCache.ContainsKey(cachedKey))
+                        {
+                            savedNewSKUs.Add(detail);
+                        }
+                    }
+                }
+                
+                // 如果有新SKU需要上传图片
+                if (savedNewSKUs.Count > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"发现 {savedNewSKUs.Count} 个新SKU需要上传图片");
+                    
+                    bool newSkuImageSuccess = await UploadImagesForNewSKUsAsync(savedNewSKUs);
+                    
+                    if (!newSkuImageSuccess)
+                    {
+                        MainForm.Instance.uclog.AddLog("部分新SKU图片上传失败，但产品已保存", Global.UILogType.警告);
+                        // 不阻断流程，因为产品已保存成功
+                        // 用户可以在日志中查看详细信息
+                    }
+                }
+            }
+
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
@@ -2518,16 +2555,36 @@ namespace RUINORERP.UI.ProductEAV
                                         }
                                     }
 
-                                    // 如果图片有未保存的更改，显示标记
+                                    // 如果图片有未保存的更改，显示状态标识
                                     if (detail.HasUnsavedImageChanges)
                                     {
-                                        string unsavedText = "*";
-                                        using (var unsavedBrush = new SolidBrush(Color.Orange))
-                                        using (var unsavedFont = new Font(e.CellStyle.Font.FontFamily, 10, FontStyle.Bold))
+                                        // 检查是新增还是修改
+                                        bool isReplace = skuImageDeletedCache.ContainsKey(detail) && 
+                                                          skuImageDeletedCache[detail].Count > 0 &&
+                                                          imageDataList.Count > 0;
+                                        
+                                        string statusText = isReplace ? "替换" : "新增";
+                                        Color statusColor = isReplace ? Color.OrangeRed : Color.Green;
+                                        
+                                        using (var statusBrush = new SolidBrush(statusColor))
+                                        using (var statusFont = new Font(e.CellStyle.Font.FontFamily, 9, FontStyle.Bold))
                                         {
-                                            var textSize = e.Graphics.MeasureString(unsavedText, unsavedFont);
-                                            e.Graphics.DrawString(unsavedText, unsavedFont, unsavedBrush,
-                                                new PointF(e.CellBounds.Right - textSize.Width - 4, e.CellBounds.Top + 2));
+                                            var textSize = e.Graphics.MeasureString(statusText, statusFont);
+                                            var statusRect = new Rectangle(
+                                                e.CellBounds.Right - (int)textSize.Width - 6,
+                                                e.CellBounds.Top + 2,
+                                                (int)textSize.Width + 4,
+                                                (int)textSize.Height + 2);
+                                            
+                                            // 绘制半透明背景
+                                            using (var bgBrush = new SolidBrush(Color.FromArgb(180, statusColor)))
+                                            {
+                                                e.Graphics.FillRectangle(bgBrush, statusRect);
+                                            }
+                                            
+                                            // 绘制文字
+                                            e.Graphics.DrawString(statusText, statusFont, Brushes.White, statusRect,
+                                                new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
                                         }
                                     }
                                 }

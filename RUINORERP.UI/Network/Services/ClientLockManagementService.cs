@@ -260,7 +260,10 @@ namespace RUINORERP.UI.Network.Services
                     }
 
                     var lockInfo = new LockInfo { BillID = billId };
-                    lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                    if (MainForm.Instance?.AppContext != null)
+                    {
+                        lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                    }
                     // 缓存过期或不存在，直接查询服务器
                     var lockRequest = new LockRequest
                     {
@@ -1054,8 +1057,18 @@ namespace RUINORERP.UI.Network.Services
                 try
                 {
                     // 获取当前用户信息
-                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                    long currentUserId = 0;
+                    string currentUserName = string.Empty;
+                    
+                    if (MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo != null)
+                    {
+                        currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                        currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                    }
+                    else
+                    {
+                        _logger?.LogWarning("无法获取当前用户信息，使用默认值");
+                    }
 
                     // 创建锁信息1
                     LockInfo lockInfo = new LockInfo();
@@ -1063,7 +1076,11 @@ namespace RUINORERP.UI.Network.Services
                     lockInfo.MenuID = menuId;
                     lockInfo.LockedUserId = currentUserId;
                     lockInfo.LockedUserName = currentUserName;
-                    lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                    
+                    if (MainForm.Instance?.AppContext != null)
+                    {
+                        lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                    }
                     // 创建刷新锁定请求
                     var lockRequest = new LockRequest
                     {
@@ -1383,8 +1400,18 @@ namespace RUINORERP.UI.Network.Services
                 _logger?.LogDebug("开始请求解锁单据 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
 
                 // 获取当前用户信息
-                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                long currentUserId = 0;
+                string currentUserName = string.Empty;
+                
+                if (MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo != null)
+                {
+                    currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                }
+                else
+                {
+                    _logger?.LogWarning("无法获取当前用户信息，使用默认值");
+                }
 
                 // 创建锁信息
                 LockInfo lockInfo = new LockInfo();
@@ -1444,8 +1471,18 @@ namespace RUINORERP.UI.Network.Services
                     billId, menuId, requesterUserName);
 
                 // 获取当前用户信息
-                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                long currentUserId = 0;
+                string currentUserName = string.Empty;
+                
+                if (MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo != null)
+                {
+                    currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                }
+                else
+                {
+                    _logger?.LogWarning("无法获取当前用户信息，使用默认值");
+                }
 
                 // 创建锁信息
                 LockInfo lockInfo = new LockInfo();
@@ -1453,7 +1490,11 @@ namespace RUINORERP.UI.Network.Services
                 lockInfo.MenuID = menuId;
                 lockInfo.LockedUserId = currentUserId;
                 lockInfo.LockedUserName = currentUserName;
-                lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                
+                if (MainForm.Instance?.AppContext != null)
+                {
+                    lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                }
                 // 创建拒绝解锁请求
                 var lockRequest = new LockRequest
                 {
@@ -1506,8 +1547,18 @@ namespace RUINORERP.UI.Network.Services
                     billId, menuId, requesterUserName);
 
                 // 获取当前用户信息
-                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                long currentUserId = 0;
+                string currentUserName = string.Empty;
+                
+                if (MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo != null)
+                {
+                    currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                }
+                else
+                {
+                    _logger?.LogWarning("无法获取当前用户信息，使用默认值");
+                }
 
                 // 创建锁信息
                 LockInfo lockInfo = new LockInfo();
@@ -1515,7 +1566,11 @@ namespace RUINORERP.UI.Network.Services
                 lockInfo.MenuID = menuId;
                 lockInfo.LockedUserId = currentUserId;
                 lockInfo.LockedUserName = currentUserName;
-                lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                
+                if (MainForm.Instance?.AppContext != null)
+                {
+                    lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                }
 
                 // 创建同意解锁请求
                 var lockRequest = new LockRequest

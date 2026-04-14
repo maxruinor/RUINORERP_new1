@@ -23,11 +23,6 @@ namespace RUINORERP.Lib.BusinessImage
         public long FileId { get; set; }
         
         /// <summary>
-        /// 图片ID（兼容属性）
-        /// </summary>
-        public long ImageId { get; set; }
-        
-        /// <summary>
         /// 原始文件名
         /// </summary>
         public string OriginalFileName { get; set; }
@@ -121,5 +116,10 @@ namespace RUINORERP.Lib.BusinessImage
         /// 文件名
         /// </summary>
         public string FileName { get; set; }
+        
+        /// <summary>
+        /// 通用标记字段，用于存储自定义状态信息（如：新增、修改、替换等）
+        /// </summary>
+        public object Tag { get; set; }
     }
 }

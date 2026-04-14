@@ -101,6 +101,18 @@ namespace RUINORERP.UI
                 _eventManager.WelcomeCompleted -= OnWelcomeCompleted;
             }
 
+            // 取消防抖重连任务
+            if (_debounceCancellationTokenSource != null)
+            {
+                try
+                {
+                    _debounceCancellationTokenSource.Cancel();
+                    _debounceCancellationTokenSource.Dispose();
+                }
+                catch { }
+                _debounceCancellationTokenSource = null;
+            }
+
             base.OnFormClosing(e);
         }
 
@@ -392,6 +404,19 @@ namespace RUINORERP.UI
 
         private async void btnok_Click(object sender, EventArgs e)
         {
+            // 取消正在进行的防抖重连任务，避免与登录流程冲突
+            if (_debounceCancellationTokenSource != null)
+            {
+                try
+                {
+                    _debounceCancellationTokenSource.Cancel();
+                    _debounceCancellationTokenSource.Dispose();
+                }
+                catch { }
+                _debounceCancellationTokenSource = null;
+                MainForm.Instance?.logger?.LogDebug("已取消防抖重连任务，开始登录流程");
+            }
+
             // 初始化取消令牌源
             _loginCancellationTokenSource = new CancellationTokenSource();
 
@@ -705,7 +730,8 @@ namespace RUINORERP.UI
                 MainForm.Instance.PrintInfoLog($"检测到服务器地址变更，准备重新连接: {_originalServerIP}:{_originalServerPort} -> {currentIP}:{currentPort}");
 
                 // 使用防抖机制，避免频繁触发
-                await DebouncedReconnectAsync();
+                // 注意：这里不等待防抖完成，让用户可以继续输入
+                _ = DebouncedReconnectAsync();
             }
         }
 
@@ -722,22 +748,54 @@ namespace RUINORERP.UI
         }
 
         /// <summary>
-        /// 防抖动的重新连接方法1
+        /// 防抖动的重新连接方法
         /// 避免用户在输入过程中频繁触发重连
         /// </summary>
-        private int _reconnectDebounceTimer = 0;
         private const int DebounceDelayMs = 1500; // 1.5秒防抖
+        private CancellationTokenSource _debounceCancellationTokenSource = null;
 
         private async Task DebouncedReconnectAsync()
         {
-            int timerId = System.Threading.Interlocked.Increment(ref _reconnectDebounceTimer);
-
-            await Task.Delay(DebounceDelayMs);
-
-            // 检查是否是最新的调用
-            if (timerId == _reconnectDebounceTimer)
+            // 取消之前的防抖任务
+            if (_debounceCancellationTokenSource != null)
             {
-                await ReconnectAndWelcomeAsync();
+                try
+                {
+                    _debounceCancellationTokenSource.Cancel();
+                    _debounceCancellationTokenSource.Dispose();
+                }
+                catch { }
+                _debounceCancellationTokenSource = null;
+            }
+
+            // 创建新的取消令牌
+            _debounceCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = _debounceCancellationTokenSource.Token;
+
+            try
+            {
+                // 等待防抖延迟
+                await Task.Delay(DebounceDelayMs, cancellationToken);
+
+                // 如果未被取消,执行重连
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await ReconnectAndWelcomeAsync();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // 正常取消,无需处理
+                MainForm.Instance?.logger?.LogDebug("防抖重连任务已取消");
+            }
+            finally
+            {
+                // 清理资源
+                if (_debounceCancellationTokenSource != null)
+                {
+                    _debounceCancellationTokenSource.Dispose();
+                    _debounceCancellationTokenSource = null;
+                }
             }
         }
 
@@ -746,8 +804,6 @@ namespace RUINORERP.UI
         /// </summary>
         private async Task ReconnectAndWelcomeAsync()
         {
-            bool needsReconnect = false;
-
             try
             {
                 MainForm.Instance?.PrintInfoLog("开始重新连接并执行欢迎流程...");
@@ -760,40 +816,116 @@ namespace RUINORERP.UI
                     return;
                 }
 
+                string newServerIP = txtServerIP.Text.Trim();
+                int newServerPort = serverPort;
+
                 // 检查是否需要重连
+                bool needsReconnect = true;
                 if (connectionManager.IsConnected)
                 {
                     string currentServerIP = (connectionManager.CurrentServerAddress ?? "").Trim();
-                    string newServerIP = txtServerIP.Text.Trim();
                     int currentPort = connectionManager.CurrentServerPort;
 
                     needsReconnect = !string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) ||
-                                   currentPort != serverPort;
-                }
-                else
-                {
-                    needsReconnect = true;
+                                   currentPort != newServerPort;
                 }
 
-                // 断开现有连接（仅在需要重连时执行）
-                if (needsReconnect && connectionManager.IsConnected)
+                if (!needsReconnect)
+                {
+                    MainForm.Instance?.logger?.LogDebug("当前已连接到目标服务器，无需重连");
+                    return;
+                }
+
+                // 断开现有连接
+                if (connectionManager.IsConnected)
                 {
                     MainForm.Instance?.ShowStatusText("正在断开现有连接...");
                     await connectionManager.DisconnectAsync();
                     await Task.Delay(200); // 等待断开完成
                 }
 
-                // 更新原始服务器信息
-                _originalServerIP = txtServerIP.Text.Trim();
-                _originalServerPort = txtPort.Text.Trim();
+                // 更新原始服务器信息（在断开连接后立即更新）
+                _originalServerIP = newServerIP;
+                _originalServerPort = newServerPort.ToString();
 
                 // 重置欢迎流程状态(不清除公告显示,保持公告可见性)
                 _welcomeCompletionTcs = new TaskCompletionSource<(bool, string)>();
                 _welcomeCompleted = false;
                 _welcomeAnnouncement = string.Empty;
 
-                // 执行连接和欢迎流程
-                await InitializeConnectionAndWelcomeFlowAsync();
+                // 直接执行连接和欢迎流程，不重用 InitializeConnectionAndWelcomeFlowAsync
+                // 避免与窗体加载时的初始化流程产生竞态条件
+                MainForm.Instance?.ShowStatusText($"正在连接到服务器 {newServerIP}:{newServerPort}...");
+                MainForm.Instance?.logger?.LogDebug($"尝试连接到服务器 {newServerIP}:{newServerPort}...");
+
+                var connectTask = connectionManager.ConnectAsync(newServerIP, newServerPort);
+                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(10)));
+
+                bool connectResult = false;
+                if (completedTask == connectTask)
+                {
+                    connectResult = await connectTask;
+                }
+                else
+                {
+                    MainForm.Instance?.logger?.LogWarning($"连接服务器 {newServerIP}:{newServerPort} 超时");
+                    MainForm.Instance?.ShowStatusText($"连接服务器 {newServerIP}:{newServerPort} 超时");
+                    return;
+                }
+
+                if (!connectResult)
+                {
+                    MainForm.Instance?.ShowStatusText($"无法连接到服务器 {newServerIP}:{newServerPort}");
+                    return;
+                }
+
+                MainForm.Instance?.ShowStatusText($"服务器 {newServerIP}:{newServerPort} 连接成功");
+                MainForm.Instance.PrintInfoLog("服务器连接成功,等待欢迎消息...");
+
+                // 等待欢迎流程完成(等待最多15秒)
+                var welcomeTimeout = TimeSpan.FromSeconds(15);
+                var welcomeTask = _welcomeCompletionTcs.Task;
+                completedTask = await Task.WhenAny(welcomeTask, Task.Delay(welcomeTimeout));
+
+                if (completedTask == welcomeTask)
+                {
+                    var (success, announcement) = await welcomeTask;
+                    _welcomeCompleted = success;
+
+                    if (success)
+                    {
+                        // 显示公告内容(如果有) - 在UI线程中执行
+                        if (!string.IsNullOrEmpty(announcement))
+                        {
+                            if (this.InvokeRequired)
+                            {
+                                this.Invoke(new Action(() => DisplayAnnouncement(announcement)));
+                            }
+                            else
+                            {
+                                DisplayAnnouncement(announcement);
+                            }
+
+                            MainForm.Instance.ShowStatusText($"服务器连接成功 | 公告: {announcement}");
+                        }
+                        else
+                        {
+                            MainForm.Instance.ShowStatusText("服务器连接成功,欢迎消息验证通过");
+                        }
+
+                        MainForm.Instance?.PrintInfoLog("欢迎流程验证通过,服务器连接已就绪");
+                    }
+                    else
+                    {
+                        MainForm.Instance?.logger?.LogWarning("欢迎流程验证失败");
+                        MainForm.Instance.ShowStatusText("服务器连接成功,但欢迎消息验证失败");
+                    }
+                }
+                else
+                {
+                    MainForm.Instance?.logger?.LogWarning("欢迎流程验证超时,但连接已建立");
+                    MainForm.Instance.ShowStatusText("服务器连接成功,欢迎验证超时");
+                }
             }
             catch (Exception ex)
             {
@@ -959,7 +1091,7 @@ namespace RUINORERP.UI
             try
             {
 
-                // 检查是否存在重复登录情况
+                // 检查是否存在重复登录情况1
                 if (loginResponse.HasDuplicateLogin && loginResponse.DuplicateLoginResult != null)
                 {
                     MainForm.Instance.logger?.LogWarning($"检测到用户 {txtUserName.Text} 存在重复登录");

@@ -66,7 +66,8 @@ namespace RUINORERP.PacketSpec.Models.Requests
                 DeviceId= GetDeviceId(),
                 ClientVersion = ProtocolVersion.Current,
                 LoginTime = DateTime.Now,
-                ClientIp=GetClientIp(),
+                // ✅ 优化：移除客户端自报IP，由服务器端从Socket获取真实IP
+                // ClientIp字段保留用于兼容性，但不再主动赋值
             };
         }
         
@@ -113,31 +114,13 @@ namespace RUINORERP.PacketSpec.Models.Requests
         }
 
         /// <summary>
-        /// 客户端IP地址
+        /// 客户端IP地址（仅用于接收服务器端设置的值，不再由客户端主动上报）
         /// </summary>
         public string ClientIp { get; set; }
 
-
-        /// <summary>
-        /// 获取客户端IP地址
-        /// </summary>
-        /// <returns>客户端IP地址</returns>
-        private static string GetClientIp()
-        {
-            try
-            {
-                // 获取本地机器的IP地址
-                var hostName = System.Net.Dns.GetHostName();
-                var hostEntry = System.Net.Dns.GetHostEntry(hostName);
-                var ipAddress = hostEntry.AddressList
-                    .FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-                return ipAddress?.ToString() ?? "127.0.0.1";
-            }
-            catch
-            {
-                return "127.0.0.1";
-            }
-        }
+        // ✅ 优化：删除GetClientIp()方法，避免客户端自报不可靠的IP地址
+        // 原方法通过Dns.GetHostEntry()获取的是客户端本地网卡IP，容易被伪造且在NAT环境下错误
+        // 现在统一由服务器端从Socket RemoteEndPoint获取真实IP
 
         public bool IsValid()
         {

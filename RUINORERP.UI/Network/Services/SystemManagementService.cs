@@ -76,9 +76,18 @@ namespace RUINORERP.UI.Network.Services
                 // 获取本地电脑状态信息
                 var computerStatus = await GetLocalComputerStatusAsync();
 
+                string userId = "0";
+                string userName = "Unknown";
+                
+                if (MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo != null)
+                {
+                    userId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString();
+                    userName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                }
+
                 var response = SystemCommandResponse.CreateComputerStatusSuccess(
-                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString(),
-                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName,
+                    userId,
+                    userName,
                     Environment.MachineName,
                     HLH.Lib.Net.IpAddressHelper.GetLocIP(),
                     computerStatus.CpuUsage,
@@ -109,9 +118,18 @@ namespace RUINORERP.UI.Network.Services
                 // 执行关闭操作
                 await ExecuteShutdownAsync(request);
 
+                string userId = "0";
+                string userName = "Unknown";
+                
+                if (MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo != null)
+                {
+                    userId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString();
+                    userName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                }
+
                 var response = SystemCommandResponse.CreateShutdownSuccess(
-                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString(),
-                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName,
+                    userId,
+                    userName,
                     Environment.MachineName
                 );
 

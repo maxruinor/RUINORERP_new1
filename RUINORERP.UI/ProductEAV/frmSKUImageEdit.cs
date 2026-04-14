@@ -77,6 +77,7 @@ namespace RUINORERP.UI.ProductEAV
 
         /// <summary>
         /// 加载预缓存的图片数据
+        /// 优化：在图片上显示状态标识（新增/修改）
         /// </summary>
         private void LoadPreloadedImages()
         {
@@ -96,7 +97,19 @@ namespace RUINORERP.UI.ProductEAV
                     if (item.Item1 != null && item.Item1.Length > 0)
                     {
                         imageDataList.Add(item.Item1);
-                        imageInfos.Add(item.Item2 ?? new ImageInfo());
+                        
+                        // 为预加载的图片添加状态标记
+                        var info = item.Item2 ?? new ImageInfo();
+                        // 如果没有FileId，说明是新增图片；如果有FileId但被标记为需要更新，说明是替换图片
+                        if (info.FileId == 0)
+                        {
+                            info.Tag = "新增"; // 使用Tag字段存储状态
+                        }
+                        else
+                        {
+                            info.Tag = "修改";
+                        }
+                        imageInfos.Add(info);
                     }
                 }
 

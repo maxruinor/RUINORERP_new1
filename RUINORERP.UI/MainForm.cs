@@ -3616,35 +3616,46 @@ namespace RUINORERP.UI
 
         /// <summary>
         /// 取得最后一次输入时间（秒）
+        /// 使用Windows API GetLastInputInfo获取用户最后一次鼠标或键盘活动至今的时间
         /// </summary>
-        /// <returns></returns>
+        /// <returns>静止时间（秒），如果获取失败返回0</returns>
         public static long GetLastInputTime()
         {
-            LASTINPUTINFO vLastInputInfo = new LASTINPUTINFO();
-            vLastInputInfo.cbSize = (int)Marshal.SizeOf(vLastInputInfo);
-
-            if (!GetLastInputInfo(ref vLastInputInfo)) return 0;
-
-            long timeInMilliseconds = Environment.TickCount - (long)vLastInputInfo.dwTime;
-            long timeInSeconds = timeInMilliseconds / 1000;
-
-            // 处理可能的负数
-            if (timeInSeconds < 0)
+            try
             {
-                timeInSeconds = 0;
-            }
+                LASTINPUTINFO vLastInputInfo = new LASTINPUTINFO();
+                vLastInputInfo.cbSize = Marshal.SizeOf(vLastInputInfo);
 
-            if (timeInSeconds == 0)
+                if (!GetLastInputInfo(ref vLastInputInfo))
+                {
+                    // API调用失败，返回0表示无法获取
+                    return 0;
+                }
+
+                // 计算从最后一次输入到现在的时间差（毫秒）
+                long timeInMilliseconds = Environment.TickCount - (long)vLastInputInfo.dwTime;
+                
+                // 转换为秒
+                long timeInSeconds = timeInMilliseconds / 1000;
+
+                // 处理可能的溢出或负数情况（TickCount约49.7天会溢出）
+                if (timeInSeconds < 0)
+                {
+                    // TickCount溢出导致的负数，返回0
+                    timeInSeconds = 0;
+                }
+
+                // 更新空闲状态标志
+                FreeTimeExecuteCnce = timeInSeconds > 0;
+
+                return timeInSeconds;
+            }
+            catch (Exception ex)
             {
-                FreeTimeExecuteCnce = false;
+                // 记录异常但不抛出，避免影响主流程
+                System.Diagnostics.Debug.WriteLine($"GetLastInputTime异常: {ex.Message}");
+                return 0;
             }
-            else
-            {
-                FreeTimeExecuteCnce = true;
-            }
-
-
-            return timeInSeconds;
         }
 
         //[DllImport("user32.dll")]
@@ -3713,7 +3724,10 @@ namespace RUINORERP.UI
                 {
                     return;
                 }
-                MainForm.Instance.AppContext.CurUserInfo.静止时间 = GetLastInputTime();
+                
+                // 注释掉：静止时间应该在发送心跳包时实时获取，而不是在这里定时更新
+                // 这样可以确保服务器收到的是最新的静止时间，而不是可能过时的缓存值
+                // MainForm.Instance.AppContext.CurUserInfo.静止时间 = GetLastInputTime();
 
                 //if (GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
                 //{
@@ -3735,7 +3749,7 @@ namespace RUINORERP.UI
             }
             catch (Exception ex)
             {
-
+                // 静默处理定时器异常，避免影响UI
             }
         }
 

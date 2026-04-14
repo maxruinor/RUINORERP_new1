@@ -1,4 +1,4 @@
-using RUINORERP.Model;
+﻿using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace RUINORERP.PacketSpec.Models.Requests
 {
     /// <summary>
-    /// 心跳请求数据模型
+    /// 心跳请求数据模型1
     /// </summary>
     [Serializable]
     

@@ -265,11 +265,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 确认态（已审核）：可反审核（转新建）、可执行（转完结）、可结案（转完结）、可作废
                 [DataStatus.确认] = new List<object> { DataStatus.新建,DataStatus.完结,DataStatus.作废 },
                 
-                // 完结态（已执行或已结案）：可反执行（转确认）、可反结案（转确认）
+                // 完结态（已执行或已结案）：可反结案（转确认）
                 [DataStatus.完结] = new List<object> { DataStatus.确认 },
-
-                // 完结态：无任何转换可能, 终身锁定
-                [DataStatus.完结] = new List<object> { },
 
                 // 作废态：无任何转换可能, 终身锁定
                 [DataStatus.作废] = new List<object> { }
@@ -665,6 +662,9 @@ namespace RUINORERP.Model.Base.StatusManager
             /// 确认状态：不允许修改和删除, 允许反审核, 可以结案或执行
             AddStandardButtonRules(DataStatus.确认, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: true, antiClosedEnabled: false, cancelSubmitEnabled: false);
             // 注意：DataStatus.确认状态不允许直接删除, 但可以通过作废操作实现类似功能, 确保逻辑一致性
+
+            /// 完结状态：仅允许反结案
+            AddStandardButtonRules(DataStatus.完结, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: true, cancelSubmitEnabled: false);
 
             /// 作废状态：仅允许查看操作
             AddStandardButtonRules(DataStatus.作废, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: false);

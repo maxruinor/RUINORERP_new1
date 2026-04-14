@@ -810,6 +810,7 @@ namespace RUINORERP.Server.Controls
 
         /// <summary>
         /// 更新可见会话的心跳和空闲时间 - 性能优化版
+        /// 修复：使用客户端上报的静止时间，而不是服务器端计算的心跳间隔
         /// </summary>
         private void UpdateVisibleSessionsHeartbeatAndIdleTime()
         {
@@ -826,9 +827,22 @@ namespace RUINORERP.Server.Controls
                 {
                     if (item.Tag is SessionInfo sessionInfo)
                     {
-                        // 计算当前空闲时间
-                        var currentIdleTime = DateTime.Now - sessionInfo.LastHeartbeat;
-                        string formattedIdleTime = FormatIdleTime(currentIdleTime);
+                        var userInfo = sessionInfo.UserInfo;
+                        
+                        // 修复：优先使用客户端上报的静止时间，如果无效则回退到服务器端计算
+                        TimeSpan idleTimeSpan;
+                        if (userInfo != null && userInfo.静止时间 > 0)
+                        {
+                            // 使用客户端上报的静止时间（秒）
+                            idleTimeSpan = TimeSpan.FromSeconds(userInfo.静止时间);
+                        }
+                        else
+                        {
+                            // 回退方案：使用服务器端最后心跳时间计算
+                            idleTimeSpan = DateTime.Now - sessionInfo.LastHeartbeat;
+                        }
+                        
+                        string formattedIdleTime = FormatIdleTime(idleTimeSpan);
 
                         // 更新空闲时间显示（只有当值变化时才更新）
                         if (item.SubItems.Count > 10 && item.SubItems[10].Text != formattedIdleTime)
@@ -851,19 +865,20 @@ namespace RUINORERP.Server.Controls
                         }
 
                         // 检查心跳异常并更新样式（只有当状态变化时才更新）
-                        if (currentIdleTime.TotalMinutes > 5 && sessionInfo.IsConnected)
+                        // 注意：这里仍然使用LastHeartbeat来判断连接健康状态，因为这是服务器端的客观指标
+                        if (idleTimeSpan.TotalMinutes > 5 && sessionInfo.IsConnected)
                         {
                             if (item.ForeColor != Color.Red)
                             {
                                 item.ForeColor = Color.Red;
                                 item.BackColor = Color.MistyRose;
-                                item.ToolTipText = $"心跳异常 - 超过{currentIdleTime.TotalMinutes:F0}分钟无响应\n{item.ToolTipText}";
+                                item.ToolTipText = $"用户静止时间过长 - 超过{idleTimeSpan.TotalMinutes:F0}分钟无操作\n{item.ToolTipText}";
                             }
                         }
                         else if (item.ForeColor == Color.Red)
                         {
                             // 恢复正常样式
-                            SetSessionItemStyle(item, sessionInfo, sessionInfo.UserInfo ?? new CurrentUserInfo());
+                            SetSessionItemStyle(item, sessionInfo, userInfo ?? new CurrentUserInfo());
                         }
                     }
                 }

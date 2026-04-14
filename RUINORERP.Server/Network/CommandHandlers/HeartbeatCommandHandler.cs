@@ -20,7 +20,7 @@ using RUINORERP.Server.Network.Monitoring;
 namespace RUINORERP.Server.Network.CommandHandlers
 {
     /// <summary>
-    /// 心跳命令处理器
+    /// 心跳命令处理器1
     /// 处理客户端发送的心跳命令，维持连接活跃状态
     /// 优化版：动态计算心跳间隔，增强错误处理
     /// </summary>

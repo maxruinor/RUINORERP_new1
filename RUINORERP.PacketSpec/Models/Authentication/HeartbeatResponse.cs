@@ -33,7 +33,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         public Dictionary<string, object> ServerInfo { get; set; } = new();
 
         /// <summary>
-        /// 创建心跳响应
+        /// 创建心跳响应1
         /// </summary>
         public static HeartbeatResponse Create(bool isSuccess = true, string message = "心跳成功")
         {

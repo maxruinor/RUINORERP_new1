@@ -884,7 +884,7 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 发送心跳请求（优化版 - 修复请求ID重复问题）
+        /// 发送心跳请求（优化版 - 修复请求ID重复问题）1
         /// 修复：使用唯一请求ID，避免重试时ID重复
         /// </summary>
         private async Task<bool> SendHeartbeatAsync(CancellationToken cancellationToken)
@@ -928,8 +928,14 @@ namespace RUINORERP.UI.Network
                 // 只在必要时添加用户操作信息以减少数据传输
                 if (curUserInfo != null)
                 {
-                    // 获取最新的静止时间
+                    // 获取最新的静止时间（实时调用Windows API）
                     var latestIdleTime = MainForm.GetLastInputTime();
+                    
+                    // 记录静止时间用于调试（仅在首次或变化较大时记录）
+                    if (latestIdleTime > 0 && latestIdleTime % 60 == 0) // 每分钟记录一次
+                    {
+                        _logger?.LogDebug("当前用户静止时间: {IdleTime} 秒", latestIdleTime);
+                    }
 
                     heartbeatRequest.UserOperationInfo = new RUINORERP.Model.UserOperationInfo
                     {
@@ -941,7 +947,7 @@ namespace RUINORERP.UI.Network
                         心跳数 = curUserInfo.心跳数 + 1,
                         客户端版本 = curUserInfo.客户端版本,
                         客户端IP = curUserInfo.客户端IP,
-                        静止时间 = latestIdleTime,
+                        静止时间 = latestIdleTime, // 使用实时获取的静止时间
                         超级用户 = curUserInfo.超级用户,
                         授权状态 = curUserInfo.授权状态,
                         操作系统 = curUserInfo.操作系统,

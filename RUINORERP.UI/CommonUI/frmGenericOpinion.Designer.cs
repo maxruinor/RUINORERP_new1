@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.CommonUI
+namespace RUINORERP.UI.CommonUI
 {
     partial class frmGenericOpinion<T>
     {
@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmGenericOpinion<>));
             this.openFileDialog4Img = new System.Windows.Forms.OpenFileDialog();
             this.toolTipBase = new System.Windows.Forms.ToolTip(this.components);
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
@@ -76,7 +75,6 @@
             this.picBoxAttachment.Image = global::RUINORERP.UI.Properties.Resources.nopic;
             this.picBoxAttachment.Location = new System.Drawing.Point(64, 3);
             this.picBoxAttachment.Name = "picBoxAttachment";
-            this.picBoxAttachment.RowImage = ((RUINORERP.Global.Model.DataRowImage)(resources.GetObject("picBoxAttachment.RowImage")));
             this.picBoxAttachment.Size = new System.Drawing.Size(235, 190);
             this.picBoxAttachment.TabIndex = 15;
             this.picBoxAttachment.TabStop = false;

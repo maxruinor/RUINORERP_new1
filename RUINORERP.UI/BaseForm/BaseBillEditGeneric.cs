@@ -612,11 +612,13 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 批量更新工具栏按钮状态
         /// 优化：确保状态管理考虑权限设置，权限是基础，状态是在权限基础上的进一步限制
+        /// 特殊处理：保存按钮需要根据数据变更状态（HasChanged）来决定是否启用
         /// </summary>
         private void UpdateToolStripButtons(Dictionary<string, bool> buttonStates)
         {
             if (this.BaseToolStrip == null) return;
 
+            // 遍历所有按钮状态，统一应用状态管理器的结果
             foreach (var kvp in buttonStates)
             {
                 try
@@ -2219,8 +2221,8 @@ namespace RUINORERP.UI.BaseForm
                     HandlePropertyChangedSubscription(newEntity, true);
                 }
 
-                // 5. 数据绑定完成后，初始化保存按钮状态为禁用
-                toolStripButtonSave.Enabled = false;
+                // 5. 统一使用状态管理体系更新按钮状态
+                UpdateAllUIStates(EditEntity as BaseEntity);
             }
             catch (Exception ex)
             {
@@ -2272,12 +2274,15 @@ namespace RUINORERP.UI.BaseForm
             {
                 try
                 {
-                    // 使用V4状态管理系统的按钮控制
-                    UpdateAllUIStates(entity);
+                    // 关键修复：先重置变更状态，再更新UI
+                    // 这样保存按钮才能正确显示为禁用状态
                     if (pkid > 0)
                     {
                         baseEntity.AcceptChanges();
                     }
+                    
+                    // 使用V4状态管理系统的按钮控制
+                    UpdateAllUIStates(entity);
 
                     if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
                     {
@@ -3960,6 +3965,10 @@ namespace RUINORERP.UI.BaseForm
 
                     string billNo = editEntity.GetPropertyValue(EntityInfo.NoField).ToString();
                     await MainForm.Instance.auditLogHelper.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{frm.OpinionText}");
+
+                    // 结案成功后统一使用状态管理体系更新UI按钮状态
+                    UpdateAllUIStates(EditEntity as BaseEntity);
+
                     // 统一状态同步 - 结案操作
                     var updateData = ConvertToTodoUpdate(rs.ReturnObject as T, TodoUpdateType.StatusChanged);
                     if (updateData != null)
@@ -4211,6 +4220,9 @@ namespace RUINORERP.UI.BaseForm
                     }
 
                     reviewResult.Succeeded = true;
+
+                    // 审核成功后统一使用状态管理体系更新UI按钮状态
+                    UpdateAllUIStates(EditEntity as BaseEntity);
 
                     // 统一状态同步 - 审核操作
                     var updateData = ConvertToTodoUpdate(rmr.ReturnObject as T, TodoUpdateType.StatusChanged);
@@ -4782,6 +4794,10 @@ namespace RUINORERP.UI.BaseForm
                 {
                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                     rs = true;
+
+                    // 反审成功后统一使用状态管理体系更新UI按钮状态
+                    UpdateAllUIStates(EditEntity as BaseEntity);
+
                     var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
 
                     string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();
@@ -5564,18 +5580,14 @@ namespace RUINORERP.UI.BaseForm
                 // 使用更友好的消息框显示修改权限验证结果
                 MessageBox.Show(edit.Message, "修改权限验证", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 MainForm.Instance.uclog.AddLog($"修改操作被拒绝：{edit.Message}");
-                toolStripbtnModify.Enabled = false;
-                toolStripButtonSave.Enabled = false;
+                // 统一使用状态管理体系更新按钮状态
+                UpdateAllUIStates(editEntity);
                 return;
             }
-            else
-            {
-                toolStripbtnModify.Enabled = false;
-            }
-
 
             EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
-
+            // 统一使用状态管理体系更新按钮状态
+            UpdateAllUIStates(editEntity);
         }
 
 
@@ -7221,6 +7233,10 @@ namespace RUINORERP.UI.BaseForm
                 // 保存成功后的锁定状态管理
                 await PostSaveLockManagement(entity, pkid);
                 MainForm.Instance.uclog.AddLog("保存成功");
+
+                // 保存成功后统一使用状态管理体系更新UI按钮状态
+                UpdateAllUIStates(entity as BaseEntity);
+
                 //保存是否需要提醒？状态？
                 if (pkid > 0)
                 {
@@ -8261,6 +8277,8 @@ namespace RUINORERP.UI.BaseForm
                     // 提交成功后保持禁用，失败后重新启用
                     btnSubmit.Enabled = false;
                 }
+                // 统一使用状态管理体系更新UI按钮状态
+                UpdateAllUIStates(EditEntity as BaseEntity);
             }
         }
 
@@ -8426,6 +8444,10 @@ namespace RUINORERP.UI.BaseForm
                     await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("撤回提交", EditEntity, "制单人撤回提交，单据回到草稿状态");
 
                     rs = true;
+
+                    // 撤回提交成功后统一使用状态管理体系更新UI按钮状态
+                    UpdateAllUIStates(EditEntity as BaseEntity);
+
                     KryptonMessageBox.Show($"单据 {billNo} 已撤回提交，回到草稿状态。", "撤回提交成功", KryptonMessageBoxButtons.OK, KryptonMessageBoxIcon.Information);
                 }
                 else

@@ -576,8 +576,25 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     switch (updateRequest.Operation)
                     {
                         case CacheOperation.Set:
+                            // 验证 CacheData 是否为 null
+                            if (updateRequest.CacheData == null)
+                            {
+                                logger.LogWarning($"缓存同步请求中 CacheData 为 null, TableName={updateRequest.TableName}");
+                                return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>(
+                                    $"缓存数据不能为空,表名: {updateRequest.TableName}"));
+                            }
+                            
                             //CacheDataConverter.SerializeToBytes
                             object entity = updateRequest.CacheData.GetData();
+                            
+                            // 验证反序列化后的实体是否为 null
+                            if (entity == null)
+                            {
+                                logger.LogWarning($"缓存数据反序列化失败, TableName={updateRequest.TableName}, EntityTypeName={updateRequest.CacheData.EntityTypeName}");
+                                return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>(
+                                    $"缓存数据反序列化失败,表名: {updateRequest.TableName}"));
+                            }
+                            
                             _cacheManager.UpdateEntityList(updateRequest.TableName, entity);
                             break;
                         case CacheOperation.Remove:
@@ -594,12 +611,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 catch (Exception ex)
                 {
-                    //errorRespnse = new ResponseBase
-                    //{
-                    //    IsSuccess = false,
-                    //    Message = ex.Message,
-                    //    Timestamp = DateTime.Now
-                    //};
+                    logger.LogError(ex, $"处理缓存同步异常, TableName={updateRequest.TableName}, Operation={updateRequest.Operation}");
+                    return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>(
+                        $"处理缓存同步异常: {ex.Message}"));
                 }
 
                 #endregion

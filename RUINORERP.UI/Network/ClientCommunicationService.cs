@@ -2133,6 +2133,28 @@ SendCommandWithResponseAsync 恢复执行并返回响应
 
 
         /// <summary>
+        /// 设置执行上下文的会话和用户信息
+        /// 从MainForm.Instance.AppContext中提取SessionId和UserId，空引用安全
+        /// </summary>
+        /// <param name="context">执行上下文</param>
+        /// <param name="commandId">命令标识符（用于日志记录）</param>
+        private void SetExecutionContextInfo(ExecutionContext context, CommandId commandId)
+        {
+            if (MainForm.Instance?.AppContext != null)
+            {
+                context.SessionId = MainForm.Instance.AppContext.SessionId;
+                context.UserId = MainForm.Instance.AppContext.CurUserInfo?.UserID ?? 0;
+            }
+            else
+            {
+                context.SessionId = string.Empty;
+                context.UserId = 0;
+                _logger?.LogWarning("MainForm.Instance或AppContext为空，无法设置SessionId和UserId: CommandId={CommandId}", commandId.ToString());
+            }
+        }
+
+
+        /// <summary>
         /// 发送数据包的核心私有方法
         /// 封装了构建数据包、序列化、加密和发送的公共逻辑
         /// </summary>
@@ -2198,28 +2220,8 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 {
                     // 非登录命令：需要设置SessionId、UserId和Token
                     
-                    // 1. 安全地设置SessionId和UserId，避免空引用异常
-                    if (MainForm.Instance?.AppContext != null)
-                    {
-                        packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;
-                        
-                        // 检查CurUserInfo是否为null
-                        if (MainForm.Instance.AppContext.CurUserInfo != null)
-                        {
-                            packet.ExecutionContext.UserId = MainForm.Instance.AppContext.CurUserInfo.UserID;
-                        }
-                        else
-                        {
-                            _logger?.LogWarning("CurUserInfo为空，无法设置UserId: CommandId={CommandId}", commandId.ToString());
-                            packet.ExecutionContext.UserId = 0; // 设置默认值
-                        }
-                    }
-                    else
-                    {
-                        _logger?.LogWarning("MainForm.Instance或AppContext为空，无法设置SessionId和UserId: CommandId={CommandId}", commandId.ToString());
-                        packet.ExecutionContext.SessionId = string.Empty;
-                        packet.ExecutionContext.UserId = 0;
-                    }
+                    // 1. 安全地设置SessionId和UserId（使用提取的方法，避免代码重复）
+                    SetExecutionContextInfo(packet.ExecutionContext, commandId);
                     
                     // 2. 自动附加Token
                     await AutoAttachTokenAsync(packet.ExecutionContext);

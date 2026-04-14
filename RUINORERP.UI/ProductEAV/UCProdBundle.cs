@@ -39,6 +39,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using Netron.GraphLib;
 using static System.Drawing.Html.CssLength;
+using Krypton.Toolkit;
 
 
 namespace RUINORERP.UI.ProductEAV
@@ -49,6 +50,16 @@ namespace RUINORERP.UI.ProductEAV
         public UCProdBundle()
         {
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// 添加排除菜单列表 - 套装组合不需要结案功能
+        /// </summary>
+        public override void AddExcludeMenuList()
+        {
+            // 套装组合是基础资料，不需要结案/反结案功能
+            base.AddExcludeMenuList(MenuItemEnums.结案);
+            base.AddExcludeMenuList(MenuItemEnums.反结案);
         }
 
         internal override void LoadDataToUI(object Entity)
@@ -86,12 +97,17 @@ namespace RUINORERP.UI.ProductEAV
             {
                 entity.PrimaryKeyID = entity.BundleID;
                 entity.ActionStatus = ActionStatus.加载;
-
-
+                
+                // 显示审核状态
+                if (entity.ApprovalStatus.HasValue)
+                {
+                    lblReview.Text = ((ApprovalStatus)entity.ApprovalStatus).ToString();
+                }
             }
             else
             {
                 entity.ActionStatus = ActionStatus.新增;
+                entity.DataStatus = (int)DataStatus.草稿;
                 if (entity.tb_ProdBundleDetails != null && entity.tb_ProdBundleDetails.Count > 0)
                 {
                     entity.tb_ProdBundleDetails.ForEach(c => c.BundleID = 0);
@@ -103,10 +119,13 @@ namespace RUINORERP.UI.ProductEAV
             DataBindingHelper.BindData4Cmb<tb_Unit>(entity, t => t.Unit_ID, c => c.UnitName, cmbUnit);
             DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.BundleName, txtBundleName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.BundleName, txtBundleName, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.BundleName, txtBundleName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.TargetQty, txtTargetQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Notes, txtDescription, BindDataType4TextBox.Text, false);
+            
+            // 绑定数据状态和审核状态到标签
+            DataBindingHelper.BindData4ControlByEnum<tb_ProdBundle>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_ProdBundle>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
+            
             if (entity.tb_ProdBundleDetails != null && entity.tb_ProdBundleDetails.Count > 0)
             {
                 sgh.LoadItemDataToGrid<tb_ProdBundleDetail>(grid1, sgd, entity.tb_ProdBundleDetails, c => c.ProdDetailID);
@@ -115,38 +134,30 @@ namespace RUINORERP.UI.ProductEAV
             {
                 sgh.LoadItemDataToGrid<tb_ProdBundleDetail>(grid1, sgd, new List<tb_ProdBundleDetail>(), c => c.ProdDetailID);
             }
-            if (EditEntity.PrintStatus == 0)
-            {
-                lblPrintStatus.Text = "未打印";
-            }
-            else
-            {
-                lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
-            }
+            
+            // 初始化打印状态显示
+            UpdatePrintStatusDisplay();
 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
             {
-                //显示 打印状态 如果是草稿状态 不显示打印
-                if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
+                if (EditEntity == null) return;
+                
+                // 更新打印状态显示
+                UpdatePrintStatusDisplay();
+                
+                // 如果状态发生变化，刷新按钮状态
+                if (s2.PropertyName == entity.GetPropertyName<tb_ProdBundle>(c => c.DataStatus) ||
+                    s2.PropertyName == entity.GetPropertyName<tb_ProdBundle>(c => c.ApprovalStatus) ||
+                    s2.PropertyName == entity.GetPropertyName<tb_ProdBundle>(c => c.ApprovalResults) ||
+                    s2.PropertyName == entity.GetPropertyName<tb_ProdBundle>(c => c.PrintStatus))
                 {
-                    toolStripbtnPrint.Enabled = true;
-                    if (EditEntity.PrintStatus == 0)
-                    {
-                        lblPrintStatus.Text = "未打印";
-                    }
-                    else
-                    {
-                        lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
-                    }
-
-                }
-                else
-                {
-                    toolStripbtnPrint.Enabled = false;
+                    UpdateButtonStates();
                 }
             };
 
+            // 初始化按钮状态
+            UpdateButtonStates();
 
             base.BindData(entity);
         }
@@ -231,6 +242,51 @@ namespace RUINORERP.UI.ProductEAV
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
         }
 
+        /// <summary>
+        /// 更新打印状态显示
+        /// </summary>
+        private void UpdatePrintStatusDisplay()
+        {
+            if (EditEntity == null) return;
+            
+            if (EditEntity.PrintStatus == 0)
+            {
+                lblPrintStatus.Text = "未打印";
+            }
+            else
+            {
+                lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
+            }
+        }
+
+        /// <summary>
+        /// 根据单据状态更新按钮可用性
+        /// 参考销售订单的状态驱动按钮控制逻辑
+        /// </summary>
+        private void UpdateButtonStates()
+        {
+            if (EditEntity == null) return;
+            
+            var dataStatus = (DataStatus)EditEntity.DataStatus;
+            var approvalStatus = (ApprovalStatus)(EditEntity.ApprovalStatus ?? 0);
+            
+            // 打印按钮：非草稿/新建状态且已审核通过才能打印
+            bool canPrint = dataStatus != DataStatus.草稿 && 
+                           dataStatus != DataStatus.新建 &&
+                           approvalStatus == ApprovalStatus.审核通过;
+            toolStripbtnPrint.Enabled = canPrint;
+            
+            // 删除按钮：草稿或新建状态可以删除
+            bool canDelete = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
+            if (toolStripbtnDelete != null)
+            {
+                toolStripbtnDelete.Enabled = canDelete;
+            }
+            
+            // 注意：审核、反审核、修改等按钮由基类的权限系统自动控制
+            // 这里只需要控制打印和删除按钮即可
+        }
+
         private void Grid1_Enter(object sender, EventArgs e)
         {
             SelectLocationTips();
@@ -302,151 +358,7 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
-        /*
-   protected async override Task<ApprovalEntity> Review()
-   {
-       if (EditEntity == null)
-       {
-           return null;
-       }
-       //如果已经审核通过，则不能重复审核
-       if (EditEntity.ApprovalStatus.HasValue)
-       {
-           if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-           {
-               if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-               {
-                   MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                   return null;
-               }
-           }
-       }
-
-       RevertCommand command = new RevertCommand();
-       //缓存当前编辑的对象。如果撤销就回原来的值
-       tb_ProdBundle oldobj = CloneHelper.DeepCloneObject<tb_ProdBundle>(EditEntity);
-       command.UndoOperation = delegate ()
-       {
-           //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-           CloneHelper.SetValues<tb_ProdBundle>(EditEntity, oldobj);
-       };
-       ApprovalEntity ae = await base.Review();
-       if (EditEntity == null)
-       {
-           return null;
-       }
-       if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-       {
-           return null;
-       }
-
-       // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-       //因为只需要更新主表
-       //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-       // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-       tb_ProdBundleController<tb_ProdBundle> ctr = Startup.GetFromFac<tb_ProdBundleController<tb_ProdBundle>>();
-       List<tb_ProdBundle> _StockIns = new List<tb_ProdBundle>();
-       _StockIns.Add(EditEntity);
-       ReturnResults<bool> rs = await ctr.AdjustingAsync(_StockIns, ae);
-       if (rs.Succeeded)
-       {
-           //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-           //{
-
-           //}
-           //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-           //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-           //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-           //MainForm.Instance.ecs.AddSendData(od);
-
-           //审核成功
-           base.ToolBarEnabledControl(MenuItemEnums.审核);
-           //如果审核结果为不通过时，审核不是灰色。
-           if (!ae.ApprovalResults)
-           {
-               toolStripbtnReview.Enabled = true;
-           }
-           MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。");
-       }
-       else
-       {
-           //审核失败 要恢复之前的值
-           command.Undo();
-           MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rs.ErrorMsg},请联系管理员！", Color.Red);
-       }
-
-       return ae;
-   }
-
-
-   protected async override void ReReview()
-   {
-       if (EditEntity == null)
-       {
-           return;
-       }
-       //如果已经审核通过，则不能重复审核
-       if (EditEntity.ApprovalStatus.HasValue)
-       {
-           if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-           {
-               if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-               {
-                   // MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                   RevertCommand command = new RevertCommand();
-                   //缓存当前编辑的对象。如果撤销就回原来的值
-                   tb_ProdBundle oldobj = CloneHelper.DeepCloneObject<tb_ProdBundle>(EditEntity);
-                   command.UndoOperation = delegate ()
-                   {
-                       //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                       CloneHelper.SetValues<tb_ProdBundle>(EditEntity, oldobj);
-                   };
-                   ApprovalEntity ae = await base.Review();
-
-                   // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                   //因为只需要更新主表
-                   //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-                   // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-                   tb_ProdBundleController<tb_ProdBundle> ctr = Startup.GetFromFac<tb_ProdBundleController<tb_ProdBundle>>();
-                   List<tb_ProdBundle> tb_ProdBundles = new List<tb_ProdBundle>();
-                   tb_ProdBundles.Add(EditEntity);
-
-                   ReturnResults<bool> rs = await ctr.AntiApprovalAsync(tb_ProdBundles);
-                   if (rs.Succeeded)
-                   {
-                       //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                       //{
-
-                       //}
-                       //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                       //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                       //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                       //MainForm.Instance.ecs.AddSendData(od);
-
-                       //审核成功
-                       base.ToolBarEnabledControl(MenuItemEnums.反审);
-                       //如果审核结果为不通过时，审核不是灰色。
-                       if (!ae.ApprovalResults)
-                       {
-                           toolStripbtnReview.Enabled = true;
-                       }
-                       MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}反审成功。");
-                   }
-                   else
-                   {
-                       //审核失败 要恢复之前的值
-                       command.Undo();
-                       MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}反审失败{rs.ErrorMsg},请联系管理员！", Color.Red);
-                   }
-
-               }
-           }
-       }
-
-
-
-   }
-   */
+        
 
         List<tb_ProdBundleDetail> details = new List<tb_ProdBundleDetail>();
         protected async override Task<bool> Save(bool NeedValidated)
@@ -469,17 +381,7 @@ namespace RUINORERP.UI.ProductEAV
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
                 }
-                //二选中，验证机制还没有弄好。先这里处理
-                //if (EditEntity.CustomerVendor_ID == 0 || EditEntity.CustomerVendor_ID == -1)
-                //{
-                //    EditEntity.CustomerVendor_ID = null;
-                //}
-
-                //if (EditEntity.Employee_ID == 0 || EditEntity.Employee_ID == -1)
-                //{
-                //    EditEntity.Employee_ID = null;
-                //}
-                //如果明细包含主表中的母件时。不允许保存
+               
 
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (NeedValidated && aa.Count > 0)
@@ -508,6 +410,9 @@ namespace RUINORERP.UI.ProductEAV
                     if (SaveResult.Succeeded)
                     {
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BundleName}。");
+                        
+                        // 保存成功后刷新按钮状态
+                        UpdateButtonStates();
                     }
                     else
                     {
@@ -532,6 +437,22 @@ namespace RUINORERP.UI.ProductEAV
 
 
 
+
+        /// <summary>
+        /// 重写删除方法，调用基类删除方法后清空图片控件
+        /// </summary>
+        protected override async Task<ReturnResults<tb_ProdBundle>> Delete()
+        {
+            if (EditEntity == null)
+            {
+                return new ReturnResults<tb_ProdBundle> { Succeeded = false, ErrorMsg = "没有要删除的数据" };
+            }
+
+            // 调用基类的删除方法
+            ReturnResults<tb_ProdBundle> result = await base.Delete();
+            
+            return result;
+        }
 
     }
 }

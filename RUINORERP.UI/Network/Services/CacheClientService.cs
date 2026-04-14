@@ -826,11 +826,12 @@ namespace RUINORERP.UI.Network.Services
 
             if (string.IsNullOrEmpty(tableName) || entity == null)
             {
-                _log.LogWarning("同步缓存更新时表名或实体为空");
+                _log.LogWarning("同步缓存更新时表名或实体为空, TableName={0}, EntityIsNull={1}", 
+                    tableName, entity == null);
                 return;
             }
 
-            _log.LogDebug("准备同步缓存更新，表名={0}", tableName);
+            _log.LogDebug("准备同步缓存更新，表名={0}, 实体类型={1}", tableName, entity.GetType().Name);
 
             try
             {
@@ -838,19 +839,38 @@ namespace RUINORERP.UI.Network.Services
                 //cacheData.EntityType = TableSchemaManager.Instance.GetSchemaInfo(tableName).EntityType;
                 cacheData.EntityTypeName = entity.GetType().AssemblyQualifiedName;
                 cacheData.EntityByte = JsonCompressionSerializationService.Serialize(entity);
+                
+                // ✅ 验证 CacheData 是否正确创建
+                if (cacheData == null || cacheData.EntityByte == null || cacheData.EntityByte.Length == 0)
+                {
+                    _log.LogError("CacheData 创建失败或数据为空, TableName={0}, EntityTypeName={1}", 
+                        tableName, entity.GetType().FullName);
+                    return;
+                }
+                
+                _log.LogDebug("CacheData 创建成功, TableName={0}, DataSize={1} bytes", 
+                    tableName, cacheData.EntityByte.Length);
 
                 // 创建缓存更新请求并处理
-                await _cacheRequestManager.ProcessCacheOperationAsync(CacheCommands.CacheSync, new CacheRequest
+                var cacheRequest = new CacheRequest
                 {
                     Operation = CacheOperation.Set,
                     TableName = tableName,
                     CacheData = cacheData,
                     Timestamp = DateTime.UtcNow
-                });
+                };
+                
+                _log.LogDebug("发送缓存同步请求, RequestId={0}, TableName={1}, Operation={2}",
+                    cacheRequest.RequestId, tableName, cacheRequest.Operation);
+                
+                await _cacheRequestManager.ProcessCacheOperationAsync(CacheCommands.CacheSync, cacheRequest);
+                
+                _log.LogDebug("缓存同步请求发送成功, TableName={0}", tableName);
             }
             catch (Exception ex)
             {
-                _log.LogError(ex, "同步缓存更新失败，表名={0}", tableName);
+                _log.LogError(ex, "同步缓存更新失败，表名={0}, 实体类型={1}", 
+                    tableName, entity?.GetType().FullName ?? "null");
             }
         }
 
@@ -942,6 +962,12 @@ namespace RUINORERP.UI.Network.Services
                 if (!_tableSchemaManager.CacheableTableNames.Contains(e.Key))
                     return;
 
+                // ✅ 关键修复: Set 操作必须有 Value
+                if (e.Operation == CacheOperation.Set && e.Value == null)
+                {
+                    _log.LogWarning("缓存同步事件数据异常: Operation=Set, 但 Value 为 null, TableName={0}", e.Key);
+                    return; // ❌ 数据无效,不同步
+                }
 
                 // 创建缓存更新请求 - 使用简化的操作类型
                 var request = new CacheRequest
@@ -960,15 +986,28 @@ namespace RUINORERP.UI.Network.Services
                 if (e.Value != null)
                 {
                     CacheData cacheData = CacheData.Create(e.Key, e.Value);
+                    
+                    // ✅ 验证 CacheData 是否正确创建
+                    if (cacheData == null || cacheData.EntityByte == null || cacheData.EntityByte.Length == 0)
+                    {
+                        _log.LogError("CacheData 创建失败, TableName={0}, Operation={1}, ValueType={2}", 
+                            e.Key, e.Operation, e.ValueType?.FullName ?? "null");
+                        return; // ❌ 数据无效,不同步
+                    }
+                    
                     request.CacheData = cacheData;
+                    _log.LogDebug("缓存变更事件处理成功, TableName={0}, Operation={1}, DataSize={2} bytes",
+                        e.Key, e.Operation, cacheData.EntityByte.Length);
+                }
+                else if (e.Operation == CacheOperation.Set)
+                {
+                    // ✅ 额外保护: Set 操作不应该走到这里
+                    _log.LogError("逻辑错误: Set 操作的 Value 为 null, TableName={0}", e.Key);
+                    return; // ❌ 数据无效,不同步
                 }
 
                 // 发送命令到服务器
                 await _commService.SendOneWayCommandAsync<CacheRequest>(CacheCommands.CacheSync, request, CancellationToken.None);
-
-
-
-
 
                 _log.LogDebug("客户端缓存变更已同步到服务器: {0}, 操作: {1}", e.Key, e.Operation.ToString());
             }

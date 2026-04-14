@@ -102,15 +102,44 @@ namespace RUINORERP.UI
             }
 
             // 取消防抖重连任务
-            if (_debounceCancellationTokenSource != null)
+            CancellationTokenSource ctsToCancel = null;
+            lock (this)
+            {
+                if (_debounceCancellationTokenSource != null)
+                {
+                    ctsToCancel = _debounceCancellationTokenSource;
+                    _debounceCancellationTokenSource = null;
+                }
+            }
+
+            if (ctsToCancel != null)
             {
                 try
                 {
-                    _debounceCancellationTokenSource.Cancel();
-                    _debounceCancellationTokenSource.Dispose();
+                    if (!ctsToCancel.IsCancellationRequested)
+                    {
+                        ctsToCancel.Cancel();
+                    }
                 }
-                catch { }
-                _debounceCancellationTokenSource = null;
+                catch (ObjectDisposedException)
+                {
+                    // 已释放,忽略
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance?.logger?.LogWarning(ex, "窗体关闭时取消防抖任务发生异常");
+                }
+                finally
+                {
+                    try
+                    {
+                        ctsToCancel.Dispose();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // 已释放,忽略
+                    }
+                }
             }
 
             base.OnFormClosing(e);
@@ -405,15 +434,45 @@ namespace RUINORERP.UI
         private async void btnok_Click(object sender, EventArgs e)
         {
             // 取消正在进行的防抖重连任务，避免与登录流程冲突
-            if (_debounceCancellationTokenSource != null)
+            CancellationTokenSource ctsToCancel = null;
+            lock (this)
+            {
+                if (_debounceCancellationTokenSource != null)
+                {
+                    ctsToCancel = _debounceCancellationTokenSource;
+                    _debounceCancellationTokenSource = null;
+                }
+            }
+
+            if (ctsToCancel != null)
             {
                 try
                 {
-                    _debounceCancellationTokenSource.Cancel();
-                    _debounceCancellationTokenSource.Dispose();
+                    if (!ctsToCancel.IsCancellationRequested)
+                    {
+                        ctsToCancel.Cancel();
+                    }
                 }
-                catch { }
-                _debounceCancellationTokenSource = null;
+                catch (ObjectDisposedException)
+                {
+                    // 已释放,忽略
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance?.logger?.LogWarning(ex, "取消防抖任务时发生异常");
+                }
+                finally
+                {
+                    try
+                    {
+                        ctsToCancel.Dispose();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // 已释放,忽略
+                    }
+                }
+                
                 MainForm.Instance?.logger?.LogDebug("已取消防抖重连任务，开始登录流程");
             }
 
@@ -757,20 +816,65 @@ namespace RUINORERP.UI
         private async Task DebouncedReconnectAsync()
         {
             // 取消之前的防抖任务
-            if (_debounceCancellationTokenSource != null)
+            CancellationTokenSource oldCts = null;
+            lock (this)
+            {
+                if (_debounceCancellationTokenSource != null)
+                {
+                    oldCts = _debounceCancellationTokenSource;
+                    _debounceCancellationTokenSource = null;
+                }
+            }
+
+            // 在锁外取消和释放,避免持有锁时间过长
+            if (oldCts != null)
             {
                 try
                 {
-                    _debounceCancellationTokenSource.Cancel();
-                    _debounceCancellationTokenSource.Dispose();
+                    if (!oldCts.IsCancellationRequested)
+                    {
+                        oldCts.Cancel();
+                    }
                 }
-                catch { }
-                _debounceCancellationTokenSource = null;
+                catch (ObjectDisposedException)
+                {
+                    // 已释放,忽略
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance?.logger?.LogWarning(ex, "取消防抖任务时发生异常");
+                }
+                finally
+                {
+                    try
+                    {
+                        oldCts.Dispose();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // 已释放,忽略
+                    }
+                }
             }
 
             // 创建新的取消令牌
-            _debounceCancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = _debounceCancellationTokenSource.Token;
+            CancellationTokenSource newCts = null;
+            try
+            {
+                newCts = new CancellationTokenSource();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "创建防抖令牌失败");
+                return;
+            }
+
+            lock (this)
+            {
+                _debounceCancellationTokenSource = newCts;
+            }
+
+            var cancellationToken = newCts.Token;
 
             try
             {
@@ -788,13 +892,33 @@ namespace RUINORERP.UI
                 // 正常取消,无需处理
                 MainForm.Instance?.logger?.LogDebug("防抖重连任务已取消");
             }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "防抖重连过程中发生异常");
+            }
             finally
             {
                 // 清理资源
-                if (_debounceCancellationTokenSource != null)
+                CancellationTokenSource ctsToDispose = null;
+                lock (this)
                 {
-                    _debounceCancellationTokenSource.Dispose();
-                    _debounceCancellationTokenSource = null;
+                    if (_debounceCancellationTokenSource == newCts)
+                    {
+                        ctsToDispose = _debounceCancellationTokenSource;
+                        _debounceCancellationTokenSource = null;
+                    }
+                }
+
+                if (ctsToDispose != null)
+                {
+                    try
+                    {
+                        ctsToDispose.Dispose();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // 已释放,忽略
+                    }
                 }
             }
         }

@@ -618,6 +618,13 @@ namespace RUINORERP.UI.BaseForm
         {
             if (this.BaseToolStrip == null) return;
 
+            // 获取实体的HasChanged状态，用于保存按钮的特殊处理
+            bool hasUnsavedChanges = false;
+            if (EditEntity is BaseEntity baseEntity)
+            {
+                hasUnsavedChanges = baseEntity.HasChanged;
+            }
+
             // 遍历所有按钮状态，统一应用状态管理器的结果
             foreach (var kvp in buttonStates)
             {
@@ -626,6 +633,18 @@ namespace RUINORERP.UI.BaseForm
                     var button = FindToolStripButtonByName(kvp.Key);
                     if (button != null)
                     {
+                        // 保存按钮特殊处理：根据HasChanged独立控制
+                        // 不受StateManager的静态规则影响，避免保存成功后按钮状态被错误覆盖
+                        string[] saveButtonNames = new[] { "toolStripButtonSave", "保存", "save", "tsBtnSave" };
+                        bool isSaveButton = saveButtonNames.Any(name => kvp.Key.Equals(name, StringComparison.OrdinalIgnoreCase));
+                        if (isSaveButton)
+                        {
+                            // 保存按钮由HasChanged决定：有权保存 AND 有变更 才启用
+                            bool hasSavePermission = kvp.Value;
+                            button.Enabled = hasSavePermission && hasUnsavedChanges;
+                            continue;
+                        }
+
                         // 状态管理不应该覆盖权限设置
                         // 只有在按钮有权限的情况下，才根据状态设置是否启用
                         // 按钮的权限状态已经在 BaseBillEdit_Load 中由 UIHelper.ControlButton 设置
@@ -4983,7 +5002,10 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 根据数据变更情况更新保存按钮状态
-        /// 优化：使用StateManager.GetUIControlStates获取统一的按钮状态，确保一致性
+        /// 保存按钮的启用条件：
+        /// 1. 用户拥有保存权限（由StateManager决定）
+        /// 2. 页面数据发生变更（HasChanged为true）
+        /// 这两个条件必须同时满足，保存按钮才启用
         /// </summary>
         private void UpdateSaveButtonStateBasedOnChanges()
         {
@@ -4994,28 +5016,33 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                // 使用StateManager获取所有按钮状态，包括保存按钮
-                var buttonStates = StateManager.GetUIControlStates(EditEntity);
-                if (buttonStates == null || buttonStates.Count == 0)
+                // 获取保存按钮
+                var btnSave = FindToolStripButtonByName("toolStripButtonSave");
+                if (btnSave == null)
                 {
                     return;
                 }
 
-                // 获取保存按钮并更新状态
-                var btnSave = FindToolStripButtonByName("toolStripButtonSave");
-                if (btnSave != null)
+                // 条件1：使用StateManager获取是否有保存权限
+                var buttonStates = StateManager.GetUIControlStates(EditEntity);
+                bool hasSavePermission = false;
+
+                // 尝试多种可能的保存按钮名称来检查权限
+                string[] saveButtonNames = new[] { "toolStripButtonSave", "保存", "save", "tsBtnSave" };
+                foreach (string saveButtonName in saveButtonNames)
                 {
-                    // 尝试多种可能的保存按钮名称
-                    string[] saveButtonNames = new[] { "保存", "save", "tsBtnSave" };
-                    foreach (string saveButtonName in saveButtonNames)
+                    if (buttonStates.TryGetValue(saveButtonName, out bool enabled) && enabled)
                     {
-                        if (buttonStates.TryGetValue(saveButtonName, out bool enabled))
-                        {
-                            btnSave.Enabled = enabled;
-                            break;
-                        }
+                        hasSavePermission = true;
+                        break;
                     }
                 }
+
+                // 条件2：检查数据是否有未保存的变更
+                bool hasUnsavedChanges = EditEntity.HasChanged;
+
+                // 保存按钮必须同时满足：有权限 AND 有变更
+                btnSave.Enabled = hasSavePermission && hasUnsavedChanges;
 
                 // 同时更新其他按钮状态，确保整体一致性
                 UpdateAllButtonStates(EditEntity);

@@ -6,7 +6,7 @@ using SqlSugar;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 待处理的图片操作类型
+    /// 待处理的图片操作类型1
     /// </summary>
     public enum PendingImageOperation
     {
@@ -27,7 +27,7 @@ namespace RUINORERP.Model
     }
 
     /// <summary>
-    /// 待处理的图片信息
+    /// 待处理的图片信息2
     /// 用于在UI编辑期间暂存图片数据,等待统一提交
     /// </summary>
     public class PendingImageInfo

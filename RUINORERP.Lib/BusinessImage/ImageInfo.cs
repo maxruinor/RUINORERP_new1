@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Lib.BusinessImage
 {
     /// <summary>
-    /// 图片信息类1
+    /// 图片信息类12
     /// 用于统一管理图片的各种属性和状态，支持业务场景中的图片处理
     /// </summary>
     public class ImageInfo

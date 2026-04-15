@@ -417,7 +417,8 @@ namespace RUINORERP.UI.ProductEAV
             }
             catch (Exception ex)
             {
-                MainForm.Instance.uclog.AddLog($"绘制产品图片缩略图失败: {ex.Message}", Global.UILogType.警告);
+                // ✅ 静默失败,不弹窗、不记录日志、不提示
+                // 图片绘制失败不影响数据展示,只保持单元格空白即可
                 DrawPlaceholderImage(e);
                 e.Handled = true;
             }

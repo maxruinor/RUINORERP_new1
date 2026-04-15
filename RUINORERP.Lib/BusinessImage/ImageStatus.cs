@@ -1,7 +1,7 @@
 namespace RUINORERP.Lib.BusinessImage
 {
     /// <summary>
-    /// 图片同步状态枚举
+    /// 图片同步状态枚举1
     /// </summary>
     public enum ImageStatus
     {

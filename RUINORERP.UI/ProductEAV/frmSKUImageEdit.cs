@@ -100,14 +100,19 @@ namespace RUINORERP.UI.ProductEAV
                         
                         // 为预加载的图片添加状态标记
                         var info = item.Item2 ?? new ImageInfo();
-                        // 如果没有FileId，说明是新增图片；如果有FileId但被标记为需要更新，说明是替换图片
+                        
+                        // ✅ 关键修复: 根据FileId判断图片来源,设置正确的Status
                         if (info.FileId == 0)
                         {
-                            info.Tag = "新增"; // 使用Tag字段存储状态
+                            // 新增图片: FileId=0,标记为待上传
+                            info.Tag = "新增";
+                            info.Status = RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload;
                         }
                         else
                         {
+                            // 已有图片: FileId>0,标记为正常(不需要重新上传)
                             info.Tag = "修改";
+                            info.Status = RUINORERP.Lib.BusinessImage.ImageStatus.Normal;
                         }
                         imageInfos.Add(info);
                     }
@@ -115,8 +120,9 @@ namespace RUINORERP.UI.ProductEAV
 
                 if (imageDataList.Count > 0)
                 {
-                    // 加载到MagicPictureBox（不清除现有图片，标记为非更新状态）
-                    magicPictureBox.LoadImages(imageDataList, imageInfos, false);
+                    // ✅ 关键修复: 传入true表示这些图片已经存在于系统中
+                    // 这样LoadImagesInternal会根据FileId正确设置Status
+                    magicPictureBox.LoadImages(imageDataList, imageInfos, true);
                     lblInfo.Values.Text = $"已加载 {imageDataList.Count} 张缓存图片，正在检查服务器...";
                     MainForm.Instance.uclog.AddLog($"SKU编辑器从缓存加载了 {imageDataList.Count} 张图片");
                 }
@@ -347,20 +353,10 @@ namespace RUINORERP.UI.ProductEAV
         {
             try
             {
-                // 1. 处理删除操作
-                if (deletedImages != null && deletedImages.Count > 0)
-                {
-                    foreach (var delImg in deletedImages)
-                    {
-                        if (delImg.FileId > 0)
-                        {
-                            prodDetail.MarkImageForDeletion(delImg.FileId);
-                            MainForm.Instance.uclog.AddLog($"  - 标记删除图片 FileId={delImg.FileId}");
-                        }
-                    }
-                }
-
-                // 2. 处理新增/替换操作
+                // ✅ 关键修复: 构建已处理FileId集合,避免重复处理
+                var processedFileIds = new HashSet<long>();
+                
+                // 1. 先处理替换操作(优先级最高)
                 if (updatedImages != null && updatedImages.Count > 0)
                 {
                     foreach (var imgTuple in updatedImages)
@@ -368,32 +364,57 @@ namespace RUINORERP.UI.ProductEAV
                         var imageData = imgTuple.Item1;
                         var imageInfo = imgTuple.Item2;
                         
-                        if (imageData != null && imageData.Length > 0)
+                        if (imageData != null && imageData.Length > 0 && imageInfo.FileId > 0)
                         {
-                            // 判断是新增还是替换
-                            if (imageInfo.FileId > 0)
-                            {
-                                // 替换: 有FileId表示已存在的图片
-                                prodDetail.MarkImageForReplacement(
-                                    existingFileId: imageInfo.FileId,
-                                    newImageData: imageData,
-                                    fileName: imageInfo.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
-                                    description: imageInfo.Description,
-                                    sortOrder: imageInfo.SortOrder
-                                );
-                                MainForm.Instance.uclog.AddLog($"  - 标记替换图片 FileId={imageInfo.FileId}");
-                            }
-                            else
-                            {
-                                // 新增: 没有FileId表示新图片
-                                prodDetail.AddPendingImage(
-                                    imageData: imageData,
-                                    fileName: imageInfo.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
-                                    description: imageInfo.Description,
-                                    sortOrder: imageInfo.SortOrder
-                                );
-                                MainForm.Instance.uclog.AddLog($"  - 标记新增图片 {imageInfo.FileName}");
-                            }
+                            // 替换: 有FileId表示已存在的图片
+                            prodDetail.MarkImageForReplacement(
+                                existingFileId: imageInfo.FileId,
+                                newImageData: imageData,
+                                fileName: imageInfo.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
+                                description: imageInfo.Description,
+                                sortOrder: imageInfo.SortOrder
+                            );
+                            processedFileIds.Add(imageInfo.FileId);
+                            MainForm.Instance.uclog.AddLog($"  - 标记替换图片 FileId={imageInfo.FileId}");
+                        }
+                    }
+                }
+                
+                // 2. 再处理新增操作(没有FileId的图片)
+                if (updatedImages != null && updatedImages.Count > 0)
+                {
+                    foreach (var imgTuple in updatedImages)
+                    {
+                        var imageData = imgTuple.Item1;
+                        var imageInfo = imgTuple.Item2;
+                        
+                        if (imageData != null && imageData.Length > 0 && imageInfo.FileId == 0)
+                        {
+                            // 新增: 没有FileId表示新图片
+                            prodDetail.AddPendingImage(
+                                imageData: imageData,
+                                fileName: imageInfo.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
+                                description: imageInfo.Description,
+                                sortOrder: imageInfo.SortOrder
+                            );
+                            MainForm.Instance.uclog.AddLog($"  - 标记新增图片 {imageInfo.FileName}");
+                        }
+                    }
+                }
+
+                // 3. 最后处理删除操作(排除已经被替换的图片)
+                if (deletedImages != null && deletedImages.Count > 0)
+                {
+                    foreach (var delImg in deletedImages)
+                    {
+                        if (delImg.FileId > 0 && !processedFileIds.Contains(delImg.FileId))
+                        {
+                            prodDetail.MarkImageForDeletion(delImg.FileId);
+                            MainForm.Instance.uclog.AddLog($"  - 标记删除图片 FileId={delImg.FileId}");
+                        }
+                        else if (processedFileIds.Contains(delImg.FileId))
+                        {
+                            MainForm.Instance.uclog.AddLog($"  - 跳过删除 FileId={delImg.FileId} (已被标记为替换)");
                         }
                     }
                 }

@@ -1419,37 +1419,66 @@ namespace RUINORERP.UI.Network
             try
             {
                 string ResponseTypeName = typeof(TResponse).AssemblyQualifiedName;
-
-                // 使用现有的SendPacketCoreAsync发送请求，并传递带有响应类型信息的上下文
+            
+                // 使用现有的SendPacketCoreAsync发送请求,并传递带有响应类型信息的上下文
                 await SendPacketCoreAsync<TRequest>(_socketClient, commandId, request, timeoutMs, ct, ResponseTypeName);
-
-
-
-                // 等待响应或超时11
+            
+            
+            
+                // 等待响应或超时
                 var timeoutTask = Task.Delay(timeoutMs, cts.Token);
                 var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
-
+            
                 if (completedTask == timeoutTask)
                 {
-                    throw new TimeoutException($"请求超时（{timeoutMs}ms），指令类型：{commandId.ToString()}，请求ID: {request.RequestId}");
+                    // ✅ 详细记录超时原因,便于诊断
+                    _logger?.LogError("[登录超时] CommandId={CommandId}, RequestId={RequestId}, TimeoutMs={TimeoutMs}, ElapsedTime={Elapsed}ms",
+                        commandId.ToString(), request.RequestId, timeoutMs,
+                        (DateTime.UtcNow - pendingRequest.CreatedAt).TotalMilliseconds);
+                                
+                    throw new TimeoutException($"请求超时({timeoutMs}ms),指令类型:{commandId.ToString()},请求ID:{request.RequestId}");
                 }
-
+            
                 ct.ThrowIfCancellationRequested();
-
+            
                 var responsePacket = await tcs.Task;
-
+            
                 if (responsePacket != null)
                 {
                     // 记录请求完成事件
                     _clientEventManager.OnRequestCompleted(request.RequestId, DateTime.UtcNow - pendingRequest.CreatedAt);
                 }
-
+            
                 // 直接进行类型检查并返回响应包
                 return responsePacket as PacketModel;
             }
+            catch (TimeoutException ex)
+            {
+                // ✅ 超时异常直接抛出,保留原始信息
+                throw;
+            }
+            catch (OperationCanceledException ex)
+            {
+                // ✅ 取消操作单独处理
+                _logger?.LogWarning("[请求取消] CommandId={CommandId}, RequestId={RequestId}, Reason=用户取消或系统关闭",
+                    commandId.ToString(), request.RequestId);
+                throw;
+            }
+            catch (NetworkCommunicationException ex)
+            {
+                // ✅ 网络通信异常,记录详细信息
+                _logger?.LogError(ex, "[网络通信失败] CommandId={CommandId}, RequestId={RequestId}, Error={Error}",
+                    commandId.ToString(), request.RequestId, ex.Message);
+                throw new InvalidOperationException(
+                    $"请求处理失败,指令类型:{commandId.ToString()},请求ID:{request.RequestId}: {ex.Message}", ex);
+            }
             catch (Exception ex) when (!(ex is TimeoutException) && !(ex is OperationCanceledException))
             {
-                throw new InvalidOperationException($"请求处理失败，指令类型：{commandId.ToString()}，请求ID: {request.RequestId}: {ex.Message}", ex);
+                // ✅ 其他异常,记录完整堆栈
+                _logger?.LogError(ex, "[请求异常] CommandId={CommandId}, RequestId={RequestId}, ExceptionType={ExceptionType}",
+                    commandId.ToString(), request.RequestId, ex.GetType().Name);
+                throw new InvalidOperationException(
+                    $"请求处理失败,指令类型:{commandId.ToString()},请求ID:{request.RequestId}: {ex.Message}", ex);
             }
             finally
             {
@@ -1461,42 +1490,42 @@ namespace RUINORERP.UI.Network
         /// 根据命令类型获取超时时间
         /// </summary>
         /// <param name="commandId">命令ID</param>
-        /// <returns>超时时间（毫秒）</returns>
+        /// <returns>超时时间(毫秒)</returns>
         private int GetTimeoutByCommandType(CommandId commandId)
         {
             // 根据命令类型设置不同的超时时间
-            // 缓存相关请求设置较短超时，避免UI阻塞
+            // 缓存相关请求设置较短超时,避免UI阻塞
             if (commandId.Name.Contains("Cache"))
             {
                 return 5000; // 缓存请求5秒超时
             }
-
-            // 认证相关请求设置较短超时
+        
+            // 认证相关请求设置较长超时 - 外网环境下需要更长时间
             if (commandId.Name.Contains("Auth") || commandId.Name.Contains("Login"))
             {
-                return 8000; // 认证请求8秒超时
+                return 30000; // ✅ 登录/认证请求30秒超时(原8秒),适配外网高延迟场景
             }
-
+        
             // 查询相关请求
             if (commandId.Name.Contains("Query") || commandId.Name.Contains("Search"))
             {
-                return 10000; // 查询请求10秒超时
+                return 15000; // 查询请求15秒超时(原10秒)
             }
-
+        
             // 数据保存相关请求
             if (commandId.Name.Contains("Save") || commandId.Name.Contains("Update") || commandId.Name.Contains("Delete"))
             {
-                return 15000; // 保存/更新/删除请求15秒超时
+                return 20000; // 保存/更新/删除请求20秒超时(原15秒)
             }
-
+        
             // 报表相关请求
             if (commandId.Name.Contains("Report") || commandId.Name.Contains("Export"))
             {
-                return 30000; // 报表/导出请求30秒超时
+                return 45000; // 报表/导出请求45秒超时(原30秒)
             }
-
+        
             // 默认超时时间
-            return 20000; // 默认20秒超时
+            return 30000; // ✅ 默认30秒超时(原20秒),提升外网稳定性
         }
 
 

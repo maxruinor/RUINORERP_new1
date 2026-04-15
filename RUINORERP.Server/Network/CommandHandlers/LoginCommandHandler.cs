@@ -270,6 +270,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 const double timeDifferenceThreshold = 300.0;
                 if (timeDifference > timeDifferenceThreshold)
                 {
+                    // ✅ 详细记录时间不同步问题
+                    logger?.LogWarning($"[登录被拒绝-时间不同步] ServerTime={serverTime:yyyy-MM-dd HH:mm:ss}, ClientTime={clientTime:yyyy-MM-dd HH:mm:ss}, Difference={timeDifference:F0}s, Threshold={timeDifferenceThreshold}s");
                     return ResponseFactory.CreateSpecificErrorResponse(executionContext, new Exception($"客户端时间与服务器时间差异过大 ({timeDifference:F0}秒)，请校准系统时间"));
                 }
 
@@ -319,10 +321,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
 
                 // 检查登录尝试次数
-                if (GetLoginAttempts(loginRequest.Username) >= MaxLoginAttempts)
+                int currentAttempts = GetLoginAttempts(loginRequest.Username);
+                if (currentAttempts >= MaxLoginAttempts)
                 {
-                    logger?.LogWarning($"[登录失败] 登录尝试次数过多: Username={loginRequest.Username}, Attempts={GetLoginAttempts(loginRequest.Username)}");
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "登录尝试次数过多，请稍后再试");
+                    // ✅ 详细记录登录限制原因
+                    logger?.LogWarning($"[登录被拒绝-过度防护] Username={loginRequest.Username}, ClientIp={sessionInfo.ClientIp}, Attempts={currentAttempts}, MaxAttempts={MaxLoginAttempts}");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, $"登录尝试次数过多({currentAttempts}/{MaxLoginAttempts})，请稍后再试");
                 }
 
                 // 验证用户凭据
@@ -330,16 +334,26 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (userInfo == null)
                 {
                     IncrementLoginAttempts(loginRequest.Username);
+                    int newAttempts = GetLoginAttempts(loginRequest.Username);
+                    
+                    // 计算剩余尝试次数
+                    int remainingAttempts = MaxLoginAttempts - newAttempts;
                     
                     // ✅ 优化：失败5次后自动封禁IP 1小时（使用服务器端获取的真实IP）
-                    if (GetLoginAttempts(loginRequest.Username) >= MaxLoginAttempts)
+                    if (newAttempts >= MaxLoginAttempts)
                     {
                         BlacklistManager.BanIp(sessionInfo.ClientIp, TimeSpan.FromHours(1));
-                        logger?.LogWarning($"[自动封禁] IP地址 {sessionInfo.ClientIp} 因登录失败次数过多被封禁1小时，Username={loginRequest.Username}");
+                        logger?.LogWarning($"[自动封禁] IP地址 {sessionInfo.ClientIp} 因登录失败次数过多被封禁1小时，Username={loginRequest.Username}, FailedAttempts={newAttempts}");
+                        // 封禁后返回带封禁信息的错误（不暴露具体剩余次数以防暴力破解探测）
+                        return ResponseFactory.CreateSpecificErrorResponse(executionContext, "登录尝试次数过多，账户已被临时锁定，请稍后再试或联系管理员");
                     }
                     
-                    logger?.LogWarning($"[登录失败] 用户名或密码错误: Username={loginRequest.Username}, ClientIp={sessionInfo.ClientIp}, Attempts={GetLoginAttempts(loginRequest.Username)}");
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "用户名或密码错误");
+                    // ✅ 优化：详细记录认证失败，并提供剩余尝试次数提示（帮助正常用户了解状态）
+                    string errorMessage = remainingAttempts > 0 
+                        ? $"用户名或密码错误，剩余尝试次数：{remainingAttempts}"
+                        : "用户名或密码错误";
+                    logger?.LogWarning($"[登录失败-认证错误] Username={loginRequest.Username}, ClientIp={sessionInfo.ClientIp}, Attempts={newAttempts}/{MaxLoginAttempts}, Remaining={remainingAttempts}, Reason=用户名或密码错误");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, errorMessage);
                 }
 
                 // 重置登录尝试次数
@@ -442,8 +456,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         ["CurrentActiveUsers"] = SessionService.ActiveSessionCount.ToString()
                     });
 
-                // 记录登录成功日志
-                logger?.LogInformation($"[登录成功] Username={loginRequest.Username}, UserId={userInfo.User_ID}, SessionId={sessionInfo.SessionID}, ClientIp={sessionInfo.ClientIp}, HasDuplicateLogin={duplicateResult.HasDuplicateLogin}, RegistrationStatus={registrationStatus}");
+                // ✅ 详细记录登录成功信息
+                logger?.LogInformation($"[登录成功] Username={loginRequest.Username}, UserId={userInfo.User_ID}, SessionId={sessionInfo.SessionID}, ClientIp={sessionInfo.ClientIp}, HasDuplicateLogin={duplicateResult.HasDuplicateLogin}, RegistrationStatus={registrationStatus}, ElapsedTime={(DateTime.Now - serverTime).TotalMilliseconds:F0}ms");
 
                 return loginResponse;
 
@@ -451,6 +465,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
+                // ✅ 详细记录登录异常，包含完整堆栈信息
+                logger?.LogError(ex, $"[登录异常] Username={loginRequest.Username}, ClientIp={sessionInfo?.ClientIp}, ExceptionType={ex.GetType().Name}, Message={ex.Message}");
                 return ResponseFactory.CreateSpecificErrorResponse(executionContext, ex, "处理登录异常");
             }
         }
@@ -721,18 +737,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
         #region 核心业务逻辑方法
 
         /// <summary>
-        /// 验证用户凭据
+        /// 验证用户凭据（不含防暴力延迟，仅执行核心验证）
         /// </summary>
-        private async Task<tb_UserInfo> ValidateUserCredentialsAsync(LoginRequest loginRequest, CancellationToken cancellationToken)
+        private async Task<tb_UserInfo> ValidateUserCredentialsCoreAsync(LoginRequest loginRequest, CancellationToken cancellationToken)
         {
             try
             {
-                //防止暴力破解攻击,时间侧信道攻击防护,降低服务器负载 这是一个 安全最佳实践 ，在身份验证系统中很常见，目的是提高系统的安全性而不是处理超时情况。
-                await Task.Delay(500, cancellationToken);
-                
                 logger?.LogDebug($"[凭据验证] 开始验证用户: Username={loginRequest.Username}, ClientIp={loginRequest.ClientIp}");
                 
-                //password = EncryptionHelper.AesDecryptByHashKey(enPwd, username);
                 string EnPassword = EncryptionHelper.AesEncryptByHashKey(loginRequest.Password, loginRequest.Username);
 
                 var user = await Program.AppContextData.Db.CopyNew().Queryable<tb_UserInfo>()
@@ -743,20 +755,43 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 
                 if (user != null)
                 {
-                    logger?.LogDebug($"[凭据验证] 验证成功: UserId={user.User_ID}, UserName={user.UserName}");
+                    logger?.LogInformation($"[凭据验证成功] UserId={user.User_ID}, UserName={user.UserName}, ClientIp={loginRequest.ClientIp}");
                 }
                 else
                 {
-                    logger?.LogDebug($"[凭据验证] 验证失败: 用户名或密码不匹配, Username={loginRequest.Username}");
+                    logger?.LogWarning($"[凭据验证失败] 用户名或密码不匹配: Username={loginRequest.Username}, ClientIp={loginRequest.ClientIp}");
                 }
                 
                 return user;
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, $"[凭据验证异常] 验证用户凭据时发生异常: Username={loginRequest.Username}");
-                throw; // 重新抛出异常，让上层处理
+                logger?.LogError(ex, $"[凭据验证异常] 验证用户凭据时发生异常: Username={loginRequest.Username}, ExceptionType={ex.GetType().Name}");
+                throw;
             }
+        }
+
+        /// <summary>
+        /// 验证用户凭据（完整版本，包含防暴力延迟）
+        /// </summary>
+        private async Task<tb_UserInfo> ValidateUserCredentialsAsync(LoginRequest loginRequest, CancellationToken cancellationToken)
+        {
+            int currentAttempts = GetLoginAttempts(loginRequest.Username);
+            
+            var user = await ValidateUserCredentialsCoreAsync(loginRequest, cancellationToken);
+            
+            if (user == null)
+            {
+                int estimatedAttempts = currentAttempts + 1;
+                if (estimatedAttempts >= 3)
+                {
+                    int delayMs = Math.Min(200 * (estimatedAttempts - 2), 2000);
+                    logger?.LogWarning($"[防暴力破解] Username={loginRequest.Username}, CurrentAttempts={currentAttempts}, EstimatedAttempts={estimatedAttempts}, Delay={delayMs}ms");
+                    await Task.Delay(delayMs, cancellationToken);
+                }
+            }
+            
+            return user;
         }
 
         /// <summary>
@@ -956,9 +991,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private bool IsUserBlacklisted(string username, string ipAddress)
         {
-            // 检查IP是否被封禁
-            return BlacklistManager.IsIpBanned(username) ||
-                   !string.IsNullOrEmpty(ipAddress) && BlacklistManager.IsIpBanned(ipAddress);
+            // 内网业务系统：主要依靠IP封禁（用于真正的异常攻击）
+            // 不封禁用户名，避免误伤正常用户
+            return !string.IsNullOrEmpty(ipAddress) && BlacklistManager.IsIpBanned(ipAddress);
         }
 
         /// <summary>

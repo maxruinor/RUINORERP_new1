@@ -509,6 +509,14 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
                 
+                // ✅ 国外IP/未授权IP拦截：只允许内网IP和白名单IP
+                if (!string.IsNullOrEmpty(clientIp) && !BlacklistManager.IsIpAllowed(clientIp))
+                {
+                    _logger.LogWarning($"[IP拦截] 拒绝非内网IP连接: {clientIp}");
+                    await session.CloseAsync(CloseReason.ServerShutdown);
+                    return;
+                }
+
                 // ✅ 优化：获取客户端IP并检查黑名单（在网络层早期拦截）
                 if (!string.IsNullOrEmpty(clientIp) && BlacklistManager.IsIpBanned(clientIp))
                 {

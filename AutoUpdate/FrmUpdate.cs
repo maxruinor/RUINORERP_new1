@@ -91,14 +91,14 @@ namespace AutoUpdate
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnskipCurrentVersion = new System.Windows.Forms.Button();
             this.lblupdatefiles = new System.Windows.Forms.Label();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lvUpdateList = new System.Windows.Forms.ListView();
             this.chFileName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.chVersion = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.chProgress = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.pbDownFile = new System.Windows.Forms.ProgressBar();
             this.lbState = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.pbDownFile = new System.Windows.Forms.ProgressBar();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.btnNext = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
@@ -158,15 +158,13 @@ namespace AutoUpdate
             this.lblupdatefiles.TabIndex = 9;
             this.lblupdatefiles.Text = "更新文件列表";
             // 
-            // groupBox2
+            // groupBox1
             // 
-            this.groupBox2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupBox2.Location = new System.Drawing.Point(0, 341);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(371, 2);
-            this.groupBox2.TabIndex = 7;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "groupBox2";
+            this.groupBox1.Location = new System.Drawing.Point(0, 32);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(368, 8);
+            this.groupBox1.TabIndex = 1;
+            this.groupBox1.TabStop = false;
             // 
             // lvUpdateList
             // 
@@ -197,13 +195,6 @@ namespace AutoUpdate
             this.chProgress.Text = "进度";
             this.chProgress.Width = 69;
             // 
-            // pbDownFile
-            // 
-            this.pbDownFile.Location = new System.Drawing.Point(3, 301);
-            this.pbDownFile.Name = "pbDownFile";
-            this.pbDownFile.Size = new System.Drawing.Size(365, 23);
-            this.pbDownFile.TabIndex = 5;
-            // 
             // lbState
             // 
             this.lbState.Location = new System.Drawing.Point(3, 277);
@@ -212,13 +203,22 @@ namespace AutoUpdate
             this.lbState.TabIndex = 4;
             this.lbState.Text = "准备就绪，即将开始下载文件";
             // 
-            // groupBox1
+            // pbDownFile
             // 
-            this.groupBox1.Location = new System.Drawing.Point(0, 32);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(368, 8);
-            this.groupBox1.TabIndex = 1;
-            this.groupBox1.TabStop = false;
+            this.pbDownFile.Location = new System.Drawing.Point(3, 301);
+            this.pbDownFile.Name = "pbDownFile";
+            this.pbDownFile.Size = new System.Drawing.Size(365, 23);
+            this.pbDownFile.TabIndex = 5;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupBox2.Location = new System.Drawing.Point(0, 341);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(371, 2);
+            this.groupBox2.TabIndex = 7;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "groupBox2";
             // 
             // btnNext
             // 
@@ -258,7 +258,7 @@ namespace AutoUpdate
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(100, 16);
             this.label4.TabIndex = 13;
-            this.label4.Text = "MAXRUINOR����";
+            this.label4.Text = "MAXRUINOR";
             this.label4.Visible = false;
             // 
             // label3
@@ -341,7 +341,7 @@ namespace AutoUpdate
             this.AcceptButton = this.btnNext;
             this.AutoScaleBaseSize = new System.Drawing.Size(6, 14);
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(491, 397);
+            this.ClientSize = new System.Drawing.Size(512, 399);
             this.ControlBox = false;
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.btnCancel);
@@ -427,7 +427,7 @@ namespace AutoUpdate
                 {
                     return;
                 }
-                
+                pbDownFile.Visible = true;
                 // 确保Minimum和Maximum设置合理
                 if (pbDownFile.Maximum <= pbDownFile.Minimum)
                 {
@@ -1596,6 +1596,515 @@ namespace AutoUpdate
         }
 
         /// <summary>
+        /// 异步复制文件 - 优化版本，避免UI阻塞
+        /// </summary>
+        /// <param name="sourcePath"></param>
+        /// <param name="objPath"></param>
+        /// <param name="VerNo"></param>
+        public async Task CopyFileAsync(string sourcePath, string objPath, string VerNo)
+        {
+            List<string> contents = new List<string>();
+            AppendAllText($"[CopyFileAsync] 开始异步复制文件，版本: {VerNo}");
+            AppendAllText($"[CopyFileAsync] 源路径: {sourcePath}");
+            AppendAllText($"[CopyFileAsync] 目标路径: {objPath}");
+
+            // 验证源路径是否存在
+            if (!Directory.Exists(sourcePath))
+            {
+                AppendAllText($"[CopyFileAsync] 错误：源路径不存在: {sourcePath}");
+                return;
+            }
+
+            if (!Directory.Exists(objPath))
+            {
+                Directory.CreateDirectory(objPath);
+                AppendAllText($"[CopyFileAsync] 创建目标目录: {objPath}");
+            }
+            else
+            {
+                AppendAllText($"[CopyFileAsync] 目标目录已存在: {objPath}");
+            }
+
+            List<string> needCopyFiles = new List<string>();
+
+            string[] allfiles = Directory.GetFiles(sourcePath);
+            AppendAllText($"[CopyFileAsync] 源目录包含 {allfiles.Length} 个文件");
+            AppendAllText($"[CopyFileAsync] htUpdateFile 包含 {htUpdateFile.Count} 个条目");
+
+            // 遍历所有文件并找出需要备份的文件
+            foreach (string file in allfiles)
+            {
+                // 获取文件名
+                string fileName = Path.GetFileName(file);
+
+                // 检查文件是否存在于 Hashtable 中
+                foreach (DictionaryEntry var in htUpdateFile)
+                {
+                    if (var.Value is string[] info)
+                    {
+                        string updateFileName = info[0];
+
+                        // 处理相对路径和绝对路径的匹配
+                        string updateFileBaseName = Path.GetFileName(updateFileName);
+
+                        // 直接比较文件名，忽略路径差异
+                        if (updateFileBaseName.Equals(fileName, StringComparison.OrdinalIgnoreCase) &&
+                            info[1] == VerNo && !needCopyFiles.Contains(file))
+                        {
+                            needCopyFiles.Add(file);
+                            AppendAllText($"[CopyFileAsync] 找到需要复制的文件: {fileName} (更新文件: {updateFileName}, 版本: {VerNo})");
+                        }
+                    }
+                }
+
+            }
+
+            string[] files = needCopyFiles.ToArray();
+            AppendAllText($"[CopyFileAsync] 需要复制 {files.Length} 个文件");
+
+            //注意：从版本目录获取的所有文件中 只复制在更新列表中的文件进行覆盖
+
+            // 初始化进度条（只在有文件需要复制时）
+            if (files.Length > 0 && pbDownFile != null)
+            {
+                try
+                {
+                    pbDownFile.Visible = true;
+                    pbDownFile.Minimum = 0;
+                    pbDownFile.Maximum = files.Length;
+                    SafeSetProgressValue(0);
+                    await Task.Delay(10); // 轻量级UI刷新
+                    AppendAllText($"[CopyFileAsync] 初始化进度条，最大值: {files.Length}");
+                }
+                catch (Exception ex)
+                {
+                    // 【修复】进度条初始化失败不影响文件复制
+                    AppendAllText($"[CopyFileAsync] 警告: 进度条初始化失败: {ex.Message}，将继续复制文件");
+                }
+            }
+
+            // 优化文件处理顺序：先处理压缩文件，再处理普通文件
+            // 这样可以确保单个文件的精确更新优先于压缩包中的批量更新
+            var orderedFiles = files.OrderByDescending(f =>
+            {
+                string extension = Path.GetExtension(f).ToLower();
+                return extension == ".zip" || extension == ".rar" ? 1 : 0;
+            }).ToArray();
+
+            // 使用并行处理提高性能，但限制并发数量以避免资源竞争
+            int maxDegreeOfParallelism = Math.Min(Environment.ProcessorCount, 4); // 最多4个并行任务
+            var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
+            
+            var copyTasks = new List<Task>();
+            
+            for (int i = 0; i < orderedFiles.Length; i++)
+            {
+                string file = orderedFiles[i];
+                int currentIndex = i;
+                
+                var task = Task.Run(async () =>
+                {
+                    await semaphore.WaitAsync();
+                    try
+                    {
+                        await ProcessSingleFileAsync(file, currentIndex, orderedFiles.Length, objPath, VerNo, contents);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                });
+                
+                copyTasks.Add(task);
+            }
+            
+            // 等待所有文件复制完成
+            await Task.WhenAll(copyTasks);
+
+            string[] dirs = Directory.GetDirectories(sourcePath);
+            AppendAllText($"[CopyFileAsync] 发现 {dirs.Length} 个子目录");
+
+            // 并行处理子目录
+            var dirTasks = new List<Task>();
+            for (int i = 0; i < dirs.Length; i++)
+            {
+                string[] childdir = dirs[i].Split('\\');
+                string childDirName = childdir[childdir.Length - 1];
+                // 使用Path.Combine安全构建路径，避免双反斜杠问题
+                string destSubDir = Path.Combine(objPath, childDirName);
+                AppendAllText($"[CopyFileAsync] 处理子目录 {i + 1}/{dirs.Length}: {childDirName}");
+
+                // 确保目标子目录存在
+                if (!Directory.Exists(destSubDir))
+                {
+                    Directory.CreateDirectory(destSubDir);
+                    AppendAllText($"[CopyFileAsync] 创建子目录: {destSubDir}");
+                }
+                else
+                {
+                    AppendAllText($"[CopyFileAsync] 子目录已存在: {destSubDir}");
+                }
+
+                // 【修复】保存当前进度条状态，防止递归调用修改后影响当前循环
+                int savedMaximum = pbDownFile.Maximum;
+                int savedValue = pbDownFile.Value;
+
+                // 异步递归复制子目录（传递相同的 VerNo 参数）
+                var dirTask = CopyFileAsync(dirs[i], destSubDir, VerNo);
+                dirTasks.Add(dirTask);
+
+                // 【修复】恢复进度条状态
+                if (pbDownFile != null)
+                {
+                    // 安全恢复：先确保Value在合理范围内，再设置Maximum
+                    // 如果savedValue > savedMaximum，先把Value降到不超过savedMaximum
+                    if (savedValue > savedMaximum)
+                    {
+                        savedValue = savedMaximum;
+                        AppendAllText($"[CopyFileAsync] 调整保存的进度值: {savedValue} (防止超过最大值)");
+                    }
+                    
+                    // 先临时把Value设为0，避免设置Maximum时触发异常
+                    pbDownFile.Value = 0;
+                    // 再设置Maximum
+                    pbDownFile.Maximum = savedMaximum;
+                    // 最后用安全方法设置实际Value
+                    SafeSetProgressValue(savedValue);
+                    AppendAllText($"[CopyFileAsync] 恢复进度条状态: Maximum={savedMaximum}, Value={savedValue}");
+                }
+            }
+            
+            // 等待所有子目录复制完成
+            await Task.WhenAll(dirTasks);
+
+            AppendAllLines(contents);
+            AppendAllText($"[CopyFileAsync] 文件复制完成，版本: {VerNo}");
+        }
+        
+        /// <summary>
+        /// 异步处理单个文件
+        /// </summary>
+        private async Task ProcessSingleFileAsync(string file, int currentIndex, int totalFiles, string objPath, string VerNo, List<string> contents)
+        {
+            try
+            {
+                // 【优化】不在每个文件都更新 UI，改为批量更新以减少 UI 刷新频率
+                // 每 5 个文件或最后一个文件才更新 UI
+                bool shouldUpdateUI = (currentIndex % 5 == 0) || (currentIndex == totalFiles - 1);
+                
+                if (shouldUpdateUI)
+                {
+                    AppendAllText($"[CopyFileAsync] 处理文件 {currentIndex + 1}/{totalFiles}: {Path.GetFileName(file)}");
+
+                    // 更新进度条和状态显示
+                    try
+                    {
+                        if (pbDownFile != null && !pbDownFile.IsDisposed)
+                        {
+                            SafeSetProgressValue(currentIndex + 1);
+                            pbDownFile.Update();
+                        }
+
+                        if (lbState != null && !lbState.IsDisposed)
+                        {
+                            lbState.Text = $"正在复制文件 {currentIndex + 1}/{totalFiles}: {Path.GetFileName(file)}\n复制完成后将自动启动程序";
+                            lbState.Update();
+                        }
+
+                        // 【优化】增加等待时间，让 UI 有时间刷新（从 5ms 增加到 20ms）
+                        await Task.Delay(20);
+                    }
+                    catch (Exception progressEx)
+                    {
+                        AppendAllText($"[CopyFileAsync] 警告: 进度显示更新失败: {progressEx.Message}");
+                    }
+                }
+
+                #region 复制文件
+                //如果正在更新自身 避免自身运行时被覆盖
+                //【修复】比较文件名，而不是完整路径
+                string fileName = Path.GetFileName(file);
+                if (fileName.Equals(currentexeName, StringComparison.OrdinalIgnoreCase) && selfUpdateStarted)
+                {
+                    AppendAllText($"[CopyFileAsync] 跳过自身更新文件，将由自我更新流程处理: {file}");
+                    contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + file);
+                    return;
+                }
+
+                //http://sevenzipsharp.codeplex.com/
+                //如果是压缩文件则解压，否则直接复制
+                if (System.IO.Path.GetExtension(fileName).ToLower() == ".zip")
+                {
+                    AppendAllText($"[CopyFileAsync] 解压ZIP文件: {fileName}");
+
+                    //System.IO.Compression.ZipFile.ExtractToDirectory(System.IO.Path.Combine(sourcePath, fileName), objPath); 
+                    string zipPathWithName = System.IO.Path.Combine(Path.GetDirectoryName(file), fileName);
+                    //MessageBox.Show("zipPathWithName:" + zipPathWithName);
+                    //MessageBox.Show("objPath:" + objPath);
+
+                    using (ZipArchive archive = ZipFile.OpenRead(zipPathWithName))
+                    {
+                        archive.ExtractToDirectory(objPath, true);
+                    }
+                    AppendAllText($"[CopyFileAsync] ZIP文件解压完成");
+                }
+                else if (System.IO.Path.GetExtension(fileName).ToLower() == ".rar")
+                {
+                    AppendAllText($"[CopyFileAsync] 解压RAR文件: {fileName}");
+
+
+                    RARToFileEmail(objPath, System.IO.Path.Combine(Path.GetDirectoryName(file), fileName));
+
+
+
+                    AppendAllText($"[CopyFileAsync] RAR文件解压完成");
+
+                }
+                else
+                {
+                    string destFile = System.IO.Path.Combine(objPath, fileName);
+                    AppendAllText($"[CopyFileAsync] 复制普通文件: {fileName}");
+
+                    // 【优化】添加文件复制重试机制，解决文件被占用问题
+                    bool copySuccess = false;
+                    int retryCount = 0;
+                    int maxRetries = 3;
+                    while (!copySuccess && retryCount < maxRetries)
+                    {
+                        try
+                        {
+                            // 使用异步文件复制
+                            using (var sourceStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous))
+                            using (var destStream = new FileStream(destFile, FileMode.Create, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous))
+                            {
+                                await sourceStream.CopyToAsync(destStream);
+                            }
+                            copySuccess = true;
+                        }
+                        catch (IOException)
+                        {
+                            // 检查是否是更新程序自身的文件，如果是则跳过重试
+                            string destFileName = Path.GetFileName(destFile);
+                            if (destFileName.Equals("AutoUpdate.exe", StringComparison.OrdinalIgnoreCase) ||
+                                destFileName.Equals("AutoUpdateUpdater.exe", StringComparison.OrdinalIgnoreCase))
+                            {
+                                AppendAllText($"[CopyFileAsync] 跳过更新程序自身文件，稍后将由AutoUpdateUpdater处理: {destFileName}");
+                                copySuccess = true; // 标记为成功，跳过此文件
+                            }
+                            else if (retryCount < maxRetries - 1)
+                            {
+                                retryCount++;
+                                AppendAllText($"[CopyFileAsync] 文件被占用，{retryCount}秒后重试...");
+                                await Task.Delay(1000 * retryCount);
+                                
+                                // 尝试强制关闭占用文件的进程
+                                TryKillProcessUsingFile(destFile);
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!copySuccess)
+                    {
+                        // 最后一次尝试强制复制
+                        TryForceCopyFile(file, destFile);
+                        copySuccess = File.Exists(destFile);
+                    }
+
+                    contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + file);
+                    AppendAllText($"[CopyFileAsync] 文件复制成功: {fileName}");
+                }
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                string errorMsg = $"文件更新失败: {ex.Message}";
+                AppendAllText(errorMsg);
+            }
+        }
+
+        /// <summary>
+        /// 异步复制文件 - 优化版本，避免UI阻塞（不带版本号，复制所有文件）
+        /// </summary>
+        /// <param name="sourcePath"></param>
+        /// <param name="objPath"></param>
+        public async Task CopyFileAsync(string sourcePath, string objPath)
+        {
+            List<string> contents = new List<string>();
+            AppendAllText($"[CopyFileAsync] 开始异步复制所有文件");
+            AppendAllText($"[CopyFileAsync] 源路径: {sourcePath}");
+            AppendAllText($"[CopyFileAsync] 目标路径: {objPath}");
+
+            // 验证源路径是否存在
+            if (!Directory.Exists(sourcePath))
+            {
+                AppendAllText($"[CopyFileAsync] 错误：源路径不存在: {sourcePath}");
+                return;
+            }
+
+            if (!Directory.Exists(objPath))
+            {
+                Directory.CreateDirectory(objPath);
+                AppendAllText($"[CopyFileAsync] 创建目标目录: {objPath}");
+            }
+            else
+            {
+                AppendAllText($"[CopyFileAsync] 目标目录已存在: {objPath}");
+            }
+
+            List<string> needCopyFiles = new List<string>();
+
+            string[] allfiles = Directory.GetFiles(sourcePath);
+            AppendAllText($"[CopyFileAsync] 源目录包含 {allfiles.Length} 个文件");
+
+            // 遍历所有文件并找出需要备份的文件
+            foreach (string file in allfiles)
+            {
+                // 获取文件名
+                string fileName = Path.GetFileName(file);
+
+                // 检查文件是否存在于 Hashtable 中
+                foreach (DictionaryEntry var in htUpdateFile)
+                {
+                    if (var.Value is string[] info)
+                    {
+                        FileInfo fileInfo = new FileInfo(info[0]);
+                        if (fileInfo.Name == fileName && !needCopyFiles.Contains(file))
+                        {
+                            needCopyFiles.Add(file);
+                            AppendAllText($"[CopyFileAsync] 找到需要复制的文件: {fileName}");
+                        }
+                    }
+
+                }
+
+            }
+
+            string[] files = needCopyFiles.ToArray();
+            AppendAllText($"[CopyFileAsync] 需要复制 {files.Length} 个文件");
+
+            //注意：从版本目录获取的所有文件中 只复制在更新列表中的文件进行覆盖
+
+            // 初始化进度条（只在有文件需要复制时）
+            if (files.Length > 0 && pbDownFile != null)
+            {
+                try
+                {
+                    pbDownFile.Visible = true;
+                    pbDownFile.Minimum = 0;
+                    pbDownFile.Maximum = files.Length;
+                    SafeSetProgressValue(0);
+                    await Task.Delay(10); // 轻量级UI刷新
+                    AppendAllText($"[CopyFileAsync] 初始化进度条，最大值: {files.Length}");
+                }
+                catch (Exception ex)
+                {
+                    // 【修复】进度条初始化失败不影响文件复制
+                    AppendAllText($"[CopyFileAsync] 警告: 进度条初始化失败: {ex.Message}，将继续复制文件");
+                }
+            }
+
+            // 优化文件处理顺序：先处理压缩文件，再处理普通文件
+            var orderedFiles = files.OrderByDescending(f =>
+            {
+                string extension = Path.GetExtension(f).ToLower();
+                return extension == ".zip" || extension == ".rar" ? 1 : 0;
+            }).ToArray();
+
+            // 使用并行处理提高性能，但限制并发数量以避免资源竞争
+            int maxDegreeOfParallelism = Math.Min(Environment.ProcessorCount, 4); // 最多4个并行任务
+            var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
+            
+            var copyTasks = new List<Task>();
+            
+            for (int i = 0; i < orderedFiles.Length; i++)
+            {
+                string file = orderedFiles[i];
+                int currentIndex = i;
+                
+                var task = Task.Run(async () =>
+                {
+                    await semaphore.WaitAsync();
+                    try
+                    {
+                        await ProcessSingleFileAsync(file, currentIndex, orderedFiles.Length, objPath, "", contents);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                });
+                
+                copyTasks.Add(task);
+            }
+            
+            // 等待所有文件复制完成
+            await Task.WhenAll(copyTasks);
+
+            string[] dirs = Directory.GetDirectories(sourcePath);
+            AppendAllText($"[CopyFileAsync] 发现 {dirs.Length} 个子目录");
+
+            // 并行处理子目录
+            var dirTasks = new List<Task>();
+            for (int i = 0; i < dirs.Length; i++)
+            {
+                string[] childdir = dirs[i].Split('\\');
+                string childDirName = childdir[childdir.Length - 1];
+                // 使用Path.Combine安全构建路径，避免双反斜杠问题
+                string destSubDir = Path.Combine(objPath, childDirName);
+                AppendAllText($"[CopyFileAsync] 处理子目录 {i + 1}/{dirs.Length}: {childDirName}");
+
+                // 确保目标子目录存在
+                if (!Directory.Exists(destSubDir))
+                {
+                    Directory.CreateDirectory(destSubDir);
+                    AppendAllText($"[CopyFileAsync] 创建子目录: {destSubDir}");
+                }
+                else
+                {
+                    AppendAllText($"[CopyFileAsync] 子目录已存在: {destSubDir}");
+                }
+
+                // 【修复】保存当前进度条状态，防止递归调用修改后影响当前循环
+                int savedMaximum = pbDownFile.Maximum;
+                int savedValue = pbDownFile.Value;
+
+                // 异步递归复制子目录（不带 VerNo 参数）
+                var dirTask = CopyFileAsync(dirs[i], destSubDir);
+                dirTasks.Add(dirTask);
+
+                // 【修复】恢复进度条状态
+                if (pbDownFile != null)
+                {
+                    // 安全恢复：先确保Value在合理范围内，再设置Maximum
+                    // 如果savedValue > savedMaximum，先把Value降到不超过savedMaximum
+                    if (savedValue > savedMaximum)
+                    {
+                        savedValue = savedMaximum;
+                        AppendAllText($"[CopyFileAsync] 调整保存的进度值: {savedValue} (防止超过最大值)");
+                    }
+                    
+                    // 先临时把Value设为0，避免设置Maximum时触发异常
+                    pbDownFile.Value = 0;
+                    // 再设置Maximum
+                    pbDownFile.Maximum = savedMaximum;
+                    // 最后用安全方法设置实际Value
+                    SafeSetProgressValue(savedValue);
+                    AppendAllText($"[CopyFileAsync] 恢复进度条状态: Maximum={savedMaximum}, Value={savedValue}");
+                }
+            }
+            
+            // 等待所有子目录复制完成
+            await Task.WhenAll(dirTasks);
+
+            AppendAllLines(contents);
+            AppendAllText($"[CopyFileAsync] 文件复制完成");
+        }
+
+        /// <summary>
         /// 复制文件 按版本备份文件 全部
         /// </summary>
         /// <param name="sourcePath"></param>
@@ -1933,7 +2442,7 @@ namespace AutoUpdate
         /// <summary>
         /// 完成更新并执行实际更新
         /// </summary>
-        private void btnFinish_Click(object sender, System.EventArgs e)
+        private async void btnFinish_Click(object sender, System.EventArgs e)
         {
             // 执行实际的自我更新
             AppendAllText("开始执行自我更新...");
@@ -1956,9 +2465,9 @@ namespace AutoUpdate
             bool selfUpdateSuccess = false;
             try
             {
-                LastCopy();
-                // 如果LastCopy没有退出程序，说明自我更新失败，使用传统方式
-                Thread.Sleep(500);
+                await LastCopyAsync();
+                // 如果LastCopyAsync没有退出程序，说明自我更新失败，使用传统方式
+                await Task.Delay(500);
                 selfUpdateSuccess = false;
             }
             catch (Exception ex)
@@ -1993,7 +2502,7 @@ namespace AutoUpdate
         }
 
 
-        private void LastCopy()
+        private async Task LastCopyAsync()
         {
             // 【优化】原子化更新事务 - 记录更新状态用于失败回滚
             List<string> updatedFiles = new List<string>();
@@ -2002,30 +2511,33 @@ namespace AutoUpdate
             
             try
             {
-                AppendAllText("===== 开始执行 LastCopy 文件复制 =====");
+                AppendAllText("===== 开始执行 LastCopy 文件复制 (异步优化版) =====");
                 
                 // 【修复】设置标志，告诉CopyFile方法跳过自我更新文件
                 // 由AutoUpdateUpdater完成后重启
                 selfUpdateStarted = true;
                 
-                // 【关键修复】重新显示 panel1 和进度条
-                // 因为下载完成后 InvalidateControl() 隐藏了 panel1
-                if (panel1 != null)
+                // 【关键修复】正确切换 Panel 显示，解决进度条不可见问题
+                if (panel1 != null && panel2 != null)
                 {
-                    panel1.Visible = true;
-                    AppendAllText("[LastCopy] 重新显示 panel1");
+                    panel2.Visible = false;  // 先隐藏 panel2（完成界面）
+                    panel1.Visible = true;   // 再显示 panel1（下载界面，包含进度条）
+                    panel1.BringToFront();   // 确保 panel1 在最前面
+                    AppendAllText("[LastCopy] 切换到 panel1（下载界面）");
                 }
                 
                 if (pbDownFile != null)
                 {
                     pbDownFile.Visible = true;
-                    AppendAllText("[LastCopy] 确保进度条可见");
+                    pbDownFile.BringToFront();  // 确保进度条在最前面
+                    AppendAllText("[LastCopy] 确保进度条可见并在最前");
                 }
                 
                 if (lbState != null)
                 {
                     lbState.Visible = true;
-                    AppendAllText("[LastCopy] 确保状态标签可见");
+                    lbState.BringToFront();  // 确保状态标签在最前面
+                    AppendAllText("[LastCopy] 确保状态标签可见并在最前");
                 }
                 
                 // 初始化进度条，确保Maximum已设置
@@ -2039,11 +2551,17 @@ namespace AutoUpdate
                 pbDownFile.Value = 0;
                 pbDownFile.Refresh();
                 lbState.Refresh();
+                
+                // 【优化】强制刷新整个窗体，确保 UI 完全更新
+                this.Refresh();
+                Application.DoEvents();  // 确保 UI 完全刷新
 
                 // 更新UI状态
                 lbState.Text = "正在准备更新文件，请稍候...";
                 SafeSetProgressValue(0);
-                Application.DoEvents();
+                
+                // 【优化】增加等待时间，确保 UI 完全渲染（从 50ms 增加到 200ms）
+                await Task.Delay(200);
                 
                 //更新完成后copy文件，将下载的临时文件夹中的新文件复制到对应目标目录使其生效
 
@@ -2097,6 +2615,11 @@ namespace AutoUpdate
                 int totalVersions = versionDirList.Count;
                 int currentVersionProgress = 0;
                 int processedFiles = 0;
+                
+                // 【增强】显示阶段提示
+                lbState.Text = $"阶段 1/3: 正在复制文件 (共 {totalFilesToCopy} 个文件)...\n复制完成后将自动启动程序，请耐心等待";
+                SafeSetProgressValue(0);
+                await Task.Delay(50);
 
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
@@ -2113,10 +2636,10 @@ namespace AutoUpdate
                     processedFiles += versionFileCount;
                     
                     int overallProgress = (processedFiles * 90) / totalFilesToCopy; // 预留10%给后续操作
-                    lbState.Text = $"正在复制文件... ({processedFiles}/{totalFilesToCopy})";
+                    lbState.Text = $"阶段 2/3: 正在复制文件... ({processedFiles}/{totalFilesToCopy})\n复制完成后将自动启动程序";
                     SafeSetProgressValue(Math.Min(overallProgress, 90));
                     pbDownFile.Refresh();
-                    Application.DoEvents();
+                    await Task.Delay(10); // 轻量级UI刷新
                     
                     // 使用Path.Combine安全构建路径，避免双反斜杠问题
                     AppendAllText($"[LastCopy] 处理版本 {i + 1}/{totalVersions}: {versionDirList[i]}");
@@ -2125,7 +2648,7 @@ namespace AutoUpdate
                     // 确保源路径存在
                     if (Directory.Exists(sourcePath))
                     {
-                        CopyFile(sourcePath, targetDir, versionDirList[i]);
+                        await CopyFileAsync(sourcePath, targetDir, versionDirList[i]);
                         AppendAllText($"[LastCopy] 成功复制版本目录: {sourcePath} 到 {targetDir}");
                     }
                     else
@@ -2135,10 +2658,10 @@ namespace AutoUpdate
                 }
                 
                 // 更新进度到90%
-                lbState.Text = "文件复制完成，正在处理自我更新...";
+                lbState.Text = "阶段 3/3: 文件复制完成，正在处理自我更新...\n即将自动启动程序";
                 SafeSetProgressValue(90);
                 pbDownFile.Refresh();
-                Application.DoEvents();
+                await Task.Delay(10);
                 
                 AppendAllText("文件复制完成，开始执行自我更新流程...");
 
@@ -2264,10 +2787,10 @@ namespace AutoUpdate
                 if (selfUpdateStarted)
                 {
                     // 更新状态提示 - 用户可看到
-                    lbState.Text = "更新成功！正在启动主程序，请稍候...";
+                    lbState.Text = "✅ 更新成功！\n正在启动主程序，请稍候...";
                     SafeSetProgressValue(100);
                     pbDownFile.Refresh();
-                    Application.DoEvents();
+                    await Task.Delay(10);
                     
                     AppendAllText("自我更新辅助进程已成功启动，主进程即将退出...");
                     
@@ -3415,7 +3938,7 @@ namespace AutoUpdate
         /// 采用双进程方式确保自身更新的可靠性
         /// 先复制所有其他文件，最后处理自我更新
         /// </summary>
-        public void ApplyApp()
+        public async Task ApplyAppAsync()
         {
             try
             {
@@ -3434,7 +3957,7 @@ namespace AutoUpdate
                 
                 // 【修复】设置标志为true，让CopyFile跳过AutoUpdate.exe
                 selfUpdateStarted = true;
-                CopyFile(tempUpdatePath, AppDomain.CurrentDomain.BaseDirectory);
+                await CopyFileAsync(tempUpdatePath, AppDomain.CurrentDomain.BaseDirectory);
 
                 // 确保配置文件被正确更新到根目录
                 string tempConfigFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");

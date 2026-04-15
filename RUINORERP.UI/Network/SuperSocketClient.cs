@@ -418,69 +418,86 @@ namespace RUINORERP.UI.Network
                 }
             }
 
-            // 双重检查连接状态
-            if (!_isConnected || _client == null)
+            // ✅ 增强：发送前进行连接预验证（最多重试2次）
+            const int MAX_SEND_RETRIES = 2;
+            Exception lastException = null;
+            
+            for (int retry = 0; retry <= MAX_SEND_RETRIES; retry++)
             {
-                throw new InvalidOperationException("未连接到服务器");
-            }
-
-            try
-            {
-                // 检查连接是否有效
-                if (_client.Socket == null || !_client.Socket.Connected)
+                try
                 {
-                    _isConnected = false;
-                    _logger?.LogWarning("尝试发送数据时发现Socket连接已断开");
-                    throw new InvalidOperationException("连接已断开");
-                }
+                    // 双重检查连接状态
+                    if (!_isConnected || _client == null)
+                    {
+                        throw new InvalidOperationException("未连接到服务器");
+                    }
 
-                // 检查取消令牌是否已请求取消
-                cancellationToken.ThrowIfCancellationRequested();
+                    // ✅ 验证连接是否真正可用
+                    if (!ValidateConnection())
+                    {
+                        _logger?.LogWarning($"[连接验证失败] 第{retry + 1}次尝试，Socket状态异常");
+                        _isConnected = false;
+                        throw new InvalidOperationException("连接已断开");
+                    }
 
-                // 使用Task.Run将同步Send方法包装成异步操作
-                // 确保在IO操作期间不会阻塞调用线程
-                await Task.Run(() =>
-                {
+                    // 检查取消令牌是否已请求取消
                     cancellationToken.ThrowIfCancellationRequested();
-                    // 在发送过程中再次检查连接状态
+
+                    // 使用Task.Run将同步Send方法包装成异步操作
+                    // 确保在IO操作期间不会阻塞调用线程
+                    await Task.Run(() =>
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        // 在发送过程中再次检查连接状态
+                        if (_client.Socket == null || !_client.Socket.Connected)
+                        {
+                            _isConnected = false;
+                            _logger?.LogWarning("发送数据过程中发现Socket连接已断开");
+                            throw new InvalidOperationException("连接已断开");
+                        }
+                        _client.Send(data);
+                    }, cancellationToken).ConfigureAwait(false);
+
+                    // 发送完成后再次检查连接状态
                     if (_client.Socket == null || !_client.Socket.Connected)
                     {
                         _isConnected = false;
-                        _logger?.LogWarning("发送数据过程中发现Socket连接已断开");
-                        throw new InvalidOperationException("连接已断开");
+                        _logger?.LogWarning("发送数据完成后发现Socket连接已断开");
                     }
-                    _client.Send(data);
-                }, cancellationToken).ConfigureAwait(false);
 
-                // 发送完成后再次检查连接状态
-                if (_client.Socket == null || !_client.Socket.Connected)
-                {
-                    _isConnected = false;
-                    _logger?.LogWarning("发送数据完成后发现Socket连接已断开");
+                    _logger?.LogDebug("成功发送数据到服务器，数据长度: {DataLength}", data?.Length ?? 0);
+                    return; // ✅ 发送成功，直接返回
                 }
-
-                _logger?.LogDebug("成功发送数据到服务器，数据长度: {DataLength}", data?.Length ?? 0);
+                catch (OperationCanceledException)
+                {
+                    // 处理取消操作
+                    _logger?.LogWarning("发送数据操作被取消");
+                    throw;
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
+                {
+                    // 处理管道写入器已完成的特定异常
+                    _isConnected = false;
+                    _logger?.LogWarning("发送数据失败：管道写入器已完成，连接已断开");
+                    throw new InvalidOperationException("连接已断开，无法发送数据");
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    _logger?.LogWarning(ex, $"[发送失败] 第{retry + 1}次尝试失败: {ex.Message}");
+                    
+                    // 如果不是最后一次重试，等待后重试
+                    if (retry < MAX_SEND_RETRIES)
+                    {
+                        _logger?.LogInformation($"[发送重试] 将在500ms后进行第{retry + 2}次重试");
+                        await Task.Delay(500, cancellationToken);
+                    }
+                }
             }
-            catch (OperationCanceledException)
-            {
-                // 处理取消操作
-                _logger?.LogWarning("发送数据操作被取消");
-                throw;
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
-            {
-                // 处理管道写入器已完成的特定异常
-                _isConnected = false;
-                _logger?.LogWarning("发送数据失败：管道写入器已完成，连接已断开");
-                throw new InvalidOperationException("连接已断开，无法发送数据");
-            }
-            catch (Exception ex)
-            {
-                // 记录其他发送异常
-                _isConnected = false;
-                _logger?.LogError(ex, "发送数据到服务器失败");
-                throw;
-            }
+            
+            // ✅ 所有重试均失败，抛出最终异常
+            _logger?.LogError(lastException, $"[发送彻底失败] 经过{MAX_SEND_RETRIES + 1}次尝试后仍然失败");
+            throw new InvalidOperationException($"发送数据失败，已重试{MAX_SEND_RETRIES}次: {lastException?.Message}", lastException);
         }
 
         /// <summary>

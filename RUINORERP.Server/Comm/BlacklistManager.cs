@@ -13,16 +13,30 @@ public class BlacklistManager : INotifyCollectionChanged
 {
     private static readonly BindingList<BlacklistEntry> _bannedList = new BindingList<BlacklistEntry>();
     private static readonly ConcurrentDictionary<string, DateTime> _bannedIPs = new ConcurrentDictionary<string, DateTime>();
+    private static readonly HashSet<string> _allowedIPs = new HashSet<string>();
+    private static readonly List<IpRange> _allowedRanges = new List<IpRange>();
     private static SynchronizationContext _uiContext;
 
     public event NotifyCollectionChangedEventHandler CollectionChanged;
-    // 使用 BindingList 替代 ObservableCollection 更适合 WinForms
     public static BindingList<BlacklistEntry> BannedList => _bannedList;
 
     public static void Initialize(SynchronizationContext context)
     {
         _uiContext = context ?? throw new ArgumentNullException(nameof(context));
         _bannedList.RaiseListChangedEvents = true;
+        InitializeAllowedIpRanges();
+    }
+
+    /// <summary>
+    /// 初始化允许的IP段（内网IP段）
+    /// </summary>
+    private static void InitializeAllowedIpRanges()
+    {
+        _allowedRanges.Add(new IpRange("10.0.0.0", "10.255.255.255"));
+        _allowedRanges.Add(new IpRange("172.16.0.0", "172.31.255.255"));
+        _allowedRanges.Add(new IpRange("192.168.0.0", "192.168.255.255"));
+        _allowedRanges.Add(new IpRange("127.0.0.0", "127.255.255.255"));
+        _allowedRanges.Add(new IpRange("169.254.0.0", "169.254.255.255"));
     }
 
     public static void BanIp(string ip, TimeSpan duration)
@@ -145,5 +159,75 @@ public class BlacklistManager : INotifyCollectionChanged
         {
             UnbanIp(ip);
         }
+    }
+
+    /// <summary>
+    /// 添加允许的IP（白名单）
+    /// </summary>
+    public static void AddAllowedIp(string ip)
+    {
+        if (!string.IsNullOrWhiteSpace(ip))
+            _allowedIPs.Add(ip);
+    }
+
+    /// <summary>
+    /// 检查IP是否在允许列表中（内网或白名单）
+    /// </summary>
+    public static bool IsIpAllowed(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip))
+            return false;
+
+        if (_allowedIPs.Contains(ip))
+            return true;
+
+        foreach (var range in _allowedRanges)
+        {
+            if (range.Contains(ip))
+                return true;
+        }
+
+        return false;
+    }
+}
+
+/// <summary>
+/// IP范围类
+/// </summary>
+public class IpRange
+{
+    private readonly uint _start;
+    private readonly uint _end;
+
+    public IpRange(string startIp, string endIp)
+    {
+        _start = IpToUInt(startIp);
+        _end = IpToUInt(endIp);
+    }
+
+    public bool Contains(string ip)
+    {
+        uint ipUInt = IpToUInt(ip);
+        return ipUInt >= _start && ipUInt <= _end;
+    }
+
+    private static uint IpToUInt(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip))
+            return 0;
+
+        if (!System.Net.IPAddress.TryParse(ip, out var ipAddress))
+            return 0;
+
+        byte[] bytes = ipAddress.GetAddressBytes();
+        if (bytes.Length != 4)
+            return 0;
+
+        uint result = 0;
+        foreach (var b in bytes)
+        {
+            result = (result << 8) | b;
+        }
+        return result;
     }
 }

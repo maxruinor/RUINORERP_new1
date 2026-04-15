@@ -712,6 +712,14 @@ namespace RUINORERP.UI.ProductEAV
                     tb_ProdDetail detail = new tb_ProdDetail();
                     //为null的不需要，不然会覆盖
                     detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(epd);
+                    
+                    // ✅ 关键修复: AutoMapper不会复制IsIgnore属性,需要手动复制PendingImages
+                    if (epd.PendingImages != null && epd.PendingImages.Count > 0)
+                    {
+                        detail.PendingImages = new List<PendingImageInfo>(epd.PendingImages);
+                        MainForm.Instance.uclog.AddLog($"[GetDetailsAndRelations] 复制PendingImages: SKU={epd.SKU}, Count={epd.PendingImages.Count}");
+                    }
+                    
                     detail.tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>();
                     // 设置创建/修改信息
                     if (detail.ProdDetailID == 0)
@@ -2923,61 +2931,13 @@ namespace RUINORERP.UI.ProductEAV
 
                         if (dialogResult == DialogResult.OK)
                         {
-                            // ✅ 在窗体关闭前提取图片数据，存入PendingImages
-                            // 获取需要上传的图片数据
-                            var updatedImages = imageEditForm.GetUpdatedImages();
-                            if (updatedImages != null && updatedImages.Count > 0)
-                            {
-                                // ✅ 清除旧的PendingImages,添加新的
-                                detail.ClearPendingImages();
-                                
-                                foreach (var imgTuple in updatedImages)
-                                {
-                                    detail.AddPendingImage(
-                                        imageData: imgTuple.Item1,
-                                        fileName: imgTuple.Item2?.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
-                                        description: imgTuple.Item2?.Description,
-                                        sortOrder: imgTuple.Item2?.SortOrder ?? 0
-                                    );
-                                }
-                                
-                                MainForm.Instance.uclog.AddLog($"已缓存 {updatedImages.Count} 张SKU图片到PendingImages，SKU: {detail.SKU}, ID: {detail.ProdDetailID}");
-                            }
-                            else
-                            {
-                                // 如果没有图片了，清除所有PendingImages
-                                detail.ClearPendingImages();
-                                // ✅ HasUnsavedImageChanges是计算属性,不需要手动设置
-                                // 如果没有图片了，清空ImagesPath
-                                if (!string.IsNullOrEmpty(detail.ImagesPath))
-                                {
-                                    // ImagesPath将在保存时更新
-                                }
-                            }
-
-                            // ✅ 获取需要删除的图片信息,添加到PendingImages
-                            var deletedImages = imageEditForm.GetDeletedImages();
-                            if (deletedImages != null && deletedImages.Count > 0)
-                            {
-                                foreach (var delImg in deletedImages)
-                                {
-                                    // ✅ FileId是long类型,不是long?
-                                    if (delImg.FileId > 0)
-                                    {
-                                        detail.MarkImageForDeletion(delImg.FileId);
-                                    }
-                                }
-                                MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 标记{deletedImages.Count}张图片为待删除");
-                            }
+                            // ✅ frmSKUImageEdit.btnOK_Click中已经调用了SyncChangesToPendingImages
+                            // 所以detail.PendingImages已经被正确填充,不需要再次处理
+                            
+                            MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 图片编辑完成，PendingImages.Count={detail.PendingImages?.Count ?? 0}");
 
                             // 刷新当前单元格显示
                             dataGridView1.InvalidateCell(e.ColumnIndex, e.RowIndex);
-
-                            // 标记图片已更改
-                            if (updatedImages?.Count > 0 || deletedImages?.Count > 0)
-                            {
-                                MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 图片已更改，待保存");
-                            }
                         }
                     }
                 }

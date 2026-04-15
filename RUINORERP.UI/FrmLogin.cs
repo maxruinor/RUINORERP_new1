@@ -1298,6 +1298,23 @@ namespace RUINORERP.UI
                 // 保存用户配置
                 await SaveUserConfig(isInitPwd);
 
+                // 🆕 如果用户勾选了“记住密码”，设置自动重新登录凭据
+                if (chksaveIDpwd.Checked)
+                {
+                    try
+                    {
+                        MainForm.Instance.communicationService.SetAutoReloginCredentials(
+                            txtUserName.Text,
+                            txtPassWord.Text
+                        );
+                        MainForm.Instance.logger?.LogDebug("已设置自动重新登录凭据");
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger?.LogWarning(ex, "设置自动重新登录凭据失败");
+                    }
+                }
+
                 // 记录登录时间
                 if (Program.AppContextData.CurUserInfo.登录时间 < DateTime.Now.AddYears(-30))
                 {

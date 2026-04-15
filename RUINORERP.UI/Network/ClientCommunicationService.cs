@@ -470,8 +470,9 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 处理连接管理器重连成功事件
         /// 优化：网络恢复后自动恢复工作状态，不再依赖锁定机制
+        /// 🆕 新增：自动重新登录逻辑（后台执行，不显示登录窗体）
         /// </summary>
-        private void OnReconnectSucceeded()
+        private async void OnReconnectSucceeded()
         {
             try
             {
@@ -494,6 +495,9 @@ namespace RUINORERP.UI.Network
                 {
                     _logger?.LogWarning(eventEx, "触发ReconnectSucceeded事件时发生异常");
                 }
+
+                // 🆕 尝试恢复登录状态（后台执行，不显示登录窗体）
+                await TryRestoreLoginStateAsync();
 
                 // 显示重连成功信息到UI
                 try
@@ -1208,6 +1212,309 @@ namespace RUINORERP.UI.Network
                 return false;
             }
         }
+
+        #region 自动重新登录相关方法
+
+        /// <summary>
+        /// 🆕 设置自动重新登录凭据
+        /// 在用户登录成功后调用，保存到 UserGlobalConfig（已通过二进制序列化加密）
+        /// </summary>
+        public void SetAutoReloginCredentials(string username, string password)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(username))
+                {
+                    _logger?.LogWarning("SetAutoReloginCredentials: 用户名为空，跳过设置");
+                    return;
+                }
+
+                // 直接保存到 UserGlobalConfig（已有序列化存储机制）
+                UserGlobalConfig.Instance.UseName = username;
+                UserGlobalConfig.Instance.PassWord = password;
+                UserGlobalConfig.Instance.AutoSavePwd = true;
+                UserGlobalConfig.Instance.Serialize();
+                
+                _logger?.LogDebug($"已设置自动重新登录凭据: Username={username}");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "SetAutoReloginCredentials发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 🆕 清除自动重新登录凭据
+        /// 在用户登出或取消记住密码时调用
+        /// </summary>
+        public void ClearAutoReloginCredentials()
+        {
+            try
+            {
+                UserGlobalConfig.Instance.AutoSavePwd = false;
+                UserGlobalConfig.Instance.UseName = null;
+                UserGlobalConfig.Instance.PassWord = null;
+                UserGlobalConfig.Instance.Serialize();
+                
+                _logger?.LogDebug("已清除自动重新登录凭据");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "ClearAutoReloginCredentials发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 🆕 尝试恢复登录状态（后台执行，不显示登录窗体）
+        /// 在重连成功后自动调用，检查Token有效性并决定是否需要重新登录
+        /// </summary>
+        private async Task TryRestoreLoginStateAsync()
+        {
+            try
+            {
+                _logger?.LogDebug("开始尝试恢复登录状态...");
+
+                // 1. 首先检查是否有有效的Token
+                var userLoginService = GetUserLoginService();
+                if (userLoginService == null)
+                {
+                    _logger?.LogWarning("UserLoginService未初始化，跳过自动重新登录");
+                    return;
+                }
+
+                var currentToken = await userLoginService.GetCurrentAccessToken();
+                if (!string.IsNullOrEmpty(currentToken))
+                {
+                    try
+                    {
+                        // 尝试验证现有Token
+                        var isValid = await userLoginService.ValidateTokenAsync(currentToken);
+                        if (isValid)
+                        {
+                            _logger?.LogInformation("✅ 现有Token仍然有效，无需重新登录");
+                            
+                            // 通知UI Token有效
+                            NotifyUITokenValid();
+                            return; // Token有效，直接返回
+                        }
+                        else
+                        {
+                            _logger?.LogDebug("现有Token已失效，将尝试重新登录");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogDebug(ex, "Token验证失败，将尝试重新登录");
+                    }
+                }
+                else
+                {
+                    _logger?.LogDebug("没有有效的Token，将尝试重新登录");
+                }
+
+                // 2. Token无效或不存在，尝试自动重新登录
+                // 🆕 从 UserGlobalConfig 读取保存的凭据
+                if (UserGlobalConfig.Instance.AutoSavePwd && 
+                    !string.IsNullOrEmpty(UserGlobalConfig.Instance.UseName) && 
+                    !string.IsNullOrEmpty(UserGlobalConfig.Instance.PassWord))
+                {
+                    string username = UserGlobalConfig.Instance.UseName;
+                    string password = UserGlobalConfig.Instance.PassWord;
+                    
+                    _logger?.LogInformation($"🔄 Token失效，尝试使用保存的凭据自动重新登录: Username={username}");
+
+                    // 执行登录
+                    var loginResult = await userLoginService.LoginAsync(
+                        username,
+                        password,
+                        CancellationToken.None
+                    );
+
+                    if (loginResult != null && loginResult.IsSuccess)
+                    {
+                        _logger?.LogInformation($"✅ 自动重新登录成功: Username={username}, SessionId={loginResult.SessionId}");
+
+                        // 通知UI登录成功
+                        NotifyUIAutoReloginSuccess(loginResult);
+                    }
+                    else
+                    {
+                        var errorMsg = loginResult?.ErrorMessage ?? "未知错误";
+                        _logger?.LogWarning($"❌ 自动重新登录失败: Username={username}, Error={errorMsg}");
+
+                        // 清除自动登录标志，避免无限重试
+                        UserGlobalConfig.Instance.AutoSavePwd = false;
+                        UserGlobalConfig.Instance.Serialize();
+
+                        // 通知用户需要手动登录
+                        NotifyUIAutoReloginFailed(errorMsg);
+                    }
+                }
+                else
+                {
+                    _logger?.LogDebug("未启用自动重新登录或凭据不完整，用户需要手动登录");
+                    
+                    // 通知UI需要手动登录
+                    NotifyUIManualLoginRequired();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "TryRestoreLoginStateAsync发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 🆕 获取UserLoginService实例
+        /// </summary>
+        private UserLoginService GetUserLoginService()
+        {
+            // 优先使用已设置的实例
+            if (_userLoginService != null)
+            {
+                return _userLoginService;
+            }
+
+            // 尝试从DI容器获取
+            try
+            {
+                _userLoginService = RUINORERP.UI.Startup.GetFromFac<UserLoginService>();
+                return _userLoginService;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "无法获取UserLoginService实例");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 🆕 通知UI Token仍然有效
+        /// </summary>
+        private void NotifyUITokenValid()
+        {
+            try
+            {
+                if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                {
+                    if (MainForm.Instance.InvokeRequired)
+                    {
+                        MainForm.Instance.BeginInvoke(new Action(() =>
+                        {
+                            MainForm.Instance.ShowStatusText("服务器连接已恢复，会话有效");
+                            MainForm.Instance.PrintInfoLog("Token验证通过，会话仍然有效");
+                        }));
+                    }
+                    else
+                    {
+                        MainForm.Instance.ShowStatusText("服务器连接已恢复，会话有效");
+                        MainForm.Instance.PrintInfoLog("Token验证通过，会话仍然有效");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "NotifyUITokenValid发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 🆕 通知UI自动重新登录成功
+        /// </summary>
+        private void NotifyUIAutoReloginSuccess(LoginResponse loginResult)
+        {
+            try
+            {
+                if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                {
+                    if (MainForm.Instance.InvokeRequired)
+                    {
+                        MainForm.Instance.BeginInvoke(new Action(() =>
+                        {
+                            MainForm.Instance.ShowStatusText($"服务器恢复，已自动重新登录 ({loginResult.Username})");
+                            MainForm.Instance.PrintInfoLog($"自动重新登录成功: Username={loginResult.Username}");
+                        }));
+                    }
+                    else
+                    {
+                        MainForm.Instance.ShowStatusText($"服务器恢复，已自动重新登录 ({loginResult.Username})");
+                        MainForm.Instance.PrintInfoLog($"自动重新登录成功: Username={loginResult.Username}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "NotifyUIAutoReloginSuccess发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 🆕 通知UI自动重新登录失败
+        /// </summary>
+        private void NotifyUIAutoReloginFailed(string errorMessage)
+        {
+            try
+            {
+                if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                {
+                    if (MainForm.Instance.InvokeRequired)
+                    {
+                        MainForm.Instance.BeginInvoke(new Action(() =>
+                        {
+                            MessageBox.Show(
+                                $"服务器恢复，但自动登录失败：{errorMessage}\n\n请重新登录。",
+                                "需要重新登录",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning
+                            );
+                        }));
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            $"服务器恢复，但自动登录失败：{errorMessage}\n\n请重新登录。",
+                            "需要重新登录",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "NotifyUIAutoReloginFailed发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 🆕 通知UI需要手动登录
+        /// </summary>
+        private void NotifyUIManualLoginRequired()
+        {
+            try
+            {
+                if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                {
+                    if (MainForm.Instance.InvokeRequired)
+                    {
+                        MainForm.Instance.BeginInvoke(new Action(() =>
+                        {
+                            MainForm.Instance.ShowStatusText("服务器已恢复，请重新登录");
+                        }));
+                    }
+                    else
+                    {
+                        MainForm.Instance.ShowStatusText("服务器已恢复，请重新登录");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "NotifyUIManualLoginRequired发生异常");
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 连接状态变更事件处理

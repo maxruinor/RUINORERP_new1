@@ -309,7 +309,7 @@ namespace RUINORERP.UI
                             // ✅ 连接断开时主动启动重连
                             if (CurrentLoginStatus == LoginStatus.LoggedIn)
                             {
-                                logger?.LogWarning("检测到连接断开，启动自动重连机制");
+                                //logger?.LogWarning("检测到连接断开，启动自动重连机制");
                                 communicationService.ConnectionManager.StartAutoReconnect();
                                 
                                 // 在UI线程显示提示

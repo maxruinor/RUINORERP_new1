@@ -115,6 +115,20 @@ namespace RUINORERP.UI.Network
         /// 用于用户手动登录后重置锁定状态
         /// </summary>
         void ResetHeartbeatFailureCount();
+
+        /// <summary>
+        /// 🆕 设置自动重新登录凭据
+        /// 在用户登录成功后调用，保存到 UserGlobalConfig
+        /// </summary>
+        /// <param name="username">用户名</param>
+        /// <param name="password">密码</param>
+        void SetAutoReloginCredentials(string username, string password);
+
+        /// <summary>
+        /// 🆕 清除自动重新登录凭据
+        /// 在用户登出或取消记住密码时调用
+        /// </summary>
+        void ClearAutoReloginCredentials();
     }
 
 }

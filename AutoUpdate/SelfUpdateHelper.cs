@@ -83,12 +83,11 @@ namespace AutoUpdate
                 
                 // 在启动 AutoUpdateUpdater 之前，确保当前进程完全释放资源
                 WriteLog("AutoUpdateLog.txt", "[启动更新器] 等待进程资源完全释放...");
-                Thread.Sleep(500);  // 【优化】从2000ms减少到500ms
+                Thread.Sleep(200);  // 【优化】从500ms减少到200ms
                 
-                // 强制垃圾回收
+                // 强制垃圾回收（优化：减少次数）
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-                GC.Collect();
                 WriteLog("AutoUpdateLog.txt", "[启动更新器] 已执行垃圾回收");
                 
                 // 启动AutoUpdateUpdater（无参数，通过配置文件传递）
@@ -106,8 +105,9 @@ namespace AutoUpdate
                 {
                     WriteLog("AutoUpdateLog.txt", "AutoUpdateUpdater已成功启动");
                     
-                    // 等待 AutoUpdateUpdater 进程确认启动
-                    Thread.Sleep(UPDATER_STARTUP_WAIT_MS);
+                    // 【优化】减少等待时间到 300ms（从 1000ms）
+                    // 辅助进程是独立的，不需要长时间确认
+                    Thread.Sleep(300);
                     
                     return true;
                 }
@@ -554,8 +554,9 @@ namespace AutoUpdate
                         WriteLog("AutoUpdateLog.txt", $"[ERP启动] ERP系统启动成功，进程ID: {process.Id}");
                         WriteLog("AutoUpdateLog.txt", $"[ERP启动] 进程名称: {process.ProcessName}");
                         
-                        // 等待进程启动完成
-                        Thread.Sleep(1500);
+                        // 【优化】减少等待时间到 500ms（从 1500ms）
+                        // ERP 启动是异步的，不需要长时间等待
+                        Thread.Sleep(500);
                         
                         // 检查进程是否仍在运行
                         if (!process.HasExited)

@@ -2770,16 +2770,13 @@ namespace AutoUpdate
                     AppendAllText($"[AutoUpdate更新] 释放UI控件时出错: {ex.Message}");
                 }
                 
-                // 强制垃圾回收（多次执行以确保完全清理）
+                // 强制垃圾回收（优化：减少次数）
                 AppendAllText("[AutoUpdate更新] 执行垃圾回收...");
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
                 AppendAllText("[AutoUpdate更新] 已执行垃圾回收");
                 
-                // 【优化】减少等待时间，优化用户体验
+                // 【优化】启动辅助进程
                 AppendAllText("[AutoUpdate更新] 正在启动辅助进程...");
 
                 selfUpdateStarted = SelfUpdateHelper.StartAutoUpdateUpdater(currentExePath, tempUpdatePath);
@@ -2787,7 +2784,7 @@ namespace AutoUpdate
                 if (selfUpdateStarted)
                 {
                     // 更新状态提示 - 用户可看到
-                    lbState.Text = "✅ 更新成功！\n正在启动主程序，请稍候...";
+                    lbState.Text = "✅ 更新成功！\n正在启动主程序...";
                     SafeSetProgressValue(100);
                     pbDownFile.Refresh();
                     await Task.Delay(10);
@@ -2798,9 +2795,10 @@ namespace AutoUpdate
                     AppendAllText("[配置同步] 退出前再次确保配置文件已复制...");
                     CopyConfigFileToRoot();
                     
-                    // 【优化】减少等待时间到2秒
-                    AppendAllText("[AutoUpdate更新] 等待2秒后退出...");
-                    Thread.Sleep(2000);
+                    // 【优化】大幅减少等待时间到 500ms（从 2000ms）
+                    // 辅助进程已经启动，不需要长时间等待
+                    AppendAllText("[AutoUpdate更新] 等待 500ms 后退出...");
+                    await Task.Delay(500);
 
                     // 隐藏窗口，避免用户看到闪烁
                     AppendAllText("[AutoUpdate更新] 正在关闭更新程序...");

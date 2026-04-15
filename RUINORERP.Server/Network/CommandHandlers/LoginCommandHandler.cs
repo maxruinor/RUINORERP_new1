@@ -256,6 +256,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             CommandContext executionContext,
             CancellationToken cancellationToken)
         {
+            // 【修复】在 try 块外声明 sessionInfo，确保 catch 块中可以访问
+            SessionInfo sessionInfo = null;
 
             try
             {
@@ -282,7 +284,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
 
                 // 获取或创建会话信息
-                var sessionInfo = SessionService.GetSession(executionContext.SessionId);
+                sessionInfo = SessionService.GetSession(executionContext.SessionId);
                 
                 // 如果从执行上下文获取失败，尝试从登录请求获取
                 if (sessionInfo == null && loginRequest != null && !string.IsNullOrEmpty(loginRequest.SessionId))

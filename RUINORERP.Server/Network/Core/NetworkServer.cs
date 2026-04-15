@@ -304,9 +304,10 @@ namespace RUINORERP.Server.Network.Core
 
                    }, async (session, reason) =>
                    {
+                       string re = reason.ToString();
                        await _sessionManager.RemoveSessionAsync(session.SessionID);
                    });
-                   })
+                })
                     .ConfigureLogging((hostCtx, loggingBuilder) =>
                     {
                         // 复制全局日志配置，确保日志一致性
@@ -691,12 +692,12 @@ namespace RUINORERP.Server.Network.Core
                 // 发生异常时，确保清空之前可能的部分数据，使用完全的默认配置
                 ports.Clear();
                 _configuredIps.Clear();
-                
+
                 var defaultPort = new ListenOptions().Port;
                 ports.Add(defaultPort);
                 Serverport = defaultPort;
                 _configuredIps.Add("0.0.0.0");
-                
+
                 _logger?.LogInformation($"发生异常后使用默认端口: {defaultPort}");
             }
 
@@ -785,9 +786,9 @@ namespace RUINORERP.Server.Network.Core
             message.AppendLine("==================================================");
             message.AppendLine("端口占用检测报告");
             message.AppendLine("==================================================\n");
-            
+
             message.AppendLine($"检测结果：端口 {port} 已被其他进程占用！\n");
-            
+
             // 获取占用端口的进程信息
             var processInfo = GetPortProcessInfo(port);
             if (!string.IsNullOrEmpty(processInfo))
@@ -795,7 +796,7 @@ namespace RUINORERP.Server.Network.Core
                 message.AppendLine($"占用进程信息：");
                 message.AppendLine($"{processInfo}\n");
             }
-            
+
             message.AppendLine("解决方案：");
             message.AppendLine($"1. 查看端口占用情况：");
             message.AppendLine($"   netstat -ano | findstr :{port}");
@@ -804,7 +805,7 @@ namespace RUINORERP.Server.Network.Core
             message.AppendLine($"\n3. 终止占用进程（谨慎操作）：");
             message.AppendLine($"   taskkill /PID [进程ID] /F");
             message.AppendLine($"\n==================================================");
-            
+
             return message.ToString();
         }
 
@@ -818,7 +819,7 @@ namespace RUINORERP.Server.Network.Core
             try
             {
                 var processInfo = new System.Text.StringBuilder();
-                
+
                 // 使用netstat命令获取端口占用信息
                 var startInfo = new ProcessStartInfo
                 {
@@ -828,14 +829,14 @@ namespace RUINORERP.Server.Network.Core
                     RedirectStandardOutput = true,
                     CreateNoWindow = true
                 };
-                
+
                 using (var process = Process.Start(startInfo))
                 {
                     if (process != null)
                     {
                         var output = process.StandardOutput.ReadToEnd();
                         process.WaitForExit();
-                        
+
                         if (!string.IsNullOrEmpty(output))
                         {
                             var lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -861,7 +862,7 @@ namespace RUINORERP.Server.Network.Core
                         }
                     }
                 }
-                
+
                 return processInfo.Length > 0 ? processInfo.ToString() : "无法获取进程信息";
             }
             catch (Exception ex)
@@ -884,7 +885,7 @@ namespace RUINORERP.Server.Network.Core
                 {
                     string processName = process.ProcessName;
                     string processPath = string.Empty;
-                    
+
                     // 尝试获取进程路径
                     try
                     {
@@ -895,7 +896,7 @@ namespace RUINORERP.Server.Network.Core
                         _logger?.LogWarning(ex, $"获取进程 {pid} 路径时发生异常，可能需要管理员权限");
                         processPath = "无法获取路径(需要管理员权限)";
                     }
-                    
+
                     return $"PID: {pid}, 名称: {processName}, 路径: {processPath}";
                 }
             }
@@ -909,7 +910,7 @@ namespace RUINORERP.Server.Network.Core
                 return $"PID: {pid}, 无法获取详情";
             }
         }
-        
+
         /// <summary>
         /// 获取端口占用的详细错误信息，用于向上抛出异常
         /// </summary>
@@ -917,7 +918,7 @@ namespace RUINORERP.Server.Network.Core
         /// <returns>包含详细解决方案的错误信息</returns>
         private string GetPortOccupiedDetailedMessage(Exception ex)
         {
-            return "=========================================="  + Environment.NewLine +
+            return "==========================================" + Environment.NewLine +
                    "服务器启动失败：" + BuildPortOccupiedMessage(Serverport, ex.Message);
         }
 
@@ -956,11 +957,11 @@ namespace RUINORERP.Server.Network.Core
         /// <param name="ex">异常对象</param>
         private void HandlePortOccupiedException(Exception ex)
         {
-            var errorMessage = "=========================================="  + Environment.NewLine +
+            var errorMessage = "==========================================" + Environment.NewLine +
                                "服务器启动失败：" + BuildPortOccupiedMessage(Serverport, ex.Message);
-        
+
             LogError(errorMessage);
-        
+
             // 同时在控制台显示彩色错误信息
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(errorMessage);

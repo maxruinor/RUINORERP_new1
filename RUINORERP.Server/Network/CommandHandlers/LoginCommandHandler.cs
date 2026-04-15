@@ -315,12 +315,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 sessionInfo.ClientIp = realIp;
                 logger?.LogInformation($"[IP获取] SessionID={sessionInfo.SessionID}, ClientIp={sessionInfo.ClientIp}, Source=RemoteEndPoint");
                 
-                // 检查黑名单（使用服务器端获取的真实IP）
-                if (IsUserBlacklisted(loginRequest.Username, sessionInfo.ClientIp))
-                {
-                    logger?.LogWarning($"[登录失败] 用户或IP在黑名单中: Username={loginRequest.Username}, ClientIp={sessionInfo.ClientIp}");
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "用户或IP在黑名单中");
-                }
+                // ✅ 已移除IP黑名单检查 - 内网环境不需要IP限制，避免影响正常使用
+                // if (IsUserBlacklisted(loginRequest.Username, sessionInfo.ClientIp))
+                // {
+                //     logger?.LogWarning($"[登录失败] 用户或IP在黑名单中: Username={loginRequest.Username}, ClientIp={sessionInfo.ClientIp}");
+                //     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "用户或IP在黑名单中");
+                // }
 
                 // 检查登录尝试次数
                 int currentAttempts = GetLoginAttempts(loginRequest.Username);
@@ -341,14 +341,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 计算剩余尝试次数
                     int remainingAttempts = MaxLoginAttempts - newAttempts;
                     
-                    // ✅ 优化：失败5次后自动封禁IP 1小时（使用服务器端获取的真实IP）
-                    if (newAttempts >= MaxLoginAttempts)
-                    {
-                        BlacklistManager.BanIp(sessionInfo.ClientIp, TimeSpan.FromHours(1));
-                        logger?.LogWarning($"[自动封禁] IP地址 {sessionInfo.ClientIp} 因登录失败次数过多被封禁1小时，Username={loginRequest.Username}, FailedAttempts={newAttempts}");
-                        // 封禁后返回带封禁信息的错误（不暴露具体剩余次数以防暴力破解探测）
-                        return ResponseFactory.CreateSpecificErrorResponse(executionContext, "登录尝试次数过多，账户已被临时锁定，请稍后再试或联系管理员");
-                    }
+                    // ✅ 优化：失败5次后不再封禁IP - 内网环境不需要IP封禁，避免影响正常使用
+                    // if (newAttempts >= MaxLoginAttempts)
+                    // {
+                    //     BlacklistManager.BanIp(sessionInfo.ClientIp, TimeSpan.FromHours(1));
+                    //     logger?.LogWarning($"[自动封禁] IP地址 {sessionInfo.ClientIp} 因登录失败次数过多被封禁1小时，Username={loginRequest.Username}, FailedAttempts={newAttempts}");
+                    //     // 封禁后返回带封禁信息的错误（不暴露具体剩余次数以防暴力破解探测）
+                    //     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "登录尝试次数过多，账户已被临时锁定，请稍后再试或联系管理员");
+                    // }
                     
                     // ✅ 优化：详细记录认证失败，并提供剩余尝试次数提示（帮助正常用户了解状态）
                     string errorMessage = remainingAttempts > 0 
@@ -990,12 +990,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 检查用户或IP是否在黑名单中
+        /// ⚠️ 已禁用 - 内网环境不需要IP限制
         /// </summary>
         private bool IsUserBlacklisted(string username, string ipAddress)
         {
-            // 内网业务系统：主要依靠IP封禁（用于真正的异常攻击）
-            // 不封禁用户名，避免误伤正常用户
-            return !string.IsNullOrEmpty(ipAddress) && BlacklistManager.IsIpBanned(ipAddress);
+            // 内网业务系统：已移除IP封禁功能，避免影响正常用户使用
+            // 仅保留登录次数限制作为基础防护
+            return false;
         }
 
         /// <summary>

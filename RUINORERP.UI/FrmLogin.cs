@@ -605,7 +605,7 @@ namespace RUINORERP.UI
                     : $"登录失败: {ex.Message}";
 
                 MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                btnok.Enabled = true;
+                btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
                 btncancel.Text = "取消";
             }
             finally
@@ -1144,7 +1144,7 @@ namespace RUINORERP.UI
                 }
 
                 // 创建组合取消令牌：包含用户取消和超时取消
-                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15)); // 15秒超时
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(8)); // ✅ 8秒超时,快速失败便于重试
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                     timeoutCts.Token,
                     _loginCancellationTokenSource?.Token ?? CancellationToken.None);
@@ -1155,9 +1155,9 @@ namespace RUINORERP.UI
                     string serverIP = txtServerIP.Text.Trim();
                     MainForm.Instance.PrintInfoLog($"正在连接到服务器 {serverIP}:{serverPort}...");
 
-                    // 连接到服务器
+                    // 连接到服务器（✅ 缩短为8秒超时）
                     var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
-                    var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(15), linkedCts.Token));
+                    var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(8), linkedCts.Token));
 
                     if (completedTask != connectTask)
                     {
@@ -1187,14 +1187,14 @@ namespace RUINORERP.UI
                 {
                     var errorMsg = loginResponse?.ErrorMessage ?? "登录失败，请检查用户名和密码";
                     MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    btnok.Enabled = true;
+                    btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
                     btncancel.Text = "取消";
                 }
             }
             catch (OperationCanceledException)
             {
                 MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                btnok.Enabled = true;
+                btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
                 btncancel.Text = "取消";
             }
             finally

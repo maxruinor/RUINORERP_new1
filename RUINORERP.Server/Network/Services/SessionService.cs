@@ -483,47 +483,43 @@ namespace RUINORERP.Server.Network.Services
                 
                 bool shouldCloseConnection = false; // 标记是否需要关闭连接
                 
-                if (!string.IsNullOrEmpty(clientIp) && clientIp != "0.0.0.0")
-                {
-                    // 记录连接并检查是否超限
-                    var tracker = _connectionRates.GetOrAdd(clientIp, _ => new ConnectionRateTracker());
-                    lock (tracker)
-                    {
-                        tracker.RecordConnection();
-                        
-                        // ✅ 如果1分钟内连接超过60次，自动封禁30分钟（DDoS防护）
-                        const int maxConnectionsPerMinute = 60;
-                        if (tracker.IsExceedingLimit(maxConnectionsPerMinute, TimeSpan.FromMinutes(1)))
-                        {
-                            BlacklistManager.BanIp(clientIp, TimeSpan.FromMinutes(30));
-                            _logger.LogWarning($"[自动封禁-DDoS] IP {clientIp} 因高频连接被封禁30分钟 (1分钟内{tracker.ConnectionCount}次连接)");
-                            shouldCloseConnection = true; // 标记需要关闭
-                        }
-                    }
-                    
-                    // ⚠️ 修复：在lock块外执行await操作
-                    if (shouldCloseConnection)
-                    {
-                        await session.CloseAsync(CloseReason.ServerShutdown);
-                        return;
-                    }
-                }
+                // ✅ 已禁用DDoS防护 - 内网环境不需要连接频率限制
+                // if (!string.IsNullOrEmpty(clientIp) && clientIp != "0.0.0.0")
+                // {
+                //     var tracker = _connectionRates.GetOrAdd(clientIp, _ => new ConnectionRateTracker());
+                //     lock (tracker)
+                //     {
+                //         tracker.RecordConnection();
+                //         const int maxConnectionsPerMinute = 60;
+                //         if (tracker.IsExceedingLimit(maxConnectionsPerMinute, TimeSpan.FromMinutes(1)))
+                //         {
+                //             BlacklistManager.BanIp(clientIp, TimeSpan.FromMinutes(30));
+                //             _logger.LogWarning($"[自动封禁-DDoS] IP {clientIp} 因高频连接被封禁30分钟");
+                //             shouldCloseConnection = true;
+                //         }
+                //     }
+                //     if (shouldCloseConnection)
+                //     {
+                //         await session.CloseAsync(CloseReason.ServerShutdown);
+                //         return;
+                //     }
+                // }
                 
-                // ✅ 国外IP/未授权IP拦截：只允许内网IP和白名单IP
-                if (!string.IsNullOrEmpty(clientIp) && !BlacklistManager.IsIpAllowed(clientIp))
-                {
-                    _logger.LogWarning($"[IP拦截] 拒绝非内网IP连接: {clientIp}");
-                    await session.CloseAsync(CloseReason.ServerShutdown);
-                    return;
-                }
+                // ✅ 已禁用IP白名单拦截 - 内网环境允许所有IP连接
+                // if (!string.IsNullOrEmpty(clientIp) && !BlacklistManager.IsIpAllowed(clientIp))
+                // {
+                //     _logger.LogWarning($"[IP拦截] 拒绝非内网IP连接: {clientIp}");
+                //     await session.CloseAsync(CloseReason.ServerShutdown);
+                //     return;
+                // }
 
-                // ✅ 优化：获取客户端IP并检查黑名单（在网络层早期拦截）
-                if (!string.IsNullOrEmpty(clientIp) && BlacklistManager.IsIpBanned(clientIp))
-                {
-                    _logger.LogWarning($"[黑名单拦截] IP地址已被封禁，拒绝连接: {clientIp}");
-                    await session.CloseAsync(CloseReason.ServerShutdown);
-                    return;
-                }
+                // ✅ 已禁用IP黑名单检查 - 内网环境不封禁IP
+                // if (!string.IsNullOrEmpty(clientIp) && BlacklistManager.IsIpBanned(clientIp))
+                // {
+                //     _logger.LogWarning($"[黑名单拦截] IP地址已被封禁，拒绝连接: {clientIp}");
+                //     await session.CloseAsync(CloseReason.ServerShutdown);
+                //     return;
+                // }
 
                 // 检查是否已达到最大会话数
                 if (ActiveSessionCount >= MaxSessionCount)

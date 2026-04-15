@@ -105,8 +105,9 @@ namespace RUINORERP.UI.Network.Services
                 _logger?.LogInformation($"[登录请求] 用户名: {username}, SessionId: {loginRequest.SessionId}");
 
                 // 发送登录命令并获取响应 - 移除复杂重试逻辑，依赖ClientCommunicationService的可靠性
+                // ✅ 使用0让SendCommandWithResponseAsync自动根据命令类型设置超时(登录为8秒,快速失败便于重试)
                 var response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
-                    AuthenticationCommands.Login, loginRequest, ct, 20000);
+                    AuthenticationCommands.Login, loginRequest, ct, 8000);
 
 
 

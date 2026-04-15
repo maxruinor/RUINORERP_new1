@@ -490,7 +490,7 @@ namespace RUINORERP.UI.BaseForm
         {
             // 防止重复更新、无效调用和窗体已释放的情况
             if (entity == null || _isUpdatingUIStates || this.IsDisposed) return;
-
+            
             try
             {
                 _isUpdatingUIStates = true;
@@ -515,6 +515,20 @@ namespace RUINORERP.UI.BaseForm
 
                 // 5. 字段显示权限控制
                 UIHelper.ControlForeignFieldInvisible<T>(this, false);
+                if (entity.ActionStatus == ActionStatus.新增)
+                {
+                    toolStripbtnSubmit.Enabled = false;
+                    if (entity.PrimaryKeyID>0)
+                    {
+                        toolStripbtnSubmit.Enabled = true;
+                    }
+                }
+
+                if (entity.ActionStatus == ActionStatus.修改)
+                {
+                    toolStripButtonSave.Enabled = true;
+                    toolStripbtnSubmit.Enabled = true;
+                }
 
             }
             catch (Exception ex)
@@ -1989,7 +2003,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveImage(imageInfo.FileId);
                                 MainForm.Instance.PrintInfoLog($"成功上传图片: {imageInfo.FileName ?? imageInfo.OriginalFileName}");
-                                
+
                                 // 更新单元格模型数据
                                 if (imageInfo.Cell is ImageWebCell webCell)
                                 {
@@ -2242,9 +2256,6 @@ namespace RUINORERP.UI.BaseForm
                     {
                         baseEntity.AcceptChanges();
                     }
-                    
-                    // 使用V4状态管理系统的按钮控制
-                    UpdateAllUIStates(entity);
 
                     if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
                     {
@@ -2879,6 +2890,7 @@ namespace RUINORERP.UI.BaseForm
 
                         UNLock(); // 解锁当前单据
                         Add();
+                        toolStripbtnSubmit.Enabled = false;
                     }
                     catch (Exception ex)
                     {
@@ -2889,10 +2901,12 @@ namespace RUINORERP.UI.BaseForm
                     break;
                 case MenuItemEnums.复制性新增:
                     AddByCopy();
+                    toolStripbtnSubmit.Enabled = false;
                     break;
 
                 case MenuItemEnums.数据特殊修正:
                     SpecialDataFix();
+
                     break;
 
                 case MenuItemEnums.删除:
@@ -3062,21 +3076,22 @@ namespace RUINORERP.UI.BaseForm
                                         return;
                                     }
                                 }
-                            }
-                            if (EditEntity.HasChanged)
-                            {
                                 editEntity.ActionStatus = ActionStatus.修改;
-                            }
-
-                            rsSave = await Save(true);
-                            if (!rsSave)
-                            {
-                                // 验证失败或保存失败，不锁定单据，保持保存按钮可用1
-                                // await LockBill();
                             }
                             else
                             {
+                                editEntity.ActionStatus = ActionStatus.新增;
+                            }
+
+                            rsSave = await Save(true);
+                            if (rsSave)
+                            {
+                                // 先标记数据已保存（HasChanged=false），再更新UI状态
+                                // 这样保存按钮才能正确显示为禁用状态
                                 EditEntity.AcceptChanges();
+                                // 保存成功，统一使用状态管理体系更新所有UI按钮状态
+                                UpdateAllUIStates(EditEntity);
+                                toolStripButtonSave.Enabled = false;
                             }
                         }
                         else if (hasImagesToUpload)
@@ -3098,15 +3113,12 @@ namespace RUINORERP.UI.BaseForm
                     finally
                     {
                         // 根据保存结果和状态管理系统恢复按钮状态
-                        if (rsSave)
+                        if (!rsSave)
                         {
-                            // 保存成功，更新所有UI状态（包括修改按钮等）
-                            UpdateAllUIStates(EditEntity);
-                        }
-                        else
-                        {
+
+
                             // 保存失败，仅更新保存按钮状态
-                            var btnSave = FindToolStripButtonByName("toolStripButtonSave");
+                            var btnSave = toolStripButtonSave;
                             if (btnSave != null)
                             {
                                 if (EditEntity != null && EditEntity.HasChanged)
@@ -3880,7 +3892,7 @@ namespace RUINORERP.UI.BaseForm
             CommonUI.frmGenericOpinion<T> frm = new CommonUI.frmGenericOpinion<T>();
             frm.FormTitle = "结案确认";
             frm.OpinionLabelText = "结案意见：";
-            
+
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
 
@@ -3890,9 +3902,9 @@ namespace RUINORERP.UI.BaseForm
             //ae.bizName = cbd.BizName;
 
 
-            frm.BindData(EditEntity, 
-                e => cbd.BillNo, 
-                e => "单据", 
+            frm.BindData(EditEntity,
+                e => cbd.BillNo,
+                e => "单据",
                 e => ReflectionHelper.GetPropertyValue(e, "CloseCaseOpinions"));
 
             if (frm.ShowDialog() == DialogResult.OK)
@@ -3937,7 +3949,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         await SyncTodoStatusAsync(updateData, "结案");
                     }
-                 
+
                     // 结案凭证图片也使用队列模式，与保存/审核类似
                     if (frm.UploadedFileId.HasValue && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
@@ -3949,7 +3961,7 @@ namespace RUINORERP.UI.BaseForm
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                  
+
                     Refreshs();
                 }
                 else
@@ -6348,13 +6360,13 @@ namespace RUINORERP.UI.BaseForm
                             MessageBoxIcon.Question);
 
                         userConfirmed = (confirmResult == DialogResult.Yes);
-                        
+
                         if (!userConfirmed.Value)
                         {
                             MainForm.Instance.uclog.AddLog($"用户取消了单据转换：{sourceDisplayName} -> {targetDisplayName}", Global.UILogType.普通消息);
                         }
                     });
-                    
+
                     shouldContinue = userConfirmed ?? false;
                 }
 
@@ -7098,6 +7110,32 @@ namespace RUINORERP.UI.BaseForm
             return rmr;
         }
 
+        /// <summary>
+        /// 重写基类的Save方法，使DoButtonClick中的保存逻辑能够正常工作
+        /// 原BaseBillEdit.Save(bool)直接返回false，导致保存逻辑无法执行
+        /// </summary>
+        /// <param name="needValidated">是否需要验证</param>
+        /// <returns>保存是否成功</returns>
+        protected async override Task<bool> Save(bool needValidated)
+        {
+            if (EditEntity == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                // 调用实际的保存逻辑
+                var result = await Save(EditEntity);
+                return result.Succeeded;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"保存异常：{ex.Message}");
+                return false;
+            }
+        }
+
         protected async Task<ReturnMainSubResults<T>> Save(T entity)
         {
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -7140,53 +7178,50 @@ namespace RUINORERP.UI.BaseForm
             }
 
             ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
-            
+
             try
             {
                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                 rmr = await ctr.BaseSaveOrUpdateWithChild<T>(entity);
-            if (rmr.Succeeded)
-            {
-                if (entity is BaseEntity baseEntity)
+                if (rmr.Succeeded)
                 {
-                    baseEntity.AcceptChanges();
-                    if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
+                    if (entity is BaseEntity baseEntity)
                     {
-                        List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
-                        if (detailEntities != null && detailEntities.Count > 0)
+                        baseEntity.AcceptChanges();
+                        if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
                         {
-                            for (int i = 0; i < detailEntities.Count; i++)
+                            List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
+                            if (detailEntities != null && detailEntities.Count > 0)
                             {
-                                if (detailEntities[i] is BaseEntity detailEntity)
+                                for (int i = 0; i < detailEntities.Count; i++)
                                 {
-                                    if (detailEntity.HasChanged)
+                                    if (detailEntities[i] is BaseEntity detailEntity)
                                     {
-                                        detailEntity.AcceptChanges();
+                                        if (detailEntity.HasChanged)
+                                        {
+                                            detailEntity.AcceptChanges();
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
 
-                long newkeyid = rmr.ReturnObject.PrimaryKeyID;
-                pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+                    long newkeyid = rmr.ReturnObject.PrimaryKeyID;
+                    pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
 
-                // 保存成功后的锁定状态管理
-                await PostSaveLockManagement(entity, pkid);
-                MainForm.Instance.uclog.AddLog("保存成功");
+                    // 保存成功后的锁定状态管理
+                    await PostSaveLockManagement(entity, pkid);
+                    MainForm.Instance.uclog.AddLog("保存成功");
 
-                // 保存成功后统一使用状态管理体系更新UI按钮状态
-                UpdateAllUIStates(entity as BaseEntity);
-
-                //保存是否需要提醒？状态？
-                if (pkid > 0)
-                {
-                    //var updateData = ConvertToTodoUpdate(entity);
-                    //TodoSyncManager.Instance.PublishUpdate(updateData);
-                }
-                await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
+                    //保存是否需要提醒？状态？
+                    if (pkid > 0)
+                    {
+                        //var updateData = ConvertToTodoUpdate(entity);
+                        //TodoSyncManager.Instance.PublishUpdate(updateData);
+                    }
+                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
                 }
                 else
                 {
@@ -7198,7 +7233,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             string title = parts[1];
                             string message = parts[2];
-                            
+
                             // 弹出确认对话框
                             DialogResult confirmResult = MessageBox.Show(
                                 message,
@@ -7207,7 +7242,7 @@ namespace RUINORERP.UI.BaseForm
                                 MessageBoxIcon.Question,
                                 MessageBoxDefaultButton.Button2
                             );
-                            
+
                             if (confirmResult == DialogResult.Yes)
                             {
                                 // 用户确认，记录日志并返回成功标志，由调用方决定是否继续
@@ -7224,12 +7259,12 @@ namespace RUINORERP.UI.BaseForm
                             }
                         }
                     }
-                    
+
                     // ✅ 关键修复：检查是否有唯一键约束错误
                     if (!string.IsNullOrEmpty(MainForm.LastUniqueConstraintError))
                     {
                         MainForm.Instance.uclog.AddLog(
-                            MainForm.LastUniqueConstraintError, 
+                            MainForm.LastUniqueConstraintError,
                             UILogType.错误
                         );
                         // 清除已处理的错误信息，避免重复显示
@@ -7252,11 +7287,11 @@ namespace RUINORERP.UI.BaseForm
                         ErrorMsg = MainForm.LastUniqueConstraintError ?? ex.Message
                     };
                 }
-                
+
                 // 记录其他异常
                 MainForm.Instance.uclog.AddLog($"保存异常：{ex.Message}", UILogType.错误);
                 logger?.LogError(ex, "保存单据异常");
-                
+
                 // 重新抛出异常，让调用方决定如何处理
                 throw;
             }
@@ -9014,7 +9049,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 var cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
                 var bizType = cbd?.BizType ?? BizType.默认数据;
-                
+
                 if (bizType == BizType.默认数据)
                 {
                     logger?.LogWarning("无法获取当前单据的业务类型");
@@ -9023,7 +9058,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 使用BillLockHelper简化调用
                 var response = await BillLockHelper.UnlockByBizTypeAsync(userid, bizType, logger);
-                
+
                 if (response?.IsSuccess == true)
                 {
                     if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
@@ -9521,7 +9556,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 logger?.LogWarning(ex, "获取产品信息失败，将使用默认提示信息");
             }
-            
+
             // 降级处理：如果缓存中没有找到产品信息，返回原始提示信息
             return $"{customPrefix}，相同的产品不能多行录入，如有需要请另建单据保存！";
         }

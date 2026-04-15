@@ -651,7 +651,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 为不同状态添加通用按钮规则
             //草稿状态：允许所有操作, 除了审核和反审核
-            AddStandardButtonRules(DataStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: false);
+            AddStandardButtonRules(DataStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: false);
 
             // 根据全局提交修改模式设置已新建状态的按钮规则
             // 灵活模式：允许修改；严格模式：不允许修改

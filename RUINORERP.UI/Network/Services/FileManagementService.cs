@@ -37,12 +37,22 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 最大重试次数
         /// </summary>
-        private const int MaxRetryCount = 3;
+        private const int MaxRetryCount = 2;
 
         /// <summary>
         /// 初始重试延迟（毫秒）
         /// </summary>
-        private const int InitialRetryDelayMs = 1000;
+        private const int InitialRetryDelayMs = 500;
+        
+        /// <summary>
+        /// 文件上传超时时间（毫秒）- 针对大图片适当延长
+        /// </summary>
+        private const int UploadTimeoutMs = 60000; // 60秒
+        
+        /// <summary>
+        /// 锁等待超时时间（秒）- 减少到5秒，快速失败
+        /// </summary>
+        private const int LockWaitTimeoutSeconds = 5;
 
         /// <summary>
         /// 构造函数
@@ -223,10 +233,10 @@ namespace RUINORERP.UI.Network.Services
             if (request.FileStorageInfos == null || request.FileStorageInfos.Count == 0)
                 throw new ArgumentException("文件数据不能为空");
 
-            // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败避免长时间等待
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
             {
-                _log?.LogWarning("获取文件操作锁超时");
+                _log?.LogWarning("获取文件操作锁超时({Timeout}秒)，可能有其他文件操作正在进行", LockWaitTimeoutSeconds);
                 return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("系统繁忙，请稍后重试");
             }
 
@@ -247,9 +257,9 @@ namespace RUINORERP.UI.Network.Services
                     // 只记录关键信息，移除详细的文件名日志
                     _log?.LogDebug("开始文件上传请求");
 
-                    // 发送文件上传命令并获取响应
+                    // 发送文件上传命令并获取响应，使用专门的上传超时时间
                     var response = await _communicationService.SendCommandWithResponseAsync<FileUploadResponse>(
-                        FileCommands.FileUpload, request, ct);
+                        FileCommands.FileUpload, request, ct, timeoutMs: UploadTimeoutMs);
 
                     // 检查响应数据是否为空
                     if (response == null)
@@ -314,8 +324,8 @@ namespace RUINORERP.UI.Network.Services
             if (request.FileStorageInfo.FileId == 0)
                 throw new ArgumentException("文件ID不能为空", nameof(request.FileStorageInfo));
 
-            // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
             {
                 return FileDownloadResponse.CreateFailure("系统繁忙，请稍后重试");
             }
@@ -331,9 +341,9 @@ namespace RUINORERP.UI.Network.Services
                 // 只记录关键信息，移除详细的文件ID日志
                 //开始文件下载请求
 
-                // 发送文件下载命令并获取响应
+                // 发送文件下载命令并获取响应，使用60秒超时（大图片可能需要更长时间）
                 var response = await _communicationService.SendCommandWithResponseAsync<FileDownloadResponse>(
-                    FileCommands.FileDownload, request, ct);
+                    FileCommands.FileDownload, request, ct, timeoutMs: UploadTimeoutMs);
 
                 // 检查响应数据是否为空
                 if (response == null)
@@ -390,10 +400,10 @@ namespace RUINORERP.UI.Network.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
             {
-                _log?.LogWarning("获取文件操作锁超时");
+                _log?.LogWarning("获取文件操作锁超时({Timeout}秒)，可能有其他文件操作正在进行", LockWaitTimeoutSeconds);
                 return FileDeleteResponse.CreateFailure("系统繁忙，请稍后重试");
             }
 
@@ -474,10 +484,10 @@ namespace RUINORERP.UI.Network.Services
             if (request.FileStorageInfo.FileId == 0)
                 throw new ArgumentException("文件ID不能为空", nameof(request.FileStorageInfo.FileId));
 
-            // 使用信号量确保同一时间只有一个文件操作请求，带30秒超时
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
             {
-                _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
+                _log?.LogWarning("获取文件操作锁超时({Timeout}秒)，当前锁状态: {CurrentCount}", LockWaitTimeoutSeconds, _fileOperationLock.CurrentCount);
                 return FileInfoResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
             }
 
@@ -556,10 +566,10 @@ namespace RUINORERP.UI.Network.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            // 使用信号量确保同一时间只有一个文件操作请求，带30秒超时
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
             {
-                _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
+                _log?.LogWarning("获取文件操作锁超时({Timeout}秒)，当前锁状态: {CurrentCount}", LockWaitTimeoutSeconds, _fileOperationLock.CurrentCount);
                 return FileListResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
             }
 
@@ -633,10 +643,10 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>存储使用信息</returns>
         public async Task<StorageUsageInfoData> GetStorageUsageInfoAsync(CancellationToken ct = default)
         {
-            // 使用信号量确保同一时间只有一个文件操作请求，带30秒超时
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
             {
-                _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
+                _log?.LogWarning("获取文件操作锁超时({Timeout}秒)，当前锁状态: {CurrentCount}", LockWaitTimeoutSeconds, _fileOperationLock.CurrentCount);
                 return new StorageUsageInfoData();
             }
 

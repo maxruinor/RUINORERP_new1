@@ -327,10 +327,11 @@ namespace RUINORERP.UI.ProductEAV
                                     physicalDelete: false
                                 );
                                 
-                                if (!deleteResponse.IsSuccess)
+                                if (deleteResponse == null || !deleteResponse.IsSuccess)
                                 {
                                     hasError = true;
-                                    MainForm.Instance.uclog.AddLog($"    删除失败: {deleteResponse.ErrorMessage}", Global.UILogType.错误);
+                                    string errorMsg = deleteResponse?.ErrorMessage ?? "删除结果为空";
+                                    MainForm.Instance.uclog.AddLog($"    删除失败: {errorMsg}", Global.UILogType.错误);
                                 }
                             }
                         }
@@ -351,10 +352,11 @@ namespace RUINORERP.UI.ProductEAV
                                     physicalDelete: false
                                 );
                                 
-                                if (!deleteResponse.IsSuccess)
+                                if (deleteResponse == null || !deleteResponse.IsSuccess)
                                 {
                                     hasError = true;
-                                    MainForm.Instance.uclog.AddLog($"    删除旧图失败: {deleteResponse.ErrorMessage}", Global.UILogType.错误);
+                                    string errorMsg = deleteResponse?.ErrorMessage ?? "删除结果为空";
+                                    MainForm.Instance.uclog.AddLog($"    删除旧图失败: {errorMsg}", Global.UILogType.错误);
                                     continue;
                                 }
                                 
@@ -366,7 +368,7 @@ namespace RUINORERP.UI.ProductEAV
                                     "ImagesPath"
                                 );
                                 
-                                if (uploadResult.IsSuccess)
+                                if (uploadResult != null && uploadResult.IsSuccess)
                                 {
                                     totalSuccessCount++;
                                     MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
@@ -374,7 +376,8 @@ namespace RUINORERP.UI.ProductEAV
                                 else
                                 {
                                     hasError = true;
-                                    MainForm.Instance.uclog.AddLog($"    上传失败: {uploadResult.ErrorMessage}", Global.UILogType.错误);
+                                    string errorMsg = uploadResult?.ErrorMessage ?? "上传结果为空";
+                                    MainForm.Instance.uclog.AddLog($"    上传失败: {errorMsg}", Global.UILogType.错误);
                                 }
                             }
                         }
@@ -395,7 +398,7 @@ namespace RUINORERP.UI.ProductEAV
                                     "ImagesPath"
                                 );
                                 
-                                if (uploadResult.IsSuccess)
+                                if (uploadResult != null && uploadResult.IsSuccess)
                                 {
                                     totalSuccessCount++;
                                     MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
@@ -403,7 +406,8 @@ namespace RUINORERP.UI.ProductEAV
                                 else
                                 {
                                     hasError = true;
-                                    MainForm.Instance.uclog.AddLog($"    上传失败: {uploadResult.ErrorMessage}", Global.UILogType.错误);
+                                    string errorMsg = uploadResult?.ErrorMessage ?? "上传结果为空";
+                                    MainForm.Instance.uclog.AddLog($"    上传失败: {errorMsg}", Global.UILogType.错误);
                                 }
                             }
                         }
@@ -470,10 +474,11 @@ namespace RUINORERP.UI.ProductEAV
                                             physicalDelete: false
                                         );
                                         
-                                        if (!deleteResponse.IsSuccess)
+                                        if (deleteResponse == null || !deleteResponse.IsSuccess)
                                         {
                                             hasError = true;
-                                            MainForm.Instance.uclog.AddLog($"    删除失败: {deleteResponse.ErrorMessage}", Global.UILogType.错误);
+                                            string errorMsg = deleteResponse?.ErrorMessage ?? "删除结果为空";
+                                            MainForm.Instance.uclog.AddLog($"    删除失败: {errorMsg}", Global.UILogType.错误);
                                         }
                                     }
                                 }
@@ -494,10 +499,11 @@ namespace RUINORERP.UI.ProductEAV
                                             physicalDelete: false
                                         );
                                         
-                                        if (!deleteResponse.IsSuccess)
+                                        if (deleteResponse == null || !deleteResponse.IsSuccess)
                                         {
                                             hasError = true;
-                                            MainForm.Instance.uclog.AddLog($"    删除旧图失败: {deleteResponse.ErrorMessage}", Global.UILogType.错误);
+                                            string errorMsg = deleteResponse?.ErrorMessage ?? "删除结果为空";
+                                            MainForm.Instance.uclog.AddLog($"    删除旧图失败: {errorMsg}", Global.UILogType.错误);
                                             continue;
                                         }
                                         
@@ -509,7 +515,7 @@ namespace RUINORERP.UI.ProductEAV
                                             "ImagesPath"
                                         );
                                         
-                                        if (uploadResult.IsSuccess)
+                                        if (uploadResult != null && uploadResult.IsSuccess)
                                         {
                                             totalSuccessCount++;
                                             MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
@@ -517,7 +523,8 @@ namespace RUINORERP.UI.ProductEAV
                                         else
                                         {
                                             hasError = true;
-                                            MainForm.Instance.uclog.AddLog($"    上传失败: {uploadResult.ErrorMessage}", Global.UILogType.错误);
+                                            string errorMsg = uploadResult?.ErrorMessage ?? "上传结果为空";
+                                            MainForm.Instance.uclog.AddLog($"    上传失败: {errorMsg}", Global.UILogType.错误);
                                         }
                                     }
                                 }
@@ -538,7 +545,7 @@ namespace RUINORERP.UI.ProductEAV
                                             "ImagesPath"
                                         );
                                         
-                                        if (uploadResult.IsSuccess)
+                                        if (uploadResult != null && uploadResult.IsSuccess)
                                         {
                                             totalSuccessCount++;
                                             MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
@@ -546,7 +553,8 @@ namespace RUINORERP.UI.ProductEAV
                                         else
                                         {
                                             hasError = true;
-                                            MainForm.Instance.uclog.AddLog($"    上传失败: {uploadResult.ErrorMessage}", Global.UILogType.错误);
+                                            string errorMsg = uploadResult?.ErrorMessage ?? "上传结果为空";
+                                            MainForm.Instance.uclog.AddLog($"    上传失败: {errorMsg}", Global.UILogType.错误);
                                         }
                                     }
                                 }

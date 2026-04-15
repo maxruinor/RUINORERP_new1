@@ -1,10 +1,11 @@
 
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 18:15:11
+// 时间：04/15/2025 10:00:00
 // **************************************
 using System;
 using SqlSugar;
@@ -19,21 +20,20 @@ using System.Drawing;
 using RUINORERP.Global;
 using RUINORERP.Global.Model;
 using RUINORERP.Global.EnumExt;
+
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// tb_ProdDetail 扩展类, 用于存放临时字段和辅助功能1
-    /// 后面按这个规律统一处理。如果实现中带有图片的字段。则需要额外处理
-    /// 字段名：RowImage
-    /// 后面如果支持多图则可能是List<key,value> key是图片名, value是图片对象
+    /// tb_Prod 扩展类, 用于存放临时字段和辅助功能
+    /// 用于产品主图的PendingImages管理
     /// </summary>
-    public partial class tb_ProdDetail 
+    public partial class tb_Prod
     {
         #region 图片管理扩展字段
 
         /// <summary>
         /// 待处理的图片操作列表(UI临时字段,不存储到数据库)
-        /// 用于在编辑期间暂存图片的新增/删除/替换操作,等待UCProductList.Save()时统一提交
+        /// 用于在编辑期间暂存产品主图的新增/删除/替换操作,等待UCProductList.Save()时统一提交
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -44,8 +44,8 @@ namespace RUINORERP.Model
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
-        public bool HasUnsavedImageChanges 
-        { 
+        public bool HasUnsavedImageChanges
+        {
             get => PendingImages != null && PendingImages.Count > 0;
         }
 
@@ -60,7 +60,7 @@ namespace RUINORERP.Model
         {
             if (PendingImages == null)
                 PendingImages = new List<PendingImageInfo>();
-            
+
             PendingImages.Add(PendingImageInfo.CreateAdd(imageData, fileName, description, sortOrder));
         }
 
@@ -72,7 +72,7 @@ namespace RUINORERP.Model
         {
             if (PendingImages == null)
                 PendingImages = new List<PendingImageInfo>();
-            
+
             PendingImages.Add(PendingImageInfo.CreateDelete(fileId));
         }
 
@@ -88,7 +88,7 @@ namespace RUINORERP.Model
         {
             if (PendingImages == null)
                 PendingImages = new List<PendingImageInfo>();
-            
+
             PendingImages.Add(PendingImageInfo.CreateReplace(existingFileId, newImageData, fileName, description, sortOrder));
         }
 
@@ -125,52 +125,6 @@ namespace RUINORERP.Model
         }
 
         #endregion
-
-        /// <summary>
-        /// 属性组名称, 用于多属性组合显示, 此字段不存储到数据库
-        /// </summary>
-        [SugarColumn(IsIgnore = true, ColumnDescription = "多属性组合")]
-        [Browsable(true)]
-        public string PropertyGroupName { get; set; }
-
-
-
-        /// <summary>
-        /// 多属性新组合序号, 用于多属性组合生成时的唯一标识, 此字段不存储到数据库
-        /// </summary>
-        [SugarColumn(IsIgnore = true, ColumnDescription = "多属性新组合序号")]
-        [Browsable(true)]
-        public string MultiPropertyEditorSEQ { get; set; }
-
-        /// <summary>
-        /// 产品信息显示文本
-        /// </summary>
-        [SugarColumn(IsIgnore = true, ColumnDescription = "产品信息")]
-        [Browsable(true)]
-        public string DisplayText
-        {
-            get
-            {
-                if (ProdDetailID == -1)
-                    return "请选择";
-
-                var uniqueParts = new HashSet<string>();
-
-                if (!string.IsNullOrWhiteSpace(tb_prod?.CNName))
-                    uniqueParts.Add(tb_prod.CNName);
-
-                if (!string.IsNullOrWhiteSpace(SKU))
-                    uniqueParts.Add(SKU);
-
-                if (!string.IsNullOrWhiteSpace(tb_prod?.Model))
-                    uniqueParts.Add(tb_prod.Model);
-
-                if (!string.IsNullOrWhiteSpace(tb_prod?.Specifications))
-                    uniqueParts.Add(tb_prod.Specifications);
-
-                return string.Join("-", uniqueParts);
-            }
-        }
     }
 }
 

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Lib.BusinessImage
 {
     /// <summary>
-    /// 图片信息类
+    /// 图片信息类1
     /// 用于统一管理图片的各种属性和状态，支持业务场景中的图片处理
     /// </summary>
     public class ImageInfo
@@ -116,6 +116,16 @@ namespace RUINORERP.Lib.BusinessImage
         /// 文件名
         /// </summary>
         public string FileName { get; set; }
+        
+        /// <summary>
+        /// ✅ 新增: 图片描述/备注
+        /// </summary>
+        public string Description { get; set; }
+        
+        /// <summary>
+        /// ✅ 新增: 排序序号
+        /// </summary>
+        public int SortOrder { get; set; }
         
         /// <summary>
         /// 通用标记字段，用于存储自定义状态信息（如：新增、修改、替换等）

@@ -557,7 +557,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 return;
             }
 
-            // 处理ImageInfo参数
+            // 处理ImageInfo参数1
             List<ImageInfo> imageInfosList = null;
             if (imageInfo != null)
             {

@@ -80,7 +80,7 @@ namespace RUINORERP.Lib.BusinessImage
 
         /// <summary>
         /// 生成默认ID
-        /// 当FileId无效时使用文件名的哈希值作为唯一标识
+        /// 当FileId无效时使用文件名的哈希值作为唯一标识1
         /// </summary>
         /// <param name="imageInfo">图片信息</param>
         /// <returns>默认ID</returns>

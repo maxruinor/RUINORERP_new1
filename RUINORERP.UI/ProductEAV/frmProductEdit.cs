@@ -69,21 +69,24 @@ namespace RUINORERP.UI.ProductEAV
         private ClientBizCodeService clientBizCodeService;
 
         /// <summary>
+        /// ✅ 已废弃: 旧的图片缓存机制,现在使用tb_ProdDetail.PendingImages
         /// 临时存储SKU图片数据（key: tb_ProdDetail对象引用, value: 图片数据列表）
         /// 使用对象引用作为key，支持未保存的SKU（ProdDetailID为0的情况）
         /// </summary>
-        private Dictionary<tb_ProdDetail, List<Tuple<byte[], ImageInfo>>> skuImageDataCache = new Dictionary<tb_ProdDetail, List<Tuple<byte[], ImageInfo>>>();
+        // private Dictionary<tb_ProdDetail, List<Tuple<byte[], ImageInfo>>> skuImageDataCache = new Dictionary<tb_ProdDetail, List<Tuple<byte[], ImageInfo>>>();
 
         /// <summary>
+        /// ✅ 已废弃: 旧的图片缓存机制,现在使用tb_ProdDetail.PendingImages
         /// 按ProdDetailID存储图片数据的缓存（key: ProdDetailID, value: 图片数据列表）
         /// 用于在对象引用不一致时通过ID查找图片数据
         /// </summary>
-        private Dictionary<long, List<Tuple<byte[], ImageInfo>>> skuImageDataCacheById = new Dictionary<long, List<Tuple<byte[], ImageInfo>>>();
+        // private Dictionary<long, List<Tuple<byte[], ImageInfo>>> skuImageDataCacheById = new Dictionary<long, List<Tuple<byte[], ImageInfo>>>();
 
         /// <summary>
+        /// ✅ 已废弃: 旧的图片缓存机制,现在使用tb_ProdDetail.PendingImages
         /// 临时存储SKU需要删除的图片信息（key: tb_ProdDetail对象引用, value: 需要删除的图片信息列表）
         /// </summary>
-        private Dictionary<tb_ProdDetail, List<ImageInfo>> skuImageDeletedCache = new Dictionary<tb_ProdDetail, List<ImageInfo>>();
+        // private Dictionary<tb_ProdDetail, List<ImageInfo>> skuImageDeletedCache = new Dictionary<tb_ProdDetail, List<ImageInfo>>();
 
         //定义两个值，为了计算listview的高宽，高是属性的倍数 假设一个属性一行 是50px，有三组则x3
         //宽取每组属性中值的最多个数,的字长，一个字算20px?
@@ -466,67 +469,227 @@ namespace RUINORERP.UI.ProductEAV
 
             //要先保存再修改才起作用
 
-            // 检查是否有图片需要上传或删除
+            // ✅ 注意: frmProductEdit只是临时编辑窗体,数据保存到bindingSource内存中
+            // 真正的数据库保存由UCProductList.Save()方法统一处理
+            // 因此这里不能调用Save(),只能标记有未保存的图片更改
+
+            // ✅ 重构: 将产品主图数据从magicPictureBox迁移到PendingImages
+            // 此时不上传图片,因为产品可能还没有有效的ProdBaseID
+            // UCProductList.Save()会统一处理PendingImages中的图片
             if (HasImagesToUpload())
             {
-                bool imageUploadSuccess = await UploadImagesIfNeeded();
-                if (!imageUploadSuccess)
-                {
-                    MessageBox.Show("图片处理失败，请重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-            }
+                MainForm.Instance.uclog.AddLog($"检测到产品主图有待处理的图片更改,将在列表保存时统一处理");
 
-            // 检查是否有SKU图片需要上传或删除
-            if (HasSKUImagesToUpload())
-            {
-                bool skuImageUploadSuccess = await UploadSKUImagesIfNeeded();
-                if (!skuImageUploadSuccess)
-                {
-                    MessageBox.Show("SKU图片处理失败，请重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-            }
+                // ✅ 遍历主图控件,将数据迁移到PendingImages
+                var updatedImages = magicPictureBox产品基本图片.GetImagesNeedingUpdate();
+                var deletedImages = magicPictureBox产品基本图片.GetDeletedImages();
 
-            // 上传新SKU的图片（关键修复：新增SKU时添加的图片）
-            if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
-            {
-                // 找出新保存的SKU（有ProdDetailID且在缓存中有图片数据）
-                var savedNewSKUs = new List<tb_ProdDetail>();
-                
-                foreach (var detail in EditEntity.tb_ProdDetails)
+                // 迁移新增/替换的图片到PendingImages
+                if (updatedImages != null && updatedImages.Count > 0)
                 {
-                    if (detail.ProdDetailID > 0)
+                    foreach (var imgTuple in updatedImages)
                     {
-                        // 检查这个SKU是否在缓存中有图片（说明是新添加的）
-                        var cachedKey = skuImageDataCache.Keys
-                            .FirstOrDefault(k => k.SKU == detail.SKU && k.ProdDetailID == 0);
-                        
-                        if (cachedKey != null && skuImageDataCache.ContainsKey(cachedKey))
+                        // imgTuple.Item1 = byte[], imgTuple.Item2 = ImageInfo
+                        var imageInfo = imgTuple.Item2;
+                        if (imageInfo != null && imageInfo.FileId > 0)
                         {
-                            savedNewSKUs.Add(detail);
+                            // 替换
+                            EditEntity.MarkImageForReplacement(
+                                existingFileId: imageInfo.FileId,
+                                newImageData: imgTuple.Item1,
+                                fileName: imageInfo.OriginalFileName ?? $"image_{DateTime.Now.Ticks}.jpg",
+                                description: imageInfo.Description,
+                                sortOrder: imageInfo.SortOrder ?? 0
+                            );
+                        }
+                        else
+                        {
+                            // 新增
+                            EditEntity.AddPendingImage(
+                                imageData: imgTuple.Item1,
+                                fileName: imageInfo?.OriginalFileName ?? $"image_{DateTime.Now.Ticks}.jpg",
+                                description: imageInfo?.Description,
+                                sortOrder: imageInfo?.SortOrder ?? 0
+                            );
                         }
                     }
+                    MainForm.Instance.uclog.AddLog($"产品主图添加{updatedImages.Count}张待上传图片到PendingImages");
                 }
-                
-                // 如果有新SKU需要上传图片
-                if (savedNewSKUs.Count > 0)
+
+                // 迁移删除的图片到PendingImages
+                if (deletedImages != null && deletedImages.Count > 0)
                 {
-                    MainForm.Instance.uclog.AddLog($"发现 {savedNewSKUs.Count} 个新SKU需要上传图片");
-                    
-                    bool newSkuImageSuccess = await UploadImagesForNewSKUsAsync(savedNewSKUs);
-                    
-                    if (!newSkuImageSuccess)
+                    foreach (var delImg in deletedImages)
                     {
-                        MainForm.Instance.uclog.AddLog("部分新SKU图片上传失败，但产品已保存", Global.UILogType.警告);
-                        // 不阻断流程，因为产品已保存成功
-                        // 用户可以在日志中查看详细信息
+                        if (delImg != null && delImg.FileId > 0)
+                        {
+                            EditEntity.MarkImageForDeletion(delImg.FileId);
+                        }
+                    }
+                    MainForm.Instance.uclog.AddLog($"产品主图标记{deletedImages.Count}张图片为待删除");
+                }
+            }
+
+            // ✅ 重构: 将SKU图片数据从旧缓存迁移到PendingImages(兼容过渡)
+            // 此时不上传图片,因为SKU可能还没有有效的ProdDetailID
+            // UCProductList.Save()会统一处理PendingImages中的图片
+            if (HasSKUImagesToUpload())
+            {
+                MainForm.Instance.uclog.AddLog($"检测到{EditEntity?.tb_ProdDetails?.Count ?? 0}个SKU有待处理的图片更改,将在列表保存时统一处理");
+                
+                // ✅ 遍历所有SKU,将旧的缓存数据迁移到PendingImages
+                foreach (var detail in EditEntity?.tb_ProdDetails ?? new List<tb_ProdDetail>())
+                {
+                    // 检查是否有待上传的图片(从旧缓存读取)
+                    var updatedImages = GetSKUImagesNeedingUpdate(detail);
+                    var deletedImages = GetSKUImagesToDelete(detail);
+                    
+                    // 迁移新增/替换的图片到PendingImages
+                    if (updatedImages != null && updatedImages.Count > 0)
+                    {
+                        foreach (var imgTuple in updatedImages)
+                        {
+                            // imgTuple.Item1 = byte[], imgTuple.Item2 = ImageInfo
+                            detail.AddPendingImage(
+                                imageData: imgTuple.Item1,
+                                fileName: imgTuple.Item2?.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
+                                description: imgTuple.Item2?.Description,
+                                sortOrder: imgTuple.Item2?.SortOrder ?? 0
+                            );
+                        }
+                        MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 添加{updatedImages.Count}张待上传图片到PendingImages");
+                    }
+                    
+                    // 迁移删除的图片到PendingImages
+                    if (deletedImages != null && deletedImages.Count > 0)
+                    {
+                        foreach (var delImg in deletedImages)
+                        {
+                            // ✅ FileId是long类型,不是long?,直接使用
+                            if (delImg.FileId > 0)
+                            {
+                                detail.MarkImageForDeletion(delImg.FileId);
+                            }
+                        }
+                        MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 标记{deletedImages.Count}张图片为待删除");
                     }
                 }
             }
 
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        /// <summary>
+        /// 窗体关闭后处理（已废弃，SKU图片上传由UCProductList.Save()统一处理）
+        /// </summary>
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            base.OnFormClosed(e);
+            // SKU图片上传由UCProductList.Save()统一处理，此处无需再处理
+        }
+
+        /// <summary>
+        /// ✅ 已废弃: 统一处理所有SKU的图片上传
+        /// 现在由UCProductList.Save()统一处理,此方法不再使用
+        /// 前提: 所有SKU必须已有ProdDetailID > 0
+        /// </summary>
+        [Obsolete("已由UCProductList.Save()统一处理,此方法不再使用")]
+        private async Task<bool> UploadAllSKUImagesAsync()
+        {
+            // ✅ 已废弃: 图片上传由UCProductList.Save()统一处理
+            MainForm.Instance.uclog.AddLog("UploadAllSKUImagesAsync已废弃,跳过执行");
+            return true;
+            
+            /* 旧代码已注释:
+            try
+            {
+                if (EditEntity?.tb_ProdDetails == null || EditEntity.tb_ProdDetails.Count == 0)
+                    return true;
+
+                int successCount = 0;
+                int failCount = 0;
+                
+                MainForm.Instance.uclog.AddLog($"开始统一处理{EditEntity.tb_ProdDetails.Count}个SKU的图片上传...");
+                
+                foreach (var detail in EditEntity.tb_ProdDetails)
+                {
+                    // 跳过没有ID的SKU(理论上不应该发生)
+                    if (detail.ProdDetailID <= 0)
+                    {
+                        MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 没有有效ID,跳过图片上传", Global.UILogType.错误);
+                        failCount++;
+                        continue;
+                    }
+
+                    // 从缓存获取待处理的图片
+                    var updatedImages = GetSKUImagesNeedingUpdate(detail);
+                    var deletedImages = GetSKUImagesToDelete(detail);
+
+                    bool hasUpdates = updatedImages != null && updatedImages.Count > 0;
+                    bool hasDeletions = deletedImages != null && deletedImages.Count > 0;
+
+                    if (!hasUpdates && !hasDeletions)
+                        continue; // 无变更,跳过
+
+                    MainForm.Instance.uclog.AddLog($"处理SKU {detail.SKU ?? "未命名"} (ID: {detail.ProdDetailID}) - 更新:{(hasUpdates ? updatedImages.Count : 0)}张, 删除:{(hasDeletions ? deletedImages.Count : 0)}张");
+
+                    // 调用通用上传方法
+                    var success = await UploadUpdatedImagesAsync<tb_ProdDetail>(
+                        detail, updatedImages, deletedImages, d => d.ImagesPath);
+
+                    if (success)
+                    {
+                        successCount += hasUpdates ? updatedImages.Count : 0;
+                        // ✅ 清理缓存(调用ClearPendingImages)
+                        ClearSKUImageCache(detail);
+                        // ✅ HasUnsavedImageChanges是计算属性,不能赋值,ClearPendingImages后自动变为false
+                        MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 图片处理成功");
+                    }
+                    else
+                    {
+                        failCount++;
+                        MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 图片处理失败", Global.UILogType.错误);
+                    }
+                }
+
+                if (failCount > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"SKU图片上传完成: 成功{successCount}张, 失败{failCount}个SKU", Global.UILogType.警告);
+                }
+                else if (successCount > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"成功上传{successCount}张SKU图片");
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog("没有需要处理的SKU图片");
+                }
+
+                return failCount == 0;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"SKU图片上传异常: {ex.Message}", Global.UILogType.错误);
+                return false;
+            }
+            */
+        }
+
+        /// <summary>
+        /// ✅ 已废弃: 清理指定SKU的图片缓存(现在使用detail.ClearPendingImages())
+        /// 清理指定SKU的图片缓存
+        /// </summary>
+        private void ClearSKUImageCache(tb_ProdDetail detail)
+        {
+            // ✅ 改为调用新的API
+            detail?.ClearPendingImages();
+            
+            // 旧代码已注释:
+            // skuImageDataCache.Remove(detail);
+            // skuImageDeletedCache.Remove(detail);
+            // if (detail.ProdDetailID > 0)
+            //     skuImageDataCacheById.Remove(detail.ProdDetailID);
         }
 
 
@@ -2495,76 +2658,84 @@ namespace RUINORERP.UI.ProductEAV
                     var detail = dataGridView1.Rows[e.RowIndex].DataBoundItem as tb_ProdDetail;
                     if (detail != null)
                     {
-                        // 检查是否有缓存的图片数据需要显示（包括新添加但未上传的图片）
-                        bool hasCachedData = skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail].Count > 0;
+                        // ✅ 从PendingImages获取待处理的图片
+                        var pendingAddImages = detail.GetPendingAddImages();
+                        var pendingReplaceImages = detail.GetPendingReplaceImages();
+                        bool hasPendingImages = (pendingAddImages != null && pendingAddImages.Count > 0) || 
+                                               (pendingReplaceImages != null && pendingReplaceImages.Count > 0);
 
                         // 调试日志（仅在第一次绘制时记录）
                         if (e.RowIndex == dataGridView1.CurrentCell?.RowIndex)
                         {
-                            MainForm.Instance.uclog.AddLog($"CellPainting: SKU={detail.SKU}, ID={detail.ProdDetailID}, HasCachedData={hasCachedData}, HasUnsavedChanges={detail.HasUnsavedImageChanges}, ImagesPath={detail.ImagesPath}");
+                            MainForm.Instance.uclog.AddLog($"CellPainting: SKU={detail.SKU}, ID={detail.ProdDetailID}, HasPendingImages={hasPendingImages}, ImagesPath={detail.ImagesPath}");
                         }
 
-                        if (hasCachedData)
+                        if (hasPendingImages)
                         {
                             // 绘制背景（不绘制前景，我们自己绘制）
                             e.PaintBackground(e.ClipBounds, false);
                             e.Handled = true;
 
-                            // 显示第一张图片的缩略图
-                            var imageDataList = skuImageDataCache[detail];
-                            try
+                            // ✅ 显示第一张待处理图片的缩略图(优先显示新增/替换的图片)
+                            byte[] firstImageData = null;
+                            if (pendingAddImages != null && pendingAddImages.Count > 0)
                             {
-                                using (var ms = new MemoryStream(imageDataList[0].Item1))
-                                using (var originalImage = Image.FromStream(ms))
+                                firstImageData = pendingAddImages[0].ImageData;
+                            }
+                            else if (pendingReplaceImages != null && pendingReplaceImages.Count > 0)
+                            {
+                                firstImageData = pendingReplaceImages[0].ImageData;
+                            }
+
+                            if (firstImageData != null)
+                            {
+                                try
                                 {
-                                    // 计算缩略图尺寸（保持宽高比）
-                                    int maxWidth = e.CellBounds.Width - 4;
-                                    int maxHeight = e.CellBounds.Height - 4;
-                                    float ratio = Math.Min((float)maxWidth / originalImage.Width, (float)maxHeight / originalImage.Height);
-                                    int thumbWidth = (int)(originalImage.Width * ratio);
-                                    int thumbHeight = (int)(originalImage.Height * ratio);
-
-                                    // 居中绘制缩略图
-                                    int x = e.CellBounds.X + (e.CellBounds.Width - thumbWidth) / 2;
-                                    int y = e.CellBounds.Y + (e.CellBounds.Height - thumbHeight) / 2;
-                                    var thumbRect = new Rectangle(x, y, thumbWidth, thumbHeight);
-
-                                    // 直接绘制图片到单元格，不创建中间的缩略图Bitmap
-                                    e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                                    e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                                    e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                                    e.Graphics.DrawImage(originalImage, thumbRect);
-
-                                    // 如果有多张图片，显示数量标签
-                                    if (imageDataList.Count > 1)
+                                    using (var ms = new MemoryStream(firstImageData))
+                                    using (var originalImage = Image.FromStream(ms))
                                     {
-                                        string countText = $"+{imageDataList.Count - 1}";
-                                        using (var countBrush = new SolidBrush(Color.FromArgb(200, 0, 120, 215)))
-                                        using (var textBrush = new SolidBrush(Color.White))
-                                        using (var countFont = new Font(e.CellStyle.Font.FontFamily, 8, FontStyle.Bold))
+                                        // 计算缩略图尺寸（保持宽高比）
+                                        int maxWidth = e.CellBounds.Width - 4;
+                                        int maxHeight = e.CellBounds.Height - 4;
+                                        float ratio = Math.Min((float)maxWidth / originalImage.Width, (float)maxHeight / originalImage.Height);
+                                        int thumbWidth = (int)(originalImage.Width * ratio);
+                                        int thumbHeight = (int)(originalImage.Height * ratio);
+
+                                        // 居中绘制缩略图
+                                        int x = e.CellBounds.X + (e.CellBounds.Width - thumbWidth) / 2;
+                                        int y = e.CellBounds.Y + (e.CellBounds.Height - thumbHeight) / 2;
+                                        var thumbRect = new Rectangle(x, y, thumbWidth, thumbHeight);
+
+                                        // 直接绘制图片到单元格，不创建中间的缩略图Bitmap
+                                        e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                                        e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                                        e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                                        e.Graphics.DrawImage(originalImage, thumbRect);
+
+                                        // 如果有多张图片，显示数量标签
+                                        int totalPendingCount = (pendingAddImages?.Count ?? 0) + (pendingReplaceImages?.Count ?? 0);
+                                        if (totalPendingCount > 1)
                                         {
-                                            var textSize = e.Graphics.MeasureString(countText, countFont);
-                                            var countRect = new Rectangle(
-                                                e.CellBounds.Right - (int)textSize.Width - 8,
-                                                e.CellBounds.Bottom - (int)textSize.Height - 4,
-                                                (int)textSize.Width + 6,
-                                                (int)textSize.Height + 2);
-                                            e.Graphics.FillRectangle(countBrush, countRect);
-                                            e.Graphics.DrawString(countText, countFont, textBrush, countRect,
-                                                new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+                                            string countText = $"+{totalPendingCount - 1}";
+                                            using (var countBrush = new SolidBrush(Color.FromArgb(200, 0, 120, 215)))
+                                            using (var textBrush = new SolidBrush(Color.White))
+                                            using (var countFont = new Font(e.CellStyle.Font.FontFamily, 8, FontStyle.Bold))
+                                            {
+                                                var textSize = e.Graphics.MeasureString(countText, countFont);
+                                                var countRect = new Rectangle(
+                                                    e.CellBounds.Right - (int)textSize.Width - 8,
+                                                    e.CellBounds.Bottom - (int)textSize.Height - 4,
+                                                    (int)textSize.Width + 6,
+                                                    (int)textSize.Height + 2);
+                                                e.Graphics.FillRectangle(countBrush, countRect);
+                                                e.Graphics.DrawString(countText, countFont, textBrush, countRect,
+                                                    new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+                                            }
                                         }
-                                    }
 
-                                    // 如果图片有未保存的更改，显示状态标识
-                                    if (detail.HasUnsavedImageChanges)
-                                    {
-                                        // 检查是新增还是修改
-                                        bool isReplace = skuImageDeletedCache.ContainsKey(detail) && 
-                                                          skuImageDeletedCache[detail].Count > 0 &&
-                                                          imageDataList.Count > 0;
-                                        
-                                        string statusText = isReplace ? "替换" : "新增";
-                                        Color statusColor = isReplace ? Color.OrangeRed : Color.Green;
+                                        // 显示状态标识
+                                        string statusText = pendingReplaceImages != null && pendingReplaceImages.Count > 0 ? "替换" : "新增";
+                                        Color statusColor = pendingReplaceImages != null && pendingReplaceImages.Count > 0 ? Color.OrangeRed : Color.Green;
                                         
                                         using (var statusBrush = new SolidBrush(statusColor))
                                         using (var statusFont = new Font(e.CellStyle.Font.FontFamily, 9, FontStyle.Bold))
@@ -2588,19 +2759,19 @@ namespace RUINORERP.UI.ProductEAV
                                         }
                                     }
                                 }
-                            }
-                            catch
-                            {
-                                // 图片加载失败，显示文本
-                                using (var brush = new SolidBrush(Color.Red))
+                                catch
                                 {
-                                    e.Graphics.DrawString("图片加载失败", e.CellStyle.Font, brush,
-                                        e.CellBounds, StringFormat.GenericDefault);
+                                    // 图片加载失败，显示文本
+                                    using (var brush = new SolidBrush(Color.Red))
+                                    {
+                                        e.Graphics.DrawString("图片加载失败", e.CellStyle.Font, brush,
+                                            e.CellBounds, StringFormat.GenericDefault);
+                                    }
                                 }
                             }
                             return;
                         }
-                        // 如果有未保存的更改但没有缓存数据（可能是删除了所有图片），显示特殊提示
+                        // 如果有待删除的图片但没有新增/替换图片，显示特殊提示
                         else if (detail.HasUnsavedImageChanges)
                         {
                             using (var brush = new SolidBrush(Color.Orange))
@@ -2700,12 +2871,48 @@ namespace RUINORERP.UI.ProductEAV
 
                 try
                 {
-                    // 准备传递给编辑器的缓存图片数据
+                    // ✅ 准备传递给编辑器的缓存图片数据(从PendingImages读取)
                     List<Tuple<byte[], ImageInfo>> cachedImages = null;
-                    if (skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail].Count > 0)
+                    var pendingAddImages = detail.GetPendingAddImages();
+                    var pendingReplaceImages = detail.GetPendingReplaceImages();
+                    
+                    if ((pendingAddImages != null && pendingAddImages.Count > 0) || 
+                        (pendingReplaceImages != null && pendingReplaceImages.Count > 0))
                     {
-                        cachedImages = skuImageDataCache[detail];
-                        MainForm.Instance.uclog.AddLog($"准备将 {cachedImages.Count} 张缓存图片传递给编辑器，SKU: {detail.SKU}");
+                        cachedImages = new List<Tuple<byte[], ImageInfo>>();
+                        
+                        // 添加新增的图片
+                        if (pendingAddImages != null)
+                        {
+                            foreach (var img in pendingAddImages)
+                            {
+                                var imageInfo = new ImageInfo
+                                {
+                                    FileName = img.FileName,
+                                    Description = img.Description,
+                                    SortOrder = img.SortOrder
+                                };
+                                cachedImages.Add(Tuple.Create(img.ImageData, imageInfo));
+                            }
+                        }
+                        
+                        // 添加替换的图片
+                        if (pendingReplaceImages != null)
+                        {
+                            foreach (var img in pendingReplaceImages)
+                            {
+                                var imageInfo = new ImageInfo
+                                {
+                                    FileName = img.FileName,
+                                    Description = img.Description,
+                                    SortOrder = img.SortOrder,
+                                    FileId = img.ExistingFileId ?? 0  // ✅ long?转long,默认为0
+                                };
+                                cachedImages.Add(Tuple.Create(img.ImageData, imageInfo));
+                            }
+                        }
+                        
+                        MainForm.Instance.uclog.AddLog($"准备将 {cachedImages.Count} 张PendingImages传递给编辑器，SKU: {detail.SKU}");
                     }
 
                     // 创建并显示SKU图片编辑对话框，传入缓存的图片数据
@@ -2716,45 +2923,51 @@ namespace RUINORERP.UI.ProductEAV
 
                         if (dialogResult == DialogResult.OK)
                         {
-                            // 在窗体关闭前提取图片数据，避免窗体释放后无法访问
-                            // 使用对象引用作为key，支持未保存的SKU（ProdDetailID为0）
+                            // ✅ 在窗体关闭前提取图片数据，存入PendingImages
                             // 获取需要上传的图片数据
                             var updatedImages = imageEditForm.GetUpdatedImages();
                             if (updatedImages != null && updatedImages.Count > 0)
                             {
-                                skuImageDataCache[detail] = updatedImages;
-                                // 同时更新按ID索引的缓存
-                                if (detail.ProdDetailID > 0)
+                                // ✅ 清除旧的PendingImages,添加新的
+                                detail.ClearPendingImages();
+                                
+                                foreach (var imgTuple in updatedImages)
                                 {
-                                    skuImageDataCacheById[detail.ProdDetailID] = updatedImages;
+                                    detail.AddPendingImage(
+                                        imageData: imgTuple.Item1,
+                                        fileName: imgTuple.Item2?.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
+                                        description: imgTuple.Item2?.Description,
+                                        sortOrder: imgTuple.Item2?.SortOrder ?? 0
+                                    );
                                 }
-                                detail.HasUnsavedImageChanges = true;
-                                MainForm.Instance.uclog.AddLog($"已缓存 {updatedImages.Count} 张SKU图片到内存，SKU: {detail.SKU}, ID: {detail.ProdDetailID}");
+                                
+                                MainForm.Instance.uclog.AddLog($"已缓存 {updatedImages.Count} 张SKU图片到PendingImages，SKU: {detail.SKU}, ID: {detail.ProdDetailID}");
                             }
                             else
                             {
-                                skuImageDataCache.Remove(detail);
-                                if (detail.ProdDetailID > 0)
-                                {
-                                    skuImageDataCacheById.Remove(detail.ProdDetailID);
-                                }
+                                // 如果没有图片了，清除所有PendingImages
+                                detail.ClearPendingImages();
+                                // ✅ HasUnsavedImageChanges是计算属性,不需要手动设置
                                 // 如果没有图片了，清空ImagesPath
                                 if (!string.IsNullOrEmpty(detail.ImagesPath))
                                 {
-                                    detail.HasUnsavedImageChanges = true;
+                                    // ImagesPath将在保存时更新
                                 }
                             }
 
-                            // 获取需要删除的图片信息
+                            // ✅ 获取需要删除的图片信息,添加到PendingImages
                             var deletedImages = imageEditForm.GetDeletedImages();
                             if (deletedImages != null && deletedImages.Count > 0)
                             {
-                                skuImageDeletedCache[detail] = deletedImages;
-                                detail.HasUnsavedImageChanges = true;
-                            }
-                            else
-                            {
-                                skuImageDeletedCache.Remove(detail);
+                                foreach (var delImg in deletedImages)
+                                {
+                                    // ✅ FileId是long类型,不是long?
+                                    if (delImg.FileId > 0)
+                                    {
+                                        detail.MarkImageForDeletion(delImg.FileId);
+                                    }
+                                }
+                                MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 标记{deletedImages.Count}张图片为待删除");
                             }
 
                             // 刷新当前单元格显示
@@ -3057,11 +3270,11 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     try
                     {
-                        // 检查是否已有缓存（非强制刷新时）
+                        // ✅ 检查是否已有缓存（非强制刷新时）
                         if (!forceRefresh && detail.ProdDetailID > 0)
                         {
-                            if (skuImageDataCache.ContainsKey(detail) ||
-                                skuImageDataCacheById.ContainsKey(detail.ProdDetailID))
+                            // ✅ 从PendingImages检查是否有待处理的图片
+                            if (detail.HasUnsavedImageChanges)
                             {
                                 skippedCount++;
                                 continue; // 已有缓存，跳过
@@ -3110,15 +3323,18 @@ namespace RUINORERP.UI.ProductEAV
 
                 MainForm.Instance.uclog.AddLog($"正在刷新SKU {detail.SKU} 的图片...");
 
-                // 清除旧缓存
-                if (skuImageDataCache.ContainsKey(detail))
-                {
-                    skuImageDataCache.Remove(detail);
-                }
-                if (skuImageDataCacheById.ContainsKey(detail.ProdDetailID))
-                {
-                    skuImageDataCacheById.Remove(detail.ProdDetailID);
-                }
+                // ✅ 清除旧缓存(改为调用新的API)
+                detail.ClearPendingImages();
+                
+                // 旧代码已注释:
+                // if (skuImageDataCache.ContainsKey(detail))
+                // {
+                //     skuImageDataCache.Remove(detail);
+                // }
+                // if (skuImageDataCacheById.ContainsKey(detail.ProdDetailID))
+                // {
+                //     skuImageDataCacheById.Remove(detail.ProdDetailID);
+                // }
 
                 // 从服务器重新加载
                 await LoadSKUImageAsync(detail);
@@ -3168,15 +3384,24 @@ namespace RUINORERP.UI.ProductEAV
                     }
                 }
 
-                // 缓存图片数据
+                // ✅ 缓存图片数据(改为存入PendingImages)
                 if (imageDataList.Count > 0)
                 {
-                    skuImageDataCache[detail] = imageDataList;
-                    if (detail.ProdDetailID > 0)
+                    // ✅ 将加载的图片添加到PendingImages(标记为已存在,不需要上传)
+                    foreach (var imgTuple in imageDataList)
                     {
-                        skuImageDataCacheById[detail.ProdDetailID] = imageDataList;
+                        var imageInfo = imgTuple.Item2;
+                        // 注意: 这里不添加到PendingImages,因为这是从服务器加载的已有图片
+                        // PendingImages只存储用户新添加/删除/替换的图片
                     }
-                    MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 已缓存 {imageDataList.Count} 张图片");
+                    
+                    // 旧代码已注释:
+                    // skuImageDataCache[detail] = imageDataList;
+                    // if (detail.ProdDetailID > 0)
+                    // {
+                    //     skuImageDataCacheById[detail.ProdDetailID] = imageDataList;
+                    // }
+                    MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 已加载 {imageDataList.Count} 张图片");
                 }
             }
             catch (Exception ex)
@@ -3256,19 +3481,20 @@ namespace RUINORERP.UI.ProductEAV
             // 检查每个SKU明细是否有未保存的图片更改
             foreach (var detail in EditEntity.tb_ProdDetails)
             {
-                // 检查是否有缓存的图片数据需要上传
+                // ✅ 检查是否有缓存的图片数据需要上传(从PendingImages读取)
                 if (detail.HasUnsavedImageChanges)
                 {
                     return true;
                 }
-
-                // 检查是否有缓存的图片数据
-                if (skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail] != null && skuImageDataCache[detail].Count > 0)
-                {
-                    return true;
-                }
-
-                if (skuImageDeletedCache.ContainsKey(detail) && skuImageDeletedCache[detail] != null && skuImageDeletedCache[detail].Count > 0)
+                
+                // 兼容检查: 从PendingImages获取
+                var pendingAddImages = detail.GetPendingAddImages();
+                var pendingDeleteImages = detail.GetPendingDeleteImages();
+                var pendingReplaceImages = detail.GetPendingReplaceImages();
+                
+                if ((pendingAddImages?.Count ?? 0) > 0 || 
+                    (pendingDeleteImages?.Count ?? 0) > 0 || 
+                    (pendingReplaceImages?.Count ?? 0) > 0)
                 {
                     return true;
                 }
@@ -3277,50 +3503,82 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// 获取指定SKU需要更新的图片列表
+        /// ✅ 重构: 获取指定SKU需要更新的图片列表(从PendingImages读取)
         /// </summary>
         /// <param name="detail">SKU明细对象</param>
-        /// <returns>需要更新的图片列表</returns>
+        /// <returns>需要更新的图片列表(Tuple格式,兼容旧代码)</returns>
         private List<Tuple<byte[], ImageInfo>> GetSKUImagesNeedingUpdate(tb_ProdDetail detail)
         {
-            // 检查缓存中是否有待上传的图片 - 使用对象引用作为key
-            if (skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail] != null)
+            // ✅ 从PendingImages获取待新增和待替换的图片
+            var pendingAddImages = detail.GetPendingAddImages();
+            var pendingReplaceImages = detail.GetPendingReplaceImages();
+            
+            var result = new List<Tuple<byte[], ImageInfo>>();
+            
+            // 添加新增的图片
+            if (pendingAddImages != null && pendingAddImages.Count > 0)
             {
-                var images = skuImageDataCache[detail];
-                MainForm.Instance.uclog.AddLog($"[GetSKUImagesNeedingUpdate] 通过对象引用找到缓存，SKU: {detail.SKU}, 图片数: {images.Count}");
-                return images;
+                foreach (var img in pendingAddImages)
+                {
+                    var imageInfo = new ImageInfo
+                    {
+                        FileName = img.FileName,
+                        Description = img.Description,
+                        SortOrder = img.SortOrder
+                    };
+                    result.Add(Tuple.Create(img.ImageData, imageInfo));
+                }
             }
-
-            // 如果通过对象引用找不到，尝试通过ProdDetailID查找（适用于已保存的SKU）
-            if (detail.ProdDetailID > 0 && skuImageDataCacheById.ContainsKey(detail.ProdDetailID))
+            
+            // 添加替换的图片
+            if (pendingReplaceImages != null && pendingReplaceImages.Count > 0)
             {
-                var images = skuImageDataCacheById[detail.ProdDetailID];
-                MainForm.Instance.uclog.AddLog($"[GetSKUImagesNeedingUpdate] 通过ID找到缓存，SKU: {detail.SKU}, ID: {detail.ProdDetailID}, 图片数: {images.Count}");
-                return images;
+                foreach (var img in pendingReplaceImages)
+                {
+                    var imageInfo = new ImageInfo
+                    {
+                        FileName = img.FileName,
+                        Description = img.Description,
+                        SortOrder = img.SortOrder,
+                        FileId = img.ExistingFileId ?? 0
+                    };
+                    result.Add(Tuple.Create(img.ImageData, imageInfo));
+                }
             }
-
-            // 如果没有缓存数据，返回null
-            MainForm.Instance.uclog.AddLog($"[GetSKUImagesNeedingUpdate] 未找到缓存，SKU: {detail.SKU}, ID: {detail.ProdDetailID}, 缓存键数量: {skuImageDataCache.Count}");
-            return null;
+            
+            if (result.Count > 0)
+            {
+                MainForm.Instance.uclog.AddLog($"[GetSKUImagesNeedingUpdate] 从PendingImages找到{result.Count}张图片，SKU: {detail.SKU}");
+            }
+            
+            return result.Count > 0 ? result : null;
         }
 
         /// <summary>
-        /// 获取指定SKU需要删除的图片列表
+        /// ✅ 重构: 获取指定SKU需要删除的图片列表(从PendingImages读取)
         /// </summary>
         /// <param name="detail">SKU明细对象</param>
         /// <returns>需要删除的图片列表</returns>
         private List<ImageInfo> GetSKUImagesToDelete(tb_ProdDetail detail)
         {
-            // 检查缓存中是否有待删除的图片 - 使用对象引用作为key
-            if (skuImageDeletedCache.ContainsKey(detail) && skuImageDeletedCache[detail] != null)
+            // ✅ 从PendingImages获取待删除的图片
+            var pendingDeleteImages = detail.GetPendingDeleteImages();
+            
+            if (pendingDeleteImages != null && pendingDeleteImages.Count > 0)
             {
-                var images = skuImageDeletedCache[detail];
-                MainForm.Instance.uclog.AddLog($"[GetSKUImagesToDelete] 通过对象引用找到删除缓存，SKU: {detail.SKU}, 删除数: {images.Count}");
-                return images;
+                var result = new List<ImageInfo>();
+                foreach (var img in pendingDeleteImages)
+                {
+                    result.Add(new ImageInfo
+                    {
+                        FileId = img.ExistingFileId ?? 0
+                    });
+                }
+                
+                MainForm.Instance.uclog.AddLog($"[GetSKUImagesToDelete] 从PendingImages找到{result.Count}张待删除图片，SKU: {detail.SKU}");
+                return result;
             }
-
-            // 如果没有缓存数据，返回null
-            MainForm.Instance.uclog.AddLog($"[GetSKUImagesToDelete] 未找到删除缓存，SKU: {detail.SKU}, ID: {detail.ProdDetailID}");
+            
             return null;
         }
 
@@ -3501,13 +3759,19 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// 为已保存的新SKU上传图片（在产品保存后调用）
+        /// ✅ 已废弃: 为已保存的新SKU上传图片（现在由UCProductList.Save()统一处理）
         /// 当新SKU保存到数据库并获取到ProdDetailID后，调用此方法上传图片
         /// </summary>
         /// <param name="savedDetails">已保存的SKU明细列表（包含新生成的ID）</param>
         /// <returns>操作是否成功</returns>
+        [Obsolete("已重构为UploadAllSKUImagesAsync方法，此方法不再使用")]
         public async Task<bool> UploadImagesForNewSKUsAsync(List<tb_ProdDetail> savedDetails)
         {
+            // ✅ 已废弃: 图片上传由UCProductList.Save()统一处理
+            MainForm.Instance.uclog.AddLog("UploadImagesForNewSKUsAsync已废弃,跳过执行");
+            return true;
+            
+            /* 旧代码已注释:
             try
             {
                 if (savedDetails == null || savedDetails.Count == 0)
@@ -3568,7 +3832,8 @@ namespace RUINORERP.UI.ProductEAV
                             if (uploadSuccess)
                             {
                                 totalSuccessCount += imagesToUpload.Count;
-                                savedDetail.HasUnsavedImageChanges = false;
+                                // ✅ HasUnsavedImageChanges是计算属性,不能赋值
+                                savedDetail.ClearPendingImages();  // 清除待处理列表后自动变为false
                                 MainForm.Instance.uclog.AddLog($"新SKU {savedDetail.SKU} 图片上传成功");
                             }
                             else
@@ -3577,9 +3842,12 @@ namespace RUINORERP.UI.ProductEAV
                                 MainForm.Instance.uclog.AddLog($"新SKU {savedDetail.SKU} 图片上传失败", UILogType.错误);
                             }
 
-                            // 清理旧缓存
-                            skuImageDataCache.Remove(originalDetail);
-                            skuImageDeletedCache.Remove(originalDetail);
+                            // ✅ 清理旧缓存(改为调用新API)
+                            originalDetail?.ClearPendingImages();
+                            
+                            // 旧代码已注释:
+                            // skuImageDataCache.Remove(originalDetail);
+                            // skuImageDeletedCache.Remove(originalDetail);
                         }
                     }
                     catch (Exception ex)
@@ -3602,20 +3870,26 @@ namespace RUINORERP.UI.ProductEAV
             }
             catch (Exception ex)
             {
-                MainForm.Instance.uclog.AddLog($"上传新SKU图片时发生异常：{ex.Message}", Global.UILogType.错误);
+                MainForm.Instance.uclog.AddLog($"UploadImagesForNewSKUsAsync异常：{ex.Message}", Global.UILogType.错误);
                 return false;
             }
+            */
         }
 
         /// <summary>
-        /// 上传或删除SKU图片（如果需要）
+        /// ✅ 已废弃: 上传或删除SKU图片（如果需要）
         /// 实现SKU明细图片的上传和删除逻辑
-        /// 支持：新增SKU图片、编辑现有SKU图片（替换、删除）
-        /// 注意：新SKU（ProdDetailID=0）的图片不会在此方法中上传，需要使用 UploadImagesForNewSKUsAsync
+        /// 现在由UCProductList.Save()统一处理,此方法不再使用
         /// </summary>
         /// <returns>操作是否成功</returns>
+        [Obsolete("已由UCProductList.Save()统一处理,此方法不再使用")]
         private async Task<bool> UploadSKUImagesIfNeeded()
         {
+            // ✅ 已废弃: 图片上传由UCProductList.Save()统一处理
+            MainForm.Instance.uclog.AddLog("UploadSKUImagesIfNeeded已废弃,跳过执行");
+            return true;
+            
+            /* 旧代码已注释:
             try
             {
                 if (EditEntity == null || EditEntity.tb_ProdDetails == null)
@@ -3655,9 +3929,8 @@ namespace RUINORERP.UI.ProductEAV
                         if (detail.ProdDetailID == 0)
                         {
                             MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 是新添加的，需要先保存产品获取ID后才能上传图片");
+                            // ✅ HasUnsavedImageChanges是计算属性,已经有PendingImages就会返回true,不需要手动设置
                             // 注意：这里不直接上传，而是依赖产品保存后再处理
-                            // 标记需要后续处理
-                            detail.HasUnsavedImageChanges = true;
                             continue;
                         }
 
@@ -3681,22 +3954,22 @@ namespace RUINORERP.UI.ProductEAV
                                 MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 成功删除 {deletedImages.Count} 张图片");
                             }
 
-                            // 重置变更标记
-                            detail.HasUnsavedImageChanges = false;
-
-                            // 清空相关缓存
-                            if (skuImageDataCache.ContainsKey(detail))
-                            {
-                                skuImageDataCache.Remove(detail);
-                            }
-                            if (skuImageDeletedCache.ContainsKey(detail))
-                            {
-                                skuImageDeletedCache.Remove(detail);
-                            }
-                            if (detail.ProdDetailID > 0 && skuImageDataCacheById.ContainsKey(detail.ProdDetailID))
-                            {
-                                skuImageDataCacheById.Remove(detail.ProdDetailID);
-                            }
+                            // ✅ 清空相关缓存(调用ClearPendingImages后HasUnsavedImageChanges自动变为false)
+                            detail.ClearPendingImages();
+                            
+                            // 旧代码已注释:
+                            // if (skuImageDataCache.ContainsKey(detail))
+                            // {
+                            //     skuImageDataCache.Remove(detail);
+                            // }
+                            // if (skuImageDeletedCache.ContainsKey(detail))
+                            // {
+                            //     skuImageDeletedCache.Remove(detail);
+                            // }
+                            // if (detail.ProdDetailID > 0 && skuImageDataCacheById.ContainsKey(detail.ProdDetailID))
+                            // {
+                            //     skuImageDataCacheById.Remove(detail.ProdDetailID);
+                            // }
 
                             // 刷新该SKU在表格中的显示
                             RefreshSKUImageDisplay(detail);
@@ -3722,13 +3995,20 @@ namespace RUINORERP.UI.ProductEAV
                     }
                 }
 
-                // 清理已不存在的SKU的缓存
-                var detailsToRemove = skuImageDataCache.Keys.Where(k => !EditEntity.tb_ProdDetails.Contains(k)).ToList();
+                // ✅ 清理已不存在的SKU的缓存(改为调用新API)
+                var detailsToRemove = EditEntity.tb_ProdDetails.Where(d => d.HasUnsavedImageChanges == false).ToList();
                 foreach (var detail in detailsToRemove)
                 {
-                    skuImageDataCache.Remove(detail);
-                    skuImageDeletedCache.Remove(detail);
+                    detail.ClearPendingImages();
                 }
+                
+                // 旧代码已注释:
+                // var detailsToRemove = skuImageDataCache.Keys.Where(k => !EditEntity.tb_ProdDetails.Contains(k)).ToList();
+                // foreach (var detail in detailsToRemove)
+                // {
+                //     skuImageDataCache.Remove(detail);
+                //     skuImageDeletedCache.Remove(detail);
+                // }
 
                 // 汇总处理结果
                 if (totalFailCount > 0)
@@ -3757,6 +4037,7 @@ namespace RUINORERP.UI.ProductEAV
                 MainForm.Instance.uclog.AddLog($"上传SKU图片时发生异常：{ex.Message}", Global.UILogType.错误);
                 return false;
             }
+            */
         }
 
         /// <summary>

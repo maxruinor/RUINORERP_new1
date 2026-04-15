@@ -304,7 +304,10 @@ namespace RUINORERP.UI.ProductEAV
 
                 if (updateCount > 0 || deleteCount > 0)
                 {
-                    prodDetail.HasUnsavedImageChanges = true;
+                    // ✅ 将MagicPictureBox的变更同步到prodDetail.PendingImages
+                    SyncChangesToPendingImages(updatedImages, deletedImages);
+                    
+                    // ✅ HasUnsavedImageChanges是计算属性,会根据PendingImages.Count自动返回true
 
                     // 记录详细的变更信息
                     string changeInfo = $"图片变更统计：新增/替换 {updateCount} 张，删除 {deleteCount} 张，当前共 {totalCount} 张";
@@ -331,6 +334,76 @@ namespace RUINORERP.UI.ProductEAV
                 lblInfo.Values.Text = $"保存失败: {ex.Message}";
                 MainForm.Instance.uclog.AddLog($"保存图片状态失败: {ex.Message}", Global.UILogType.错误);
                 MessageBox.Show($"保存图片状态失败:\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// ✅ 新增: 将MagicPictureBox的变更同步到prodDetail.PendingImages
+        /// 这样UCProductList.Save()才能处理这些变更
+        /// </summary>
+        private void SyncChangesToPendingImages(
+            List<Tuple<byte[], ImageInfo>> updatedImages,
+            List<ImageInfo> deletedImages)
+        {
+            try
+            {
+                // 1. 处理删除操作
+                if (deletedImages != null && deletedImages.Count > 0)
+                {
+                    foreach (var delImg in deletedImages)
+                    {
+                        if (delImg.FileId > 0)
+                        {
+                            prodDetail.MarkImageForDeletion(delImg.FileId);
+                            MainForm.Instance.uclog.AddLog($"  - 标记删除图片 FileId={delImg.FileId}");
+                        }
+                    }
+                }
+
+                // 2. 处理新增/替换操作
+                if (updatedImages != null && updatedImages.Count > 0)
+                {
+                    foreach (var imgTuple in updatedImages)
+                    {
+                        var imageData = imgTuple.Item1;
+                        var imageInfo = imgTuple.Item2;
+                        
+                        if (imageData != null && imageData.Length > 0)
+                        {
+                            // 判断是新增还是替换
+                            if (imageInfo.FileId > 0)
+                            {
+                                // 替换: 有FileId表示已存在的图片
+                                prodDetail.MarkImageForReplacement(
+                                    existingFileId: imageInfo.FileId,
+                                    newImageData: imageData,
+                                    fileName: imageInfo.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
+                                    description: imageInfo.Description,
+                                    sortOrder: imageInfo.SortOrder
+                                );
+                                MainForm.Instance.uclog.AddLog($"  - 标记替换图片 FileId={imageInfo.FileId}");
+                            }
+                            else
+                            {
+                                // 新增: 没有FileId表示新图片
+                                prodDetail.AddPendingImage(
+                                    imageData: imageData,
+                                    fileName: imageInfo.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
+                                    description: imageInfo.Description,
+                                    sortOrder: imageInfo.SortOrder
+                                );
+                                MainForm.Instance.uclog.AddLog($"  - 标记新增图片 {imageInfo.FileName}");
+                            }
+                        }
+                    }
+                }
+
+                MainForm.Instance.uclog.AddLog($"已同步{updatedImages?.Count ?? 0}个新增/替换, {deletedImages?.Count ?? 0}个删除到PendingImages");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"同步PendingImages失败: {ex.Message}", Global.UILogType.错误);
+                throw; // 重新抛出,让调用方处理
             }
         }
 

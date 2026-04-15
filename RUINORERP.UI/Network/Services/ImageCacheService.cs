@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Common.Caching;
 using RUINORERP.Model;
 using RUINORERP.Repository.UnitOfWorks;
 using System;
@@ -11,25 +12,23 @@ using System.Threading.Tasks;
 namespace RUINORERP.UI.Network.Services
 {
     /// <summary>
-    /// 图片缓存服务 - 提供高频图片的内存缓存
-    /// 策略：
-    /// - 产品主图：永久缓存（默认24小时，更新时失效）
-    /// - 订单凭证图：短期缓存（默认1小时）
-    /// - 费用报销单凭证图：短期缓存（默认1小时）
-    /// - 辅助图片：不缓存（延迟加载）
-    /// 支持配置化，可通过appsettings.json调整缓存策略
+    /// 图片缓存服务 - 客户端实现
+    /// 策略:
+    /// - 产品主图:永久缓存(默认24小时,更新时失效)
+    /// - 订单凭证图:短期缓存(默认1小时)
+    /// - 费用报销单凭证图:短期缓存(默认1小时)
+    /// - 辅助图片:不缓存(延迟加载)
+    /// 支持配置化,可通过appsettings.json调整缓存策略
+    /// 继承自ImageCacheServiceBase,提供通用的FileId缓存能力 + 业务场景扩展
     /// </summary>
-    public class ImageCacheService : IDisposable
+    public class ImageCacheService : ImageCacheServiceBase
     {
-        private readonly IMemoryCache _cache;
         private readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly ILogger<ImageCacheService> _logger;
-        private readonly SemaphoreSlim _cacheLock = new SemaphoreSlim(1, 1);
         private readonly ImageCacheConfiguration _config;
-        private bool _disposed = false;
-
+    
         /// <summary>
-        /// 缓存键前缀常量
+        /// 缓存键前缀常量(业务场景专用)
         /// </summary>
         private static class CacheKeys
         {
@@ -38,15 +37,15 @@ namespace RUINORERP.UI.Network.Services
             public const string ExpenseClaimEvidence = "expenseclaim_evidence_";
             public const string PaymentRecordVoucher = "paymentrecord_voucher_";
         }
-
+    
         /// <summary>
-        /// 缓存过期时间配置（从配置读取）
+        /// 缓存过期时间配置(从配置读取)
         /// </summary>
         private TimeSpan ProductMainImageExpiration => _config?.ProductMainImageExpiration ?? TimeSpan.FromHours(24);
         private TimeSpan SaleOrderVoucherExpiration => _config?.SaleOrderVoucherExpiration ?? TimeSpan.FromHours(1);
         private TimeSpan ExpenseClaimEvidenceExpiration => _config?.ExpenseClaimEvidenceExpiration ?? TimeSpan.FromHours(1);
         private TimeSpan PaymentRecordVoucherExpiration => _config?.PaymentRecordVoucherExpiration ?? TimeSpan.FromHours(1);
-
+    
         /// <summary>
         /// 是否启用缓存
         /// </summary>
@@ -58,18 +57,18 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="cache">内存缓存实例</param>
         /// <param name="unitOfWorkManage">工作单元管理</param>
         /// <param name="logger">日志记录器</param>
-        /// <param name="config">缓存配置（可选，如未提供则使用默认值）</param>
+        /// <param name="config">缓存配置(可选,如未提供则使用默认值)</param>
         public ImageCacheService(
             IMemoryCache cache,
             IUnitOfWorkManage unitOfWorkManage,
             ILogger<ImageCacheService> logger,
             ImageCacheConfiguration config = null)
+            : base(cache) // 调用基类构造函数,使用默认的4小时滑动过期和8小时绝对过期
         {
-            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _unitOfWorkManage = unitOfWorkManage ?? throw new ArgumentNullException(nameof(unitOfWorkManage));
             _logger = logger;
             _config = config ?? new ImageCacheConfiguration(); // 使用默认配置
-
+        
             _logger?.LogInformation("图片缓存服务初始化完成,是否启用:{IsEnabled},产品图过期:{ProductExpiration}小时,订单图过期:{OrderExpiration}小时",
                 IsCacheEnabled,
                 _config?.ProductMainImageExpiration.TotalHours ?? 24,
@@ -96,7 +95,7 @@ namespace RUINORERP.UI.Network.Services
 
             string cacheKey = $"{CacheKeys.ProductMainImage}{productId}";
 
-            return await _cache.GetOrCreateAsync(cacheKey, async entry =>
+            return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
             {
                 _logger?.LogDebug("缓存未命中，从数据库查询产品主图: ProductId={ProductId}", productId);
 
@@ -153,7 +152,7 @@ namespace RUINORERP.UI.Network.Services
             }
 
             string cacheKey = $"{CacheKeys.ProductMainImage}{productId}";
-            _cache.Remove(cacheKey);
+            _memoryCache.Remove(cacheKey);
             _logger?.LogDebug("已移除产品主图缓存: ProductId={ProductId}", productId);
         }
 
@@ -174,7 +173,7 @@ namespace RUINORERP.UI.Network.Services
             foreach (var productId in productIds)
             {
                 string cacheKey = $"{CacheKeys.ProductMainImage}{productId}";
-                if (_cache.TryGetValue(cacheKey, out string imagePath))
+                if (_memoryCache.TryGetValue(cacheKey, out string imagePath))
                 {
                     result[productId] = imagePath;
                 }
@@ -199,11 +198,11 @@ namespace RUINORERP.UI.Network.Services
                     {
                         result[product.ProdBaseID] = product.ImagesPath;
 
-                        // 缓存查询结果（如果启用缓存）
+                        // 缓存查询结果(如果启用缓存)
                         string cacheKey = $"{CacheKeys.ProductMainImage}{product.ProdBaseID}";
                         if (IsCacheEnabled)
                         {
-                            _cache.Set(cacheKey, product.ImagesPath, ProductMainImageExpiration);
+                            _memoryCache.Set(cacheKey, product.ImagesPath, ProductMainImageExpiration);
                         }
                     }
                 }
@@ -238,7 +237,7 @@ namespace RUINORERP.UI.Network.Services
 
             string cacheKey = $"{CacheKeys.SaleOrderVoucher}{orderId}";
 
-            return await _cache.GetOrCreateAsync(cacheKey, async entry =>
+            return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
             {
                 _logger?.LogDebug("缓存未命中，从数据库查询订单凭证图: OrderId={OrderId}", orderId);
 
@@ -285,7 +284,7 @@ namespace RUINORERP.UI.Network.Services
                 return;
 
             string cacheKey = $"{CacheKeys.SaleOrderVoucher}{orderId}";
-            _cache.Remove(cacheKey);
+            _memoryCache.Remove(cacheKey);
             _logger?.LogDebug("已移除订单凭证图缓存: OrderId={OrderId}", orderId);
         }
 
@@ -294,11 +293,135 @@ namespace RUINORERP.UI.Network.Services
         #region 通用缓存操作
 
         /// <summary>
+        /// ✅ 新增: 根据FileId获取图片信息(带缓存)
+        /// 用于查询列表时的缩略图显示
+        /// </summary>
+        /// <param name="fileId">文件ID</param>
+        /// <returns>图片信息(包含ImageData)</returns>
+        public async Task<RUINORERP.Lib.BusinessImage.ImageInfo> GetImageInfoByFileIdAsync(long fileId)
+        {
+            if (fileId <= 0)
+                return null;
+
+            // ✅ 先检查基类的FileId缓存
+            var cachedStorageInfo = GetImageInfo(fileId);
+            if (cachedStorageInfo != null && cachedStorageInfo.FileData != null)
+            {
+                _logger?.LogDebug("缓存命中: FileId={FileId}", fileId);
+                return ConvertToImageInfo(cachedStorageInfo);
+            }
+
+            // 缓存未命中,从数据库查询
+            try
+            {
+                var db = _unitOfWorkManage.GetDbClient().CopyNew();
+                var fileStorageInfo = await db.Queryable<tb_FS_FileStorageInfo>()
+                    .Where(f => f.FileId == fileId)
+                    .FirstAsync();
+
+                if (fileStorageInfo != null)
+                {
+                    // ✅ 添加到基类缓存
+                    AddImageInfo(fileStorageInfo);
+                    _logger?.LogDebug("从数据库加载并缓存: FileId={FileId}, Size={Size} bytes", fileId, fileStorageInfo.FileData?.Length ?? 0);
+
+                    return ConvertToImageInfo(fileStorageInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "查询图片信息失败: FileId={FileId}", fileId);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// ✅ 新增: 批量获取图片信息(优化版)
+        /// 一次性查询多个FileId,减少数据库往返
+        /// </summary>
+        /// <param name="fileIds">文件ID列表</param>
+        /// <returns>FileId到ImageInfo的字典</returns>
+        public async Task<Dictionary<long, RUINORERP.Lib.BusinessImage.ImageInfo>> GetImageInfosBatchAsync(List<long> fileIds)
+        {
+            if (fileIds == null || fileIds.Count == 0)
+                return new Dictionary<long, RUINORERP.Lib.BusinessImage.ImageInfo>();
+
+            var result = new Dictionary<long, RUINORERP.Lib.BusinessImage.ImageInfo>();
+            var uncachedIds = new List<long>();
+
+            // 1. 先从缓存中获取
+            foreach (var fileId in fileIds.Where(id => id > 0))
+            {
+                var cachedStorageInfo = GetImageInfo(fileId);
+                if (cachedStorageInfo != null && cachedStorageInfo.FileData != null)
+                {
+                    result[fileId] = ConvertToImageInfo(cachedStorageInfo);
+                }
+                else
+                {
+                    uncachedIds.Add(fileId);
+                }
+            }
+
+            // 2. 批量查询未缓存的
+            if (uncachedIds.Count > 0)
+            {
+                try
+                {
+                    var db = _unitOfWorkManage.GetDbClient().CopyNew();
+                    var fileStorageInfos = await db.Queryable<tb_FS_FileStorageInfo>()
+                        .Where(f => uncachedIds.Contains(f.FileId))
+                        .ToListAsync();
+
+                    foreach (var fsi in fileStorageInfos)
+                    {
+                        // 添加到缓存
+                        AddImageInfo(fsi);
+                        
+                        result[fsi.FileId] = ConvertToImageInfo(fsi);
+                    }
+
+                    _logger?.LogDebug("批量加载图片: 请求{RequestCount}, 缓存命中{CacheHit}, 数据库查询{DbQuery}",
+                        fileIds.Count, result.Count - uncachedIds.Count, uncachedIds.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "批量查询图片信息失败");
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// ✅ 辅助方法: 将tb_FS_FileStorageInfo转换为ImageInfo
+        /// </summary>
+        private RUINORERP.Lib.BusinessImage.ImageInfo ConvertToImageInfo(tb_FS_FileStorageInfo storageInfo)
+        {
+            if (storageInfo == null)
+                return null;
+
+            return new RUINORERP.Lib.BusinessImage.ImageInfo
+            {
+                FileId = storageInfo.FileId,
+                OriginalFileName = storageInfo.OriginalFileName,
+                ImageData = storageInfo.FileData,
+                FileSize = storageInfo.FileSize,
+                FileType = storageInfo.FileType,
+                FileExtension = storageInfo.FileExtension,
+                HashValue = storageInfo.HashValue,
+                CreateTime = storageInfo.Created_at ?? DateTime.Now,
+                ModifiedAt = storageInfo.Modified_at ?? DateTime.Now
+            };
+        }
+
+        /// <summary>
         /// 清空所有缓存
         /// </summary>
         public void ClearAllCache()
         {
-            if (_cache is MemoryCache memoryCache)
+            if (_memoryCache is MemoryCache memoryCache)
             {
                 memoryCache.Clear();
                 _logger?.LogInformation("已清空所有图片缓存");
@@ -311,7 +434,7 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>缓存统计信息</returns>
         public CacheStatistics GetCacheStatistics()
         {
-            if (!(_cache is MemoryCache memoryCache))
+            if (!(_memoryCache is MemoryCache memoryCache))
                 return null;
 
             var stats = new CacheStatistics
@@ -322,23 +445,6 @@ namespace RUINORERP.UI.Network.Services
 
             _logger?.LogDebug("图片缓存统计: {Statistics}", stats);
             return stats;
-        }
-
-        #endregion
-
-        #region IDisposable实现
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-
-            _disposed = true;
-            _cacheLock?.Dispose();
-            _logger?.LogInformation("图片缓存服务已释放");
         }
 
         #endregion

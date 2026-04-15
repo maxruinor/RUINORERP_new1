@@ -95,8 +95,22 @@ namespace RUINORERP.UI.Network.Services
                     RelatedField = relatedField
                 };
 
-                _logger?.LogInformation("[FileBusinessService] 开始上传文件: OwnerTableName={OwnerTableName}, BusinessId={BusinessId}, RelatedField={RelatedField}, FileName={FileName}",
-                    uploadRequest.OwnerTableName, uploadRequest.BusinessId, uploadRequest.RelatedField, fileName);
+                // 关键修复: 对于tb_ProdDetail实体,强制使用ProdDetailID作为BusinessId
+                if (entity is tb_ProdDetail prodDetail)
+                {
+                    uploadRequest.BusinessId = prodDetail.ProdDetailID;
+                    _logger?.LogInformation("[FileBusinessService] 检测到tb_ProdDetail实体,使用ProdDetailID={ProdDetailID}作为BusinessId", prodDetail.ProdDetailID);
+                }
+
+                // 验证BusinessId是否有效
+                if (uploadRequest.BusinessId <= 0)
+                {
+                    _logger?.LogError("[FileBusinessService] BusinessId无效: {BusinessId}, 请确保实体已保存到数据库", uploadRequest.BusinessId);
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("业务ID无效,请先保存实体数据");
+                }
+
+                _logger?.LogInformation("[FileBusinessService] 开始上传文件: OwnerTableName={OwnerTableName}, BusinessId={BusinessId}, RelatedField={RelatedField}, FileName={FileName}, EntityPrimaryKeyID={PrimaryKeyID}",
+                    uploadRequest.OwnerTableName, uploadRequest.BusinessId, uploadRequest.RelatedField, fileName, entity.PrimaryKeyID);
 
                 var response = await fileService.UploadFileAsync(uploadRequest);
 
@@ -136,6 +150,21 @@ namespace RUINORERP.UI.Network.Services
                 {
                     _logger?.LogError("上传文件失败：服务器返回的FileStorageInfos为空");
                     return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回的响应数据不完整");
+                }
+
+                // ✅ 关键优化: 上传成功后,将文件信息添加到ImageCacheService缓存
+                try
+                {
+                    var imageCacheService = _appContext.GetRequiredService<RUINORERP.UI.Network.Services.ImageCacheService>();
+                    if (imageCacheService != null && response.FileStorageInfos != null)
+                    {
+                        imageCacheService.AddImageInfos(response.FileStorageInfos);
+                        _logger?.LogInformation("已将{Count}个上传的文件信息添加到ImageCacheService缓存", response.FileStorageInfos.Count);
+                    }
+                }
+                catch (Exception cacheEx)
+                {
+                    _logger?.LogWarning(cacheEx, "添加文件信息到缓存失败,不影响上传结果");
                 }
 
                 // 上传成功后，将文件ID更新到业务实体的关联字段中
@@ -444,6 +473,30 @@ namespace RUINORERP.UI.Network.Services
                 {
                     _logger?.LogInformation("删除文件成功: BusinessId={BusinessId}, 删除数量={Count}",
                         businessId, response.DeletedFileIds?.Count ?? 0);
+                    
+                    // ✅ 关键优化: 删除成功后,从ImageCacheService缓存中移除
+                    try
+                    {
+                        var imageCacheService = _appContext.GetRequiredService<RUINORERP.UI.Network.Services.ImageCacheService>();
+                        if (imageCacheService != null && response.DeletedFileIds != null && response.DeletedFileIds.Count > 0)
+                        {
+                            // 将List<string>转换为IEnumerable<long>
+                            var deletedFileIds = response.DeletedFileIds
+                                .Where(id => long.TryParse(id, out _))
+                                .Select(id => long.Parse(id))
+                                .ToList();
+                            
+                            if (deletedFileIds.Count > 0)
+                            {
+                                imageCacheService.RemoveImageInfos(deletedFileIds);
+                                _logger?.LogInformation("已从ImageCacheService缓存中移除{Count}个已删除的文件", deletedFileIds.Count);
+                            }
+                        }
+                    }
+                    catch (Exception cacheEx)
+                    {
+                        _logger?.LogWarning(cacheEx, "清除缓存失败,不影响删除结果");
+                    }
                 }
 
                 return response;

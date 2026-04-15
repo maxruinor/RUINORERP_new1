@@ -120,6 +120,16 @@ namespace RUINORERP.Common.BusinessImage
         /// 文件名
         /// </summary>
         public string FileName { get; set; }
+        
+        /// <summary>
+        /// ✅ 新增: 图片描述/备注
+        /// </summary>
+        public string Description { get; set; }
+        
+        /// <summary>
+        /// ✅ 新增: 排序序号
+        /// </summary>
+        public int SortOrder { get; set; }
     }
 
     /// <summary>

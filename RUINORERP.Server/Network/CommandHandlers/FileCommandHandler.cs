@@ -331,6 +331,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 var businessRelation = new tb_FS_BusinessRelation
                                 {
                                     OwnerTableName = reusedOwnerTable,
+                                    OwnerTableDesc = reusedOwnerTable, // ✅ 默认使用表名作为描述
                                     BusinessNo = uploadRequest.BusinessNo ?? string.Empty,
                                     BusinessId = uploadRequest.BusinessId.Value,
                                     FileId = reusedFileStorageInfo.FileId,
@@ -451,6 +452,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             var businessRelation = new tb_FS_BusinessRelation
                             {
                                 OwnerTableName = ownerTable,
+                                OwnerTableDesc = ownerTable, // ✅ 默认使用表名作为描述
                                 BusinessNo = uploadRequest.BusinessNo ?? string.Empty, // 使用空字符串作为默认值
                                 BusinessId = uploadRequest.BusinessId.Value, // 新增:业务主键ID
                                 FileId = fileStorageInfo.FileId,

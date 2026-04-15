@@ -80,6 +80,20 @@ namespace RUINORERP.Model
                         }
         }
 
+        private string _OwnerTableDesc;
+        /// <summary>
+        /// 业务表描述
+       /// </summary>
+        [AdvQueryAttribute(ColName = "OwnerTableDesc",ColDesc = "业务表描述")] 
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "OwnerTableDesc" ,Length=100,IsNullable = true,ColumnDescription = "业务表描述" )]
+        public string OwnerTableDesc
+        { 
+            get{return _OwnerTableDesc;}
+            set{
+            SetProperty(ref _OwnerTableDesc, value);
+                        }
+        }
+
 
 
         private long _BusinessId;

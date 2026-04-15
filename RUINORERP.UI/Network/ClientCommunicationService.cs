@@ -1244,27 +1244,6 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 🆕 清除自动重新登录凭据
-        /// 在用户登出或取消记住密码时调用
-        /// </summary>
-        public void ClearAutoReloginCredentials()
-        {
-            try
-            {
-                UserGlobalConfig.Instance.AutoSavePwd = false;
-                UserGlobalConfig.Instance.UseName = null;
-                UserGlobalConfig.Instance.PassWord = null;
-                UserGlobalConfig.Instance.Serialize();
-                
-                _logger?.LogDebug("已清除自动重新登录凭据");
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "ClearAutoReloginCredentials发生异常");
-            }
-        }
-
-        /// <summary>
         /// 🆕 尝试恢复登录状态（后台执行，不显示登录窗体）
         /// 在重连成功后自动调用，检查Token有效性并决定是否需要重新登录
         /// </summary>
@@ -1342,10 +1321,9 @@ namespace RUINORERP.UI.Network
                         var errorMsg = loginResult?.ErrorMessage ?? "未知错误";
                         _logger?.LogWarning($"❌ 自动重新登录失败: Username={username}, Error={errorMsg}");
 
-                        // 清除自动登录标志，避免无限重试
-                        UserGlobalConfig.Instance.AutoSavePwd = false;
-                        UserGlobalConfig.Instance.Serialize();
-
+                        // ✅ 不清除 AutoSavePwd，保留用户凭据供下次重试
+                        // 只有在用户主动登出或取消“记住密码”时才清除
+                        
                         // 通知用户需要手动登录
                         NotifyUIAutoReloginFailed(errorMsg);
                     }

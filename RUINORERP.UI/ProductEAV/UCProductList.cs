@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using RUINOR.Core;
 using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
@@ -139,6 +139,18 @@ namespace RUINORERP.UI.ProductEAV
                         break;
                 }
                 e.Handled = true;
+                return;
+            }
+            
+            // ✅ 新增: 处理Images列的智能图片预览(单属性显示主图,多属性优先显示SKU图)
+            if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
+            {
+                var columnName = dataGridView1.Columns[e.ColumnIndex].Name;
+                if (columnName == "Images" || columnName == "ImagesPath")
+                {
+                    DrawSmartProductImageThumbnail(e);
+                    return;
+                }
             }
         }
 
@@ -183,6 +195,9 @@ namespace RUINORERP.UI.ProductEAV
             dataGridView1.DataSource = ListDataSoure;
 
             ToolBarEnabledControl(MenuItemEnums.查询);
+            
+            // ✅ 查询完成后预加载可见行图片(优化体验)
+            await PreloadVisibleImagesAsync();
         }
 
 
@@ -233,7 +248,8 @@ namespace RUINORERP.UI.ProductEAV
         {
             List<tb_Prod> list = new List<tb_Prod>();
             tb_ProdController<tb_Prod> pctr = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
-            //这里是否要用保存列表来处理
+            
+            // ✅ 第一步: 先保存所有产品数据到数据库(获取有效的ProdDetailID)
             foreach (var item in bindingSourceList.List)
             {
                 var entity = item as tb_Prod;
@@ -247,39 +263,21 @@ namespace RUINORERP.UI.ProductEAV
                         base.toolStripButtonSave.Enabled = false;
                         ReturnResults<tb_Prod> rr = new ReturnResults<tb_Prod>();
                         rr = await pctr.SaveOrUpdateAsync(entity);
-                        //rr = await base.ctr.BaseSaveOrUpdateWithChildtb_Prod(entity as tb_Prod);
-                        // await ctr.SaveOrUpdate(entity as tb_Unit);
                         if (rr.Succeeded)
                         {
                             base.toolStripButtonSave.Enabled = true;
                             ToolBarEnabledControl(MenuItemEnums.保存);
                             list.Add(rr.ReturnObject);
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_Prod>("产品保存", rr.ReturnObject);
-                            //保存箱规
-                            //if (entity.tb_BoxRuleses.Count > 0 && entity.tb_BoxRuleses[0] != null && entity.tb_BoxRuleses[0].HasChanged)
-                            //{
-                            //    //直接保存到DB
-                            //    BaseController<tb_BoxRules> ctr = Startup.GetFromFacByName<BaseController<tb_BoxRules>>(typeof(tb_BoxRules).Name + "Controller");
-                            //    ReturnResults<tb_BoxRules> rrboxrule = new ReturnResults<tb_BoxRules>();
-                            //    rrboxrule = await ctr.BaseSaveOrUpdate(entity.tb_BoxRuleses[0]);
-                            //    if (rr.Succeeded)
-                            //    {
-                            //        entity.tb_BoxRuleses[0].HasChanged = false;
-                            //    }
-                            //}
+                            
                             //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-
                             base._eventDrivenCacheManager.UpdateEntity<tb_Prod>(rr.ReturnObject);
-
                         }
                         else
                         {
                             base.toolStripButtonSave.Enabled = false;
                             MainForm.Instance.uclog.AddLog(rr.ErrorMsg, Global.UILogType.错误);
                         }
-                        //tb_Unit Entity = await ctr.AddReEntityAsync(entity);
-                        //如果新增 保存后。还是新增加状态，因为增加另一条。所以保存不为灰色。所以会重复增加
                         break;
                     case ActionStatus.删除:
                         break;
@@ -289,8 +287,535 @@ namespace RUINORERP.UI.ProductEAV
                 entity.HasChanged = false;
             }
 
+            // ✅ 第二步: 统一处理所有产品的主图和SKU图片上传(此时所有产品和SKU都有有效的ID)
+            int totalSuccessCount = 0;
+            int totalFailCount = 0;
+            
+            foreach (var product in list)
+            {
+                // ✅ 处理产品主图
+                if (product.HasUnsavedImageChanges)
+                {
+                    try
+                    {
+                        MainForm.Instance.uclog.AddLog($"开始处理产品 '{product.CNName}' 的主图上传...");
+                        
+                        // 获取文件服务
+                        var fileService = Startup.GetFromFac<RUINORERP.UI.Network.Services.FileBusinessService>();
+                        if (fileService == null)
+                        {
+                            MainForm.Instance.uclog.AddLog("FileBusinessService不可用", Global.UILogType.错误);
+                            totalFailCount++;
+                            continue;
+                        }
+
+                        bool hasError = false;
+
+                        // 1. 处理删除操作
+                        var deleteImages = product.GetPendingDeleteImages();
+                        foreach (var delImg in deleteImages)
+                        {
+                            if (delImg.ExistingFileId.HasValue && delImg.ExistingFileId.Value > 0)
+                            {
+                                MainForm.Instance.uclog.AddLog($"  - 删除主图 FileId={delImg.ExistingFileId.Value}");
+                                
+                                // ✅ 调用删除接口
+                                var deleteResponse = await fileService.DeleteImagesByIdsAsync(
+                                    product.ProdBaseID,
+                                    "tb_Prod",
+                                    new List<long> { delImg.ExistingFileId.Value },
+                                    physicalDelete: false
+                                );
+                                
+                                if (!deleteResponse.IsSuccess)
+                                {
+                                    hasError = true;
+                                    MainForm.Instance.uclog.AddLog($"    删除失败: {deleteResponse.ErrorMessage}", Global.UILogType.错误);
+                                }
+                            }
+                        }
+
+                        // 2. 处理替换操作(先删后增)
+                        var replaceImages = product.GetPendingReplaceImages();
+                        foreach (var repImg in replaceImages)
+                        {
+                            if (repImg.ExistingFileId.HasValue && repImg.ImageData != null)
+                            {
+                                MainForm.Instance.uclog.AddLog($"  - 替换主图 FileId={repImg.ExistingFileId.Value}");
+                                
+                                // ✅ 先删除旧的
+                                var deleteResponse = await fileService.DeleteImagesByIdsAsync(
+                                    product.ProdBaseID,
+                                    "tb_Prod",
+                                    new List<long> { repImg.ExistingFileId.Value },
+                                    physicalDelete: false
+                                );
+                                
+                                if (!deleteResponse.IsSuccess)
+                                {
+                                    hasError = true;
+                                    MainForm.Instance.uclog.AddLog($"    删除旧图失败: {deleteResponse.ErrorMessage}", Global.UILogType.错误);
+                                    continue;
+                                }
+                                
+                                // ✅ 再上传新的
+                                var uploadResult = await fileService.UploadImageAsync(
+                                    product,
+                                    repImg.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
+                                    repImg.ImageData,
+                                    "ImagesPath"
+                                );
+                                
+                                if (uploadResult.IsSuccess)
+                                {
+                                    totalSuccessCount++;
+                                    MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
+                                }
+                                else
+                                {
+                                    hasError = true;
+                                    MainForm.Instance.uclog.AddLog($"    上传失败: {uploadResult.ErrorMessage}", Global.UILogType.错误);
+                                }
+                            }
+                        }
+
+                        // 3. 处理新增操作
+                        var addImages = product.GetPendingAddImages();
+                        foreach (var addImg in addImages)
+                        {
+                            if (addImg.ImageData != null && !string.IsNullOrEmpty(addImg.FileName))
+                            {
+                                MainForm.Instance.uclog.AddLog($"  - 新增主图 {addImg.FileName} ({addImg.ImageData.Length} bytes)");
+                                
+                                // ✅ 上传图片
+                                var uploadResult = await fileService.UploadImageAsync(
+                                    product,
+                                    addImg.FileName,
+                                    addImg.ImageData,
+                                    "ImagesPath"
+                                );
+                                
+                                if (uploadResult.IsSuccess)
+                                {
+                                    totalSuccessCount++;
+                                    MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
+                                }
+                                else
+                                {
+                                    hasError = true;
+                                    MainForm.Instance.uclog.AddLog($"    上传失败: {uploadResult.ErrorMessage}", Global.UILogType.错误);
+                                }
+                            }
+                        }
+
+                        if (!hasError)
+                        {
+                            // 清除待处理列表
+                            product.ClearPendingImages();
+                            MainForm.Instance.uclog.AddLog($"产品 '{product.CNName}' 主图处理成功");
+                        }
+                        else
+                        {
+                            totalFailCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        totalFailCount++;
+                        MainForm.Instance.uclog.AddLog(
+                            $"处理产品 '{product.CNName}' 主图时异常: {ex.Message}",
+                            Global.UILogType.错误);
+                    }
+                }
+            }
+            
+            foreach (var product in list)
+            {
+                if (product.tb_ProdDetails != null && product.tb_ProdDetails.Count > 0)
+                {
+                    foreach (var detail in product.tb_ProdDetails)
+                    {
+                        // ✅ 修复: 移除ProdDetailID > 0检查,因为新增SKU的PendingImages可能不为空
+                        // 新增SKU在第一步保存后会获得有效ProdDetailID,此时才能上传图片
+                        if (detail.HasUnsavedImageChanges)
+                        {
+                            try
+                            {
+                                MainForm.Instance.uclog.AddLog($"开始处理产品 '{product.CNName}' 的SKU '{detail.SKU}' 的图片上传...");
+                                
+                                // 获取文件服务
+                                var fileService = Startup.GetFromFac<RUINORERP.UI.Network.Services.FileBusinessService>();
+                                if (fileService == null)
+                                {
+                                    MainForm.Instance.uclog.AddLog("FileBusinessService不可用", Global.UILogType.错误);
+                                    totalFailCount++;
+                                    continue;
+                                }
+
+                                bool hasError = false;
+
+                                // 1. 处理删除操作
+                                var deleteImages = detail.GetPendingDeleteImages();
+                                foreach (var delImg in deleteImages)
+                                {
+                                    if (delImg.ExistingFileId.HasValue && delImg.ExistingFileId.Value > 0)
+                                    {
+                                        MainForm.Instance.uclog.AddLog($"  - 删除图片 FileId={delImg.ExistingFileId.Value}");
+                                        
+                                        // ✅ 调用删除接口
+                                        var deleteResponse = await fileService.DeleteImagesByIdsAsync(
+                                            detail.ProdDetailID,
+                                            "tb_ProdDetail",
+                                            new List<long> { delImg.ExistingFileId.Value },
+                                            physicalDelete: false
+                                        );
+                                        
+                                        if (!deleteResponse.IsSuccess)
+                                        {
+                                            hasError = true;
+                                            MainForm.Instance.uclog.AddLog($"    删除失败: {deleteResponse.ErrorMessage}", Global.UILogType.错误);
+                                        }
+                                    }
+                                }
+
+                                // 2. 处理替换操作(先删后增)
+                                var replaceImages = detail.GetPendingReplaceImages();
+                                foreach (var repImg in replaceImages)
+                                {
+                                    if (repImg.ExistingFileId.HasValue && repImg.ImageData != null)
+                                    {
+                                        MainForm.Instance.uclog.AddLog($"  - 替换图片 FileId={repImg.ExistingFileId.Value}");
+                                        
+                                        // ✅ 先删除旧的
+                                        var deleteResponse = await fileService.DeleteImagesByIdsAsync(
+                                            detail.ProdDetailID,
+                                            "tb_ProdDetail",
+                                            new List<long> { repImg.ExistingFileId.Value },
+                                            physicalDelete: false
+                                        );
+                                        
+                                        if (!deleteResponse.IsSuccess)
+                                        {
+                                            hasError = true;
+                                            MainForm.Instance.uclog.AddLog($"    删除旧图失败: {deleteResponse.ErrorMessage}", Global.UILogType.错误);
+                                            continue;
+                                        }
+                                        
+                                        // ✅ 再上传新的
+                                        var uploadResult = await fileService.UploadImageAsync(
+                                            detail,
+                                            repImg.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
+                                            repImg.ImageData,
+                                            "ImagesPath"
+                                        );
+                                        
+                                        if (uploadResult.IsSuccess)
+                                        {
+                                            totalSuccessCount++;
+                                            MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
+                                        }
+                                        else
+                                        {
+                                            hasError = true;
+                                            MainForm.Instance.uclog.AddLog($"    上传失败: {uploadResult.ErrorMessage}", Global.UILogType.错误);
+                                        }
+                                    }
+                                }
+
+                                // 3. 处理新增操作
+                                var addImages = detail.GetPendingAddImages();
+                                foreach (var addImg in addImages)
+                                {
+                                    if (addImg.ImageData != null && !string.IsNullOrEmpty(addImg.FileName))
+                                    {
+                                        MainForm.Instance.uclog.AddLog($"  - 新增图片 {addImg.FileName} ({addImg.ImageData.Length} bytes)");
+                                        
+                                        // ✅ 上传图片
+                                        var uploadResult = await fileService.UploadImageAsync(
+                                            detail,
+                                            addImg.FileName,
+                                            addImg.ImageData,
+                                            "ImagesPath"
+                                        );
+                                        
+                                        if (uploadResult.IsSuccess)
+                                        {
+                                            totalSuccessCount++;
+                                            MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
+                                        }
+                                        else
+                                        {
+                                            hasError = true;
+                                            MainForm.Instance.uclog.AddLog($"    上传失败: {uploadResult.ErrorMessage}", Global.UILogType.错误);
+                                        }
+                                    }
+                                }
+
+                                if (!hasError)
+                                {
+                                    // 清除待处理列表
+                                    detail.ClearPendingImages();
+                                    MainForm.Instance.uclog.AddLog($"SKU '{detail.SKU}' 图片处理成功");
+                                }
+                                else
+                                {
+                                    totalFailCount++;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                totalFailCount++;
+                                MainForm.Instance.uclog.AddLog(
+                                    $"处理SKU '{detail.SKU}' 图片时异常: {ex.Message}",
+                                    Global.UILogType.错误);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (totalFailCount > 0)
+            {
+                MessageBox.Show(
+                    $"有{totalFailCount}个SKU的图片处理失败!\r\n\r\n" +
+                    $"请查看日志了解详细信息。",
+                    "SKU图片处理完成",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                
+                MainForm.Instance.uclog.AddLog($"SKU图片处理完成: 成功{totalSuccessCount}个, 失败{totalFailCount}个", Global.UILogType.警告);
+            }
+            else if (totalSuccessCount > 0)
+            {
+                MainForm.Instance.uclog.AddLog($"成功处理{totalSuccessCount}个SKU的图片");
+            }
+
             base.toolStripButtonModify.Enabled = true;
             return list;
+        }
+
+        /// <summary>
+        /// ✅ 新增: 智能绘制产品图片缩略图(懒加载)
+        /// 规则: 统一优先显示SKU图片,如果没有SKU图片则回退到主图
+        /// </summary>
+        private async void DrawSmartProductImageThumbnail(DataGridViewCellPaintingEventArgs e)
+        {
+            try
+            {
+                var row = dataGridView1.Rows[e.RowIndex];
+                var product = row.DataBoundItem as tb_Prod;
+                
+                if (product == null)
+                {
+                    DrawPlaceholderImage(e);
+                    e.Handled = true;
+                    return;
+                }
+                
+                // ✅ 智能获取应该显示的图片FileId(优先SKU,其次主图)
+                long? targetFileId = await GetSmartImageFileIdAsync(product);
+                
+                if (!targetFileId.HasValue || targetFileId.Value <= 0)
+                {
+                    // 没有图片,不绘制任何内容(保持空白)
+                    e.PaintBackground(e.ClipBounds, true);
+                    e.Handled = true;
+                    return;
+                }
+                
+                // ✅ 使用ImageCacheService获取图片(异步懒加载)
+                var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
+                if (imageCacheService != null)
+                {
+                    var imageInfo = await imageCacheService.GetImageInfoByFileIdAsync(targetFileId.Value);
+                    
+                    if (imageInfo != null && imageInfo.ImageData != null && imageInfo.ImageData.Length > 0)
+                    {
+                        // 绘制缩略图
+                        using (var ms = new System.IO.MemoryStream(imageInfo.ImageData))
+                        using (var image = Image.FromStream(ms))
+                        {
+                            DrawThumbnailInCell(e, image);
+                        }
+                        e.Handled = true;
+                        return;
+                    }
+                }
+                
+                // 缓存未命中或加载失败,不绘制任何内容
+                e.PaintBackground(e.ClipBounds, true);
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"绘制产品图片缩略图失败: {ex.Message}", Global.UILogType.警告);
+                e.PaintBackground(e.ClipBounds, true);
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// ✅ 新增: 智能获取图片FileId
+        /// 规则: 统一优先查找SKU图片,如果没有则回退到主图
+        /// </summary>
+        private async Task<long?> GetSmartImageFileIdAsync(tb_Prod product)
+        {
+            try
+            {
+                // ✅ 第一步: 优先查找SKU图片(遍历所有SKU,找到第一个有图片的)
+                if (product.tb_ProdDetails != null && product.tb_ProdDetails.Count > 0)
+                {
+                    foreach (var detail in product.tb_ProdDetails)
+                    {
+                        if (!string.IsNullOrEmpty(detail.ImagesPath))
+                        {
+                            var skuFileIds = ParseFileIds(detail.ImagesPath);
+                            if (skuFileIds.Count > 0)
+                            {
+                                // 找到第一个有图片的SKU,返回其第一个FileId
+                                return skuFileIds[0];
+                            }
+                        }
+                    }
+                }
+                
+                // ✅ 第二步: SKU都没有图片,回退到主图
+                if (!string.IsNullOrEmpty(product.ImagesPath))
+                {
+                    var mainFileIds = ParseFileIds(product.ImagesPath);
+                    if (mainFileIds.Count > 0)
+                    {
+                        return mainFileIds[0];
+                    }
+                }
+                
+                // 没有任何图片
+                return null;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"获取智能图片FileId失败: {ex.Message}", Global.UILogType.警告);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// ✅ 新增: 解析ImagesPath中的FileId列表
+        /// </summary>
+        private List<long> ParseFileIds(string imagesPath)
+        {
+            if (string.IsNullOrEmpty(imagesPath))
+                return new List<long>();
+            
+            return imagesPath.Split(',')
+                .Where(s => long.TryParse(s.Trim(), out _))
+                .Select(long.Parse)
+                .Where(id => id > 0)
+                .ToList();
+        }
+
+        /// <summary>
+        /// ✅ 新增: 绘制缩略图到单元格(自动缩放)
+        /// </summary>
+        private void DrawThumbnailInCell(DataGridViewCellPaintingEventArgs e, Image image)
+        {
+            // 绘制背景
+            e.PaintBackground(e.ClipBounds, true);
+            
+            // 计算缩略图尺寸(保持宽高比)
+            int maxWidth = e.CellBounds.Width - 4;
+            int maxHeight = e.CellBounds.Height - 4;
+            
+            if (maxWidth <= 0 || maxHeight <= 0 || image.Width == 0 || image.Height == 0)
+            {
+                DrawPlaceholderImage(e);
+                return;
+            }
+            
+            float ratio = Math.Min(
+                (float)maxWidth / image.Width,
+                (float)maxHeight / image.Height
+            );
+            
+            int thumbWidth = (int)(image.Width * ratio);
+            int thumbHeight = (int)(image.Height * ratio);
+            
+            // 居中绘制
+            int x = e.CellBounds.X + (e.CellBounds.Width - thumbWidth) / 2;
+            int y = e.CellBounds.Y + (e.CellBounds.Height - thumbHeight) / 2;
+            
+            Rectangle thumbRect = new Rectangle(x, y, thumbWidth, thumbHeight);
+            
+            // 高质量绘制
+            e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            e.Graphics.DrawImage(image, thumbRect);
+            
+            // 绘制边框
+            using (var pen = new Pen(Color.LightGray, 1))
+            {
+                e.Graphics.DrawRectangle(pen, thumbRect);
+            }
+        }
+
+        /// <summary>
+        /// ✅ 新增: 绘制占位符(已废弃,无图片时保持空白)
+        /// </summary>
+        private void DrawPlaceholderImage(DataGridViewCellPaintingEventArgs e)
+        {
+            // 不再绘制"无图片"文字,保持单元格空白
+            e.PaintBackground(e.ClipBounds, true);
+        }
+
+        /// <summary>
+        /// ✅ 新增: 查询完成后预加载可见行图片(优化体验)
+        /// 在数据绑定后调用,批量加载当前可见行的图片到缓存
+        /// </summary>
+        public async Task PreloadVisibleImagesAsync()
+        {
+            try
+            {
+                if (dataGridView1.DataSource == null || dataGridView1.Rows.Count == 0)
+                    return;
+
+                // 获取可见行的FileId列表
+                var visibleFileIds = new List<long>();
+                
+                foreach (DataGridViewRow row in dataGridView1.Rows)
+                {
+                    if (!row.Visible || row.IsNewRow) continue;
+                    
+                    var product = row.DataBoundItem as tb_Prod;
+                    if (product != null)
+                    {
+                        // ✅ 使用智能逻辑获取FileId
+                        var fileId = await GetSmartImageFileIdAsync(product);
+                        if (fileId.HasValue && fileId.Value > 0)
+                        {
+                            visibleFileIds.Add(fileId.Value);
+                        }
+                    }
+                }
+
+                if (visibleFileIds.Count > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"开始预加载{visibleFileIds.Count}个产品图片...");
+                    
+                    // ✅ 批量加载到缓存
+                    var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
+                    if (imageCacheService != null)
+                    {
+                        await imageCacheService.GetImageInfosBatchAsync(visibleFileIds);
+                        MainForm.Instance.uclog.AddLog("图片预加载完成");
+                        
+                        // 触发重绘,显示图片
+                        dataGridView1.Invalidate();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"预加载图片失败: {ex.Message}", Global.UILogType.警告);
+            }
         }
 
         private void UCProductList_Load(object sender, EventArgs e)

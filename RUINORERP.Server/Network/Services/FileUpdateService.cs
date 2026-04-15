@@ -465,6 +465,7 @@ namespace RUINORERP.Server.Network.Services
                 {
                     FileId = fileId,
                     OwnerTableName = OwnerTableName,
+                    OwnerTableDesc = OwnerTableName, // ✅ 默认使用表名作为描述
                     BusinessNo = businessNo,
                     BusinessId = businessId,
                     RelatedField = relatedField,
@@ -685,6 +686,7 @@ namespace RUINORERP.Server.Network.Services
                 {
                     FileId = versionFileId,
                     OwnerTableName = OwnerTableName,
+                    OwnerTableDesc = OwnerTableName, // ✅ 默认使用表名作为描述
                     BusinessId = businessId,
                     RelatedField = relatedField,
                     IsActive = true,

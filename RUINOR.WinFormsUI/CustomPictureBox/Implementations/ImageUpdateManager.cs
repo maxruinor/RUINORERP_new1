@@ -7,7 +7,7 @@ using RUINORERP.Lib.BusinessImage; // 用于访问ImageInfo类
 namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
 {
     /// <summary>
-    /// 图片更新管理器1
+    /// 图片更新管理器12
     /// 用于跟踪和管理图片的更新状态
     /// </summary>
     public class ImageUpdateManager

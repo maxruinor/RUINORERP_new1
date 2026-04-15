@@ -245,7 +245,18 @@ namespace RUINORERP.UI.ProductEAV
                         break;
                 }
                 e.Handled = true;
-
+                return;
+            }
+            
+            // ✅ 新增: 处理Images列的图片预览
+            if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
+            {
+                var columnName = newSumDataGridView产品.Columns[e.ColumnIndex].Name;
+                if (columnName == "Images" || columnName == "ImagesPath")
+                {
+                    DrawProductImageThumbnail(e);
+                    return;
+                }
             }
         }
 
@@ -351,6 +362,191 @@ namespace RUINORERP.UI.ProductEAV
                     }
 
                 }
+            }
+        }
+
+        /// <summary>
+        /// ✅ 新增: 绘制产品图片缩略图(懒加载)
+        /// </summary>
+        private async void DrawProductImageThumbnail(DataGridViewCellPaintingEventArgs e)
+        {
+            try
+            {
+                var row = newSumDataGridView产品.Rows[e.RowIndex];
+                var product = row.DataBoundItem as tb_Prod;
+                
+                if (product == null || string.IsNullOrEmpty(product.ImagesPath))
+                {
+                    // 没有图片,绘制默认占位符
+                    DrawPlaceholderImage(e);
+                    e.Handled = true;
+                    return;
+                }
+                
+                // ✅ 从ImagesPath解析FileId
+                var fileIds = ParseFileIds(product.ImagesPath);
+                if (fileIds.Count == 0)
+                {
+                    DrawPlaceholderImage(e);
+                    e.Handled = true;
+                    return;
+                }
+                
+                // ✅ 使用ImageCacheService获取第一张图片(异步懒加载)
+                var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
+                if (imageCacheService != null)
+                {
+                    var imageInfo = await imageCacheService.GetImageInfoByFileIdAsync(fileIds[0]);
+                    
+                    if (imageInfo != null && imageInfo.ImageData != null && imageInfo.ImageData.Length > 0)
+                    {
+                        // 绘制缩略图
+                        using (var ms = new System.IO.MemoryStream(imageInfo.ImageData))
+                        using (var image = Image.FromStream(ms))
+                        {
+                            DrawThumbnailInCell(e, image);
+                        }
+                        e.Handled = true;
+                        return;
+                    }
+                }
+                
+                // 缓存未命中或加载失败,绘制占位符
+                DrawPlaceholderImage(e);
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"绘制产品图片缩略图失败: {ex.Message}", Global.UILogType.警告);
+                DrawPlaceholderImage(e);
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// ✅ 新增: 解析ImagesPath中的FileId列表
+        /// </summary>
+        private List<long> ParseFileIds(string imagesPath)
+        {
+            if (string.IsNullOrEmpty(imagesPath))
+                return new List<long>();
+            
+            return imagesPath.Split(',')
+                .Where(s => long.TryParse(s.Trim(), out _))
+                .Select(long.Parse)
+                .Where(id => id > 0)
+                .ToList();
+        }
+
+        /// <summary>
+        /// ✅ 新增: 绘制缩略图到单元格(自动缩放)
+        /// </summary>
+        private void DrawThumbnailInCell(DataGridViewCellPaintingEventArgs e, Image image)
+        {
+            // 绘制背景
+            e.PaintBackground(e.ClipBounds, true);
+            
+            // 计算缩略图尺寸(保持宽高比)
+            int maxWidth = e.CellBounds.Width - 4;
+            int maxHeight = e.CellBounds.Height - 4;
+            
+            if (maxWidth <= 0 || maxHeight <= 0 || image.Width == 0 || image.Height == 0)
+            {
+                DrawPlaceholderImage(e);
+                return;
+            }
+            
+            float ratio = Math.Min(
+                (float)maxWidth / image.Width,
+                (float)maxHeight / image.Height
+            );
+            
+            int thumbWidth = (int)(image.Width * ratio);
+            int thumbHeight = (int)(image.Height * ratio);
+            
+            // 居中绘制
+            int x = e.CellBounds.X + (e.CellBounds.Width - thumbWidth) / 2;
+            int y = e.CellBounds.Y + (e.CellBounds.Height - thumbHeight) / 2;
+            
+            Rectangle thumbRect = new Rectangle(x, y, thumbWidth, thumbHeight);
+            
+            // 高质量绘制
+            e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            e.Graphics.DrawImage(image, thumbRect);
+            
+            // 绘制边框
+            using (var pen = new Pen(Color.LightGray, 1))
+            {
+                e.Graphics.DrawRectangle(pen, thumbRect);
+            }
+        }
+
+        /// <summary>
+        /// ✅ 新增: 绘制占位符
+        /// </summary>
+        private void DrawPlaceholderImage(DataGridViewCellPaintingEventArgs e)
+        {
+            e.PaintBackground(e.ClipBounds, true);
+            
+            // 绘制“无图片”文字
+            TextRenderer.DrawText(
+                e.Graphics,
+                "无图片",
+                e.CellStyle.Font,
+                e.CellBounds,
+                Color.Gray,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter
+            );
+        }
+
+        /// <summary>
+        /// ✅ 新增: 查询完成后预加载可见行图片(优化体验)
+        /// 在数据绑定后调用,批量加载当前可见行的图片到缓存
+        /// </summary>
+        public async Task PreloadVisibleImagesAsync()
+        {
+            try
+            {
+                if (newSumDataGridView产品.DataSource == null || newSumDataGridView产品.Rows.Count == 0)
+                    return;
+
+                // 获取可见行的FileId列表
+                var visibleFileIds = new List<long>();
+                
+                foreach (DataGridViewRow row in newSumDataGridView产品.Rows)
+                {
+                    if (!row.Visible || row.IsNewRow) continue;
+                    
+                    var product = row.DataBoundItem as tb_Prod;
+                    if (product != null && !string.IsNullOrEmpty(product.ImagesPath))
+                    {
+                        var fileIds = ParseFileIds(product.ImagesPath);
+                        if (fileIds.Count > 0)
+                        {
+                            visibleFileIds.Add(fileIds[0]); // 只预加载第一张
+                        }
+                    }
+                }
+
+                if (visibleFileIds.Count > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"开始预加载{visibleFileIds.Count}个产品图片...");
+                    
+                    // ✅ 批量加载到缓存
+                    var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
+                    if (imageCacheService != null)
+                    {
+                        await imageCacheService.GetImageInfosBatchAsync(visibleFileIds);
+                        MainForm.Instance.uclog.AddLog("图片预加载完成");
+                        
+                        // 触发重绘,显示图片
+                        newSumDataGridView产品.Invalidate();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"预加载图片失败: {ex.Message}", Global.UILogType.警告);
             }
         }
 
@@ -500,12 +696,15 @@ namespace RUINORERP.UI.ProductEAV
 
 
         ConcurrentDictionary<string, string> cds = UIHelper.GetFieldNameList<View_ProdDetail>();
-        private void Query产品()
+        private async void Query产品()
         {
             View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
             int maxrow = int.Parse(txtMaxRows.Value.ToString());
             var list = dc.BaseQueryByWhereTop(GetQueryExp(), maxrow);
             bindingSourceProdDetail.DataSource = list.ToBindingSortCollection();
+            
+            // ✅ 查询完成后预加载可见行图片(优化体验)
+            await PreloadVisibleImagesAsync();
         }
 
 
@@ -593,7 +792,8 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// 预加载SKU图片到缓存（性能优化）
+        /// 预加载SKU图片信息到ImageCacheService缓存(性能优化)
+        /// 利用统一的ImageCacheService基类,减少后续数据库查询
         /// </summary>
         private async Task PreloadSKUImagesAsync(List<View_ProdDetail> listDetails)
         {
@@ -602,29 +802,52 @@ namespace RUINORERP.UI.ProductEAV
                 if (listDetails == null || listDetails.Count == 0)
                     return;
 
-                var fileService = Startup.GetFromFac<FileBusinessService>();
-                if (fileService == null)
-                    return;
-
                 var prodDetailIds = listDetails.Select(d => d.ProdDetailID).Where(id => id > 0).ToList();
                 if (prodDetailIds.Count == 0)
                     return;
 
-                // 批量预加载图片到缓存
-                foreach (var prodDetailId in prodDetailIds)
+                MainForm.Instance.uclog.AddLog($"开始预加载{prodDetailIds.Count}个SKU的图片信息到缓存...");
+
+                // 获取ImageCacheService实例
+                var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
+                if (imageCacheService == null)
                 {
-                    try
-                    {
-                        var prodDetail = new tb_ProdDetail { ProdDetailID = prodDetailId };
-                        await fileService.DownloadImageAsync<tb_ProdDetail>(prodDetail, c => c.ImagesPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.uclog.AddLog($"预加载SKU {prodDetailId} 图片失败: {ex.Message}", Global.UILogType.警告);
-                    }
+                    MainForm.Instance.uclog.AddLog("ImageCacheService不可用,跳过预加载", Global.UILogType.警告);
+                    return;
                 }
 
-                MainForm.Instance.uclog.AddLog($"预加载 {prodDetailIds.Count} 个SKU的图片到缓存");
+                // 批量查询所有SKU的文件关联和文件信息(一次性查询,避免N+1问题)
+                var db = MainForm.Instance.AppContext.Db.CopyNew();
+                
+                // 先查询业务关联
+                var businessRelations = await db.Queryable<tb_FS_BusinessRelation>()
+                    .Where(br => br.OwnerTableName == "tb_ProdDetail" 
+                              && br.IsActive 
+                              && prodDetailIds.Contains(br.BusinessId))
+                    .ToListAsync();
+
+                if (businessRelations == null || businessRelations.Count == 0)
+                {
+                    MainForm.Instance.uclog.AddLog("未找到任何SKU的业务关联记录");
+                    return;
+                }
+
+                // 提取所有FileId
+                var fileIds = businessRelations.Select(br => br.FileId).Distinct().ToList();
+                
+                // 批量查询文件信息
+                var fileInfos = await db.Queryable<tb_FS_FileStorageInfo>()
+                    .Where(f => f.FileStatus == (int)FileStatus.Active 
+                             && f.isdeleted == false 
+                             && fileIds.Contains(f.FileId))
+                    .ToListAsync();
+
+                // ✅ 关键优化: 将文件信息添加到ImageCacheService缓存
+                if (fileInfos != null && fileInfos.Count > 0)
+                {
+                    imageCacheService.AddImageInfos(fileInfos);
+                    MainForm.Instance.uclog.AddLog($"已将{fileInfos.Count}个SKU图片信息预加载到ImageCacheService缓存");
+                }
             }
             catch (Exception ex)
             {
@@ -633,39 +856,79 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// 添加SKU图片子项（显示图片信息）
-        /// 优化：显示图片数量和状态标识
+        /// 添加SKU图片子项(显示数量标签)
+        /// 优化: 利用ImageCacheService缓存,减少数据库查询,异步加载不阻塞UI
         /// </summary>
         private async void AddSKUImageSubItem(TreeListViewItem itemRow, View_ProdDetail row)
         {
-            string imageText = "无图片";
+            // 先添加占位文本
+            var placeholderSubItem = new System.Windows.Forms.ListViewItem.ListViewSubItem();
+            placeholderSubItem.Text = "加载中...";
+            itemRow.SubItems.Add(placeholderSubItem);
 
             try
             {
-                // 查询tb_ProdDetail获取ImagesPath
-                var fileService = Startup.GetFromFac<FileBusinessService>();
-                if (fileService != null && row.ProdDetailID > 0)
+                if (row.ProdDetailID <= 0)
                 {
-                    var prodDetail = new tb_ProdDetail { ProdDetailID = row.ProdDetailID };
-                    var downloadResponse = await fileService.DownloadImageAsync<tb_ProdDetail>(prodDetail, c => c.ImagesPath);
+                    placeholderSubItem.Text = "无图片";
+                    return;
+                }
 
-                    if (downloadResponse != null && downloadResponse.IsSuccess && 
-                        downloadResponse.FileStorageInfos != null && downloadResponse.FileStorageInfos.Count > 0)
+                // ✅ 获取ImageCacheService实例
+                var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
+                
+                // 查询业务关联获取FileId列表
+                var db = MainForm.Instance.AppContext.Db.CopyNew();
+                var relations = await db.Queryable<tb_FS_BusinessRelation>()
+                    .Where(br => br.OwnerTableName == "tb_ProdDetail" 
+                              && br.BusinessId == row.ProdDetailID 
+                              && br.IsActive)
+                    .ToListAsync();
+
+                if (relations == null || relations.Count == 0)
+                {
+                    placeholderSubItem.Text = "无图片";
+                    return;
+                }
+
+                // ✅ 关键优化: 从缓存获取文件信息,避免重复查询数据库
+                int cachedCount = 0;
+                foreach (var relation in relations)
+                {
+                    // 尝试从缓存获取
+                    var cachedInfo = imageCacheService?.GetImageInfo(relation.FileId);
+                    if (cachedInfo != null)
                     {
-                        int imageCount = downloadResponse.FileStorageInfos.Count;
+                        cachedCount++;
+                    }
+                    else
+                    {
+                        // 缓存未命中,查询数据库并加入缓存
+                        var fileInfo = await db.Queryable<tb_FS_FileStorageInfo>()
+                            .Where(f => f.FileId == relation.FileId 
+                                     && f.FileStatus == (int)FileStatus.Active 
+                                     && f.isdeleted == false)
+                            .FirstAsync();
                         
-                        // 查询时只显示数量，不显示状态标识
-                        imageText = $"{imageCount}张";
+                        if (fileInfo != null)
+                        {
+                            imageCacheService?.AddImageInfo(fileInfo); // 加入缓存
+                            cachedCount++;
+                        }
                     }
                 }
+
+                // 更新显示数量
+                int imageCount = cachedCount;
+                placeholderSubItem.Text = $"{imageCount}张";
+                // 注意: ListViewSubItem没有ToolTipText属性,如果需要提示,可以设置整个Item的ToolTip
+                // itemRow.ToolTipText = $"共{imageCount}张图片,点击查看大图";
             }
             catch (Exception ex)
             {
-                MainForm.Instance.uclog.AddLog($"获取SKU图片数量失败: {ex.Message}", Global.UILogType.警告);
+                MainForm.Instance.uclog.AddLog($"获取SKU图片信息失败: {ex.Message}", Global.UILogType.警告);
+                placeholderSubItem.Text = "加载失败";
             }
-
-            // 设置文本
-            itemRow.SubItems.Add(imageText);
         }
         // 从数据源获取类型排序优先级
         private Dictionary<string, int> GetTypePriorityFromData(List<View_ProdDetail> list)

@@ -175,7 +175,6 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 用户登出方法
         /// 简化版：移除复杂逻辑，专注于本地状态清理和服务器通知
-        /// 🆕 新增：清除自动重新登录凭据
         /// </summary>
         public async Task<bool> LogoutAsync(CancellationToken ct = default)
         {
@@ -208,16 +207,6 @@ namespace RUINORERP.UI.Network.Services
 
                 // 执行本地登出清理
                 await CleanupLoginStateAsync();
-
-                // 🆕 清除自动重新登录凭据
-                try
-                {
-                    _communicationService.ClearAutoReloginCredentials();
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, "清除自动重新登录凭据失败");
-                }
 
                 return serverLogoutSuccess;
             }

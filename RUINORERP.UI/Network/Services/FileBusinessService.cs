@@ -10,6 +10,8 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Repository.UnitOfWorks;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -35,6 +37,26 @@ namespace RUINORERP.UI.Network.Services
         private readonly ILogger<FileBusinessService> _logger;
         private readonly ApplicationContext _appContext;
         private readonly IEntityMappingService _mapper;
+        
+        /// <summary>
+        /// 图片最大宽度(像素)
+        /// </summary>
+        private const int MaxImageWidth = 1920;
+        
+        /// <summary>
+        /// 图片最大高度(像素)
+        /// </summary>
+        private const int MaxImageHeight = 1080;
+        
+        /// <summary>
+        /// JPEG压缩质量(0-100),85是质量和大小的良好平衡
+        /// </summary>
+        private const long JpegQuality = 85;
+        
+        /// <summary>
+        /// 需要压缩的最小文件大小(字节),小于此值不压缩(约500KB)
+        /// </summary>
+        private const long MinCompressSize = 500 * 1024;
 
         /// <summary>
         /// 构造函数
@@ -76,6 +98,29 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
+                // ✅ 图片压缩并获取宽高信息
+                var compressResult = CompressImageIfNeeded(fileData, fileName);
+                
+                if (compressResult.CompressedData != null && compressResult.CompressedData.Length < fileData.Length)
+                {
+                    _logger?.LogInformation("[FileBusinessService] 图片已压缩: {OriginalSize}KB → {CompressedSize}KB, 压缩率{Ratio}%, 尺寸: {Width}x{Height}",
+                        fileData.Length / 1024,
+                        compressResult.CompressedData.Length / 1024,
+                        (1 - (double)compressResult.CompressedData.Length / fileData.Length) * 100,
+                        compressResult.Width,
+                        compressResult.Height);
+                    
+                    fileData = compressResult.CompressedData;
+                }
+                else if (compressResult.Width > 0 && compressResult.Height > 0)
+                {
+                    // 未压缩,但仍然获取了宽高信息
+                    _logger?.LogDebug("[FileBusinessService] 图片无需压缩, 尺寸: {Width}x{Height}, 大小: {Size}KB",
+                        compressResult.Width,
+                        compressResult.Height,
+                        fileData.Length / 1024);
+                }
+                
                 var fileService = _appContext.GetRequiredService<FileManagementService>();
 
                 var storageInfo = new tb_FS_FileStorageInfo
@@ -508,6 +553,197 @@ namespace RUINORERP.UI.Network.Services
                 return ResponseFactory.CreateSpecificErrorResponse<FileDeleteResponse>($"删除文件失败: {ex.Message}");
             }
         }
+
+        #region 图片压缩功能
+
+        /// <summary>
+        /// 图片压缩结果
+        /// </summary>
+        private class CompressResult
+        {
+            public byte[] CompressedData { get; set; }
+            public int Width { get; set; }
+            public int Height { get; set; }
+        }
+
+        /// <summary>
+        /// ✅ 图片压缩: 根据文件大小和尺寸判断是否需要压缩
+        /// </summary>
+        /// <param name="imageData">原始图片数据</param>
+        /// <param name="fileName">文件名(用于判断格式)</param>
+        /// <returns>压缩结果(包含压缩后的数据和宽高信息)</returns>
+        private CompressResult CompressImageIfNeeded(byte[] imageData, string fileName)
+        {
+            var result = new CompressResult();
+            
+            try
+            {
+                // 1. 检查是否为图片格式
+                string extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+                if (string.IsNullOrEmpty(extension) || 
+                    !new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" }.Contains(extension))
+                {
+                    return result; // 非图片格式,返回空结果
+                }
+
+                // 2. 尝试加载图片并获取尺寸
+                using (var ms = new MemoryStream(imageData))
+                using (var originalImage = Image.FromStream(ms))
+                {
+                    result.Width = originalImage.Width;
+                    result.Height = originalImage.Height;
+                    
+                    // 3. 小文件不压缩
+                    if (imageData.Length < MinCompressSize)
+                    {
+                        return result; // 返回宽高信息,但不压缩
+                    }
+
+                    // 4. 如果尺寸已经很小,仅对JPEG进行质量压缩
+                    if (originalImage.Width <= MaxImageWidth && originalImage.Height <= MaxImageHeight)
+                    {
+                        if (extension == ".jpg" || extension == ".jpeg")
+                        {
+                            result.CompressedData = CompressJpegQuality(originalImage);
+                        }
+                        return result;
+                    }
+
+                    // 5. 需要缩放+压缩
+                    _logger?.LogDebug("[图片压缩] 开始压缩: {Width}x{Height}, {Size}KB",
+                        originalImage.Width, originalImage.Height, imageData.Length / 1024);
+
+                    // 计算缩放比例
+                    float widthRatio = (float)MaxImageWidth / originalImage.Width;
+                    float heightRatio = (float)MaxImageHeight / originalImage.Height;
+                    float ratio = Math.Min(widthRatio, heightRatio);
+
+                    int newWidth = (int)(originalImage.Width * ratio);
+                    int newHeight = (int)(originalImage.Height * ratio);
+                    
+                    // 更新结果中的宽高
+                    result.Width = newWidth;
+                    result.Height = newHeight;
+
+                    // 创建缩放后的图片
+                    using (var resizedImage = new Bitmap(newWidth, newHeight))
+                    {
+                        using (var graphics = Graphics.FromImage(resizedImage))
+                        {
+                            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                            graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                            graphics.DrawImage(originalImage, 0, 0, newWidth, newHeight);
+                        }
+
+                        // 6. 根据原格式保存
+                        if (extension == ".jpg" || extension == ".jpeg")
+                        {
+                            result.CompressedData = SaveAsJpeg(resizedImage);
+                        }
+                        else if (extension == ".png")
+                        {
+                            result.CompressedData = SaveAsPng(resizedImage);
+                        }
+                        else
+                        {
+                            // 其他格式转为JPEG
+                            result.CompressedData = SaveAsJpeg(resizedImage);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 压缩失败,返回原始宽高信息(如果有),不影响上传
+                _logger?.LogWarning(ex, "[图片压缩] 压缩失败,使用原始图片");
+            }
+            
+            return result;
+        }
+
+        /// <summary>
+        /// 仅压缩JPEG质量(不改变尺寸)
+        /// </summary>
+        private byte[] CompressJpegQuality(Image image)
+        {
+            try
+            {
+                var encoder = GetEncoder(ImageFormat.Jpeg);
+                var encoderParams = new EncoderParameters(1);
+                encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, JpegQuality);
+
+                using (var ms = new MemoryStream())
+                {
+                    image.Save(ms, encoder, encoderParams);
+                    return ms.ToArray();
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 保存为JPEG格式
+        /// </summary>
+        private byte[] SaveAsJpeg(Image image)
+        {
+            try
+            {
+                var encoder = GetEncoder(ImageFormat.Jpeg);
+                var encoderParams = new EncoderParameters(1);
+                encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, JpegQuality);
+
+                using (var ms = new MemoryStream())
+                {
+                    image.Save(ms, encoder, encoderParams);
+                    return ms.ToArray();
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 保存为PNG格式
+        /// </summary>
+        private byte[] SaveAsPng(Image image)
+        {
+            try
+            {
+                using (var ms = new MemoryStream())
+                {
+                    image.Save(ms, ImageFormat.Png);
+                    return ms.ToArray();
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取图片编码器
+        /// </summary>
+        private ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            var codecs = ImageCodecInfo.GetImageEncoders();
+            foreach (var codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
+        }
+
+        #endregion
 
         /// <summary>
         /// 根据路径获取文件信息

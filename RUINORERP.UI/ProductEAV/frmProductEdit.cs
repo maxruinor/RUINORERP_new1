@@ -499,7 +499,7 @@ namespace RUINORERP.UI.ProductEAV
                                 newImageData: imgTuple.Item1,
                                 fileName: imageInfo.OriginalFileName ?? $"image_{DateTime.Now.Ticks}.jpg",
                                 description: imageInfo.Description,
-                                sortOrder: imageInfo.SortOrder ?? 0
+                                sortOrder: imageInfo.SortOrder
                             );
                         }
                         else

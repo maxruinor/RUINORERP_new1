@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace RUINORERP.Common.BusinessImage
+namespace RUINORERP.Model.BusinessImage
 {
     /// <summary>
-    /// 图片信息类2
+    /// 图片信息类12
+    /// 用于统一管理图片的各种属性和状态，支持业务场景中的图片处理
     /// </summary>
     public class ImageInfo
     {
@@ -20,11 +21,6 @@ namespace RUINORERP.Common.BusinessImage
         /// 图片ID
         /// </summary>
         public long FileId { get; set; }
-        
-        /// <summary>
-        /// 图片ID（兼容属性）
-        /// </summary>
-        public long ImageId { get; set; }
         
         /// <summary>
         /// 原始文件名
@@ -130,43 +126,10 @@ namespace RUINORERP.Common.BusinessImage
         /// ✅ 新增: 排序序号
         /// </summary>
         public int SortOrder { get; set; }
+        
+        /// <summary>
+        /// 通用标记字段，用于存储自定义状态信息（如：新增、修改、替换等）
+        /// </summary>
+        public object Tag { get; set; }
     }
-
-    /// <summary>
-    /// 图片状态枚举1
-    /// </summary>
-    public enum ImageStatus
-    {
-        /// <summary>
-        /// 正常状态
-        /// </summary>
-        Normal,
-        
-        /// <summary>
-        /// 待上传
-        /// </summary>
-        PendingUpload,
-        
-        /// <summary>
-        /// 处理中（防止重复处理）
-        /// </summary>
-        Processing,
-        
-        /// <summary>
-        /// 已上传
-        /// </summary>
-        Uploaded,
-        
-        /// <summary>
-        /// 待删除
-        /// </summary>
-        PendingDelete,
-        
-        /// <summary>
-        /// 已删除
-        /// </summary>
-        Deleted
-    }
-
-
 }

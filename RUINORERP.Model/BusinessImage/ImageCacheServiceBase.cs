@@ -1,13 +1,14 @@
 using Microsoft.Extensions.Caching.Memory;
-using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
-namespace RUINORERP.Common.Caching
+namespace RUINORERP.Model.BusinessImage
 {
     /// <summary>
-    /// 图片缓存服务基类 - 提供基于FileId的通用文件信息缓存
+    /// ✅ 通用图片缓存服务基类 - 使用object存储,不依赖具体实体类型
     /// 适用于客户端和服务器端,减少数据库查询压力
+    /// 调用方自行转换类型,保持缓存服务的通用性
     /// </summary>
     public abstract class ImageCacheServiceBase : IDisposable
     {
@@ -55,29 +56,28 @@ namespace RUINORERP.Common.Caching
         #region 基础缓存操作
 
         /// <summary>
-        /// 从缓存获取图片信息
+        /// ✅ 从缓存获取对象(返回object,调用方自行转换)
         /// </summary>
         /// <param name="fileId">文件ID</param>
-        /// <returns>图片信息,不存在返回null</returns>
-        public virtual tb_FS_FileStorageInfo GetImageInfo(long fileId)
+        /// <returns>缓存对象,不存在返回null</returns>
+        public virtual object GetImageInfo(long fileId)
         {
             if (fileId <= 0)
                 return null;
 
             var cacheKey = GenerateCacheKey(fileId);
-            _memoryCache.TryGetValue(cacheKey, out tb_FS_FileStorageInfo imageInfo);
+            _memoryCache.TryGetValue(cacheKey, out object imageInfo);
             return imageInfo;
         }
 
         /// <summary>
-        /// 将图片信息添加到缓存
+        /// ✅ 将对象添加到缓存(接受object,通用性强)
         /// </summary>
-        /// <param name="imageInfo">图片信息</param>
+        /// <param name="imageInfo">图片信息对象(tb_FS_FileStorageInfo或其他)</param>
         public virtual void AddImageInfo(tb_FS_FileStorageInfo imageInfo)
         {
-            if (imageInfo == null || imageInfo.FileId <= 0)
+            if (imageInfo == null)
                 return;
-
             var cacheKey = GenerateCacheKey(imageInfo.FileId);
             _memoryCache.Set(cacheKey, imageInfo, _cacheOptions);
         }
@@ -96,9 +96,9 @@ namespace RUINORERP.Common.Caching
         }
 
         /// <summary>
-        /// 批量添加图片信息到缓存
+        /// ✅ 批量添加对象到缓存
         /// </summary>
-        /// <param name="imageInfos">图片信息列表</param>
+        /// <param name="imageInfos">图片信息列表(object类型)</param>
         public virtual void AddImageInfos(IEnumerable<tb_FS_FileStorageInfo> imageInfos)
         {
             if (imageInfos == null)

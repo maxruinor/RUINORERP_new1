@@ -13,7 +13,6 @@ using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common;
-using RUINORERP.Lib.BusinessImage;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -45,6 +44,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static RUINORERP.UI.Common.DataBindingHelper;
+using RUINORERP.Model.BusinessImage;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -530,51 +530,9 @@ namespace RUINORERP.UI.ProductEAV
                 }
             }
 
-            // ✅ 重构: 将SKU图片数据从旧缓存迁移到PendingImages(兼容过渡)
-            // 此时不上传图片,因为SKU可能还没有有效的ProdDetailID
-            // UCProductList.Save()会统一处理PendingImages中的图片
-            if (HasSKUImagesToUpload())
-            {
-                MainForm.Instance.uclog.AddLog($"检测到{EditEntity?.tb_ProdDetails?.Count ?? 0}个SKU有待处理的图片更改,将在列表保存时统一处理");
-                
-                // ✅ 遍历所有SKU,将旧的缓存数据迁移到PendingImages
-                foreach (var detail in EditEntity?.tb_ProdDetails ?? new List<tb_ProdDetail>())
-                {
-                    // 检查是否有待上传的图片(从旧缓存读取)
-                    var updatedImages = GetSKUImagesNeedingUpdate(detail);
-                    var deletedImages = GetSKUImagesToDelete(detail);
-                    
-                    // 迁移新增/替换的图片到PendingImages
-                    if (updatedImages != null && updatedImages.Count > 0)
-                    {
-                        foreach (var imgTuple in updatedImages)
-                        {
-                            // imgTuple.Item1 = byte[], imgTuple.Item2 = ImageInfo
-                            detail.AddPendingImage(
-                                imageData: imgTuple.Item1,
-                                fileName: imgTuple.Item2?.FileName ?? $"image_{DateTime.Now.Ticks}.jpg",
-                                description: imgTuple.Item2?.Description,
-                                sortOrder: imgTuple.Item2?.SortOrder ?? 0
-                            );
-                        }
-                        MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 添加{updatedImages.Count}张待上传图片到PendingImages");
-                    }
-                    
-                    // 迁移删除的图片到PendingImages
-                    if (deletedImages != null && deletedImages.Count > 0)
-                    {
-                        foreach (var delImg in deletedImages)
-                        {
-                            // ✅ FileId是long类型,不是long?,直接使用
-                            if (delImg.FileId > 0)
-                            {
-                                detail.MarkImageForDeletion(delImg.FileId);
-                            }
-                        }
-                        MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 标记{deletedImages.Count}张图片为待删除");
-                    }
-                }
-            }
+            // ✅ 简化: SKU图片已在frmSKUImageEdit中同步到PendingImages,无需再次迁移
+            // frmSKUImageEdit.btnOK_Click -> SyncChangesToPendingImages -> detail.PendingImages
+            // UCProductList.Save()会直接读取detail.PendingImages并上传
 
             this.DialogResult = DialogResult.OK;
             this.Close();
@@ -716,7 +674,7 @@ namespace RUINORERP.UI.ProductEAV
                     // ✅ 关键修复: AutoMapper不会复制IsIgnore属性,需要手动复制PendingImages
                     if (epd.PendingImages != null && epd.PendingImages.Count > 0)
                     {
-                        detail.PendingImages = new List<PendingImageInfo>(epd.PendingImages);
+                        detail.PendingImages = new List<ImageInfo>(epd.PendingImages);
                         MainForm.Instance.uclog.AddLog($"[GetDetailsAndRelations] 复制PendingImages: SKU={epd.SKU}, Count={epd.PendingImages.Count}");
                     }
                     
@@ -2666,11 +2624,9 @@ namespace RUINORERP.UI.ProductEAV
                     var detail = dataGridView1.Rows[e.RowIndex].DataBoundItem as tb_ProdDetail;
                     if (detail != null)
                     {
-                        // ✅ 从PendingImages获取待处理的图片
-                        var pendingAddImages = detail.GetPendingAddImages();
-                        var pendingReplaceImages = detail.GetPendingReplaceImages();
-                        bool hasPendingImages = (pendingAddImages != null && pendingAddImages.Count > 0) || 
-                                               (pendingReplaceImages != null && pendingReplaceImages.Count > 0);
+                        // ✅ 简化: 从PendingImages获取待上传的图片
+                        var pendingUploadImages = detail.GetPendingAddImages();
+                        bool hasPendingImages = pendingUploadImages != null && pendingUploadImages.Count > 0;
 
                         // 调试日志（仅在第一次绘制时记录）
                         if (e.RowIndex == dataGridView1.CurrentCell?.RowIndex)
@@ -2684,16 +2640,8 @@ namespace RUINORERP.UI.ProductEAV
                             e.PaintBackground(e.ClipBounds, false);
                             e.Handled = true;
 
-                            // ✅ 显示第一张待处理图片的缩略图(优先显示新增/替换的图片)
-                            byte[] firstImageData = null;
-                            if (pendingAddImages != null && pendingAddImages.Count > 0)
-                            {
-                                firstImageData = pendingAddImages[0].ImageData;
-                            }
-                            else if (pendingReplaceImages != null && pendingReplaceImages.Count > 0)
-                            {
-                                firstImageData = pendingReplaceImages[0].ImageData;
-                            }
+                            // ✅ 显示第一张待上传图片的缩略图
+                            byte[] firstImageData = pendingUploadImages[0].ImageData;
 
                             if (firstImageData != null)
                             {
@@ -2721,7 +2669,7 @@ namespace RUINORERP.UI.ProductEAV
                                         e.Graphics.DrawImage(originalImage, thumbRect);
 
                                         // 如果有多张图片，显示数量标签
-                                        int totalPendingCount = (pendingAddImages?.Count ?? 0) + (pendingReplaceImages?.Count ?? 0);
+                                        int totalPendingCount = pendingUploadImages.Count;
                                         if (totalPendingCount > 1)
                                         {
                                             string countText = $"+{totalPendingCount - 1}";
@@ -2741,9 +2689,9 @@ namespace RUINORERP.UI.ProductEAV
                                             }
                                         }
 
-                                        // 显示状态标识
-                                        string statusText = pendingReplaceImages != null && pendingReplaceImages.Count > 0 ? "替换" : "新增";
-                                        Color statusColor = pendingReplaceImages != null && pendingReplaceImages.Count > 0 ? Color.OrangeRed : Color.Green;
+                                        // ✅ 简化: 统一显示"待上传"标识
+                                        string statusText = "待上传";
+                                        Color statusColor = Color.Green;
                                         
                                         using (var statusBrush = new SolidBrush(statusColor))
                                         using (var statusFont = new Font(e.CellStyle.Font.FontFamily, 9, FontStyle.Bold))
@@ -2881,43 +2829,23 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     // ✅ 准备传递给编辑器的缓存图片数据(从PendingImages读取)
                     List<Tuple<byte[], ImageInfo>> cachedImages = null;
-                    var pendingAddImages = detail.GetPendingAddImages();
-                    var pendingReplaceImages = detail.GetPendingReplaceImages();
+                    // ✅ 简化: 检查是否有待上传的图片
+                    var pendingUploadImages = detail.GetPendingAddImages();
                     
-                    if ((pendingAddImages != null && pendingAddImages.Count > 0) || 
-                        (pendingReplaceImages != null && pendingReplaceImages.Count > 0))
+                    if (pendingUploadImages != null && pendingUploadImages.Count > 0)
                     {
                         cachedImages = new List<Tuple<byte[], ImageInfo>>();
                         
-                        // 添加新增的图片
-                        if (pendingAddImages != null)
+                        foreach (var img in pendingUploadImages)
                         {
-                            foreach (var img in pendingAddImages)
+                            var imageInfo = new ImageInfo
                             {
-                                var imageInfo = new ImageInfo
-                                {
-                                    FileName = img.FileName,
-                                    Description = img.Description,
-                                    SortOrder = img.SortOrder
-                                };
-                                cachedImages.Add(Tuple.Create(img.ImageData, imageInfo));
-                            }
-                        }
-                        
-                        // 添加替换的图片
-                        if (pendingReplaceImages != null)
-                        {
-                            foreach (var img in pendingReplaceImages)
-                            {
-                                var imageInfo = new ImageInfo
-                                {
-                                    FileName = img.FileName,
-                                    Description = img.Description,
-                                    SortOrder = img.SortOrder,
-                                    FileId = img.ExistingFileId ?? 0  // ✅ long?转long,默认为0
-                                };
-                                cachedImages.Add(Tuple.Create(img.ImageData, imageInfo));
-                            }
+                                FileName = img.FileName,
+                                Description = img.Description,
+                                SortOrder = img.SortOrder,
+                                FileId = img.FileId  // ✅ 直接使用FileId
+                            };
+                            cachedImages.Add(Tuple.Create(img.ImageData, imageInfo));
                         }
                         
                         MainForm.Instance.uclog.AddLog($"准备将 {cachedImages.Count} 张PendingImages传递给编辑器，SKU: {detail.SKU}");
@@ -3447,14 +3375,12 @@ namespace RUINORERP.UI.ProductEAV
                     return true;
                 }
                 
-                // 兼容检查: 从PendingImages获取
-                var pendingAddImages = detail.GetPendingAddImages();
+                // ✅ 简化: 从PendingImages获取待处理的图片
+                var pendingUploadImages = detail.GetPendingAddImages();
                 var pendingDeleteImages = detail.GetPendingDeleteImages();
-                var pendingReplaceImages = detail.GetPendingReplaceImages();
                 
-                if ((pendingAddImages?.Count ?? 0) > 0 || 
-                    (pendingDeleteImages?.Count ?? 0) > 0 || 
-                    (pendingReplaceImages?.Count ?? 0) > 0)
+                if ((pendingUploadImages?.Count ?? 0) > 0 || 
+                    (pendingDeleteImages?.Count ?? 0) > 0)
                 {
                     return true;
                 }
@@ -3469,38 +3395,21 @@ namespace RUINORERP.UI.ProductEAV
         /// <returns>需要更新的图片列表(Tuple格式,兼容旧代码)</returns>
         private List<Tuple<byte[], ImageInfo>> GetSKUImagesNeedingUpdate(tb_ProdDetail detail)
         {
-            // ✅ 从PendingImages获取待新增和待替换的图片
-            var pendingAddImages = detail.GetPendingAddImages();
-            var pendingReplaceImages = detail.GetPendingReplaceImages();
+            // ✅ 从PendingImages获取待上传的图片
+            var pendingUploadImages = detail.GetPendingAddImages();
             
             var result = new List<Tuple<byte[], ImageInfo>>();
             
-            // 添加新增的图片
-            if (pendingAddImages != null && pendingAddImages.Count > 0)
+            if (pendingUploadImages != null && pendingUploadImages.Count > 0)
             {
-                foreach (var img in pendingAddImages)
-                {
-                    var imageInfo = new ImageInfo
-                    {
-                        FileName = img.FileName,
-                        Description = img.Description,
-                        SortOrder = img.SortOrder
-                    };
-                    result.Add(Tuple.Create(img.ImageData, imageInfo));
-                }
-            }
-            
-            // 添加替换的图片
-            if (pendingReplaceImages != null && pendingReplaceImages.Count > 0)
-            {
-                foreach (var img in pendingReplaceImages)
+                foreach (var img in pendingUploadImages)
                 {
                     var imageInfo = new ImageInfo
                     {
                         FileName = img.FileName,
                         Description = img.Description,
                         SortOrder = img.SortOrder,
-                        FileId = img.ExistingFileId ?? 0
+                        FileId = img.FileId  // ✅ 直接使用FileId
                     };
                     result.Add(Tuple.Create(img.ImageData, imageInfo));
                 }
@@ -3531,7 +3440,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     result.Add(new ImageInfo
                     {
-                        FileId = img.ExistingFileId ?? 0
+                        FileId = img.FileId  // ✅ 直接使用FileId
                     });
                 }
                 

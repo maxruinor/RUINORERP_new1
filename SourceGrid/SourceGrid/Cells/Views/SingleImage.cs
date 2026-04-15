@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using DevAge.Drawing;
 using DevAge.Drawing.VisualElements;
 using System.Threading.Tasks;
-using RUINORERP.Lib.BusinessImage;
+using RUINORERP.Model.BusinessImage;
 
 namespace SourceGrid.Cells.Views
 {

@@ -2,7 +2,6 @@ using MathNet.Numerics.LinearAlgebra.Factorization;
 using Microsoft.IdentityModel.Tokens;
 using Netron.GraphLib;
 using RUINOR.WinFormsUI.CustomPictureBox;
-using RUINORERP.Lib.BusinessImage;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
@@ -28,6 +27,7 @@ using Winista.Text.HtmlParser.Data;
 using static FastReport.Design.ToolWindows.DictionaryWindow;
 using static RUINORERP.UI.Log.UClog;
 using Color = System.Drawing.Color;
+using RUINORERP.Model.BusinessImage;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -1112,7 +1112,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         BusinessId = valueImageWeb.BusinessId;
                         OwnerTableName = valueImageWeb.OwnerTableName;
                         // 将旧图片标记为待删除状态
-                        RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.AddImage(cell, imageWeb.FileId, imageWeb.StorageFileName, imageWeb.ImageData, RUINORERP.Lib.BusinessImage.ImageStatus.PendingDelete, valueImageWeb.BusinessId, valueImageWeb.OwnerTableName, valueImageWeb.StoragePath);
+                        ImageStateManager.Instance.AddImage(cell, imageWeb.FileId, imageWeb.StorageFileName, imageWeb.ImageData, ImageStatus.PendingDelete, valueImageWeb.BusinessId, valueImageWeb.OwnerTableName, valueImageWeb.StoragePath);
                     }
                 }
                 catch (Exception ex)
@@ -1144,7 +1144,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     long tempImageId = GenerateUniqueLongId();
 
                     // 将新图片标记为待上传状态
-                    RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.AddImage(cell, tempImageId, fileName, imageBytes, RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload, BusinessId, OwnerTableName);
+                    ImageStateManager.Instance.AddImage(cell, tempImageId, fileName, imageBytes, ImageStatus.PendingUpload, BusinessId, OwnerTableName);
 
                     // 更新单元格值为临时ID，确保只存储图片ID
                     cell.Value = tempImageId;
@@ -1164,7 +1164,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     if (cell.View is RemoteImageView imageView)
                     {
                         // 尝试从ImageStateManager获取新图片数据
-                        var pendingUploadImages = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
+                        var pendingUploadImages = ImageStateManager.Instance.GetPendingUploadImages();
                         var newImageInfo = pendingUploadImages.FirstOrDefault(img => img.FileId == tempImageId);
                         if (newImageInfo != null && newImageInfo.ImageData != null)
                         {
@@ -1206,7 +1206,7 @@ namespace RUINORERP.UI.UCSourceGrid
             else
             {
                 //如果用户不替换了，则清除上面添加到删除集合中的文件 
-                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveImage(imageWeb.FileId);
+                ImageStateManager.Instance.RemoveImage(imageWeb.FileId);
 
             }
         }

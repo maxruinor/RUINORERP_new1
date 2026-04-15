@@ -311,8 +311,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                         // 检查是否存在相同Hash的文件，实现去重
                         var existingFiles = await _fileStorageInfoController.QueryByNavAsync(
-                            c => c.HashValue == contentHash 
-                                && c.FileStatus == (int)FileStatus.Active 
+                            c => c.HashValue == contentHash
+                                && c.FileStatus == (int)FileStatus.Active
                                 && c.isdeleted == false);
 
                         if (existingFiles != null && existingFiles.Count > 0)
@@ -323,7 +323,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                             // 复用已有文件，创建业务关联（跳过文件保存）
                             var reusedFileStorageInfo = existingFile;
-                            
+
                             // 保存业务关联
                             var reusedOwnerTable = uploadRequest.OwnerTableName ?? "Unknown";
                             if (reusedOwnerTable.Trim().Length > 0 && uploadRequest.BusinessId.HasValue && uploadRequest.BusinessId.Value > 0)
@@ -372,7 +372,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                     }
                                 }
                             }
-                            
+
                             responseData.FileStorageInfos.Add(reusedFileStorageInfo);
                             continue; // 跳过文件保存，直接处理下一个
                         }
@@ -705,14 +705,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
             if (cachedImageInfo != null)
             {
                 _logger?.LogDebug("从缓存获取图片信息: FileId={FileId}", fileId);
-                return cachedImageInfo;
+                return cachedImageInfo as tb_FS_FileStorageInfo;
             }
 
             // 缓存未命中，从数据库查询
             var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == fileId && c.isdeleted == false);
             if (fileInfos != null && fileInfos.Count > 0)
             {
-                var imageInfo = fileInfos[0] as tb_FS_FileStorageInfo;
+                tb_FS_FileStorageInfo imageInfo = fileInfos[0];
                 // 添加到缓存
                 _imageCacheService.AddImageInfo(imageInfo);
                 _logger?.LogDebug("从数据库获取图片信息并缓存: FileId={FileId}", fileId);
@@ -985,7 +985,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             // 定义响应变量，确保所有路径都能返回
             FileDeleteResponse response = null;
-            
+
             try
             {
                 // 验证输入参数

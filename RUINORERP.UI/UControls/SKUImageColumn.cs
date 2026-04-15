@@ -6,8 +6,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Lib.BusinessImage;
 using RUINORERP.Model;
+using RUINORERP.Model.BusinessImage;
 using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.UControls

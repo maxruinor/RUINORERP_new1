@@ -5,6 +5,7 @@ using System.Reflection;
 using SourceGrid.Cells;
 using SourceGrid.Cells.Models;
 using RUINORERP.Common.Helper;
+using RUINORERP.Model.BusinessImage;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -52,7 +53,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
 
                 // 如果单元格Tag是ImageInfo，也需要更新1
-                if (cell.Tag is RUINORERP.Lib.BusinessImage.ImageInfo imageInfo)
+                if (cell.Tag is ImageInfo imageInfo)
                 {
                     imageInfo.BusinessId = businessId;
                     if (!string.IsNullOrEmpty(ownerTableName))

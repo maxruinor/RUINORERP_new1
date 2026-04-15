@@ -18,8 +18,8 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global.EnumExt;
-using RUINORERP.Lib.BusinessImage;
 using RUINORERP.Model;
+using RUINORERP.Model.BusinessImage;
 using RUINORERP.Model.Dto;
 using RUINORERP.PacketSpec.Models.FileManagement;
 using RUINORERP.UI.AdvancedUIModule;
@@ -77,7 +77,7 @@ namespace RUINORERP.UI.FM
             // 恢复图片状态 - 直接使用正确的 ImageStateManager
             try
             {
-                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.ResetStatus();
+                ImageStateManager.Instance.ResetStatus();
                 MainForm.Instance.PrintInfoLog("图片状态已重置");
             }
             catch (Exception ex)
@@ -939,8 +939,8 @@ namespace RUINORERP.UI.FM
                 if (NeedValidated)
                 {
                     // 1. 处理明细图片同步 (从 ImageStateManager 提取)
-                    var pendingUploads = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
-                    var pendingDeletes = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingDeleteImages();
+                    var pendingUploads = ImageStateManager.Instance.GetPendingUploadImages();
+                    var pendingDeletes = ImageStateManager.Instance.GetPendingDeleteImages();
 
                     if (pendingUploads.Count > 0 || pendingDeletes.Count > 0)
                     {
@@ -967,7 +967,7 @@ namespace RUINORERP.UI.FM
                         }
                         
                         // 保存成功后清理状态
-                        RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveProcessedImages();
+                        ImageStateManager.Instance.RemoveProcessedImages();
                         MainForm.Instance.PrintInfoLog("明细图片同步完成。");
                     }
 
@@ -1216,12 +1216,12 @@ namespace RUINORERP.UI.FM
         /// <param name="rowIndex">行索引</param>
         /// <param name="colIndex">列索引</param>
         /// <returns>图片信息</returns>
-        private RUINORERP.Lib.BusinessImage.ImageInfo GetImageInfoFromCell(int rowIndex, int colIndex)
+        private ImageInfo GetImageInfoFromCell(int rowIndex, int colIndex)
         {
             try
             {
                 var cell = grid1[rowIndex, colIndex];
-                if (cell?.Tag is RUINORERP.Lib.BusinessImage.ImageInfo imageInfo)
+                if (cell?.Tag is ImageInfo imageInfo)
                 {
                     return imageInfo;
                 }
@@ -1230,7 +1230,7 @@ namespace RUINORERP.UI.FM
                 var model = cell?.Model?.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                 if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb && valueImageWeb.FileId > 0)
                 {
-                    return RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetImageInfo(valueImageWeb.FileId);
+                    return ImageStateManager.Instance.GetImageInfo(valueImageWeb.FileId);
                 }
 
                 return null;
@@ -1259,18 +1259,18 @@ namespace RUINORERP.UI.FM
                 // 1. 标记图片状态为待删除
                 if (imageInfo != null && imageInfo.FileId > 0)
                 {
-                    RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.FileId, RUINORERP.Lib.BusinessImage.ImageStatus.PendingDelete);
+                    ImageStateManager.Instance.UpdateImageStatus(imageInfo.FileId, ImageStatus.PendingDelete);
                 }
                 else if (valueImageWeb.FileId > 0)
                 {
                     // 如果没有完整的ImageInfo，创建一个临时的用于状态管理
-                    var tempImageInfo = new RUINORERP.Lib.BusinessImage.ImageInfo
+                    var tempImageInfo = new ImageInfo
                     {
                         FileId = valueImageWeb.FileId,
                         OriginalFileName = valueImageWeb.OriginalFileName,
-                        Status = RUINORERP.Lib.BusinessImage.ImageStatus.PendingDelete
+                        Status = ImageStatus.PendingDelete
                     };
-                    RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.AddImage(tempImageInfo);
+                    ImageStateManager.Instance.AddImage(tempImageInfo);
                 }
 
                 // 2. 记录需要删除的文件路径（用于后续清理）

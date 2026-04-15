@@ -20,6 +20,8 @@ using System.Drawing;
 using RUINORERP.Global;
 using RUINORERP.Global.Model;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Model.BusinessImage;
+
 
 namespace RUINORERP.Model
 {
@@ -32,25 +34,25 @@ namespace RUINORERP.Model
         #region 图片管理扩展字段
 
         /// <summary>
-        /// 待处理的图片操作列表(UI临时字段,不存储到数据库)
-        /// 用于在编辑期间暂存产品主图的新增/删除/替换操作,等待UCProductList.Save()时统一提交
+        /// ✅ 简化: 待处理的图片操作列表(UI临时字段,不存储到数据库)
+        /// 直接使用ImageInfo,通过Status字段管理状态,消除PendingImageInfo冗余
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
-        public List<PendingImageInfo> PendingImages { get; set; } = new List<PendingImageInfo>();
+        public List<ImageInfo> PendingImages { get; set; } = new List<ImageInfo>();
 
         /// <summary>
-        /// 是否有未保存的图片更改（UI临时字段）
+        /// ✅ 简化: 是否有未保存的图片更改（UI临时字段）
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
         public bool HasUnsavedImageChanges
         {
-            get => PendingImages != null && PendingImages.Count > 0;
+            get => PendingImages?.Any(img => img.Status != ImageStatus.Normal) ?? false;
         }
 
         /// <summary>
-        /// 添加待上传的图片
+        /// ✅ 简化: 添加待上传的图片
         /// </summary>
         /// <param name="imageData">图片原始数据</param>
         /// <param name="fileName">文件名</param>
@@ -59,25 +61,37 @@ namespace RUINORERP.Model
         public void AddPendingImage(byte[] imageData, string fileName, string description = null, int sortOrder = 0)
         {
             if (PendingImages == null)
-                PendingImages = new List<PendingImageInfo>();
+                PendingImages = new List<ImageInfo>();
 
-            PendingImages.Add(PendingImageInfo.CreateAdd(imageData, fileName, description, sortOrder));
+            PendingImages.Add(new ImageInfo
+            {
+                FileId = 0,
+                ImageData = imageData,
+                FileName = fileName,
+                Description = description,
+                SortOrder = sortOrder,
+                Status = ImageStatus.PendingUpload
+            });
         }
 
         /// <summary>
-        /// 标记删除已存在的图片
+        /// ✅ 简化: 标记删除已存在的图片
         /// </summary>
         /// <param name="fileId">要删除的文件ID</param>
         public void MarkImageForDeletion(long fileId)
         {
             if (PendingImages == null)
-                PendingImages = new List<PendingImageInfo>();
+                PendingImages = new List<ImageInfo>();
 
-            PendingImages.Add(PendingImageInfo.CreateDelete(fileId));
+            PendingImages.Add(new ImageInfo
+            {
+                FileId = fileId,
+                Status = ImageStatus.PendingDelete
+            });
         }
 
         /// <summary>
-        /// 标记替换图片(删除旧的,上传新的)
+        /// ✅ 简化: 标记替换图片(删除旧的,上传新的)
         /// </summary>
         /// <param name="existingFileId">现有文件ID</param>
         /// <param name="newImageData">新图片数据</param>
@@ -87,13 +101,29 @@ namespace RUINORERP.Model
         public void MarkImageForReplacement(long existingFileId, byte[] newImageData, string fileName, string description = null, int sortOrder = 0)
         {
             if (PendingImages == null)
-                PendingImages = new List<PendingImageInfo>();
+                PendingImages = new List<ImageInfo>();
 
-            PendingImages.Add(PendingImageInfo.CreateReplace(existingFileId, newImageData, fileName, description, sortOrder));
+            // 先标记旧图片为删除
+            PendingImages.Add(new ImageInfo
+            {
+                FileId = existingFileId,
+                Status = ImageStatus.PendingDelete
+            });
+            
+            // 再添加新图片
+            PendingImages.Add(new ImageInfo
+            {
+                FileId = 0,
+                ImageData = newImageData,
+                FileName = fileName,
+                Description = description,
+                SortOrder = sortOrder,
+                Status = ImageStatus.PendingUpload
+            });
         }
 
         /// <summary>
-        /// 清除所有待处理的图片操作(提交成功后调用)
+        /// ✅ 简化: 清除所有待处理的图片操作(提交成功后调用)
         /// </summary>
         public void ClearPendingImages()
         {
@@ -101,27 +131,32 @@ namespace RUINORERP.Model
         }
 
         /// <summary>
-        /// 获取待新增的图片列表
+        /// ✅ 简化: 获取待新增/替换的图片列表(Status=PendingUpload且ImageData不为空)
         /// </summary>
-        public List<PendingImageInfo> GetPendingAddImages()
+        public List<ImageInfo> GetPendingAddImages()
         {
-            return PendingImages?.Where(p => p.Operation == PendingImageOperation.Add).ToList() ?? new List<PendingImageInfo>();
+            return PendingImages?.Where(p => p.Status == ImageStatus.PendingUpload && p.ImageData != null && p.ImageData.Length > 0).ToList() 
+                   ?? new List<ImageInfo>();
         }
 
         /// <summary>
-        /// 获取待删除的图片列表
+        /// ✅ 简化: 获取待删除的图片列表(Status=PendingDelete且FileId>0)
         /// </summary>
-        public List<PendingImageInfo> GetPendingDeleteImages()
+        public List<ImageInfo> GetPendingDeleteImages()
         {
-            return PendingImages?.Where(p => p.Operation == PendingImageOperation.Delete).ToList() ?? new List<PendingImageInfo>();
+            return PendingImages?.Where(p => p.Status == ImageStatus.PendingDelete && p.FileId > 0).ToList() 
+                   ?? new List<ImageInfo>();
         }
 
         /// <summary>
-        /// 获取待替换的图片列表
+        /// ✅ 简化: 获取待替换的图片列表(已废弃,统一使用GetPendingAddImages和GetPendingDeleteImages)
         /// </summary>
-        public List<PendingImageInfo> GetPendingReplaceImages()
+        [Obsolete("请使用GetPendingAddImages和GetPendingDeleteImages代替")]
+        public List<ImageInfo> GetPendingReplaceImages()
         {
-            return PendingImages?.Where(p => p.Operation == PendingImageOperation.Replace).ToList() ?? new List<PendingImageInfo>();
+            // 替换操作被拆分为: 一个Delete记录 + 一个Add记录
+            // 这个方法保留是为了兼容旧代码,返回空列表
+            return new List<ImageInfo>();
         }
 
         #endregion

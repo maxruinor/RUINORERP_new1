@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using RUINORERP.Lib.BusinessImage;
+using RUINORERP.Model.BusinessImage;
 using SourceGrid.Cells;
 
 namespace SourceGrid.Cells.Views

@@ -3,7 +3,6 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Document;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
-using RUINORERP.Lib.UI;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
 using System;
@@ -12,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using tb_SaleOut = RUINORERP.Model.tb_SaleOut;
 using tb_PurEntry = RUINORERP.Model.tb_PurEntry;
+using RUINORERP.Model.UI;
 
 namespace RUINORERP.Business.Document.Converters
 {

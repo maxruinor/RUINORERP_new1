@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using RUINOR.WinFormsUI.CustomPictureBox;
-using RUINORERP.Lib.BusinessImage; // 用于访问ImageInfo类
+using RUINORERP.Model.BusinessImage; // 用于访问ImageInfo类
 
 namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
 {

@@ -87,6 +87,7 @@ using ILogger = Microsoft.Extensions.Logging.ILogger;
 using RUINORERP.Business.EntityLoadService;
 using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.UI.BusinessService;
+using RUINORERP.Model.UI;
 namespace RUINORERP.UI
 {
     public class Startup
@@ -632,7 +633,7 @@ namespace RUINORERP.UI
 
             // 注册单据选择器工厂
             builder.RegisterType<RUINORERP.UI.ToolForm.DocumentSelectorFactory>()
-                .As<RUINORERP.Lib.UI.IDocumentSelectorFactory>()
+                .As<IDocumentSelectorFactory>()
                 .InstancePerDependency();
 
             // RegisterForm的调用已移至MainRegister统一处理，避免重复注册

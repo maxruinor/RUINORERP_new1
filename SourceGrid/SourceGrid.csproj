@@ -572,9 +572,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RUINORERP.Lib\RUINORERP.Lib.csproj">
-      <Project>{56227b2f-9ac5-4c25-9e5e-071d4faab483}</Project>
-      <Name>RUINORERP.Lib</Name>
+    <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj">
+      <Project>{3fa484a1-e238-4632-aa93-d8e7b5ca5b07}</Project>
+      <Name>RUINORERP.Model</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

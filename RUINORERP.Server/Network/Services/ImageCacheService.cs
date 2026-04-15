@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
-using RUINORERP.Common.Caching;
+using RUINORERP.Model.BusinessImage;
 
 namespace RUINORERP.Server.Network.Services
 {

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using RUINORERP.Common.Caching;
 using RUINORERP.Model;
+using RUINORERP.Model.BusinessImage;
 using RUINORERP.Repository.UnitOfWorks;
 using System;
 using System.Collections.Generic;
@@ -298,17 +298,17 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         /// <param name="fileId">文件ID</param>
         /// <returns>图片信息(包含ImageData)</returns>
-        public async Task<RUINORERP.Lib.BusinessImage.ImageInfo> GetImageInfoByFileIdAsync(long fileId)
+        public async Task<ImageInfo> GetImageInfoByFileIdAsync(long fileId)
         {
             if (fileId <= 0)
                 return null;
 
             // ✅ 先检查基类的FileId缓存
             var cachedStorageInfo = GetImageInfo(fileId);
-            if (cachedStorageInfo != null && cachedStorageInfo.FileData != null)
+            if (cachedStorageInfo != null && cachedStorageInfo is tb_FS_FileStorageInfo storageInfo && storageInfo.FileData != null)
             {
                 _logger?.LogDebug("缓存命中: FileId={FileId}", fileId);
-                return ConvertToImageInfo(cachedStorageInfo);
+                return ConvertToImageInfo(storageInfo);
             }
 
             // 缓存未命中,从数据库查询
@@ -342,21 +342,21 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         /// <param name="fileIds">文件ID列表</param>
         /// <returns>FileId到ImageInfo的字典</returns>
-        public async Task<Dictionary<long, RUINORERP.Lib.BusinessImage.ImageInfo>> GetImageInfosBatchAsync(List<long> fileIds)
+        public async Task<Dictionary<long, ImageInfo>> GetImageInfosBatchAsync(List<long> fileIds)
         {
             if (fileIds == null || fileIds.Count == 0)
-                return new Dictionary<long, RUINORERP.Lib.BusinessImage.ImageInfo>();
+                return new Dictionary<long, ImageInfo>();
 
-            var result = new Dictionary<long, RUINORERP.Lib.BusinessImage.ImageInfo>();
+            var result = new Dictionary<long, ImageInfo>();
             var uncachedIds = new List<long>();
 
             // 1. 先从缓存中获取
             foreach (var fileId in fileIds.Where(id => id > 0))
             {
                 var cachedStorageInfo = GetImageInfo(fileId);
-                if (cachedStorageInfo != null && cachedStorageInfo.FileData != null)
+                if (cachedStorageInfo != null && cachedStorageInfo is tb_FS_FileStorageInfo storageInfo && storageInfo.FileData != null)
                 {
-                    result[fileId] = ConvertToImageInfo(cachedStorageInfo);
+                    result[fileId] = ConvertToImageInfo(cachedStorageInfo as tb_FS_FileStorageInfo);
                 }
                 else
                 {
@@ -397,12 +397,12 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// ✅ 辅助方法: 将tb_FS_FileStorageInfo转换为ImageInfo
         /// </summary>
-        private RUINORERP.Lib.BusinessImage.ImageInfo ConvertToImageInfo(tb_FS_FileStorageInfo storageInfo)
+        private ImageInfo ConvertToImageInfo(tb_FS_FileStorageInfo storageInfo)
         {
             if (storageInfo == null)
                 return null;
 
-            return new RUINORERP.Lib.BusinessImage.ImageInfo
+            return new ImageInfo
             {
                 FileId = storageInfo.FileId,
                 OriginalFileName = storageInfo.OriginalFileName,

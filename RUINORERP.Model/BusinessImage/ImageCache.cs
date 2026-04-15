@@ -1,7 +1,7 @@
 using System.Drawing;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace RUINORERP.Common.BusinessImage
+namespace RUINORERP.Model.BusinessImage
 {
     /// <summary>
     /// 图片缓存
@@ -15,7 +15,7 @@ namespace RUINORERP.Common.BusinessImage
             ExpirationScanFrequency = System.TimeSpan.FromMinutes(5)
         });
         private readonly object _lock = new object();
-        
+
         /// <summary>
         /// 单例实例
         /// </summary>
@@ -37,7 +37,7 @@ namespace RUINORERP.Common.BusinessImage
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 添加图片
         /// </summary>
@@ -53,12 +53,12 @@ namespace RUINORERP.Common.BusinessImage
                         .SetSize(image.Size.Width * image.Size.Height * 4) // 估算内存占用
                         .SetSlidingExpiration(System.TimeSpan.FromMinutes(30))
                         .SetAbsoluteExpiration(System.TimeSpan.FromHours(2));
-                    
+
                     _cache.Set(fileId.ToString(), image, cacheEntryOptions);
                 }
             }
         }
-        
+
         /// <summary>
         /// 移除图片
         /// </summary>
@@ -73,7 +73,7 @@ namespace RUINORERP.Common.BusinessImage
                 }
             }
         }
-        
+
         /// <summary>
         /// 清空缓存
         /// </summary>
@@ -84,7 +84,7 @@ namespace RUINORERP.Common.BusinessImage
                 _cache.Clear();
             }
         }
-        
+
         /// <summary>
         /// 获取缓存大小
         /// </summary>

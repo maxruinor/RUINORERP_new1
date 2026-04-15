@@ -16,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using RUINORERP.Model.BusinessImage;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -364,12 +365,12 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         /// <param name="fileStorageInfo">文件存储信息实体</param>
         /// <returns>转换后的ImageInfo对象</returns>
-        public RUINORERP.Lib.BusinessImage.ImageInfo ConvertToImageInfo(tb_FS_FileStorageInfo fileStorageInfo)
+        public ImageInfo ConvertToImageInfo(tb_FS_FileStorageInfo fileStorageInfo)
         {
             if (fileStorageInfo == null)
                 return null;
 
-            return new RUINORERP.Lib.BusinessImage.ImageInfo
+            return new ImageInfo
             {
                 FileId = fileStorageInfo.FileId,
                 OriginalFileName = fileStorageInfo.OriginalFileName,
@@ -393,7 +394,7 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         /// <param name="imageInfo">图片信息对象</param>
         /// <returns>转换后的tb_FS_FileStorageInfo实体</returns>
-        public tb_FS_FileStorageInfo ConvertToFileStorageInfo(RUINORERP.Lib.BusinessImage.ImageInfo imageInfo)
+        public tb_FS_FileStorageInfo ConvertToFileStorageInfo(ImageInfo imageInfo)
         {
             if (imageInfo == null)
                 return null;

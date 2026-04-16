@@ -415,12 +415,19 @@ namespace RUINORERP.Business.Document
 
         /// <summary>
         /// 获取转换器的显示名称
-        /// 首先尝试获取转换器自身的 DisplayName 属性
-        /// 如果没有则使用默认格式
+        /// 
+        /// 优先级规则:
+        /// 1. 优先使用转换器自身的 DisplayName 属性(子类重写)
+        /// 2. 如果没有重写,根据转换类型和源单据类型生成默认名称:
+        ///    - ActionOperation: 直接使用目标单据名称
+        ///    - DocumentGeneration: 返回"转换为{目标单据}"
+        /// 
+        /// 注意:sourceDisplayName 已经根据源单据实例动态生成(如"收款"或"付款")
         /// </summary>
         /// <param name="converter">转换器实例</param>
-        /// <param name="sourceDisplayName">源单据显示名称</param>
+        /// <param name="sourceDisplayName">源单据显示名称(已根据实例动态生成)</param>
         /// <param name="targetDisplayName">目标单据显示名称</param>
+        /// <param name="conversionType">转换类型</param>
         /// <returns>显示名称</returns>
         private string GetConverterDisplayName(object converter, string sourceDisplayName, string targetDisplayName, DocumentConversionType conversionType)
         {
@@ -430,14 +437,26 @@ namespace RUINORERP.Business.Document
                 var displayNameProperty = converter.GetType().GetProperty("DisplayName");
                 if (displayNameProperty != null)
                 {
-                    if (conversionType == DocumentConversionType.ActionOperation)
+                    var displayName = displayNameProperty.GetValue(converter) as string;
+                    
+                    // 如果转换器重写了 DisplayName(非空),直接使用
+                    if (!string.IsNullOrEmpty(displayName))
                     {
-                        var displayName = displayNameProperty.GetValue(converter) as string;
                         return displayName;
                     }
                 }
-                // 默认格式
-                return $"转换为{targetDisplayName}";
+                
+                // 默认格式:根据转换类型生成
+                if (conversionType == DocumentConversionType.ActionOperation)
+                {
+                    // 动作操作型:直接使用目标单据名称
+                    return targetDisplayName;
+                }
+                else
+                {
+                    // 单据生成型:使用"转换为{目标单据}"格式
+                    return $"转换为{targetDisplayName}";
+                }
             }
             catch (Exception ex)
             {

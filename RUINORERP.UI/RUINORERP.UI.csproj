@@ -2548,7 +2548,14 @@
     <Compile Include="SysConfig\UCClientLockManage.Designer.cs">
       <DependentUpon>UCClientLockManage.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToolForm\AmountInputSelectorAdapter.cs" />
     <Compile Include="ToolForm\DocumentSelectorAdapter.cs" />
+    <Compile Include="ToolForm\frmAmountInput.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolForm\frmAmountInput.Designer.cs">
+      <DependentUpon>frmAmountInput.cs</DependentUpon>
+    </Compile>
     <Compile Include="ToolForm\frmMessageViewer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -4864,6 +4871,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolForm\frmAdvanceSelectorGeneric.resx">
       <DependentUpon>frmAdvanceSelectorGeneric.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolForm\frmAmountInput.resx">
+      <DependentUpon>frmAmountInput.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolForm\frmSelectItemFromGrid.resx">
       <DependentUpon>frmSelectItemFromGrid.cs</DependentUpon>

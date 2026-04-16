@@ -24,6 +24,7 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将制令单及其明细转换为缴库单及其明细
     /// 复用业务层的核心转换逻辑，确保数据一致性
     /// </summary>
+    [System.ComponentModel.Description("转缴库单")]
     public class ManufacturingOrderToFinishedGoodsInvConverter : DocumentConverterBase<tb_ManufacturingOrder, tb_FinishedGoodsInv>
     {
         private readonly IMapper _mapper;
@@ -54,11 +55,6 @@ namespace RUINORERP.Business.Document.Converters
             _authorizeController = authorizeController ?? throw new ArgumentNullException(nameof(authorizeController));
         }
 
-        /// <summary>
-        /// 转换器显示名称
-        /// 使用基类实现，从Description特性获取
-        /// </summary>
-        public override string DisplayName => base.DisplayName;
 
         /// <summary>
         /// 执行具体的转换逻辑 - 复用业务层核心逻辑

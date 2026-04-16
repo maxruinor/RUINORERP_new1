@@ -28,8 +28,8 @@ namespace RUINORERP.Business.Document.Converters
     /// 销售订单到销售出库单转换器
     /// 负责将销售订单及其明细转换为销售出库单及其明细
     /// 复用业务层的核心转换逻辑（SaleOrderToSaleOut），确保数据一致性
-    /// 1
     /// </summary>
+    [System.ComponentModel.Description("转销售出库单")]
     public class SaleOrderToSaleOutConverter : DocumentConverterBase<tb_SaleOrder, tb_SaleOut>
     {
         private readonly ILogger<SaleOrderToSaleOutConverter> _logger;
@@ -55,12 +55,6 @@ namespace RUINORERP.Business.Document.Converters
             _cacheManager = cacheManager;
             _unitOfWorkManage = unitOfWorkManage ?? throw new ArgumentNullException(nameof(unitOfWorkManage));
         }
-
-        /// <summary>
-        /// 转换器显示名称
-        /// 使用基类实现，从Description特性获取
-        /// </summary>
-        public override string DisplayName => base.DisplayName;
 
         /// <summary>
         /// 执行单据转换 - 直接调用业务层核心逻辑 SaleOrderToSaleOut

@@ -21,6 +21,7 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将销售出库单及其明细转换为销售退回单及其明细
     /// 复用业务层的核心转换逻辑（SaleOutToSaleOutRe），确保数据一致性
     /// </summary>
+    [System.ComponentModel.Description("转销售退回单")]
     public class SaleOutToSaleOutReConverter : DocumentConverterBase<tb_SaleOut, tb_SaleOutRe>
     {
         private readonly ILogger<SaleOutToSaleOutReConverter> _logger;
@@ -44,12 +45,7 @@ namespace RUINORERP.Business.Document.Converters
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        /// <summary>
-        /// 转换器显示名称
-        /// 使用基类实现，从Description特性获取
-        /// </summary>
-        public override string DisplayName => base.DisplayName;
-        
+
         /// <summary>
         /// 执行单据转换 - 直接调用业务层核心逻辑 SaleOutToSaleOutRe
         /// 重写基类方法，完全控制转换过程

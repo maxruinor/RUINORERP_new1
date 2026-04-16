@@ -25,6 +25,7 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将借出单及其明细转换为归还单及其明细
     /// 复用业务层的核心转换逻辑（BuildProdReturningFromBorrow），确保数据一致性
     /// </summary>
+    [System.ComponentModel.Description("转为归还单")]
     public class BorrowToReturnConverter : DocumentConverterBase<tb_ProdBorrowing, tb_ProdReturning>
     {
         private readonly ILogger<BorrowToReturnConverter> _logger;
@@ -44,11 +45,6 @@ namespace RUINORERP.Business.Document.Converters
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        /// <summary>
-        /// 转换器显示名称
-        /// 使用基类实现，从Description特性获取
-        /// </summary>
-        public override string DisplayName => base.DisplayName;
 
         /// <summary>
         /// 执行单据转换 - 直接调用业务层核心逻辑 BuildProdReturningFromBorrow

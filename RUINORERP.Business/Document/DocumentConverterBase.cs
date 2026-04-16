@@ -162,6 +162,28 @@ namespace RUINORERP.Business.Document
 
         /// <summary>
         /// 获取转换操作的显示名称
+        /// 
+        /// 三层优先级规则:
+        /// 1. 【最高】如果子类重写了 DisplayName 属性(硬编码业务文本),直接使用
+        ///    示例: public override string DisplayName => "退还余款";
+        /// 
+        /// 2. 【其次】如果未重写,根据转换类型和单据特性智能生成:
+        ///    - ActionOperation: 返回目标单据显示名称(支持动态,如"收款"或"付款")
+        ///    - DocumentGeneration: 返回"源单据转目标单据"格式
+        /// 
+        /// 3. 【兜底】异常时返回类型名称拼接
+        /// 
+        /// 注意:
+        /// - C#的多态机制会自动处理:如果子类重写了DisplayName,会直接调用子类的实现
+        /// - 如果子类没有重写,会执行此基类实现,根据ConversionType智能生成
+        /// - TargetDocumentDisplayName 已经由 DocumentConverterFactory 根据源单据实例动态生成
+        /// 
+        /// 使用示例:
+        ///   // 场景1:需要固定文本(不随单据类型变化)
+        ///   public override string DisplayName => "订单取消作废";
+        ///   
+        ///   // 场景2:需要动态文本(随ReceivePaymentType变化)
+        ///   // 不重写,让基类自动使用 TargetDocumentDisplayName("收款"或"付款")
         /// </summary>
         public virtual string DisplayName
         {
@@ -169,11 +191,24 @@ namespace RUINORERP.Business.Document
             {
                 try
                 {
-                    return $"{SourceDocumentDisplayName}转{TargetDocumentDisplayName}";
+                    // 根据转换类型生成智能默认名称
+                    // 如果子类重写了此属性,C#多态机制会自动调用子类的实现,不会执行到这里
+                    if (ConversionType == DocumentConversionType.ActionOperation)
+                    {
+                        // 动作操作型:使用目标单据显示名称
+                        // 注意:TargetDocumentDisplayName 已由工厂根据源单据实例动态生成
+                        // 例如:预收款单 → "收款", 预付款单 → "付款"
+                        return TargetDocumentDisplayName;
+                    }
+                    else
+                    {
+                        // 单据生成型:使用完整的转换描述
+                        return $"{SourceDocumentDisplayName}转{TargetDocumentDisplayName}";
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "获取转换操作显示名称失败，使用默认格式");
+                    _logger.LogWarning(ex, "获取转换操作显示名称失败,使用默认格式");
                     return $"{typeof(TSource).Name}转{typeof(TTarget).Name}";
                 }
             }

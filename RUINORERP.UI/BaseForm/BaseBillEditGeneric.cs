@@ -6305,7 +6305,7 @@ namespace RUINORERP.UI.BaseForm
                     throw new InvalidOperationException("无法获取ActionManager服务实例");
                 }
 
-                // 动作操作型转换：直接执行业务操作，不需要打开新窗体
+                // 动作操作型转换：直接执行业务操作，不需要打开新窗体1
                 if (conversionType == DocumentConversionType.ActionOperation)
                 {
                     await PerformActionOperationAsync(actionManager, menuItemText, sourceDisplayName, targetDisplayName, targetType, converterType);

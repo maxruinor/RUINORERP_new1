@@ -15,11 +15,12 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将对账单及其明细转换为收付款单及其明细
     /// 复用业务层的核心转换逻辑（BuildPaymentRecord），确保数据一致性
     /// </summary>
+    [System.ComponentModel.Description("转收付款单")]
     public class StatementToPaymentRecordConverter : DocumentConverterBase<tb_FM_Statement, tb_FM_PaymentRecord>
     {
         private readonly ILogger<StatementToPaymentRecordConverter> _logger;
         private readonly tb_FM_PaymentRecordController<tb_FM_PaymentRecord> _paymentController;
-        
+
         /// <summary>
         /// 构造函数 - 依赖注入
         /// </summary>
@@ -33,12 +34,6 @@ namespace RUINORERP.Business.Document.Converters
             _paymentController = paymentController ?? throw new ArgumentNullException(nameof(paymentController));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
-        /// <summary>
-        /// 转换器显示名称
-        /// 使用基类实现，从Description特性获取
-        /// </summary>
-        public override string DisplayName => base.DisplayName;
 
         /// <summary>
         /// 执行单据转换 - 直接调用业务层核心逻辑 BuildPaymentRecord
@@ -58,7 +53,7 @@ namespace RUINORERP.Business.Document.Converters
             // 直接调用经过长期验证的 BuildPaymentRecord 方法
             return await _paymentController.BuildPaymentRecord(new List<tb_FM_Statement> { source });
         }
-        
+
         /// <summary>
         /// 执行具体的转换逻辑 - 重写后不再使用基类的 target 参数模式
         /// </summary>
@@ -91,10 +86,10 @@ namespace RUINORERP.Business.Document.Converters
                 }
 
                 // 检查对账单状态
-                if (source.StatementStatus != (int)StatementStatus.确认 && 
+                if (source.StatementStatus != (int)StatementStatus.确认 &&
                     source.StatementStatus != (int)StatementStatus.部分结算 ||
                     source.ApprovalStatus != (int)ApprovalStatus.审核通过 ||
-                    !source.ApprovalResults.HasValue || 
+                    !source.ApprovalResults.HasValue ||
                     !source.ApprovalResults.Value)
                 {
                     var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
@@ -125,7 +120,7 @@ namespace RUINORERP.Business.Document.Converters
                 {
                     result.AddInfo($"转换金额为0，仍将按对账单类型生成收付款单");
                 }
-                
+
                 await Task.CompletedTask; // 满足异步方法签名要求
             }
             catch (Exception ex)

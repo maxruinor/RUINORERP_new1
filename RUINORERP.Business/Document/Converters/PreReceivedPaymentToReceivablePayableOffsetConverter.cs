@@ -18,7 +18,7 @@ using RUINORERP.Model.UI;
 namespace RUINORERP.Business.Document.Converters
 {
     /// <summary>
-    /// 预收付款单到应收应付款单抵扣转换器
+    /// 预收付款单到应收应付款单抵扣转换器1
     /// 从预收/预付款单菜单执行抵扣，选择应收/应付款单进行抵扣
     /// 转换结果：更新应收应付款单的核销状态，更新预收付款单的余额
     /// 这是一个动作操作型转换，不需要生成新单据，而是执行业务操作

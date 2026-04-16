@@ -16,6 +16,10 @@ using Winista.Text.HtmlParser.Filters;
 
 namespace RUINORERP.UI.ToolForm
 {
+    /// <summary>
+    /// 高级选择器窗体
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public partial class frmAdvanceSelector<T> : Krypton.Toolkit.KryptonForm
     {
         // 选中的单据列表

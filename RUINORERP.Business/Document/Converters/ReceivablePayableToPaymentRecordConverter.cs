@@ -24,6 +24,7 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将应收应付款单及其明细转换为收付款单及其明细
     /// 复用业务层的核心转换逻辑（BuildPaymentRecord），确保数据一致性
     /// </summary>
+    [System.ComponentModel.Description("应收应付转收付款")]
     public class ReceivablePayableToPaymentRecordConverter : DocumentConverterBase<tb_FM_ReceivablePayable, tb_FM_PaymentRecord>
     {
         private readonly ILogger<ReceivablePayableToPaymentRecordConverter> _logger;
@@ -44,12 +45,6 @@ namespace RUINORERP.Business.Document.Converters
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _receivablePayableController = receivablePayableController;
         }
-
-        /// <summary>
-        /// 转换器显示名称
-        /// 使用基类实现，从Description特性获取
-        /// </summary>
-        public override string DisplayName => base.DisplayName;
 
         /// <summary>
         /// 执行单据转换 - 直接调用业务层核心逻辑 BuildPaymentRecord

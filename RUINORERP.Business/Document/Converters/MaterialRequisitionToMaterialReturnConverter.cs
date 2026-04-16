@@ -23,6 +23,7 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将领料单及其明细转换为退料单及其明细
     /// 复用业务层的核心转换逻辑，确保数据一致性
     /// </summary>
+    [System.ComponentModel.Description("转退料单")]
     public class MaterialRequisitionToMaterialReturnConverter : DocumentConverterBase<tb_MaterialRequisition, tb_MaterialReturn>
     {
         private readonly IMapper _mapper;
@@ -52,12 +53,7 @@ namespace RUINORERP.Business.Document.Converters
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        /// <summary>
-        /// 转换器显示名称
-        /// 使用基类实现，从Description特性获取
-        /// </summary>
-        public override string DisplayName => base.DisplayName;
-        
+
         /// <summary>
         /// 执行具体的转换逻辑 - 复用业务层核心逻辑
         /// </summary>

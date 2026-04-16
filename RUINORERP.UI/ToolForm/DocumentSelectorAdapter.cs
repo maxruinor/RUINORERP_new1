@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 namespace RUINORERP.UI.ToolForm
 {
     /// <summary>
-    /// 单据选择器适配器
+    /// 单据选择器适配器1
     /// 将 frmAdvanceSelector 适配为 IDocumentSelector 接口
     /// </summary>
     /// <typeparam name="T">单据类型</typeparam>

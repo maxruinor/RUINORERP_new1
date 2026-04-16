@@ -88,6 +88,7 @@ using RUINORERP.Business.EntityLoadService;
 using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.UI.BusinessService;
 using RUINORERP.Model.UI;
+using RUINORERP.UI.ToolForm;
 namespace RUINORERP.UI
 {
     public class Startup
@@ -1396,6 +1397,12 @@ namespace RUINORERP.UI
 
             // 注册单据业务操作服务
             services.AddScoped<IBillOperationService, BillOperationService>();
+
+            // 注册单据选择器工厂
+            services.AddSingleton<IDocumentSelectorFactory, DocumentSelectorFactory>();
+            
+            // 注册金额输入选择器工厂
+            services.AddSingleton<IAmountInputSelectorFactory, AmountInputSelectorFactory>();
 
             services.AddSingleton(typeof(MenuTracker)); // 菜单跟踪
 

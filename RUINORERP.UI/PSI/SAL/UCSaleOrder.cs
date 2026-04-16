@@ -628,9 +628,9 @@ namespace RUINORERP.UI.PSI.SAL
             }
             base.BindData(entity);
 
-            // 调用基类方法下载图片，指定关联字段
+            // ✅ 优化: 调用基类方法下载图片，先检查客户端缓存
             // 注意:LoadImages内部已自动完成初始化和状态重置,无需额外调用InitializeImageControl
-            await DownloadImageAsync(entity, magicPictureBox订金付款凭证, c => c.VoucherImage);
+            await DownloadImageWithCacheAsync(entity, magicPictureBox订金付款凭证, c => c.VoucherImage);
         }
 
         /// <summary>
@@ -1894,6 +1894,106 @@ namespace RUINORERP.UI.PSI.SAL
                 MainForm.Instance.uclog.AddLog($"上传图片时发生异常：{ex.Message}", Global.UILogType.错误);
                 logger.LogError(ex, "上传图片异常");
                 return new List<ImageSyncResult>();
+            }
+        }
+
+        /// <summary>
+        /// ✅ 优化: 带缓存检查的图片下载方法
+        /// </summary>
+        private async Task DownloadImageWithCacheAsync<T>(BaseEntity entity, MagicPictureBox pictureBox, Expression<Func<T, object>> exp) where T : BaseEntity
+        {
+            try
+            {
+                var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
+                var fileService = Startup.GetFromFac<FileBusinessService>();
+                
+                // 获取字段名
+                string fieldName = exp.GetMemberInfo().Name;
+                var propertyInfo = entity.GetType().GetProperty(fieldName);
+                if (propertyInfo == null) return;
+                
+                var fieldValue = propertyInfo.GetValue(entity);
+                if (fieldValue == null || string.IsNullOrEmpty(fieldValue.ToString())) return;
+                
+                // 解析FileId
+                long fileId = ParseFileIdFromString(fieldValue.ToString());
+                if (fileId <= 0) return;
+                
+                // ✅ 优先检查客户端缓存
+                if (imageCacheService != null)
+                {
+                    var cachedStorageInfo = imageCacheService.GetImageInfo(fileId);
+                    if (cachedStorageInfo != null && 
+                        cachedStorageInfo is tb_FS_FileStorageInfo storageInfo && 
+                        storageInfo.FileData != null)
+                    {
+                        // 缓存命中,直接使用
+                        MainForm.Instance.Invoke(new Action(() =>
+                        {
+                            LoadImageFromCache(pictureBox, storageInfo);
+                        }));
+                        MainForm.Instance.uclog.AddLog($"✅ 订金凭证缓存命中: FileId={fileId}");
+                        return;
+                    }
+                }
+                
+                // 缓存未命中,调用原下载方法(会自动缓存)
+                await DownloadImageAsync(entity, pictureBox, exp);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "下载订金付款凭证图片异常");
+            }
+        }
+        
+        /// <summary>
+        /// ✅ 新增: 从字符串解析FileId
+        /// </summary>
+        private long ParseFileIdFromString(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return 0;
+            
+            // 尝试直接解析为数字
+            if (long.TryParse(value.Trim(), out long fileId))
+            {
+                return fileId;
+            }
+            
+            // 如果是多图片路径(分号分隔),取第一个
+            if (value.Contains(";"))
+            {
+                var firstPath = value.Split(';')[0].Trim();
+                if (long.TryParse(firstPath, out fileId))
+                {
+                    return fileId;
+                }
+            }
+            
+            return 0;
+        }
+        
+        /// <summary>
+        /// ✅ 新增: 从缓存加载图片到MagicPictureBox
+        /// </summary>
+        private void LoadImageFromCache(MagicPictureBox pictureBox, tb_FS_FileStorageInfo storageInfo)
+        {
+            if (pictureBox == null || storageInfo == null || storageInfo.FileData == null) return;
+            
+            try
+            {
+                List<byte[]> imageDataList = new List<byte[]> { storageInfo.FileData };
+                List<ImageInfo> imageInfos = new List<ImageInfo>();
+                
+                var fileService = Startup.GetFromFac<FileBusinessService>();
+                imageInfos.Add(fileService.ConvertToImageInfo(storageInfo));
+                
+                pictureBox.LoadImages(imageDataList, imageInfos, true);
+                pictureBox.Visible = true;
+                MainForm.Instance.uclog.AddLog($"✅ 从缓存加载订金凭证图片: FileId={storageInfo.FileId}, Size={storageInfo.FileData.Length / 1024}KB");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "从缓存加载订金凭证图片异常");
             }
         }
     }

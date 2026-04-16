@@ -199,7 +199,8 @@ namespace RUINORERP.Server
         builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
             .Where(t => !t.IsAbstract && !t.IsInterface
                 && t != typeof(RUINORERP.Server.Configuration.ScheduledTaskConfiguration) // 排除ScheduledTaskConfiguration单例类
-                && t != typeof(RUINORERP.Model.Base.StatusManager.GlobalStateRulesManager)) // 排除GlobalStateRulesManager单例类
+                && t != typeof(RUINORERP.Model.Base.StatusManager.GlobalStateRulesManager) // 排除GlobalStateRulesManager单例类
+                && t != typeof(RUINORERP.Server.Network.Services.ImageCacheService)) // 排除ImageCacheService，单独注册为单例(避免缓存实例不共享)
             .AsImplementedInterfaces()
             .AsSelf()
             .SingleInstance();
@@ -210,6 +211,12 @@ namespace RUINORERP.Server
             .AsImplementedInterfaces()
             .AsSelf()
             .SingleInstance();
+
+        // 【新增】图片缓存服务必须注册为单例,确保所有地方共享同一个缓存实例
+        builder.RegisterType<RUINORERP.Server.Network.Services.ImageCacheService>()
+            .AsSelf()
+            .SingleInstance()  // ⚠️ 关键: 必须是单例,否则缓存不共享!
+            .PropertiesAutowired();
 
             // 配置核心服务
             ConfigureServices(services);
@@ -243,13 +250,7 @@ namespace RUINORERP.Server
             System.Diagnostics.Debug.WriteLine("序号表初始化完成");
             #endif
 
-            // 测试序号表功能
-            //var testResult = sequenceService.TestSequenceTable();
-            //  #if DEBUG
-            //  System.Diagnostics.Debug.WriteLine("数据库序列表测试结果:");
-            //  System.Diagnostics.Debug.WriteLine(testResult);
-            //  #endif
-
+   
 
             // 注册业务编码生成相关服务
             builder.RegisterType<DatabaseSequenceService>().AsSelf().SingleInstance(); // 注册数据库序列服务

@@ -4,7 +4,7 @@ using RUINORERP.Model.BusinessImage;
 namespace RUINORERP.Server.Network.Services
 {
     /// <summary>
-    /// 图片缓存服务 - 服务器端实现
+    /// 图片缓存服务 - 服务器端实现1
     /// 提供基于内存的图片信息缓存,减少数据库查询压力
     /// 继承自ImageCacheServiceBase,使用默认的4小时滑动过期和8小时绝对过期策略
     /// </summary>

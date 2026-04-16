@@ -612,7 +612,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     try
                     {
-                        // 组合StoragePath和StorageFileName得到完整的相对路径
+                        // ✅ 优化: 如果FileData已存在(从缓存或DownloadByFileIdAsync加载),跳过重复IO
+                        if (fileInfo.FileData != null && fileInfo.FileData.Length > 0)
+                        {
+                            _logger?.LogDebug("✅ FileData已存在,跳过重复读取: FileId={FileId}, Size={Size}KB", 
+                                fileInfo.FileId, fileInfo.FileData.Length / 1024);
+                            successfulFiles.Add(fileInfo);
+                            continue;
+                        }
+                        
+                        // FileData为空,需要从文件系统读取
                         string fullRelativePath = Path.Combine(fileInfo.StoragePath, fileInfo.StorageFileName);
                         string filePath = FileStorageHelper.ResolveToAbsolutePath(fullRelativePath);
                         if (!File.Exists(filePath))
@@ -700,22 +709,44 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private async Task<tb_FS_FileStorageInfo> DownloadByFileIdAsync(long fileId, CancellationToken cancellationToken)
         {
-            // 先从缓存获取
+            // ✅ 先从缓存获取(已包含FileData)
             var cachedImageInfo = _imageCacheService.GetImageInfo(fileId);
-            if (cachedImageInfo != null)
+            if (cachedImageInfo != null && cachedImageInfo is tb_FS_FileStorageInfo cached && cached.FileData != null)
             {
-                _logger?.LogDebug("从缓存获取图片信息: FileId={FileId}", fileId);
-                return cachedImageInfo as tb_FS_FileStorageInfo;
+                _logger?.LogDebug("✅ 缓存命中(含二进制数据): FileId={FileId}, Size={Size}KB", fileId, cached.FileData.Length / 1024);
+                return cached;
             }
 
-            // 缓存未命中，从数据库查询
+            // 缓存未命中，从数据库查询元数据
             var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == fileId && c.isdeleted == false);
             if (fileInfos != null && fileInfos.Count > 0)
             {
                 tb_FS_FileStorageInfo imageInfo = fileInfos[0];
-                // 添加到缓存
+                
+                // ✅ 关键修复: 从文件系统加载二进制数据到FileData
+                try
+                {
+                    string fullRelativePath = Path.Combine(imageInfo.StoragePath, imageInfo.StorageFileName);
+                    string filePath = FileStorageHelper.ResolveToAbsolutePath(fullRelativePath);
+                    
+                    if (File.Exists(filePath))
+                    {
+                        imageInfo.FileData = await File.ReadAllBytesAsync(filePath, cancellationToken);
+                        _logger?.LogDebug("📦 从文件系统加载二进制数据: FileId={FileId}, Size={Size}KB", fileId, imageInfo.FileData.Length / 1024);
+                    }
+                    else
+                    {
+                        _logger?.LogWarning("⚠️ 物理文件不存在: {FilePath}", filePath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "❌ 加载文件二进制数据失败: FileId={FileId}", fileId);
+                }
+                
+                // ✅ 添加到缓存(现在包含FileData)
                 _imageCacheService.AddImageInfo(imageInfo);
-                _logger?.LogDebug("从数据库获取图片信息并缓存: FileId={FileId}", fileId);
+                _logger?.LogDebug("💾 已将完整图片信息(含二进制)加入缓存: FileId={FileId}", fileId);
                 return imageInfo;
             }
             return null;
@@ -760,7 +791,34 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                     if (fileInfos != null && fileInfos.Count > 0)
                     {
-                        return fileInfos[0] as tb_FS_FileStorageInfo;
+                        var fileInfo = fileInfos[0] as tb_FS_FileStorageInfo;
+                        
+                        // ✅ 从文件系统加载二进制数据到FileData
+                        try
+                        {
+                            string fullRelativePath = Path.Combine(fileInfo.StoragePath, fileInfo.StorageFileName);
+                            string filePath = FileStorageHelper.ResolveToAbsolutePath(fullRelativePath);
+                            
+                            if (File.Exists(filePath))
+                            {
+                                fileInfo.FileData = await File.ReadAllBytesAsync(filePath, cancellationToken);
+                                _logger?.LogDebug("📦 从文件系统加载二进制数据(按字段): FileId={FileId}, Size={Size}KB", 
+                                    fileInfo.FileId, fileInfo.FileData.Length / 1024);
+                            }
+                            else
+                            {
+                                _logger?.LogWarning("⚠️ 物理文件不存在(按字段): {FilePath}", filePath);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "❌ 加载文件二进制数据失败(按字段): FileId={FileId}", fileInfo.FileId);
+                        }
+                        
+                        // ✅ 添加到缓存
+                        _imageCacheService.AddImageInfo(fileInfo);
+                        
+                        return fileInfo;
                     }
                 }
             }
@@ -808,7 +866,34 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                         if (files != null && files.Count > 0)
                         {
-                            fileInfos.Add(files[0] as tb_FS_FileStorageInfo);
+                            var fileInfo = files[0] as tb_FS_FileStorageInfo;
+                            
+                            // ✅ 从文件系统加载二进制数据到FileData
+                            try
+                            {
+                                string fullRelativePath = Path.Combine(fileInfo.StoragePath, fileInfo.StorageFileName);
+                                string filePath = FileStorageHelper.ResolveToAbsolutePath(fullRelativePath);
+                                
+                                if (File.Exists(filePath))
+                                {
+                                    fileInfo.FileData = await File.ReadAllBytesAsync(filePath, cancellationToken);
+                                    _logger?.LogDebug("📦 从文件系统加载二进制数据(批量): FileId={FileId}, Size={Size}KB", 
+                                        fileInfo.FileId, fileInfo.FileData.Length / 1024);
+                                }
+                                else
+                                {
+                                    _logger?.LogWarning("⚠️ 物理文件不存在(批量): {FilePath}", filePath);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger?.LogError(ex, "❌ 加载文件二进制数据失败(批量): FileId={FileId}", fileInfo.FileId);
+                            }
+                            
+                            // ✅ 添加到缓存
+                            _imageCacheService.AddImageInfo(fileInfo);
+                            
+                            fileInfos.Add(fileInfo);
                         }
                     }
                 }

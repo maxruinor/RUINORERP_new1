@@ -377,7 +377,37 @@ namespace RUINORERP.UI.FM
                 {
                     try
                     {
-                        await DownloadImageAsync(entity, picboxCloseCaseImagePath, c => c.CloseCaseImagePath);
+                        var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
+                        var fileService = Startup.GetFromFac<FileBusinessService>();
+                        
+                        // ✅ 优先检查客户端缓存(通过FileId)
+                        bool cacheHit = false;
+                        if (!string.IsNullOrEmpty(entity.CloseCaseImagePath))
+                        {
+                            long fileId = ParseFileIdFromPath(entity.CloseCaseImagePath);
+                            if (fileId > 0 && imageCacheService != null)
+                            {
+                                var cachedStorageInfo = imageCacheService.GetImageInfo(fileId);
+                                if (cachedStorageInfo != null && 
+                                    cachedStorageInfo is tb_FS_FileStorageInfo storageInfo && 
+                                    storageInfo.FileData != null)
+                                {
+                                    // 缓存命中,直接使用
+                                    MainForm.Instance.Invoke(new Action(() =>
+                                    {
+                                        LoadImageDataFromCache(storageInfo);
+                                    }));
+                                    cacheHit = true;
+                                    MainForm.Instance.uclog.AddLog($"✅ 结案凭证缓存命中: FileId={fileId}");
+                                }
+                            }
+                        }
+                        
+                        // 缓存未命中,调用DownloadImageAsync(会自动缓存)
+                        if (!cacheHit)
+                        {
+                            await DownloadImageAsync(entity, picboxCloseCaseImagePath, c => c.CloseCaseImagePath);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -393,7 +423,11 @@ namespace RUINORERP.UI.FM
                 {
                     try
                     {
-                        await LoadDetailImagesAsync(entity.tb_FM_ExpenseClaimDetails);
+                        var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
+                        var fileService = Startup.GetFromFac<FileBusinessService>();
+                        
+                        // ✅ 优先检查客户端缓存,减少不必要的网络请求
+                        await LoadDetailImagesWithCacheAsync(entity.tb_FM_ExpenseClaimDetails, imageCacheService, fileService);
                     }
                     catch (Exception ex)
                     {
@@ -647,6 +681,157 @@ namespace RUINORERP.UI.FM
 
 
 
+
+        /// <summary>
+        /// ✅ 新增: 从缓存加载结案凭证图片
+        /// </summary>
+        private void LoadImageDataFromCache(tb_FS_FileStorageInfo storageInfo)
+        {
+            if (storageInfo == null || storageInfo.FileData == null) return;
+            
+            try
+            {
+                // 单图片模式 - 直接使用缓存数据
+                picboxCloseCaseImagePath.MultiImageSupport = false;
+                
+                List<byte[]> imageDataList = new List<byte[]> { storageInfo.FileData };
+                List<ImageInfo> imageInfos = new List<ImageInfo>();
+                
+                var fileService = Startup.GetFromFac<FileBusinessService>();
+                imageInfos.Add(fileService.ConvertToImageInfo(storageInfo));
+                
+                picboxCloseCaseImagePath.LoadImages(imageDataList, imageInfos, true);
+                picboxCloseCaseImagePath.Visible = true;
+                MainForm.Instance.uclog.AddLog($"✅ 从缓存加载结案凭证图片: FileId={storageInfo.FileId}, Size={storageInfo.FileData.Length / 1024}KB");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "从缓存加载结案凭证图片异常");
+            }
+        }
+
+        /// <summary>
+        /// ✅ 新增: 解析图片路径中的FileId
+        /// </summary>
+        private long ParseFileIdFromPath(string imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath)) return 0;
+            
+            // 尝试直接解析为数字
+            if (long.TryParse(imagePath.Trim(), out long fileId))
+            {
+                return fileId;
+            }
+            
+            // 如果是多图片路径(分号分隔),取第一个
+            if (imagePath.Contains(";"))
+            {
+                var firstPath = imagePath.Split(';')[0].Trim();
+                if (long.TryParse(firstPath, out fileId))
+                {
+                    return fileId;
+                }
+            }
+            
+            return 0;
+        }
+
+        /// <summary>
+        /// ✅ 优化: 带缓存检查的明细图片加载
+        /// </summary>
+        private async Task LoadDetailImagesWithCacheAsync(
+            List<tb_FM_ExpenseClaimDetail> details,
+            RUINORERP.UI.Network.Services.ImageCacheService imageCacheService,
+            FileBusinessService fileService)
+        {
+            if (details == null || details.Count == 0) return;
+
+            try
+            {
+                var imageColumn = sgd["EvidenceImagePath"];
+                if (imageColumn == null) return;
+
+                // 获取图片列的索引
+                int colIndex = GetEvidenceImageColumnIndex();
+                if (colIndex < 0) return;
+
+                // 构建主键到单元格的映射字典（一次性遍历，O(n)）
+                var cellMap = new Dictionary<long, SourceGrid.Cells.Cell>();
+                for (int i = 1; i < grid1.RowsCount; i++)
+                {
+                    var rowData = grid1.Rows[i].RowData;
+                    if (rowData is tb_FM_ExpenseClaimDetail rowDetail)
+                    {
+                        var cellVirtual = grid1.GetCell(i, colIndex);
+                        if (cellVirtual is SourceGrid.Cells.Cell cell)
+                        {
+                            cellMap[rowDetail.ClaimSubID] = cell;
+                        }
+                    }
+                }
+
+                int cacheHitCount = 0;
+                int downloadCount = 0;
+                
+                foreach (var detail in details)
+                {
+                    if (cellMap.TryGetValue(detail.ClaimSubID, out var cell))
+                    {
+                        // 关键修复：为所有图片单元格设置业务ID，包括空单元格
+                        BusinessImageCellManager.SetCellBusinessId<tb_FM_ExpenseClaimDetail>(cell, detail.ClaimSubID, c => c.EvidenceImagePath);
+                        
+                        if (!string.IsNullOrEmpty(detail.EvidenceImagePath))
+                        {
+                            try
+                            {
+                                // ✅ 优先检查客户端缓存
+                                long fileId = ParseFileIdFromPath(detail.EvidenceImagePath);
+                                bool cacheHit = false;
+                                
+                                if (fileId > 0 && imageCacheService != null)
+                                {
+                                    var cachedStorageInfo = imageCacheService.GetImageInfo(fileId);
+                                    if (cachedStorageInfo != null && 
+                                        cachedStorageInfo is tb_FS_FileStorageInfo storageInfo && 
+                                        storageInfo.FileData != null)
+                                    {
+                                        // 缓存命中,直接使用
+                                        UpdateCellImage(cell, storageInfo, detail.ClaimSubID);
+                                        cacheHit = true;
+                                        cacheHitCount++;
+                                    }
+                                }
+                                
+                                // 缓存未命中,调用下载方法(会自动缓存)
+                                if (!cacheHit)
+                                {
+                                    var fileStorageInfos = await DownloadDetailImageAsync(detail, fileService);
+                                    if (fileStorageInfos != null && fileStorageInfos.Count > 0)
+                                    {
+                                        UpdateCellImage(cell, fileStorageInfos[0], detail.ClaimSubID);
+                                        downloadCount++;
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MainForm.Instance.logger.LogError(ex, $"加载明细 {detail.ClaimSubID} 的图片失败");
+                            }
+                        }
+                    }
+                }
+
+                if (cacheHitCount > 0 || downloadCount > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"✅ 明细图片加载完成: 缓存命中{cacheHitCount}张, 下载{downloadCount}张");
+                    this.Invoke(new Action(() => grid1.Invalidate()));
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "加载明细报销凭证图片异常");
+            }
+        }
 
         /// <summary>
         /// 加载图片数据

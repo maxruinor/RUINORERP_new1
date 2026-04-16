@@ -110,6 +110,8 @@ namespace RUINORERP.UI.ProductEAV
             kryptonNavigator1.SelectedPageChanged += KryptonNavigator1_SelectedPageChanged;
             newSumDataGridView产品.CellPainting += KryptonDataGridView产品_CellPainting;
             newSumDataGridView产品.CellMouseMove += KryptonDataGridView产品_CellMouseMove;
+            // ✅ Phase 2: 添加滚动事件,实现智能预加载
+            newSumDataGridView产品.Scroll += NewSumDataGridView产品_Scroll;
             newSumDataGridView产品.CustomRowNo = true;
             newSumDataGridView产品.ShowCellToolTips = true;
             newSumDataGridView产品.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
@@ -579,23 +581,30 @@ namespace RUINORERP.UI.ProductEAV
 
                 if (visibleFileIds.Count > 0)
                 {
-                    MainForm.Instance.uclog.AddLog($"开始预加载{visibleFileIds.Count}个SKU图片...");
+                    MainForm.Instance.uclog.AddLog($"📦 开始预加载{visibleFileIds.Count}个SKU图片到缓存...");
                     
                     // ✅ 批量加载到缓存
                     var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
                     if (imageCacheService != null)
                     {
+                        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                         await imageCacheService.GetImageInfosBatchAsync(visibleFileIds);
-                        MainForm.Instance.uclog.AddLog("图片预加载完成");
+                        stopwatch.Stop();
+                        
+                        MainForm.Instance.uclog.AddLog($"✅ 图片预加载完成,耗时{stopwatch.ElapsedMilliseconds}ms");
                         
                         // 触发重绘,显示图片
                         newSumDataGridView产品.Invalidate();
                     }
                 }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog("ℹ️ 没有需要预加载的图片");
+                }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.uclog.AddLog($"预加载图片失败: {ex.Message}", Global.UILogType.警告);
+                MainForm.Instance.uclog.AddLog($"❌ 预加载图片失败: {ex.Message}", Global.UILogType.警告);
             }
         }
 

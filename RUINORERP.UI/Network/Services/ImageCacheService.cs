@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.UI.Network.Services
 {
     /// <summary>
-    /// 图片缓存服务 - 客户端实现
+    /// 图片缓存服务 - 客户端实现1
     /// 策略:
     /// - 产品主图:永久缓存(默认24小时,更新时失效)
     /// - 订单凭证图:短期缓存(默认1小时)
@@ -345,9 +345,11 @@ namespace RUINORERP.UI.Network.Services
             var cachedStorageInfo = GetImageInfo(fileId);
             if (cachedStorageInfo != null && cachedStorageInfo is tb_FS_FileStorageInfo storageInfo && storageInfo.FileData != null)
             {
-                _logger?.LogDebug("缓存命中: FileId={FileId}", fileId);
+                _logger?.LogDebug("✅ 缓存命中: FileId={FileId}", fileId);
                 return ConvertToImageInfo(storageInfo);
             }
+
+            _logger?.LogDebug("❌ 缓存未命中,从数据库查询: FileId={FileId}", fileId);
 
             // 缓存未命中,从数据库查询
             try
@@ -361,14 +363,18 @@ namespace RUINORERP.UI.Network.Services
                 {
                     // ✅ 添加到基类缓存
                     AddImageInfo(fileStorageInfo);
-                    _logger?.LogDebug("从数据库加载并缓存: FileId={FileId}, Size={Size} bytes", fileId, fileStorageInfo.FileData?.Length ?? 0);
+                    _logger?.LogDebug("📦 从数据库加载并缓存: FileId={FileId}, Size={Size} bytes", fileId, fileStorageInfo.FileData?.Length ?? 0);
 
                     return ConvertToImageInfo(fileStorageInfo);
+                }
+                else
+                {
+                    _logger?.LogWarning("⚠️ 数据库中未找到图片: FileId={FileId}", fileId);
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "查询图片信息失败: FileId={FileId}", fileId);
+                _logger?.LogError(ex, "❌ 查询图片信息失败: FileId={FileId}", fileId);
             }
 
             return null;
@@ -402,15 +408,24 @@ namespace RUINORERP.UI.Network.Services
                 }
             }
 
+            // ✅ 记录缓存命中情况
+            int cacheHitCount = fileIds.Count - uncachedIds.Count;
+            _logger?.LogInformation("📊 批量获取图片: 总请求{Total}, 缓存命中{Hit}, 需DB查询{Miss}, 命中率{Rate}%",
+                fileIds.Count, cacheHitCount, uncachedIds.Count, 
+                fileIds.Count > 0 ? (cacheHitCount * 100 / fileIds.Count) : 0);
+
             // 2. 批量查询未缓存的
             if (uncachedIds.Count > 0)
             {
                 try
                 {
+                    _logger?.LogDebug("🔍 开始从数据库查询{Count}个未缓存的图片", uncachedIds.Count);
                     var db = _unitOfWorkManage.GetDbClient().CopyNew();
                     var fileStorageInfos = await db.Queryable<tb_FS_FileStorageInfo>()
                         .Where(f => uncachedIds.Contains(f.FileId))
                         .ToListAsync();
+
+                    _logger?.LogDebug("✅ 数据库返回{Count}条记录", fileStorageInfos?.Count ?? 0);
 
                     foreach (var fsi in fileStorageInfos)
                     {
@@ -420,12 +435,11 @@ namespace RUINORERP.UI.Network.Services
                         result[fsi.FileId] = ConvertToImageInfo(fsi);
                     }
 
-                    _logger?.LogDebug("批量加载图片: 请求{RequestCount}, 缓存命中{CacheHit}, 数据库查询{DbQuery}",
-                        fileIds.Count, result.Count - uncachedIds.Count, uncachedIds.Count);
+                    _logger?.LogDebug("📦 已将{Count}个图片加入缓存", fileStorageInfos?.Count ?? 0);
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "批量查询图片信息失败");
+                    _logger?.LogError(ex, "❌ 批量查询图片信息失败");
                 }
             }
 
@@ -524,21 +538,51 @@ namespace RUINORERP.UI.Network.Services
         /// 产品主图缓存过期时间（默认24小时）
         /// </summary>
         public TimeSpan ProductMainImageExpiration { get; set; } = TimeSpan.FromHours(24);
+        
+        /// <summary>
+        /// 产品主图绝对过期时间（默认7天）
+        /// </summary>
+        public TimeSpan ProductMainImageAbsoluteExpiration { get; set; } = TimeSpan.FromDays(7);
+
+        /// <summary>
+        /// SKU图片缓存过期时间（默认12小时）
+        /// </summary>
+        public TimeSpan SkuImageExpiration { get; set; } = TimeSpan.FromHours(12);
+        
+        /// <summary>
+        /// SKU图片绝对过期时间（默认3天）
+        /// </summary>
+        public TimeSpan SkuImageAbsoluteExpiration { get; set; } = TimeSpan.FromDays(3);
 
         /// <summary>
         /// 销售订单凭证图缓存过期时间（默认1小时）
         /// </summary>
         public TimeSpan SaleOrderVoucherExpiration { get; set; } = TimeSpan.FromHours(1);
+        
+        /// <summary>
+        /// 销售订单凭证图绝对过期时间（默认24小时）
+        /// </summary>
+        public TimeSpan SaleOrderVoucherAbsoluteExpiration { get; set; } = TimeSpan.FromHours(24);
 
         /// <summary>
         /// 费用报销单凭证图缓存过期时间（默认1小时）
         /// </summary>
         public TimeSpan ExpenseClaimEvidenceExpiration { get; set; } = TimeSpan.FromHours(1);
+        
+        /// <summary>
+        /// 费用报销单凭证图绝对过期时间（默认24小时）
+        /// </summary>
+        public TimeSpan ExpenseClaimEvidenceAbsoluteExpiration { get; set; } = TimeSpan.FromHours(24);
 
         /// <summary>
         /// 付款记录凭证图缓存过期时间（默认1小时）
         /// </summary>
         public TimeSpan PaymentRecordVoucherExpiration { get; set; } = TimeSpan.FromHours(1);
+        
+        /// <summary>
+        /// 付款记录凭证图绝对过期时间（默认24小时）
+        /// </summary>
+        public TimeSpan PaymentRecordVoucherAbsoluteExpiration { get; set; } = TimeSpan.FromHours(24);
 
         /// <summary>
         /// 从配置字典创建配置对象

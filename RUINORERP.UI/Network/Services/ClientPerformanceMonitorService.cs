@@ -220,6 +220,13 @@ namespace RUINORERP.UI.Network.Services
                     return;
                 }
 
+                // ✅ 提前检查：登录状态（确保用户已完全登录）
+                if (!Program.AppContextData.IsOnline)
+                {
+                    _logger?.LogDebug("用户未登录，跳过性能数据上报");
+                    return;
+                }
+
                 // ✅ 提前检查：Token有效性（避免进入发送流程后才失败）
                 var appContext = MainForm.Instance?.AppContext;
                 if (appContext == null || string.IsNullOrEmpty(appContext.SessionId))

@@ -847,12 +847,22 @@ namespace RUINORERP.UI
             /// 注意：TableSchemaManager的特殊注册在ConfigureContainer方法中处理，这里不重复注册
             /// 注意：HelpManager使用单例模式，不通过Autofac注册
             /// 注意：InitModuleMenu排除自动注册，单独注册为单例
+            /// 注意：ImageCacheService排除自动注册，单独注册为单例(避免缓存实例不共享)
+            /// 注意：ClientLocalLockCacheService排除自动注册，单独注册为单例(避免锁缓存不共享)
+            /// 注意：ConfigSyncService排除自动注册，单独注册为单例(避免配置同步状态不一致)
+            /// 注意：FileManagementService排除自动注册，单独注册为单例(避免文件锁和Timer不共享)
+            /// 注意：LockRecoveryManager排除自动注册，单独注册为单例(避免健康检查Timer不共享)
             /// </summary>
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
                 .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type) &&
                                type != typeof(RUINORERP.Business.Cache.TableSchemaManager) &&
                                type != typeof(RUINORERP.UI.HelpSystem.Core.HelpManager) &&
-                               type != typeof(InitModuleMenu)) // 排除InitModuleMenu，单独注册为单例
+                               type != typeof(InitModuleMenu) &&
+                               type != typeof(RUINORERP.UI.Network.Services.ImageCacheService) &&
+                               type != typeof(RUINORERP.UI.Network.Services.ClientLocalLockCacheService) &&
+                               type != typeof(RUINORERP.UI.Network.Services.ConfigSyncService) &&
+                               type != typeof(RUINORERP.UI.Network.Services.FileManagementService) &&
+                               type != typeof(RUINORERP.UI.Network.Services.LockRecoveryManager)) // 排除需要单例的服务
                 .AsImplementedInterfaces()
                 .AsSelf();
 
@@ -864,6 +874,36 @@ namespace RUINORERP.UI
 
 
 
+
+            // 【新增】图片缓存服务必须注册为单例,确保所有地方共享同一个缓存实例
+            builder.RegisterType<RUINORERP.UI.Network.Services.ImageCacheService>()
+                .AsSelf()
+                .SingleInstance()  // ⚠️ 关键: 必须是单例,否则缓存不共享!
+                .PropertiesAutowired();
+
+            // 【新增】客户端本地锁缓存服务必须注册为单例,确保锁状态全局共享
+            builder.RegisterType<RUINORERP.UI.Network.Services.ClientLocalLockCacheService>()
+                .AsSelf()
+                .SingleInstance()  // ⚠️ 关键: 必须是单例,否则锁缓存不共享!
+                .PropertiesAutowired();
+
+            // 【新增】配置同步服务必须注册为单例,确保配置同步状态一致
+            builder.RegisterType<RUINORERP.UI.Network.Services.ConfigSyncService>()
+                .AsSelf()
+                .SingleInstance()  // ⚠️ 关键: 必须是单例,否则配置同步状态不一致!
+                .PropertiesAutowired();
+
+            // 【新增】文件管理服务必须注册为单例,确保文件锁和Timer全局共享
+            builder.RegisterType<RUINORERP.UI.Network.Services.FileManagementService>()
+                .AsSelf()
+                .SingleInstance()  // ⚠️ 关键: 必须是单例,否则业务锁(_businessLocks)和清理Timer不共享!
+                .PropertiesAutowired();
+
+            // 【新增】锁恢复管理器必须注册为单例,确保健康检查Timer全局唯一
+            builder.RegisterType<RUINORERP.UI.Network.Services.LockRecoveryManager>()
+                .AsSelf()
+                .SingleInstance()  // ⚠️ 关键: 必须是单例,否则健康检查Timer重复执行!
+                .PropertiesAutowired();
 
             //覆盖上面自动注册的？说是最后的才是
 

@@ -188,10 +188,17 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _ImagesPath;
+
         [AdvQueryAttribute(ColName = "ImagesPath", ColDesc = "产品图片")]
         [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ImagesPath", Length = 40, IsNullable = true, ColumnDescription = "产品图片")]
         [Display(Name = "产品图片")]
-        public string ImagesPath { get; set; }
+        public string ImagesPath 
+        {
+            get { return _ImagesPath; }            set
+            {                SetProperty(ref _ImagesPath, value);
+            }
+        }
 
         private int? _Quantity;
 

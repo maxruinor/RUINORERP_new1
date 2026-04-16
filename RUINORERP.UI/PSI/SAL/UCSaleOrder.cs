@@ -1521,6 +1521,10 @@ namespace RUINORERP.UI.PSI.SAL
                         Krypton.Toolkit.KryptonMessageBoxIcon.Error);
                             
                     MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反结案操作失败,原因是{rs.ErrorMsg},如果无法解决,请联系管理员!", Color.Red);
+                    
+                    // ✅ 关键修复：刷新UI状态，确保按钮和数据状态与Controller恢复后的实体状态一致
+                    UpdateAllUIStates(EditEntity);
+                    
                     // ✅ 返回false,让基类的错误处理逻辑恢复按钮为可用状态
                     return false;
                 }
@@ -1598,6 +1602,10 @@ namespace RUINORERP.UI.PSI.SAL
                         Krypton.Toolkit.KryptonMessageBoxIcon.Error);
         
                     MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决,请联系管理员!", Color.Red);
+                    
+                    // ✅ 关键修复：刷新UI状态，确保按钮和数据状态与Controller恢复后的实体状态一致
+                    UpdateAllUIStates(EditEntity);
+                    
                     // ✅ 返回false,让基类的错误处理逻辑恢复按钮为可用状态
                     return false;
                 }

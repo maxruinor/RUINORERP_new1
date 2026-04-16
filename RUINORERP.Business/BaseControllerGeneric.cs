@@ -42,6 +42,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls;
 using Expression = System.Linq.Expressions.Expression;
+using RUINORERP.Business.Base;
 
 namespace RUINORERP.Business
 {
@@ -102,6 +103,11 @@ namespace RUINORERP.Business
         /// 行级权限过滤器服务（注入单例）
         /// </summary>
         private readonly SqlSugarRowLevelAuthFilter _rowLevelAuthFilter;
+        
+        /// <summary>
+        /// 实体状态保护器 - 用于在事务执行过程中保护实体状态
+        /// </summary>
+        protected EntityStateProtector StateProtector { get; private set; } = new EntityStateProtector();
         public BaseController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null)
         {
             _logger = logger;
@@ -136,6 +142,175 @@ namespace RUINORERP.Business
 
         #region  
 
+
+        #endregion
+
+        #region 事务状态保护
+
+        /// <summary>
+        /// 在事务外保护实体状态（推荐方式）
+        /// 应该在开启事务之前调用，遵循"事务范围最小化"原则
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="entities">需要保护的实体列表</param>
+        /// <example>
+        /// <code>
+        /// // ✅ 正确：先保护，后开启事务
+        /// ProtectEntities(entity);  // 保持具体类型
+        /// _unitOfWorkManage.BeginTran();
+        /// </code>
+        /// </example>
+        protected void ProtectEntities<TEntity>(params TEntity[] entities) where TEntity : BaseEntity
+        {
+            foreach (var entity in entities)
+            {
+                if (entity != null)
+                {
+                    StateProtector.Protect(entity);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 保护当前控制器的实体类型（最简用法）
+        /// 利用 BaseController&lt;T&gt; 的泛型参数 T，无需显式指定类型
+        /// </summary>
+        /// <param name="entities">需要保护的实体列表</param>
+        /// <example>
+        /// <code>
+        /// // ✅ 最简洁：在 tb_SaleOrderController 中直接调用
+        /// ProtectEntity(order);  // 自动推断为 tb_SaleOrder
+        /// BeginTran();
+        /// </code>
+        /// </example>
+        protected void ProtectEntity(params T[] entities)
+        {
+            foreach (var entity in entities)
+            {
+                if (entity is BaseEntity baseEntity)
+                {
+                    StateProtector.Protect(baseEntity);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 选择性保护实体状态（性能优化版）
+        /// 只保护指定的字段，适合大型实体
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="entity">要保护的实体</param>
+        /// <param name="propertyExpressions">要保护的属性表达式列表</param>
+        /// <example>
+        /// <code>
+        /// // ✅ 只保护状态相关字段
+        /// ProtectEntitiesSelective(entity, 
+        ///     e => e.DataStatus, 
+        ///     e => e.ApprovalStatus);
+        /// _unitOfWorkManage.BeginTran();
+        /// </code>
+        /// </example>
+        protected void ProtectEntitiesSelective<TEntity>(
+            TEntity entity, 
+            params Expression<Func<TEntity, object>>[] propertyExpressions) where TEntity : BaseEntity
+        {
+            if (entity != null)
+            {
+                StateProtector.ProtectSelective(entity, propertyExpressions);
+            }
+        }
+
+        /// <summary>
+        /// 开启事务（不自动保护，需要先调用 ProtectEntities）
+        /// 遵循“事务范围最小化”原则：克隆操作在事务外完成
+        /// </summary>
+        protected void BeginTran()
+        {
+            _unitOfWorkManage.BeginTran();
+        }
+
+        /// <summary>
+        /// 开启事务并选择性保护实体（便捷方法）
+        /// 内部会先创建快照再开启事务，符合最佳实践
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="entity">要保护的实体</param>
+        /// <param name="propertyExpressions">要保护的属性表达式列表</param>
+        protected void BeginTranWithSelectiveProtection<TEntity>(
+            TEntity entity, 
+            params Expression<Func<TEntity, object>>[] propertyExpressions) where TEntity : BaseEntity
+        {
+            // ✅ 先保护（事务外）
+            ProtectEntitiesSelective(entity, propertyExpressions);
+            // ✅ 后开启事务
+            _unitOfWorkManage.BeginTran();
+        }
+
+        /// <summary>
+        /// 开启事务并完整保护实体（便捷方法）
+        /// 内部会先创建快照再开启事务，符合最佳实践
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="entities">需要保护的实体列表</param>
+        protected void BeginTranWithProtection<TEntity>(params TEntity[] entities) where TEntity : BaseEntity
+        {
+            // ✅ 先保护（事务外）- 保持具体类型
+            ProtectEntities(entities);
+            // ✅ 后开启事务
+            _unitOfWorkManage.BeginTran();
+        }
+
+        /// <summary>
+        /// 开启事务并保护当前控制器类型的实体（最简用法）
+        /// 利用 BaseController&lt;T&gt; 的泛型参数 T
+        /// </summary>
+        /// <param name="entities">需要保护的实体列表</param>
+        /// <example>
+        /// <code>
+        /// // ✅ 在 tb_SaleOrderController 中使用
+        /// BeginTranWithProtection(order);  // 自动推断为 tb_SaleOrder
+        /// </code>
+        /// </example>
+        protected void BeginTranWithProtection(params T[] entities)
+        {
+            // ✅ 先保护（事务外）- 利用类的泛型参数 T
+            ProtectEntity(entities);
+            // ✅ 后开启事务
+            _unitOfWorkManage.BeginTran();
+        }
+
+        /// <summary>
+        /// 提交事务并清理状态保护
+        /// </summary>
+        protected void CommitTranWithCleanup()
+        {
+            try
+            {
+                _unitOfWorkManage.CommitTran();
+            }
+            finally
+            {
+                // 无论成功与否都清理快照
+                StateProtector.Clear();
+            }
+        }
+
+        /// <summary>
+        /// 回滚事务并恢复实体状态
+        /// </summary>
+        protected void RollbackTranWithRestore()
+        {
+            try
+            {
+                _unitOfWorkManage.RollbackTran();
+            }
+            finally
+            {
+                // 恢复所有受保护实体的原始状态
+                StateProtector.RestoreAll();
+                StateProtector.Clear();
+            }
+        }
 
         #endregion
 

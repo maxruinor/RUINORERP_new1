@@ -7,7 +7,7 @@ using SqlSugar;
 namespace RUINORERP.Repository.UnitOfWorks
 {
     /// <summary>
-    /// 事务管理接口
+    /// 事务管理接口1
     /// </summary>
     public interface IUnitOfWorkManage
     {

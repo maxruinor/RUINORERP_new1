@@ -293,6 +293,44 @@ namespace RUINORERP.UI.Network.Services
         #region 通用缓存操作
 
         /// <summary>
+        /// ✅ 新增: 获取SKU图片列表(带缓存)
+        /// 用于frmProductEdit中显示SKU图片缩略图
+        /// </summary>
+        public async Task<List<ImageInfo>> GetSKUImagesByProdDetailIdAsync(long prodDetailId)
+        {
+            if (prodDetailId <= 0)
+                return new List<ImageInfo>();
+
+            // 1. 先检查缓存中是否已有该SKU的所有图片
+            var cachedImages = new List<ImageInfo>();
+            
+            // 2. 查询业务关联获取FileId列表
+            var db = _unitOfWorkManage.GetDbClient().CopyNew();
+            var relations = await db.Queryable<tb_FS_BusinessRelation>()
+                .Where(br => br.OwnerTableName == "tb_ProdDetail" 
+                          && br.BusinessId == prodDetailId 
+                          && br.IsActive)
+                .ToListAsync();
+
+            if (relations == null || relations.Count == 0)
+                return cachedImages;
+
+            // 3. 批量从缓存获取或数据库查询
+            var fileIds = relations.Select(r => r.FileId).ToList();
+            var imageInfos = await GetImageInfosBatchAsync(fileIds);
+
+            foreach (var fileId in fileIds)
+            {
+                if (imageInfos.TryGetValue(fileId, out var info))
+                {
+                    cachedImages.Add(info);
+                }
+            }
+
+            return cachedImages;
+        }
+
+        /// <summary>
         /// ✅ 新增: 根据FileId获取图片信息(带缓存)
         /// 用于查询列表时的缩略图显示
         /// </summary>

@@ -277,14 +277,13 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 下载文件
         /// 通过反射获取实体关联字段的文件ID，然后下载文件
+        /// ✅ 优化: 下载前先检查ImageCacheService缓存
         /// </summary>
         /// <param name="entity">业务实体</param>
         /// <param name="relatedField">关联字段名</param>
         /// <returns>文件下载响应</returns>
         public async Task<FileDownloadResponse> DownloadImageAsync(BaseEntity entity, string relatedField)
         {
-            var fileService = _appContext.GetRequiredService<FileManagementService>();
-
             try
             {
                 if (string.IsNullOrEmpty(relatedField) || entity == null)
@@ -310,6 +309,31 @@ namespace RUINORERP.UI.Network.Services
                     return FileDownloadResponse.CreateFailure($"关联字段 {relatedField} 的值不是有效的文件ID");
                 }
 
+                // ✅ 关键优化: 先检查ImageCacheService缓存
+                var imageCacheService = _appContext.GetRequiredService<RUINORERP.UI.Network.Services.ImageCacheService>();
+                if (imageCacheService != null)
+                {
+                    var cachedStorageInfo = imageCacheService.GetImageInfo(fileId);
+                    if (cachedStorageInfo != null && 
+                        cachedStorageInfo is tb_FS_FileStorageInfo storageInfo && 
+                        storageInfo.FileData != null)
+                    {
+                        _logger?.LogInformation("[FileBusinessService] 缓存命中,跳过下载: FileId={FileId}, Size={Size}KB", 
+                            fileId, storageInfo.FileData.Length / 1024);
+                        
+                        // 构造成功响应
+                        var cachedResponse = new FileDownloadResponse
+                        {
+                            IsSuccess = true,
+                            Message = "从缓存获取",
+                            FileStorageInfos = new List<tb_FS_FileStorageInfo> { storageInfo }
+                        };
+                        return cachedResponse;
+                    }
+                }
+
+                // 缓存未命中,调用原下载逻辑
+                var fileService = _appContext.GetRequiredService<FileManagementService>();
                 var request = new FileDownloadRequest
                 {
                     FileStorageInfo = new tb_FS_FileStorageInfo { FileId = fileId }
@@ -320,6 +344,13 @@ namespace RUINORERP.UI.Network.Services
                 if (response != null && response.IsSuccess)
                 {
                     _logger?.LogDebug("下载文件成功: FileId={FileId}", fileId);
+                    
+                    // ✅ 下载成功后加入缓存
+                    if (response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
+                    {
+                        imageCacheService?.AddImageInfos(response.FileStorageInfos);
+                        _logger?.LogInformation("[FileBusinessService] 下载成功并已缓存: FileId={FileId}", fileId);
+                    }
                 }
 
                 return response;

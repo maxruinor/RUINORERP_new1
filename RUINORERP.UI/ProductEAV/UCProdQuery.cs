@@ -366,37 +366,59 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// ✅ 新增: 绘制产品图片缩略图(懒加载)
+        /// ✅ 优化: 智能绘制产品图片缩略图(优先SKU→主图)
         /// </summary>
         private async void DrawProductImageThumbnail(DataGridViewCellPaintingEventArgs e)
         {
             try
             {
-                var row = newSumDataGridView产品.Rows[e.RowIndex];
-                var product = row.DataBoundItem as tb_Prod;
+                // ✅ 修复：在异步操作开始前获取所需数据，避免跨线程访问UI控件
+                View_ProdDetail viewProdDetail = null;
                 
-                if (product == null || string.IsNullOrEmpty(product.ImagesPath))
+                // 在UI线程上获取数据
+                if (newSumDataGridView产品.InvokeRequired)
                 {
-                    // 没有图片,绘制默认占位符
+                    newSumDataGridView产品.Invoke(new Action(() =>
+                    {
+                        if (e.RowIndex >= 0 && e.RowIndex < newSumDataGridView产品.Rows.Count)
+                        {
+                            var row = newSumDataGridView产品.Rows[e.RowIndex];
+                            viewProdDetail = row.DataBoundItem as View_ProdDetail;
+                        }
+                    }));
+                }
+                else
+                {
+                    if (e.RowIndex >= 0 && e.RowIndex < newSumDataGridView产品.Rows.Count)
+                    {
+                        var row = newSumDataGridView产品.Rows[e.RowIndex];
+                        viewProdDetail = row.DataBoundItem as View_ProdDetail;
+                    }
+                }
+                
+                if (viewProdDetail == null)
+                {
                     DrawPlaceholderImage(e);
                     e.Handled = true;
                     return;
                 }
                 
-                // ✅ 从ImagesPath解析FileId
-                var fileIds = ParseFileIds(product.ImagesPath);
-                if (fileIds.Count == 0)
+                // ✅ View_ProdDetail本身就是SKU,直接使用其ImagesPath
+                long? targetFileId = GetFileIdFromViewProdDetail(viewProdDetail);
+                
+                if (!targetFileId.HasValue || targetFileId.Value <= 0)
                 {
-                    DrawPlaceholderImage(e);
+                    // 没有图片,保持空白
+                    e.PaintBackground(e.ClipBounds, true);
                     e.Handled = true;
                     return;
                 }
                 
-                // ✅ 使用ImageCacheService获取第一张图片(异步懒加载)
+                // ✅ 使用ImageCacheService获取图片(异步懒加载)
                 var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
                 if (imageCacheService != null)
                 {
-                    var imageInfo = await imageCacheService.GetImageInfoByFileIdAsync(fileIds[0]);
+                    var imageInfo = await imageCacheService.GetImageInfoByFileIdAsync(targetFileId.Value);
                     
                     if (imageInfo != null && imageInfo.ImageData != null && imageInfo.ImageData.Length > 0)
                     {
@@ -411,16 +433,41 @@ namespace RUINORERP.UI.ProductEAV
                     }
                 }
                 
-                // 缓存未命中或加载失败,绘制占位符
-                DrawPlaceholderImage(e);
+                // 缓存未命中或加载失败,保持空白
+                e.PaintBackground(e.ClipBounds, true);
                 e.Handled = true;
             }
             catch (Exception ex)
             {
-                // ✅ 静默失败,不弹窗、不记录日志、不提示
-                // 图片绘制失败不影响数据展示,只保持单元格空白即可
-                DrawPlaceholderImage(e);
+                // 静默失败,保持单元格空白
                 e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// ✅ 新增: 从View_ProdDetail获取图片FileId(View_ProdDetail本身就是SKU)
+        /// </summary>
+        private long? GetFileIdFromViewProdDetail(View_ProdDetail viewProdDetail)
+        {
+            try
+            {
+                // View_ProdDetail本身就是SKU,直接使用其ImagesPath
+                if (!string.IsNullOrEmpty(viewProdDetail.ImagesPath))
+                {
+                    var fileIds = ParseFileIds(viewProdDetail.ImagesPath);
+                    if (fileIds.Count > 0)
+                    {
+                        return fileIds[0];
+                    }
+                }
+                
+                // 没有任何图片
+                return null;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"获取View_ProdDetail图片FileId失败: {ex.Message}", Global.UILogType.警告);
+                return null;
             }
         }
 
@@ -511,27 +558,28 @@ namespace RUINORERP.UI.ProductEAV
                 if (newSumDataGridView产品.DataSource == null || newSumDataGridView产品.Rows.Count == 0)
                     return;
 
-                // 获取可见行的FileId列表
+                // 获取可见行的FileId列表(View_ProdDetail本身就是SKU)
                 var visibleFileIds = new List<long>();
                 
                 foreach (DataGridViewRow row in newSumDataGridView产品.Rows)
                 {
                     if (!row.Visible || row.IsNewRow) continue;
                     
-                    var product = row.DataBoundItem as tb_Prod;
-                    if (product != null && !string.IsNullOrEmpty(product.ImagesPath))
+                    var viewProdDetail = row.DataBoundItem as View_ProdDetail;
+                    if (viewProdDetail != null)
                     {
-                        var fileIds = ParseFileIds(product.ImagesPath);
-                        if (fileIds.Count > 0)
+                        // ✅ 直接从View_ProdDetail获取FileId
+                        var fileId = GetFileIdFromViewProdDetail(viewProdDetail);
+                        if (fileId.HasValue && fileId.Value > 0)
                         {
-                            visibleFileIds.Add(fileIds[0]); // 只预加载第一张
+                            visibleFileIds.Add(fileId.Value);
                         }
                     }
                 }
 
                 if (visibleFileIds.Count > 0)
                 {
-                    MainForm.Instance.uclog.AddLog($"开始预加载{visibleFileIds.Count}个产品图片...");
+                    MainForm.Instance.uclog.AddLog($"开始预加载{visibleFileIds.Count}个SKU图片...");
                     
                     // ✅ 批量加载到缓存
                     var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();

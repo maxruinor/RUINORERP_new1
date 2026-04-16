@@ -3239,7 +3239,7 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// 加载单个SKU的图片
+        /// 加载单个SKU的图片2
         /// </summary>
         /// <param name="detail">SKU明细</param>
         private async Task LoadSKUImageAsync(tb_ProdDetail detail)
@@ -3355,101 +3355,13 @@ namespace RUINORERP.UI.ProductEAV
             }
         }
 
-        /// <summary>
-        /// 检查是否有SKU图片需要上传或删除
-        /// </summary>
-        /// <returns>如果有SKU图片需要上传或删除返回true，否则返回false</returns>
-        private bool HasSKUImagesToUpload()
-        {
-            if (EditEntity == null || EditEntity.tb_ProdDetails == null)
-            {
-                return false;
-            }
-
-            // 检查每个SKU明细是否有未保存的图片更改
-            foreach (var detail in EditEntity.tb_ProdDetails)
-            {
-                // ✅ 检查是否有缓存的图片数据需要上传(从PendingImages读取)
-                if (detail.HasUnsavedImageChanges)
-                {
-                    return true;
-                }
-                
-                // ✅ 简化: 从PendingImages获取待处理的图片
-                var pendingUploadImages = detail.GetPendingAddImages();
-                var pendingDeleteImages = detail.GetPendingDeleteImages();
-                
-                if ((pendingUploadImages?.Count ?? 0) > 0 || 
-                    (pendingDeleteImages?.Count ?? 0) > 0)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// ✅ 重构: 获取指定SKU需要更新的图片列表(从PendingImages读取)
-        /// </summary>
-        /// <param name="detail">SKU明细对象</param>
-        /// <returns>需要更新的图片列表(Tuple格式,兼容旧代码)</returns>
-        private List<Tuple<byte[], ImageInfo>> GetSKUImagesNeedingUpdate(tb_ProdDetail detail)
-        {
-            // ✅ 从PendingImages获取待上传的图片
-            var pendingUploadImages = detail.GetPendingAddImages();
-            
-            var result = new List<Tuple<byte[], ImageInfo>>();
-            
-            if (pendingUploadImages != null && pendingUploadImages.Count > 0)
-            {
-                foreach (var img in pendingUploadImages)
-                {
-                    var imageInfo = new ImageInfo
-                    {
-                        FileName = img.FileName,
-                        Description = img.Description,
-                        SortOrder = img.SortOrder,
-                        FileId = img.FileId  // ✅ 直接使用FileId
-                    };
-                    result.Add(Tuple.Create(img.ImageData, imageInfo));
-                }
-            }
-            
-            if (result.Count > 0)
-            {
-                MainForm.Instance.uclog.AddLog($"[GetSKUImagesNeedingUpdate] 从PendingImages找到{result.Count}张图片，SKU: {detail.SKU}");
-            }
-            
-            return result.Count > 0 ? result : null;
-        }
-
-        /// <summary>
-        /// ✅ 重构: 获取指定SKU需要删除的图片列表(从PendingImages读取)
-        /// </summary>
-        /// <param name="detail">SKU明细对象</param>
-        /// <returns>需要删除的图片列表</returns>
-        private List<ImageInfo> GetSKUImagesToDelete(tb_ProdDetail detail)
-        {
-            // ✅ 从PendingImages获取待删除的图片
-            var pendingDeleteImages = detail.GetPendingDeleteImages();
-            
-            if (pendingDeleteImages != null && pendingDeleteImages.Count > 0)
-            {
-                var result = new List<ImageInfo>();
-                foreach (var img in pendingDeleteImages)
-                {
-                    result.Add(new ImageInfo
-                    {
-                        FileId = img.FileId  // ✅ 直接使用FileId
-                    });
-                }
-                
-                MainForm.Instance.uclog.AddLog($"[GetSKUImagesToDelete] 从PendingImages找到{result.Count}张待删除图片，SKU: {detail.SKU}");
-                return result;
-            }
-            
-            return null;
-        }
+        // ✅ 已删除以下兼容方法,统一使用UCProductList.Save()处理图片:
+        // - HasSKUImagesToUpload()
+        // - GetSKUImagesNeedingUpdate()
+        // - GetSKUImagesToDelete()
+        // 
+        // 原因: 这些方法从PendingImages读取再添加回去,导致重复
+        // 新架构: frmSKUImageEdit -> SyncChangesToPendingImages -> UCProductList.Save
 
         /// <summary>
         /// 上传或删除图片（如果需要）- 通用方法

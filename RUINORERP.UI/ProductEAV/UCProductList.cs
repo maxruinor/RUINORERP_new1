@@ -38,6 +38,11 @@ namespace RUINORERP.UI.ProductEAV
     {
 
         private List<tb_ProdCategories> _categorylist = new List<tb_ProdCategories>();
+        
+        /// <summary>
+        /// ✅ 新增: 批量上传并发限流器（最多同时3个上传任务）
+        /// </summary>
+        private readonly System.Threading.SemaphoreSlim _uploadThrottle = new System.Threading.SemaphoreSlim(3, 3);
 
         public UCProductList()
         {
@@ -287,270 +292,37 @@ namespace RUINORERP.UI.ProductEAV
                 entity.HasChanged = false;
             }
 
-            // ✅ 第二步: 统一处理所有产品的主图和SKU图片上传(此时所有产品和SKU都有有效的ID)
-            int totalSuccessCount = 0;
-            int totalFailCount = 0;
+            // ✅ 第二步: 收集所有需要上传的图片任务
+            var uploadTasks = new List<Task<UploadResult>>();
             
             foreach (var product in list)
             {
                 // ✅ 处理产品主图
                 if (product.HasUnsavedImageChanges)
                 {
-                    try
-                    {
-                        MainForm.Instance.uclog.AddLog($"开始处理产品 '{product.CNName}' 的主图上传...");
-                        
-                        // 获取文件服务
-                        var fileService = Startup.GetFromFac<RUINORERP.UI.Network.Services.FileBusinessService>();
-                        if (fileService == null)
-                        {
-                            MainForm.Instance.uclog.AddLog("FileBusinessService不可用", Global.UILogType.错误);
-                            totalFailCount++;
-                            continue;
-                        }
-
-                        bool hasError = false;
-
-                        // 1. 处理删除操作
-                        var deleteImages = product.GetPendingDeleteImages();
-                        foreach (var delImg in deleteImages)
-                        {
-                            if (delImg.FileId > 0)
-                            {
-                                MainForm.Instance.uclog.AddLog($"  - 删除主图 FileId={delImg.FileId}");
-                                
-                                // ✅ 调用删除接口
-                                var deleteResponse = await fileService.DeleteImagesByIdsAsync(
-                                    product.ProdBaseID,
-                                    "tb_Prod",
-                                    new List<long> { delImg.FileId },
-                                    physicalDelete: false
-                                );
-                                
-                                if (deleteResponse == null || !deleteResponse.IsSuccess)
-                                {
-                                    hasError = true;
-                                    string errorMsg = deleteResponse?.ErrorMessage ?? "删除结果为空";
-                                    MainForm.Instance.uclog.AddLog($"    删除失败: {errorMsg}", Global.UILogType.错误);
-                                }
-                            }
-                        }
-
-                        // ✅ 简化: 替换操作已被拆分为Delete+Add,不需要单独处理
-                        // GetPendingReplaceImages()现在返回空列表
-
-                        // 2. 处理新增/替换操作(统一处理Status=PendingUpload的图片)
-                        var addImages = product.GetPendingAddImages();
-                        bool hasImageChanges = false;  // ✅ 标记是否有图片变更
-                        
-                        foreach (var addImg in addImages)
-                        {
-                            if (addImg.ImageData != null && !string.IsNullOrEmpty(addImg.FileName))
-                            {
-                                MainForm.Instance.uclog.AddLog($"  - 上传主图 {addImg.FileName} ({addImg.ImageData.Length} bytes)");
-                                
-                                // ✅ 上传图片
-                                var uploadResult = await fileService.UploadImageAsync(
-                                    product,
-                                    addImg.FileName,
-                                    addImg.ImageData,
-                                    "ImagesPath"
-                                );
-                                
-                                if (uploadResult != null && uploadResult.IsSuccess)
-                                {
-                                    totalSuccessCount++;
-                                    hasImageChanges = true;  // ✅ 标记有变更
-                                    MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
-                                }
-                                else
-                                {
-                                    hasError = true;
-                                    string errorMsg = uploadResult?.ErrorMessage ?? "上传结果为空";
-                                    MainForm.Instance.uclog.AddLog($"    上传失败: {errorMsg}", Global.UILogType.错误);
-                                }
-                            }
-                        }
-
-                        if (!hasError)
-                        {
-                            // ✅ 关键修复: 如果有图片变更,需要保存product以持久化ImagesPath
-                            if (hasImageChanges)
-                            {
-                                try
-                                {
-                                    var prodController = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
-                                    if (prodController != null)
-                                    {
-                                        var saveResult = await prodController.SaveOrUpdateAsync(product);
-                                        if (saveResult.Succeeded)
-                                        {
-                                            MainForm.Instance.uclog.AddLog($"  ✅ 产品 '{product.CNName}' ImagesPath已保存到数据库: {product.ImagesPath}");
-                                        }
-                                        else
-                                        {
-                                            MainForm.Instance.uclog.AddLog($"  ⚠️ 产品 '{product.CNName}' ImagesPath保存失败: {saveResult.ErrorMsg}", Global.UILogType.警告);
-                                        }
-                                    }
-                                }
-                                catch (Exception saveEx)
-                                {
-                                    MainForm.Instance.uclog.AddLog($"  ⚠️ 产品 '{product.CNName}' ImagesPath保存异常: {saveEx.Message}", Global.UILogType.警告);
-                                }
-                            }
-                            
-                            // 清除待处理列表
-                            product.ClearPendingImages();
-                            MainForm.Instance.uclog.AddLog($"产品 '{product.CNName}' 主图处理成功");
-                        }
-                        else
-                        {
-                            totalFailCount++;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        totalFailCount++;
-                        MainForm.Instance.uclog.AddLog(
-                            $"处理产品 '{product.CNName}' 主图时异常: {ex.Message}",
-                            Global.UILogType.错误);
-                    }
+                    uploadTasks.Add(UploadProductMainImageAsync(product));
                 }
-            }
-            
-            foreach (var product in list)
-            {
+                
+                // ✅ 处理SKU图片
                 if (product.tb_ProdDetails != null && product.tb_ProdDetails.Count > 0)
                 {
                     foreach (var detail in product.tb_ProdDetails)
                     {
-                        // ✅ 修复: 移除ProdDetailID > 0检查,因为新增SKU的PendingImages可能不为空
-                        // 新增SKU在第一步保存后会获得有效ProdDetailID,此时才能上传图片
                         if (detail.HasUnsavedImageChanges)
                         {
-                            try
-                            {
-                                MainForm.Instance.uclog.AddLog($"开始处理产品 '{product.CNName}' 的SKU '{detail.SKU}' 的图片上传...");
-                                
-                                // 获取文件服务
-                                var fileService = Startup.GetFromFac<RUINORERP.UI.Network.Services.FileBusinessService>();
-                                if (fileService == null)
-                                {
-                                    MainForm.Instance.uclog.AddLog("FileBusinessService不可用", Global.UILogType.错误);
-                                    totalFailCount++;
-                                    continue;
-                                }
-
-                                bool hasError = false;
-
-                                // 1. 处理删除操作
-                                var deleteImages = detail.GetPendingDeleteImages();
-                                foreach (var delImg in deleteImages)
-                                {
-                                    if (delImg.FileId > 0)
-                                    {
-                                        MainForm.Instance.uclog.AddLog($"  - 删除图片 FileId={delImg.FileId}");
-                                        
-                                        // ✅ 调用删除接口
-                                        var deleteResponse = await fileService.DeleteImagesByIdsAsync(
-                                            detail.ProdDetailID,
-                                            "tb_ProdDetail",
-                                            new List<long> { delImg.FileId },
-                                            physicalDelete: false
-                                        );
-                                        
-                                        if (deleteResponse == null || !deleteResponse.IsSuccess)
-                                        {
-                                            hasError = true;
-                                            string errorMsg = deleteResponse?.ErrorMessage ?? "删除结果为空";
-                                            MainForm.Instance.uclog.AddLog($"    删除失败: {errorMsg}", Global.UILogType.错误);
-                                        }
-                                    }
-                                }
-
-                                // ✅ 简化: 替换操作已被拆分为Delete+Add,不需要单独处理
-                                // GetPendingReplaceImages()现在返回空列表
-
-                                // 2. 处理新增/替换操作(统一处理Status=PendingUpload的图片)
-                                var addImages = detail.GetPendingAddImages();
-                                bool hasImageChanges = false;  // ✅ 标记是否有图片变更
-                                
-                                foreach (var addImg in addImages)
-                                {
-                                    if (addImg.ImageData != null && !string.IsNullOrEmpty(addImg.FileName))
-                                    {
-                                        MainForm.Instance.uclog.AddLog($"  - 上传图片 {addImg.FileName} ({addImg.ImageData.Length} bytes)");
-                                        
-                                        // ✅ 上传图片
-                                        var uploadResult = await fileService.UploadImageAsync(
-                                            detail,
-                                            addImg.FileName,
-                                            addImg.ImageData,
-                                            "ImagesPath"
-                                        );
-                                        
-                                        if (uploadResult != null && uploadResult.IsSuccess)
-                                        {
-                                            totalSuccessCount++;
-                                            hasImageChanges = true;  // ✅ 标记有变更
-                                            MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
-                                        }
-                                        else
-                                        {
-                                            hasError = true;
-                                            string errorMsg = uploadResult?.ErrorMessage ?? "上传结果为空";
-                                            MainForm.Instance.uclog.AddLog($"    上传失败: {errorMsg}", Global.UILogType.错误);
-                                        }
-                                    }
-                                }
-
-                                if (!hasError)
-                                {
-                                    // ✅ 关键修复: 如果有图片变更,需要保存detail以持久化ImagesPath
-                                    if (hasImageChanges)
-                                    {
-                                        try
-                                        {
-                                            var prodController = Startup.GetFromFac<tb_ProdDetailController<tb_ProdDetail>>();
-                                            if (prodController != null)
-                                            {
-                                                var saveResult = await prodController.SaveOrUpdate(detail);
-                                                if (saveResult.Succeeded)
-                                                {
-                                                    MainForm.Instance.uclog.AddLog($"  ✅ SKU '{detail.SKU}' ImagesPath已保存到数据库: {detail.ImagesPath}");
-                                                }
-                                                else
-                                                {
-                                                    MainForm.Instance.uclog.AddLog($"  ⚠️ SKU '{detail.SKU}' ImagesPath保存失败: {saveResult.ErrorMsg}", Global.UILogType.警告);
-                                                }
-                                            }
-                                        }
-                                        catch (Exception saveEx)
-                                        {
-                                            MainForm.Instance.uclog.AddLog($"  ⚠️ SKU '{detail.SKU}' ImagesPath保存异常: {saveEx.Message}", Global.UILogType.警告);
-                                        }
-                                    }
-                                    
-                                    // 清除待处理列表
-                                    detail.ClearPendingImages();
-                                    MainForm.Instance.uclog.AddLog($"SKU '{detail.SKU}' 图片处理成功");
-                                }
-                                else
-                                {
-                                    totalFailCount++;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                totalFailCount++;
-                                MainForm.Instance.uclog.AddLog(
-                                    $"处理SKU '{detail.SKU}' 图片时异常: {ex.Message}",
-                                    Global.UILogType.错误);
-                            }
+                            uploadTasks.Add(UploadSkuImageAsync(product, detail));
                         }
                     }
                 }
             }
+            
+            // ✅ 第三步: 并行执行所有上传任务（最多3个并发）
+            MainForm.Instance.uclog.AddLog($"开始并行处理{uploadTasks.Count}个图片上传任务（最多3个并发）...");
+            var results = await Task.WhenAll(uploadTasks);
+            
+            // ✅ 第四步: 统计结果
+            int totalSuccessCount = results.Count(r => r.IsSuccess);
+            int totalFailCount = results.Count(r => !r.IsSuccess);
             
             if (totalFailCount > 0)
             {
@@ -578,6 +350,12 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         private async void DrawSmartProductImageThumbnail(DataGridViewCellPaintingEventArgs e)
         {
+            // ⚠️ 保护: 验证参数有效性
+            if (e == null || e.RowIndex < 0 || e.ColumnIndex < 0)
+            {
+                return;
+            }
+            
             try
             {
                 var row = dataGridView1.Rows[e.RowIndex];
@@ -628,8 +406,16 @@ namespace RUINORERP.UI.ProductEAV
             {
                 // ✅ 静默失败,不弹窗、不记录日志、不提示
                 // 图片绘制失败不影响数据展示,只保持单元格空白即可
-                e.PaintBackground(e.ClipBounds, true);
-                e.Handled = true;
+                // ⚠️ 注意: 在 async void 中,异常发生时 e 对象可能已失效,不要尝试重新绘制
+                // 只标记为已处理,让 DataGridView 使用默认绘制
+                try
+                {
+                    e.Handled = true;
+                }
+                catch
+                {
+                    // 如果连设置 Handled 都失败,说明对象已完全失效,直接忽略
+                }
             }
         }
 
@@ -795,6 +581,284 @@ namespace RUINORERP.UI.ProductEAV
             {
                 MainForm.Instance.uclog.AddLog($"预加载图片失败: {ex.Message}", Global.UILogType.警告);
             }
+        }
+        
+        /// <summary>
+        /// ✅ 新增: 并行上传产品主图（带限流）
+        /// </summary>
+        private async Task<UploadResult> UploadProductMainImageAsync(tb_Prod product)
+        {
+            await _uploadThrottle.WaitAsync();
+            try
+            {
+                return await ProcessProductMainImageInternalAsync(product);
+            }
+            finally
+            {
+                _uploadThrottle.Release();
+            }
+        }
+        
+        /// <summary>
+        /// ✅ 新增: 并行上传SKU图片（带限流）
+        /// </summary>
+        private async Task<UploadResult> UploadSkuImageAsync(tb_Prod product, tb_ProdDetail detail)
+        {
+            await _uploadThrottle.WaitAsync();
+            try
+            {
+                return await ProcessSkuImageInternalAsync(product, detail);
+            }
+            finally
+            {
+                _uploadThrottle.Release();
+            }
+        }
+        
+        /// <summary>
+        /// ✅ 内部方法: 处理产品主图上传
+        /// </summary>
+        private async Task<UploadResult> ProcessProductMainImageInternalAsync(tb_Prod product)
+        {
+            try
+            {
+                MainForm.Instance.uclog.AddLog($"开始处理产品 '{product.CNName}' 的主图上传...");
+                
+                var fileService = Startup.GetFromFac<RUINORERP.UI.Network.Services.FileBusinessService>();
+                if (fileService == null)
+                {
+                    MainForm.Instance.uclog.AddLog("FileBusinessService不可用", Global.UILogType.错误);
+                    return UploadResult.Fail("FileBusinessService不可用");
+                }
+
+                bool hasError = false;
+
+                // 1. 处理删除操作
+                var deleteImages = product.GetPendingDeleteImages();
+                foreach (var delImg in deleteImages)
+                {
+                    if (delImg.FileId > 0)
+                    {
+                        MainForm.Instance.uclog.AddLog($"  - 删除主图 FileId={delImg.FileId}");
+                        
+                        var deleteResponse = await fileService.DeleteImagesByIdsAsync(
+                            product.ProdBaseID,
+                            "tb_Prod",
+                            new List<long> { delImg.FileId },
+                            physicalDelete: false
+                        );
+                        
+                        if (deleteResponse == null || !deleteResponse.IsSuccess)
+                        {
+                            hasError = true;
+                            string errorMsg = deleteResponse?.ErrorMessage ?? "删除结果为空";
+                            MainForm.Instance.uclog.AddLog($"    删除失败: {errorMsg}", Global.UILogType.错误);
+                        }
+                    }
+                }
+
+                // 2. 处理新增/替换操作
+                var addImages = product.GetPendingAddImages();
+                bool hasImageChanges = false;
+                
+                foreach (var addImg in addImages)
+                {
+                    if (addImg.ImageData != null && !string.IsNullOrEmpty(addImg.FileName))
+                    {
+                        MainForm.Instance.uclog.AddLog($"  - 上传主图 {addImg.FileName} ({addImg.ImageData.Length} bytes)");
+                        
+                        var uploadResult = await fileService.UploadImageAsync(
+                            product,
+                            addImg.FileName,
+                            addImg.ImageData,
+                            "ImagesPath"
+                        );
+                        
+                        if (uploadResult != null && uploadResult.IsSuccess)
+                        {
+                            hasImageChanges = true;
+                            MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
+                        }
+                        else
+                        {
+                            hasError = true;
+                            string errorMsg = uploadResult?.ErrorMessage ?? "上传结果为空";
+                            MainForm.Instance.uclog.AddLog($"    上传失败: {errorMsg}", Global.UILogType.错误);
+                        }
+                    }
+                }
+
+                if (!hasError)
+                {
+                    if (hasImageChanges)
+                    {
+                        try
+                        {
+                            var prodController = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
+                            if (prodController != null)
+                            {
+                                var saveResult = await prodController.SaveOrUpdateAsync(product);
+                                if (saveResult.Succeeded)
+                                {
+                                    MainForm.Instance.uclog.AddLog($"  ✅ 产品 '{product.CNName}' ImagesPath已保存到数据库: {product.ImagesPath}");
+                                }
+                                else
+                                {
+                                    MainForm.Instance.uclog.AddLog($"  ⚠️ 产品 '{product.CNName}' ImagesPath保存失败: {saveResult.ErrorMsg}", Global.UILogType.警告);
+                                }
+                            }
+                        }
+                        catch (Exception saveEx)
+                        {
+                            MainForm.Instance.uclog.AddLog($"  ⚠️ 产品 '{product.CNName}' ImagesPath保存异常: {saveEx.Message}", Global.UILogType.警告);
+                        }
+                    }
+                    
+                    product.ClearPendingImages();
+                    MainForm.Instance.uclog.AddLog($"产品 '{product.CNName}' 主图处理成功");
+                    return UploadResult.Success();
+                }
+                else
+                {
+                    return UploadResult.Fail("主图处理有错误");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog(
+                    $"处理产品 '{product.CNName}' 主图时异常: {ex.Message}",
+                    Global.UILogType.错误);
+                return UploadResult.Fail(ex.Message);
+            }
+        }
+        
+        /// <summary>
+        /// ✅ 内部方法: 处理SKU图片上传
+        /// </summary>
+        private async Task<UploadResult> ProcessSkuImageInternalAsync(tb_Prod product, tb_ProdDetail detail)
+        {
+            try
+            {
+                MainForm.Instance.uclog.AddLog($"开始处理产品 '{product.CNName}' 的SKU '{detail.SKU}' 的图片上传...");
+                
+                var fileService = Startup.GetFromFac<RUINORERP.UI.Network.Services.FileBusinessService>();
+                if (fileService == null)
+                {
+                    MainForm.Instance.uclog.AddLog("FileBusinessService不可用", Global.UILogType.错误);
+                    return UploadResult.Fail("FileBusinessService不可用");
+                }
+
+                bool hasError = false;
+
+                // 1. 处理删除操作
+                var deleteImages = detail.GetPendingDeleteImages();
+                foreach (var delImg in deleteImages)
+                {
+                    if (delImg.FileId > 0)
+                    {
+                        MainForm.Instance.uclog.AddLog($"  - 删除图片 FileId={delImg.FileId}");
+                        
+                        var deleteResponse = await fileService.DeleteImagesByIdsAsync(
+                            detail.ProdDetailID,
+                            "tb_ProdDetail",
+                            new List<long> { delImg.FileId },
+                            physicalDelete: false
+                        );
+                        
+                        if (deleteResponse == null || !deleteResponse.IsSuccess)
+                        {
+                            hasError = true;
+                            string errorMsg = deleteResponse?.ErrorMessage ?? "删除结果为空";
+                            MainForm.Instance.uclog.AddLog($"    删除失败: {errorMsg}", Global.UILogType.错误);
+                        }
+                    }
+                }
+
+                // 2. 处理新增/替换操作
+                var addImages = detail.GetPendingAddImages();
+                bool hasImageChanges = false;
+                
+                foreach (var addImg in addImages)
+                {
+                    if (addImg.ImageData != null && !string.IsNullOrEmpty(addImg.FileName))
+                    {
+                        MainForm.Instance.uclog.AddLog($"  - 上传图片 {addImg.FileName} ({addImg.ImageData.Length} bytes)");
+                        
+                        var uploadResult = await fileService.UploadImageAsync(
+                            detail,
+                            addImg.FileName,
+                            addImg.ImageData,
+                            "ImagesPath"
+                        );
+                        
+                        if (uploadResult != null && uploadResult.IsSuccess)
+                        {
+                            hasImageChanges = true;
+                            MainForm.Instance.uclog.AddLog($"    上传成功: FileId={uploadResult.FileStorageInfos?.FirstOrDefault()?.FileId}");
+                        }
+                        else
+                        {
+                            hasError = true;
+                            string errorMsg = uploadResult?.ErrorMessage ?? "上传结果为空";
+                            MainForm.Instance.uclog.AddLog($"    上传失败: {errorMsg}", Global.UILogType.错误);
+                        }
+                    }
+                }
+
+                if (!hasError)
+                {
+                    if (hasImageChanges)
+                    {
+                        try
+                        {
+                            var prodController = Startup.GetFromFac<tb_ProdDetailController<tb_ProdDetail>>();
+                            if (prodController != null)
+                            {
+                                var saveResult = await prodController.SaveOrUpdate(detail);
+                                if (saveResult.Succeeded)
+                                {
+                                    MainForm.Instance.uclog.AddLog($"  ✅ SKU '{detail.SKU}' ImagesPath已保存到数据库: {detail.ImagesPath}");
+                                }
+                                else
+                                {
+                                    MainForm.Instance.uclog.AddLog($"  ⚠️ SKU '{detail.SKU}' ImagesPath保存失败: {saveResult.ErrorMsg}", Global.UILogType.警告);
+                                }
+                            }
+                        }
+                        catch (Exception saveEx)
+                        {
+                            MainForm.Instance.uclog.AddLog($"  ⚠️ SKU '{detail.SKU}' ImagesPath保存异常: {saveEx.Message}", Global.UILogType.警告);
+                        }
+                    }
+                    
+                    detail.ClearPendingImages();
+                    MainForm.Instance.uclog.AddLog($"SKU '{detail.SKU}' 图片处理成功");
+                    return UploadResult.Success();
+                }
+                else
+                {
+                    return UploadResult.Fail("SKU图片处理有错误");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog(
+                    $"处理SKU '{detail.SKU}' 图片时异常: {ex.Message}",
+                    Global.UILogType.错误);
+                return UploadResult.Fail(ex.Message);
+            }
+        }
+        
+        /// <summary>
+        /// ✅ 新增: 上传结果封装类
+        /// </summary>
+        private class UploadResult
+        {
+            public bool IsSuccess { get; private set; }
+            public string ErrorMessage { get; private set; }
+            
+            public static UploadResult Success() => new UploadResult { IsSuccess = true };
+            public static UploadResult Fail(string error) => new UploadResult { IsSuccess = false, ErrorMessage = error };
         }
 
         private void UCProductList_Load(object sender, EventArgs e)

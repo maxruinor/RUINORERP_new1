@@ -8,6 +8,7 @@ using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.UI.Network;
 using RUINORERP.UI.Network.Exceptions;
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
@@ -22,37 +23,36 @@ namespace RUINORERP.UI.Network.Services
 {
     /// <summary>
     /// 文件管理服务类
-    /// 提供文件上传、下载、删除、查询、更新等核心功能1
-    /// 参考UserLoginService的设计模式实现
+    /// 提供文件上传、下载、删除、查询、更新等核心功能
     /// </summary>
     public sealed class FileManagementService : IDisposable
     {
         private readonly ClientCommunicationService _communicationService;
         private readonly ILogger<FileManagementService> _log;
-        private readonly SemaphoreSlim _fileOperationLock = new SemaphoreSlim(1, 1); // 防止并发文件操作请求
+        private readonly ConcurrentDictionary<long, SemaphoreSlim> _businessLocks = new();
+        private readonly SemaphoreSlim _lockDictionaryLock = new SemaphoreSlim(1, 1);
         private bool _isDisposed = false;
-        // 图片扩展名常量，避免重复创建数组
         private static readonly string[] ImageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp" };
 
         /// <summary>
-        /// 最大重试次数
+        /// 文件上传超时时间（毫秒）
         /// </summary>
-        private const int MaxRetryCount = 2;
-
-        /// <summary>
-        /// 初始重试延迟（毫秒）
-        /// </summary>
-        private const int InitialRetryDelayMs = 500;
+        private const int UploadTimeoutMs = 60000;
         
         /// <summary>
-        /// 文件上传超时时间（毫秒）- 针对大图片适当延长
+        /// 单个业务锁等待超时时间（秒）
         /// </summary>
-        private const int UploadTimeoutMs = 60000; // 60秒
+        private const int BusinessLockWaitTimeoutSeconds = 30;
         
         /// <summary>
-        /// 锁等待超时时间（秒）- 减少到5秒，快速失败
+        /// 最大并发上传数（同一业务ID）
         /// </summary>
-        private const int LockWaitTimeoutSeconds = 5;
+        private const int MaxConcurrentUploadsPerBusiness = 1;
+        
+        /// <summary>
+        /// 锁清理定时器（每5分钟清理一次空闲锁）
+        /// </summary>
+        private readonly System.Threading.Timer _lockCleanupTimer;
 
         /// <summary>
         /// 构造函数
@@ -66,6 +66,78 @@ namespace RUINORERP.UI.Network.Services
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _log = logger;
+            
+            // 启动定期清理空闲锁的定时器（5分钟后开始，每5分钟执行一次）
+            _lockCleanupTimer = new System.Threading.Timer(
+                _ => CleanupIdleLocks(),
+                null,
+                TimeSpan.FromMinutes(5),
+                TimeSpan.FromMinutes(5)
+            );
+        }
+
+        /// <summary>
+        /// 获取指定业务ID的锁，如果不存在则创建
+        /// </summary>
+        /// <param name="businessId">业务ID</param>
+        /// <returns>信号量</returns>
+        private SemaphoreSlim GetOrCreateBusinessLock(long businessId)
+        {
+            return _businessLocks.GetOrAdd(businessId, _ => new SemaphoreSlim(MaxConcurrentUploadsPerBusiness, MaxConcurrentUploadsPerBusiness));
+        }
+
+        /// <summary>
+        /// 清理不再使用的业务锁
+        /// </summary>
+        /// <param name="businessId">业务ID</param>
+        private void TryCleanupBusinessLock(long businessId)
+        {
+            if (_businessLocks.TryRemove(businessId, out var removed))
+            {
+                try
+                {
+                    removed?.Dispose();
+                    _log?.LogDebug("已清理业务锁: BusinessId={BusinessId}", businessId);
+                }
+                catch (Exception ex)
+                {
+                    _log?.LogWarning(ex, "清理业务锁失败: BusinessId={BusinessId}", businessId);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 定期清理空闲的业务锁（防止内存泄漏）
+        /// </summary>
+        private void CleanupIdleLocks()
+        {
+            try
+            {
+                var idleLocks = _businessLocks
+                    .Where(kvp => kvp.Value.CurrentCount == MaxConcurrentUploadsPerBusiness)
+                    .Select(kvp => kvp.Key)
+                    .ToList();
+                
+                foreach (var businessId in idleLocks)
+                {
+                    // 再次检查，避免竞态条件
+                    if (_businessLocks.TryGetValue(businessId, out var lockObj) &&
+                        lockObj.CurrentCount == MaxConcurrentUploadsPerBusiness)
+                    {
+                        TryCleanupBusinessLock(businessId);
+                    }
+                }
+                
+                if (idleLocks.Count > 0)
+                {
+                    _log?.LogDebug("清理了{Count}个空闲业务锁，当前活跃锁数量: {ActiveCount}",
+                        idleLocks.Count, _businessLocks.Count);
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogWarning(ex, "清理空闲锁时发生异常");
+            }
         }
 
         /// <summary>
@@ -219,139 +291,121 @@ namespace RUINORERP.UI.Network.Services
 
 
         /// <summary>
-        /// 文件上传12
+        /// 文件上传
         /// </summary>
         /// <param name="request">文件上传请求</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>文件上传响应</returns>
         public async Task<FileUploadResponse> UploadFileAsync(FileUploadRequest request, CancellationToken ct = default)
         {
-            // 验证参数
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
             if (request.FileStorageInfos == null || request.FileStorageInfos.Count == 0)
                 throw new ArgumentException("文件数据不能为空");
 
-            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败避免长时间等待
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
+            long businessId = request.BusinessId ?? 0L;
+            var businessLock = GetOrCreateBusinessLock(businessId);
+            bool lockAcquired = false;
+
+            try
             {
-                _log?.LogWarning("获取文件操作锁超时({Timeout}秒)，可能有其他文件操作正在进行", LockWaitTimeoutSeconds);
-                return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("系统繁忙，请稍后重试");
+                lockAcquired = await businessLock.WaitAsync(TimeSpan.FromSeconds(BusinessLockWaitTimeoutSeconds), ct);
+                if (!lockAcquired)
+                {
+                    _log?.LogWarning("获取业务锁超时({Timeout}秒)，BusinessId: {BusinessId}", BusinessLockWaitTimeoutSeconds, businessId);
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("系统繁忙，请稍后重试");
+                }
+
+                if (!_communicationService.ConnectionManager.IsConnected)
+                {
+                    _log?.LogWarning("文件上传失败：未连接到服务器");
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("未连接到服务器，请检查网络连接后重试");
+                }
+
+                _log?.LogDebug("开始文件上传请求, BusinessId: {BusinessId}", businessId);
+
+                var response = await _communicationService.SendCommandWithResponseAsync<FileUploadResponse>(
+                    FileCommands.FileUpload, request, ct, timeoutMs: UploadTimeoutMs);
+
+                if (response == null)
+                {
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回了空的响应数据");
+                }
+
+                if (!response.IsSuccess)
+                {
+                    if (response.ErrorMessage?.Contains("格式不支持") == true || 
+                        response.ErrorMessage?.Contains("超过限制") == true)
+                    {
+                        return response;
+                    }
+                    _log?.LogWarning("文件上传失败: {Error}", response.ErrorMessage);
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>(response.ErrorMessage ?? "上传失败");
+                }
+
+                _log?.LogDebug("文件上传成功, BusinessId: {BusinessId}, FileCount: {FileCount}", 
+                    businessId, response.FileStorageInfos?.Count ?? 0);
+                return response;
             }
-
-            Exception lastException = null;
-            
-            // 重试循环
-            for (int retryCount = 0; retryCount < MaxRetryCount; retryCount++)
+            catch (OperationCanceledException)
             {
-                try
+                _log?.LogWarning("文件上传已取消, BusinessId: {BusinessId}", businessId);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "文件上传异常, BusinessId: {BusinessId}", businessId);
+                return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件上传异常: {ex.Message}");
+            }
+            finally
+            {
+                if (lockAcquired)
                 {
-                    // 检查连接状态
-                    if (!_communicationService.ConnectionManager.IsConnected)
-                    {
-                        _log?.LogWarning("文件上传失败：未连接到服务器");
-                        return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("未连接到服务器，请检查网络连接后重试");
-                    }
-
-                    // 只记录关键信息，移除详细的文件名日志
-                    _log?.LogDebug("开始文件上传请求");
-
-                    // 发送文件上传命令并获取响应，使用专门的上传超时时间
-                    var response = await _communicationService.SendCommandWithResponseAsync<FileUploadResponse>(
-                        FileCommands.FileUpload, request, ct, timeoutMs: UploadTimeoutMs);
-
-                    // 检查响应数据是否为空
-                    if (response == null)
-                    {
-                        throw new Exception("服务器返回了空的响应数据");
-                    }
-
-                    // 检查响应是否成功
-                    if (!response.IsSuccess)
-                    {
-                        // 如果是业务错误（如文件格式不支持），不重试
-                        if (response.ErrorMessage?.Contains("格式不支持") == true || 
-                            response.ErrorMessage?.Contains("超过限制") == true)
-                        {
-                            return response;
-                        }
-                        throw new Exception(response.ErrorMessage);
-                    }
-
-                    // 成功，返回结果
-                    return response;
-                }
-                catch (OperationCanceledException)
-                {
-                    // 取消操作，不重试
-                    throw;
-                }
-                catch (Exception ex) when (retryCount < MaxRetryCount - 1)
-                {
-                    lastException = ex;
-                    var delayMs = InitialRetryDelayMs * (int)Math.Pow(2, retryCount); // 指数退避: 1s, 2s, 4s
-                    _log?.LogWarning("文件上传失败，{Delay}ms后重试 ({Retry}/{Max}): {Error}",
-                        delayMs, retryCount + 1, MaxRetryCount, ex.Message);
-                    
-                    await Task.Delay(delayMs, ct);
+                    try { businessLock.Release(); } catch { }
                 }
             }
-
-            // 所有重试都失败
-            _log?.LogError(lastException, "文件上传失败，已重试{MaxRetryCount}次", MaxRetryCount);
-            var errorResponse = ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>(
-                $"文件上传失败，已重试{MaxRetryCount}次: {lastException?.Message}");
-            
-            // 释放锁
-            try { _fileOperationLock.Release(); } catch { }
-            
-            return errorResponse;
         }
 
         /// <summary>
-        /// 文件下载
+        /// 文件下载1
         /// </summary>
         /// <param name="request">文件下载请求</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>文件下载响应</returns>
         public async Task<FileDownloadResponse> DownloadFileAsync(FileDownloadRequest request, CancellationToken ct = default)
         {
-            // 验证参数
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
             if (request.FileStorageInfo.FileId == 0)
                 throw new ArgumentException("文件ID不能为空", nameof(request.FileStorageInfo));
 
-            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
-            {
-                return FileDownloadResponse.CreateFailure("系统繁忙，请稍后重试");
-            }
+            long businessId = request.FileStorageInfo.FileId;
+            var businessLock = GetOrCreateBusinessLock(businessId);
+            bool lockAcquired = false;
 
             try
             {
-                // 检查连接状态
+                lockAcquired = await businessLock.WaitAsync(TimeSpan.FromSeconds(BusinessLockWaitTimeoutSeconds), ct);
+                if (!lockAcquired)
+                {
+                    return FileDownloadResponse.CreateFailure("系统繁忙，请稍后重试");
+                }
+
                 if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     return FileDownloadResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
                 }
 
-                // 只记录关键信息，移除详细的文件ID日志
-                //开始文件下载请求
-
-                // 发送文件下载命令并获取响应，使用60秒超时（大图片可能需要更长时间）
                 var response = await _communicationService.SendCommandWithResponseAsync<FileDownloadResponse>(
                     FileCommands.FileDownload, request, ct, timeoutMs: UploadTimeoutMs);
 
-                // 检查响应数据是否为空
                 if (response == null)
                 {
                     return FileDownloadResponse.CreateFailure("服务器返回了空的响应数据，请联系系统管理员");
                 }
 
-                // 检查响应是否成功
                 if (!response.IsSuccess)
                 {
                     return FileDownloadResponse.CreateFailure($"文件下载失败: {response.Message}{response.ErrorMessage}");
@@ -359,7 +413,7 @@ namespace RUINORERP.UI.Network.Services
 
                 return response;
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
                 return FileDownloadResponse.CreateFailure("文件下载操作已取消");
             }
@@ -375,15 +429,9 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 确保释放锁
-                try
+                if (lockAcquired)
                 {
-                    _fileOperationLock.Release();
-                }
-                catch (SemaphoreFullException)
-                {
-                    // 锁已经被释放,忽略
-                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
+                    try { businessLock.Release(); } catch { }
                 }
             }
         }
@@ -396,51 +444,48 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>文件删除响应</returns>
         public async Task<FileDeleteResponse> DeleteFileAsync(FileDeleteRequest request, CancellationToken ct = default)
         {
-            // 验证参数
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
-            {
-                _log?.LogWarning("获取文件操作锁超时({Timeout}秒)，可能有其他文件操作正在进行", LockWaitTimeoutSeconds);
-                return FileDeleteResponse.CreateFailure("系统繁忙，请稍后重试");
-            }
+            long businessId = request.BusinessId;
+            var businessLock = GetOrCreateBusinessLock(businessId);
+            bool lockAcquired = false;
 
             try
             {
-                // 检查连接状态
+                lockAcquired = await businessLock.WaitAsync(TimeSpan.FromSeconds(BusinessLockWaitTimeoutSeconds), ct);
+                if (!lockAcquired)
+                {
+                    _log?.LogWarning("获取业务锁超时({Timeout}秒)，BusinessId: {BusinessId}", BusinessLockWaitTimeoutSeconds, businessId);
+                    return FileDeleteResponse.CreateFailure("系统繁忙，请稍后重试");
+                }
+
                 if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _log?.LogWarning("文件删除失败：未连接到服务器");
                     return FileDeleteResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
                 }
 
-                // 只记录关键信息，移除详细的文件ID日志
-                _log?.LogDebug("开始文件删除请求");
+                _log?.LogDebug("开始文件删除请求, BusinessId: {BusinessId}", businessId);
 
-                // 发送文件删除命令并获取响应
                 var response = await _communicationService.SendCommandWithResponseAsync<FileDeleteResponse>(
                     FileCommands.FileDelete, request, ct);
 
-                // 检查响应数据是否为空
                 if (response == null)
                 {
                     _log?.LogError("文件删除失败：服务器返回了空的响应数据");
                     return FileDeleteResponse.CreateFailure("服务器返回了空的响应数据，请联系系统管理员");
                 }
 
-                // 检查响应是否成功
                 if (!response.IsSuccess)
                 {
                     _log?.LogWarning("文件删除失败: {ErrorMessage}", response.ErrorMessage);
                     return FileDeleteResponse.CreateFailure($"文件删除失败: {response.ErrorMessage}");
                 }
 
-                // 只记录关键信息，简化日志内容
                 return response;
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
                 return FileDeleteResponse.CreateFailure("文件删除操作已取消");
             }
@@ -456,15 +501,9 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 确保释放锁
-                try
+                if (lockAcquired)
                 {
-                    _fileOperationLock.Release();
-                }
-                catch (SemaphoreFullException)
-                {
-                    // 锁已经被释放,忽略
-                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
+                    try { businessLock.Release(); } catch { }
                 }
             }
         }
@@ -477,59 +516,55 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>文件信息响应</returns>
         public async Task<FileInfoResponse> GetFileInfoAsync(FileInfoRequest request, CancellationToken ct = default)
         {
-            // 验证参数
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
             if (request.FileStorageInfo.FileId == 0)
                 throw new ArgumentException("文件ID不能为空", nameof(request.FileStorageInfo.FileId));
 
-            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
-            {
-                _log?.LogWarning("获取文件操作锁超时({Timeout}秒)，当前锁状态: {CurrentCount}", LockWaitTimeoutSeconds, _fileOperationLock.CurrentCount);
-                return FileInfoResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
-            }
+            long businessId = request.FileStorageInfo.FileId;
+            var businessLock = GetOrCreateBusinessLock(businessId);
+            bool lockAcquired = false;
 
             try
             {
+                lockAcquired = await businessLock.WaitAsync(TimeSpan.FromSeconds(BusinessLockWaitTimeoutSeconds), ct);
+                if (!lockAcquired)
+                {
+                    _log?.LogWarning("获取业务锁超时({Timeout}秒)，BusinessId: {BusinessId}", BusinessLockWaitTimeoutSeconds, businessId);
+                    return FileInfoResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
+                }
 
-                // 检查连接状态
                 if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _log?.LogWarning("获取文件信息失败：未连接到服务器");
                     return FileInfoResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
                 }
 
-                // 只记录关键信息，移除详细的文件ID日志
-                _log?.LogDebug("开始获取文件信息请求");
+                _log?.LogDebug("开始获取文件信息请求, FileId: {FileId}", businessId);
 
-                // 发送获取文件信息命令并获取响应
                 var response = await _communicationService.SendCommandWithResponseAsync<FileInfoResponse>(
                     FileCommands.FileInfoQuery, request, ct);
 
-                // 检查响应数据是否为空
                 if (response == null)
                 {
                     _log?.LogError("获取文件信息失败：服务器返回了空的响应数据");
                     return FileInfoResponse.CreateFailure("服务器返回了空的响应数据，请联系系统管理员");
                 }
 
-                // 检查响应是否成功
                 if (!response.IsSuccess)
                 {
                     _log?.LogWarning("获取文件信息失败: {ErrorMessage}", response.ErrorMessage);
                     return FileInfoResponse.CreateFailure($"获取文件信息失败: {response.ErrorMessage}");
                 }
 
-                // 只记录关键信息，简化日志内容
                 return response;
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
                 return FileInfoResponse.CreateFailure("获取文件信息操作已取消");
             }
-            catch (TimeoutException ex)
+            catch (TimeoutException)
             {
                 _log?.LogWarning("获取文件信息过程中发生超时异常");
                 return FileInfoResponse.CreateFailure("文件操作超时，请稍后重试");
@@ -541,15 +576,9 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 确保释放锁
-                try
+                if (lockAcquired)
                 {
-                    _fileOperationLock.Release();
-                }
-                catch (SemaphoreFullException)
-                {
-                    // 锁已经被释放,忽略
-                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
+                    try { businessLock.Release(); } catch { }
                 }
             }
         }
@@ -562,58 +591,48 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>文件列表响应</returns>
         public async Task<FileListResponse> GetFileListAsync(FileListRequest request, CancellationToken ct = default)
         {
-            // 验证参数
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
-            {
-                _log?.LogWarning("获取文件操作锁超时({Timeout}秒)，当前锁状态: {CurrentCount}", LockWaitTimeoutSeconds, _fileOperationLock.CurrentCount);
-                return FileListResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
-            }
+            // ✅ 修复: 使用请求中的BusinessId，如果没有则使用0作为全局锁
+            long businessId = request.BusinessId;
+            var businessLock = GetOrCreateBusinessLock(businessId);
+            bool lockAcquired = false;
 
             try
             {
+                lockAcquired = await businessLock.WaitAsync(TimeSpan.FromSeconds(BusinessLockWaitTimeoutSeconds), ct);
+                if (!lockAcquired)
+                {
+                    return FileListResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
+                }
 
-                // 检查连接状态
                 if (!_communicationService.ConnectionManager.IsConnected)
                 {
-                    _log?.LogWarning("获取文件列表失败：未连接到服务器");
                     return FileListResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
                 }
 
-                // 只记录关键信息，移除详细的操作日志
-                _log?.LogDebug("开始获取文件列表请求");
-
-                // 发送获取文件列表命令并获取响应
                 var response = await _communicationService.SendCommandWithResponseAsync<FileListResponse>(
                     FileCommands.FileList, request, ct);
 
-                // 检查响应数据是否为空
                 if (response == null)
                 {
-                    _log?.LogError("获取文件列表失败：服务器返回了空的响应数据");
                     return FileListResponse.CreateFailure("服务器返回了空的响应数据，请联系系统管理员");
                 }
 
-                // 检查响应是否成功
                 if (!response.IsSuccess)
                 {
-                    _log?.LogWarning("获取文件列表失败: {ErrorMessage}", response.ErrorMessage);
                     return FileListResponse.CreateFailure($"获取文件列表失败: {response.ErrorMessage}");
                 }
 
-                // 只记录关键信息，简化日志内容
                 return response;
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
                 return FileListResponse.CreateFailure("获取文件列表操作已取消");
             }
-            catch (TimeoutException ex)
+            catch (TimeoutException)
             {
-                _log?.LogWarning("获取文件列表过程中发生超时异常");
                 return FileListResponse.CreateFailure("文件操作超时，请稍后重试");
             }
             catch (Exception ex)
@@ -623,15 +642,9 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 确保释放锁
-                try
+                if (lockAcquired)
                 {
-                    _fileOperationLock.Release();
-                }
-                catch (SemaphoreFullException)
-                {
-                    // 锁已经被释放,忽略
-                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
+                    try { businessLock.Release(); } catch { }
                 }
             }
         }
@@ -643,41 +656,36 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>存储使用信息</returns>
         public async Task<StorageUsageInfoData> GetStorageUsageInfoAsync(CancellationToken ct = default)
         {
-            // ✅ 使用信号量确保同一时间只有一个文件操作请求，快速失败
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(LockWaitTimeoutSeconds), ct))
-            {
-                _log?.LogWarning("获取文件操作锁超时({Timeout}秒)，当前锁状态: {CurrentCount}", LockWaitTimeoutSeconds, _fileOperationLock.CurrentCount);
-                return new StorageUsageInfoData();
-            }
+            // ✅ 修复: 存储使用情况是全局信息，使用特殊的锁ID(-1)避免与业务锁冲突
+            var businessLock = GetOrCreateBusinessLock(-1);
+            bool lockAcquired = false;
 
             try
             {
-
-                // 检查连接状态
-                if (!_communicationService.ConnectionManager.IsConnected)
+                lockAcquired = await businessLock.WaitAsync(TimeSpan.FromSeconds(BusinessLockWaitTimeoutSeconds), ct);
+                if (!lockAcquired)
                 {
-                    _log?.LogWarning("获取存储使用信息失败：未连接到服务器");
                     return new StorageUsageInfoData();
                 }
 
-                // 创建存储使用信息请求
+                if (!_communicationService.ConnectionManager.IsConnected)
+                {
+                    return new StorageUsageInfoData();
+                }
+
                 var request = new FileInfoRequest();
 
-                // 发送获取文件信息命令并获取响应
                 var response = await _communicationService.SendCommandWithResponseAsync<FileInfoResponse>(
                     FileCommands.FileInfoQuery, request, ct);
 
                 if (response != null && response.IsSuccess)
                 {
-                    // 创建存储使用信息
                     var usageInfo = new StorageUsageInfoData();
 
-                    // 计算存储使用情况
                     if (response.FileStorageInfos != null)
                     {
                         foreach (var fileInfo in response.FileStorageInfos)
                         {
-                            // 直接累加文件大小
                             usageInfo.TotalSize += (fileInfo.FileSize > 0 ? fileInfo.FileSize : 0);
                             usageInfo.TotalFileCount++;
                         }
@@ -695,15 +703,9 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                // 确保释放锁
-                try
+                if (lockAcquired)
                 {
-                    _fileOperationLock.Release();
-                }
-                catch (SemaphoreFullException)
-                {
-                    // 锁已经被释放,忽略
-                    _log?.LogDebug("文件操作锁已释放,无需重复释放");
+                    try { businessLock.Release(); } catch { }
                 }
             }
         }
@@ -747,8 +749,26 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
-                // 释放资源
-                _fileOperationLock.Dispose();
+                // 停止清理定时器
+                _lockCleanupTimer?.Dispose();
+                
+                // 清理所有业务锁
+                foreach (var kvp in _businessLocks)
+                {
+                    try
+                    {
+                        kvp.Value?.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        _log?.LogWarning(ex, "释放业务锁失败: BusinessId={BusinessId}", kvp.Key);
+                    }
+                }
+                _businessLocks.Clear();
+                
+                _lockDictionaryLock?.Dispose();
+                
+                _log?.LogInformation("FileManagementService资源已释放");
             }
             catch (Exception ex)
             {

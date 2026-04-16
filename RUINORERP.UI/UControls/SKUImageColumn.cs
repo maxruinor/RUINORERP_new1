@@ -674,7 +674,7 @@ namespace RUINORERP.UI.UControls
         }
 
         /// <summary>
-        /// 从数据库查询SKU图片
+        /// 从数据库查询SKU图片111111
         /// </summary>
         private static async Task<List<byte[]>> QuerySKUImagesFromDbAsync(long prodDetailId)
         {

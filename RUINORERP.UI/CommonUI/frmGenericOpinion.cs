@@ -1,4 +1,9 @@
 ﻿using NPOI.SS.Formula.Functions;
+using RUINORERP.Business.BizMapperService;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using System;
@@ -11,9 +16,6 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Common.Helper;
-using RUINORERP.Global;
-using RUINORERP.Model;
 using ImageHelper = RUINORERP.Common.Helper.ImageHelper;
 
 
@@ -176,10 +178,10 @@ namespace RUINORERP.UI.CommonUI
                     {
                         MainForm.Instance.PrintInfoLog("正在上传结案凭证图片...");
                         var fileService = Startup.GetFromFac<RUINORERP.UI.Network.Services.FileBusinessService>();
-                        
+
                         // 获取业务实体ID，如果是新单据可能为0，服务器端会处理关联
                         long businessId = (Entity as RUINORERP.Model.BaseEntity)?.PrimaryKeyID ?? 0;
-                        
+
                         // 将图片转换为二进制并上传
                         byte[] imageData = ImageHelper.ImageToByteArray(picBoxAttachment.Image);
                         var response = await fileService.UploadImageAsync(
@@ -285,7 +287,6 @@ namespace RUINORERP.UI.CommonUI
         /// </summary>
         public void BindData(T entity,
             Expression<Func<T, object>> billNoExpression = null,
-            Expression<Func<T, object>> billTypeExpression = null,
             Expression<Func<T, object>> opinionExpression = null)
         {
             Entity = entity;
@@ -297,12 +298,18 @@ namespace RUINORERP.UI.CommonUI
                 txtBillNO.ReadOnly = true;
             }
 
+            CommBillData cbd = EntityMappingHelper.GetBillData<T>(entity);
+            //ae.BillNo = cbd.BillNo;
+            //ae.bizType = cbd.BizType;
+            //ae.bizName = cbd.BizName;
+
+            txtBillType.Text = cbd.BizName;
             // 绑定单据类型
-            if (billTypeExpression != null)
-            {
-                DataBindingHelper.BindData4TextBox(entity, billTypeExpression, txtBillType, BindDataType4TextBox.Text, false);
-                txtBillType.ReadOnly = true;
-            }
+            //if (billTypeExpression != null)
+            //{
+            //    DataBindingHelper.BindData4TextBox(entity, billTypeExpression, txtBillType, BindDataType4TextBox.Text, false);
+            //    txtBillType.ReadOnly = true;
+            //}
 
             // 绑定意见内容
             if (opinionExpression != null)
@@ -331,4 +338,4 @@ namespace RUINORERP.UI.CommonUI
         #endregion
     }
 }
- 
+

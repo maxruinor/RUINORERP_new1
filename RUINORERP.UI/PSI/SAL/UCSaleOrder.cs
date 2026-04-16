@@ -630,7 +630,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             // ✅ 优化: 调用基类方法下载图片，先检查客户端缓存
             // 注意:LoadImages内部已自动完成初始化和状态重置,无需额外调用InitializeImageControl
-            await DownloadImageWithCacheAsync(entity, magicPictureBox订金付款凭证, c => c.VoucherImage);
+            await DownloadImageWithCacheAsync<tb_SaleOrder>(entity, magicPictureBox订金付款凭证, c => c.VoucherImage);
         }
 
         /// <summary>
@@ -1470,17 +1470,16 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 return false;
             }
-
-
-            // 使用增强后的通用意见窗体（反结案）
+        
+        
+            // 使用增强后的通用意见窗体(反结案)
             CommonUI.frmGenericOpinion<tb_SaleOrder> frm = new CommonUI.frmGenericOpinion<tb_SaleOrder>();
             frm.FormTitle = "销售订单反结案确认";
-            frm.OpinionLabelText = "反结案意见：";
+            frm.OpinionLabelText = "反结案意见:";
             frm.BindData(EditEntity,
                 e => e.SOrderNo,
-                e => "销售订单",
                 e => e.CloseCaseOpinions);
-
+        
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
                 List<tb_SaleOrder> EditEntitys = new List<tb_SaleOrder>();
@@ -1490,33 +1489,45 @@ namespace RUINORERP.UI.PSI.SAL
                 List<tb_SaleOrder> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.完结 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue).ToList();
                 if (needCloseCases.Count == 0)
                 {
-                    MainForm.Instance.PrintInfoLog($"要反结案的数据为：{needCloseCases.Count}:请检查数据！");
+                    MainForm.Instance.PrintInfoLog($"要反结案的数据为:{needCloseCases.Count}:请检查数据!");
+                    // ✅ 关键修复:业务校验失败时返回false,让基类恢复按钮状态
                     return false;
                 }
-
+        
                 tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                 ReturnResults<bool> rs = await ctr.AntiBatchCloseCaseAsync(needCloseCases);
                 if (rs.Succeeded)
                 {
                     //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
                     //{
-
+        
                     //}
-                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                    //这里审核完了的话,如果这个单存在于工作流的集合队列中,则向服务器说明审核完成。
+                    //这里推送到审核,启动工作流  队列应该有一个策略 比方优先级,桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
                     MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("反结案", EditEntity, $"反结案意见:{frm.OpinionText}");
                     Refreshs();
+                    // ✅ 反结案成功返回true
+                    return true;
                 }
                 else
                 {
-                    MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                    // ✅ 关键修复:反结案失败时弹出明确的错误提示,并返回false让基类恢复按钮状态
+                    string errorMsg = string.IsNullOrEmpty(rs.ErrorMsg) ? "未知错误" : rs.ErrorMsg;
+                    KryptonMessageBox.Show($"反结案操作失败!\n\n失败原因:{errorMsg}\n\n如无法解决,请联系管理员!",
+                        "反结案失败",
+                        Krypton.Toolkit.KryptonMessageBoxButtons.OK,
+                        Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+                            
+                    MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反结案操作失败,原因是{rs.ErrorMsg},如果无法解决,请联系管理员!", Color.Red);
+                    // ✅ 返回false,让基类的错误处理逻辑恢复按钮为可用状态
+                    return false;
                 }
-                return true;
             }
             else
             {
+                // ✅ 用户取消操作,返回false,基类会恢复按钮状态
                 return false;
             }
         }
@@ -1527,70 +1538,73 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 return false;
             }
-
-
-
-            // 使用增强后的通用意见窗体（结案）
+        
+        
+        
+            // 使用增强后的通用意见窗体(结案)
             CommonUI.frmGenericOpinion<tb_SaleOrder> frm = new CommonUI.frmGenericOpinion<tb_SaleOrder>();
             frm.FormTitle = "销售订单结案确认";
-            frm.OpinionLabelText = "结案意见：";
+            frm.OpinionLabelText = "结案意见:";
             frm.BindData(EditEntity,
                 e => e.SOrderNo,
-                e => "销售订单",
                 e => e.CloseCaseOpinions);
-
+        
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
                 List<tb_SaleOrder> EditEntitys = new List<tb_SaleOrder>();
                 EditEntity.CloseCaseOpinions = frm.OpinionText;
-
-                // 原子性回填图片ID（如果上传成功）
+        
+                // 原子性回填图片ID(如果上传成功)
                 if (frm.UploadedFileId.HasValue)
                 {
                     //EditEntity.CloseImages.Add(frm.UploadedFileId)
                 }
-
+        
                 EditEntitys.Add(EditEntity);
                 //已经审核的并且通过的情况才能结案
                 List<tb_SaleOrder> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
                 if (needCloseCases.Count == 0)
                 {
-                    MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");
+                    MainForm.Instance.PrintInfoLog($"要结案的数据为:{needCloseCases.Count}:请检查数据!");
+                    // ✅ 关键修复:业务校验失败时返回false,让基类恢复按钮状态
                     return false;
                 }
-
+        
                 tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                 ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
                 if (rs.Succeeded)
                 {
                     //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
                     //{
-
+        
                     //}
-                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                    //这里审核完了的话,如果这个单存在于工作流的集合队列中,则向服务器说明审核完成。
+                    //这里推送到审核,启动工作流  队列应该有一个策略 比方优先级,桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
                     EditEntity.AcceptChanges();
                     await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("结案", EditEntity, $"结案意见:{frm.OpinionText}");
                     Refreshs();
+                    // ✅ 结案成功返回true
+                    return true;
                 }
                 else
                 {
-                    // 结案失败时弹出明确的错误提示
+                    // ✅ 关键修复:结案失败时弹出明确的错误提示,并返回false让基类恢复按钮状态
                     string errorMsg = string.IsNullOrEmpty(rs.ErrorMsg) ? "未知错误" : rs.ErrorMsg;
-                    KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！",
+                    KryptonMessageBox.Show($"结案操作失败!\n\n失败原因:{errorMsg}\n\n如无法解决,请联系管理员!",
                         "结案失败",
                         Krypton.Toolkit.KryptonMessageBoxButtons.OK,
                         Krypton.Toolkit.KryptonMessageBoxIcon.Error);
-
-                    MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+        
+                    MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决,请联系管理员!", Color.Red);
+                    // ✅ 返回false,让基类的错误处理逻辑恢复按钮为可用状态
                     return false;
                 }
-                return true;
             }
             else
             {
+                // ✅ 用户取消操作,返回false,基类会恢复按钮状态
                 return false;
             }
         }
@@ -1900,16 +1914,15 @@ namespace RUINORERP.UI.PSI.SAL
         /// <summary>
         /// ✅ 优化: 带缓存检查的图片下载方法
         /// </summary>
-        private async Task DownloadImageWithCacheAsync<T>(BaseEntity entity, MagicPictureBox pictureBox, Expression<Func<T, object>> exp) where T : BaseEntity
+        private async Task DownloadImageWithCacheAsync<T>(T entity, MagicPictureBox pictureBox, Expression<Func<T, object>> exp) where T : BaseEntity
         {
             try
             {
                 var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
-                var fileService = Startup.GetFromFac<FileBusinessService>();
                 
                 // 获取字段名
                 string fieldName = exp.GetMemberInfo().Name;
-                var propertyInfo = entity.GetType().GetProperty(fieldName);
+                var propertyInfo = typeof(T).GetProperty(fieldName);
                 if (propertyInfo == null) return;
                 
                 var fieldValue = propertyInfo.GetValue(entity);
@@ -1938,7 +1951,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 
                 // 缓存未命中,调用原下载方法(会自动缓存)
-                await DownloadImageAsync(entity, pictureBox, exp);
+                await DownloadImageAsync(entity as tb_SaleOrder, pictureBox, exp as Expression<Func<tb_SaleOrder, object>>);
             }
             catch (Exception ex)
             {

@@ -446,7 +446,6 @@ namespace RUINORERP.UI.PSI.PUR
             frm.OpinionLabelText = "结案意见：";
             frm.BindData(EditEntity, 
                 e => e.PuRequisitionNo, 
-                e => "请购单", 
                 e => e.CloseCaseOpinions);
 
             if (frm.ShowDialog() == DialogResult.OK)

@@ -72,7 +72,6 @@ namespace RUINORERP.UI.CommonUI
             // 
             this.picBoxAttachment.AllowDrop = true;
             this.picBoxAttachment.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picBoxAttachment.Image = global::RUINORERP.UI.Properties.Resources.nopic;
             this.picBoxAttachment.Location = new System.Drawing.Point(64, 3);
             this.picBoxAttachment.Name = "picBoxAttachment";
             this.picBoxAttachment.Size = new System.Drawing.Size(235, 190);

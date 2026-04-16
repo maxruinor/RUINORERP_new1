@@ -1919,7 +1919,6 @@ namespace RUINORERP.UI.BaseForm
             {
                 frm.BindData(needCloseCases[0], 
                     e => ReflectionHelper.GetPropertyValue(e, BaseUIHelper.GetEntityPrimaryKey<M>()) != null ? ReflectionHelper.GetPropertyValue(e, "BillNo") : null, 
-                    e => "单据", 
                     e => ReflectionHelper.GetPropertyValue(e, "CloseCaseOpinions"));
             }
             else

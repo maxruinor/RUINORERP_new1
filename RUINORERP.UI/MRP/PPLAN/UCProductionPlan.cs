@@ -525,288 +525,10 @@ namespace RUINORERP.UI.MRP.MP
             return false;
         }
 
-        /*
-        protected async override Task<ApprovalEntity> Review()
-        {
-            if (EditEntity == null)
-            {
-                return null;
-            }
-
-            //如果已经审核通过，则不能重复审核
-            if (EditEntity.ApprovalStatus.HasValue)
-            {
-                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-                {
-                    if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-                    {
-                        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。", UILogType.警告);
-                        return null;
-                    }
-                }
-            }
-
-            if (EditEntity.tb_ProductionPlanDetails == null || EditEntity.tb_ProductionPlanDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整产品数量和金额数据。", UILogType.警告);
-                return null;
-            }
-
-            RevertCommand command = new RevertCommand();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_ProductionPlan oldobj = CloneHelper.DeepCloneObject<tb_ProductionPlan>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_ProductionPlan>(EditEntity, oldobj);
-            };
-            ApprovalEntity ae = await base.Review();
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-            {
-                return null;
-            }
-            //ReturnResults<tb_Stocktake> rmr = new ReturnResults<tb_Stocktake>();
-            // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            //因为只需要更新主表
-            //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-            // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-            tb_ProductionPlanController<tb_ProductionPlan> ctr = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();
-            ReturnResults<tb_ProductionPlan> rmrs = await ctr.ApprovalAsync(EditEntity);
-            if (rmrs.Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.审核);
-                ToolBarEnabledControl(EditEntity);
-                //如果审核结果为不通过时，审核不是灰色。
-                if (!ae.ApprovalResults)
-                {
-                    toolStripbtnReview.Enabled = true;
-                }
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,原因是：{rmrs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
-            }
-            return ae;
-        }
-        */
-        /*
-        protected override void Print()
-        {
-            //base.Print();
-            //return;
-            //if (_EditEntity == null)
-            //{
-            //    return;
-            //    _EditEntity = new tb_Stocktake();
-            //}
-            //List<tb_Stocktake> main = new List<tb_Stocktake>();
-            ////公共产品数据部分
-            //List<tb_Product> products = new List<tb_Product>();
-            //foreach (tb_StocktakeDetail item in details)
-            //{
-            //    //载入数据就是相对完整的
-            //    tb_Product prod = list.Find(p => p.Product_ID == item.Product_ID);
-            //    if (prod != null)
-            //    {
-            //        item.tb_Product = prod;
-            //    }
-            //}
-
-            //_EditEntity.tb_StocktakeDetail = details;
-            // main.Add(_EditEntity);
-            //FastReport.Report FReport;
-            //FReport = new FastReport.Report();
-            //FReport.RegisterData(details, "Main");
-            //String reportFile = "SOB.frx";
-            //RptPreviewForm frm = new RptPreviewForm();
-            //frm.ReprotfileName = reportFile;
-            //frm.MyReport = FReport;
-            //frm.ShowDialog();
-
-
-            //List<tb_Stocktake> main = new List<tb_Stocktake>();
-            ////公共产品数据部分
-            //List<View_ProdDetail> products = new List<tb_Product>();
-            //foreach (tb_StocktakeDetail item in details)
-            //{
-            //    //载入数据就是相对完整的
-            //    tb_Product prod = list.Find(p => p.Product_ID == item.Product_ID);
-            //    if (prod != null)
-            //    {
-            //        item.tb_Product = prod;
-            //    }
-            //}
-
-            //_EditEntity.tb_StocktakeDetail = details;
-            //main.Add(_EditEntity);
-
-
-            FastReport.Report FReport;
-            FReport = new FastReport.Report();
-            FReport.RegisterData(details, "Main");
-            String reportFile = typeof(tb_ProductionPlan).Name + ".frx";
-            RptPreviewForm frm = new RptPreviewForm();
-            frm.ReprotfileName = reportFile;
-            frm.MyReport = FReport;
-            frm.ShowDialog();
-
-
-        }
-        */
-
-        //protected override void Print()
-        //{
-
-        //    PrintData = ctr.GetPrintData(EditEntity.PrimaryKeyID);
-        //    base.Print();
-
-        //}
-
-
-
-
-
-        /*
-        protected override void PrintDesigned()
-        {
-            string ReprotfileName = typeof(tb_ProductionPlan).Name + ".frx";
-            //RptDesignForm frm = new RptDesignForm();
-            //frm.ReportTemplateFile = ReprotfileName;
-            // frm.ShowDialog();
-            //调用内置方法 给数据源 新编辑，后面的话，直接load 可以不用给数据源的格式
-            //string ReprotfileName = "SOB.frx";
-            //List<tb_ProductionPlan> main = new List<tb_ProductionPlan>();
-            //_EditEntity.tb_sales_order_details = details;
-            //main.Add(_EditEntity);
-            FastReport.Report FReport;
-            FReport = new FastReport.Report();
-            List<tb_ProductionPlan> rptSources = new List<tb_ProductionPlan>();
-            tb_ProductionPlan saleOrder = EditEntity as tb_ProductionPlan;
-            saleOrder.tb_ProductionPlanDetails = details;
-            rptSources.Add(saleOrder);
-
-            FReport.RegisterData(rptSources, "报表数据源");
-            String reportFile = string.Format("ReportTemplate/{0}", ReprotfileName);
-            FReport.Load(reportFile);  //载入报表文件
-            //FReport.FileName = "销售订单单据";
-            FReport.Design();
-
-        }
-        */
-
-        /*
-          protected override void Preview()
-        {
-            //RptMainForm PRT = new RptMainForm();
-            //PRT.ShowDialog();
-            //return;
-            //RptPreviewForm pForm = new RptPreviewForm();
-            //pForm.ReprotfileName = "SOB.frx";
-            //List<tb_ProductionPlan> main = new List<tb_ProductionPlan>();
-            //main.Add(_EditEntity);
-            //pForm.Show();
-            tb_Stocktake testmain = new tb_Stocktake();
-            //要给值
-            //if (EditEntity == null)
-            //{
-            //    return;
-            //    EditEntity = new tb_Stocktake();
-            //}
-
-            List<T> main = new List<T>();
-            testmain.tb_StocktakeDetails = details;
-            main.Add(testmain);
-            FastReport.Report FReport;
-            FReport = new FastReport.Report();
-            FReport.RegisterData(main, "Main");
-            String reportFile = "SOB.frx";
-            RptPreviewForm frm = new RptPreviewForm();
-            frm.ReprotfileName = reportFile;
-            frm.MyReport = FReport;
-            frm.ShowDialog();
-        }
-         */
-
-        /*
-        protected async override Task<ApprovalEntity> ReReview()
-        {
-            ApprovalEntity ae = new ApprovalEntity();
-            if (EditEntity == null)
-            {
-                return ae;
-            }
-
-            //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return ae;
-            }
-
-
-            if (EditEntity.tb_ProductionPlanDetails == null || EditEntity.tb_ProductionPlanDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-                return ae;
-            }
-
-            RevertCommand command = new RevertCommand();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_ProductionPlan oldobj = CloneHelper.DeepCloneObject<tb_ProductionPlan>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_ProductionPlan>(EditEntity, oldobj);
-            };
-
-            tb_ProductionPlanController<tb_ProductionPlan> ctr = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();
-            ReturnResults<bool> Succeeded = await ctr.AntiApprovalAsync(EditEntity);
-            if (Succeeded.Succeeded)
-            {
-
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.反审);
-                ToolBarEnabledControl(EditEntity);
-                toolStripbtnReview.Enabled = true;
-
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{EditEntity.PPNo}反审失败{Succeeded.ErrorMsg},请联系管理员！", Color.Red);
-            }
-            return ae;
-        }
-        */
+ 
 
         /// <summary>
-        /// 
+        /// 生产计划结案
         /// </summary>
         /// <returns></returns>
         protected async override Task<bool> CloseCaseAsync()
@@ -815,16 +537,15 @@ namespace RUINORERP.UI.MRP.MP
             {
                 return false;
             }
-
+        
             // 使用增强后的通用意见窗体
             CommonUI.frmGenericOpinion<tb_ProductionPlan> frm = new CommonUI.frmGenericOpinion<tb_ProductionPlan>();
             frm.FormTitle = "生产计划结案确认";
-            frm.OpinionLabelText = "结案意见：";
+            frm.OpinionLabelText = "结案意见:";
             frm.BindData(EditEntity, 
                 e => e.PPNo, 
-                e => "生产计划", 
                 e => e.CloseCaseOpinions);
-
+        
             if (frm.ShowDialog() == DialogResult.OK)
             {
                 List<tb_ProductionPlan> EditEntitys = new List<tb_ProductionPlan>();
@@ -839,7 +560,8 @@ namespace RUINORERP.UI.MRP.MP
                 List<tb_ProductionPlan> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
                 if (needCloseCases.Count == 0)
                 {
-                    MessageBox.Show($"要结案的数据行数为：{needCloseCases.Count}:请检查数据！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"要结案的数据行数为:{needCloseCases.Count}:请检查数据!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // ✅ 关键修复:业务校验失败时返回false,让基类恢复按钮状态
                     return false;
                 }
                 tb_ProductionPlanController<tb_ProductionPlan> ctr = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();
@@ -848,30 +570,35 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
                     //{
-
+        
                     //}
-                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                    //这里审核完了的话,如果这个单存在于工作流的集合队列中,则向服务器说明审核完成。
+                    //这里推送到审核,启动工作流  队列应该有一个策略 比方优先级,桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
                     base.Refreshs();
+                    // ✅ 结案成功返回true
                     return true;
                 }
                 else
                 {
-                    // 结案失败时弹出明确的错误提示
+                    // ✅ 关键修复:结案失败时弹出明确的错误提示,并返回false让基类恢复按钮状态
                     string errorMsg = string.IsNullOrEmpty(rs.ErrorMsg) ? "未知错误" : rs.ErrorMsg;
-                    KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！", 
+                    KryptonMessageBox.Show($"结案操作失败!\n\n失败原因:{errorMsg}\n\n如无法解决,请联系管理员!", 
                         "结案失败", 
                         Krypton.Toolkit.KryptonMessageBoxButtons.OK, 
                         Krypton.Toolkit.KryptonMessageBoxIcon.Error);
-                    
-                    MainForm.Instance.PrintInfoLog($"{EditEntity.PPNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                            
+                    MainForm.Instance.PrintInfoLog($"{EditEntity.PPNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决,请联系管理员!", Color.Red);
+                    // ✅ 返回false,让基类的错误处理逻辑恢复按钮为可用状态
                     return false;
                 }
-
             }
-            return true;
+            else
+            {
+                // ✅ 用户取消操作,返回false,基类会恢复按钮状态
+                return false;
+            }
         }
 
 

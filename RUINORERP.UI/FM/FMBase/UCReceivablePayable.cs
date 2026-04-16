@@ -1035,7 +1035,6 @@ namespace RUINORERP.UI.FM
             frm.BindData(
                  EditEntity,
                  e => e.ARAPNo,
-                 e => e.ARAPNo,
                  e => e.Remark
             );
 

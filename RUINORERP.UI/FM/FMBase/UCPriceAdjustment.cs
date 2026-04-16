@@ -776,7 +776,9 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.uclog.AddLog("请先配置图片服务器路径", UILogType.错误);
                 }
             }
-            return true;
+            // ✅ 关键修复:返回基类的实际结果,而不是硬编码return true
+            // 如果基类Submit失败(return false),这里也必须返回false,让基类恢复按钮状态
+            return rs;
         }
 
 

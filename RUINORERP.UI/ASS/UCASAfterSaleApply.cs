@@ -843,16 +843,15 @@ namespace RUINORERP.UI.ASS
             {
                 return false;
             }
-
-            // 使用增强后的通用意见窗体（反结案）
+        
+            // 使用增强后的通用意见窗体(反结案)
             CommonUI.frmGenericOpinion<tb_AS_AfterSaleApply> frm = new CommonUI.frmGenericOpinion<tb_AS_AfterSaleApply>();
             frm.FormTitle = "售后申请单反结案确认";
-            frm.OpinionLabelText = "反结案意见：";
+            frm.OpinionLabelText = "反结案意见:";
             frm.BindData(EditEntity, 
                 e => e.ASApplyNo, 
-                e => "售后申请单", 
                 e => e.Notes);
-
+        
             if (frm.ShowDialog() == DialogResult.OK)
             {
                 List<tb_AS_AfterSaleApply> EditEntitys = new List<tb_AS_AfterSaleApply>();
@@ -862,33 +861,45 @@ namespace RUINORERP.UI.ASS
                 List<tb_AS_AfterSaleApply> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.完结 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue).ToList();
                 if (needCloseCases.Count == 0)
                 {
-                    MainForm.Instance.PrintInfoLog($"要反结案的数据为：{needCloseCases.Count}:请检查数据！");
+                    MainForm.Instance.PrintInfoLog($"要反结案的数据为:{needCloseCases.Count}:请检查数据!");
+                    // ✅ 关键修复:业务校验失败时返回false,让基类恢复按钮状态
                     return false;
                 }
-
+        
                 tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply> ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
                 ReturnResults<bool> rs = await ctr.AntiBatchCloseCaseAsync(needCloseCases);
                 if (rs.Succeeded)
                 {
                     //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
                     //{
-
+        
                     //}
-                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                    //这里审核完了的话,如果这个单存在于工作流的集合队列中,则向服务器说明审核完成。
+                    //这里推送到审核,启动工作流  队列应该有一个策略 比方优先级,桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_AfterSaleApply>("反结案", EditEntity, $"反结案意见:{EditEntity.Notes}");
                     Refreshs();
+                    // ✅ 反结案成功返回true
+                    return true;
                 }
                 else
                 {
-                    MainForm.Instance.PrintInfoLog($"{EditEntity.ASApplyNo}反结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                    // ✅ 关键修复:反结案失败时弹出明确的错误提示,并返回false让基类恢复按钮状态
+                    string errorMsg = string.IsNullOrEmpty(rs.ErrorMsg) ? "未知错误" : rs.ErrorMsg;
+                    KryptonMessageBox.Show($"反结案操作失败!\n\n失败原因:{errorMsg}\n\n如无法解决,请联系管理员!",
+                        "反结案失败",
+                        Krypton.Toolkit.KryptonMessageBoxButtons.OK,
+                        Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+                            
+                    MainForm.Instance.PrintInfoLog($"{EditEntity.ASApplyNo}反结案操作失败,原因是{rs.ErrorMsg},如果无法解决,请联系管理员!", Color.Red);
+                    // ✅ 返回false,让基类的错误处理逻辑恢复按钮为可用状态
+                    return false;
                 }
-                return true;
             }
             else
             {
+                // ✅ 用户取消操作,返回false,基类会恢复按钮状态
                 return false;
             }
         }
@@ -906,7 +917,6 @@ namespace RUINORERP.UI.ASS
             frm.OpinionLabelText = "结案意见：";
             frm.BindData(EditEntity, 
                 e => e.ASApplyNo, 
-                e => "售后申请单", 
                 e => e.Notes);
 
             if (frm.ShowDialog() == DialogResult.OK)

@@ -5,6 +5,7 @@ using Krypton.Navigator;
 using Krypton.Toolkit;
 using Krypton.Toolkit.Suite.Extended.TreeGridView;
 using Krypton.Workspace;
+using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
 using Netron.NetronLight;
 using NPOI.SS.Formula.Functions;
@@ -119,6 +120,11 @@ namespace RUINORERP.UI.ProductEAV
             timer.Interval = 1000;
             timer.Tick += new EventHandler(timer_Tick);
             
+            // ✅ Phase 2: 初始化预加载防抖定时器
+            _preloadTimer = new Timer();
+            _preloadTimer.Interval = PRELOAD_DEBOUNCE_MS;
+            _preloadTimer.Tick += PreloadTimer_Tick;
+           
            
             ProdBundleDisplayTextResolver.Initialize(newSumDataGridView产品组合);
             DisplayTextResolver.AddColumnDisplayType<tb_Prod>(c=>c.Images,ColumnDisplayTypeEnum.Image);
@@ -127,6 +133,12 @@ namespace RUINORERP.UI.ProductEAV
 
         private bool isMouseOverHeader = false;
         private int lastMouseOverRowIndex = -1;
+
+        // ✅ Phase 2: 智能预加载相关字段
+        private Timer _preloadTimer; // 防抖定时器
+        private HashSet<long> _preloadedFileIds = new HashSet<long>(); // 已预加载的FileId集合
+        private const int PRELOAD_BUFFER_ROWS = 10; // 预加载缓冲区行数(可见行下方10行)
+        private const int PRELOAD_DEBOUNCE_MS = 300; // 防抖延迟(毫秒)
 
         private void timer_Tick(object sender, EventArgs e)
         {
@@ -605,6 +617,124 @@ namespace RUINORERP.UI.ProductEAV
             catch (Exception ex)
             {
                 MainForm.Instance.uclog.AddLog($"❌ 预加载图片失败: {ex.Message}", Global.UILogType.警告);
+            }
+        }
+
+        /// <summary>
+        /// ✅ Phase 2: DataGridView滚动事件 - 触发智能预加载
+        /// </summary>
+        private void NewSumDataGridView产品_Scroll(object sender, ScrollEventArgs e)
+        {
+            // 重置防抖定时器
+            _preloadTimer.Stop();
+            _preloadTimer.Start();
+        }
+
+        /// <summary>
+        /// ✅ Phase 2: 防抖定时器触发 - 执行智能预加载
+        /// </summary>
+        private async void PreloadTimer_Tick(object sender, EventArgs e)
+        {
+            _preloadTimer.Stop();
+            
+            // 后台异步预加载,不阻塞UI
+            await Task.Run(() => PreloadBufferImagesAsync());
+        }
+
+        /// <summary>
+        /// ✅ Phase 2: 预加载缓冲区图片(可见行下方PRELOAD_BUFFER_ROWS行)
+        /// </summary>
+        private async Task PreloadBufferImagesAsync()
+        {
+            try
+            {
+                if (newSumDataGridView产品.InvokeRequired)
+                {
+                    newSumDataGridView产品.Invoke(new Action(async () => await DoPreloadBufferImagesAsync()));
+                }
+                else
+                {
+                    await DoPreloadBufferImagesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "智能预加载图片异常");
+            }
+        }
+
+        /// <summary>
+        /// ✅ Phase 2: 实际执行预加载逻辑
+        /// </summary>
+        private async Task DoPreloadBufferImagesAsync()
+        {
+            try
+            {
+                if (newSumDataGridView产品.DataSource == null || newSumDataGridView产品.Rows.Count == 0)
+                    return;
+
+                // 获取第一个可见行索引
+                int firstVisibleRow = newSumDataGridView产品.FirstDisplayedScrollingRowIndex;
+                if (firstVisibleRow < 0) return;
+
+                // 获取可见行数
+                int visibleRowCount = newSumDataGridView产品.DisplayedRowCount(false);
+                
+                // 计算预加载范围: 可见行 + 下方BUFFER行
+                int preloadStartRow = firstVisibleRow + visibleRowCount;
+                int preloadEndRow = Math.Min(preloadStartRow + PRELOAD_BUFFER_ROWS, newSumDataGridView产品.Rows.Count - 1);
+
+                if (preloadStartRow >= newSumDataGridView产品.Rows.Count)
+                    return; // 已经到底部,无需预加载
+
+                // 收集需要预加载的FileId
+                var fileIdsToPreload = new List<long>();
+                
+                for (int i = preloadStartRow; i <= preloadEndRow; i++)
+                {
+                    var row = newSumDataGridView产品.Rows[i];
+                    if (!row.Visible || row.IsNewRow) continue;
+
+                    var viewProdDetail = row.DataBoundItem as View_ProdDetail;
+                    if (viewProdDetail != null)
+                    {
+                        var fileId = GetFileIdFromViewProdDetail(viewProdDetail);
+                        if (fileId.HasValue && fileId.Value > 0)
+                        {
+                            // ✅ 跳过已预加载的FileId
+                            if (!_preloadedFileIds.Contains(fileId.Value))
+                            {
+                                fileIdsToPreload.Add(fileId.Value);
+                            }
+                        }
+                    }
+                }
+
+                if (fileIdsToPreload.Count == 0)
+                    return;
+
+                // 批量预加载到缓存
+                var imageCacheService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ImageCacheService>();
+                if (imageCacheService != null)
+                {
+                    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                    await imageCacheService.GetImageInfosBatchAsync(fileIdsToPreload);
+                    stopwatch.Stop();
+
+                    // 标记为已预加载
+                    foreach (var fileId in fileIdsToPreload)
+                    {
+                        _preloadedFileIds.Add(fileId);
+                    }
+
+                    MainForm.Instance.uclog.AddLog(
+                        $"🚀 智能预加载: {fileIdsToPreload.Count}张图片, 耗时{stopwatch.ElapsedMilliseconds}ms, " +
+                        $"范围[{preloadStartRow}-{preloadEndRow}]");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "执行预加载逻辑异常");
             }
         }
 

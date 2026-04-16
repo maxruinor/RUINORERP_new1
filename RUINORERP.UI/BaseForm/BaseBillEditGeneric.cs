@@ -490,7 +490,7 @@ namespace RUINORERP.UI.BaseForm
         {
             // 防止重复更新、无效调用和窗体已释放的情况
             if (entity == null || _isUpdatingUIStates || this.IsDisposed) return;
-            
+
             try
             {
                 _isUpdatingUIStates = true;
@@ -518,7 +518,7 @@ namespace RUINORERP.UI.BaseForm
                 if (entity.ActionStatus == ActionStatus.新增)
                 {
                     toolStripbtnSubmit.Enabled = false;
-                    if (entity.PrimaryKeyID>0)
+                    if (entity.PrimaryKeyID > 0)
                     {
                         toolStripbtnSubmit.Enabled = true;
                     }
@@ -3423,14 +3423,13 @@ namespace RUINORERP.UI.BaseForm
 
                         bool rsCloseCase = await CloseCaseAsync();
                         if (!rsCloseCase)
-                        {
+                        {        // 结案失败后刷新UI状态，确保按钮状态正确
+                            UpdateAllUIStates(EditEntity);
                             // 结案失败时恢复结案按钮状态
                             if (btnCaseClosed != null && EditEntity != null)
                             {
                                 btnCaseClosed.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonCaseClosed");
                             }
-                            // 结案失败后刷新UI状态，确保按钮状态正确
-                            UpdateAllUIStates(EditEntity);
                         }
                         else
                         {
@@ -3904,7 +3903,6 @@ namespace RUINORERP.UI.BaseForm
 
             frm.BindData(EditEntity,
                 e => cbd.BillNo,
-                e => "单据",
                 e => ReflectionHelper.GetPropertyValue(e, "CloseCaseOpinions"));
 
             if (frm.ShowDialog() == DialogResult.OK)

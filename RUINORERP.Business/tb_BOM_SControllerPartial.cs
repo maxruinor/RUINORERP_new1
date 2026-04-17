@@ -261,12 +261,22 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 递归更新所有上级BOM的成本信息
+        /// ✅ 优化: 添加批处理和性能监控
         /// </summary>
         /// <param name="prodDetailId">当前BOM对应的产品详情ID</param>
         /// <param name="selfProductionCost">当前BOM的自产总成本</param>
         /// <param name="processedProdDetailIds">已处理的产品详情ID集合，用于检测循环引用</param>
-        public async Task UpdateParentBOMsAsync(long prodDetailId, decimal selfProductionCost, HashSet<long> processedProdDetailIds = null)
+        /// <param name="depth">当前递归深度(用于性能监控)</param>
+        public async Task UpdateParentBOMsAsync(long prodDetailId, decimal selfProductionCost, HashSet<long> processedProdDetailIds = null, int depth = 0)
         {
+            // ✅ 优化: 限制最大递归深度,防止异常情况下无限递归
+            const int MAX_DEPTH = 10;
+            if (depth > MAX_DEPTH)
+            {
+                _logger.LogWarning("BOM成本更新达到最大递归深度({MaxDepth}),ProdDetailID={ProdDetailID}", MAX_DEPTH, prodDetailId);
+                return;
+            }
+
             // 初始化已处理集合
             if (processedProdDetailIds == null)
             {
@@ -283,6 +293,7 @@ namespace RUINORERP.Business
             // 将当前产品详情ID添加到已处理集合
             processedProdDetailIds.Add(prodDetailId);
 
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 // 查询所有直接引用当前产品作为子件的上级BOM
@@ -295,6 +306,14 @@ namespace RUINORERP.Business
                 {
                     return; // 没有上级BOM，递归终止
                 }
+
+                _logger.LogDebug("BOM成本更新[深度={Depth}]: ProdDetailID={ProdDetailID}, 找到{Count}个上级BOM", 
+                    depth, prodDetailId, parentBomList.Count);
+
+                // ✅ 优化: 批量收集所有需要更新的明细和主表,减少数据库操作次数
+                var allDetailsToUpdate = new List<tb_BOM_SDetail>();
+                var allBomsToUpdate = new List<tb_BOM_S>();
+                var nextLevelUpdates = new List<(long ProdDetailId, decimal Cost)>();
 
                 // 处理当前层级的所有BOM
                 foreach (var parentBom in parentBomList)
@@ -342,23 +361,47 @@ namespace RUINORERP.Business
                         parentBom.OutProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalOutManuCost + parentBom.OutApportionedCost;
                         parentBom.SelfProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalSelfManuCost + parentBom.SelfApportionedCost;
 
-                        // 保存明细更新(包含RealTimeCost和SubtotalRealTimeCost)
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(parentBom.tb_BOM_SDetails)
-                              .UpdateColumns(it => new { it.UnitCost, it.RealTimeCost, it.SubtotalUnitCost, it.SubtotalRealTimeCost })
-                              .ExecuteCommandHasChangeAsync();
+                        // ✅ 优化: 收集到批量更新列表
+                        allDetailsToUpdate.AddRange(parentBom.tb_BOM_SDetails);
+                        allBomsToUpdate.Add(parentBom);
 
-                        // 保存主表更新
-                        await _unitOfWorkManage.GetDbClient().Updateable(parentBom)
-                              .UpdateColumns(it => new { it.TotalMaterialCost, it.OutProductionAllCosts, it.SelfProductionAllCosts })
-                              .ExecuteCommandHasChangeAsync();
-
-                        // 递归处理上一级BOM
-                        await UpdateParentBOMsAsync(parentBom.ProdDetailID, parentBom.SelfProductionAllCosts, processedProdDetailIds);
+                        // 收集下一级更新
+                        nextLevelUpdates.Add((parentBom.ProdDetailID, parentBom.SelfProductionAllCosts));
                     }
+                }
+
+                // ✅ 优化: 批量执行数据库更新
+                if (allDetailsToUpdate.Count > 0)
+                {
+                    // 保存明细更新(包含RealTimeCost和SubtotalRealTimeCost)
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(allDetailsToUpdate)
+                          .UpdateColumns(it => new { it.UnitCost, it.RealTimeCost, it.SubtotalUnitCost, it.SubtotalRealTimeCost })
+                          .ExecuteCommandHasChangeAsync();
+
+                    // 保存主表更新
+                    await _unitOfWorkManage.GetDbClient().Updateable(allBomsToUpdate)
+                          .UpdateColumns(it => new { it.TotalMaterialCost, it.OutProductionAllCosts, it.SelfProductionAllCosts })
+                          .ExecuteCommandHasChangeAsync();
+
+                    _logger.LogDebug("BOM成本更新[深度={Depth}]: 批量更新了{DetailCount}个明细,{BomCount}个主表", 
+                        depth, allDetailsToUpdate.Count, allBomsToUpdate.Count);
+                }
+
+                // ✅ 优化: 递归处理上一级BOM(使用相同的processedProdDetailIds)
+                foreach (var update in nextLevelUpdates)
+                {
+                    await UpdateParentBOMsAsync(update.ProdDetailId, update.Cost, processedProdDetailIds, depth + 1);
                 }
             }
             finally
             {
+                stopwatch.Stop();
+                if (stopwatch.ElapsedMilliseconds > 100) // 记录耗时较长的操作
+                {
+                    _logger.LogInformation("BOM成本更新[深度={Depth},ProdDetailID={ProdDetailID}]耗时:{ElapsedMs}ms", 
+                        depth, prodDetailId, stopwatch.ElapsedMilliseconds);
+                }
+
                 // 从已处理集合中移除当前产品详情ID，允许在其他分支中再次处理
                 processedProdDetailIds.Remove(prodDetailId);
             }
@@ -437,6 +480,107 @@ namespace RUINORERP.Business
 
                         // 递归处理上一级BOM
                         await RollbackParentBOMsCostAsync(parentBom.ProdDetailID, processedProdDetailIds);
+                    }
+                }
+            }
+            finally
+            {
+                processedProdDetailIds.Remove(prodDetailId);
+            }
+        }
+
+        /// <summary>
+        /// 反审核时回滚上级BOM的成本(保留实时库存成本)
+        /// ✅ 优化版本: 使用当前库存成本作为RealTimeCost,而非设为NULL
+        /// </summary>
+        /// <param name="prodDetailId">当前BOM对应的产品详情ID</param>
+        /// <param name="inventoryCost">当前库存成本(反审核后的成本)</param>
+        /// <param name="processedProdDetailIds">已处理的产品详情ID集合，用于检测循环引用</param>
+        public async Task RollbackParentBOMsCostWithInventoryAsync(long prodDetailId, decimal inventoryCost, HashSet<long> processedProdDetailIds = null)
+        {
+            // 初始化已处理集合
+            if (processedProdDetailIds == null)
+            {
+                processedProdDetailIds = new HashSet<long>();
+            }
+
+            // 检查是否存在循环引用
+            if (processedProdDetailIds.Contains(prodDetailId))
+            {
+                _logger.LogWarning("检测到BOM循环引用: ProdDetailID = {0}", prodDetailId);
+                return;
+            }
+
+            processedProdDetailIds.Add(prodDetailId);
+
+            try
+            {
+                // 查询所有直接引用当前产品作为子件的上级BOM
+                var parentBomList = await _appContext.Db.Queryable<tb_BOM_S>()
+                                      .Includes(x => x.tb_BOM_SDetails)
+                                      .Where(x => x.tb_BOM_SDetails.Any(z => z.ProdDetailID == prodDetailId))
+                                      .ToListAsync();
+
+                if (parentBomList == null || parentBomList.Count == 0)
+                {
+                    return;
+                }
+
+                foreach (var parentBom in parentBomList)
+                {
+                    bool hasChanges = false;
+
+                    foreach (var detail in parentBom.tb_BOM_SDetails)
+                    {
+                        if (detail.ProdDetailID == prodDetailId)
+                        {
+                            // ✅ 优化: 使用当前库存成本作为RealTimeCost,而非设为NULL
+                            // 这样即使反审核后,上级BOM仍然有一个有效的成本参考
+                            if (inventoryCost > 0)
+                            {
+                                detail.RealTimeCost = inventoryCost;
+                                detail.SubtotalRealTimeCost = inventoryCost * detail.UsedQty;
+                                _logger.LogDebug("BOM明细[SubID={SubID}]反审核后使用库存成本:{Cost}", detail.SubID, inventoryCost);
+                            }
+                            else
+                            {
+                                // 如果库存成本无效,则回退到UnitCost
+                                detail.RealTimeCost = detail.UnitCost;
+                                detail.SubtotalRealTimeCost = detail.UnitCost * detail.UsedQty;
+                                _logger.LogWarning("BOM明细[SubID={SubID}]反审核时库存成本无效({Cost}),使用UnitCost:{UnitCost}", 
+                                    detail.SubID, inventoryCost, detail.UnitCost);
+                            }
+
+                            // SubtotalUnitCost保持不变(基于UnitCost)
+                            detail.SubtotalUnitCost = detail.UnitCost * detail.UsedQty;
+
+                            hasChanges = true;
+                        }
+                    }
+
+                    if (hasChanges)
+                    {
+                        // 重新计算BOM总成本
+                        // ✅ 优化: 优先使用RealTimeCost计算总成本
+                        parentBom.TotalMaterialCost = parentBom.tb_BOM_SDetails.Sum(c => 
+                            c.RealTimeCost.HasValue && c.RealTimeCost.Value > 0 
+                            ? c.SubtotalRealTimeCost.Value 
+                            : c.SubtotalUnitCost);
+                        parentBom.OutProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalOutManuCost + parentBom.OutApportionedCost;
+                        parentBom.SelfProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalSelfManuCost + parentBom.SelfApportionedCost;
+
+                        // 保存明细更新
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(parentBom.tb_BOM_SDetails)
+                              .UpdateColumns(it => new { it.RealTimeCost, it.SubtotalRealTimeCost, it.SubtotalUnitCost })
+                              .ExecuteCommandHasChangeAsync();
+
+                        // 保存主表更新
+                        await _unitOfWorkManage.GetDbClient().Updateable(parentBom)
+                              .UpdateColumns(it => new { it.TotalMaterialCost, it.OutProductionAllCosts, it.SelfProductionAllCosts })
+                              .ExecuteCommandHasChangeAsync();
+
+                        // 递归处理上一级BOM(使用当前BOM的自产成本)
+                        await RollbackParentBOMsCostWithInventoryAsync(parentBom.ProdDetailID, parentBom.SelfProductionAllCosts, processedProdDetailIds);
                     }
                 }
             }

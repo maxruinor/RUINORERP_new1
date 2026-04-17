@@ -167,6 +167,14 @@ namespace RUINORERP.Business
                 // 【事务优化】第一步：预处理阶段（无事务）- 验证和计算
                 #region 预处理阶段
 
+                // 1.1 基础业务规则验证 - 数量一致性检查
+                if (entity.TotalQty != entity.tb_SaleOrderDetails.Sum(c => c.Quantity))
+                {
+                    rmrs.ErrorMsg = $"销售订单数量与明细之和不相等!请检查数据后重试！";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
 

@@ -7232,9 +7232,16 @@ namespace RUINORERP.UI.BaseForm
                             string title = parts[1];
                             string message = parts[2];
 
+                            // ✅ 修复：去掉消息中的 NEED_CONFIRM: 前缀，避免显示给用户
+                            string displayMessage = message;
+                            if (displayMessage.StartsWith("NEED_CONFIRM:"))
+                            {
+                                displayMessage = displayMessage.Substring("NEED_CONFIRM:".Length);
+                            }
+
                             // 弹出确认对话框
                             DialogResult confirmResult = MessageBox.Show(
-                                message,
+                                displayMessage,
                                 title,
                                 MessageBoxButtons.YesNo,
                                 MessageBoxIcon.Question,

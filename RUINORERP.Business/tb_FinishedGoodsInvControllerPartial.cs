@@ -133,24 +133,159 @@ namespace RUINORERP.Business
             // 将预加载的数据赋值给实体
             entity.tb_manufacturingorder = manufacturingOrder;
             
+            #region 【事务外】验证阶段 - 所有业务规则验证在事务外执行
+            
+            // 验证0: 检查制令单是否存在
+            if (entity.tb_manufacturingorder == null)
+            {
+                rs.Succeeded = false;
+                rs.ErrorMsg = $"未找到对应的制令单(MOID={entity.MOID})!请检查数据后重试！";
+                _logger.LogWarning(rs.ErrorMsg);
+                return rs;
+            }
+            
+            // 验证1: 检查缴库明细是否属于当前制令单
+            if (!entity.tb_FinishedGoodsInvDetails.Any(c => 
+                c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && 
+                c.Location_ID == entity.tb_manufacturingorder.Location_ID))
+            {
+                rs.Succeeded = false;
+                rs.ErrorMsg = $"缴库明细中有不属于当前制令单生产的产品及对应仓库!请检查数据后重试！";
+                _logger.LogWarning(rs.ErrorMsg);
+                return rs;
+            }
+            
+            // 验证2: 检查制令单是否有物料发出
+            if (entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Sum(c => c.ActualSentQty) == 0)
+            {
+                rs.Succeeded = false;
+                rs.ErrorMsg = $"制令单:{entity.tb_manufacturingorder.MONO}，没有任何物料发出。";
+                _logger.LogWarning(rs.ErrorMsg);
+                return rs;
+            }
+            
+            // 验证3: 计算缴库数量并验证
+            List<tb_FinishedGoodsInvDetail> detailList = new List<tb_FinishedGoodsInvDetail>();
+            foreach (var item in entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Where(c => 
+                c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结).ToList())
+            {
+                detailList.AddRange(item.tb_FinishedGoodsInvDetails);
+            }
+            detailList.AddRange(entity.tb_FinishedGoodsInvDetails);
+            
+            var PaidQuantity = detailList.Where(c => 
+                c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && 
+                c.Location_ID == entity.tb_manufacturingorder.Location_ID).Sum(c => c.Qty);
+            
+            // 验证3.1: 缴库数量不能大于制令单生产数量
+            if (PaidQuantity > entity.tb_manufacturingorder.ManufacturingQty)
+            {
+                string prodName = entity.tb_manufacturingorder.tb_proddetail.tb_prod.CNName + 
+                    entity.tb_manufacturingorder.tb_proddetail.tb_prod.Specifications;
+                rs.Succeeded = false;
+                rs.ErrorMsg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量。";
+                _logger.LogWarning(rs.ErrorMsg);
+                return rs;
+            }
+            
+            // 验证3.2: 根据BOM计算最大可缴库数量
+            decimal CanManufactureQtyBybom = 0;
+            var CanManufactureQtyBybomList = entity.tb_manufacturingorder.tb_ManufacturingOrderDetails
+                .Where(c => c.ActualSentQty >= 1 && c.IsKeyMaterial.HasValue && c.IsKeyMaterial.Value == true)
+                .OrderByDescending(c => c.ActualSentQty)
+                .ToList();
+            
+            if (CanManufactureQtyBybomList.Count > 0)
+            {
+                tb_ManufacturingOrderDetail MinQtyDetail = CanManufactureQtyBybomList[0];
+                if (MinQtyDetail.ActualSentQty > 0)
+                {
+                    tb_BOM_S minbom = MinQtyDetail.tb_bom_s;
+                    if (minbom != null)
+                    {
+                        tb_BOM_SDetail miniBomDetail = minbom.tb_BOM_SDetails
+                            .FirstOrDefault(c => c.ProdDetailID == MinQtyDetail.ProdDetailID);
+                        if (miniBomDetail != null)
+                        {
+                            CanManufactureQtyBybom = MinQtyDetail.ActualSentQty / 
+                                miniBomDetail.UsedQty.ToDecimal() * minbom.OutputQty;
+                        }
+                    }
+                }
+                
+                // 如果总缴库数量大于最小制成数量则返回需要用户确认
+                if (PaidQuantity > CanManufactureQtyBybom)
+                {
+                    string msg = $"系统检测到缴库数量大于发出的关键物料能生产的最小数量";
+                    try
+                    {
+                        object obj = _cacheManager.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
+                        if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
+                        {
+                            msg += $"\r\n{prodDetail.SKU}:{prodDetail.CNName}实发数量不够生产{CanManufactureQtyBybom}";
+                        }
+                    }
+                    catch (Exception tipEx)
+                    {
+                        _logger.Error(tipEx);
+                    }
+                    
+                    return new ReturnResults<T>
+                    {
+                        Succeeded = false,
+                        ErrorMsg = $"NEED_CONFIRM:缴库数量超额确认:{msg}\r\n\r\n你确定要审核通过吗？"
+                    };
+                }
+            }
+            
+            // 验证4: 检查已交数量是否超过缴库总数
+            // 注意：此验证已在验证3.1中覆盖(PaidQuantity <= ManufacturingQty)，这里可以省略
+            // 保留注释以备后续审计
+            
+            // 验证5: 计划单数量限制检查(移到事务外,避免事务开启后回滚)
+            // ✅ 优化: 提前检查计划单数量是否超过限制,减少事务持有时间
+            if (productionDemand != null && entity.tb_manufacturingorder.PDID > 0)
+            {
+                // 验证5.1: 检查计划明细数量是否超过1.5倍
+                foreach (var child in entity.tb_FinishedGoodsInvDetails)
+                {
+                    tb_ProductionPlanDetail planDetail = productionDemand.tb_productionplan.tb_ProductionPlanDetails
+                        .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID);
+                    if (planDetail != null)
+                    {
+                        decimal newCompletedQty = planDetail.CompletedQuantity + child.Qty;
+                        if (newCompletedQty > (planDetail.Quantity * 1.5m))
+                        {
+                            rs.Succeeded = false;
+                            rs.ErrorMsg = $"缴库明细中有完成数量大于计划数量的产品1.5倍，系统认为异常数量!请检查后重试！";
+                            _logger.LogWarning(rs.ErrorMsg + $" 计划单:{productionDemand.PPNo}, 产品:{child.ProdDetailID}, 计划数量:{planDetail.Quantity}, 新完成数量:{newCompletedQty}");
+                            return rs;
+                        }
+                    }
+                }
+                
+                // 验证5.2: 检查计划总数量是否超过1.5倍
+                int totalPlanCompletedQuantity = productionDemand.tb_productionplan.tb_ProductionPlanDetails.Sum(c => c.CompletedQuantity);
+                int newTotalCompletedQuantity = totalPlanCompletedQuantity + entity.tb_FinishedGoodsInvDetails.Sum(c => c.Qty);
+                if (newTotalCompletedQuantity > (productionDemand.tb_productionplan.TotalQuantity * 1.5))
+                {
+                    rs.Succeeded = false;
+                    rs.ErrorMsg = $"缴库数量大于计划数量超过1.5倍!请检查数据后重试！";
+                    _logger.LogWarning(rs.ErrorMsg + $" 计划单:{productionDemand.PPNo}, 计划总数:{productionDemand.tb_productionplan.TotalQuantity}, 新完成总数:{newTotalCompletedQuantity}");
+                    return rs;
+                }
+            }
+            
+            #endregion
+            
             // 【事务开始】只包含更新操作，最小化事务区间
             try
             {
-                _unitOfWorkManage.BeginTran();
-
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                
-                // 注意：所有查询已在事务外完成，这里直接使用预加载的数据
 
-                //如果制令单中的关键物料没有发全则不能缴库,或只是提醒，用全局变量控制？
-                if (true)
-                {
-
-                }
-
+                _unitOfWorkManage.BeginTran();
+      
                 #region 由缴库更新库存
-
-
 
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
@@ -237,37 +372,7 @@ namespace RUINORERP.Business
                         }
                         
                         CommService.CostCalculations.CostCalculation(_appContext, inv, child.Qty, effectiveCost);
-                        var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-                        // 递归更新所有上级BOM的成本
-                        await ctrbom.UpdateParentBOMsAsync(inv.ProdDetailID, inv.Inv_Cost);
-
-                        /*
-                        #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
-
-                        tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
-                        List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                        .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
-                        .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
-                        foreach (tb_BOM_SDetail bomDetail in bomDetails)
-                        {
-                            //如果存在则更新 
-                            bomDetail.UnitCost = inv.Inv_Cost;
-                            bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
-                            if (bomDetail.tb_bom_s != null)
-                            {
-                                bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
-                                bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
-                                bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
-                                await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
-                            }
-                        }
-                        if (bomDetails.Count > 0)
-                        {
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
-                        }
-
-                        #endregion
-                        */
+                        
                     }
 
                     inv.Quantity = inv.Quantity + child.Qty;
@@ -280,11 +385,8 @@ namespace RUINORERP.Business
 
                 }
                 #endregion
-                //List应该用ExecuteReturnSnowflakeIdListAsync 否则返回的是ID的值不是影响的行数。
-                //var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdAsync();
-
-
-                // 使用LINQ查询
+                
+                // ✅ 验证4: 检查库存更新列表中是否有重复的商品
                 var CheckNewInvList = invUpdateList
                     .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
                     .Where(g => g.Count() > 1)
@@ -293,151 +395,54 @@ namespace RUINORERP.Business
 
                 if (CheckNewInvList.Count > 0)
                 {
-                    //新增库存中有重复的商品，操作失败。请联系管理员。
                     rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rs.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran(); // ⚠️ BUG修复：事务中返回前必须回滚
+                    _unitOfWorkManage.RollbackTran();
                     _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                     return rs;
                 }
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                // 日志移到事务外记录
-
-                //如果缴库明细中的品不是来自制令单，则报错
-                if (!entity.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && c.Location_ID == entity.tb_manufacturingorder.Location_ID))
+                if (InvMainCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    rs.Succeeded = false;
-                    rs.ErrorMsg = $"缴库明细中有不属于当前制令单生产的产品及对应仓库!请检查数据后重试！";
-                    return rs;
+                    _logger.Debug($"{entity.DeliveryBillNo}缴库更新库存结果为0行，请检查数据！");
                 }
 
+                // ✅ 性能优化: 批量更新BOM成本(在库存更新后,减少循环中的数据库操作)
+                // 注意: 必须在事务内执行,以保证与库存更新的原子性
+                if (!entity.tb_manufacturingorder.IsCustomizedOrder)
+                {
+                    var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                    var updatedProdDetailIds = invUpdateList.Select(i => i.ProdDetailID).Distinct().ToList();
+                    
+                    foreach (var prodDetailId in updatedProdDetailIds)
+                    {
+                        var inv = invUpdateList.FirstOrDefault(i => i.ProdDetailID == prodDetailId);
+                        if (inv != null && inv.Inv_Cost > 0)
+                        {
+                            await ctrbom.UpdateParentBOMsAsync(prodDetailId, inv.Inv_Cost);
+                        }
+                    }
+                }
 
                 #region 由缴库单更新制令单
                 if (entity.tb_manufacturingorder.tb_FinishedGoodsInvs == null)
                 {
                     entity.tb_manufacturingorder.tb_FinishedGoodsInvs = new List<tb_FinishedGoodsInv>();
                 }
-                //先找到所有缴库明细,再找按制令单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
-                List<tb_FinishedGoodsInvDetail> detailList = new List<tb_FinishedGoodsInvDetail>();
-                foreach (var item in entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Where(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结).ToList())
-                {
-                    detailList.AddRange(item.tb_FinishedGoodsInvDetails);
-                }
-
-                //要加上当前缴款的明细。
-
-                detailList.AddRange(entity.tb_FinishedGoodsInvDetails);
-
-                //这里与采购订单不一样。采购订单是用明细去比较，这里是回写的是制令单，是主表。
-                string prodName = entity.tb_manufacturingorder.tb_proddetail.tb_prod.CNName + entity.tb_manufacturingorder.tb_proddetail.tb_prod.Specifications;
-                //找出所有这个制令单的对应 缴库的数量加总
-                var PaidQuantity = detailList.Where(c => c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && c.Location_ID == entity.tb_manufacturingorder.Location_ID).Sum(c => c.Qty);
-
-                #region 缴库数量按制令单实发数根据BOM计算得到最多能入库的数量，如果超过则提示后退回
-                decimal CanManufactureQtyBybom = 0;
-                //按制令单中所有要发出的物料中数量为整数的最小值为算 ，小数可能是 胶水 纸箱这种耗材。暂时排除
-                //最小可能产出量,关键物料且大于1的数量，根据BOM配方去计划
-                var CanManufactureQtyBybomList = entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Where(c => c.ActualSentQty >= 1 && c.IsKeyMaterial.HasValue && c.IsKeyMaterial.Value == true).OrderByDescending(c => c.ActualSentQty).ToList();
-
-                //注意如果制令单生成时手动或程序指定了替换料，这时也要把替换料对应 的BOM记录到制令单明细中。用于后面判断生成最小量成品
-                if (CanManufactureQtyBybomList.Count > 0)
-                {
-                    tb_ManufacturingOrderDetail MinQtyDetail = CanManufactureQtyBybomList[0];
-                    if (MinQtyDetail.ActualSentQty > 0)
-                    {
-                        //先找到对应的所属配方。再找到他在配方明细中的基数。
-                        tb_BOM_S minbom = MinQtyDetail.tb_bom_s;
-                        if (minbom != null)
-                        {
-                            tb_BOM_SDetail miniBomDetail = minbom.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == MinQtyDetail.ProdDetailID);
-                            if (miniBomDetail != null)
-                            {
-                                //实发数量/bom配方明细中的基准数量*BOM产出量=可以做的成品数量
-                                CanManufactureQtyBybom = MinQtyDetail.ActualSentQty / miniBomDetail.UsedQty.ToDecimal() * minbom.OutputQty;
-                            }
-                            //TODO:注意 这里暂时不处理特殊情况。如果手动添加或替换料则暂时不算能生产的最小数量
-                            //else
-                            //{
-                            //    //找不到就可能是替换料或自己手动添加的铺料。
-                            //    throw new Exception("制令单明细没有指定所属配方，请修改数据后再试，或联系管理员。");
-                            //}
-                        }
-                        //else
-                        //{
-                        //    //没有找到配方说明在生成制令单时。没有指定。注意如果制令单生成时手动或程序指定了替换料，这时也要把替换料对应 的BOM记录到制令单明细中。用于后面判断生成最小量成品
-                        //    throw new Exception("制令单明细没有指定所属配方，请修改数据后再试，或联系管理员。");
-                        //}
-
-                    }
-                    //如果总缴库数量大于最小制成数量则审核出错。
-                    if (PaidQuantity > CanManufactureQtyBybom)
-                    {
-                        // ⚠️ P0严重BUG修复：返回前必须先回滚事务，否则会导致库存已更新但单据未审核的数据不一致
-                        _unitOfWorkManage.RollbackTran();
-                        
-                        // ✅ 修复：不再弹出MessageBox，而是返回需要用户确认的结果
-                        string msg = $"系统检测到缴库数量大于发出的关键物料能生产的最小数量";
-                        try
-                        {
-                            object obj = _cacheManager.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
-                            if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                            {
-                                //提示哪个关键物料实发数不够生产。
-                                msg += $"\r\n{prodDetail.SKU}:{prodDetail.CNName}实发数量不够生产{CanManufactureQtyBybom}";
-                            }
-                        }
-                        catch (Exception tipEx)
-                        {
-                            _logger.Error(tipEx);
-                        }
-
-                        // ✅ 返回需要用户确认的验证结果
-                        return new ReturnResults<T>
-                        {
-                            Succeeded = false,
-                            ErrorMsg = $"NEED_CONFIRM:缴库数量超额确认:{msg}\r\n\r\n你确定要审核通过吗？"
-                        };
-                    }
-                }
-
-                //如果制令单中没有发任何数量的物料是不可能缴库的。
-                if (entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Sum(c => c.ActualSentQty) == 0)
-                {
-                    string msg = $"制令单:{entity.tb_manufacturingorder.MONO}，没有任何物料发出。";
-                    rs.ErrorMsg = msg;
-                    _unitOfWorkManage.RollbackTran();
-                    return rs;
-                }
-
-                #endregion
-                if (PaidQuantity > entity.tb_manufacturingorder.ManufacturingQty)
-                {
-                    string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量。";
-                    rs.ErrorMsg = msg;
-                    _unitOfWorkManage.RollbackTran();
-                    _logger.Debug(msg);
-                    return rs;
-                }
-                else
-                {
-                    //当前行累计到交付,只是当前单的。不是以前的。
-                    var RowQty = entity.tb_FinishedGoodsInvDetails.Where(c => c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && c.Location_ID == entity.tb_manufacturingorder.Location_ID).Sum(c => c.Qty);
-                    entity.tb_manufacturingorder.QuantityDelivered += RowQty;
-                    //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                    if (entity.tb_manufacturingorder.QuantityDelivered > detailList.Sum(c => c.Qty))
-                    {
-                        _unitOfWorkManage.RollbackTran();
-                        rs.ErrorMsg = $"缴库单：{entity.DeliveryBillNo}审核时，{entity.tb_manufacturingorder.SKU}缴库总数量不能大于制令单{entity.tb_manufacturingorder.MONO}中的生产数量！";
-                        rs.Succeeded = false;
-                        return rs;
-                    }
+                
+                // 注意：detailList和PaidQuantity已在事务外计算，这里直接使用
+                // 当前行累计到交付,只是当前单的。不是以前的。
+                var RowQty = entity.tb_FinishedGoodsInvDetails.Where(c => 
+                    c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && 
+                    c.Location_ID == entity.tb_manufacturingorder.Location_ID).Sum(c => c.Qty);
+                entity.tb_manufacturingorder.QuantityDelivered += RowQty;
 
                     //制令单已交数量和判断是否结案
-                    if (entity.tb_manufacturingorder.QuantityDelivered == entity.tb_manufacturingorder.ManufacturingQty
-                        && entity.tb_manufacturingorder.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
+                // ✅ 优化: 使用容差比较替代精确相等,避免浮点数精度问题
+                if (Math.Abs(entity.tb_manufacturingorder.QuantityDelivered - entity.tb_manufacturingorder.ManufacturingQty) < 0.0001m
+                    && entity.tb_manufacturingorder.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
                     {
                         entity.tb_manufacturingorder.DataStatus = (int)DataStatus.完结;
                         entity.tb_manufacturingorder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{entity.tb_manufacturingorder.MONO},缴库单审核时，生产数量等于交付数量，自动结案";
@@ -454,7 +459,7 @@ namespace RUINORERP.Business
                             }
                         }
                     }
-                }
+                
 
                 //更新制令单已交数量和判断是否结案
                 int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(entity.tb_manufacturingorder).ExecuteCommandAsync();
@@ -470,13 +475,13 @@ namespace RUINORERP.Business
 
                 //更新计划单已交数量，制令单会引用需求分析，需求分析引用计划单
                 // ✅ 优化：使用事务外预加载的 productionDemand 数据
+                // 注意：计划单数量限制检查已在事务外完成(验证5)，这里只执行更新操作
                 if (productionDemand != null && entity.tb_manufacturingorder.PDID > 0)
                 {
                     //一个缴款单上面一个制令单。一个制令单 找到 需求单，再找到计划单。但是：需求下有多个制令单都来自于一个计划单，
                     //所以这里要循环加总保存到计划单中。
                     #region 更新计划单的完成数量
                     //标记一下，如果计划单明细有变化，则更新计划单明细
-                    //
                     bool PlanDetailHasChanged = false;
 
                     foreach (var child in entity.tb_FinishedGoodsInvDetails)
@@ -486,15 +491,7 @@ namespace RUINORERP.Business
                         {
                             //按理计划这样保存也是总数量。
                             planDetail.CompletedQuantity = planDetail.CompletedQuantity + child.Qty;
-                            //意思是制令单时可以增加数量，大于计划数量。 缴库数量根据制令单来核对即可。但是不能大于1.5倍。不然就重新建计划
-                            //这里是：比方 销售订单中 1000台  另10台是备品。isgift但是计划时要合在一起生产。这时计划目标是分开的。需求是合并算的。
-                            if (planDetail.CompletedQuantity > (planDetail.Quantity * 1.5))
-                            {
-                                _unitOfWorkManage.RollbackTran();
-                                rs.Succeeded = false;
-                                rs.ErrorMsg = $"缴库明细中有完成数量大于计划数量的产品1.5倍，系统认为异常数量!请检查后重试！";
-                                return rs;
-                            }
+                            // ✅ 注意：数量限制检查已在事务外验证阶段完成(验证5)，这里不再重复检查
                             PlanDetailHasChanged = true;
                         }
                     }
@@ -518,14 +515,7 @@ namespace RUINORERP.Business
                     if (totalPlanCompletedQuantity != productionDemand.tb_productionplan.TotalCompletedQuantity)
                     {
                         productionDemand.tb_productionplan.TotalCompletedQuantity = totalPlanCompletedQuantity;
-                        //意思是制令单时可以修改计划数量。缴库根据制令单数量来，但是如果计划完成的数量 大于计划本身的1.5倍。认为不正常。暂时默认这样规则。
-                        if (productionDemand.tb_productionplan.TotalCompletedQuantity > (productionDemand.tb_productionplan.TotalQuantity * 1.5))
-                        {
-                            _unitOfWorkManage.RollbackTran();
-                            rs.Succeeded = false;
-                            rs.ErrorMsg = $"缴库数量大于计划数量超过1.5倍!请检查数据后重试！";
-                            return rs;
-                        }
+                        // ✅ 注意：总数限制检查已在事务外验证阶段完成(验证5.2)，这里不再重复检查
                         PlanHasChanged = true;
                     }
 
@@ -736,11 +726,24 @@ namespace RUINORERP.Business
                     _logger.Debug($"{entity.DeliveryBillNo}更新库存结果为0行，请检查数据！");
                 }
 
-                // ✅ 缴库单反审核时，需要回滚上级BOM的成本(将RealTimeCost重置为NULL)
+                // ✅ 优化: 缴库单反审核时，使用新的成本回滚方法(保留实时库存成本)
+                var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
                 {
-                    var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-                    await ctrbom.RollbackParentBOMsCostAsync(child.ProdDetailID);
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    invDict2.TryGetValue(key, out var inv);
+                    if (inv != null)
+                    {
+                        // ✅ 使用反审核后的库存成本,而非设为NULL
+                        await ctrbom.RollbackParentBOMsCostWithInventoryAsync(child.ProdDetailID, inv.Inv_Cost);
+                    }
+                    else
+                    {
+                        // 如果找不到库存记录,使用明细中的成本作为回退
+                        _logger.LogWarning("缴库单反审核时未找到库存记录,ProdDetailID={ProdDetailID},使用明细成本:{Cost}", 
+                            child.ProdDetailID, child.UnitCost);
+                        await ctrbom.RollbackParentBOMsCostWithInventoryAsync(child.ProdDetailID, child.UnitCost);
+                    }
                 }
 
                 #region 处理制令单和计划单

@@ -433,24 +433,33 @@ namespace RUINORERP.Business
                         {
                             // ✅ 修复：不再弹出MessageBox，而是返回需要用户确认的结果
                             StringBuilder errorBuilder1 = new StringBuilder();
-                            errorBuilder1.AppendLine($"预{PaymentType}单总金额{totalLocalAmount}(包含当前金额{currentPrePayment.LocalPrepaidAmount})，超过了订单总金额{totalOrderAmount}");
-                            errorBuilder1.AppendLine($"业务类型：{(BizType)bizTypeGroup.Key}");
-                            errorBuilder1.AppendLine($"来源单号：{billNoGroup.Key}");
+                            errorBuilder1.AppendLine("⚠️ 超额支付预警");
+                            errorBuilder1.AppendLine($"━━━━━━━━━━━━━━━━━━━━━");
+                            errorBuilder1.AppendLine($"当前累计预{PaymentType}金额已超过订单总额！");
                             errorBuilder1.AppendLine();
-                            errorBuilder1.AppendLine($"累计预{PaymentType}金额：{totalLocalAmount}");
-                            errorBuilder1.AppendLine($"订单总金额：{totalOrderAmount}");
-                            errorBuilder1.AppendLine($"超额金额：{totalLocalAmount - totalOrderAmount}");
+                            errorBuilder1.AppendLine($"📊 金额明细：");
+                            errorBuilder1.AppendLine($"   • 订单总金额：{totalOrderAmount}");
+                            errorBuilder1.AppendLine($"   • 累计预{PaymentType}金额：{totalLocalAmount}");
+                            errorBuilder1.AppendLine($"   • 其中当前单据：{currentPrePayment.LocalPrepaidAmount}");
+                            errorBuilder1.AppendLine($"   • 超额金额：{totalLocalAmount - totalOrderAmount}");
                             errorBuilder1.AppendLine();
-                            errorBuilder1.AppendLine("建议：");
-                            errorBuilder1.AppendLine("1. 检查是否有重复的预收付款单");
-                            errorBuilder1.AppendLine("2. 调整预收付款金额，使其不超过订单总额");
-                            errorBuilder1.AppendLine("3. 如确需超额，请与财务部门确认");
+                            errorBuilder1.AppendLine($"📋 业务信息：");
+                            errorBuilder1.AppendLine($"   • 业务类型：{(BizType)bizTypeGroup.Key}");
+                            errorBuilder1.AppendLine($"   • 来源单号：{billNoGroup.Key}");
+                            errorBuilder1.AppendLine();
+                            errorBuilder1.AppendLine("💡 常见原因：");
+                            errorBuilder1.AppendLine("   1. 可能存在重复的预收付款单");
+                            errorBuilder1.AppendLine("   2. 供应商/客户要求超额支付");
+                            errorBuilder1.AppendLine("   3. 包含额外费用（如运费、税费）");
+                            errorBuilder1.AppendLine();
+                            errorBuilder1.AppendLine("━━━━━━━━━━━━━━━━━━━━━");
 
                             // 返回需要用户确认的结果
                             return ConfirmableValidationResult.NeedConfirm(
-                                "超额确认",
+                                "超额支付确认",
                                 errorBuilder1.ToString(),
-                                $"确定要超额预{PaymentType}吗？"
+                                "确认要继续审核通过吗？",
+                                "取消"
                             );
                         }
                         else
@@ -469,34 +478,42 @@ namespace RUINORERP.Business
                             {
                                 // ✅ 修复：不再弹出MessageBox，而是返回需要用户确认的结果
                                 StringBuilder errorBuilder2 = new StringBuilder();
-                                errorBuilder2.AppendLine($"当前的预{PaymentType}单总金额{totalLocalAmount}与对应来源业务的已支付笔数中的金额相同，请确认不是重复支付");
-                                errorBuilder2.AppendLine($"业务类型：{(BizType)bizTypeGroup.Key}");
-                                errorBuilder2.AppendLine($"来源单号：{billNoGroup.Key}");
+                                errorBuilder2.AppendLine("⚠️ 重复金额预警");
+                                errorBuilder2.AppendLine($"━━━━━━━━━━━━━━━━━━━━━");
+                                errorBuilder2.AppendLine($"检测到相同金额的预{PaymentType}单，请确认是否为重复操作！");
                                 errorBuilder2.AppendLine();
-                                errorBuilder2.AppendLine($"当前预{PaymentType}金额：{currentPrePayment.LocalPrepaidAmount}");
-                                errorBuilder2.AppendLine($"累计预{PaymentType}金额：{totalLocalAmount}");
+                                errorBuilder2.AppendLine($"💰 当前单据信息：");
+                                errorBuilder2.AppendLine($"   • 单据编号：{currentPrePayment.PreRPNO}");
+                                errorBuilder2.AppendLine($"   • 预{PaymentType}金额：{currentPrePayment.LocalPrepaidAmount}");
+                                errorBuilder2.AppendLine();
+                                errorBuilder2.AppendLine($"📋 业务信息：");
+                                errorBuilder2.AppendLine($"   • 业务类型：{(BizType)bizTypeGroup.Key}");
+                                errorBuilder2.AppendLine($"   • 来源单号：{billNoGroup.Key}");
+                                errorBuilder2.AppendLine($"   • 累计预{PaymentType}金额：{totalLocalAmount}");
                                 errorBuilder2.AppendLine();
                                 
                                 // 列出金额相同的单据
                                 var duplicateItems = prePaymentLists.Where(a => a.PreRPID != currentPrePayment.PreRPID && a.LocalPrepaidAmount == currentPrePayment.LocalPrepaidAmount).ToList();
-                                errorBuilder2.AppendLine($"发现 {duplicateItems.Count} 笔相同金额的预{PaymentType}单：");
+                                errorBuilder2.AppendLine($"📌 发现 {duplicateItems.Count} 笔相同金额的预{PaymentType}单：");
                                 int itemIndex = 1;
                                 foreach (var item in duplicateItems)
                                 {
-                                    errorBuilder2.AppendLine($"{itemIndex}. 单据编号: {item.PreRPNO}, 金额: {item.LocalPrepaidAmount}, 创建时间: {item.Created_at}");
+                                    errorBuilder2.AppendLine($"   {itemIndex}. 编号: {item.PreRPNO} | 金额: {item.LocalPrepaidAmount} | 时间: {item.Created_at:yyyy-MM-dd HH:mm}");
                                     itemIndex++;
                                 }
                                 errorBuilder2.AppendLine();
-                                errorBuilder2.AppendLine("建议：");
-                                errorBuilder2.AppendLine("1. 仔细核对上述单据，确认是否为重复操作");
-                                errorBuilder2.AppendLine("2. 如果是重复操作，请取消并删除多余的单据");
-                                errorBuilder2.AppendLine("3. 如果确实需要多笔相同金额的预付款，请与财务部门确认");
+                                errorBuilder2.AppendLine("💡 说明：");
+                                errorBuilder2.AppendLine("   • 分批支付相同金额属于正常业务");
+                                errorBuilder2.AppendLine("   • 请核对上述单据，确认非重复操作即可继续");
+                                errorBuilder2.AppendLine();
+                                errorBuilder2.AppendLine("━━━━━━━━━━━━━━━━━━━━━");
 
                                 // 返回需要用户确认的结果
                                 return ConfirmableValidationResult.NeedConfirm(
                                     "重复支付确认",
                                     errorBuilder2.ToString(),
-                                    $"确定要预{PaymentType}吗？"
+                                    "确认是不同批次支付，继续审核？",
+                                    "取消"
                                 );
                             }
                         }

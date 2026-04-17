@@ -1309,7 +1309,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     //默认是否隐藏
                     griddefine[i].Visible = !griddefine[i].DefaultHide;
 
-                    //加载配置中的自定义显示列的控制
+                    //加载配置中的自定义显示列的控制1
                     if (menuController.ColumnDisplays.Any(c => c.ColCaption == griddefine[i].ColCaption
                     &&
                     c.ColCaption != "项"

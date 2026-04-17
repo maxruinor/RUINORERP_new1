@@ -2320,7 +2320,10 @@ namespace RUINORERP.UI.UControls
                         this.AllowDrop = true;
                         if (NeedSaveColumnsXml)
                         {
-                            ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
+                            // 异步加载列配置（优先数据库，兼容XML）
+                            // 注意：在事件处理中使用 Task.Run 来避免阻塞UI
+                            var loadTask = Task.Run(async () => await customizeGrid.LoadColumnsListByCdcAsync());
+                            ColumnDisplays = loadTask.GetAwaiter().GetResult();
                         }
 
 
@@ -2408,6 +2411,22 @@ namespace RUINORERP.UI.UControls
             {
                 xmlFileName = value;
                 customizeGrid.XmlFileName = XmlFileName;
+                customizeGrid.GridKeyName = value;
+            }
+        }
+
+        private long? _menuId;
+        /// <summary>
+        /// 菜单ID，用于数据库列配置存储关联
+        /// </summary>
+        [Browsable(false)]
+        public long? MenuId
+        {
+            get { return _menuId; }
+            set
+            {
+                _menuId = value;
+                customizeGrid.MenuId = value;
             }
         }
 
@@ -2931,7 +2950,7 @@ namespace RUINORERP.UI.UControls
                 Tag = config.ClickEventName
             };
 
-            // 绑定事件处理程序
+            // 绑定事件处理程序1
             if (!string.IsNullOrEmpty(config.ClickEventName))
             {
                 var handler = FindEventHandler(config.ClickEventName);
@@ -3097,7 +3116,7 @@ namespace RUINORERP.UI.UControls
 
 
         //自定义列
-        private void NewSumDataGridView_自定义列(object sender, EventArgs e)
+        public async void NewSumDataGridView_自定义列(object sender, EventArgs e)
         {
             if (customizeGrid.ColumnDisplays.Count == 0)
             {
@@ -3108,7 +3127,9 @@ namespace RUINORERP.UI.UControls
 
             }
 
-            customizeGrid.SetColumns(customizeGrid.LoadColumnsListByCdc(true));
+            // 异步加载最新配置并显示设置窗口
+            var latestConfig = await customizeGrid.LoadColumnsListByCdcAsync(false);
+            customizeGrid.SetColumns(latestConfig);
         }
 
         private void NewSumDataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -4319,7 +4340,10 @@ namespace RUINORERP.UI.UControls
                 this.AllowDrop = true;
                 if (NeedSaveColumnsXml)
                 {
-                    ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
+                    // 异步加载列配置（优先数据库，兼容XML）
+                    // 注意：在事件处理中使用 Task.Run 来避免阻塞UI
+                    var loadTask = Task.Run(async () => await customizeGrid.LoadColumnsListByCdcAsync());
+                    ColumnDisplays = loadTask.GetAwaiter().GetResult();
                 }
 
 

@@ -980,6 +980,7 @@
     <Compile Include="Common\BackgroundCacheLoader.cs" />
     <Compile Include="Common\CheckedListBoxHelper.cs" />
     <Compile Include="Common\ColumnComparer.cs" />
+    <Compile Include="Common\ColumnConfigManager.cs" />
     <Compile Include="Common\ControlBindingHelper.cs" />
     <Compile Include="Common\ControlExtensions.cs" />
     <Compile Include="Common\DatabaseExceptionHandler.cs" />

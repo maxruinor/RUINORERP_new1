@@ -207,31 +207,21 @@ namespace RUINORERP.UI.ForCustomizeGrid
                 MessageBox.Show("不能隐藏所有列！", "提醒", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            
+            // ✅ 修复：直接使用 listView1.Items 的顺序来更新 ColumnDisplays
             int sortindex = 0;
-            //上面临时保存了一个之前的序列数组
             foreach (ListViewItem item in listView1.Items)
             {
-                if (item.Tag is ColDisplayController columnDisplays)
+                if (item.Tag is ColDisplayController columnDisplay)
                 {
-                    if (columnDisplays != null)
-                    {
-                        ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == columnDisplays.ColName).FirstOrDefault();
-                        if (cdc != null)
-                        {
-                            cdc.Visible = item.Checked;
-                            cdc.ColDisplayIndex = sortindex;
-                        }
-
-                    }
-                }
-                if (string.IsNullOrEmpty(item.Text))
-                {
+                    // ✅ 直接修改 Tag 中的对象（它和 ColumnDisplays 中的是同一个引用）
+                    columnDisplay.Visible = item.Checked;
+                    columnDisplay.ColDisplayIndex = sortindex;
+                    
                     sortindex++;
-                    continue;
                 }
-
-                sortindex++;
             }
+            
             DialogResult = DialogResult.OK;
         }
 
@@ -300,8 +290,6 @@ namespace RUINORERP.UI.ForCustomizeGrid
         /// <summary>
         /// 恢复默认列配置
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void btnRestoreDefaultConfig_Click(object sender, EventArgs e)
         {
             try
@@ -333,7 +321,13 @@ namespace RUINORERP.UI.ForCustomizeGrid
                         listView1.Items.Add(lvi);
                     }
                 }
- 
+
+                // 同步更新 ColumnDisplays 集合
+                ColumnDisplays.Clear();
+                ColumnDisplays.AddRange(InitColumnDisplays);
+                
+                // ✅ 不再直接保存和应用，由 CustomizeGrid.SetColumns 统一处理
+                // 只需要设置 DialogResult = OK，让调用方处理
             }
             catch (Exception ex)
             {

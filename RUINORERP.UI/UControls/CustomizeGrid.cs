@@ -1,11 +1,13 @@
-﻿using FastReport.DevComponents.DotNetBar.Controls;
+using FastReport.DevComponents.DotNetBar.Controls;
 using HLH.WinControl.Mycontrol;
+using RUINORERP.UI.Common;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 
@@ -122,46 +124,128 @@ namespace RUINORERP.UI.UControls
         /// <summary>
         /// 是否保存列自定义设置
         /// </summary>
-        public bool NeedSaveColumnsXml { get; set; } = false;
+        public bool NeedSaveColumnsXml { get; set; } = true;
 
 
         /// <summary>
-        /// 持久化只能这个格式，所以思路 只保存name->enname bool
+        /// 持久化到数据库（使用ColumnConfigManager统一管理）
         /// </summary>
-        /// <param name="qs"></param>
+        /// <param name="columnDisplays">列显示配置列表</param>
         public void SaveColumnsList(List<ColDisplayController> columnDisplays)
         {
             if (!NeedSaveColumnsXml)
             {
                 return;
             }
-            if (this.XmlFileNamecdc == null)
+
+            // 验证必要参数
+            if (string.IsNullOrEmpty(this.GridKeyName))
             {
-                this.XmlFileNamecdc = "defaultColfilecdc_1.xml";
+                System.Diagnostics.Debug.WriteLine("警告: GridKeyName未设置，无法保存列配置");
+                return;
             }
-            string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\ColumnsConfig", this.XmlFileNamecdc.ToString());
-            System.IO.FileInfo fi = new FileInfo(PathwithFileName);
-            //判断目录是否存在
-            if (!System.IO.Directory.Exists(fi.Directory.FullName))
+
+            if (!this.MenuId.HasValue || this.MenuId.Value == 0)
             {
-                System.IO.Directory.CreateDirectory(fi.Directory.FullName);
+                System.Diagnostics.Debug.WriteLine("警告: MenuId未设置，无法保存列配置");
+                return;
             }
-            manager.serialize_to_xml(PathwithFileName, columnDisplays);
+
+            try
+            {
+                // 使用统一的ColumnConfigManager进行延时批量保存
+                ColumnConfigManager.Instance.SaveColumnConfig(
+                    this.GridKeyName,
+                    this.MenuId.Value,
+                    columnDisplays
+                );
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"保存列配置失败: {ex.Message}");
+            }
         }
 
 
-        RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
         /// <summary>
         /// 加载列配置列表
-        /// 当init=true时，如果配置文件存在则先删除，再生成默认配置
+        /// 优先从数据库加载（如果配置了MenuId和GridKeyName），兼容XML加载
+        /// 当init=true时，强制重新生成默认配置
         /// </summary>
-        /// <param name="init">是否初始化：true时删除现有配置文件并生成默认配置</param>
+        /// <param name="init">是否初始化：true时删除现有配置并生成默认配置</param>
         /// <returns>列显示控制器列表</returns>
-        public List<ColDisplayController> LoadColumnsListByCdc(bool init = false)
+        public async Task<List<ColDisplayController>> LoadColumnsListByCdcAsync(bool init = false)
         {
             List<ColDisplayController> ColumnDisplays = new List<ColDisplayController>();
 
-            string PickConfigPath = string.Empty;
+            try
+            {
+                // 如果init=true，跳过加载，直接生成默认配置
+                if (init)
+                {
+                    ColumnDisplays = GenerateDefaultColumnConfig();
+                    if (NeedSaveColumnsXml && !string.IsNullOrEmpty(this.GridKeyName) && this.MenuId.HasValue)
+                    {
+                        // 异步重置为默认配置
+                        await ColumnConfigManager.Instance.ResetToDefaultAsync(
+                            this.GridKeyName,
+                            this.MenuId.Value,
+                            ColumnDisplays
+                        );
+                    }
+                    return ColumnDisplays;
+                }
+
+                // 尝试从数据库加载（如果有MenuId和GridKeyName）
+                if (!string.IsNullOrEmpty(this.GridKeyName) && this.MenuId.HasValue && this.MenuId.Value > 0)
+                {
+                    ColumnDisplays = await ColumnConfigManager.Instance.LoadColumnConfigAsync(
+                        this.GridKeyName,
+                        this.MenuId.Value
+                    );
+
+                    // 如果数据库中有配置，直接返回
+                    if (ColumnDisplays != null && ColumnDisplays.Count > 0)
+                    {
+                        return ColumnDisplays;
+                    }
+                }
+
+                // 数据库无配置或参数不全，尝试从XML加载（兼容旧版本）
+                ColumnDisplays = LoadFromXmlLegacy();
+
+                // 如果XML也没有配置，生成默认配置
+                if (ColumnDisplays == null || ColumnDisplays.Count == 0)
+                {
+                    ColumnDisplays = GenerateDefaultColumnConfig();
+                    
+                    // 如果需要保存，则保存到数据库
+                    if (NeedSaveColumnsXml && !string.IsNullOrEmpty(this.GridKeyName) && this.MenuId.HasValue)
+                    {
+                        ColumnConfigManager.Instance.SaveColumnConfig(
+                            this.GridKeyName,
+                            this.MenuId.Value,
+                            ColumnDisplays
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载列配置失败: {ex.Message}");
+                // 异常时生成默认配置
+                ColumnDisplays = GenerateDefaultColumnConfig();
+            }
+
+            return ColumnDisplays;
+        }
+
+        /// <summary>
+        /// 从XML文件加载配置（兼容旧版本的遗留方法）
+        /// </summary>
+        /// <returns>列显示控制器列表</returns>
+        private List<ColDisplayController> LoadFromXmlLegacy()
+        {
             try
             {
                 if (this.XmlFileNamecdc == null)
@@ -170,54 +254,21 @@ namespace RUINORERP.UI.UControls
                 }
                 string filepath = System.IO.Path.Combine(Application.StartupPath + "\\ColumnsConfig", this.XmlFileNamecdc.ToString());
 
-                //判断目录是否存在
-                if (!System.IO.Directory.Exists(Application.StartupPath + "\\ColumnsConfig"))
+                if (!System.IO.File.Exists(filepath))
                 {
-                    System.IO.Directory.CreateDirectory(Application.StartupPath + "\\ColumnsConfig");
+                    return new List<ColDisplayController>();
                 }
 
-                // 如果init=true且配置文件存在，则先删除配置文件
-                if (init && System.IO.File.Exists(filepath))
-                {
-                    System.IO.File.Delete(filepath);
-                }
+                var xmlHelper = new RUINORERP.Common.Helper.XmlHelper();
+                var config = xmlHelper.deserialize_from_xml(filepath, typeof(List<ColDisplayController>)) as List<ColDisplayController>;
 
-                string s = "";
-                if (System.IO.File.Exists(filepath))
-                {
-                    if (!System.IO.File.Exists(filepath))
-                        s = "不存在相应的目录";
-                    else
-                    {
-                        ColumnDisplays = manager.deserialize_from_xml(filepath, typeof(List<ColDisplayController>)) as List<ColDisplayController>;
-                    }
-                }
-
+                return config ?? new List<ColDisplayController>();
             }
             catch (Exception ex)
             {
-                // 记录异常但不中断流程
-                System.Diagnostics.Debug.WriteLine($"加载列配置失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"XML加载失败: {ex.Message}");
+                return new List<ColDisplayController>();
             }
-
-            if (ColumnDisplays == null)
-            {
-                ColumnDisplays = new List<ColDisplayController>();
-            }
-
-            // 如果需要保存列配置，并且列配置为空（可能是init=true删除了配置文件，或者配置文件不存在）
-            if ((ColumnDisplays.Count == 0 || init))
-            {
-                // 生成默认的列配置
-                ColumnDisplays = GenerateDefaultColumnConfig();
-            }
-            if (NeedSaveColumnsXml)
-            {
-                // 保存默认配置
-                SaveColumnsList(ColumnDisplays);
-            }
-
-            return ColumnDisplays;
         }
 
         /// <summary>
@@ -498,6 +549,26 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         public string XmlFileNamecdc { get; set; }
 
+        private long? _menuId;
+        /// <summary>
+        /// 菜单ID，用于数据库存储关联
+        /// </summary>
+        public long? MenuId
+        {
+            get { return _menuId; }
+            set { _menuId = value; }
+        }
+
+        private string _gridKeyName;
+        /// <summary>
+        /// 表格键名，用于数据库存储
+        /// </summary>
+        public string GridKeyName
+        {
+            get { return _gridKeyName; }
+            set { _gridKeyName = value; }
+        }
+
         private string xmlFileName = string.Empty;
 
         [Browsable(false)]
@@ -526,7 +597,7 @@ namespace RUINORERP.UI.UControls
         /// <summary>
         /// 设置列
         /// </summary>
-        public void SetColumns(List<ColDisplayController> InitColumnDisplays)
+        public async void SetColumns(List<ColDisplayController> InitColumnDisplays)
         {
 
             if (targetDataGridView != null && targetDataGridView.DataSource != null)
@@ -542,20 +613,47 @@ namespace RUINORERP.UI.UControls
                            select col;
 
                 set.ColumnDisplays = cols.ToList();
-                //if (NeedSaveColumnsXml)
-                //{
-                //    set.InitColumnDisplays = LoadColumnsListByCdc(true);
-                //}
 
                 set.InitializeDefaultColumn += Set_InitializeDefaultColumn;
 
-
                 //将上次保存的带到UI上 如勾选状态
-                // set.QueryResult = qr;
                 if (set.ShowDialog() == DialogResult.OK)
                 {
+                    // ✅ 从 frmColumnsSets 获取修改后的配置
+                    ColumnDisplays.Clear();
+                    ColumnDisplays.AddRange(set.ColumnDisplays);
+                    
+                    // 应用配置到 UI
                     targetDataGridView.BindColumnStyle();
-                    SaveColumnsList(ColumnDisplays);
+
+                    if (NeedSaveColumnsXml)
+                    {
+                        // ✅ 判断是否是恢复默认操作
+                        // 如果 ColumnDisplays 与 InitColumnDisplays 完全相同，说明是恢复默认
+                        bool isRestoredDefault = ColumnDisplays.Count == InitColumnDisplays.Count &&
+                            ColumnDisplays.All(c => InitColumnDisplays.Any(ic => 
+                                ic.ColName == c.ColName && 
+                                ic.Visible == c.Visible && 
+                                ic.ColDisplayIndex == c.ColDisplayIndex));
+                        
+                        if (isRestoredDefault)
+                        {
+                            // 恢复默认：立即保存到数据库（不延时）
+                            if (!string.IsNullOrEmpty(this.GridKeyName) && this.MenuId.HasValue)
+                            {
+                                await ColumnConfigManager.Instance.ResetToDefaultAsync(
+                                    this.GridKeyName,
+                                    this.MenuId.Value,
+                                    ColumnDisplays
+                                );
+                            }
+                        }
+                        else
+                        {
+                            // 手动修改：延时批量保存
+                            SaveColumnsList(ColumnDisplays);
+                        }
+                    }
                 }
             }
             else
@@ -571,9 +669,9 @@ namespace RUINORERP.UI.UControls
                 ColumnDisplays.Clear();
                 if (ColumnDisplays.Count == 0)
                 {
-                    // 生成默认的列配置
                     ColumnDisplays = GenerateDefaultColumnConfig();
                 }
+
                 InitializeDefaultColumnCustomizeGrid(ColumnDisplays);
             }
         }

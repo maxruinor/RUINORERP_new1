@@ -28,6 +28,8 @@
         <OutputType>Library</OutputType>
         <RootNamespace>Krypton.Docking</RootNamespace>
         <AssemblyName>Krypton.Docking</AssemblyName>
+        <!-- 禁用自动生成的AssemblyInfo，避免调试时EN1005错误 -->
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <!-- Set the CheckEolTargetFramework property to false to fix the warning -->
         <CheckEolTargetFramework>false</CheckEolTargetFramework>
         <ApplicationIcon>Krypton.ico</ApplicationIcon>

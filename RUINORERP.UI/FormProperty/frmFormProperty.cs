@@ -22,6 +22,10 @@ using System.Xml.Serialization;
 
 namespace RUINORERP.UI.FormProperty
 {
+
+    /// <summary>
+    /// 1
+    /// </summary>
     public partial class frmFormProperty : frmBase
     {
        

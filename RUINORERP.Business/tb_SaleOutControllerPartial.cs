@@ -950,8 +950,8 @@ namespace RUINORERP.Business
 
                         if (orderUpdateResult <= 0)
                         {
-                            _logger.LogError($"销售出库单{entity.SaleOutNo}审核：订单状态更新失败，订单ID: {entity.tb_saleorder.SOrder_ID}");
                             _unitOfWorkManage.RollbackTran();
+                            _logger.LogError($"销售出库单{entity.SaleOutNo}审核：订单状态更新失败，订单ID: {entity.tb_saleorder.SOrder_ID}");
                             rrs.Succeeded = false;
                             rrs.ErrorMsg = "订单状态更新失败，审核终止";
                             return rrs;
@@ -1048,13 +1048,13 @@ namespace RUINORERP.Business
                 }).ExecuteCommandAsync();
 
 
-                // 关键修复：事务提交前验证关键数据完整性
+                _unitOfWorkManage.CommitTran();
+
+                // 事务提交后记录日志
                 if (entity.tb_saleorder != null && entity.tb_saleorder.DataStatus == (int)DataStatus.完结)
                 {
-                    _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：订单{entity.tb_saleorder.SOrderNo}已标记为完结状态，准备提交事务");
+                    _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：订单{entity.tb_saleorder.SOrderNo}已标记为完结状态，事务已提交");
                 }
-
-                _unitOfWorkManage.CommitTran();
 
                 // 【死锁优化】财务独立事务处理（仅在启用财务模块时执行）
                 // 核心特性：

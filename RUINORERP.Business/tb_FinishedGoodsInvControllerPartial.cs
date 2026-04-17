@@ -296,17 +296,14 @@ namespace RUINORERP.Business
                     //新增库存中有重复的商品，操作失败。请联系管理员。
                     rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rs.Succeeded = false;
-                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                     _unitOfWorkManage.RollbackTran(); // ⚠️ BUG修复：事务中返回前必须回滚
+                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                     return rs;
                 }
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                if (InvMainCounter == 0)
-                {
-                    _logger.Debug($"{entity.DeliveryBillNo}缴库更新库存结果为0行，请检查数据！");
-                }
+                // 日志移到事务外记录
 
                 //如果缴库明细中的品不是来自制令单，则报错
                 if (!entity.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && c.Location_ID == entity.tb_manufacturingorder.Location_ID))

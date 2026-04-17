@@ -3157,13 +3157,11 @@ namespace RUINORERP.Business
                     rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_PaymentRecord>(entity as tb_FM_PaymentRecord)
                         .Include(m => m.tb_FM_PaymentRecordDetails)
                         .ExecuteCommandAsync();
-                    _logger.LogDebug($"插入收款记录: PaymentId={entity.PaymentId}, 结果={rs}");
                 }
 
                 // 仅在当前方法管理事务时才提交
                 if (shouldManageTransaction)
                 {
-                    _logger.LogDebug("BaseSaveOrUpdateWithChild: 提交事务");
                     _unitOfWorkManage.CommitTran();
                 }
 
@@ -3171,6 +3169,7 @@ namespace RUINORERP.Business
                 entity.PrimaryKeyID = entity.PaymentId;
                 rsms.Succeeded = rs;
 
+                // 事务提交后记录日志
                 _logger.LogInformation($"收款记录保存成功: PaymentId={entity.PaymentId}, Succeeded={rs}");
             }
             catch (Exception ex)
@@ -3178,14 +3177,14 @@ namespace RUINORERP.Business
                 // 仅在当前方法管理事务时才回滚
                 if (shouldManageTransaction)
                 {
-                    _logger.LogError(ex, "BaseSaveOrUpdateWithChild: 保存失败，正在回滚事务");
                     _unitOfWorkManage.RollbackTran();
+                    _logger.LogError(ex, "BaseSaveOrUpdateWithChild: 保存失败，事务已回滚");
                 }
                 else if (isInExistingTransaction)
                 {
                     // 如果在现有事务中失败，标记需要回滚
-                    _logger.LogError(ex, "BaseSaveOrUpdateWithChild: 在现有事务中保存失败，标记回滚");
                     _unitOfWorkManage.MarkForRollback();
+                    _logger.LogError(ex, "BaseSaveOrUpdateWithChild: 在现有事务中保存失败，标记回滚");
                 }
 
                 // 出错后，取消生成的ID等值

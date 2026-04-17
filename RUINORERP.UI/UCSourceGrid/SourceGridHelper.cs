@@ -3834,7 +3834,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
             SourceGridDefine sgdefine = dc.ParentGridDefine;
             //var colInfo = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId);
-            foreach (ColumnInfo item in sgdefine.grid.Columns)
+            foreach (SourceGrid.ColumnInfo item in sgdefine.grid.Columns)
             {
                 if (item == null)
                 {

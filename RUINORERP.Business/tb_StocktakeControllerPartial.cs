@@ -188,6 +188,7 @@ namespace RUINORERP.Business
 
                 if (CheckNewInvList.Count > 0)
                 {
+                    _unitOfWorkManage.RollbackTran(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
                     //新增库存中有重复的商品，操作失败。请联系管理员。
                     rmrs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rmrs.Succeeded = false;
@@ -381,6 +382,7 @@ namespace RUINORERP.Business
                     rmsr.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rmsr.Succeeded = false;
                     _logger.LogError(rmsr.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    _unitOfWorkManage.RollbackTran(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
                     return rmsr;
 
                 }

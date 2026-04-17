@@ -63,8 +63,9 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="username">用户名</param>
         /// <param name="password">密码</param>
         /// <param name="ct">取消令牌</param>
+        /// <param name="isAutoLogin">是否为自动登录（自动登录时不显示弹窗）</param>
         /// <returns>包含指令信息的登录响应</returns>
-        public async Task<LoginResponse> LoginAsync(string username, string password, CancellationToken ct = default)
+        public async Task<LoginResponse> LoginAsync(string username, string password, CancellationToken ct = default, bool isAutoLogin = false)
         {
             // 验证参数
             if (string.IsNullOrEmpty(username))
@@ -128,7 +129,6 @@ namespace RUINORERP.UI.Network.Services
                 // 登录成功后处理Token
                 if (response.Token != null && !string.IsNullOrEmpty(response.Token.AccessToken))
                 {
-
                     //接收来自服务器的Token并保存
                     await _tokenManager.TokenStorage.SetTokenAsync(response.Token);
                     if (MainForm.Instance?.AppContext != null)
@@ -136,6 +136,21 @@ namespace RUINORERP.UI.Network.Services
                         MainForm.Instance.AppContext.SessionId = response.SessionId;
                     }
 
+                    // ✅ 如果不是自动登录，保存凭据供下次自动登录使用
+                    if (!isAutoLogin)
+                    {
+                        try
+                        {
+                            // 获取通信服务实例并保存凭据
+                            var commService = RUINORERP.UI.Startup.GetFromFac<ClientCommunicationService>();
+                            commService?.SetAutoReloginCredentials(username, password);
+                            _logger?.LogDebug("已保存自动登录凭据");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, "保存自动登录凭据失败");
+                        }
+                    }
                 }
                 else
                 {
@@ -143,7 +158,7 @@ namespace RUINORERP.UI.Network.Services
                 }
 
                 // 处理注册状态和到期提醒
-                await HandleRegistrationStatusAsync(response);
+                await HandleRegistrationStatusAsync(response, isAutoLogin);
 
                 return response;
             }
@@ -238,7 +253,8 @@ namespace RUINORERP.UI.Network.Services
         {
             var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
             // 检查Token是否有效（未过期）
-            if (tokenInfo != null && tokenInfo.ExpiresAt > DateTime.UtcNow.AddMinutes(1)) // 提前1分钟视为过期
+            // 优化：使用5分钟缓冲时间，避免短期重连时Token被误判为失效
+            if (tokenInfo != null && !tokenInfo.IsExpired())
             {
                 return tokenInfo.AccessToken;
             }
@@ -324,7 +340,8 @@ namespace RUINORERP.UI.Network.Services
         /// 处理注册状态和到期提醒
         /// </summary>
         /// <param name="loginResponse">登录响应</param>
-        private async Task HandleRegistrationStatusAsync(LoginResponse loginResponse)
+        /// <param name="isAutoLogin">是否为自动登录（自动登录时不显示弹窗）</param>
+        private async Task HandleRegistrationStatusAsync(LoginResponse loginResponse, bool isAutoLogin = false)
         {
             try
             {
@@ -333,19 +350,27 @@ namespace RUINORERP.UI.Network.Services
                 {
                     _logger?.LogInformation($"收到注册到期提醒：{loginResponse.ExpirationReminder.ReminderMessage}");
 
-                    // 在主线程上显示提醒
-                    if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                    // ✅ 自动登录时不显示弹窗，仅记录日志
+                    if (!isAutoLogin)
                     {
-                        MainForm.Instance.Invoke(new Action(() =>
+                        // 在主线程上显示提醒
+                        if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
                         {
-                            MessageBox.Show(
-                                loginResponse.ExpirationReminder.ReminderMessage + "\n\n" +
-                                $"续费方式：{loginResponse.ExpirationReminder.RenewalMethod}\n" +
-                                $"联系方式：{loginResponse.ExpirationReminder.ContactInfo}",
-                                "注册到期提醒",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Warning);
-                        }));
+                            MainForm.Instance.Invoke(new Action(() =>
+                            {
+                                MessageBox.Show(
+                                    loginResponse.ExpirationReminder.ReminderMessage + "\n\n" +
+                                    $"续费方式：{loginResponse.ExpirationReminder.RenewalMethod}\n" +
+                                    $"联系方式：{loginResponse.ExpirationReminder.ContactInfo}",
+                                    "注册到期提醒",
+                                    MessageBoxButtons.OK,
+                                    MessageBoxIcon.Warning);
+                            }));
+                        }
+                    }
+                    else
+                    {
+                        _logger?.LogDebug("自动登录模式，跳过注册到期提醒弹窗");
                     }
                 }
 

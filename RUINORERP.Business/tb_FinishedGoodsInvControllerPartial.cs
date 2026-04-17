@@ -44,6 +44,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 审核，先判断是否结案，再更新状态
+        /// 优化：事务区间最小化，查询操作移到事务外
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
@@ -51,86 +52,95 @@ namespace RUINORERP.Business
         {
             tb_FinishedGoodsInv entity = ObjectEntity as tb_FinishedGoodsInv;
             ReturnResults<T> rs = new ReturnResults<T>();
+            
+            #region 【事务外】预处理阶段 - 批量预加载所有需要的数据
+            
+            // 1. 预加载库存数据
+            var allKeys = new List<(long ProdDetailID, long Location_ID)>();
+            if (entity.tb_FinishedGoodsInvDetails != null)
+            {
+                foreach (var detail in entity.tb_FinishedGoodsInvDetails)
+                {
+                    allKeys.Add((detail.ProdDetailID, detail.Location_ID));
+                }
+            }
+
+            var invDict1 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
+            if (allKeys.Count > 0)
+            {
+                var requiredKeys = allKeys.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
+                var inventoryList = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
+                    .ToListAsync();
+                invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+            }
+
+            // 2. 预加载缴库单明细
+            if (entity.tb_FinishedGoodsInvDetails == null)
+            {
+                entity.tb_FinishedGoodsInvDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInvDetail>()
+                    .Where(c => c.FG_ID == entity.FG_ID)
+                    .ToListAsync();
+            }
+
+            // 3. 预加载制令单完整数据（包括关联数据）
+            tb_ManufacturingOrder manufacturingOrder = null;
+            if (entity.MOID > 0)
+            {
+                manufacturingOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+                    .Includes(b => b.tb_proddetail, c => c.tb_prod)
+                    .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
+                    .AsNavQueryable()
+                    .Includes(d => d.tb_ManufacturingOrderDetails, e => e.tb_bom_s, c => c.tb_BOM_SDetails, f => f.tb_BOM_SDetailSubstituteMaterials)
+                    .Includes(b => b.tb_productiondemand, c => c.tb_productionplan, d => d.tb_ProductionPlanDetails)
+                    .Includes(b => b.tb_MaterialRequisitions, c => c.tb_MaterialRequisitionDetails)
+                    .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails)
+                    .Where(c => c.MOID == entity.MOID)
+                    .SingleAsync();
+            }
+
+            // 4. 预加载BOM明细
+            var bomDetailDict = new Dictionary<long, tb_BOM_SDetail>();
+            if (entity.MOID > 0 && entity.tb_FinishedGoodsInvDetails != null && manufacturingOrder != null && manufacturingOrder.BOM_ID > 0)
+            {
+                var prodDetailIds = entity.tb_FinishedGoodsInvDetails.Select(d => d.ProdDetailID).Distinct().ToList();
+                if (prodDetailIds.Any())
+                {
+                    var bomDetails = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_BOM_SDetail>()
+                        .Where(d => prodDetailIds.Contains(d.ProdDetailID) && d.BOM_ID == manufacturingOrder.BOM_ID)
+                        .ToListAsync();
+                    
+                    bomDetailDict = bomDetails.ToDictionary(d => d.ProdDetailID);
+                    _logger.LogDebug($"✅ 缴库单审核预加载BOM明细: {bomDetails.Count}条记录");
+                }
+            }
+
+            // 5. 预加载需求分析单和计划单数据（如果需要）
+            tb_ProductionDemand productionDemand = null;
+            if (manufacturingOrder != null && manufacturingOrder.PDID > 0)
+            {
+                productionDemand = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
+                    .AsNavQueryable()
+                    .Includes(a => a.tb_productionplan, b => b.tb_ProductionPlanDetails)
+                    .Where(c => c.PDID == manufacturingOrder.PDID)
+                    .SingleAsync();
+            }
+            
+            #endregion
+            
+            // 将预加载的数据赋值给实体
+            entity.tb_manufacturingorder = manufacturingOrder;
+            
+            // 【事务开始】只包含更新操作，最小化事务区间
             try
             {
-                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
-                var allKeys = new List<(long ProdDetailID, long Location_ID)>();
-                if (entity.tb_FinishedGoodsInvDetails != null)
-                {
-                    foreach (var detail in entity.tb_FinishedGoodsInvDetails)
-                    {
-                        allKeys.Add((detail.ProdDetailID, detail.Location_ID));
-                    }
-                }
-
-                var invDict1 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
-                if (allKeys.Count > 0)
-                {
-                    var requiredKeys = allKeys.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
-                    var inventoryList = await _unitOfWorkManage.GetDbClient()
-                        .Queryable<tb_Inventory>()
-                        .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
-                        .ToListAsync();
-                    invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
-                }
-                #endregion
-
-                // ✅ P1修复: 批量预加载BOM明细(性能优化 - 避免循环中查询数据库)
-                var bomDetailDict = new Dictionary<long, tb_BOM_SDetail>();
-                if (entity.MOID > 0 && entity.tb_FinishedGoodsInvDetails != null)
-                {
-                    var prodDetailIds = entity.tb_FinishedGoodsInvDetails.Select(d => d.ProdDetailID).Distinct().ToList();
-                    if (prodDetailIds.Any())
-                    {
-                        // 需要查询制令单的BOM_ID
-                        var mo = await _unitOfWorkManage.GetDbClient()
-                            .Queryable<tb_ManufacturingOrder>()
-                            .Where(m => m.MOID == entity.MOID)
-                            .FirstAsync();
-                        
-                        if (mo != null && mo.BOM_ID > 0)
-                        {
-                            var bomDetails = await _unitOfWorkManage.GetDbClient()
-                                .Queryable<tb_BOM_SDetail>()
-                                .Where(d => prodDetailIds.Contains(d.ProdDetailID) && d.BOM_ID == mo.BOM_ID)
-                                .ToListAsync();
-                            
-                            bomDetailDict = bomDetails.ToDictionary(d => d.ProdDetailID);
-                            
-                            _logger.LogDebug($"✅ 缴库单审核预加载BOM明细: {bomDetails.Count}条记录");
-                        }
-                    }
-                }
-
-                // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                 
-                if (entity.tb_FinishedGoodsInvDetails == null)
-                {
-                    entity.tb_FinishedGoodsInvDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInvDetail>()
-                        .Where(c => c.FG_ID == entity.FG_ID)
-                        .ToListAsync();
-                }
-
-
-                //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案
-                //缴库复制。每次还是要先查询一下
-                if (entity.MOID > 0)
-                {
-                    entity.tb_manufacturingorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
-                    .Includes(b => b.tb_proddetail, c => c.tb_prod)
-                    .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
-                    .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                    .Includes(d => d.tb_ManufacturingOrderDetails, e => e.tb_bom_s, c => c.tb_BOM_SDetails, f => f.tb_BOM_SDetailSubstituteMaterials)
-                    .Includes(b => b.tb_productiondemand, c => c.tb_productionplan, d => d.tb_ProductionPlanDetails)
-                    //  .Includes(b => b.tb_productiondemand, c => c.tb_ManufacturingOrders, d => d.tb_ManufacturingOrderDetails)
-                    .Includes(b => b.tb_MaterialRequisitions, c => c.tb_MaterialRequisitionDetails)
-                   .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails) //找到他名下的所有的缴库信息
-                    .Where(c => c.MOID == entity.MOID)
-                    .SingleAsync();
-                }
+                
+                // 注意：所有查询已在事务外完成，这里直接使用预加载的数据
 
                 //如果制令单中的关键物料没有发全则不能缴库,或只是提醒，用全局变量控制？
                 if (true)
@@ -287,6 +297,7 @@ namespace RUINORERP.Business
                     rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rs.Succeeded = false;
                     _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    _unitOfWorkManage.RollbackTran(); // ⚠️ BUG修复：事务中返回前必须回滚
                     return rs;
                 }
 
@@ -367,6 +378,9 @@ namespace RUINORERP.Business
                     //如果总缴库数量大于最小制成数量则审核出错。
                     if (PaidQuantity > CanManufactureQtyBybom)
                     {
+                        // ⚠️ P0严重BUG修复：返回前必须先回滚事务，否则会导致库存已更新但单据未审核的数据不一致
+                        _unitOfWorkManage.RollbackTran();
+                        
                         // ✅ 修复：不再弹出MessageBox，而是返回需要用户确认的结果
                         string msg = $"系统检测到缴库数量大于发出的关键物料能生产的最小数量";
                         try
@@ -458,16 +472,9 @@ namespace RUINORERP.Business
                 #endregion
 
                 //更新计划单已交数量，制令单会引用需求分析，需求分析引用计划单
-                if (entity.tb_manufacturingorder.PDID > 0)
+                // ✅ 优化：使用事务外预加载的 productionDemand 数据
+                if (productionDemand != null && entity.tb_manufacturingorder.PDID > 0)
                 {
-                    //2024-6-26修改为强引用了
-                    //因为没有强引用 这里主动去查询
-                    tb_ProductionDemand productionDemand = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
-                       .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                       .Includes(a => a.tb_productionplan, b => b.tb_ProductionPlanDetails)
-                       .Where(c => c.PDID == entity.tb_manufacturingorder.PDID)
-                       .SingleAsync();
-
                     //一个缴款单上面一个制令单。一个制令单 找到 需求单，再找到计划单。但是：需求下有多个制令单都来自于一个计划单，
                     //所以这里要循环加总保存到计划单中。
                     #region 更新计划单的完成数量
@@ -598,72 +605,92 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 反审核
+        /// 优化：事务区间最小化，查询操作移到事务外
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-
-
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             tb_FinishedGoodsInv entity = ObjectEntity as tb_FinishedGoodsInv;
             ReturnResults<T> rs = new ReturnResults<T>();
 
+            //判断是否能反审?
+            if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
+            {
+                return rs;
+            }
+
+            #region 【事务外】预处理阶段 - 批量预加载所有需要的数据
+            
+            // 1. 预加载库存数据
+            var allKeys2 = new List<(long ProdDetailID, long Location_ID)>();
+            if (entity.tb_FinishedGoodsInvDetails != null)
+            {
+                foreach (var detail in entity.tb_FinishedGoodsInvDetails)
+                {
+                    allKeys2.Add((detail.ProdDetailID, detail.Location_ID));
+                }
+            }
+
+            var invDict2 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
+            if (allKeys2.Count > 0)
+            {
+                var requiredKeys = allKeys2.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
+                var inventoryList = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
+                    .ToListAsync();
+                invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+            }
+
+            // 2. 预加载制令单完整数据
+            tb_ManufacturingOrder manufacturingOrder = null;
+            if (entity.MOID > 0)
+            {
+                manufacturingOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+                    .AsNavQueryable()
+                    .Includes(b => b.tb_proddetail, c => c.tb_prod)
+                    .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails)
+                    .Includes(b => b.tb_MaterialRequisitions, c => c.tb_MaterialRequisitionDetails)
+                    .Where(c => c.MOID == entity.MOID)
+                    .SingleAsync();
+            }
+
+            // 3. 预加载BOM明细
+            var bomDetailDict2 = new Dictionary<long, tb_BOM_SDetail>();
+            if (entity.MOID > 0 && entity.tb_FinishedGoodsInvDetails != null && manufacturingOrder != null && manufacturingOrder.BOM_ID > 0)
+            {
+                var prodDetailIds = entity.tb_FinishedGoodsInvDetails.Select(d => d.ProdDetailID).Distinct().ToList();
+                if (prodDetailIds.Any())
+                {
+                    var bomDetails = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_BOM_SDetail>()
+                        .Where(d => prodDetailIds.Contains(d.ProdDetailID) && d.BOM_ID == manufacturingOrder.BOM_ID)
+                        .ToListAsync();
+                    
+                    bomDetailDict2 = bomDetails.ToDictionary(d => d.ProdDetailID);
+                }
+            }
+
+            // 4. 预加载需求分析单和计划单数据（如果需要）
+            tb_ProductionDemand productionDemand = null;
+            if (manufacturingOrder != null && manufacturingOrder.PDID > 0)
+            {
+                productionDemand = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
+                    .AsNavQueryable()
+                    .Includes(a => a.tb_productionplan, b => b.tb_ProductionPlanDetails)
+                    .Where(c => c.PDID == manufacturingOrder.PDID)
+                    .SingleAsync();
+            }
+            
+            #endregion
+            
+            // 将预加载的数据赋值给实体
+            entity.tb_manufacturingorder = manufacturingOrder;
+            
+            // 【事务开始】只包含更新操作，最小化事务区间
             try
             {
-                //判断是否能反审?
-                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
-                {
-                    return rs;
-                }
-
-                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
-                var allKeys2 = new List<(long ProdDetailID, long Location_ID)>();
-                if (entity.tb_FinishedGoodsInvDetails != null)
-                {
-                    foreach (var detail in entity.tb_FinishedGoodsInvDetails)
-                    {
-                        allKeys2.Add((detail.ProdDetailID, detail.Location_ID));
-                    }
-                }
-
-                var invDict2 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
-                if (allKeys2.Count > 0)
-                {
-                    var requiredKeys = allKeys2.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
-                    var inventoryList = await _unitOfWorkManage.GetDbClient()
-                        .Queryable<tb_Inventory>()
-                        .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
-                        .ToListAsync();
-                    invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
-                }
-                #endregion
-
-                // ✅ P1修复: 反审核前批量预加载BOM明细(性能优化)
-                var bomDetailDict2 = new Dictionary<long, tb_BOM_SDetail>();
-                if (entity.MOID > 0 && entity.tb_FinishedGoodsInvDetails != null)
-                {
-                    var prodDetailIds = entity.tb_FinishedGoodsInvDetails.Select(d => d.ProdDetailID).Distinct().ToList();
-                    if (prodDetailIds.Any())
-                    {
-                        // 需要查询制令单的BOM_ID
-                        var mo = await _unitOfWorkManage.GetDbClient()
-                            .Queryable<tb_ManufacturingOrder>()
-                            .Where(m => m.MOID == entity.MOID)
-                            .FirstAsync();
-                        
-                        if (mo != null && mo.BOM_ID > 0)
-                        {
-                            var bomDetails = await _unitOfWorkManage.GetDbClient()
-                                .Queryable<tb_BOM_SDetail>()
-                                .Where(d => prodDetailIds.Contains(d.ProdDetailID) && d.BOM_ID == mo.BOM_ID)
-                                .ToListAsync();
-                            
-                            bomDetailDict2 = bomDetails.ToDictionary(d => d.ProdDetailID);
-                        }
-                    }
-                }
-
-                // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
@@ -719,23 +746,10 @@ namespace RUINORERP.Business
                     await ctrbom.RollbackParentBOMsCostAsync(child.ProdDetailID);
                 }
 
-
-
-                #region
-
-                //处理 制令单？ 要单独处理，查出来，因为没有用强引用
-                //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案--的反操作
-
-                if (entity.MOID > 0)
-                {
-                    entity.tb_manufacturingorder = _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
-                    .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                    .Includes(b => b.tb_proddetail, c => c.tb_prod)
-                    .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails)
-                    .Includes(b => b.tb_MaterialRequisitions, c => c.tb_MaterialRequisitionDetails)
-                    .Where(c => c.MOID == entity.MOID)
-                    .Single();
-                }
+                #region 处理制令单和计划单
+                
+                // ✅ 优化：使用事务外预加载的 manufacturingOrder 数据
+                // 更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案--的反操作
 
                 if (entity.tb_manufacturingorder != null)
                 {
@@ -787,15 +801,9 @@ namespace RUINORERP.Business
                 }
 
                 //更新计划单已交数量，制令单会引用需求分析，需求分析引用计划单
-                if (entity.tb_manufacturingorder.PDID > 0)
+                // ✅ 优化：使用事务外预加载的 productionDemand 数据
+                if (productionDemand != null && entity.tb_manufacturingorder.PDID > 0)
                 {
-
-
-                    tb_ProductionDemand productionDemand = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
-                       .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                       .Includes(a => a.tb_productionplan, b => b.tb_ProductionPlanDetails)
-                       .Where(c => c.PDID == entity.tb_manufacturingorder.PDID)
-                       .SingleAsync();
                     foreach (var child in entity.tb_FinishedGoodsInvDetails)
                     {
                         tb_ProductionPlanDetail planDetail = productionDemand.tb_productionplan.tb_ProductionPlanDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID);

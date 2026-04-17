@@ -121,6 +121,13 @@ namespace RUINORERP.Model.ConfigModel
         [Description("是否启用单据状态变化消息发送功能")]
         public bool EnableBillStatusMessage { get; set; } = true;
 
+        #region AI配置
+
+        [JsonProperty("AIProviderType")]
+        [Category("AI配置")]
+        [Description("AI服务提供商类型：Ollama、OpenAI、AzureOpenAI等")]
+        public string AIProviderType { get; set; } = "Ollama";
+
         [JsonProperty("OllamaApiAddress")]
         [Category("AI配置")]
         [Description("OLLAMA大模型API地址")]
@@ -130,5 +137,38 @@ namespace RUINORERP.Model.ConfigModel
         [Category("AI配置")]
         [Description("OLLAMA大模型默认名称")]
         public string OllamaDefaultModel { get; set; } = "deepseek-coder:6.7b";
+
+        [JsonProperty("OpenAIApiKey")]
+        [Category("AI配置")]
+        [Description("OpenAI API密钥（使用外部API时需要）")]
+        public string OpenAIApiKey { get; set; } = "";
+
+        [JsonProperty("OpenAIApiBaseUrl")]
+        [Category("AI配置")]
+        [Description("OpenAI API基础URL，默认为https://api.openai.com/v1")]
+        public string OpenAIApiBaseUrl { get; set; } = "https://api.openai.com/v1";
+
+        [JsonProperty("OpenAIDefaultModel")]
+        [Category("AI配置")]
+        [Description("OpenAI默认模型，如gpt-3.5-turbo、gpt-4等")]
+        public string OpenAIDefaultModel { get; set; } = "gpt-3.5-turbo";
+
+        [JsonProperty("AIRequestTimeout")]
+        [Category("AI配置")]
+        [Description("AI请求超时时间（秒）")]
+        [Range(1, 300, ErrorMessage = "超时时间必须在1-300秒之间")]
+        public int AIRequestTimeout { get; set; } = 60;
+
+        [JsonProperty("AIEnableDataImport")]
+        [Category("AI配置")]
+        [Description("是否启用AI辅助数据导入功能")]
+        public bool AIEnableDataImport { get; set; } = true;
+
+        [JsonProperty("AIEnableSmartAnalysis")]
+        [Category("AI配置")]
+        [Description("是否启用AI智能分析功能")]
+        public bool AIEnableSmartAnalysis { get; set; } = false;
+
+        #endregion
     }
 }

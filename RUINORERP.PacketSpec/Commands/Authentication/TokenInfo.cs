@@ -49,8 +49,9 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// </summary>
         public bool IsExpired()
         {
-            // 添加1分钟的缓冲时间，避免临界情况
-            return ExpiresAt.AddMinutes(-1) < DateTime.Now;
+            // 添加5分钟的缓冲时间，避免短期重连时Token被误判为失效
+            // 使用UtcNow确保时区一致性
+            return ExpiresAt.AddMinutes(-5) < DateTime.UtcNow;
         }
 
         /// <summary>
@@ -59,7 +60,8 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         public bool IsRefreshTokenExpired()
         {
             // 添加1分钟的缓冲时间，避免临界情况
-            return RefreshTokenExpiresAt.AddMinutes(-1) < DateTime.Now;
+            // 使用UtcNow确保时区一致性
+            return RefreshTokenExpiresAt.AddMinutes(-1) < DateTime.UtcNow;
         }
 
         /// <summary>
@@ -69,7 +71,8 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// <returns>是否即将过期</returns>
         public bool WillExpireSoon(TimeSpan threshold)
         {
-            return ExpiresAt > DateTime.Now && (ExpiresAt - DateTime.Now) < threshold;
+            // 使用UtcNow确保时区一致性
+            return ExpiresAt > DateTime.UtcNow && (ExpiresAt - DateTime.UtcNow) < threshold;
         }
     }
 }

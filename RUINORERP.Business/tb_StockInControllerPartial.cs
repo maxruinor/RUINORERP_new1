@@ -114,7 +114,7 @@ namespace RUINORERP.Business
                         rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                         rs.Succeeded = false;
                         _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                        return rs;
+                        return rs; // ✅ 事务外返回，无需回滚
                     }
                 }
 

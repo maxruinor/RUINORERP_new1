@@ -15,8 +15,8 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.Business.LogicaService;
 using RUINORERP.UI.Common;
 using RUINORERP.Business;
-using RUINORERP.AI;
 using Newtonsoft.Json;
+using RUINORERP.Business.AIServices;
 
 namespace RUINORERP.UI.BI
 {
@@ -33,8 +33,8 @@ namespace RUINORERP.UI.BI
             InitializeComponent();
             // 获取系统全局配置
             var config = MainForm.Instance.AppContext.GetRequiredService<RUINORERP.Model.ConfigModel.SystemGlobalConfig>();
-            // 使用配置中的API地址和默认模型名称
-            _ollamaService = new OllamaService(config.OllamaApiAddress);
+            // 使用配置创建Ollama服务
+            _ollamaService = new OllamaService(config);
             _defaultModelName = config.OllamaDefaultModel;
             // 添加文本框编辑完成事件
             txtPropertyValueName.Leave += TxtPropertyValueName_Leave;
@@ -108,7 +108,7 @@ namespace RUINORERP.UI.BI
 输出：{{""Code"": ""ZDYD""}}"; 
                     
                     // 调用AI生成编码
-                    var response = await _ollamaService.GenerateAsync(_defaultModelName, prompt);
+                    var response = await _ollamaService.GenerateAsync(prompt);
                     
                     // 解析AI返回的结果
                     if (!string.IsNullOrEmpty(response?.Response))

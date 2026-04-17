@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -121,6 +121,10 @@ namespace RUINORERP.UI.MRP.MP
 
          
 
+        /// <summary>
+        /// 批量结案
+        /// 添加确认机制：如果存在已发料但未缴库的情况，提示用户确认
+        /// </summary>
         public async override Task<bool> CloseCase(List<tb_ProductionPlan> EditEntitys)
         {
             if (EditEntitys == null)
@@ -133,6 +137,107 @@ namespace RUINORERP.UI.MRP.MP
             {
                 MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");
                 return false;
+            }
+
+            // 预检查：检查是否存在已发料但未缴库的情况
+            StringBuilder warningMsg = new StringBuilder();
+            int warningCount = 0;
+            foreach (var plan in needCloseCases)
+            {
+                // 加载计划单的完整数据
+                var planFullData = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionPlan>()
+                    .Includes(p => p.tb_ProductionDemands, d => d.tb_ManufacturingOrders)
+                    .Where(p => p.PPID == plan.PPID)
+                    .FirstAsync();
+
+                if (planFullData?.tb_ProductionDemands != null)
+                {
+                    foreach (var demand in planFullData.tb_ProductionDemands)
+                    {
+                        if (demand.tb_ManufacturingOrders != null)
+                        {
+                            foreach (var mo in demand.tb_ManufacturingOrders)
+                            {
+                                if (mo.DataStatus == (int)DataStatus.确认 && mo.ApprovalResults.HasValue && mo.ApprovalResults.Value)
+                                {
+                                    // 加载制令单的完整数据
+                                    var moFullData = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
+                                        .Includes(m => m.tb_MaterialRequisitions, mr => mr.tb_MaterialRequisitionDetails)
+                                        .Includes(m => m.tb_FinishedGoodsInvs, fg => fg.tb_FinishedGoodsInvDetails)
+                                        .Where(m => m.MOID == mo.MOID)
+                                        .FirstAsync();
+
+                                    if (moFullData?.tb_MaterialRequisitions != null)
+                                    {
+                                        var approvedMaterialRequisitions = moFullData.tb_MaterialRequisitions
+                                            .Where(mr => mr.DataStatus == (int)DataStatus.确认
+                                                && mr.ApprovalStatus.HasValue
+                                                && mr.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
+                                            .ToList();
+
+                                        if (approvedMaterialRequisitions.Any())
+                                        {
+                                            decimal totalMaterialSent = approvedMaterialRequisitions
+                                                .SelectMany(mr => mr.tb_MaterialRequisitionDetails)
+                                                .Sum(mrd => mrd.ActualSentQty);
+
+                                            decimal totalFinishedGoods = 0;
+                                            if (moFullData.tb_FinishedGoodsInvs != null)
+                                            {
+                                                totalFinishedGoods = moFullData.tb_FinishedGoodsInvs
+                                                    .Where(fg => fg.DataStatus == (int)DataStatus.确认
+                                                        && fg.ApprovalStatus.HasValue
+                                                        && fg.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
+                                                    .SelectMany(fg => fg.tb_FinishedGoodsInvDetails)
+                                                    .Sum(fgd => fgd.Qty);
+                                            }
+
+                                            if (totalMaterialSent > 0 && totalFinishedGoods == 0)
+                                            {
+                                                warningCount++;
+                                                if (warningCount <= 5) // 最多显示5条警告
+                                                {
+                                                    warningMsg.AppendLine($"  - 制令单[{mo.MONO}]:已发料{totalMaterialSent}但未缴库");
+                                                }
+                                            }
+                                            else if (totalMaterialSent > totalFinishedGoods)
+                                            {
+                                                warningCount++;
+                                                if (warningCount <= 5) // 最多显示5条警告
+                                                {
+                                                    warningMsg.AppendLine($"  - 制令单[{mo.MONO}]:已发料{totalMaterialSent}大于已缴库{totalFinishedGoods}");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 如果存在警告，显示确认对话框
+            if (warningCount > 0)
+            {
+                string fullWarningMsg = warningMsg.ToString();
+                if (warningCount > 5)
+                {
+                    fullWarningMsg += $"  ... 还有 {warningCount - 5} 条类似警告\n";
+                }
+
+                DialogResult result = MessageBox.Show(
+                    $"检测到以下制令单存在已发料但未缴库的情况：\n\n{fullWarningMsg}\n是否继续强制结案？\n\n提示：强制结案后，这些制令单将被标记为完结，未缴库的物料将无法自动关联。",
+                    "结案确认",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button2);
+
+                if (result == DialogResult.No)
+                {
+                    MainForm.Instance.PrintInfoLog("用户取消了结案操作", Color.Orange);
+                    return false;
+                }
             }
 
             tb_ProductionPlanController<tb_ProductionPlan> ctr = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();

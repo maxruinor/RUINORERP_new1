@@ -45,6 +45,7 @@
             this.contextMenuStripDelete = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.删除选中配置文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label4 = new System.Windows.Forms.Label();
+            this.btnAiMatch = new System.Windows.Forms.Button();
             this.contextMenuStrip1.SuspendLayout();
             this.contextMenuStripDelete.SuspendLayout();
             this.SuspendLayout();
@@ -195,12 +196,22 @@
             this.label4.TabIndex = 21;
             this.label4.Text = "已经存在的配对文件";
             // 
+            // btnAiMatch
+            // 
+            this.btnAiMatch.Location = new System.Drawing.Point(1078, 624);
+            this.btnAiMatch.Name = "btnAiMatch";
+            this.btnAiMatch.Size = new System.Drawing.Size(191, 33);
+            this.btnAiMatch.TabIndex = 22;
+            this.btnAiMatch.Text = "button1";
+            this.btnAiMatch.UseVisualStyleBackColor = true;
+            // 
             // frmDbColumnToExlColumnConfig
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btmCancel;
             this.ClientSize = new System.Drawing.Size(1301, 807);
+            this.Controls.Add(this.btnAiMatch);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.listBoxExitFile);
             this.Controls.Add(this.txtMatchConfigFileName);
@@ -240,5 +251,6 @@
         private System.Windows.Forms.ToolStripMenuItem 清空匹配结果ToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripDelete;
         private System.Windows.Forms.ToolStripMenuItem 删除选中配置文件ToolStripMenuItem;
+        private System.Windows.Forms.Button btnAiMatch;
     }
 }

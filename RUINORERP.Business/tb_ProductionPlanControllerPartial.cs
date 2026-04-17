@@ -175,6 +175,7 @@ namespace RUINORERP.Business
         /// <summary>
         /// 批量结案   
         /// 计划单结案，则相关的需求单，制令单， 都会结案 
+        /// 添加判断：检查制令单下是否存在已发料但未缴库的情况
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -183,19 +184,104 @@ namespace RUINORERP.Business
             List<tb_ProductionPlan> entitys = new List<tb_ProductionPlan>();
             entitys = NeedCloseCaseList as List<tb_ProductionPlan>;
             ReturnResults<bool> rs = new ReturnResults<bool>();
+            
+            long[] ids = entitys.Select(c => c.PPID).ToArray();
+
+            // 【事务外】预加载计划单及其关联数据（包括需求分析、制令单）
+            var Plans = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlan>()
+                      .Includes(c => c.tb_ProductionDemands, d => d.tb_ManufacturingOrders)
+                      .Where(d => ids.Contains(d.PPID)).ToListAsync();
+            Plans.ForEach(c => c.CloseCaseOpinions = entitys[0].CloseCaseOpinions);
+
+            List<tb_ProductionDemand> needupdateProductionDemands = new List<tb_ProductionDemand>();
+            List<tb_ManufacturingOrder> needupdateManufacturingOrders = new List<tb_ManufacturingOrder>();
+
+            #region 【事务外】结案前检查
+            // 检查每个计划单下的制令单是否存在已发料但未缴库的情况
+            foreach (var plan in Plans)
+            {
+                // 判断能结案的是确认审核过的
+                if (plan.DataStatus != (int)DataStatus.确认 || !plan.ApprovalResults.HasValue)
+                {
+                    continue;
+                }
+
+                if (plan.tb_ProductionDemands != null)
+                {
+                    foreach (var demand in plan.tb_ProductionDemands)
+                    {
+                        if (demand.tb_ManufacturingOrders != null)
+                        {
+                            foreach (var mo in demand.tb_ManufacturingOrders)
+                            {
+                                // 加载制令单的完整数据（包括发料单和缴库单）
+                                if (mo.DataStatus == (int)DataStatus.确认 && mo.ApprovalResults.HasValue && mo.ApprovalResults.Value)
+                                {
+                                    // 【事务外】查询制令单完整数据
+                                    var moFullData = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+                                        .Includes(m => m.tb_MaterialRequisitions, mr => mr.tb_MaterialRequisitionDetails)
+                                        .Includes(m => m.tb_FinishedGoodsInvs, fg => fg.tb_FinishedGoodsInvDetails)
+                                        .Where(m => m.MOID == mo.MOID)
+                                        .FirstAsync();
+
+                                    if (moFullData != null)
+                                    {
+                                        // 检查是否存在已审核的发料单
+                                        if (moFullData.tb_MaterialRequisitions != null && moFullData.tb_MaterialRequisitions.Any())
+                                        {
+                                            var approvedMaterialRequisitions = moFullData.tb_MaterialRequisitions
+                                                .Where(mr => mr.DataStatus == (int)DataStatus.确认 
+                                                    && mr.ApprovalStatus.HasValue 
+                                                    && mr.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
+                                                .ToList();
+
+                                            if (approvedMaterialRequisitions.Any())
+                                            {
+                                                // 计算已发料总数
+                                                decimal totalMaterialSent = approvedMaterialRequisitions
+                                                    .SelectMany(mr => mr.tb_MaterialRequisitionDetails)
+                                                    .Sum(mrd => mrd.ActualSentQty);
+
+                                                // 计算已缴库总数
+                                                decimal totalFinishedGoods = 0;
+                                                if (moFullData.tb_FinishedGoodsInvs != null)
+                                                {
+                                                    totalFinishedGoods = moFullData.tb_FinishedGoodsInvs
+                                                        .Where(fg => fg.DataStatus == (int)DataStatus.确认 
+                                                            && fg.ApprovalStatus.HasValue 
+                                                            && fg.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
+                                                        .SelectMany(fg => fg.tb_FinishedGoodsInvDetails)
+                                                        .Sum(fgd => fgd.Qty);
+                                                }
+
+                                                // 如果存在发料但未缴库的情况，记录警告信息
+                                                if (totalMaterialSent > 0 && totalFinishedGoods == 0)
+                                                {
+                                                    _logger.LogWarning($"计划单[{plan.PPNo}]下的制令单[{mo.MONO}]存在已发料({totalMaterialSent})但未缴库的情况，强制结案");
+                                                    // 将警告信息添加到结案意见中
+                                                    mo.CloseCaseOpinions = $"【警告】存在已发料({totalMaterialSent})但未缴库的情况，强制结案。" + (mo.CloseCaseOpinions ?? "");
+                                                }
+                                                else if (totalMaterialSent > totalFinishedGoods)
+                                                {
+                                                    _logger.LogWarning($"计划单[{plan.PPNo}]下的制令单[{mo.MONO}]存在已发料({totalMaterialSent})大于已缴库({totalFinishedGoods})的情况，强制结案");
+                                                    // 将警告信息添加到结案意见中
+                                                    mo.CloseCaseOpinions = $"【警告】已发料({totalMaterialSent})大于已缴库({totalFinishedGoods})，强制结案。" + (mo.CloseCaseOpinions ?? "");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            #endregion
+
             try
             {
-                // 开启事务，保证数据一致性
+                // 【事务开始】只包含更新操作，最小化事务区间
                 _unitOfWorkManage.BeginTran();
-                long[] ids = entitys.Select(c => c.PPID).ToArray();
-
-                var Plans = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlan>()
-                          .Includes(c => c.tb_ProductionDemands, d => d.tb_ManufacturingOrders)
-                          .Where(d => ids.Contains(d.PPID)).ToListAsync();
-                Plans.ForEach(c => c.CloseCaseOpinions = entitys[0].CloseCaseOpinions);
-
-                List<tb_ProductionDemand> needupdateProductionDemands = new List<tb_ProductionDemand>();
-                List<tb_ManufacturingOrder> needupdateManufacturingOrders = new List<tb_ManufacturingOrder>();
 
                 #region 结案
                 //更新拟销售量  减少
@@ -221,8 +307,11 @@ namespace RUINORERP.Business
                         {
                             if (c.tb_ManufacturingOrders != null)
                             {
-                                c.tb_ManufacturingOrders.ForEach(d => d.CloseCaseOpinions = entitys[0].CloseCaseOpinions);
-                                c.tb_ManufacturingOrders.ForEach(d => d.DataStatus = (int)DataStatus.完结);
+                                c.tb_ManufacturingOrders.ForEach(d => 
+                                {
+                                    d.CloseCaseOpinions = entitys[0].CloseCaseOpinions;
+                                    d.DataStatus = (int)DataStatus.完结;
+                                });
                                 needupdateManufacturingOrders.AddRange(c.tb_ManufacturingOrders);
                             }
 

@@ -61,6 +61,38 @@ namespace RUINORERP.UI.DevTools
             {
                 DataTable dt = new DataTable();
                 dt = NopiExcelOpretaUtil.ExcelToTable(sourcePath);
+                
+                // 【新增】尝试提取 Excel 中的图片
+                try
+                {
+                    var imageMap = RUINORERP.Business.ExcelImageExtractor.ExtractImagesFromExcel(sourcePath);
+                    if (imageMap.Any())
+                    {
+                        if (!dt.Columns.Contains("_ExtractedImage"))
+                            dt.Columns.Add("_ExtractedImage", typeof(byte[]));
+
+                        // 假设标题行占 1 行，NPOI Row1 从 0 开始，DataTable RowIndex 从 0 开始
+                        // 如果图片在 Excel 第 2 行（Row1=1），对应 DataTable 第 0 行
+                        int headerOffset = 1; 
+
+                        foreach (DataRow dr in dt.Rows)
+                        {
+                            int dtRowIndex = dt.Rows.IndexOf(dr);
+                            int excelRowIndex = dtRowIndex + headerOffset;
+                            
+                            if (imageMap.ContainsKey(excelRowIndex))
+                            {
+                                dr["_ExtractedImage"] = imageMap[excelRowIndex];
+                            }
+                        }
+                        MainForm.Instance.PrintInfoLog($"成功从 Excel 提取 {imageMap.Count} 张图片。");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.PrintInfoLog($"图片提取失败: {ex.Message}");
+                }
+
                 dataGridView1.DataSource = dt;
                 MainForm.Instance.PrintInfoLog("查询到数据：" + dt.Rows.Count.ToString() + "行");
             }
@@ -213,30 +245,27 @@ namespace RUINORERP.UI.DevTools
             frmDbColumnToExlColumnConfig frm = new frmDbColumnToExlColumnConfig();
             frm.ImportTargetTableName = cmb导入所属数据表.SelectedValue.ToString();
             frm.dvExcel = dataGridView1;
-            if (cmbColumnMappingFile.SelectedIndex == -1)
+            
+            // 尝试应用模板或启动智能兜底
+            var template = RUINORERP.Business.TemplateManager.GetTemplate(frm.ImportTargetTableName);
+            if (template != null)
             {
-                MessageBox.Show("请选择对应的配置文件。");
-
-                if (MessageBox.Show("如果没有对应配置文件，\r\n将重新创建！", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
-                {
-                    //if (!System.IO.File.Exists(UserGlobalConfig.Instance.MatchColumnsConfigDir+ frm.ImportTargetTableName))
-                    //{
-                    //    System.IO.File.Create(UserGlobalConfig.Instance.MatchColumnsConfigDir);
-                    //}
-
-                    frm.Show();
-                }
+                frm.ApplyTemplate(template);
             }
             else
             {
-                if (cmbColumnMappingFile.SelectedItem is CmbItem)
-                {
-                    CmbItem ci = cmbColumnMappingFile.SelectedItem as CmbItem;
-                    frm.txtMatchConfigFileName.Text = ci.Key;
-                    frm.Show();
-                }
-
+                // 【智能兜底】无模板时自动执行通用匹配
+                MainForm.Instance.PrintInfoLog("未找到专用模板，已启动【智能语义匹配引擎】...");
+                // 这里我们直接调用 frm 的初始化逻辑，它会在 Load 事件中自动调用 AutoMatchColumns
             }
+
+            if (cmbColumnMappingFile.SelectedIndex == -1 && template == null)
+            {
+                // 如果没有配置文件且没有模板，提示用户检查自动匹配结果
+                MessageBox.Show("系统已根据字段语义自动生成映射关系。\r\n请检查右侧匹配结果，确保【逻辑主键】标记正确。", "智能匹配完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            
+            frm.Show();
             LoadfileToCmbbox();
         }
 
@@ -331,20 +360,37 @@ namespace RUINORERP.UI.DevTools
         {
             this.dataGridView1.SetUseCustomColumnDisplay(false);
             this.dataGridView2.SetUseCustomColumnDisplay(false);
-            this.Text = "2023-9-5最新版本修改";
+            this.Text = "通用数据导入工具 - 支持模板化配置";
 
             DataTable dt = MainForm.Instance.AppContext.Db.Ado.GetDataTable("select TABLE_NAME from information_schema.tables where  table_catalog = @table_catalog order by TABLE_NAME",
 new { table_catalog = "erpnew" });
-            //DataSet ds = new DataSet();
-            //ds.Tables.Add(dt);
             HLH.Lib.Helper.DropDownListHelper.InitDropList(dt.DataSet, cmb导入所属数据表, "table_name", "table_name", ComboBoxStyle.DropDown, true, true);
 
             dataGridView1.AllowUserToDeleteRows = true;
             dataGridView1.AllowUserToAddRows = true;
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
-
             LoadfileToCmbbox();
+        }
+
+        // 【新增】当用户切换目标表时，尝试加载对应的导入模板
+        private void cmb导入所属数据表_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cmb导入所属数据表.SelectedValue != null)
+            {
+                string tableName = cmb导入所属数据表.SelectedValue.ToString();
+                var template = RUINORERP.Business.TemplateManager.GetTemplate(tableName);
+                
+                if (template != null)
+                {
+                    MainForm.Instance.PrintInfoLog($"已自动加载模板: [{template.TemplateName}]。系统将按预定义规则处理列映射和图片。");
+                    // 这里可以进一步实现：自动将 template.ColumnMappings 填充到 frmDbColumnToExlColumnConfig 中
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog($"未找到表 [{tableName}] 的预定义模板，请使用手动配置模式。");
+                }
+            }
         }
 
         List<SuperKeyValuePair> dclist = new List<SuperKeyValuePair>();
@@ -526,7 +572,7 @@ new { table_catalog = "erpnew" });
                             {
                                 //转换合适类型
                                 var col = EntityFieldNameList.Where(c => c.SugarCol != null && c.SugarCol.ColumnName != null && c.FieldName == dc.Key.ToString()).FirstOrDefault();
-                                TypeConverter converter = new TypeConverter();
+                                if (col == null) continue;
 
                                 Type newcolType;
                                 // We need to check whether the property is NULLABLE
@@ -539,10 +585,27 @@ new { table_catalog = "erpnew" });
                                 {
                                     newcolType = col.ColDataType;
                                 }
-                                //var tarobj = converter.ConvertTo(dr[dc.Value.ToString()], newcolType);
-                                var tarobj = dr[dc.Value.ToString()].ToString().Convert(newcolType);
+                                
+                                object tarobj = null;
+                                try
+                                {
+                                    // 【新增】特殊处理图片类型 (byte[])
+                                    if (newcolType == typeof(byte[]) && dr[dc.Value.ToString()] is byte[] imgData)
+                                    {
+                                        tarobj = imgData;
+                                    }
+                                    else
+                                    {
+                                        tarobj = dr[dc.Value.ToString()].ToString().Convert(newcolType);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    MainForm.Instance.PrintInfoLog($"字段 {dc.Key} 类型转换失败: {ex.Message}");
+                                    continue; // 跳过该字段，防止整个导入崩溃
+                                }
+                                
                                 RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(si, dc.Key.ToString(), tarobj);
-                                //ReflectionHelper.SetPropertyValue(si, dc.Key.ToString(), tarobj);
                             }
                         }
                         else
@@ -720,122 +783,65 @@ new { table_catalog = "erpnew" });
         int SaveRowCounter = 0;
         private async Task<BindingSortCollection<object>> UpdateDataToDBForSave(List<SuperKeyValuePair> dclist)
         {
-
             string tableName = cmb导入所属数据表.SelectedValue.ToString();
-            //随便用一个。只有公共方法
-
             Type t = GetTypeByTableName(tableName);
-            var genericListType = typeof(List<>);
-            var specificListType = genericListType.MakeGenericType(t);
-            var rslist = Activator.CreateInstance(specificListType);
-            BindingSortCollection<object> sortList = new BindingSortCollection<object>();
-            rslist = bindingSource结果.DataSource;
-
-            var EntityFieldNameList = UIHelper.GetALLFieldInfoList(t);
-            var dtDicUpdateList = new List<Dictionary<string, object>>();
-            var dtDicAddList = new List<Dictionary<string, object>>();
-            string pkColName = EntityFieldNameList.FirstOrDefault(b => b.SugarCol.IsPrimaryKey == true).SugarCol.ColumnName;
-
-
-
+            
+            // 获取待保存的数据列表
+            var rslist = bindingSource结果.DataSource;
             var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
-            if (lastlist != null)
-            {
-                foreach (var item in lastlist)
-                {
-                    long pkvalue = long.Parse(ReflectionHelper.GetPropertyValue(item, pkColName).ToString());
-                    //===
-                    //如果只是看结果 就显示0，如果是直接保存新增 就给ID值
-                    if (pkvalue == 0)
-                    {
-                        long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
-                        RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(item, pkColName, sid);
-                        await MainForm.Instance.AppContext.Db.InsertableByObject(item).ExecuteCommandAsync();
-                    }
-                    else
-                    {
-                        await MainForm.Instance.AppContext.Db.UpdateableByObject(item).ExecuteCommandAsync();
-                    }
-                    sortList.Add(item);
-                }
-                //await MainForm.Instance.AppContext.Db.Insertable(lastlist).ExecuteReturnSnowflakeIdListAsync();
-            }
-            return sortList;
+            
+            if (lastlist == null || !lastlist.Any()) return new BindingSortCollection<object>();
 
-            //真正遍历数据行
-            foreach (var row in lastlist)
+            // 转换为强类型列表以便使用 IdRemappingEngine
+            var genericListType = typeof(List<>).MakeGenericType(t);
+            var typedList = Activator.CreateInstance(genericListType);
+            foreach (var item in lastlist)
             {
-                SaveRowCounter++;
-                #region 处理导入的数据
+                ((System.Collections.IList)typedList).Add(item);
+            }
+
+            // 【核心改进】执行 ID 重映射和外键修正
+            // 由于 typedList 是 object 类型，我们需要通过反射调用泛型方法
+            var remapper = new RUINORERP.Business.IdRemappingEngine(MainForm.Instance.AppContext.Db);
+            var method = typeof(RUINORERP.Business.IdRemappingEngine).GetMethod("ProcessEntitiesAsync");
+            var genericMethod = method.MakeGenericMethod(t);
+            var task = (Task)genericMethod.Invoke(remapper, new object[] { typedList });
+            await task;
+
+            BindingSortCollection<object> sortList = new BindingSortCollection<object>();
+            SaveRowCounter = 0;
+
+            // 批量入库
+            using (var tran = MainForm.Instance.AppContext.Db.Ado.UseTran())
+            {
                 try
                 {
-
-
-                    var dcrow = new Dictionary<string, object>();
-                    //创建一个实体对象
-
-                    foreach (Model.Base.BaseDtoField baseDtoField in EntityFieldNameList.Where(c => c.SugarCol != null && c.SugarCol.ColumnName != null).ToList())
+                    foreach (var item in lastlist)
                     {
-                        if (baseDtoField.SugarCol.IsPrimaryKey)
+                        long pkvalue = long.Parse(ReflectionHelper.GetPropertyValue(item, "ID").ToString());
+                        if (pkvalue == 0)
                         {
-
-                            continue;
+                            // 新增
+                            await MainForm.Instance.AppContext.Db.InsertableByObject(item).ExecuteCommandAsync();
                         }
-                        if (baseDtoField.IsFKRelationAttribute)
+                        else
                         {
-                            object fkcolValue = ReflectionHelper.GetPropertyValue(row, baseDtoField.SugarCol.ColumnName);
-                            if (fkcolValue != null)
-                            {
-                                dcrow.Add(baseDtoField.SugarCol.ColumnName, fkcolValue);
-                            }
-                            else
-                            {
-                                dcrow.Add(baseDtoField.SugarCol.ColumnName, null);
-                            }
-                            continue;
+                            // 更新
+                            await MainForm.Instance.AppContext.Db.UpdateableByObject(item).ExecuteCommandAsync();
                         }
-                        //跳过图片类型的列
-                        if (baseDtoField.SugarCol.ColumnDataType == "image")
-                        {
-                            continue;
-                        }
-                        object dccolValue = ReflectionHelper.GetPropertyValue(row, baseDtoField.SugarCol.ColumnName).ToString();
-                        dcrow.Add(baseDtoField.SugarCol.ColumnName, dccolValue);
+                        sortList.Add(item);
+                        SaveRowCounter++;
                     }
-
-                    long pkvalue = long.Parse(ReflectionHelper.GetPropertyValue(row, pkColName).ToString());
-                    //===
-                    //如果只是看结果 就显示0，如果是直接保存新增 就给ID值
-                    if (pkvalue == 0)
-                    {
-                        long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
-                        dcrow.Add(pkColName, sid);
-                        RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(row, pkColName, sid);
-
-                        dtDicAddList.Add(dcrow);
-                    }
-                    else
-                    {
-                        dcrow.Add(pkColName, pkvalue);
-                        dtDicUpdateList.Add(dcrow);
-                    }
+                    tran.CommitTran();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message + ex.StackTrace);
-                    break;
+                    tran.RollbackTran();
+                    MessageBox.Show($"导入失败: {ex.Message}");
                 }
-                #endregion
             }
-           await MainForm.Instance.AppContext.Db.Updateable(dtDicUpdateList).AS(tableName).WhereColumns(pkColName).ExecuteCommandHasChangeAsync();
-           await MainForm.Instance.AppContext.Db.Insertable(dtDicAddList).AS(tableName).ExecuteReturnSnowflakeIdAsync();
 
-            foreach (var item in lastlist)
-            {
-                sortList.Add(item);
-            }
             return sortList;
-
         }
 
 

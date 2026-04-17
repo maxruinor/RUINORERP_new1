@@ -464,7 +464,7 @@ namespace RUINORERP.Server.Services.BizCode
                 case BizType.其他入库单:
                     return "{S:OIR:upper}{D:yyMMdd}{DB:{S:其他入库单}{D:yyMM}/000}";
                 case BizType.其他出库单:
-                    return "{S:OQD:upper}{D:yyMMdd}{DB:{S:其他出库单}{D:yyMM}/000}";
+                    return "{S:OOO:upper}{D:yyMMdd}{DB:{S:其他出库单}{D:yyMM}/000}";
                 case BizType.盘点单:
                     return "{S:CS:upper}{D:yyMMdd}{DB:{S:盘点单}{D:yyMM}/000}";
                 case BizType.BOM物料清单:
@@ -488,7 +488,7 @@ namespace RUINORERP.Server.Services.BizCode
                 case BizType.生产退料单:
                     return "{S:PRR:upper}{D:yyMMdd}{DB:{S:生产退料单}{D:yyMM}/000}";
                 case BizType.缴库单:
-                    return "{S:PR:upper}{D:yyMMdd}{DB:{S:缴库单}{D:yyMM}/000}";
+                    return "{S:FG:upper}{D:yyMMdd}{DB:{S:缴库单}{D:yyMM}/000}";
                 case BizType.产品分割单:
                     return "{S:PS:upper}{D:yyMMdd}{DB:{S:产品分割单}{D:yyMM}/00}";
                 case BizType.产品组合单:
@@ -508,7 +508,7 @@ namespace RUINORERP.Server.Services.BizCode
                 case BizType.付款申请单:
                     return "{S:PA:upper}{D:yyMMdd}{DB:{S:付款申请单}{D:yyMM}/00}";
                 case BizType.销售合同:
-                    return "{S:SC-:upper}{D:yyMMdd}{DB:{S:销售合同}{D:yyMM}/00}";
+                    return "{S:SCT:upper}{D:yyMMdd}{DB:{S:销售合同}{D:yyMM}/00}";
                 case BizType.预付款单:
                     return "{S:YF:upper}{D:yyMMdd}{DB:{S:预付款单}{D:yyMM}/000}";
                 case BizType.预收款单:
@@ -522,7 +522,7 @@ namespace RUINORERP.Server.Services.BizCode
                 case BizType.应收款单:
                     return "{S:AR:upper}{D:yyMMdd}{DB:{S:应收款单}{D:yyMM}/000}";
                 case BizType.对账单:
-                    return "{S:PS:upper}{D:yyMMdd}{DB:{S:对账单}{D:yyMM}/000}";
+                    return "{S:STA:upper}{D:yyMMdd}{DB:{S:对账单}{D:yyMM}/000}";
                 case BizType.损失确认单:
                     return "{S:LO:upper}{D:yyMMdd}{DB:{S:损失确认单}{D:yyMM}/00}";
                 case BizType.溢余确认单:

@@ -145,12 +145,17 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                     if (sessionInfo == null)
                     {
-                        // 会话不存在，返回特定响应
+                        // ⚠️ 会话不存在，可能是重连后登录尚未完成
+                        // 记录详细日志，帮助诊断问题
+                        _staticLogger.LogWarning($"[心跳] 会话未找到: UserId={heartbeatRequest.UserId}, ClientId={heartbeatRequest.ClientId}, ComputerName={heartbeatRequest.ComputerName}");
+                        
+                        // 返回特定响应，让客户端知道需要重新登录
                         return new HeartbeatResponse
                         {
                             IsSuccess = false,
                             Status = "Session Not Found",
-                            NextIntervalMs = 30000
+                            NextIntervalMs = 5000, // 缩短间隔，让客户端更快重试
+                            ErrorMessage = "会话不存在，可能需要重新登录"
                         };
                     }
 

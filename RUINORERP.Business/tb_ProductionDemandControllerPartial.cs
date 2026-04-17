@@ -47,8 +47,10 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        /// 
-
+        /// <summary>
+        /// 审核需求分析单
+        /// 优化：事务区间最小化，查询操作移到事务外
+        /// </summary>
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
@@ -59,19 +61,25 @@ namespace RUINORERP.Business
                 {
                     return rmrs;
                 }
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
 
-
-                //更新计划单中已分析字段,并且要具体到目标产品。计划可能多个成品。但是只能一个一个分析
+                #region 【事务外】预处理阶段 - 预加载计划单明细数据
+                List<tb_ProductionPlanDetail> planDetails = null;
                 if (entity.tb_productionplan != null)
                 {
+                    // 预加载计划单明细数据
+                    planDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlanDetail>()
+                        .Where(c => c.PPID == entity.tb_productionplan.PPID)
+                        .ToListAsync();
+                    entity.tb_productionplan.tb_ProductionPlanDetails = planDetails;
+                }
+                #endregion
 
-                    if (entity.tb_productionplan.tb_ProductionPlanDetails == null)
-                    {
-                        entity.tb_productionplan.tb_ProductionPlanDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlanDetail>()
-                            .Where(c => c.PPID == entity.tb_productionplan.PPID).ToList();
-                    }
+                // 【事务开始】只包含更新操作，最小化事务区间
+                _unitOfWorkManage.BeginTran();
+
+                //更新计划单中已分析字段,并且要具体到目标产品。计划可能多个成品。但是只能一个一个分析
+                if (entity.tb_productionplan != null && planDetails != null)
+                {
 
 
                     foreach (tb_ProductionDemandTargetDetail tag in entity.tb_ProductionDemandTargetDetails)
@@ -225,6 +233,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 反审核
+        /// 优化：事务区间最小化，查询操作移到事务外
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -235,7 +244,17 @@ namespace RUINORERP.Business
             ReturnResults<T> rmrs = new ReturnResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
+                // 【事务外】预加载计划单明细数据
+                List<tb_ProductionPlanDetail> planDetails = null;
+                if (entity.tb_productionplan != null)
+                {
+                    planDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlanDetail>()
+                        .Where(c => c.PPID == entity.tb_productionplan.PPID)
+                        .ToListAsync();
+                    entity.tb_productionplan.tb_ProductionPlanDetails = planDetails;
+                }
+
+                // 【事务开始】只包含更新操作，最小化事务区间
                 _unitOfWorkManage.BeginTran();
 
                 //判断是否能反审?
@@ -261,13 +280,8 @@ namespace RUINORERP.Business
 
                 //更新在制数量 应该是在生产通知单时更新的，这里暂时不更新
                 //更新计划单中已分析字段,并且要具体到目标产品。计划可能多个成品。但是只能一个一个分析
-                if (entity.tb_productionplan != null)
+                if (entity.tb_productionplan != null && planDetails != null)
                 {
-                    if (entity.tb_productionplan.tb_ProductionPlanDetails == null)
-                    {
-                        entity.tb_productionplan.tb_ProductionPlanDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlanDetail>()
-                            .Where(c => c.PPID == entity.tb_productionplan.PPID).ToList();
-                    }
 
                     foreach (tb_ProductionDemandTargetDetail tag in entity.tb_ProductionDemandTargetDetails)
                     {
@@ -529,6 +543,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 通过BOM_ID，找到计划生产的成品 中需要哪些原料，并取得库存。找不到数量不够的显示出来。数量具体是多少。刚根据BOM配方和计划数量来计算
+        /// ?
         /// </summary>
         /// <param name="_bomIDs"></param>
         /// <param name="locationID"></param>
@@ -614,7 +629,8 @@ namespace RUINORERP.Business
                 }
                 else
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    // ✅ 修复：这是一个纯查询/计算方法，不在事务中执行，不应调用RollbackTran()
+                    // 此方法仅在UI层的AnalysisTargetItems()中调用，用于MRP需求分析展示
                     throw new Exception("分析的目标必须要有配方!");
                 }
 
@@ -1103,9 +1119,7 @@ namespace RUINORERP.Business
 
         }
 
-
-        //IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-
+ 
 
 
         /// <summary>

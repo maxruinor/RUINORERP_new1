@@ -313,6 +313,7 @@ namespace RUINORERP.Model
 
 
         private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new ConcurrentDictionary<Type, PropertyInfo[]>();
+        private static readonly ConcurrentDictionary<Type, List<ImportFieldInfo>> _importableFieldsCache = new ConcurrentDictionary<Type, List<ImportFieldInfo>>();
         private PropertyInfo[] GetCachedProperties()
         {
             var type = GetType();
@@ -993,6 +994,115 @@ namespace RUINORERP.Model
 
         }
 
+        /// <summary>
+        /// 获取实体的逻辑主键属性名（用于数据导入时的去重/匹配）
+        /// 优先级：带有 AdvQueryAttribute 且名称包含 Code/No 的字段 > 物理主键
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public string LogicalKeyPropertyName
+        {
+            get
+            {
+                var type = this.GetType();
+                var properties = GetCachedProperties();
+                
+                // 1. 寻找具有唯一业务标识意义的字段（如品号、编码）
+                var logicalKey = properties.FirstOrDefault(p =>
+                {
+                    var advAttr = p.GetCustomAttribute<Global.CustomAttribute.AdvQueryAttribute>();
+                    if (advAttr != null)
+                    {
+                        var nameLower = p.Name.ToLower();
+                        return nameLower.Contains("code") || nameLower.Contains("no") || nameLower.Contains("number");
+                    }
+                    return false;
+                });
+
+                if (logicalKey != null) return logicalKey.Name;
+
+                // 2. 回退到物理主键
+                var pk = properties.FirstOrDefault(p => p.GetCustomAttribute<SugarColumn>()?.IsPrimaryKey == true);
+                return pk?.Name;
+            }
+        }
+
+        /// <summary>
+        /// 获取实体的所有外键关系信息
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public List<FKRelationInfo> ImportFKRelations
+        {
+            get
+            {
+                var type = this.GetType();
+                return _fkRelationsCache.GetOrAdd(type, t =>
+                {
+                    var relations = new List<FKRelationInfo>();
+                    foreach (var property in t.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                    {
+                        var fkAttr = property.GetCustomAttribute<Global.CustomAttribute.FKRelationAttribute>(false);
+                        if (fkAttr != null)
+                        {
+                            relations.Add(new FKRelationInfo
+                            {
+                                PropertyName = property.Name,
+                                FKTableName = fkAttr.FKTableName,
+                                FK_IDColName = fkAttr.FK_IDColName
+                            });
+                        }
+                    }
+                    return relations;
+                });
+            }
+        }
+
+        /// <summary>
+        /// 获取可用于导入映射的字段列表（包含中文描述、物理名和外键标识）
+        /// 【性能优化】采用静态字典缓存，确保每个实体类型只计算一次
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public List<ImportFieldInfo> ImportableFields
+        {
+            get
+            {
+                var type = this.GetType();
+                return _importableFieldsCache.GetOrAdd(type, t =>
+                {
+                    try
+                    {
+                        var fields = new List<ImportFieldInfo>();
+                        var properties = GetCachedProperties();
+
+                        foreach (var prop in properties)
+                        {
+                            var sugarCol = prop.GetCustomAttribute<SugarColumn>();
+                            if (sugarCol == null || sugarCol.IsIgnore) continue;
+
+                            fields.Add(new ImportFieldInfo
+                            {
+                                PropertyName = prop.Name,
+                                ColumnName = sugarCol.ColumnName ?? prop.Name,
+                                Description = sugarCol.ColumnDescription ?? prop.Name,
+                                DataType = prop.PropertyType,
+                                IsForeignKey = prop.GetCustomAttribute<Global.CustomAttribute.FKRelationAttribute>() != null,
+                                IsPrimaryKey = sugarCol.IsPrimaryKey
+                            });
+                        }
+                        return fields;
+                    }
+                    catch (Exception ex)
+                    {
+                        // 【安全兜底】记录错误但不影响主流程，返回空列表
+                        System.Diagnostics.Debug.WriteLine($"获取实体 {t.Name} 导入字段信息失败: {ex.Message}");
+                        return new List<ImportFieldInfo>();
+                    }
+                });
+            }
+        }
+
 
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -1452,6 +1562,19 @@ namespace RUINORERP.Model
             OriginalValue = originalValue;
             CurrentValue = currentValue;
         }
+    }
+
+    /// <summary>
+    /// 导入字段信息辅助类
+    /// </summary>
+    public class ImportFieldInfo
+    {
+        public string PropertyName { get; set; }
+        public string ColumnName { get; set; }
+        public string Description { get; set; }
+        public Type DataType { get; set; }
+        public bool IsForeignKey { get; set; }
+        public bool IsPrimaryKey { get; set; }
     }
 
 }

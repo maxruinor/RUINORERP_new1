@@ -94,8 +94,8 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 心跳相关字段（优化后）
-        private readonly int _heartbeatIntervalMs = 10000; // 固定心跳间隔10秒，符合主流ERP系统实践
-        private readonly int _heartbeatTimeoutMs = 20000; // 心跳超时时间20秒（实际使用5秒=间隔/2）
+        private readonly int _heartbeatIntervalMs = 30000; // 固定心跳间隔30秒，更保守的设置
+        private readonly int _heartbeatTimeoutMs = 15000; // 心跳超时时间15秒
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
@@ -177,9 +177,9 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 心跳失败阈值
         /// 连续心跳失败达到此阈值时触发客户端锁定
-        /// 调整为8次，避免过长的不确定状态和误判
+        /// 调整为15次，给予更多容错机会，避免误判
         /// </summary>
-        public const int HEARTBEAT_FAILURE_THRESHOLD = 8; // 增加心跳失败阈值，给予更多容错机会
+        public const int HEARTBEAT_FAILURE_THRESHOLD = 15; // 增加心跳失败阈值，给予更多容错机会
 
         /// <summary>
         /// 心跳失败事件
@@ -471,6 +471,7 @@ namespace RUINORERP.UI.Network
         /// 处理连接管理器重连成功事件
         /// 优化：网络恢复后自动恢复工作状态，不再依赖锁定机制
         /// 🆕 新增：自动重新登录逻辑（后台执行，不显示登录窗体）
+        /// ✅ 修复：重连成功后不立即启动心跳，等待登录完成后再启动
         /// </summary>
         private async void OnReconnectSucceeded()
         {
@@ -497,6 +498,7 @@ namespace RUINORERP.UI.Network
                 }
 
                 // 🆕 尝试恢复登录状态（后台执行，不显示登录窗体）
+                // ✅ 关键：登录完成后会自动启动心跳
                 await TryRestoreLoginStateAsync();
 
                 // 显示重连成功信息到UI
@@ -509,8 +511,8 @@ namespace RUINORERP.UI.Network
                             MainForm.Instance.BeginInvoke(new Action(() =>
                             {
                                 // 显示网络恢复状态
-                                MainForm.Instance.ShowStatusText("网络已恢复，自动恢复工作");
-                                MainForm.Instance.PrintInfoLog("网络重连成功，已自动恢复与服务器的连接");
+                                MainForm.Instance.ShowStatusText("网络已恢复，正在验证会话...");
+                                MainForm.Instance.PrintInfoLog("网络重连成功，正在验证会话状态");
 
                                 // 保持向后兼容：如果之前是锁定状态，解除锁定
                                 // 注意：由于心跳失败不再导致锁定，此逻辑主要用于手动锁定场景
@@ -524,8 +526,8 @@ namespace RUINORERP.UI.Network
                         else
                         {
                             // 显示网络恢复状态
-                            MainForm.Instance.ShowStatusText("网络已恢复，自动恢复工作");
-                            MainForm.Instance.PrintInfoLog("网络重连成功，已自动恢复与服务器的连接");
+                            MainForm.Instance.ShowStatusText("网络已恢复，正在验证会话...");
+                            MainForm.Instance.PrintInfoLog("网络重连成功，正在验证会话状态");
 
                             // 保持向后兼容：如果之前是锁定状态，解除锁定
                             if (MainForm.Instance.IsLocked)
@@ -541,11 +543,11 @@ namespace RUINORERP.UI.Network
                     _logger?.LogWarning(uiEx, "更新重连成功UI时发生异常");
                 }
 
-                // 重连成功后，立即启动队列处理
-                _ = Task.Run(ProcessCommandQueueAsync);
+                // ✅ 移除：不在这里启动队列处理，等待登录完成后再启动
+                // _ = Task.Run(ProcessCommandQueueAsync);
 
-                // 重新启动心跳
-                StartHeartbeat();
+                // ✅ 移除：不在这里启动心跳，等待登录完成后再启动
+                // StartHeartbeat();
             }
             catch (Exception ex)
             {
@@ -747,6 +749,7 @@ namespace RUINORERP.UI.Network
                     if (_connectionManager.IsReconnecting || _isReconnecting)
                     {
                         _logger?.LogDebug("正在重连中，跳过本次心跳");
+                        consecutiveTimeouts = 0; // 重置计数
                         continue;
                     }
 
@@ -754,32 +757,18 @@ namespace RUINORERP.UI.Network
                     // 如果有，说明上一个心跳还未完成，跳过本次以避免请求堆积
                     if (_pendingRequests.Values.Any(r => r.CommandId == SystemCommands.Heartbeat.Name))
                     {
-                        _logger?.LogWarning("⚠️ 存在未完成的心跳请求，跳过本次心跳以避免堆积");
+                        _logger?.LogDebug("存在未完成的心跳请求，跳过本次心跳以避免堆积");
                         consecutiveTimeouts++;
 
-                        // ✅ 如果连续多次有待处理请求，说明网络严重异常
+                        // ⚠️ 连续多次有待处理请求，只记录警告，不触发重连
+                        // 这可能是临时网络延迟，不应作为重连依据
                         if (consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS)
                         {
-                            _logger?.LogError("连续 {Count} 次检测到未完成的心跳请求，可能存在网络阻塞，主动断开并重连", 
-                                consecutiveTimeouts);
+                            _logger?.LogWarning("⚠️ 连续 {Count} 次检测到未完成的心跳请求，连接状态: {IsConnected}，继续观察", 
+                                consecutiveTimeouts, _connectionManager.IsConnected);
                             
-                            // ✅ 使用取消令牌确保任务可取消
-                            var token = cancellationToken;
-                            _ = Task.Run(async () =>
-                            {
-                                try
-                                {
-                                    StopHeartbeat();
-                                    await Disconnect().ConfigureAwait(false);
-                                    _connectionManager.StartAutoReconnect();
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger?.LogError(ex, "处理心跳请求堆积时发生异常");
-                                }
-                            }, token);
-                            
-                            consecutiveTimeouts = 0; // 重置计数
+                            // ✅ 重置计数，但不触发重连
+                            consecutiveTimeouts = 0;
                         }
                         continue;
                     }
@@ -806,31 +795,14 @@ namespace RUINORERP.UI.Network
 
                         if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                         {
-                            _logger?.LogWarning("⚠️ 心跳失败达到阈值 {Threshold}，连续失败次数: {Failures}，主动断开并触发重连", 
-                                HEARTBEAT_FAILURE_THRESHOLD, currentFailures);
+                            // ⚠️ 心跳失败只记录警告，不触发重连
+                            // 心跳是辅助检测手段，不应作为重连的主要依据
+                            // 真正的重连应该由Socket断开事件或业务请求失败触发
+                            _logger?.LogWarning("⚠️ 心跳连续失败 {Failures} 次，但连接状态: {IsConnected}，继续观察",
+                                currentFailures, _connectionManager.IsConnected);
                             
-                            // ✅ 主动断开连接，触发重连机制，使用取消令牌确保任务可取消
-                            var token = cancellationToken;
-                            _ = Task.Run(async () =>
-                            {
-                                try
-                                {
-                                    // 1. 先停止心跳，避免干扰
-                                    StopHeartbeat();
-                                    
-                                    // 2. 断开连接
-                                    await Disconnect().ConfigureAwait(false);
-                                    
-                                    // 3. 触发重连
-                                    _connectionManager.StartAutoReconnect();
-                                    
-                                    _logger?.LogInformation("✅ 已主动断开并启动重连机制");
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger?.LogError(ex, "主动断开并触发重连时发生异常");
-                                }
-                            }, token);
+                            // ✅ 不触发重连，让ConnectionManager根据实际连接状态处理
+                            // 如果Socket真的断开了，OnSocketClosed事件会自动触发重连
                         }
                     }
                 }
@@ -842,33 +814,15 @@ namespace RUINORERP.UI.Network
                 {
                     _logger?.LogError(ex, "心跳循环发生异常");
                     int currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
+                    
+                    // ⚠️ 异常情况下也只记录日志，不触发重连
+                    // 心跳异常不代表连接断开，可能是临时网络波动
                     if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                     {
-                        _logger?.LogWarning("⚠️ 心跳循环异常且失败达到阈值 {Threshold}，连续失败次数: {Failures}，主动断开并触发重连", 
-                            HEARTBEAT_FAILURE_THRESHOLD, currentFailures);
+                        _logger?.LogWarning("⚠️ 心跳循环异常且连续失败 {Failures} 次，连接状态: {IsConnected}，继续观察",
+                            currentFailures, _connectionManager.IsConnected);
                         
-                        // ✅ 主动断开连接，触发重连机制，使用取消令牌确保任务可取消
-                        var token = cancellationToken;
-                        _ = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                // 1. 先停止心跳，避免干扰
-                                StopHeartbeat();
-                                
-                                // 2. 断开连接
-                                await Disconnect().ConfigureAwait(false);
-                                
-                                // 3. 触发重连
-                                _connectionManager.StartAutoReconnect();
-                                
-                                _logger?.LogInformation("✅ 已从异常处理中主动断开并启动重连机制");
-                            }
-                            catch (Exception disconnectEx)
-                            {
-                                _logger?.LogError(disconnectEx, "从异常处理中主动断开并触发重连时发生异常");
-                            }
-                        }, token);
+                        // ✅ 不触发重连，避免不必要的断开
                     }
                 }
             }
@@ -914,9 +868,23 @@ namespace RUINORERP.UI.Network
                     return false;
                 }
 
-                // 创建心跳请求，只包含必要信息
+                // ✅ 关键检查：验证Token是否有效，避免在会话失效时发送心跳
                 var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
-                var sessionToken = tokenInfo?.AccessToken;
+                if (tokenInfo == null || string.IsNullOrEmpty(tokenInfo.AccessToken))
+                {
+                    _logger?.LogDebug("心跳发送跳过：Token无效或不存在，可能未登录或会话已失效");
+                    return false;
+                }
+                
+                // 检查Token是否过期（添加5分钟缓冲）
+                if (tokenInfo.IsExpired())
+                {
+                    _logger?.LogDebug("心跳发送跳过：Token已过期，需要重新登录");
+                    return false;
+                }
+
+                // 创建心跳请求，只包含必要信息
+                var sessionToken = tokenInfo.AccessToken;
                 
                 var heartbeatRequest = new HeartbeatRequest
                 {
@@ -998,10 +966,30 @@ namespace RUINORERP.UI.Network
                             return true;
                         }
 
-                        // 如果响应不成功但连接还在，记录日志
+                        // 如果响应不成功但连接还在，记录详细日志
                         if (_connectionManager.IsConnected)
                         {
-                            _logger?.LogDebug("心跳响应失败，但连接正常");
+                            _logger?.LogWarning("⚠️ 心跳响应失败: Status={Status}, IsSuccess={IsSuccess}, ErrorMessage={ErrorMessage}, SessionId={SessionId}, UserId={UserId}",
+                                response?.Status, response?.IsSuccess, response?.ErrorMessage, sessionId, userId);
+                            
+                            // ✅ 特殊处理：如果会话不存在，触发重新登录
+                            if (response?.Status == "Session Not Found")
+                            {
+                                _logger?.LogWarning("⚠️ 服务器返回会话不存在，将尝试重新登录");
+                                
+                                // 异步触发重新登录，不阻塞当前心跳循环
+                                _ = Task.Run(async () =>
+                                {
+                                    try
+                                    {
+                                        await TryRestoreLoginStateAsync();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger?.LogError(ex, "心跳检测到会话失效后触发重新登录时发生异常");
+                                    }
+                                });
+                            }
                         }
                         return false;
                     }
@@ -1272,6 +1260,12 @@ namespace RUINORERP.UI.Network
                         {
                             _logger?.LogInformation("✅ 现有Token仍然有效，无需重新登录");
                             
+                            // ✅ Token有效，启动心跳和队列处理
+                            StartHeartbeat();
+                            _ = Task.Run(ProcessCommandQueueAsync);
+                            
+                            _logger?.LogDebug("✅ Token有效，已启动心跳和命令队列处理");
+                            
                             // 通知UI Token有效
                             NotifyUITokenValid();
                             return; // Token有效，直接返回
@@ -1302,23 +1296,44 @@ namespace RUINORERP.UI.Network
                     
                     _logger?.LogInformation($"🔄 Token失效，尝试使用保存的凭据自动重新登录: Username={username}");
 
-                    // 执行登录
-                    var loginResult = await userLoginService.LoginAsync(
-                        username,
-                        password,
-                        CancellationToken.None
-                    );
+                    // 执行登录（带超时控制）
+                    LoginResponse loginResult = null;
+                    try
+                    {
+                        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                        // ✅ 传递isAutoLogin=true，确保自动登录时不显示弹窗
+                        loginResult = await userLoginService.LoginAsync(
+                            username,
+                            password,
+                            cts.Token,
+                            isAutoLogin: true
+                        );
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger?.LogWarning("自动登录请求超时");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "自动登录过程中发生异常");
+                    }
 
                     if (loginResult != null && loginResult.IsSuccess)
                     {
                         _logger?.LogInformation($"✅ 自动重新登录成功: Username={username}, SessionId={loginResult.SessionId}");
+
+                        // ✅ 关键：登录成功后启动心跳和队列处理
+                        StartHeartbeat();
+                        _ = Task.Run(ProcessCommandQueueAsync);
+                        
+                        _logger?.LogDebug("✅ 已启动心跳和命令队列处理");
 
                         // 通知UI登录成功
                         NotifyUIAutoReloginSuccess(loginResult);
                     }
                     else
                     {
-                        var errorMsg = loginResult?.ErrorMessage ?? "未知错误";
+                        var errorMsg = loginResult?.ErrorMessage ?? "连接超时或服务器无响应";
                         _logger?.LogWarning($"❌ 自动重新登录失败: Username={username}, Error={errorMsg}");
 
                         // ✅ 不清除 AutoSavePwd，保留用户凭据供下次重试
@@ -1428,33 +1443,30 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 🆕 通知UI自动重新登录失败
+        /// 修复：自动登录失败时不显示弹窗，仅记录日志和更新状态栏
         /// </summary>
         private void NotifyUIAutoReloginFailed(string errorMessage)
         {
             try
             {
+                _logger?.LogWarning($"❌ 自动重新登录失败: {errorMessage}");
+                
                 if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
                 {
                     if (MainForm.Instance.InvokeRequired)
                     {
                         MainForm.Instance.BeginInvoke(new Action(() =>
                         {
-                            MessageBox.Show(
-                                $"服务器恢复，但自动登录失败：{errorMessage}\n\n请重新登录。",
-                                "需要重新登录",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Warning
-                            );
+                            // 仅更新状态栏，不显示弹窗
+                            MainForm.Instance.ShowStatusText($"自动登录失败，请手动登录");
+                            MainForm.Instance.PrintInfoLog($"自动登录失败: {errorMessage}");
                         }));
                     }
                     else
                     {
-                        MessageBox.Show(
-                            $"服务器恢复，但自动登录失败：{errorMessage}\n\n请重新登录。",
-                            "需要重新登录",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Warning
-                        );
+                        // 仅更新状态栏，不显示弹窗
+                        MainForm.Instance.ShowStatusText($"自动登录失败，请手动登录");
+                        MainForm.Instance.PrintInfoLog($"自动登录失败: {errorMessage}");
                     }
                 }
             }

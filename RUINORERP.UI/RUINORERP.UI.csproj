@@ -991,6 +991,12 @@
     <Compile Include="Common\TaskPool.cs" />
     <Compile Include="Common\TaskVoiceReminder.cs" />
     <Compile Include="Common\UIBizService.cs" />
+    <Compile Include="DevTools\UCDataCleanupTool.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DevTools\UCDataCleanupTool.Designer.cs">
+      <DependentUpon>UCDataCleanupTool.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormProperty\frmBillInfo.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -4300,6 +4306,9 @@
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DevTools\UCDataCleanupTool.resx">
+      <DependentUpon>UCDataCleanupTool.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EOP\UCEOPWaterStorage.resx">
       <DependentUpon>UCEOPWaterStorage.cs</DependentUpon>
     </EmbeddedResource>
@@ -5512,12 +5521,6 @@
     <Folder Include="UControls\TreeGridView\" />
     <Folder Include="UICreator\" />
     <Folder Include="WorkFlowDesigner\Nodes\editor\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RUINORERP.AI\RUINORERP.AI.csproj">
-      <Project>{A7B3D7A9-1C4A-4F9E-9D9C-8E5D7A8F9E12}</Project>
-      <Name>RUINORERP.AI</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8">

@@ -197,6 +197,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
             try
             {
                 var commandId = cmd.Packet.CommandId;
+                
+                // 处理ValidateToken命令(使用TokenValidationRequest)
+                if (commandId == AuthenticationCommands.ValidateToken)
+                {
+                    return await ProcessTokenValidationAsync(cmd.Packet.ExecutionContext, cancellationToken);
+                }
+                
+                // 处理其他认证命令(使用LoginRequest)
                 if (cmd.Packet.Request is LoginRequest loginRequest)
                 {
                     if (commandId == AuthenticationCommands.Login)
@@ -212,10 +220,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         return await ProcessLogoutAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
                     }
-                    else if (commandId == AuthenticationCommands.ValidateToken)
-                    {
-                        return await ProcessTokenValidationAsync(cmd.Packet.ExecutionContext, cancellationToken);
-                    }
                     else if (commandId == AuthenticationCommands.RefreshToken)
                     {
                         return await ProcessTokenRefreshAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
@@ -223,7 +227,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     else if (commandId == AuthenticationCommands.DuplicateLogin)
                     {
                         return await HandleDuplicateLoginAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
-
                     }
                     else
                     {
@@ -233,7 +236,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 else
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的命令类型");
+                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, $"不支持的命令类型: {commandId}");
                 }
             }
             catch (Exception ex)

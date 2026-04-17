@@ -546,14 +546,30 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// Socket连接关闭事件处理 - 优化版
         /// 修复：增加延迟检查，避免短时间内重复触发重连
+        /// 修复：添加连接关闭时间戳，防止短时间内重复处理同一关闭事件
         /// </summary>
+        private DateTime _lastSocketClosedTime = DateTime.MinValue;
+        private readonly object _socketClosedLock = new object();
+        
         private void OnSocketClosed(EventArgs e)
         {
+            // 防止短时间内重复处理同一关闭事件
+            lock (_socketClosedLock)
+            {
+                var timeSinceLastClose = DateTime.Now - _lastSocketClosedTime;
+                if (timeSinceLastClose.TotalSeconds < 3)
+                {
+                    _logger?.LogDebug("忽略重复的连接关闭事件，距离上次处理仅 {Seconds:F1} 秒", 
+                        timeSinceLastClose.TotalSeconds);
+                    return;
+                }
+                _lastSocketClosedTime = DateTime.Now;
+            }
+            
             // 触发连接断开事件
             OnConnectionStateChanged(false);
 
             bool shouldStartReconnect = false;
-            DateTime lastDisconnectTime = DateTime.Now;
 
             lock (_reconnectStateLock)
             {

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Business.CommService
 {
     /// <summary>
-    /// 成本计算
+    /// 成本计算1
     /// </summary>
     public class CostCalculations
     {

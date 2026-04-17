@@ -667,11 +667,14 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 销售出库审核后的财务独立事务处理
-        /// 在主事务提交后执行，失败不影响出库审核结果
+        /// 在主事务提交后执行，失败不影响出库审核结果（含补偿机制）
         /// </summary>
         private async Task<ReturnResults<bool>> ProcessFinanceAfterSaleOutApprovalAsync(tb_SaleOut entity, FMAuditLogHelper fMAuditLog)
         {
             ReturnResults<bool> result = new ReturnResults<bool>();
+            List<(long ARAPID, string ARAPNo, bool IsCommission)> savedPayables = new List<(long, string, bool)>();
+            bool hasError = false;
+
             try
             {
                 var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
@@ -697,7 +700,9 @@ namespace RUINORERP.Business
 
                             if (rmr.Succeeded)
                             {
-                                fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"销售出库单{entity.SaleOutNo}审核：生成应收款单，单号：{rmr.ReturnObject?.ARAPNo}", rmr.ReturnObject as tb_FM_ReceivablePayable);
+                                var savedARAP = rmr.ReturnObject;
+                                savedPayables.Add((savedARAP.ARAPId, savedARAP.ARAPNo, false));
+                                fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"销售出库单{entity.SaleOutNo}审核：生成应收款单，单号：{savedARAP.ARAPNo}", savedARAP);
 
                                 //如果是平台单，则自动审核
                                 if (payable.IsFromPlatform)
@@ -706,8 +711,12 @@ namespace RUINORERP.Business
                                     ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
                                     if (!autoApproval.Succeeded)
                                     {
+                                        // 平台单自动审核失败，触发补偿
+                                        await CompensateReceivablePayableAsync(savedARAP.ARAPId, entity.SaleOutNo, false);
                                         autoApproval.Succeeded = false;
                                         autoApproval.ErrorMsg = $"自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        hasError = true;
+                                        _logger.LogWarning($"销售出库单{entity.SaleOutNo}：平台单自动审核失败，已触发补偿机制");
                                     }
                                     else
                                     {
@@ -720,6 +729,7 @@ namespace RUINORERP.Business
                                 _logger.LogError(
                                     $"销售出库单{entity.SaleOutNo}审核：应收款单生成失败 - {rmr.ErrorMsg}\n" +
                                     $"⚠️ 请财务部门手动补录应收单据");
+                                hasError = true;
                             }
                         }
                         else
@@ -727,6 +737,7 @@ namespace RUINORERP.Business
                             _logger.LogError(
                                 $"销售出库单{entity.SaleOutNo}审核：无法重新加载出库单实体，无法生成应收款单\n" +
                                 $"⚠️ 请财务部门手动补录应收单据");
+                            hasError = true;
                         }
                     }
                     catch (Exception arEx)
@@ -734,6 +745,7 @@ namespace RUINORERP.Business
                         _logger.LogError(arEx,
                             $"销售出库单{entity.SaleOutNo}审核：生成应收款单时发生异常 - {arEx.Message}\n" +
                             $"⚠️ 请财务部门手动补录应收单据");
+                        hasError = true;
                     }
                 }
 
@@ -758,13 +770,16 @@ namespace RUINORERP.Business
 
                             if (rmrCommission.Succeeded)
                             {
-                                fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"销售出库单{entity.SaleOutNo}审核：佣金应付款单生成成功，单号：{rmrCommission.ReturnObject?.ARAPNo}", rmrCommission.ReturnObject as tb_FM_ReceivablePayable);
+                                var savedCommission = rmrCommission.ReturnObject;
+                                savedPayables.Add((savedCommission.ARAPId, savedCommission.ARAPNo, true));
+                                fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"销售出库单{entity.SaleOutNo}审核：佣金应付款单生成成功，单号：{savedCommission.ARAPNo}", savedCommission);
                             }
                             else
                             {
                                 _logger.LogError(
                                     $"销售出库单{entity.SaleOutNo}审核：佣金应付款单生成失败 - {rmrCommission.ErrorMsg}\n" +
                                     $"⚠️ 请财务部门手动补录应付单据");
+                                hasError = true;
                             }
                         }
                     }
@@ -773,18 +788,37 @@ namespace RUINORERP.Business
                         _logger.LogError(commEx,
                             $"销售出库单{entity.SaleOutNo}审核：生成佣金应付款单时发生异常 - {commEx.Message}\n" +
                             $"⚠️ 请财务部门手动补录应付单据");
+                        hasError = true;
                     }
                 }
 
                 _logger.LogInformation(
                     $"销售出库单{entity.SaleOutNo}审核：财务独立事务处理完成");
-                
-                result.Succeeded = true;
+
+                // 如果有错误且有已保存的财务单据，触发补偿机制
+                if (hasError && savedPayables.Count > 0)
+                {
+                    foreach (var saved in savedPayables)
+                    {
+                        await CompensateReceivablePayableAsync(saved.ARAPID, entity.SaleOutNo, saved.IsCommission);
+                    }
+                }
+
+                result.Succeeded = !hasError;
                 return result;
             }
             catch (Exception financeEx)
             {
                 // 财务处理失败不影响出库审核结果，但需要提供明确的用户反馈
+                // 触发补偿机制
+                if (savedPayables.Count > 0)
+                {
+                    foreach (var saved in savedPayables)
+                    {
+                        await CompensateReceivablePayableAsync(saved.ARAPID, entity.SaleOutNo, saved.IsCommission);
+                    }
+                }
+
                 _logger.LogError(financeEx,
                     $"销售出库单{entity.SaleOutNo}审核：财务独立事务处理失败（出库审核已成功）- {financeEx.Message}\n" +
                     $"⚠️ 请财务部门检查并手动补录相关单据");
@@ -793,6 +827,52 @@ namespace RUINORERP.Business
                 result.ErrorMsg = $"财务单据生成失败：{financeEx.Message}\n" +
                                   $"请财务部门手动补录相关单据，单据号：{entity.SaleOutNo}";
                 return result;
+            }
+        }
+
+        /// <summary>
+        /// 补偿机制：删除已创建的应收/应付账款
+        /// </summary>
+        private async Task CompensateReceivablePayableAsync(long arapId, string saleOutNo, bool isCommission)
+        {
+            try
+            {
+                var payable = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_FM_ReceivablePayable>()
+                    .Where(c => c.ARAPId == arapId)
+                    .FirstAsync();
+
+                if (payable == null)
+                {
+                    _logger.LogInformation($"销售出库单{saleOutNo}：{(isCommission ? "佣金应付款" : "应收款")} {arapId} 不存在，无需补偿");
+                    return;
+                }
+
+                // 检查是否已被核销/支付
+                if (payable.LocalPaidAmount > 0 || payable.ForeignPaidAmount > 0)
+                {
+                    _logger.LogError($"销售出库单{saleOutNo}：{(isCommission ? "佣金应付款" : "应收款")} {arapId} 已被核销，无法补偿删除");
+                    return;
+                }
+
+                // 删除应收/应付账款
+                var deletedCount = await _unitOfWorkManage.GetDbClient()
+                    .Deleteable<tb_FM_ReceivablePayable>()
+                    .Where(c => c.ARAPId == arapId)
+                    .ExecuteCommandAsync();
+
+                if (deletedCount > 0)
+                {
+                    _logger.LogInformation($"销售出库单{saleOutNo}：{(isCommission ? "佣金应付款" : "应收款")} {arapId} 补偿删除成功");
+                }
+                else
+                {
+                    _logger.LogWarning($"销售出库单{saleOutNo}：{(isCommission ? "佣金应付款" : "应收款")} {arapId} 补偿删除未找到记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"销售出库单{saleOutNo}：{(isCommission ? "佣金应付款" : "应收款")} {arapId} 补偿删除失败");
             }
         }
 

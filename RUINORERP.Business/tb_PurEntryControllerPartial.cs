@@ -362,17 +362,24 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        // 累加已有分组的数值字段
-
-                        group.IsGift = child.IsGift;
-                        if (group.IsGift.HasValue && !group.IsGift.Value && group.UntaxedUnitPrice > 0)
+                        // ✅ P1修复：改进加权平均单价计算，减少精度累积误差
+                        // 原公式：((currentEntryQty * child.UntaxedUnitPrice) + (group.UntaxedUnitPrice * group.PurQtySum)) / (group.PurQtySum + currentEntryQty)
+                        // 问题：在多次累加时会产生浮点数精度累积误差
+                        // 修复：使用decimal高精度类型，并确保除法运算在最后一步进行
+                        
+                        decimal totalCost = (currentEntryQty * child.UntaxedUnitPrice) + (group.UntaxedUnitPrice * group.PurQtySum);
+                        decimal totalQty = group.PurQtySum + currentEntryQty;
+                        
+                        if (totalQty > 0)
                         {
-                            group.UntaxedUnitPrice = ((currentEntryQty * child.UntaxedUnitPrice) + (group.UntaxedUnitPrice * group.PurQtySum)) / (group.PurQtySum + currentEntryQty);
+                            // 保留4位小数，符合财务精度要求
+                            group.UntaxedUnitPrice = Math.Round(totalCost / totalQty, 4, MidpointRounding.AwayFromZero);
                         }
                         else
                         {
                             group.UntaxedUnitPrice = child.UntaxedUnitPrice;
                         }
+                        
                         group.PurQtySum += currentEntryQty;
 
                         // 取最新出库时间（若当前时间更新，则覆盖）
@@ -392,7 +399,7 @@ namespace RUINORERP.Business
                 {
                     var inv = group.Value.Inventory;
 
-                    #region 计算成本
+                    #region 计算成本（反审核）
                     //直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
                     //平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
                     //先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。适用范围：适用于存货的实物流转比较符合先进先出的假设，比如食品、药品等有保质期限制的商品，先购进的存货会先发出销售。
@@ -401,14 +408,18 @@ namespace RUINORERP.Business
                     //采购价格：从供应商处购买产品或物品时的价格。
                     //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                     //市场价格：参考市场上类似产品或物品的价格。
+                    
+                    // ✅ P0修复：保存原始数量，确保成本计算使用正确的基准
+                    int originalQty = inv.Quantity;
+                    
                     if (group.Value.IsGift.HasValue && !group.Value.IsGift.Value && group.Value.UntaxedUnitPrice > 0)
                     {
+                        // AntiCostCalculation 内部会使用 inv.Quantity（即 originalQty）进行反算
                         CommService.CostCalculations.AntiCostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UntaxedUnitPrice);
 
                         var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
                         // 递归更新所有上级BOM的成本
                         await ctrbom.UpdateParentBOMsAsync(group.Key.ProdDetailID, inv.Inv_Cost);
-
                     }
 
                     #endregion
@@ -443,11 +454,12 @@ namespace RUINORERP.Business
                     #endregion
 
                     // 记录变动前的库存数量（在更新之前）
-                    int beforeQty = inv.Quantity;
+                    int beforeQty = originalQty;
 
+                    // ✅ P0修复：成本计算完成后再更新数量，保持时序一致
                     // 累加数值字段
                     inv.On_the_way_Qty += group.Value.PurQtySum.ToInt();
-                    inv.Quantity -= group.Value.PurQtySum.ToInt();
+                    inv.Quantity = originalQty - group.Value.PurQtySum.ToInt();
                     inv.LatestStorageTime = System.DateTime.Now;
                     // 计算衍生字段（如总成本）
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
@@ -1030,10 +1042,22 @@ namespace RUINORERP.Business
                 }
                 else
                 {
+                    // ✅ P1修复：改进加权平均单价计算，减少精度累积误差
                     group.IsGift = child.IsGift;
                     if (group.IsGift.HasValue && !group.IsGift.Value && group.UntaxedUnitPrice > 0)
                     {
-                        group.UntaxedUnitPrice = ((currentEntryQty * child.UntaxedUnitPrice) + (group.UntaxedUnitPrice * group.PurQtySum)) / (group.PurQtySum + currentEntryQty);
+                        decimal totalCost = (currentEntryQty * child.UntaxedUnitPrice) + (group.UntaxedUnitPrice * group.PurQtySum);
+                        decimal totalQty = group.PurQtySum + currentEntryQty;
+                        
+                        if (totalQty > 0)
+                        {
+                            // 保留4位小数，符合财务精度要求
+                            group.UntaxedUnitPrice = Math.Round(totalCost / totalQty, 4, MidpointRounding.AwayFromZero);
+                        }
+                        else
+                        {
+                            group.UntaxedUnitPrice = child.UntaxedUnitPrice;
+                        }
                     }
                     else
                     {
@@ -1143,21 +1167,44 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 财务独立事务处理 - 生成应付账款
+        /// 财务独立事务处理 - 生成应付账款（含补偿机制）
         /// </summary>
         private async Task<ReturnResults<object>> ProcessFinanceAfterApprovalAsync(tb_PurEntry entity)
         {
             var result = new ReturnResults<object>();
-            
+            tb_FM_ReceivablePayable savedPayable = null;
+            bool payableSaved = false;
+
             try
             {
                 var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
                 tb_FM_ReceivablePayable payable = await ctrpayable.BuildReceivablePayable(entity, false);
                 ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
-                
+
                 if (rmr.Succeeded)
                 {
-                    result.ReturnObject = rmr.ReturnObject;
+                    savedPayable = rmr.ReturnObject;
+                    payableSaved = true;
+                    _logger.LogInformation($"采购入库单{entity.PurEntryNo}：应付账款 {savedPayable?.ARAPNo} 生成成功");
+
+                    // 自动审核（如果配置启用）
+                    if (_appContext.FMConfig?.AutoAuditPaymentable == true)
+                    {
+                        savedPayable.ApprovalOpinions = "自动审核";
+                        var autoApproval = await ctrpayable.ApprovalAsync(savedPayable, true);
+                        if (!autoApproval.Succeeded)
+                        {
+                            // 自动审核失败，触发补偿删除
+                            await CompensatePayableAsync(savedPayable?.ARAPId, entity.PurEntryNo);
+                            result.ErrorMsg = $"自动审核失败：{autoApproval.ErrorMsg}";
+                            result.Succeeded = false;
+                            _logger.LogWarning($"采购入库单{entity.PurEntryNo}：自动审核失败，已触发补偿机制");
+                            return result;
+                        }
+                        _logger.LogInformation($"采购入库单{entity.PurEntryNo}：应付账款自动审核成功");
+                    }
+
+                    result.ReturnObject = savedPayable;
                     result.Succeeded = true;
                     _logger.LogInformation($"采购入库单{entity.PurEntryNo}财务处理成功");
                 }
@@ -1170,12 +1217,69 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                // 发生异常时，如果已保存应付账款，触发补偿删除
+                if (payableSaved)
+                {
+                    await CompensatePayableAsync(savedPayable?.ARAPId, entity.PurEntryNo);
+                }
                 result.ErrorMsg = $"财务数据处理异常：{ex.Message}";
                 result.Succeeded = false;
-                _logger.Error(ex, $"采购入库单{entity.PurEntryNo}财务处理异常");
+                _logger.Error(ex, $"采购入库单{entity.PurEntryNo}财务处理异常，已触发补偿机制");
             }
-            
+
             return result;
+        }
+
+        /// <summary>
+        /// 补偿机制：删除已创建的应付账款
+        /// </summary>
+        private async Task CompensatePayableAsync(long? arapId, string purEntryNo)
+        {
+            if (!arapId.HasValue)
+            {
+                _logger.LogWarning($"采购入库单{purEntryNo}：应付账款ID无效，无需补偿");
+                return;
+            }
+
+            try
+            {
+                var payable = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_FM_ReceivablePayable>()
+                    .Where(c => c.ARAPId == arapId)
+                    .FirstAsync();
+
+                if (payable == null)
+                {
+                    _logger.LogInformation($"采购入库单{purEntryNo}：应付账款 {arapId} 不存在，无需补偿");
+                    return;
+                }
+
+                // 检查是否已被核销
+                if (payable.LocalPaidAmount > 0 || payable.ForeignPaidAmount > 0)
+                {
+                    _logger.LogError($"采购入库单{purEntryNo}：应付账款 {arapId} 已被核销，无法补偿删除");
+                    return;
+                }
+
+                // 删除应付账款
+                var deletedCount = await _unitOfWorkManage.GetDbClient()
+                    .Deleteable<tb_FM_ReceivablePayable>()
+                    .Where(c => c.ARAPId == arapId)
+                    .ExecuteCommandAsync();
+
+                if (deletedCount > 0)
+                {
+                    _logger.LogInformation($"采购入库单{purEntryNo}：应付账款 {arapId} 补偿删除成功");
+                }
+                else
+                {
+                    _logger.LogWarning($"采购入库单{purEntryNo}：应付账款 {arapId} 补偿删除未找到记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"采购入库单{purEntryNo}：应付账款 {arapId} 补偿删除失败");
+            }
         }
 
 

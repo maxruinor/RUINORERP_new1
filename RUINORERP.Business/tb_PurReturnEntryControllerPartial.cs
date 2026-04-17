@@ -125,7 +125,6 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        inv.Quantity = inv.Quantity + child.Quantity;
                         BusinessHelper.Instance.EditEntity(inv);
                     }
                     inv.ProdDetailID = child.ProdDetailID;
@@ -135,11 +134,13 @@ namespace RUINORERP.Business
                     //采购退货单时添加 。这里减掉在路上的数量
                     inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
 
-                    //采购退货入库暂时不影响成本
+                    // ✅ P1修复：采购退货入库应该影响成本（货物退回仓库，应重新计算平均成本）
+                    // 注意：必须先调用成本计算，再更新数量，保持时序一致
                     decimal UntaxedUnitPrice = child.UnitPrice / (1 + child.TaxRate);
                     UntaxedUnitPrice = Math.Round(UntaxedUnitPrice, 3);
                     if (child.IsGift.HasValue && !child.IsGift.Value && UntaxedUnitPrice > 0)
                     {
+                        // 先计算成本（基于退货前的库存状态）
                         CommService.CostCalculations.CostCalculation(_appContext, inv, child.Quantity.ToInt(), UntaxedUnitPrice, 0);
 
                         var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
@@ -147,26 +148,31 @@ namespace RUINORERP.Business
                         await ctrbom.UpdateParentBOMsAsync(child.ProdDetailID, inv.Inv_Cost);
                     }
 
+                    // ✅ P0修复：保存更新前的数量快照
+                    int beforeQty = inv.Quantity;
+                    
+                    // 再更新数量
+                    inv.Quantity = inv.Quantity + child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
                     invUpdateList.Add(inv);
                     
-                    // 实时获取当前库存成本
+                    // 实时获取当前库存成本(使用更新前的快照)
                     decimal realtimeCost = inv.Inv_Cost;
                     
                     // 采购退货单明细没有成本相关属性，不需要更新
                     
-                    // 创建库存流水记录
+                    // ✅ P0修复：创建库存流水记录(使用快照数据)
                     tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                     transaction.ProdDetailID = inv.ProdDetailID;
                     transaction.Location_ID = inv.Location_ID;
                     transaction.BizType = (int)BizType.采购退货单;
                     transaction.ReferenceId = entity.PurReEntry_ID;
                     transaction.ReferenceNo = entity.PurReEntryNo;
-                    transaction.BeforeQuantity = inv.Quantity - child.Quantity; // 变动前的库存数量
+                    transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 变动前的库存数量(快照)
                     transaction.QuantityChange = child.Quantity; // 采购退货增加库存
-                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.AfterQuantity = beforeQty + child.Quantity; // ✅ P0修复: 变动后的库存数量
                     transaction.UnitCost = realtimeCost; // 使用实时成本
                     transaction.TransactionTime = DateTime.Now;
                     transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
@@ -429,19 +435,22 @@ namespace RUINORERP.Business
                     #endregion
                     invUpdateList.Add(inv);
                     
-                    // 实时获取当前库存成本
+                    // ✅ P0修复：保存更新前的数量快照
+                    int beforeQty = inv.Quantity;
+                    
+                    // 实时获取当前库存成本(使用更新前的快照)
                     decimal realtimeCost = inv.Inv_Cost;
                     
-                    // 创建反向库存流水记录
+                    // ✅ P0修复：创建反向库存流水记录(使用快照数据)
                     tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                     transaction.ProdDetailID = inv.ProdDetailID;
                     transaction.Location_ID = inv.Location_ID;
                     transaction.BizType = (int)BizType.采购退货单;
                     transaction.ReferenceId = entity.PurReEntry_ID;
                     transaction.ReferenceNo = entity.PurReEntryNo;
-                    transaction.BeforeQuantity = inv.Quantity + child.Quantity; // 变动前的库存数量
+                    transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 变动前的库存数量(快照)
                     transaction.QuantityChange = -child.Quantity; // 反审核减少库存
-                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.AfterQuantity = beforeQty - child.Quantity; // ✅ P0修复: 变动后的库存数量
                     transaction.UnitCost = realtimeCost; // 使用实时成本
                     transaction.TransactionTime = DateTime.Now;
                     transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;

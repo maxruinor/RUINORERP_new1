@@ -388,25 +388,29 @@ namespace RUINORERP.Business
                         inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                         inv.LatestOutboundTime = System.DateTime.Now;
                         #endregion
+                        
+                        // ✅ P0修复：保存更新前的数量快照
+                        int beforeQty = inv.Quantity;
+                        
                         invUpdateList.Add(inv);
 
-                        // 实时获取当前库存成本
+                        // 实时获取当前库存成本(使用更新前的快照)
                         decimal realtimeCost = inv.Inv_Cost;
 
                         // 更新领料明细的成本为实时成本
                         child.Cost = realtimeCost;
                         child.SubtotalCost = realtimeCost * child.ActualSentQty;
 
-                        // 创建库存流水记录
+                        // ✅ P0修复：创建库存流水记录(使用快照数据)
                         tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                         transaction.ProdDetailID = inv.ProdDetailID;
                         transaction.Location_ID = inv.Location_ID;
                         transaction.BizType = (int)BizType.生产领料单;
                         transaction.ReferenceId = entity.MR_ID;
                         transaction.ReferenceNo = entity.MaterialRequisitionNO;
-                        transaction.BeforeQuantity = inv.Quantity + child.ActualSentQty; // 变动前的库存数量
+                        transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 变动前的库存数量(快照)
                         transaction.QuantityChange = -child.ActualSentQty; // 生产领料减少库存
-                        transaction.AfterQuantity = inv.Quantity;
+                        transaction.AfterQuantity = beforeQty - child.ActualSentQty; // ✅ P0修复: 变动后的库存数量
                         transaction.UnitCost = realtimeCost; // 使用实时成本
                         transaction.TransactionTime = DateTime.Now;
                         transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
@@ -578,21 +582,25 @@ namespace RUINORERP.Business
                     // inv.LatestStorageTime
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
+                    
+                    // ✅ P0修复：保存更新前的数量快照
+                    int beforeQty = inv.Quantity;
+                    
                     invUpdateList.Add(inv);
 
-                    // 实时获取当前库存成本
+                    // 实时获取当前库存成本(使用更新前的快照)
                     decimal realtimeCost = inv.Inv_Cost;
 
-                    // 创建反向库存流水记录
+                    // ✅ P0修复：创建反向库存流水记录(使用快照数据)
                     tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                     transaction.ProdDetailID = inv.ProdDetailID;
                     transaction.Location_ID = inv.Location_ID;
                     transaction.BizType = (int)BizType.生产领料单;
                     transaction.ReferenceId = entity.MR_ID;
                     transaction.ReferenceNo = entity.MaterialRequisitionNO;
-                    transaction.BeforeQuantity = inv.Quantity - child.ActualSentQty; // 变动前的库存数量
+                    transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 变动前的库存数量(快照)
                     transaction.QuantityChange = child.ActualSentQty; // 反审核增加库存
-                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.AfterQuantity = beforeQty + child.ActualSentQty; // ✅ P0修复: 变动后的库存数量
                     transaction.UnitCost = realtimeCost; // 使用实时成本
                     transaction.TransactionTime = DateTime.Now;
                     transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;

@@ -38,6 +38,60 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_AS_RepairMaterialPickupController<T> : BaseController<T> where T : class
     {
+        /// <summary>
+        /// ✅ P1新增：智能获取维修仓首次入库成本（与tb_AS_RepairInStockController共用逻辑）
+        /// 优先级：1)其他仓库平均成本 2)产品标准成本 3)0
+        /// </summary>
+        /// <param name="prodDetailID">产品详情ID</param>
+        /// <returns>成本价格</returns>
+        private decimal GetRepairInventoryCost(long prodDetailID)
+        {
+            try
+            {
+                // 方案1：从其他仓库获取该产品的平均成本（排除维修仓）
+                var otherWarehouseCosts = _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => i.ProdDetailID == prodDetailID && i.Quantity > 0)
+                    .Select(i => new { i.Inv_Cost, i.Quantity })
+                    .ToList();
+
+                if (otherWarehouseCosts != null && otherWarehouseCosts.Any())
+                {
+                    // 计算加权平均成本
+                    decimal totalCost = otherWarehouseCosts.Sum(x => x.Inv_Cost * x.Quantity);
+                    int totalQty = otherWarehouseCosts.Sum(x => x.Quantity);
+                    
+                    if (totalQty > 0)
+                    {
+                        decimal avgCost = totalCost / totalQty;
+                        _logger.LogDebug($"维修仓首次入库，从其他仓库获取成本：产品ID={prodDetailID}, 平均成本={avgCost:F2}");
+                        return Math.Round(avgCost, 4);
+                    }
+                }
+
+                ///产品表中没有标准成品字段
+                // 方案2：从产品主数据获取标准成本
+                //var prodDetail = _unitOfWorkManage.GetDbClient()
+                //    .Queryable<tb_ProdDetail>()
+                //    .Where(p => p.ProdDetailID == prodDetailID)
+                //    .First();
+
+                //if (prodDetail != null && prodDetail.StdCost > 0)
+                //{
+                //    _logger.LogDebug($"维修仓首次入库，使用产品标准成本：产品ID={prodDetailID}, 标准成本={prodDetail.StdCost:F2}");
+                //    return prodDetail.StdCost;
+                //}
+
+                // 方案3：返回0（后续通过盘点或调价设置成本）
+                _logger.LogWarning($"维修仓首次入库，未找到成本信息：产品ID={prodDetailID}，成本设为0");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"获取维修仓成本失败：产品ID={prodDetailID}");
+                return 0;
+            }
+        }
 
         /// <summary>
         /// 转为维修领料单
@@ -205,11 +259,30 @@ namespace RUINORERP.Business
                 }
 
                 // 处理分组数据，更新库存记录的各字段
+                List<((tb_Inventory Inventory, decimal RepairQty, DateTime LatestOutboundTime) Group, int BeforeQty)> inventoryWithBeforeQty = new List<((tb_Inventory Inventory, decimal RepairQty, DateTime LatestOutboundTime) Group, int BeforeQty)>();
                 foreach (var group in inventoryGroups)
                 {
                     var inv = group.Value.Inventory;
+                    
+                    // ✅ P0修复：保存更新前的数量快照
+                    int beforeQty = inv.Quantity;
+                    
+                    // ✅ P1修复：维修领料出库也需要计算成本（减少库存）
+                    // 注意：先调用成本反算，再更新数量，保持时序一致
+                    if (inv.Quantity > 0 && group.Value.RepairQty.ToInt() > 0)
+                    {
+                        // 使用当前库存成本进行反算
+                        if (inv.Inv_Cost > 0)
+                        {
+                            CommService.CostCalculations.AntiCostCalculation(_appContext, inv, group.Value.RepairQty.ToInt(), inv.Inv_Cost);
+                        }
+                    }
+                    
                     inv.Quantity -= group.Value.RepairQty.ToInt();
                     invList.Add(inv);
+                    
+                    // ✅ P0修复：保存更新前后的信息用于流水记录
+                    inventoryWithBeforeQty.Add((group.Value, beforeQty));
                 }
 
                 if (entity.RepairOrderID.HasValue && entity.RepairOrderID.Value > 0)
@@ -258,6 +331,41 @@ namespace RUINORERP.Business
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("维修领料单审核时，库存更新数据为0，更新失败！");
+                    }
+
+                    // ✅ 新增: 记录库存流水(售后维修领料减少库存)
+                    List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                    foreach (var item in inventoryWithBeforeQty)
+                    {
+                        var group = item.Group;
+                        int beforeQty = item.BeforeQty; // ✅ P0修复: 使用保存的快照
+                        
+                        if (group.Inventory != null)
+                        {
+                            decimal realtimeCost = group.Inventory.Inv_Cost;
+                            
+                            tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                            transaction.ProdDetailID = group.Inventory.ProdDetailID;
+                            transaction.Location_ID = group.Inventory.Location_ID;
+                            transaction.BizType = (int)BizType.维修领料单;
+                            transaction.ReferenceId = entity.RMRID;
+                            transaction.ReferenceNo = entity.MaterialPickupNO;
+                            transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 更新前的数量(快照)
+                            transaction.QuantityChange = -group.RepairQty.ToInt(); // 维修领料减少库存
+                            transaction.AfterQuantity = beforeQty - group.RepairQty.ToInt(); // ✅ P0修复: 更新后的数量
+                            transaction.UnitCost = realtimeCost;
+                            transaction.TransactionTime = DateTime.Now;
+                            transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                            transaction.Notes = $"售后维修领料审核：{entity.MaterialPickupNO}，产品：{group.Inventory.tb_proddetail?.tb_prod?.CNName}";
+                            
+                            transactionList.Add(transaction);
+                        }
+                    }
+                    
+                    if (transactionList.Any())
+                    {
+                        tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                        await tranController.BatchRecordTransactionsWithRetry(transactionList);
                     }
 
                     //这部分是否能提出到上一级公共部分？
@@ -366,11 +474,44 @@ namespace RUINORERP.Business
                 }
 
                 // 处理分组数据，更新库存记录的各字段
+                List<((tb_Inventory Inventory, decimal RepairQty) Group, int BeforeQty)> inventoryWithBeforeQty2 = new List<((tb_Inventory Inventory, decimal RepairQty) Group, int BeforeQty)>();
                 foreach (var group in inventoryGroups)
                 {
                     var inv = group.Value.Inventory;
-                    inv.Quantity += group.Value.RepairQty.ToInt();
+                    
+                    // ✅ P0修复：保存更新前的数量快照
+                    int beforeQty = inv.Quantity;
+                    
+                    // ✅ P1修复：维修领料反审核时也需要回滚成本（增加库存）
+                    // 注意：先调用成本计算，再更新数量，保持时序一致
+                    if (inv.Quantity > 0 || group.Value.RepairQty.ToInt() > 0)
+                    {
+                        // 使用当前库存成本或首次入库时的成本
+                        decimal costForCalc = inv.Inv_Cost > 0 ? inv.Inv_Cost : GetRepairInventoryCost(inv.ProdDetailID);
+                        
+                        if (costForCalc > 0)
+                        {
+                            // ✅ P0修复：保存计算前的数量，用于验证
+                            int qtyBeforeCostCalc = inv.Quantity;
+                            
+                            CommService.CostCalculations.CostCalculation(_appContext, inv, group.Value.RepairQty.ToInt(), costForCalc);
+                            
+                            // ✅ P0修复：验证成本计算未意外修改数量
+                            if (inv.Quantity != qtyBeforeCostCalc)
+                            {
+                                throw new InvalidOperationException(
+                                    $"成本计算意外修改了库存数量！产品ID={inv.ProdDetailID}, " +
+                                    $"预期数量={qtyBeforeCostCalc}, 实际数量={inv.Quantity}");
+                            }
+                        }
+                    }
+                    
+                    // ✅ P0修复：显式更新数量，保持时序一致
+                    inv.Quantity = inv.Quantity + group.Value.RepairQty.ToInt();
                     invList.Add(inv);
+                    
+                    // ✅ P0修复：保存更新前后的信息用于流水记录
+                    inventoryWithBeforeQty2.Add((group.Value, beforeQty));
                 }
                 if (entity.RepairOrderID.HasValue && entity.RepairOrderID.Value > 0)
                 {
@@ -417,6 +558,41 @@ namespace RUINORERP.Business
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("库存更新数据为0，更新失败！");
+                    }
+
+                    // ✅ 新增: 记录反向库存流水(售后维修领料增加库存)
+                    List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                    foreach (var item in inventoryWithBeforeQty2)
+                    {
+                        var group = item.Group;
+                        int beforeQty = item.BeforeQty; // ✅ P0修复: 使用保存的快照
+                        
+                        if (group.Inventory != null)
+                        {
+                            decimal realtimeCost = group.Inventory.Inv_Cost;
+                            
+                            tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                            transaction.ProdDetailID = group.Inventory.ProdDetailID;
+                            transaction.Location_ID = group.Inventory.Location_ID;
+                            transaction.BizType = (int)BizType.维修领料单;
+                            transaction.ReferenceId = entity.RMRID;
+                            transaction.ReferenceNo = entity.MaterialPickupNO;
+                            transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 反审核前的数量(快照)
+                            transaction.QuantityChange = group.RepairQty.ToInt(); // 反审核增加库存
+                            transaction.AfterQuantity = beforeQty + group.RepairQty.ToInt(); // ✅ P0修复: 反审核后的数量
+                            transaction.UnitCost = realtimeCost;
+                            transaction.TransactionTime = DateTime.Now;
+                            transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                            transaction.Notes = $"售后维修领料反审核：{entity.MaterialPickupNO}，产品：{group.Inventory.tb_proddetail?.tb_prod?.CNName}";
+                            
+                            transactionList.Add(transaction);
+                        }
+                    }
+                    
+                    if (transactionList.Any())
+                    {
+                        tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                        await tranController.BatchRecordTransactionsWithRetry(transactionList);
                     }
                     //领料与维修状态无关
                     entity.DataStatus = (int)DataStatus.新建;

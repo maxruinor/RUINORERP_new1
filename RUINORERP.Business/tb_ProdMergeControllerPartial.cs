@@ -139,19 +139,23 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Qty) < 0)
+                            // 子件库存不存在，创建新记录
+                            inv = new tb_Inventory();
+                            inv.Location_ID = child.Location_ID;
+                            inv.ProdDetailID = child.ProdDetailID;
+                            inv.InitInventory = 0;
+                            
+                            // 如果不允许负库存，且消耗量>0，则报错
+                            if (!_appContext.SysConfig.CheckNegativeInventory && child.Qty > 0)
                             {
-                                rs.ErrorMsg = $"当前子件{child.tb_proddetail.SKU},在对应仓库中没有库存数据。请检查数据。组合消耗量为：{child.Qty}\r\n 系统设置不允许负库存， 请检查消耗数量与库存相关数据";
+                                rs.ErrorMsg = $"当前子件{child.tb_proddetail?.SKU ?? "未知"},在对应仓库中没有库存数据，无法消耗{child.Qty}个。请先通过【采购入库】或【期初盘点】建立库存。";
                                 _unitOfWorkManage.RollbackTran();
                                 rs.Succeeded = false;
                                 return rs;
                             }
-
-                            inv = new tb_Inventory();
-                            inv.Quantity = inv.Quantity - child.Qty;
-                            inv.InitInventory =0;
-                            inv.Location_ID = child.Location_ID;
-                            inv.ProdDetailID = child.ProdDetailID;
+                            
+                            // 允许负库存时，直接设置负数
+                            inv.Quantity = -child.Qty;
                             BusinessHelper.Instance.InitEntity(inv);
                         }
                         /*
@@ -200,6 +204,62 @@ namespace RUINORERP.Business
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("子件库存更新失败！");
+                    }
+
+                    // ✅ 新增: 记录库存流水(产品合并-母件增加,子件减少)
+                    List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                    
+                    // 1. 记录母件增加流水
+                    // 注意: invDict1中的数据是更新前的快照
+                    var keyMotherForTrans = (entity.ProdDetailID, entity.Location_ID);
+                    invDict1.TryGetValue(keyMotherForTrans, out var invMotherForTrans);
+                    if (invMotherForTrans != null)
+                    {
+                        tb_InventoryTransaction motherTransaction = new tb_InventoryTransaction();
+                        motherTransaction.ProdDetailID = invMotherForTrans.ProdDetailID;
+                        motherTransaction.Location_ID = invMotherForTrans.Location_ID;
+                        motherTransaction.BizType = (int)BizType.产品组合单;
+                        motherTransaction.ReferenceId = entity.MergeID;
+                        motherTransaction.ReferenceNo = entity.MergeNo;
+                        motherTransaction.BeforeQuantity = invMotherForTrans.Quantity; // 更新前的数量
+                        motherTransaction.QuantityChange = entity.MergeTargetQty; // 母件增加
+                        motherTransaction.AfterQuantity = invMotherForTrans.Quantity + entity.MergeTargetQty; // 更新后的数量
+                        motherTransaction.UnitCost = invMotherForTrans.Inv_Cost;
+                        motherTransaction.TransactionTime = DateTime.Now;
+                        motherTransaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        motherTransaction.Notes = $"产品合并审核：{entity.MergeNo}，母件增加，产品：{invMotherForTrans.tb_proddetail?.tb_prod?.CNName}";
+                        transactionList.Add(motherTransaction);
+                    }
+                    
+                    // 2. 记录子件减少流水
+                    foreach (var child in entity.tb_ProdMergeDetails)
+                    {
+                        var key = (child.ProdDetailID, child.Location_ID);
+                        invDict1.TryGetValue(key, out var invForTrans);
+                        if (invForTrans != null)
+                        {
+                            tb_InventoryTransaction childTransaction = new tb_InventoryTransaction();
+                            childTransaction.ProdDetailID = invForTrans.ProdDetailID;
+                            childTransaction.Location_ID = invForTrans.Location_ID;
+                            childTransaction.BizType = (int)BizType.产品组合单;
+                            childTransaction.ReferenceId = entity.MergeID;
+                            childTransaction.ReferenceNo = entity.MergeNo;
+                            childTransaction.BeforeQuantity = invForTrans.Quantity; // 更新前的数量
+                            childTransaction.QuantityChange = -child.Qty; // 子件减少
+                            childTransaction.AfterQuantity = invForTrans.Quantity - child.Qty; // 更新后的数量
+                            childTransaction.UnitCost = invForTrans.Inv_Cost;
+                            childTransaction.TransactionTime = DateTime.Now;
+                            childTransaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                            childTransaction.Notes = $"产品合并审核：{entity.MergeNo}，子件消耗，产品：{invForTrans.tb_proddetail?.tb_prod?.CNName}";
+                            transactionList.Add(childTransaction);
+                        }
+                    }
+                    
+                    // 批量记录库存流水(带死锁重试机制)
+                    if (transactionList.Any())
+                    {
+                        tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                        await tranController.BatchRecordTransactionsWithRetry(transactionList);
                     }
 
                     //这部分是否能提出到上一级公共部分？
@@ -335,6 +395,62 @@ namespace RUINORERP.Business
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("子件库存更新失败！");
+                    }
+
+                    // ✅ 新增: 记录反向库存流水(产品合并反审-母件减少,子件增加)
+                    List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                    
+                    // 1. 记录母件减少流水
+                    // 注意: invDict2中的数据是更新前的快照
+                    var keyMotherForTrans = (entity.ProdDetailID, entity.Location_ID);
+                    invDict2.TryGetValue(keyMotherForTrans, out var invMotherForTrans);
+                    if (invMotherForTrans != null)
+                    {
+                        tb_InventoryTransaction motherTransaction = new tb_InventoryTransaction();
+                        motherTransaction.ProdDetailID = invMotherForTrans.ProdDetailID;
+                        motherTransaction.Location_ID = invMotherForTrans.Location_ID;
+                        motherTransaction.BizType = (int)BizType.产品组合单;
+                        motherTransaction.ReferenceId = entity.MergeID;
+                        motherTransaction.ReferenceNo = entity.MergeNo;
+                        motherTransaction.BeforeQuantity = invMotherForTrans.Quantity; // 更新前的数量
+                        motherTransaction.QuantityChange = -entity.MergeTargetQty; // 母件减少
+                        motherTransaction.AfterQuantity = invMotherForTrans.Quantity - entity.MergeTargetQty; // 更新后的数量
+                        motherTransaction.UnitCost = invMotherForTrans.Inv_Cost;
+                        motherTransaction.TransactionTime = DateTime.Now;
+                        motherTransaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        motherTransaction.Notes = $"产品合并反审核：{entity.MergeNo}，母件减少，产品：{invMotherForTrans.tb_proddetail?.tb_prod?.CNName}";
+                        transactionList.Add(motherTransaction);
+                    }
+                    
+                    // 2. 记录子件增加流水
+                    foreach (var child in entity.tb_ProdMergeDetails)
+                    {
+                        var key = (child.ProdDetailID, child.Location_ID);
+                        invDict2.TryGetValue(key, out var invForTrans);
+                        if (invForTrans != null)
+                        {
+                            tb_InventoryTransaction childTransaction = new tb_InventoryTransaction();
+                            childTransaction.ProdDetailID = invForTrans.ProdDetailID;
+                            childTransaction.Location_ID = invForTrans.Location_ID;
+                            childTransaction.BizType = (int)BizType.产品组合单;
+                            childTransaction.ReferenceId = entity.MergeID;
+                            childTransaction.ReferenceNo = entity.MergeNo;
+                            childTransaction.BeforeQuantity = invForTrans.Quantity; // 更新前的数量
+                            childTransaction.QuantityChange = child.Qty; // 子件增加
+                            childTransaction.AfterQuantity = invForTrans.Quantity + child.Qty; // 更新后的数量
+                            childTransaction.UnitCost = invForTrans.Inv_Cost;
+                            childTransaction.TransactionTime = DateTime.Now;
+                            childTransaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                            childTransaction.Notes = $"产品合并反审核：{entity.MergeNo}，子件退回，产品：{invForTrans.tb_proddetail?.tb_prod?.CNName}";
+                            transactionList.Add(childTransaction);
+                        }
+                    }
+                    
+                    // 批量记录反向库存流水(带死锁重试机制)
+                    if (transactionList.Any())
+                    {
+                        tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                        await tranController.BatchRecordTransactionsWithRetry(transactionList);
                     }
                 }
 

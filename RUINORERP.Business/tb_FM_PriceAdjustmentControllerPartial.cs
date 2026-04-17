@@ -155,6 +155,9 @@ namespace RUINORERP.Business
                     }
                     #endregion
 
+                    // ✅ P0修复：创建反向库存流水记录列表(在更新前保存快照)
+                    List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+
                     for (int i = 0; i < entity.tb_FM_PriceAdjustmentDetails.Count; i++)
                     {
                         var detail = entity.tb_FM_PriceAdjustmentDetails[i];
@@ -163,21 +166,55 @@ namespace RUINORERP.Business
                         
                         // ✅ 从预加载字典获取（死锁优化）
                         var key = (detail.ProdDetailID.Value, detail.Location_ID);
-                        invDict2.TryGetValue(key, out var inv);
-                        if (inv != null)
+                        invDict2.TryGetValue(key, out var invSnapshot);
+                        if (invSnapshot != null)
                         {
                             #region 恢复成本
-                            // 这里只修改成本。数量不变,如果库存数量为0，或成本没有变化。则不执行调整成本的方法
-                            if (detail.Original_UnitPrice_NoTax > 0 && inv.Quantity > 0 && inv.Inv_Cost != detail.Original_UnitPrice_NoTax)
+                            // ✅ P2优化：这里只修改成本。数量不变,如果库存数量为0，或成本没有变化。则不执行调整成本的方法
+                            if (detail.Original_UnitPrice_NoTax > 0 && invSnapshot.Quantity > 0)
                             {
-                                CommService.CostCalculations.AdjustCostOnly(_appContext, inv, detail.Original_UnitPrice_NoTax);
+                                // 保存更新前的成本
+                                decimal oldCost = invSnapshot.Inv_Cost;
+                                
+                                // 计算成本差异额（而不是直接传单价）
+                                decimal costDiff = (detail.Original_UnitPrice_NoTax - invSnapshot.Inv_Cost) * invSnapshot.Quantity;
+                                
+                                // 只有当差异显著时才调整（避免浮点数精度问题）
+                                if (Math.Abs(costDiff) > 0.01m)
+                                {
+                                    CommService.CostCalculations.AdjustCostOnly(_appContext, invSnapshot, costDiff);
 
-                                var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-                                // 递归更新所有上级BOM的成本
-                                await ctrbom.UpdateParentBOMsAsync(inv.ProdDetailID, inv.Inv_Cost);
+                                    var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                                    // 递归更新所有上级BOM的成本
+                                    await ctrbom.UpdateParentBOMsAsync(invSnapshot.ProdDetailID, invSnapshot.Inv_Cost);
+                                    
+                                    // ✅ P0修复：记录成本回滚流水
+                                    tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                                    transaction.ProdDetailID = invSnapshot.ProdDetailID;
+                                    transaction.Location_ID = invSnapshot.Location_ID;
+                                    transaction.BizType = (int)BizType.采购价格调整单;
+                                    transaction.ReferenceId = entity.AdjustId;
+                                    transaction.ReferenceNo = entity.AdjustNo;
+                                    transaction.BeforeQuantity = invSnapshot.Quantity; // 数量不变
+                                    transaction.QuantityChange = 0; // 纯成本调整,数量变化为0
+                                    transaction.AfterQuantity = invSnapshot.Quantity;
+                                    transaction.UnitCost = invSnapshot.Inv_Cost; // 新成本
+                                    transaction.TransactionTime = DateTime.Now;
+                                    transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                                    transaction.Notes = $"采购价格调整反审核：{entity.AdjustNo}，成本从{oldCost:F4}回退到{invSnapshot.Inv_Cost:F4}，差异额={costDiff:F2}";
+                                    
+                                    transactionList.Add(transaction);
+                                }
                             }
                             #endregion
                         }
+                    }
+                    
+                    // ✅ P0修复：批量记录反向库存流水
+                    if (transactionList.Any())
+                    {
+                        tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                        await tranController.BatchRecordTransactionsWithRetry(transactionList);
                     }
                 }
 
@@ -276,6 +313,9 @@ namespace RUINORERP.Business
                     }
                     #endregion
 
+                    // ✅ P0修复：创建库存流水记录列表(在更新前保存快照)
+                    List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+
                     for (int i = 0; i < entity.tb_FM_PriceAdjustmentDetails.Count; i++)
                     {
                         var detail = entity.tb_FM_PriceAdjustmentDetails[i];
@@ -284,21 +324,55 @@ namespace RUINORERP.Business
                         
                         // ✅ 从预加载字典获取（死锁优化）
                         var key = (detail.ProdDetailID.Value, detail.Location_ID);
-                        invDict.TryGetValue(key, out var inv);
-                        if (inv != null)
+                        invDict.TryGetValue(key, out var invSnapshot);
+                        if (invSnapshot != null)
                         {
                             #region 计算成本
-                            //这里只修改成本。数量不变,如果库存数量为0，或成本没有变化。则不执行调整成本的方法
-                            if (detail.Correct_UnitPrice_NoTax > 0 && inv.Quantity > 0 && inv.Inv_Cost != detail.Correct_UnitPrice_NoTax)
+                            // ✅ P2优化：这里只修改成本。数量不变,如果库存数量为0，或成本没有变化。则不执行调整成本的方法
+                            if (detail.Correct_UnitPrice_NoTax > 0 && invSnapshot.Quantity > 0)
                             {
-                                CommService.CostCalculations.AdjustCostOnly(_appContext, inv, detail.Correct_UnitPrice_NoTax);
+                                // 保存更新前的成本
+                                decimal oldCost = invSnapshot.Inv_Cost;
+                                
+                                // 计算成本差异额（而不是直接传单价）
+                                decimal costDiff = (detail.Correct_UnitPrice_NoTax - invSnapshot.Inv_Cost) * invSnapshot.Quantity;
+                                
+                                // 只有当差异显著时才调整（避免浮点数精度问题）
+                                if (Math.Abs(costDiff) > 0.01m)
+                                {
+                                    CommService.CostCalculations.AdjustCostOnly(_appContext, invSnapshot, costDiff);
 
-                                var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-                                // 递归更新所有上级BOM的成本
-                                await ctrbom.UpdateParentBOMsAsync(inv.ProdDetailID, inv.Inv_Cost);
+                                    var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                                    // 递归更新所有上级BOM的成本
+                                    await ctrbom.UpdateParentBOMsAsync(invSnapshot.ProdDetailID, invSnapshot.Inv_Cost);
+                                    
+                                    // ✅ P0修复：记录成本调整流水
+                                    tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                                    transaction.ProdDetailID = invSnapshot.ProdDetailID;
+                                    transaction.Location_ID = invSnapshot.Location_ID;
+                                    transaction.BizType = (int)BizType.采购价格调整单;
+                                    transaction.ReferenceId = entity.AdjustId;
+                                    transaction.ReferenceNo = entity.AdjustNo;
+                                    transaction.BeforeQuantity = invSnapshot.Quantity; // 数量不变
+                                    transaction.QuantityChange = 0; // 纯成本调整,数量变化为0
+                                    transaction.AfterQuantity = invSnapshot.Quantity;
+                                    transaction.UnitCost = invSnapshot.Inv_Cost; // 新成本
+                                    transaction.TransactionTime = DateTime.Now;
+                                    transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                                    transaction.Notes = $"采购价格调整：{entity.AdjustNo}，成本从{oldCost:F4}调整为{invSnapshot.Inv_Cost:F4}，差异额={costDiff:F2}";
+                                    
+                                    transactionList.Add(transaction);
+                                }
                             }
                             #endregion
                         }
+                    }
+                    
+                    // ✅ P0修复：批量记录库存流水
+                    if (transactionList.Any())
+                    {
+                        tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                        await tranController.BatchRecordTransactionsWithRetry(transactionList);
                     }
                 }
 

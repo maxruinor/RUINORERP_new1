@@ -134,6 +134,9 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.EditEntity(inv);
                     }
 
+                    // ✅ P0修复：保存计算前的数量，用于验证
+                    int qtyBeforeCostCalc = inv.Quantity;
+                    
                     //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.
                     //并且其实盘点时只有数量大于0时才计算成本
                     if (CheckMode.期初盘点 == cm && child.DiffQty > 0)
@@ -148,6 +151,39 @@ namespace RUINORERP.Business
                         //既然是期初始录入成本。那就直接用期初成本作为库存成本
                         //CommService.CostCalculations.CostCalculation(_appContext, inv, child.DiffQty, child.UntaxedCost);
                     }
+                    else if (child.DiffQty != 0)
+                    {
+                        // ✅ P1修复：正常盘点（盘盈/盘亏）也需要重新计算成本
+                        // 盘盈：增加库存，需要按当前成本或指定成本计算
+                        // 盘亏：减少库存，需要按当前成本倒算
+                        if (child.DiffQty > 0)
+                        {
+                            // 盘盈：使用盘点单中指定的成本（如果有）或当前库存成本
+                            decimal costForProfit = child.UntaxedCost > 0 ? child.UntaxedCost : inv.Inv_Cost;
+                            if (costForProfit > 0)
+                            {
+                                CommService.CostCalculations.CostCalculation(_appContext, inv, child.DiffQty, costForProfit);
+                            }
+                        }
+                        else
+                        {
+                            // 盘亏：使用当前库存成本进行反算（因为盘亏是按现有成本减少）
+                            if (inv.Inv_Cost > 0)
+                            {
+                                CommService.CostCalculations.AntiCostCalculation(_appContext, inv, Math.Abs(child.DiffQty), inv.Inv_Cost);
+                            }
+                        }
+                    }
+                    
+                    // ✅ P0修复：验证成本计算未意外修改数量
+                    if (inv.Quantity != qtyBeforeCostCalc)
+                    {
+                        throw new InvalidOperationException(
+                            $"成本计算意外修改了库存数量！产品ID={child.ProdDetailID}, " +
+                            $"预期数量={qtyBeforeCostCalc}, 实际数量={inv.Quantity}");
+                    }
+                    
+                    // ✅ P0修复：显式更新数量，保持时序一致
                     //更新库存
                     if (entity.Adjust_Type == (int)Adjust_Type.全部)
                     {
@@ -160,6 +196,14 @@ namespace RUINORERP.Business
                     if (entity.Adjust_Type == (int)Adjust_Type.增加 && child.DiffQty > 0)
                     {
                         inv.Quantity = inv.Quantity + child.DiffQty;
+                    }
+                    
+                    // ✅ P0修复：验证库存不为负数
+                    if (inv.Quantity < 0)
+                    {
+                        throw new InvalidOperationException(
+                            $"库存数量不能为负数! 产品ID={inv.ProdDetailID}, " +
+                            $"仓库ID={inv.Location_ID}, 计算后数量={inv.Quantity}");
                     }
 
                     inv.ProdDetailID = child.ProdDetailID;
@@ -203,6 +247,51 @@ namespace RUINORERP.Business
                 if (Counter == 0)
                 {
                     _logger.Debug($"{entity.CheckNo}审核时，更新库存结果为0行，请检查数据！");
+                }
+
+                // ✅ 新增: 记录库存流水(盘点调整库存)
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                foreach (var child in entity.tb_StocktakeDetails)
+                {
+                    // 只记录有差异的明细
+                    if (child.DiffQty != 0)
+                    {
+                        var key = (child.ProdDetailID, entity.Location_ID);
+                        // ✅ P0修复: 从预加载字典获取更新前的快照
+                        invDict1.TryGetValue(key, out var invSnapshot);
+                        if (invSnapshot != null)
+                        {
+                            // 实时获取当前库存成本(使用更新前的快照)
+                            decimal realtimeCost = invSnapshot.Inv_Cost;
+                            
+                            // 创建库存流水记录
+                            tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                            transaction.ProdDetailID = invSnapshot.ProdDetailID;
+                            transaction.Location_ID = invSnapshot.Location_ID;
+                            transaction.BizType = (int)BizType.盘点单;
+                            transaction.ReferenceId = entity.MainID;
+                            transaction.ReferenceNo = entity.CheckNo;
+                            transaction.BeforeQuantity = invSnapshot.Quantity; // ✅ 更新前的数量(快照)
+                            transaction.QuantityChange = child.DiffQty; // 盘点调整(可正可负)
+                            transaction.AfterQuantity = invSnapshot.Quantity + child.DiffQty; // ✅ 更新后的数量
+                            transaction.UnitCost = realtimeCost; // 使用实时成本
+                            transaction.TransactionTime = DateTime.Now;
+                            transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                            
+                            // 根据差异数量生成备注
+                            string adjustType = child.DiffQty > 0 ? "盘盈" : "盘亏";
+                            transaction.Notes = $"盘点单审核：{entity.CheckNo}，{adjustType}，产品：{invSnapshot.tb_proddetail?.tb_prod?.CNName}";
+                            
+                            transactionList.Add(transaction);
+                        }
+                    }
+                }
+                
+                // 批量记录库存流水(带死锁重试机制)
+                if (transactionList.Any())
+                {
+                    tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                    await tranController.BatchRecordTransactionsWithRetry(transactionList);
                 }
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
@@ -345,10 +434,51 @@ namespace RUINORERP.Business
                  市场价格：参考市场上类似产品或物品的价格。
                   */
 
-                    //如果数量没有变化。成本不参数反计算
+                    // ✅ P0修复：期初盘点反审核 - 完整处理成本回滚
                     if (CheckMode.期初盘点 == cm && child.DiffQty != 0)
                     {
-                        CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.DiffQty, child.UntaxedCost);
+                        // 期初盘点反审核:无论库存是否为0,都需要回滚成本
+                        decimal costToUse = child.UntaxedCost > 0 ? child.UntaxedCost : inv.Inv_Cost;
+                        if (costToUse > 0)
+                        {
+                            if (child.DiffQty > 0)
+                            {
+                                // 盘盈反审核:减少之前盘盈的数量,按原成本倒算
+                                CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.DiffQty, costToUse);
+                            }
+                            else
+                            {
+                                // 盘亏反审核:增加之前盘亏的数量,按原成本正算
+                                CommService.CostCalculations.CostCalculation(_appContext, inv, Math.Abs(child.DiffQty), costToUse);
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"期初盘点反审核时成本为0，跳过成本反算：产品ID={child.ProdDetailID}");
+                        }
+                    }
+                    else if (cm != CheckMode.期初盘点 && child.DiffQty != 0)
+                    {
+                        // ✅ 正常盘点反审核：也需要回滚成本变化
+                        // 盘盈反审核（DiffQty > 0）：相当于减少库存，用AntiCostCalculation倒算
+                        // 盘亏反审核（DiffQty < 0）：相当于增加库存，用CostCalculation正算
+                        if (child.DiffQty > 0)
+                        {
+                            // 盘盈反审核：减少之前盘盈的数量，按原成本倒算
+                            if (inv.Inv_Cost > 0)
+                            {
+                                CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.DiffQty, inv.Inv_Cost);
+                            }
+                        }
+                        else
+                        {
+                            // 盘亏反审核：增加之前盘亏的数量，按原成本正算
+                            decimal costForLoss = child.UntaxedCost > 0 ? child.UntaxedCost : inv.Inv_Cost;
+                            if (costForLoss > 0)
+                            {
+                                CommService.CostCalculations.CostCalculation(_appContext, inv, Math.Abs(child.DiffQty), costForLoss);
+                            }
+                        }
                     }
 
                     //inv.Inv_Cost = child.UntaxedCost;//这里需要计算，根据系统设置中的算法计算。
@@ -393,6 +523,51 @@ namespace RUINORERP.Business
                 if (Counter == 0)
                 {
                     _logger.Debug($"{entity.CheckNo}反审核时，更新库存结果为0行，请检查数据！");
+                }
+
+                // ✅ 新增: 记录反向库存流水(盘点回退调整)
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                foreach (var child in entity.tb_StocktakeDetails)
+                {
+                    // 只记录有差异的明细
+                    if (child.DiffQty != 0)
+                    {
+                        var key = (child.ProdDetailID, entity.Location_ID);
+                        // ✅ P0修复: 从预加载字典获取更新前的快照(反审核前)
+                        invDict2.TryGetValue(key, out var invSnapshot);
+                        if (invSnapshot != null)
+                        {
+                            // 实时获取当前库存成本(使用更新前的快照)
+                            decimal realtimeCost = invSnapshot.Inv_Cost;
+                            
+                            // 创建反向库存流水记录
+                            tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                            transaction.ProdDetailID = invSnapshot.ProdDetailID;
+                            transaction.Location_ID = invSnapshot.Location_ID;
+                            transaction.BizType = (int)BizType.盘点单;
+                            transaction.ReferenceId = entity.MainID;
+                            transaction.ReferenceNo = entity.CheckNo;
+                            transaction.BeforeQuantity = invSnapshot.Quantity; // ✅ 反审核前的数量(快照)
+                            transaction.QuantityChange = -child.DiffQty; // 反审核回退(与审核相反)
+                            transaction.AfterQuantity = invSnapshot.Quantity - child.DiffQty; // ✅ 反审核后的数量
+                            transaction.UnitCost = realtimeCost; // 使用实时成本
+                            transaction.TransactionTime = DateTime.Now;
+                            transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                            
+                            // 根据差异数量生成备注
+                            string adjustType = child.DiffQty > 0 ? "盘盈回退" : "盘亏回退";
+                            transaction.Notes = $"盘点单反审核：{entity.CheckNo}，{adjustType}，产品：{invSnapshot.tb_proddetail?.tb_prod?.CNName}";
+                            
+                            transactionList.Add(transaction);
+                        }
+                    }
+                }
+                
+                // 批量记录反向库存流水(带死锁重试机制)
+                if (transactionList.Any())
+                {
+                    tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                    await tranController.BatchRecordTransactionsWithRetry(transactionList);
                 }
 
                 //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.

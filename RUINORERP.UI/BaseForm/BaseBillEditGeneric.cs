@@ -6734,69 +6734,144 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        // 重置需要忽略的属性
+        // 重置需要忽略的属性（优化版）
         private void ResetIgnoredProperties(object entity, IgnorePropertyConfiguration ignoreConfig)
         {
             if (entity == null) return;
 
             var entityType = entity.GetType();
-            // 检查是否有为该类型定义的忽略属性
-            var ignoredProperties = ignoreConfig.GetIgnoredProperties(entityType);
+            
+            // ✅ 优化1: 只处理 BaseEntity 及其子类，避免处理无关对象
+            if (!typeof(BaseEntity).IsAssignableFrom(entityType))
+            {
+                return;
+            }
 
-            // 检查是否有为该类型定义的忽略属性
+            // ✅ 优化2: 如果没有为该类型配置忽略属性，直接返回
+            var ignoredProperties = ignoreConfig.GetIgnoredProperties(entityType);
+            if (ignoredProperties.Count == 0)
+            {
+                return;
+            }
+
+            // ✅ 优化3: 使用缓存的 PropertyInfo，避免重复反射
+            var propertyCache = GetPropertyCache(entityType);
+            
             foreach (var propName in ignoredProperties)
             {
-                if (ReflectionHelper.ExistPropertyName(entityType, propName))
+                if (propertyCache.TryGetValue(propName, out var prop))
                 {
-                    var prop = entityType.GetProperty(propName);
-                    if (prop != null && prop.CanWrite)
+                    if (prop.CanWrite)
                     {
-                        // 根据属性类型设置默认值
-                        if (prop.PropertyType == typeof(string))
-                            prop.SetValue(entity, null);
-                        else if (prop.PropertyType == typeof(int))
-                            prop.SetValue(entity, 0);
-                        else if (prop.PropertyType == typeof(long))
-                            prop.SetValue(entity, 0L);
-                        else if (prop.PropertyType == typeof(decimal))
-                            prop.SetValue(entity, 0m);
-                        else if (prop.PropertyType == typeof(DateTime))
-                            prop.SetValue(entity, DateTime.MinValue);
-                        else if (prop.PropertyType == typeof(DateTime?))
-                            prop.SetValue(entity, null);
-                        else if (prop.PropertyType == typeof(bool))
-                            prop.SetValue(entity, false);
-                        // 可以根据需要添加更多类型的处理
+                        // ✅ 优化4: 使用更高效的默认值设置方式
+                        SetDefaultPropertyValue(entity, prop);
                     }
                 }
             }
 
-            // 递归处理导航属性
-            var navigationProperties = entityType.GetProperties()
-                .Where(p => p.PropertyType.IsClass &&
-                           p.PropertyType != typeof(string) &&
-                           !p.PropertyType.IsValueType);
-
+            // ✅ 优化5: 只递归处理 BaseEntity 类型的导航属性
+            var navigationProperties = GetNavigationPropertyCache(entityType);
             foreach (var navProp in navigationProperties)
             {
                 var navValue = navProp.GetValue(entity);
                 if (navValue != null)
                 {
-                    if (navValue is System.Collections.IEnumerable &&
-                        !(navValue is string))
+                    if (navValue is System.Collections.IEnumerable && !(navValue is string))
                     {
                         // 处理集合类型的导航属性
                         foreach (var item in (System.Collections.IEnumerable)navValue)
                         {
-                            ResetIgnoredProperties(item, ignoreConfig);
+                            // ✅ 优化6: 只对 BaseEntity 类型递归处理
+                            if (item is BaseEntity)
+                            {
+                                ResetIgnoredProperties(item, ignoreConfig);
+                            }
                         }
                     }
                     else
                     {
-                        // 处理单个对象的导航属性
-                        ResetIgnoredProperties(navValue, ignoreConfig);
+                        // ✅ 优化7: 只对 BaseEntity 类型递归处理
+                        if (navValue is BaseEntity)
+                        {
+                            ResetIgnoredProperties(navValue, ignoreConfig);
+                        }
                     }
                 }
+            }
+        }
+
+        // ✅ 新增：属性缓存字典（按类型缓存）
+        private static readonly ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>> _propertyCache = 
+            new ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>>();
+
+        // ✅ 新增：导航属性缓存字典（按类型缓存）
+        private static readonly ConcurrentDictionary<Type, List<PropertyInfo>> _navigationPropertyCache = 
+            new ConcurrentDictionary<Type, List<PropertyInfo>>();
+
+        /// <summary>
+        /// 获取或创建类型的属性缓存
+        /// </summary>
+        private Dictionary<string, PropertyInfo> GetPropertyCache(Type entityType)
+        {
+            return _propertyCache.GetOrAdd(entityType, type =>
+            {
+                var cache = new Dictionary<string, PropertyInfo>();
+                foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    cache[prop.Name] = prop;
+                }
+                return cache;
+            });
+        }
+
+        /// <summary>
+        /// 获取或创建类型的导航属性缓存
+        /// </summary>
+        private List<PropertyInfo> GetNavigationPropertyCache(Type entityType)
+        {
+            return _navigationPropertyCache.GetOrAdd(entityType, type =>
+            {
+                return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(p => p.PropertyType.IsClass &&
+                               p.PropertyType != typeof(string) &&
+                               !p.PropertyType.IsValueType &&
+                               typeof(BaseEntity).IsAssignableFrom(p.PropertyType) ||
+                               (p.PropertyType.IsGenericType &&
+                                p.PropertyType.GetGenericTypeDefinition() == typeof(List<>) &&
+                                typeof(BaseEntity).IsAssignableFrom(p.PropertyType.GetGenericArguments()[0])))
+                    .ToList();
+            });
+        }
+
+        /// <summary>
+        /// 设置属性的默认值（优化版）
+        /// </summary>
+        private void SetDefaultPropertyValue(object entity, PropertyInfo prop)
+        {
+            try
+            {
+                var propType = prop.PropertyType;
+                
+                // ✅ 优化：使用更简洁的类型判断
+                if (propType == typeof(string))
+                {
+                    prop.SetValue(entity, null);
+                }
+                else if (propType.IsValueType || (Nullable.GetUnderlyingType(propType) != null))
+                {
+                    // 对于值类型和可空类型，使用 Activator 创建默认值
+                    prop.SetValue(entity, Activator.CreateInstance(propType));
+                }
+                else
+                {
+                    // 引用类型设置为 null
+                    prop.SetValue(entity, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不中断流程
+                System.Diagnostics.Debug.WriteLine($"设置属性默认值失败: {prop.Name}, 错误: {ex.Message}");
             }
         }
         // 重置实体的主键

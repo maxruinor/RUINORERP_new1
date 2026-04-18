@@ -203,8 +203,21 @@ namespace RUINORERP.UI.Common
             {
                 var db = MainForm.Instance.AppContext.Db;
 
+                // ✅ 修复：先查询 tb_UIMenuPersonalization 获取 UIMenuPID
+                var menuPersonalization = await db.Queryable<tb_UIMenuPersonalization>()
+                    .Where(m => m.MenuID == menuId)
+                    .FirstAsync();
+
+                if (menuPersonalization == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ColumnConfigManager] 菜单个性化记录不存在: MenuID={menuId}");
+                    return new List<ColDisplayController>();
+                }
+
+                long uiMenuPid = menuPersonalization.UIMenuPID;
+
                 var gridSetting = await db.Queryable<tb_UIGridSetting>()
-                    .Where(c => c.GridKeyName == gridKeyName && c.UIMenuPID == menuId)
+                    .Where(c => c.GridKeyName == gridKeyName && c.UIMenuPID == uiMenuPid)
                     .FirstAsync();
 
                 if (gridSetting == null || string.IsNullOrEmpty(gridSetting.ColsSetting))
@@ -231,13 +244,38 @@ namespace RUINORERP.UI.Common
             {
                 var db = MainForm.Instance.AppContext.Db;
 
+                // ✅ 修复：先确保 tb_UIMenuPersonalization 记录存在
+                // 因为 tb_UIGridSetting.UIMenuPID 外键引用 tb_UIMenuPersonalization.UIMenuPID
+                var menuPersonalization = await db.Queryable<tb_UIMenuPersonalization>()
+                    .Where(m => m.MenuID == menuId)
+                    .FirstAsync();
+
+                long uiMenuPid;
+                if (menuPersonalization == null)
+                {
+                    // 如果不存在，创建一条记录
+                    menuPersonalization = new tb_UIMenuPersonalization
+                    {
+                        MenuID = menuId,
+                        UserPersonalizedID = null, // 可以根据需要设置
+                        // = DateTime.Now
+                    };
+                    
+                    uiMenuPid = await db.Insertable(menuPersonalization).ExecuteReturnSnowflakeIdAsync();
+                    System.Diagnostics.Debug.WriteLine($"[ColumnConfigManager] 创建菜单个性化记录: MenuID={menuId}, UIMenuPID={uiMenuPid}");
+                }
+                else
+                {
+                    uiMenuPid = menuPersonalization.UIMenuPID;
+                }
+
                 var json = JsonConvert.SerializeObject(config, new JsonSerializerSettings
                 {
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                 });
 
                 var existingSetting = await db.Queryable<tb_UIGridSetting>()
-                    .Where(c => c.GridKeyName == gridKeyName && c.UIMenuPID == menuId)
+                    .Where(c => c.GridKeyName == gridKeyName && c.UIMenuPID == uiMenuPid)
                     .FirstAsync();
 
                 if (existingSetting == null)
@@ -245,13 +283,13 @@ namespace RUINORERP.UI.Common
                     var newSetting = new tb_UIGridSetting
                     {
                         GridKeyName = gridKeyName,
-                        UIMenuPID = menuId,
+                        UIMenuPID = uiMenuPid,  // ✅ 使用正确的 UIMenuPID
                         ColsSetting = json,
                         GridType = "NewSumDataGridView",
                         ColumnsMode = 0
                     };
                     await db.Insertable(newSetting).ExecuteReturnSnowflakeIdAsync();
-                    System.Diagnostics.Debug.WriteLine($"[ColumnConfigManager] 新建配置: {gridKeyName}_{menuId}");
+                    System.Diagnostics.Debug.WriteLine($"[ColumnConfigManager] 新建配置: {gridKeyName}_{uiMenuPid}");
                 }
                 else
                 {
@@ -259,11 +297,11 @@ namespace RUINORERP.UI.Common
                     {
                         existingSetting.ColsSetting = json;
                         await db.Updateable(existingSetting).ExecuteCommandAsync();
-                        System.Diagnostics.Debug.WriteLine($"[ColumnConfigManager] 更新配置: {gridKeyName}_{menuId}");
+                        System.Diagnostics.Debug.WriteLine($"[ColumnConfigManager] 更新配置: {gridKeyName}_{uiMenuPid}");
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine($"[ColumnConfigManager] 配置未变化，跳过保存: {gridKeyName}_{menuId}");
+                        System.Diagnostics.Debug.WriteLine($"[ColumnConfigManager] 配置未变化，跳过保存: {gridKeyName}_{uiMenuPid}");
                     }
                 }
             }

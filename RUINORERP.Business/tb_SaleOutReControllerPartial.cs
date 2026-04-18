@@ -133,6 +133,8 @@ namespace RUINORERP.Business
                 }
 
                 var invDict1 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
+                // ✅ 修复: 保存库存快照(在修改前),用于后续记录流水
+                var invSnapshotDict1 = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (allKeys1.Count > 0)
                 {
                     var requiredKeys = allKeys1.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
@@ -141,6 +143,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
                     invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict1[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -161,6 +170,8 @@ namespace RUINORERP.Business
                 }
 
                 var invDict2 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
+                // ✅ 修复: 保存反审核前库存快照
+                var invSnapshotDict2 = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (allKeys2.Count > 0)
                 {
                     var requiredKeys = allKeys2.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
@@ -169,6 +180,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
                     invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict2[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -356,6 +374,16 @@ namespace RUINORERP.Business
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         // ✅ 从预加载字典获取（死锁优化）
                         var key = (child.ProdDetailID, child.Location_ID);
+                        
+                        // ✅ P0修复: 使用快照字典获取修改前的数量
+                        int beforeQty = 0;
+                        decimal beforeCost = 0;
+                        if (invSnapshotDict1.TryGetValue(key, out var snapshot))
+                        {
+                            beforeQty = snapshot.BeforeQuantity;
+                            beforeCost = snapshot.Inv_Cost;
+                        }
+                        
                         tb_Inventory inv = null;
                         invDict1.TryGetValue(key, out inv);
                         if (inv == null)
@@ -376,6 +404,9 @@ namespace RUINORERP.Business
                                     inv.Inv_Cost = oldinv.Inv_Cost;
                                     BusinessHelper.Instance.InitEntity(inv);
                                     invDict1[key] = inv;
+                                    // 新创建的库存，beforeQty应为0
+                                    beforeQty = 0;
+                                    beforeCost = oldinv.Inv_Cost;
                                 }
                             }
                         }
@@ -407,10 +438,10 @@ namespace RUINORERP.Business
                         transaction.BizType = (int)BizType.销售退回单;
                         transaction.ReferenceId = entity.SaleOutRe_ID;
                         transaction.ReferenceNo = entity.ReturnNo;
-                        transaction.BeforeQuantity = inv.Quantity - child.Quantity; // 变动前的库存数量
+                        transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 使用修改前的快照数量
                         transaction.QuantityChange = child.Quantity; // 销售退货增加库存
-                        transaction.AfterQuantity = inv.Quantity;
-                        transaction.UnitCost = realtimeCost; // 使用实时成本
+                        transaction.AfterQuantity = beforeQty + child.Quantity; // ✅ P0修复: 使用快照计算更新后的数量
+                        transaction.UnitCost = beforeCost > 0 ? beforeCost : realtimeCost; // ✅ P0修复: 使用修改前的成本
                         transaction.TransactionTime = DateTime.Now;
                         transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                         transaction.Notes = $"销售退货单审核：{entity.ReturnNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
@@ -659,6 +690,8 @@ namespace RUINORERP.Business
                 }
 
                 var invDict2 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
+                // ✅ 修复: 保存反审核前库存快照
+                var invSnapshotDict2 = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (allKeysAnti.Count > 0)
                 {
                     var requiredKeys = allKeysAnti.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
@@ -667,6 +700,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
                     invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict2[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
 
                 // 开启事务，保证数据一致性
@@ -683,6 +723,16 @@ namespace RUINORERP.Business
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         // ✅ 从预加载字典获取（死锁优化）
                         var key = (child.ProdDetailID, child.Location_ID);
+                        
+                        // ✅ P0修复: 使用快照字典获取修改前的数量
+                        int beforeQty = 0;
+                        decimal beforeCost = 0;
+                        if (invSnapshotDict2.TryGetValue(key, out var snapshot))
+                        {
+                            beforeQty = snapshot.BeforeQuantity;
+                            beforeCost = snapshot.Inv_Cost;
+                        }
+                        
                         invDict2.TryGetValue(key, out var inv);
                         if (inv == null)
                         {
@@ -722,10 +772,10 @@ namespace RUINORERP.Business
                         transaction.BizType = (int)BizType.销售退回单;
                         transaction.ReferenceId = entity.SaleOutRe_ID;
                         transaction.ReferenceNo = entity.ReturnNo;
-                        transaction.BeforeQuantity = inv.Quantity + child.Quantity; // 变动前的库存数量
+                        transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 使用修改前的快照数量
                         transaction.QuantityChange = -child.Quantity; // 反审核减少库存
-                        transaction.AfterQuantity = inv.Quantity;
-                        transaction.UnitCost = realtimeCost; // 使用实时成本
+                        transaction.AfterQuantity = beforeQty - child.Quantity; // ✅ P0修复: 使用快照计算更新后的数量
+                        transaction.UnitCost = beforeCost > 0 ? beforeCost : realtimeCost; // ✅ P0修复: 使用修改前的成本
                         transaction.TransactionTime = DateTime.Now;
                         transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                         transaction.Notes = $"销售退货单反审核：{entity.ReturnNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";

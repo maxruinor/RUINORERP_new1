@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RUINORERP.Repository.UnitOfWorks
 {
@@ -43,8 +44,9 @@ namespace RUINORERP.Repository.UnitOfWorks
     
     /// <summary>
     /// 事务上下文信息，用于追踪和管理事务生命周期
+    /// ✅ P1优化: 升级为支持异步锁的SemaphoreSlim
     /// </summary>
-    public class TransactionContext
+    public class TransactionContext : IDisposable
     {
         /// <summary>
         /// 事务唯一标识
@@ -127,9 +129,20 @@ namespace RUINORERP.Repository.UnitOfWorks
         public ConcurrentDictionary<string, object> CustomData { get; set; }
         
         /// <summary>
-        /// 锁对象（用于细粒度锁，替代lock(this)）
+        /// ✅ P1优化: 异步信号量锁（替代object LockObject）
+        /// 支持async/await跨等待保持锁
         /// </summary>
-        public object LockObject { get; set; }
+        public SemaphoreSlim LockSemaphore { get; private set; }
+        
+        /// <summary>
+        /// ✅ P2新增: 事务超时令牌源(用于自动超时)
+        /// </summary>
+        public CancellationTokenSource TimeoutCancellationTokenSource { get; set; }
+        
+        /// <summary>
+        /// ✅ P2新增: 事务开始时间(用于监控)
+        /// </summary>
+        public DateTime StartTime { get; set; }
         
         /// <summary>
         /// 构造函数
@@ -144,7 +157,7 @@ namespace RUINORERP.Repository.UnitOfWorks
             CustomData = new ConcurrentDictionary<string, object>();
             ThreadId = Thread.CurrentThread.ManagedThreadId;
             OperationId = Guid.NewGuid().ToString("N").Substring(0, 8);
-            LockObject = new object(); // 初始化锁对象
+            LockSemaphore = new SemaphoreSlim(1, 1); // ✅ 初始化为1，最大并发1
         }
         
         /// <summary>
@@ -197,5 +210,48 @@ namespace RUINORERP.Repository.UnitOfWorks
                    $"Save Points: {SavePointStack.Count}\r\n" +
                    $"Stack Trace:\r\n{StackTrace}";
         }
+
+        #region IDisposable Implementation
+        
+        private bool _disposed = false;
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // ✅ P2: 释放超时令牌
+                    TimeoutCancellationTokenSource?.Cancel();
+                    TimeoutCancellationTokenSource?.Dispose();
+                    TimeoutCancellationTokenSource = null;
+                    
+                    // 释放锁
+                    LockSemaphore?.Dispose();
+                    LockSemaphore = null;
+                    
+                    SavePointStack?.Clear();
+                    CustomData?.Clear();
+                }
+                
+                _disposed = true;
+            }
+        }
+
+        ~TransactionContext()
+        {
+            Dispose(false);
+        }
+        
+        #endregion
     }
 }

@@ -63,6 +63,8 @@ namespace RUINORERP.Business
                 }
 
                 var invDict1 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
+                // ✅ 修复: 保存库存快照(在修改前),用于后续记录流水
+                var invSnapshotDict1 = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (allKeys.Count > 0)
                 {
                     var requiredKeys = allKeys.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
@@ -71,6 +73,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
                     invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict1[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -185,24 +194,23 @@ namespace RUINORERP.Business
                     List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
                     
                     // 1. 记录母件减少流水
-                    // 注意: invDict1中的数据是更新前的快照
+                    // ✅ P0修复: 使用修改前保存的快照字典获取正确的数据
                     var keyMotherForTrans = (entity.ProdDetailID, entity.Location_ID);
-                    invDict1.TryGetValue(keyMotherForTrans, out var invMotherForTrans);
-                    if (invMotherForTrans != null)
+                    if (invSnapshotDict1.TryGetValue(keyMotherForTrans, out var snapshotMother))
                     {
                         tb_InventoryTransaction motherTransaction = new tb_InventoryTransaction();
-                        motherTransaction.ProdDetailID = invMotherForTrans.ProdDetailID;
-                        motherTransaction.Location_ID = invMotherForTrans.Location_ID;
+                        motherTransaction.ProdDetailID = entity.ProdDetailID;
+                        motherTransaction.Location_ID = entity.Location_ID;
                         motherTransaction.BizType = (int)BizType.产品分割单;
                         motherTransaction.ReferenceId = entity.SplitID;
                         motherTransaction.ReferenceNo = entity.SplitNo;
-                        motherTransaction.BeforeQuantity = invMotherForTrans.Quantity; // 更新前的数量
+                        motherTransaction.BeforeQuantity = snapshotMother.BeforeQuantity; // ✅ 使用修改前的快照数量
                         motherTransaction.QuantityChange = -entity.SplitParentQty; // 母件减少
-                        motherTransaction.AfterQuantity = invMotherForTrans.Quantity - entity.SplitParentQty; // 更新后的数量
-                        motherTransaction.UnitCost = invMotherForTrans.Inv_Cost;
+                        motherTransaction.AfterQuantity = snapshotMother.BeforeQuantity - entity.SplitParentQty; // ✅ 使用快照计算更新后的数量
+                        motherTransaction.UnitCost = snapshotMother.Inv_Cost; // 使用更新前的成本
                         motherTransaction.TransactionTime = DateTime.Now;
                         motherTransaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                        motherTransaction.Notes = $"产品拆分审核：{entity.SplitNo}，母件减少，产品：{invMotherForTrans.tb_proddetail?.tb_prod?.CNName}";
+                        motherTransaction.Notes = $"产品拆分审核：{entity.SplitNo}，母件减少，产品：{invMother?.tb_proddetail?.tb_prod?.CNName}";
                         transactionList.Add(motherTransaction);
                     }
                     
@@ -210,22 +218,24 @@ namespace RUINORERP.Business
                     foreach (var child in entity.tb_ProdSplitDetails)
                     {
                         var key = (child.ProdDetailID, child.Location_ID);
-                        invDict1.TryGetValue(key, out var invForTrans);
-                        if (invForTrans != null)
+                        if (invSnapshotDict1.TryGetValue(key, out var snapshotChild))
                         {
+                            // 获取产品名称
+                            invDict1.TryGetValue(key, out var invForTrans);
+                            
                             tb_InventoryTransaction childTransaction = new tb_InventoryTransaction();
-                            childTransaction.ProdDetailID = invForTrans.ProdDetailID;
-                            childTransaction.Location_ID = invForTrans.Location_ID;
+                            childTransaction.ProdDetailID = child.ProdDetailID;
+                            childTransaction.Location_ID = child.Location_ID;
                             childTransaction.BizType = (int)BizType.产品分割单;
                             childTransaction.ReferenceId = entity.SplitID;
                             childTransaction.ReferenceNo = entity.SplitNo;
-                            childTransaction.BeforeQuantity = invForTrans.Quantity; // 更新前的数量
+                            childTransaction.BeforeQuantity = snapshotChild.BeforeQuantity; // ✅ 使用修改前的快照数量
                             childTransaction.QuantityChange = child.Qty; // 子件增加
-                            childTransaction.AfterQuantity = invForTrans.Quantity + child.Qty; // 更新后的数量
-                            childTransaction.UnitCost = invForTrans.Inv_Cost;
+                            childTransaction.AfterQuantity = snapshotChild.BeforeQuantity + child.Qty; // ✅ 使用快照计算更新后的数量
+                            childTransaction.UnitCost = snapshotChild.Inv_Cost; // 使用更新前的成本
                             childTransaction.TransactionTime = DateTime.Now;
                             childTransaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                            childTransaction.Notes = $"产品拆分审核：{entity.SplitNo}，子件产出，产品：{invForTrans.tb_proddetail?.tb_prod?.CNName}";
+                            childTransaction.Notes = $"产品拆分审核：{entity.SplitNo}，子件产出，产品：{invForTrans?.tb_proddetail?.tb_prod?.CNName}";
                             transactionList.Add(childTransaction);
                         }
                     }
@@ -300,6 +310,8 @@ namespace RUINORERP.Business
                 }
 
                 var invDict2 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
+                // ✅ 修复: 保存反审核前库存快照
+                var invSnapshotDict2 = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (allKeys2.Count > 0)
                 {
                     var requiredKeys = allKeys2.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
@@ -308,6 +320,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
                     invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict2[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -382,24 +401,23 @@ namespace RUINORERP.Business
                     List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
                     
                     // 1. 记录母件增加流水
-                    // 注意: invDict2中的数据是更新前的快照
+                    // ✅ P0修复: 使用修改前保存的快照字典获取正确的数据
                     var keyMotherForTrans = (entity.ProdDetailID, entity.Location_ID);
-                    invDict2.TryGetValue(keyMotherForTrans, out var invMotherForTrans);
-                    if (invMotherForTrans != null)
+                    if (invSnapshotDict2.TryGetValue(keyMotherForTrans, out var snapshotMother))
                     {
                         tb_InventoryTransaction motherTransaction = new tb_InventoryTransaction();
-                        motherTransaction.ProdDetailID = invMotherForTrans.ProdDetailID;
-                        motherTransaction.Location_ID = invMotherForTrans.Location_ID;
+                        motherTransaction.ProdDetailID = entity.ProdDetailID;
+                        motherTransaction.Location_ID = entity.Location_ID;
                         motherTransaction.BizType = (int)BizType.产品分割单;
                         motherTransaction.ReferenceId = entity.SplitID;
                         motherTransaction.ReferenceNo = entity.SplitNo;
-                        motherTransaction.BeforeQuantity = invMotherForTrans.Quantity; // 更新前的数量
+                        motherTransaction.BeforeQuantity = snapshotMother.BeforeQuantity; // ✅ 使用修改前的快照数量
                         motherTransaction.QuantityChange = entity.SplitParentQty; // 母件增加
-                        motherTransaction.AfterQuantity = invMotherForTrans.Quantity + entity.SplitParentQty; // 更新后的数量
-                        motherTransaction.UnitCost = invMotherForTrans.Inv_Cost;
+                        motherTransaction.AfterQuantity = snapshotMother.BeforeQuantity + entity.SplitParentQty; // ✅ 使用快照计算更新后的数量
+                        motherTransaction.UnitCost = snapshotMother.Inv_Cost; // 使用更新前的成本
                         motherTransaction.TransactionTime = DateTime.Now;
                         motherTransaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                        motherTransaction.Notes = $"产品拆分反审核：{entity.SplitNo}，母件增加，产品：{invMotherForTrans.tb_proddetail?.tb_prod?.CNName}";
+                        motherTransaction.Notes = $"产品拆分反审核：{entity.SplitNo}，母件增加，产品：{invMother?.tb_proddetail?.tb_prod?.CNName}";
                         transactionList.Add(motherTransaction);
                     }
                     
@@ -407,22 +425,24 @@ namespace RUINORERP.Business
                     foreach (var child in entity.tb_ProdSplitDetails)
                     {
                         var key = (child.ProdDetailID, child.Location_ID);
-                        invDict2.TryGetValue(key, out var invForTrans);
-                        if (invForTrans != null)
+                        if (invSnapshotDict2.TryGetValue(key, out var snapshotChild))
                         {
                             tb_InventoryTransaction childTransaction = new tb_InventoryTransaction();
-                            childTransaction.ProdDetailID = invForTrans.ProdDetailID;
-                            childTransaction.Location_ID = invForTrans.Location_ID;
+                            childTransaction.ProdDetailID = child.ProdDetailID;
+                            childTransaction.Location_ID = child.Location_ID;
                             childTransaction.BizType = (int)BizType.产品分割单;
                             childTransaction.ReferenceId = entity.SplitID;
                             childTransaction.ReferenceNo = entity.SplitNo;
-                            childTransaction.BeforeQuantity = invForTrans.Quantity; // 更新前的数量
+                            childTransaction.BeforeQuantity = snapshotChild.BeforeQuantity; // ✅ 使用修改前的快照数量
                             childTransaction.QuantityChange = -child.Qty; // 子件减少
-                            childTransaction.AfterQuantity = invForTrans.Quantity - child.Qty; // 更新后的数量
-                            childTransaction.UnitCost = invForTrans.Inv_Cost;
+                            childTransaction.AfterQuantity = snapshotChild.BeforeQuantity - child.Qty; // ✅ 使用快照计算更新后的数量
+                            childTransaction.UnitCost = snapshotChild.Inv_Cost; // 使用更新前的成本
                             childTransaction.TransactionTime = DateTime.Now;
                             childTransaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                            childTransaction.Notes = $"产品拆分反审核：{entity.SplitNo}，子件退回，产品：{invForTrans.tb_proddetail?.tb_prod?.CNName}";
+                            
+                            // 获取产品名称
+                            invDict2.TryGetValue(key, out var invForTrans2);
+                            childTransaction.Notes = $"产品拆分反审核：{entity.SplitNo}，子件退回，产品：{invForTrans2?.tb_proddetail?.tb_prod?.CNName}";
                             transactionList.Add(childTransaction);
                         }
                     }

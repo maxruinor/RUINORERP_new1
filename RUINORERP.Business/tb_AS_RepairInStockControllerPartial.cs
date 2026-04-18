@@ -233,6 +233,8 @@ namespace RUINORERP.Business
                 }
 
                 var invDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                // ✅ 修复: 保存库存快照(在修改前),用于后续记录流水
+                var invSnapshotDict = new Dictionary<(long ProdDetailID, long LocationID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (allKeys.Count > 0)
                 {
                     var requiredKeys = allKeys.Select(k => new { k.ProdDetailID, k.LocationID }).Distinct().ToList();
@@ -241,6 +243,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
                         .ToListAsync();
                     invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -350,25 +359,25 @@ namespace RUINORERP.Business
                 foreach (var child in entity.tb_AS_RepairInStockDetails)
                 {
                     var key = (child.ProdDetailID, child.Location_ID);
-                    // ✅ P0修复: 从预加载字典获取更新前的快照
-                    invDict.TryGetValue(key, out var invSnapshot);
-                    if (invSnapshot != null)
+                    // ✅ P0修复: 使用修改前保存的快照字典获取正确的数据
+                    if (invSnapshotDict.TryGetValue(key, out var snapshot))
                     {
-                        decimal realtimeCost = invSnapshot.Inv_Cost;
-                        
                         tb_InventoryTransaction transaction = new tb_InventoryTransaction();
-                        transaction.ProdDetailID = invSnapshot.ProdDetailID;
-                        transaction.Location_ID = invSnapshot.Location_ID;
+                        transaction.ProdDetailID = child.ProdDetailID;
+                        transaction.Location_ID = child.Location_ID;
                         transaction.BizType = (int)BizType.维修入库单;
                         transaction.ReferenceId = entity.RepairInStockID;
                         transaction.ReferenceNo = entity.RepairInStockNo;
-                        transaction.BeforeQuantity = invSnapshot.Quantity; // ✅ 更新前的数量(快照)
+                        transaction.BeforeQuantity = snapshot.BeforeQuantity; // ✅ 使用修改前的快照数量
                         transaction.QuantityChange = child.Quantity; // 维修入库增加库存
-                        transaction.AfterQuantity = invSnapshot.Quantity + child.Quantity; // ✅ 更新后的数量
-                        transaction.UnitCost = realtimeCost;
+                        transaction.AfterQuantity = snapshot.BeforeQuantity + child.Quantity; // ✅ 更新后的数量
+                        transaction.UnitCost = snapshot.Inv_Cost; // 使用更新前的成本
                         transaction.TransactionTime = DateTime.Now;
                         transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                        transaction.Notes = $"售后维修入库审核：{entity.RepairInStockNo}，产品：{invSnapshot.tb_proddetail?.tb_prod?.CNName}";
+                        
+                        // 获取产品名称
+                        invDict.TryGetValue(key, out var invForName);
+                        transaction.Notes = $"售后维修入库审核：{entity.RepairInStockNo}，产品：{invForName?.tb_proddetail?.tb_prod?.CNName}";
                         
                         transactionList.Add(transaction);
                     }
@@ -528,6 +537,8 @@ namespace RUINORERP.Business
                 }
 
                 var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                // ✅ 修复: 保存反审核前库存快照
+                var invSnapshotDict2 = new Dictionary<(long ProdDetailID, long LocationID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (allKeys2.Count > 0)
                 {
                     var requiredKeys = allKeys2.Select(k => new { k.ProdDetailID, k.LocationID }).Distinct().ToList();
@@ -536,6 +547,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
                         .ToListAsync();
                     invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict2[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -623,25 +641,25 @@ namespace RUINORERP.Business
                 foreach (var child in entity.tb_AS_RepairInStockDetails)
                 {
                     var key = (child.ProdDetailID, child.Location_ID);
-                    // ✅ P0修复: 从预加载字典获取更新前的快照(反审核前)
-                    invDict2.TryGetValue(key, out var invSnapshot);
-                    if (invSnapshot != null)
+                    // ✅ P0修复: 使用修改前保存的快照字典获取正确的数据(反审核前)
+                    if (invSnapshotDict2.TryGetValue(key, out var snapshot))
                     {
-                        decimal realtimeCost = invSnapshot.Inv_Cost;
-                        
                         tb_InventoryTransaction transaction = new tb_InventoryTransaction();
-                        transaction.ProdDetailID = invSnapshot.ProdDetailID;
-                        transaction.Location_ID = invSnapshot.Location_ID;
+                        transaction.ProdDetailID = child.ProdDetailID;
+                        transaction.Location_ID = child.Location_ID;
                         transaction.BizType = (int)BizType.维修入库单;
                         transaction.ReferenceId = entity.RepairInStockID;
                         transaction.ReferenceNo = entity.RepairInStockNo;
-                        transaction.BeforeQuantity = invSnapshot.Quantity; // ✅ 反审核前的数量(快照)
+                        transaction.BeforeQuantity = snapshot.BeforeQuantity; // ✅ 使用修改前的快照数量
                         transaction.QuantityChange = -child.Quantity; // 反审核减少库存
-                        transaction.AfterQuantity = invSnapshot.Quantity - child.Quantity; // ✅ 反审核后的数量
-                        transaction.UnitCost = realtimeCost;
+                        transaction.AfterQuantity = snapshot.BeforeQuantity - child.Quantity; // ✅ 反审核后的数量
+                        transaction.UnitCost = snapshot.Inv_Cost; // 使用更新前的成本
                         transaction.TransactionTime = DateTime.Now;
                         transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                        transaction.Notes = $"售后维修入库反审核：{entity.RepairInStockNo}，产品：{invSnapshot.tb_proddetail?.tb_prod?.CNName}";
+                        
+                        // 获取产品名称
+                        invDict2.TryGetValue(key, out var invForName2);
+                        transaction.Notes = $"售后维修入库反审核：{entity.RepairInStockNo}，产品：{invForName2?.tb_proddetail?.tb_prod?.CNName}";
                         
                         transactionList.Add(transaction);
                     }

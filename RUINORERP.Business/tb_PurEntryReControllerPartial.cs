@@ -61,6 +61,8 @@ namespace RUINORERP.Business
                     .ToList();
 
                 var invDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                // ✅ 修复: 保存库存快照(在修改前),用于后续记录流水
+                var invSnapshotDict = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (requiredKeys.Count > 0)
                 {
                     var inventoryList = await _unitOfWorkManage.GetDbClient()
@@ -68,6 +70,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
                     invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -100,11 +109,24 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                // ✅ 修复: 创建库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 foreach (var ReDetail in entity.tb_PurEntryReDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     // ✅ 从预加载字典获取（死锁优化）
                     var key = (ReDetail.ProdDetailID, ReDetail.Location_ID);
+                    
+                    // ✅ P0修复: 使用快照字典获取修改前的数量
+                    int beforeQty = 0;
+                    decimal beforeCost = 0;
+                    if (invSnapshotDict.TryGetValue(key, out var snapshot))
+                    {
+                        beforeQty = snapshot.BeforeQuantity;
+                        beforeCost = snapshot.Inv_Cost;
+                    }
+                    
                     if (!invDict.TryGetValue(key, out var inv) || inv == null)
                     {
                         _unitOfWorkManage.RollbackTran();
@@ -151,6 +173,23 @@ namespace RUINORERP.Business
                 #endregion
 
                 invUpdateList.Add(inv);
+                
+                // ✅ 修复: 创建库存流水记录(使用快照数据)
+                tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                transaction.ProdDetailID = inv.ProdDetailID;
+                transaction.Location_ID = inv.Location_ID;
+                transaction.BizType = (int)BizType.采购退货单;
+                transaction.ReferenceId = entity.PurEntryRe_ID;
+                transaction.ReferenceNo = entity.PurEntryReNo;
+                transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 使用修改前的快照数量
+                transaction.QuantityChange = -ReDetail.Quantity; // 采购退货出库减少库存
+                transaction.AfterQuantity = beforeQty - ReDetail.Quantity; // ✅ P0修复: 使用快照计算更新后的数量
+                transaction.UnitCost = beforeCost > 0 ? beforeCost : inv.Inv_Cost; // ✅ P0修复: 使用修改前的成本
+                transaction.TransactionTime = DateTime.Now;
+                transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                transaction.Notes = $"采购退货单审核：{entity.PurEntryReNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
+
+                transactionList.Add(transaction);
             }
             
             // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
@@ -162,6 +201,10 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 throw new Exception("采购退货审核时，库存更新失败！");
             }
+
+            // ✅ 修复: 记录库存流水(带死锁重试机制)
+            tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+            await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
 
             if (entity.tb_purentry != null)
@@ -385,6 +428,8 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
             .ToList();
 
         var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+        // ✅ 修复: 保存反审核前库存快照
+        var invSnapshotDict2 = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
         if (requiredKeys2.Count > 0)
         {
             var inventoryList2 = await _unitOfWorkManage.GetDbClient()
@@ -392,6 +437,13 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
                 .Where(i => requiredKeys2.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                 .ToListAsync();
             invDict2 = inventoryList2.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+            
+            // ✅ 修复: 在修改前保存快照
+            foreach (var inv in inventoryList2)
+            {
+                var key = (inv.ProdDetailID, inv.Location_ID);
+                invSnapshotDict2[key] = (inv.Quantity, inv.Inv_Cost);
+            }
         }
         #endregion
 
@@ -399,7 +451,9 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
 
 
         List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
-
+        // ✅ 修复: 创建反向库存流水记录列表
+        List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+        
         foreach (var child in entity.tb_PurEntryReDetails)
         {
             #region 库存表的更新 这里应该是必需有库存的数据，
@@ -407,6 +461,16 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
 
             // ✅ 从预加载字典获取（死锁优化）
             var key = (child.ProdDetailID, child.Location_ID);
+            
+            // ✅ P0修复: 使用快照字典获取修改前的数量
+            int beforeQty = 0;
+            decimal beforeCost = 0;
+            if (invSnapshotDict2.TryGetValue(key, out var snapshot))
+            {
+                beforeQty = snapshot.BeforeQuantity;
+                beforeCost = snapshot.Inv_Cost;
+            }
+            
             if (!invDict2.TryGetValue(key, out var inv) || inv == null)
             {
                 //不应该为空
@@ -430,6 +494,23 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
             inv.LatestOutboundTime = System.DateTime.Now;
             #endregion
             invUpdateList.Add(inv);
+            
+            // ✅ 修复: 创建反向库存流水记录(使用快照数据)
+            tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+            transaction.ProdDetailID = inv.ProdDetailID;
+            transaction.Location_ID = inv.Location_ID;
+            transaction.BizType = (int)BizType.采购退货单;
+            transaction.ReferenceId = entity.PurEntryRe_ID;
+            transaction.ReferenceNo = entity.PurEntryReNo;
+            transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 使用修改前的快照数量
+            transaction.QuantityChange = child.Quantity; // 反审核增加库存
+            transaction.AfterQuantity = beforeQty + child.Quantity; // ✅ P0修复: 使用快照计算更新后的数量
+            transaction.UnitCost = beforeCost > 0 ? beforeCost : inv.Inv_Cost; // ✅ P0修复: 使用修改前的成本
+            transaction.TransactionTime = DateTime.Now;
+            transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+            transaction.Notes = $"采购退货单反审核：{entity.PurEntryReNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
+
+            transactionList.Add(transaction);
         }
         
         // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
@@ -441,6 +522,10 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             _logger.Debug($"{entity.PurEntryReNo}更新库存结果为0行，请检查数据！");
         }
+        
+        // ✅ 修复: 记录反向库存流水(带死锁重试机制)
+        tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+        await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
         if (entity.tb_purentry != null)
         {

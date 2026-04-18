@@ -66,6 +66,13 @@ namespace RUINORERP.Business
                     .ToListAsync();
 
                 var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                // ✅ 修复: 保存库存快照(在修改前),用于后续记录流水
+                var invSnapshotDict = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
+                foreach (var inv in inventoryList)
+                {
+                    var key = (inv.ProdDetailID, inv.Location_ID);
+                    invSnapshotDict[key] = (inv.Quantity, inv.Inv_Cost);
+                }
                 #endregion
 
                 // 开启事务，保证数据一致性
@@ -81,6 +88,13 @@ namespace RUINORERP.Business
                 
                 foreach (var child in entity.tb_StockTransferDetails)
                 {
+                    // ✅ P0修复: 使用修改前保存的快照字典获取调出仓库正确的数据
+                    var keyFrom = (child.ProdDetailID, entity.Location_ID_from);
+                    if (!invSnapshotDict.TryGetValue(keyFrom, out var snapshotFrom))
+                    {
+                        snapshotFrom = (0, 0m);
+                    }
+                    
                     //先看库存表中是否存在记录。  
 
                     #region 库存表的更新 调出
@@ -111,20 +125,17 @@ namespace RUINORERP.Business
                     // 添加到批量更新列表
                     invUpdateList.Add(invFrom);
                     
-                    // 实时获取调出仓库的当前库存成本
-                    decimal realtimeCost = invFrom.Inv_Cost;
-                    
                     // 创建调出仓库的库存流水记录
                     tb_InventoryTransaction transactionFrom = new tb_InventoryTransaction();
-                    transactionFrom.ProdDetailID = invFrom.ProdDetailID;
-                    transactionFrom.Location_ID = invFrom.Location_ID;
+                    transactionFrom.ProdDetailID = child.ProdDetailID;
+                    transactionFrom.Location_ID = entity.Location_ID_from;
                     transactionFrom.BizType = (int)BizType.调拨单;
                     transactionFrom.ReferenceId = entity.StockTransferID;
                     transactionFrom.ReferenceNo = entity.StockTransferNo;
-                    transactionFrom.BeforeQuantity = invFrom.Quantity + child.Qty; // 变动前的库存数量
+                    transactionFrom.BeforeQuantity = snapshotFrom.BeforeQuantity; // ✅ 使用修改前的快照数量
                     transactionFrom.QuantityChange = -child.Qty; // 调出减少库存
-                    transactionFrom.AfterQuantity = invFrom.Quantity;
-                    transactionFrom.UnitCost = realtimeCost; // 使用实时成本
+                    transactionFrom.AfterQuantity = snapshotFrom.BeforeQuantity - child.Qty; // ✅ 使用快照计算更新后的数量
+                    transactionFrom.UnitCost = snapshotFrom.Inv_Cost; // 使用更新前的成本
                     transactionFrom.TransactionTime = DateTime.Now;
                     transactionFrom.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                     transactionFrom.Notes = $"调拨单审核：{entity.StockTransferNo}，调出仓库：{entity.Location_ID_from}，产品：{invFrom.tb_proddetail?.tb_prod?.CNName}";
@@ -170,17 +181,24 @@ namespace RUINORERP.Business
                         invUpdateList.Add(invTo);
                     }
                     
+                    // ✅ P0修复: 使用修改前保存的快照字典获取调入仓库正确的数据
+                    var keyTo = (child.ProdDetailID, entity.Location_ID_to);
+                    if (!invSnapshotDict.TryGetValue(keyTo, out var snapshotTo))
+                    {
+                        snapshotTo = (0, 0m);
+                    }
+                    
                     // 创建调入仓库的库存流水记录
                     tb_InventoryTransaction transactionTo = new tb_InventoryTransaction();
-                    transactionTo.ProdDetailID = invTo.ProdDetailID;
-                    transactionTo.Location_ID = invTo.Location_ID;
+                    transactionTo.ProdDetailID = child.ProdDetailID;
+                    transactionTo.Location_ID = entity.Location_ID_to;
                     transactionTo.BizType = (int)BizType.调拨单;
                     transactionTo.ReferenceId = entity.StockTransferID;
                     transactionTo.ReferenceNo = entity.StockTransferNo;
-                    transactionTo.BeforeQuantity = invTo.Quantity - child.Qty; // 变动前的库存数量
+                    transactionTo.BeforeQuantity = snapshotTo.BeforeQuantity; // ✅ 使用修改前的快照数量
                     transactionTo.QuantityChange = child.Qty; // 调入增加库存
-                    transactionTo.AfterQuantity = invTo.Quantity;
-                    transactionTo.UnitCost = realtimeCost; // 使用调出仓库的实时成本
+                    transactionTo.AfterQuantity = snapshotTo.BeforeQuantity + child.Qty; // ✅ 使用快照计算更新后的数量
+                    transactionTo.UnitCost = snapshotFrom.Inv_Cost; // 使用调出仓库的成本
                     transactionTo.TransactionTime = DateTime.Now;
                     transactionTo.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                     transactionTo.Notes = $"调拨单审核：{entity.StockTransferNo}，调入仓库：{entity.Location_ID_to}，产品：{invTo.tb_proddetail?.tb_prod?.CNName}";
@@ -273,6 +291,13 @@ namespace RUINORERP.Business
                     .ToListAsync();
 
                 var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                // ✅ 修复: 保存反审核前库存快照
+                var invSnapshotDict2 = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
+                foreach (var inv in inventoryList)
+                {
+                    var key = (inv.ProdDetailID, inv.Location_ID);
+                    invSnapshotDict2[key] = (inv.Quantity, inv.Inv_Cost);
+                }
                 #endregion
 
                 // 开启事务，保证数据一致性
@@ -286,6 +311,13 @@ namespace RUINORERP.Business
                 
                 foreach (var child in entity.tb_StockTransferDetails)
                 {
+                    // ✅ P0修复: 使用修改前保存的快照字典获取调出仓库正确的数据
+                    var keyFrom = (child.ProdDetailID, entity.Location_ID_from);
+                    if (!invSnapshotDict2.TryGetValue(keyFrom, out var snapshotFrom))
+                    {
+                        snapshotFrom = (0, 0m);
+                    }
+                    
                     //先看库存表中是否存在记录。  
 
                     #region 库存表的更新 反审时，调出的要加回来。
@@ -308,20 +340,17 @@ namespace RUINORERP.Business
                     // 添加到批量更新列表
                     invUpdateList.Add(invFrom);
                     
-                    // 实时获取当前库存成本
-                    decimal realtimeCost = invFrom.Inv_Cost;
-                    
                     // 创建调出仓库的反向库存流水记录（反审核时调出仓库增加库存）
                     tb_InventoryTransaction transactionFrom = new tb_InventoryTransaction();
-                    transactionFrom.ProdDetailID = invFrom.ProdDetailID;
-                    transactionFrom.Location_ID = invFrom.Location_ID;
+                    transactionFrom.ProdDetailID = child.ProdDetailID;
+                    transactionFrom.Location_ID = entity.Location_ID_from;
                     transactionFrom.BizType = (int)BizType.调拨单;
                     transactionFrom.ReferenceId = entity.StockTransferID;
                     transactionFrom.ReferenceNo = entity.StockTransferNo;
-                    transactionFrom.BeforeQuantity = invFrom.Quantity - child.Qty; // 变动前的库存数量
+                    transactionFrom.BeforeQuantity = snapshotFrom.BeforeQuantity; // ✅ 使用修改前的快照数量
                     transactionFrom.QuantityChange = child.Qty; // 反审核时调出仓库增加库存
-                    transactionFrom.AfterQuantity = invFrom.Quantity;
-                    transactionFrom.UnitCost = realtimeCost; // 使用实时成本
+                    transactionFrom.AfterQuantity = snapshotFrom.BeforeQuantity + child.Qty; // ✅ 使用快照计算更新后的数量
+                    transactionFrom.UnitCost = snapshotFrom.Inv_Cost; // 使用更新前的成本
                     transactionFrom.TransactionTime = DateTime.Now;
                     transactionFrom.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                     transactionFrom.Notes = $"调拨单反审核：{entity.StockTransferNo}，调出仓库反向调整：{entity.Location_ID_from}，产品：{invFrom.tb_proddetail?.tb_prod?.CNName}";
@@ -331,6 +360,13 @@ namespace RUINORERP.Business
 
                     #region 库存表的更新  调入时不考虑成本价格,如果初次入库时则使用调出时的成本。
                     //标记是否有期初
+
+                    // ✅ P0修复: 使用修改前保存的快照字典获取调入仓库正确的数据
+                    var keyTo = (child.ProdDetailID, entity.Location_ID_to);
+                    if (!invSnapshotDict2.TryGetValue(keyTo, out var snapshotTo))
+                    {
+                        snapshotTo = (0, 0m);
+                    }
 
                     // ✅ 从预加载字典获取（死锁优化）
                     if (!invDict.TryGetValue((child.ProdDetailID, entity.Location_ID_to), out var invTo) || invTo == null)
@@ -356,20 +392,17 @@ namespace RUINORERP.Business
                     // 添加到批量更新列表
                     invUpdateList.Add(invTo);
                     
-                    // 实时获取当前库存成本
-                    decimal realtimeCostTo = invTo.Inv_Cost;
-                    
                     // 创建调入仓库的反向库存流水记录（反审核时调入仓库减少库存）
                     tb_InventoryTransaction transactionTo = new tb_InventoryTransaction();
-                    transactionTo.ProdDetailID = invTo.ProdDetailID;
-                    transactionTo.Location_ID = invTo.Location_ID;
+                    transactionTo.ProdDetailID = child.ProdDetailID;
+                    transactionTo.Location_ID = entity.Location_ID_to;
                     transactionTo.BizType = (int)BizType.调拨单;
                     transactionTo.ReferenceId = entity.StockTransferID;
                     transactionTo.ReferenceNo = entity.StockTransferNo;
-                    transactionTo.BeforeQuantity = invTo.Quantity + child.Qty; // 变动前的库存数量
+                    transactionTo.BeforeQuantity = snapshotTo.BeforeQuantity; // ✅ 使用修改前的快照数量
                     transactionTo.QuantityChange = -child.Qty; // 反审核时调入仓库减少库存
-                    transactionTo.AfterQuantity = invTo.Quantity;
-                    transactionTo.UnitCost = realtimeCostTo; // 使用实时成本
+                    transactionTo.AfterQuantity = snapshotTo.BeforeQuantity - child.Qty; // ✅ 使用快照计算更新后的数量
+                    transactionTo.UnitCost = snapshotTo.Inv_Cost; // 使用更新前的成本
                     transactionTo.TransactionTime = DateTime.Now;
                     transactionTo.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                     transactionTo.Notes = $"调拨单反审核：{entity.StockTransferNo}，调入仓库反向调整：{entity.Location_ID_to}，产品：{invTo.tb_proddetail?.tb_prod?.CNName}";

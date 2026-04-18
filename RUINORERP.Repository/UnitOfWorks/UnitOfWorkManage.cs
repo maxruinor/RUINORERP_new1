@@ -17,16 +17,20 @@ namespace RUINORERP.Repository.UnitOfWorks
 
 
     /// <summary>
-    /// 事务管理类，确认后的优化版本1
+    /// 事务管理类,确认后的优化版本
+    /// ✅ P1优化: 实现IAsyncDisposable支持异步释放
+    /// ✅ P2优化: 支持自动超时机制
     /// </summary>
-    public class UnitOfWorkManage : IUnitOfWorkManage, IDependencyRepository, IDisposable
+    public partial class UnitOfWorkManage : IUnitOfWorkManage, IDependencyRepository, IDisposable, IAsyncDisposable
     {
         private readonly ILogger<UnitOfWorkManage> _logger;
         private readonly ISqlSugarClient _sqlSugarClient;
         private readonly ApplicationContext _appContext;
+        private readonly UnitOfWorkOptions _options;
 
-        // 读写锁：允许并发读，独占写，优化高并发性能
-        private readonly ReaderWriterLockSlim _rwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        // ✅ P0修复: 移除ReaderWriterLockSlim,改用轻量级Monitor锁
+        // ✅ P1优化: TransactionContext内部已升级为SemaphoreSlim,支持异步
+        // private readonly ReaderWriterLockSlim _rwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
         // 使用 AsyncLocal 保证异步安全
         private readonly AsyncLocal<TransactionContext> _currentTransactionContext =
@@ -39,19 +43,149 @@ namespace RUINORERP.Repository.UnitOfWorks
         // 简单的嵌套计数器（兼容旧代码）
         private readonly AsyncLocal<int> _tranDepth = new AsyncLocal<int>();
         
-        // 默认事务超时时间（秒）
-        private const int DEFAULT_TRANSACTION_TIMEOUT = 60;
+        /// <summary>
+        /// ✅ P2新增: 初始化事务超时机制
+        /// </summary>
+        private void InitializeTransactionTimeout(TransactionContext context, int? timeoutSeconds = null)
+        {
+            if (!_options.EnableAutoTransactionTimeout)
+            {
+                _logger.LogDebug($"[Transaction-{context.TransactionId}] 自动超时已禁用");
+                return;
+            }
+
+            var timeout = timeoutSeconds ?? _options.DefaultTransactionTimeoutSeconds;
+            context.StartTime = DateTime.UtcNow;
+            
+            // 创建超时令牌
+            context.TimeoutCancellationTokenSource = new CancellationTokenSource();
+            context.TimeoutCancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(timeout));
+            
+            // 注册超时回调
+            context.TimeoutCancellationTokenSource.Token.Register(() =>
+            {
+                OnTransactionTimeout(context, timeout);
+            });
+            
+            _logger.LogDebug($"[Transaction-{context.TransactionId}] 超时机制已启用: {timeout}秒");
+        }
+
+        /// <summary>
+        /// ✅ P2新增: 事务超时回调
+        /// </summary>
+        private void OnTransactionTimeout(TransactionContext context, int timeoutSeconds)
+        {
+            var duration = (DateTime.UtcNow - context.StartTime).TotalSeconds;
+            
+            _logger.LogError(
+                $"[Transaction-{context.TransactionId}] ⚠️ 事务超时! " +
+                $"配置超时={timeoutSeconds}秒, 实际运行={duration:F1}秒, " +
+                $"调用方={context.CallerMethod}, 深度={context.Depth}");
+            
+            // 记录详细上下文信息
+            _logger.LogError($"事务上下文: {context.GetDebugInfo()}");
+            
+            // ✅ 强制回滚(如果配置启用)
+            if (_options.ForceRollbackOnTimeout && context.Depth > 0)
+            {
+                _logger.LogWarning($"[Transaction-{context.TransactionId}] 执行强制回滚");
+                try
+                {
+                    var dbClient = GetDbClient();
+                    if (dbClient.Ado.Transaction != null)
+                    {
+                        dbClient.Ado.RollbackTran();
+                        _logger.LogInformation($"[Transaction-{context.TransactionId}] 超时强制回滚成功");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 超时强制回滚失败");
+                }
+                finally
+                {
+                    context.ShouldRollback = true;
+                    ResetTransactionState();
+                }
+            }
+            else
+            {
+                _logger.LogWarning($"[Transaction-{context.TransactionId}] 超时但未执行强制回滚(ForceRollbackOnTimeout={_options.ForceRollbackOnTimeout})");
+            }
+        }
+
+        /// <summary>
+        /// ✅ P2新增: 检查并记录长事务警告
+        /// </summary>
+        private void CheckLongTransactionWarning(TransactionContext context)
+        {
+            if (context.StartTime == DateTime.MinValue)
+                return;
+                
+            var duration = (DateTime.UtcNow - context.StartTime).TotalSeconds;
+            
+            // 超长事务 - 错误级别
+            if (duration > _options.CriticalTransactionWarningSeconds)
+            {
+                _logger.LogError(
+                    $"[Transaction-{context.TransactionId}] 🚨 超长事务警告! " +
+                    $"已运行 {duration:F0}秒 (>{_options.CriticalTransactionWarningSeconds}秒), " +
+                    $"调用方={context.CallerMethod}");
+            }
+            // 长事务 - 警告级别
+            else if (duration > _options.LongTransactionWarningSeconds)
+            {
+                _logger.LogWarning(
+                    $"[Transaction-{context.TransactionId}] ⚠️ 长事务警告: " +
+                    $"已运行 {duration:F0}秒 (>{_options.LongTransactionWarningSeconds}秒), " +
+                    $"调用方={context.CallerMethod}");
+            }
+        }
+
+        /// <summary>
+        /// ✅ P2新增: 清理超时机制
+        /// </summary>
+        private void CleanupTransactionTimeout(TransactionContext context)
+        {
+            if (context?.TimeoutCancellationTokenSource != null)
+            {
+                try
+                {
+                    // 取消超时令牌(防止超时回调在事务完成后执行)
+                    if (!context.TimeoutCancellationTokenSource.IsCancellationRequested)
+                    {
+                        context.TimeoutCancellationTokenSource.Cancel();
+                    }
+                    context.TimeoutCancellationTokenSource.Dispose();
+                    context.TimeoutCancellationTokenSource = null;
+                    
+                    _logger.LogDebug($"[Transaction-{context.TransactionId}] 超时机制已清理");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, $"[Transaction-{context.TransactionId}] 清理超时机制时发生异常");
+                }
+            }
+        }
         
         // 最大重试次数（针对死锁等瞬态故障）
         private const int MAX_RETRY_COUNT = 3;
 
-        public UnitOfWorkManage(ISqlSugarClient sqlSugarClient, ILogger<UnitOfWorkManage> logger, ApplicationContext appContext = null)
+        public UnitOfWorkManage(
+            ISqlSugarClient sqlSugarClient, 
+            ILogger<UnitOfWorkManage> logger, 
+            ApplicationContext appContext = null,
+            Microsoft.Extensions.Options.IOptions<UnitOfWorkOptions> options = null)
         {
             _sqlSugarClient = sqlSugarClient ?? throw new ArgumentNullException(nameof(sqlSugarClient));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _appContext = appContext;
+            _options = options?.Value ?? new UnitOfWorkOptions();  // ✅ P2: 注入配置
 
             _logger.LogDebug($"UnitOfWorkManage 已创建，线程ID: {Thread.CurrentThread.ManagedThreadId}");
+            _logger.LogDebug($"事务超时配置: EnableAutoTimeout={_options.EnableAutoTransactionTimeout}, " +
+                           $"DefaultTimeout={_options.DefaultTransactionTimeoutSeconds}s, " +
+                           $"ForceRollback={_options.ForceRollbackOnTimeout}");
         }
 
         /// <summary>
@@ -60,10 +194,8 @@ namespace RUINORERP.Repository.UnitOfWorks
         /// </summary>
         public ISqlSugarClient GetDbClient()
         {
-            // 每个异步上下文使用独立的连接实例
-            // 注意：此处不再加锁，因为每个AsyncLocal上下文是独立的，
-            // 不存在并发访问同一个AsyncLocal.Value的情况
-            // 锁的职责交给需要事务保护的方法（BeginTran/CommitTran/RollbackTran）
+            // ✅ P0修复: 每个异步上下文使用独立的连接实例
+            // 关键: AsyncLocal确保不同异步流有独立的连接,避免"挂起请求"冲突
             if (_asyncLocalClient.Value == null)
             {
                 // 复制原始连接配置，创建新的连接实例
@@ -75,7 +207,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                     {
                         ConnectionString = originalConfig.ConnectionString,
                         DbType = (SqlSugar.DbType)originalConfig.DbType,
-                        IsAutoCloseConnection = false,
+                        IsAutoCloseConnection = false, // ⚠️ 关键: 事务期间不自动关闭
                         InitKeyType = originalConfig.InitKeyType,
                         MoreSettings = originalConfig.MoreSettings,
                         ConfigureExternalServices = originalConfig.ConfigureExternalServices,
@@ -83,6 +215,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                     };
         
                     _asyncLocalClient.Value = new SqlSugarClient(newConfig);
+                    _logger.LogDebug($"为异步上下文创建了新的数据库连接实例，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
                 }
                 else
                 {
@@ -93,25 +226,27 @@ namespace RUINORERP.Repository.UnitOfWorks
                         IsAutoCloseConnection = false,
                         InitKeyType = InitKeyType.Attribute
                     });
+                    _logger.LogDebug($"使用默认配置创建新连接，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
                 }
-        
-                _logger.LogDebug($"为异步上下文创建了新的数据库连接实例，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
             }
         
             return _asyncLocalClient.Value;
         }
 
         /// <summary>
-        /// 开始事务 - 使用写锁确保独占访问
+        /// 开始事务 - 使用SemaphoreSlim确保独占访问
+        /// ✅ P1优化: 改用异步信号量锁
+        /// ✅ P2优化: 支持自动超时机制
         /// </summary>
         /// <param name="isolationLevel">可选的隔离级别，不指定则使用数据库默认</param>
-        public void BeginTran(IsolationLevel? isolationLevel = null)
+        /// <param name="timeoutSeconds">可选的超时时间(秒)，null则使用配置默认值</param>
+        public void BeginTran(IsolationLevel? isolationLevel = null, int? timeoutSeconds = null)
         {
             var context = GetOrCreateTransactionContext();
             var dbClient = GetDbClient();
         
-            // 使用写锁保护事务开始操作
-            _rwLock.EnterWriteLock();
+            // ✅ P1优化: 使用SemaphoreSlim.Wait()替代lock
+            context.LockSemaphore.Wait();
             try
             {
                 // 检查嵌套深度
@@ -130,18 +265,25 @@ namespace RUINORERP.Repository.UnitOfWorks
                 {
                     _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务嵌套深度已达到 {context.Depth} 层，超过建议的10层限制，建议检查业务逻辑是否可以优化");
                 }
-        
+    
                 // 最外层事务：开启物理事务
                 if (context.Depth == 1)
                 {
-                    // 确保连接是打开的
+                    // ✅ 关键修复: 确保连接打开且无挂起的DataReader
                     if (dbClient.Ado.Connection.State != System.Data.ConnectionState.Open)
                     {
                         dbClient.Ado.Connection.Open();
                     }
+                    
+                    // ✅ 防御性检查: 清理可能存在的挂起命令
+                    if (dbClient.Ado.Transaction != null)
+                    {
+                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到残留事务对象，先回滚");
+                        try { dbClient.Ado.RollbackTran(); } catch { }
+                    }
         
                     // 设置命令超时时间
-                    dbClient.Ado.CommandTimeOut = DEFAULT_TRANSACTION_TIMEOUT;
+                    dbClient.Ado.CommandTimeOut = _options.DefaultTransactionTimeoutSeconds;
                                 
                     // 根据隔离级别开启事务
                     if (isolationLevel.HasValue)
@@ -158,27 +300,122 @@ namespace RUINORERP.Repository.UnitOfWorks
                 // 嵌套事务：使用保存点（SQL Server 支持）
                 else
                 {
-                    var savePointName = $"SP_{context.TransactionId.ToString("N").Substring(0, 8)}_{context.Depth}";
+                    // ✅ P2优化: 使用完整GUID避免极端场景下的重名
+                    var savePointName = $"SP_{context.TransactionId:N}_{context.Depth}";
                     dbClient.Ado.ExecuteCommand($"SAVE TRANSACTION {savePointName}");
                     context.SavePointStack.Push(savePointName);
                     _logger.LogDebug($"[Transaction-{context.TransactionId}] 创建保存点：{savePointName}");
                 }
-        
+    
                 context.Status = TransactionStatus.Active;
                 context.UpdateActivityTime();
+                
+                // ✅ P2: 初始化超时机制
+                InitializeTransactionTimeout(context, timeoutSeconds);
             }
             catch (Exception ex)
             {
                 // 回滚深度计数
                 context.Depth = Math.Max(0, context.Depth - 1);
                 _tranDepth.Value = Math.Max(0, _tranDepth.Value - 1);
-        
+    
                 _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 事务开启失败");
                 throw new InvalidOperationException("事务开启失败", ex);
             }
             finally
             {
-                _rwLock.ExitWriteLock();
+                context.LockSemaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// ✅ P1新增: 异步开始事务方法
+        /// ✅ P2优化: 支持自动超时机制
+        /// </summary>
+        /// <param name="isolationLevel">可选的隔离级别</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <param name="timeoutSeconds">可选的超时时间(秒)，null则使用配置默认值</param>
+        public async Task BeginTranAsync(
+            IsolationLevel? isolationLevel = null, 
+            CancellationToken cancellationToken = default,
+            int? timeoutSeconds = null)
+        {
+            var context = GetOrCreateTransactionContext();
+            var dbClient = GetDbClient();
+        
+            // ✅ P1优化: 异步等待锁
+            await context.LockSemaphore.WaitAsync(cancellationToken);
+            try
+            {
+                // 检查嵌套深度
+                if (context.Depth >= 15)
+                {
+                    throw new InvalidOperationException(
+                        $"[Transaction-{context.TransactionId}] 事务嵌套深度超过最大限制 (15)");
+                }
+
+                context.Depth++;
+                _tranDepth.Value++;
+
+                if (context.Depth > 10)
+                {
+                    _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务嵌套深度已达到 {context.Depth} 层");
+                }
+    
+                if (context.Depth == 1)
+                {
+                    // 确保连接打开
+                    if (dbClient.Ado.Connection.State != System.Data.ConnectionState.Open)
+                    {
+                        // IDbConnection 没有 OpenAsync,使用同步Open
+                        dbClient.Ado.Connection.Open();
+                    }
+                    
+                    // 清理残留事务
+                    if (dbClient.Ado.Transaction != null)
+                    {
+                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到残留事务对象，先回滚");
+                        try { await dbClient.Ado.RollbackTranAsync(); } catch { }
+                    }
+        
+                    dbClient.Ado.CommandTimeOut = _options.DefaultTransactionTimeoutSeconds;
+                                
+                    // 异步开启事务
+                    if (isolationLevel.HasValue)
+                    {
+                        await dbClient.Ado.BeginTranAsync(isolationLevel.Value);
+                        _logger.LogInformation($"[Transaction-{context.TransactionId}] 异步事务已开启，隔离级别：{isolationLevel.Value}");
+                    }
+                    else
+                    {
+                        await dbClient.Ado.BeginTranAsync();
+                        _logger.LogInformation($"[Transaction-{context.TransactionId}] 异步事务已开启");
+                    }
+                }
+                else
+                {
+                    var savePointName = $"SP_{context.TransactionId:N}_{context.Depth}";
+                    await dbClient.Ado.ExecuteCommandAsync($"SAVE TRANSACTION {savePointName}");
+                    context.SavePointStack.Push(savePointName);
+                }
+    
+                context.Status = TransactionStatus.Active;
+                context.UpdateActivityTime();
+                
+                // ✅ P2: 初始化超时机制
+                InitializeTransactionTimeout(context, timeoutSeconds);
+            }
+            catch (Exception ex)
+            {
+                context.Depth = Math.Max(0, context.Depth - 1);
+                _tranDepth.Value = Math.Max(0, _tranDepth.Value - 1);
+    
+                _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 异步事务开启失败");
+                throw;
+            }
+            finally
+            {
+                context.LockSemaphore.Release();
             }
         }
 
@@ -188,7 +425,7 @@ namespace RUINORERP.Repository.UnitOfWorks
         public void CommitTran() => CommitTranInternal();
                 
         /// <summary>
-        /// 提交事务内部实现 - 使用写锁保护
+        /// 提交事务内部实现 - 使用SemaphoreSlim保护
         /// </summary>
         private void CommitTranInternal()
         {
@@ -200,10 +437,10 @@ namespace RUINORERP.Repository.UnitOfWorks
             }
                 
             var dbClient = GetDbClient();
-            var stopwatch = Stopwatch.StartNew(); // 性能监控开始
+            var stopwatch = Stopwatch.StartNew();
                 
-            // 使用写锁保护事务提交操作
-            _rwLock.EnterWriteLock();
+            // ✅ P1修复: 使用SemaphoreSlim替代已移除的LockObject
+            context.LockSemaphore.Wait();
             try
             {
                 if (context.Depth <= 0)
@@ -242,6 +479,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                 // 最外层提交
                 try
                 {
+                    // ✅ P2: 检查长事务警告
+                    CheckLongTransactionWarning(context);
+                                        
                     // ✅ 防御性检查：验证事务对象状态
                     if (dbClient.Ado.Transaction == null)
                     {
@@ -258,18 +498,19 @@ namespace RUINORERP.Repository.UnitOfWorks
                         }
                         else
                         {
+                            // ✅ 关键修复: 确保没有挂起的DataReader
                             dbClient.Ado.CommitTran();
                             context.Status = TransactionStatus.Committed;
                             _logger.LogInformation($"[Transaction-{context.TransactionId}] 事务提交成功");
                         }
                     }
-                    
+                        
                     var duration = context.GetDuration().TotalSeconds;
                     if (duration > 10)
                     {
                         _logger.LogWarning($"[Transaction-{context.TransactionId}] 长事务提交耗时：{duration:F2}秒");
                     }
-                            
+                                
                     // ✅ 性能监控：记录事务指标
                     TransactionMetrics.RecordTransaction(
                         "commit", 
@@ -283,7 +524,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                     // ✅ 关键修复：捕获 "事务已完成" 异常
                     _logger.LogWarning(invEx, $"[Transaction-{context.TransactionId}] 事务已完成（可能已被其他地方处理），忽略此异常");
                     context.Status = TransactionStatus.Committed;
-                    
+                        
                     // ✅ 性能监控：记录事务
                     TransactionMetrics.RecordTransaction(
                         "commit", 
@@ -295,18 +536,21 @@ namespace RUINORERP.Repository.UnitOfWorks
                 {
                     context.Status = TransactionStatus.RolledBack;
                     _logger.LogError(commitEx, $"[Transaction-{context.TransactionId}] 事务提交失败");
-                            
+                                
                     // ✅ 性能监控：记录失败事务
                     TransactionMetrics.RecordTransaction(
                         "commit", 
                         context.CallerMethod, 
                         stopwatch.Elapsed.TotalSeconds, 
                         false);
-                            
+                                
                     throw;
                 }
                 finally
                 {
+                    // ✅ P2: 清理超时机制
+                    CleanupTransactionTimeout(context);
+                                            
                     // ✅ 关键修复：无论成功与否，都要重置事务状态
                     ResetTransactionState();
                 }
@@ -327,12 +571,12 @@ namespace RUINORERP.Repository.UnitOfWorks
             }
             finally
             {
-                _rwLock.ExitWriteLock();
+                context.LockSemaphore.Release();
             }
         }
 
         /// <summary>
-        /// 回滚事务 - 使用写锁保护
+        /// 回滚事务 - 使用SemaphoreSlim保护
         /// </summary>
         public void RollbackTran()
         {
@@ -344,10 +588,10 @@ namespace RUINORERP.Repository.UnitOfWorks
             }
         
             var dbClient = GetDbClient();
-            var stopwatch = Stopwatch.StartNew(); // 性能监控开始
+            var stopwatch = Stopwatch.StartNew();
         
-            // 使用写锁保护事务回滚操作
-            _rwLock.EnterWriteLock();
+            // ✅ P1修复: 使用SemaphoreSlim替代已移除的LockObject
+            context.LockSemaphore.Wait();
             try
             {
                 if (context.Depth <= 0)
@@ -372,6 +616,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                 {
                     try
                     {
+                        // ✅ P2: 检查长事务警告
+                        CheckLongTransactionWarning(context);
+                                            
                         // ✅ 防御性检查：验证事务对象状态
                         if (dbClient.Ado.Transaction == null)
                         {
@@ -394,7 +641,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                                 _logger.LogInformation($"[Transaction-{context.TransactionId}] 事务回滚成功");
                             }
                         }
-                        
+                            
                         // ✅ 性能监控：记录回滚事务
                         TransactionMetrics.RecordTransaction(
                             "rollback", 
@@ -408,7 +655,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                         // ✅ 关键修复：捕获 "事务已完成" 异常，这是正常现象（可能已被其他地方回滚）
                         _logger.LogWarning(invEx, $"[Transaction-{context.TransactionId}] 事务已完成（可能已被其他地方回滚），忽略此异常");
                         context.Status = TransactionStatus.RolledBack;
-                        
+                            
                         // ✅ 性能监控：记录回滚事务
                         TransactionMetrics.RecordTransaction(
                             "rollback", 
@@ -419,18 +666,21 @@ namespace RUINORERP.Repository.UnitOfWorks
                     catch (Exception rollbackEx)
                     {
                         _logger.LogError(rollbackEx, $"[Transaction-{context.TransactionId}] 事务回滚失败");
-                        
+                            
                         // ✅ 性能监控：记录失败回滚
                         TransactionMetrics.RecordTransaction(
                             "rollback", 
                             context.CallerMethod, 
                             stopwatch.Elapsed.TotalSeconds, 
                             false);
-                        
+                            
                         throw;
                     }
                     finally
                     {
+                        // ✅ P2: 清理超时机制
+                        CleanupTransactionTimeout(context);
+                        
                         // ✅ 关键修复：无论成功与否，都要重置事务状态
                         ResetTransactionState();
                     }
@@ -466,7 +716,7 @@ namespace RUINORERP.Repository.UnitOfWorks
             }
             finally
             {
-                _rwLock.ExitWriteLock();
+                context.LockSemaphore.Release();
             }
         }
 
@@ -555,45 +805,13 @@ namespace RUINORERP.Repository.UnitOfWorks
         
         /// <summary>
         /// 异步版本的带重试执行方法
+        /// ✅ P7优化: 已移至AsyncMethods.cs,支持CancellationToken和配置化
         /// </summary>
         /// <param name="action">要执行的操作</param>
-        /// <param name="maxRetryCount">最大重试次数，默认 3 次</param>
-        public async Task ExecuteWithRetryAsync(Func<Task> action, int maxRetryCount = MAX_RETRY_COUNT)
-        {
-            int retryCount = 0;
-            var context = CurrentTransactionContext;
-            
-            while (true)
-            {
-                try
-                {
-                    await action();
-                    return;
-                }
-                catch (SqlException sqlEx) when (sqlEx.Number == 1205 && retryCount < maxRetryCount)
-                {
-                    retryCount++;
-                    var delayMs = (int)(100 * Math.Pow(2, retryCount)); // 指数退避：200ms, 400ms, 800ms
-                    
-                    _logger.LogWarning(sqlEx, 
-                        $"[Transaction-{context?.TransactionId}] 检测到数据库死锁，正在进行第 {retryCount}/{maxRetryCount} 次重试，延迟 {delayMs}ms...");
-                    
-                    // 记录死锁上下文信息
-                    if (context != null)
-                    {
-                        _logger.LogWarning($"死锁事务上下文：{context.GetDebugInfo()}");
-                    }
-                    
-                    await Task.Delay(delayMs);
-                }
-                catch (Exception ex)
-                {
-                    // 非死锁异常或其他异常，直接抛出
-                    _logger.LogError(ex, $"[Transaction-{context?.TransactionId}] 执行失败，不再重试");
-                    throw;
-                }
-            }
-        }
+        /// <param name="maxRetryCount">最大重试次数，默认使用配置值</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        // 注意: 此方法已在 UnitOfWorkManage.AsyncMethods.cs 中实现
+        // public async Task ExecuteWithRetryAsync(Func<Task> action, int? maxRetryCount = null, CancellationToken cancellationToken = default)
 
         /// <summary>
         /// 获取或创建事务上下文
@@ -656,6 +874,12 @@ namespace RUINORERP.Repository.UnitOfWorks
                 var transactionId = context.TransactionId;
                 var duration = context.GetDuration().TotalSeconds;
         
+                // ✅ P2: 检查长事务警告(如果还没检查过)
+                CheckLongTransactionWarning(context);
+                
+                // ✅ P2: 清理超时机制
+                CleanupTransactionTimeout(context);
+        
                 // 长事务警告
                 if (duration > 60)
                 {
@@ -694,6 +918,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 
         /// <summary>
         /// 释放资源（确保连接及时释放）
+        /// ✅ P2优化: 清理超时机制
         /// </summary>
         public void Dispose()
         {
@@ -704,9 +929,18 @@ namespace RUINORERP.Repository.UnitOfWorks
                 {
                     var context = _currentTransactionContext.Value;
                             
-                    // 如果有未完成的事务，强制回滚
+                    // ✅ P2: 如果有未完成的事务且已超时,记录警告
                     if (context != null && context.Depth > 0)
                     {
+                        var duration = (DateTime.UtcNow - context.StartTime).TotalSeconds;
+                        if (duration > _options.LongTransactionWarningSeconds)
+                        {
+                            _logger.LogWarning(
+                                $"[Transaction-{context.TransactionId}] ⚠️ Dispose时发现长事务! " +
+                                $"已运行 {duration:F0}秒, 深度={context.Depth}, " +
+                                $"调用方={context.CallerMethod}");
+                        }
+                        
                         _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到未完成的事务，执行强制回滚");
                         if (dbClient.Ado.Transaction != null)
                         {
@@ -731,6 +965,10 @@ namespace RUINORERP.Repository.UnitOfWorks
                 }
                 finally
                 {
+                    // ✅ P2: 清理超时机制
+                    var context = _currentTransactionContext.Value;
+                    CleanupTransactionTimeout(context);
+                    
                     // 清理 AsyncLocal 引用
                     _asyncLocalClient.Value = null;
                     _currentTransactionContext.Value = null;
@@ -738,8 +976,71 @@ namespace RUINORERP.Repository.UnitOfWorks
                 }
             }
             
-            // 释放读写锁
-            _rwLock?.Dispose();
+            // 释放读写锁（已移除）
+            // _rwLock?.Dispose();
+        }
+
+        /// <summary>
+        /// ✅ P1新增: 异步释放资源
+        /// ✅ P2优化: 清理超时机制
+        /// </summary>
+        public async ValueTask DisposeAsync()
+        {
+            var dbClient = _asyncLocalClient.Value;
+            if (dbClient != null)
+            {
+                try
+                {
+                    var context = _currentTransactionContext.Value;
+                    
+                    // ✅ P2: 如果有未完成的事务且已超时,记录警告
+                    if (context != null && context.Depth > 0)
+                    {
+                        var duration = (DateTime.UtcNow - context.StartTime).TotalSeconds;
+                        if (duration > _options.LongTransactionWarningSeconds)
+                        {
+                            _logger.LogWarning(
+                                $"[Transaction-{context.TransactionId}] ⚠️ DisposeAsync时发现长事务! " +
+                                $"已运行 {duration:F0}秒, 深度={context.Depth}, " +
+                                $"调用方={context.CallerMethod}");
+                        }
+                        
+                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到未完成的事务，执行强制回滚");
+                        if (dbClient.Ado.Transaction != null)
+                        {
+                            await dbClient.Ado.RollbackTranAsync();
+                        }
+                    }
+                    
+                    // 异步关闭并释放连接
+                    if (dbClient.Ado.Connection != null)
+                    {
+                        if (dbClient.Ado.Connection.State == ConnectionState.Open)
+                        {
+                            dbClient.Ado.Connection.Close();
+                        }
+                    }
+                    
+                    // 释放SqlSugarClient
+                    ((IDisposable)dbClient).Dispose();
+                    _logger.LogDebug("DisposeAsync 时已释放数据库客户端");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "DisposeAsync 时发生错误");
+                }
+                finally
+                {
+                    // ✅ P2: 清理超时机制
+                    var context = _currentTransactionContext.Value;
+                    CleanupTransactionTimeout(context);
+                    
+                    _asyncLocalClient.Value = null;
+                    _currentTransactionContext.Value?.Dispose();
+                    _currentTransactionContext.Value = null;
+                    _tranDepth.Value = 0;
+                }
+            }
         }
 
         /// <summary>

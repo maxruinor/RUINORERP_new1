@@ -54,6 +54,8 @@ namespace RUINORERP.Business
                     .ToList();
 
                 var invDict1 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                // ✅ 修复: 保存库存快照(在修改前),用于后续记录流水
+                var invSnapshotDict1 = new Dictionary<(long ProdDetailID, long LocationID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (requiredKeys1.Count > 0)
                 {
                     var inventoryList = await _unitOfWorkManage.GetDbClient()
@@ -61,6 +63,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys1.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
                     invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict1[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -257,30 +266,27 @@ namespace RUINORERP.Business
                     if (child.DiffQty != 0)
                     {
                         var key = (child.ProdDetailID, entity.Location_ID);
-                        // ✅ P0修复: 从预加载字典获取更新前的快照
-                        invDict1.TryGetValue(key, out var invSnapshot);
-                        if (invSnapshot != null)
+                        // ✅ P0修复: 使用修改前保存的快照字典获取正确的数据
+                        if (invSnapshotDict1.TryGetValue(key, out var snapshot))
                         {
-                            // 实时获取当前库存成本(使用更新前的快照)
-                            decimal realtimeCost = invSnapshot.Inv_Cost;
-                            
-                            // 创建库存流水记录
                             tb_InventoryTransaction transaction = new tb_InventoryTransaction();
-                            transaction.ProdDetailID = invSnapshot.ProdDetailID;
-                            transaction.Location_ID = invSnapshot.Location_ID;
+                            transaction.ProdDetailID = child.ProdDetailID;
+                            transaction.Location_ID = entity.Location_ID;
                             transaction.BizType = (int)BizType.盘点单;
                             transaction.ReferenceId = entity.MainID;
                             transaction.ReferenceNo = entity.CheckNo;
-                            transaction.BeforeQuantity = invSnapshot.Quantity; // ✅ 更新前的数量(快照)
+                            transaction.BeforeQuantity = snapshot.BeforeQuantity; // ✅ 使用修改前的快照数量
                             transaction.QuantityChange = child.DiffQty; // 盘点调整(可正可负)
-                            transaction.AfterQuantity = invSnapshot.Quantity + child.DiffQty; // ✅ 更新后的数量
-                            transaction.UnitCost = realtimeCost; // 使用实时成本
+                            transaction.AfterQuantity = snapshot.BeforeQuantity + child.DiffQty; // ✅ 更新后的数量
+                            transaction.UnitCost = snapshot.Inv_Cost; // 使用更新前的成本
                             transaction.TransactionTime = DateTime.Now;
                             transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                             
                             // 根据差异数量生成备注
                             string adjustType = child.DiffQty > 0 ? "盘盈" : "盘亏";
-                            transaction.Notes = $"盘点单审核：{entity.CheckNo}，{adjustType}，产品：{invSnapshot.tb_proddetail?.tb_prod?.CNName}";
+                            // 获取产品名称
+                            invDict1.TryGetValue(key, out var invForName1);
+                            transaction.Notes = $"盘点单审核：{entity.CheckNo}，{adjustType}，产品：{invForName1?.tb_proddetail?.tb_prod?.CNName}";
                             
                             transactionList.Add(transaction);
                         }
@@ -367,6 +373,8 @@ namespace RUINORERP.Business
                     .ToList();
 
                 var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                // ✅ 修复: 保存反审核前库存快照
+                var invSnapshotDict2 = new Dictionary<(long ProdDetailID, long LocationID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (requiredKeys2.Count > 0)
                 {
                     var inventoryList = await _unitOfWorkManage.GetDbClient()
@@ -374,6 +382,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys2.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
                     invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict2[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -533,30 +548,27 @@ namespace RUINORERP.Business
                     if (child.DiffQty != 0)
                     {
                         var key = (child.ProdDetailID, entity.Location_ID);
-                        // ✅ P0修复: 从预加载字典获取更新前的快照(反审核前)
-                        invDict2.TryGetValue(key, out var invSnapshot);
-                        if (invSnapshot != null)
+                        // ✅ P0修复: 使用修改前保存的快照字典获取正确的数据(反审核前)
+                        if (invSnapshotDict2.TryGetValue(key, out var snapshot))
                         {
-                            // 实时获取当前库存成本(使用更新前的快照)
-                            decimal realtimeCost = invSnapshot.Inv_Cost;
-                            
-                            // 创建反向库存流水记录
                             tb_InventoryTransaction transaction = new tb_InventoryTransaction();
-                            transaction.ProdDetailID = invSnapshot.ProdDetailID;
-                            transaction.Location_ID = invSnapshot.Location_ID;
+                            transaction.ProdDetailID = child.ProdDetailID;
+                            transaction.Location_ID = entity.Location_ID;
                             transaction.BizType = (int)BizType.盘点单;
                             transaction.ReferenceId = entity.MainID;
                             transaction.ReferenceNo = entity.CheckNo;
-                            transaction.BeforeQuantity = invSnapshot.Quantity; // ✅ 反审核前的数量(快照)
+                            transaction.BeforeQuantity = snapshot.BeforeQuantity; // ✅ 使用修改前的快照数量
                             transaction.QuantityChange = -child.DiffQty; // 反审核回退(与审核相反)
-                            transaction.AfterQuantity = invSnapshot.Quantity - child.DiffQty; // ✅ 反审核后的数量
-                            transaction.UnitCost = realtimeCost; // 使用实时成本
+                            transaction.AfterQuantity = snapshot.BeforeQuantity - child.DiffQty; // ✅ 反审核后的数量
+                            transaction.UnitCost = snapshot.Inv_Cost; // 使用更新前的成本
                             transaction.TransactionTime = DateTime.Now;
                             transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                             
                             // 根据差异数量生成备注
                             string adjustType = child.DiffQty > 0 ? "盘盈回退" : "盘亏回退";
-                            transaction.Notes = $"盘点单反审核：{entity.CheckNo}，{adjustType}，产品：{invSnapshot.tb_proddetail?.tb_prod?.CNName}";
+                            // 获取产品名称
+                            invDict2.TryGetValue(key, out var invForName2);
+                            transaction.Notes = $"盘点单反审核：{entity.CheckNo}，{adjustType}，产品：{invForName2?.tb_proddetail?.tb_prod?.CNName}";
                             
                             transactionList.Add(transaction);
                         }

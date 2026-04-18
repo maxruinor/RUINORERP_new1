@@ -68,6 +68,8 @@ namespace RUINORERP.Business
                 }
 
                 var invDict1 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
+                // ✅ 修复: 保存库存快照(在修改前),用于后续记录流水
+                var invSnapshotDict1 = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (allKeys.Count > 0)
                 {
                     var requiredKeys = allKeys.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
@@ -76,6 +78,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
                     invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict1[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -199,6 +208,12 @@ namespace RUINORERP.Business
                     //标记是否有期初
                     // ✅ 从预加载字典获取（死锁优化）
                     var key = (child.ProdDetailID, child.Location_ID);
+                    // ✅ P0修复: 使用修改前保存的快照字典获取正确的数据
+                    if (!invSnapshotDict1.TryGetValue(key, out var snapshot))
+                    {
+                        snapshot = (0, 0m);
+                    }
+                    
                     invDict1.TryGetValue(key, out var inv);
                     if (inv != null)
                     {
@@ -209,35 +224,15 @@ namespace RUINORERP.Business
                     else
                     {
                         inv = new tb_Inventory();
-                        inv.Quantity = inv.Quantity + child.Qty;
-                        inv.InitInventory =0;
+                        inv.Quantity = child.Qty;
+                        inv.InitInventory = 0;
                         inv.Location_ID = child.Location_ID;
                         inv.ProdDetailID = child.ProdDetailID;
-                        inv.Notes = "";//后面修改数据库是不需要？
+                        inv.Notes = "";
                         BusinessHelper.Instance.InitEntity(inv);
                     }
-                    /*
-                  直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                 平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                 先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                 后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                 数据来源可以是多种多样的，例如：
-                 采购价格：从供应商处购买产品或物品时的价格。
-                 生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                 市场价格：参考市场上类似产品或物品的价格。
-                  */
-                    //inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
-                    //inv.CostFIFO = child.Cost;
-                    //inv.CostMonthlyWA = child.Cost;
-                    //inv.CostMovingWA = child.Cost;
-                    inv.ProdDetailID = child.ProdDetailID;
-                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                    inv.LatestStorageTime = System.DateTime.Now;
-
-                    #endregion
-                    invUpdateList.Add(inv);
                     
-                    // 实时获取当前库存成本
+                    // 获取实时成本
                     decimal realtimeCost = inv.Inv_Cost;
                     
                     // 更新归还明细的成本为实时成本
@@ -246,20 +241,23 @@ namespace RUINORERP.Business
                     
                     // 创建库存流水记录
                     tb_InventoryTransaction transaction = new tb_InventoryTransaction();
-                    transaction.ProdDetailID = inv.ProdDetailID;
-                    transaction.Location_ID = inv.Location_ID;
+                    transaction.ProdDetailID = child.ProdDetailID;
+                    transaction.Location_ID = child.Location_ID;
                     transaction.BizType = (int)BizType.归还单;
                     transaction.ReferenceId = entity.ReturnID;
                     transaction.ReferenceNo = entity.ReturnNo;
-                    transaction.BeforeQuantity = inv.Quantity - child.Qty; // 变动前的库存数量
+                    transaction.BeforeQuantity = snapshot.BeforeQuantity; // ✅ 使用修改前的快照数量
                     transaction.QuantityChange = child.Qty; // 产品归还增加库存
-                    transaction.AfterQuantity = inv.Quantity;
-                    transaction.UnitCost = realtimeCost; // 使用实时成本
+                    transaction.AfterQuantity = snapshot.BeforeQuantity + child.Qty; // ✅ 使用快照计算更新后的数量
+                    transaction.UnitCost = snapshot.Inv_Cost; // 使用更新前的成本
                     transaction.TransactionTime = DateTime.Now;
                     transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                     transaction.Notes = $"产品归还单审核：{entity.ReturnNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
 
                     transactionList.Add(transaction);
+                    
+                    #endregion
+                    invUpdateList.Add(inv);
                 }
                 
                 // 记录库存流水
@@ -337,6 +335,8 @@ namespace RUINORERP.Business
                 }
 
                 var invDict2 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
+                // ✅ 修复: 保存反审核前库存快照
+                var invSnapshotDict2 = new Dictionary<(long ProdDetailID, long Location_ID), (int BeforeQuantity, decimal Inv_Cost)>();
                 if (allKeys2.Count > 0)
                 {
                     var requiredKeys = allKeys2.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
@@ -345,6 +345,13 @@ namespace RUINORERP.Business
                         .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
                     invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    
+                    // ✅ 修复: 在修改前保存快照
+                    foreach (var inv in inventoryList)
+                    {
+                        var key = (inv.ProdDetailID, inv.Location_ID);
+                        invSnapshotDict2[key] = (inv.Quantity, inv.Inv_Cost);
+                    }
                 }
                 #endregion
 
@@ -431,6 +438,12 @@ namespace RUINORERP.Business
                     //标记是否有期初
                     // ✅ 从预加载字典获取（死锁优化）
                     var key = (child.ProdDetailID, child.Location_ID);
+                    // ✅ P0修复: 使用修改前保存的快照字典获取正确的数据
+                    if (!invSnapshotDict2.TryGetValue(key, out var snapshot))
+                    {
+                        snapshot = (0, 0m);
+                    }
+                    
                     invDict2.TryGetValue(key, out var inv);
                     if (inv != null)
                     {
@@ -438,42 +451,24 @@ namespace RUINORERP.Business
                         inv.Quantity = inv.Quantity - child.Qty;
                         BusinessHelper.Instance.EditEntity(inv);
                     }
-
-                    /*
-                  直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                 平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                 先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                 后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                 数据来源可以是多种多样的，例如：
-                 采购价格：从供应商处购买产品或物品时的价格。
-                 生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                 市场价格：参考市场上类似产品或物品的价格。
-                  */
-                    //inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
-                    //inv.CostFIFO = child.Cost;
-                    //inv.CostMonthlyWA = child.Cost;
-                    //inv.CostMovingWA = child.Cost;
-                    inv.ProdDetailID = child.ProdDetailID;
-                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                    inv.LatestStorageTime = System.DateTime.Now;
-                    #endregion
+                    
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
                     if (rr.Succeeded)
                     {
-                        // 实时获取当前库存成本
+                        // 获取实时成本
                         decimal realtimeCost = inv.Inv_Cost;
                         
                         // 创建反向库存流水记录
                         tb_InventoryTransaction transaction = new tb_InventoryTransaction();
-                        transaction.ProdDetailID = inv.ProdDetailID;
-                        transaction.Location_ID = inv.Location_ID;
+                        transaction.ProdDetailID = child.ProdDetailID;
+                        transaction.Location_ID = child.Location_ID;
                         transaction.BizType = (int)BizType.归还单;
                         transaction.ReferenceId = entity.ReturnID;
                         transaction.ReferenceNo = entity.ReturnNo;
-                        transaction.BeforeQuantity = inv.Quantity + child.Qty; // 变动前的库存数量
+                        transaction.BeforeQuantity = snapshot.BeforeQuantity; // ✅ 使用修改前的快照数量
                         transaction.QuantityChange = -child.Qty; // 反审核减少库存
-                        transaction.AfterQuantity = inv.Quantity;
-                        transaction.UnitCost = realtimeCost; // 使用实时成本
+                        transaction.AfterQuantity = snapshot.BeforeQuantity - child.Qty; // ✅ 使用快照计算更新后的数量
+                        transaction.UnitCost = snapshot.Inv_Cost; // 使用更新前的成本
                         transaction.TransactionTime = DateTime.Now;
                         transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                         transaction.Notes = $"产品归还单反审核：{entity.ReturnNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
@@ -612,3 +607,4 @@ namespace RUINORERP.Business
 
 
 
+#endregion

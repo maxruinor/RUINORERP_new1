@@ -135,6 +135,9 @@ namespace RUINORERP.Business
                         return validationResult;
                     }
 
+                    // 更新订单明细的已入库数量和未入库数量
+                    UpdatePurOrderDeliveryQty(entity);
+
                     // 计算订单未交数量和结案状态
                     CalculateOrderDeliveryStatus(entity);
                 }
@@ -931,6 +934,108 @@ namespace RUINORERP.Business
 
             rs.Succeeded = true;
             return rs;
+        }
+
+        /// <summary>
+        /// 更新采购订单明细的已入库数量和未入库数量
+        /// </summary>
+        private void UpdatePurOrderDeliveryQty(tb_PurEntry entity)
+        {
+            if (entity.tb_purorder == null) return;
+
+            //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
+            List<tb_PurEntryDetail> detailList = new List<tb_PurEntryDetail>();
+            foreach (var item in entity.tb_purorder.tb_PurEntries)
+            {
+                detailList.AddRange(item.tb_PurEntryDetails);
+            }
+
+            //分两种情况处理。
+            for (int i = 0; i < entity.tb_purorder.tb_PurOrderDetails.Count; i++)
+            {
+                string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.SKU + "-" +
+                                  entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
+                                  entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.Specifications;
+
+                //明细中有相同的产品或物品。
+                var aa = entity.tb_purorder.tb_PurOrderDetails.Select(c => c.ProdDetailID).ToList()
+                    .GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+
+                if (aa.Count > 0 && entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID > 0)
+                {
+                    #region 如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
+                    if (entity.tb_PurEntryDetails.Any(c => c.PurOrder_ChildID == 0))
+                    {
+                        throw new Exception($"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加。");
+                    }
+                    #endregion
+
+                    var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                        && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID
+                        && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
+                        && c.IsGift.HasValue && !c.IsGift.Value)
+                        .Sum(c => c.Quantity);
+
+                    if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                    {
+                        throw new Exception($"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行数量\r\n" +
+                                          $"或当前采购订单重复录入采购入库单。");
+                    }
+                    else
+                    {
+                        var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                            && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID
+                            && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
+                            && c.IsGift.HasValue && !c.IsGift.Value)
+                            .Sum(c => c.Quantity);
+                        //算出交付的数量
+                        entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
+                        entity.tb_purorder.tb_PurOrderDetails[i].UndeliveredQty -= RowQty;
+
+                        //如果已交数据大于 订单数量 给出警告
+                        if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                        {
+                            throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，{prodName}的入库总数量不能大于订单数量！");
+                        }
+                    }
+                }
+                else
+                {
+                    //一对一时
+                    var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                        && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
+                        && c.IsGift.HasValue && !c.IsGift.Value)
+                        .Sum(c => c.Quantity);
+
+                    if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                    {
+                        throw new Exception($"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量，\r\n" +
+                                          $"或当前采购订单重复录入了采购入库单。");
+                    }
+                    else
+                    {
+                        //当前行累计到交付
+                        var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                            && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
+                            && c.IsGift.HasValue && !c.IsGift.Value)
+                            .Sum(c => c.Quantity);
+                        entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
+                        entity.tb_purorder.tb_PurOrderDetails[i].UndeliveredQty -= RowQty;
+
+                        //如果已交数据大于 订单数量 给出警告
+                        if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                        {
+                            throw new Exception($"入库单：{entity.PurEntryNo}审核时，【{prodName}】的入库总数量不能大于订单数量！");
+                        }
+                    }
+                }
+            }
+
+            //如果已交数据大于 订单数量 给出警告
+            if (entity.tb_purorder.tb_PurOrderDetails.Sum(c => c.DeliveredQuantity) > entity.tb_purorder.TotalQty)
+            {
+                throw new Exception($"采购订单：{entity.tb_purorder.PurOrderNo}中，入库总交付数量不能大于订单数量！");
+            }
         }
 
         /// <summary>

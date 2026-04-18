@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -55,6 +55,8 @@ namespace RUINORERP.UI.BI
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_PayMethodAccountMapperValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
+
+            base.BindData(entity);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

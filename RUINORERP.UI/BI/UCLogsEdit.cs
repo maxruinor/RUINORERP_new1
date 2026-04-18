@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -47,6 +47,8 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<Logs>(entity, t => t.IP, txtIP, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<Logs>(entity, t => t.MAC, txtMAC, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<Logs>(entity, t => t.MachineName, txtMachineName, BindDataType4TextBox.Text, false);
+
+            base.BindData(entity);
         }
 
      

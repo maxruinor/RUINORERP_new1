@@ -6,6 +6,7 @@ using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -20,6 +21,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     {
         private readonly ISqlSugarClient _db;
         private readonly IForeignKeyService _foreignKeyService;
+        private readonly EnhancedExcelParser _excelParser;
+        private string _imageOutputDirectory;
 
         /// <summary>
         /// 导入结果统计
@@ -52,6 +55,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             public int InsertedCount { get; set; }
 
             /// <summary>
+            /// 图片导入数量
+            /// </summary>
+            public int ImageCount { get; set; }
+
+            /// <summary>
             /// 耗时（毫秒）
             /// </summary>
             public long ElapsedMilliseconds { get; set; }
@@ -60,6 +68,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             /// 失败记录列表
             /// </summary>
             public List<FailedRecord> FailedRecords { get; set; } = new List<FailedRecord>();
+
+            /// <summary>
+            /// 导入的图片路径列表
+            /// </summary>
+            public List<string> ImportedImagePaths { get; set; } = new List<string>();
         }
 
         /// <summary>
@@ -96,6 +109,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _entityInfoService = entityInfoService;
             _foreignKeyService = foreignKeyService ?? new ForeignKeyService(db);
+            _excelParser = new EnhancedExcelParser();
+        }
+
+        /// <summary>
+        /// 设置图片输出目录
+        /// </summary>
+        /// <param name="directory">图片输出目录</param>
+        public void SetImageOutputDirectory(string directory)
+        {
+            _imageOutputDirectory = directory;
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
         }
 
         /// <summary>
@@ -198,6 +225,228 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// 从Excel文件导入数据（支持图片提取）
+        /// </summary>
+        /// <param name="filePath">Excel文件路径</param>
+        /// <param name="mappings">列映射配置</param>
+        /// <param name="entityType">目标实体类型</param>
+        /// <param name="sheetIndex">工作表索引</param>
+        /// <param name="headerRowIndex">标题行索引</param>
+        /// <param name="importType">导入类型标识</param>
+        /// <returns>导入结果</returns>
+        public async System.Threading.Tasks.Task<ImportResult> ImportFromExcelAsync(
+            string filePath, 
+            ColumnMappingCollection mappings, 
+            Type entityType, 
+            int sheetIndex = 0, 
+            int headerRowIndex = 0,
+            string importType = null)
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                throw new ArgumentException("文件路径无效或文件不存在", nameof(filePath));
+            }
+
+            // 检查是否有图片字段映射
+            var imageMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ExcelImage || m.IsImageColumn).ToList();
+            bool hasImageFields = imageMappings.Count > 0;
+
+            ExcelParseResult parseResult = null;
+            DataTable dataTable;
+
+            if (hasImageFields)
+            {
+                // 使用增强解析器提取图片
+                parseResult = _excelParser.Parse(filePath, sheetIndex, headerRowIndex);
+                dataTable = parseResult.DataTable;
+            }
+            else
+            {
+                // 普通解析，不提取图片
+                dataTable = _excelParser.Parse(filePath, sheetIndex, headerRowIndex).DataTable;
+            }
+
+            // 执行数据导入
+            var result = await ImportAsync(dataTable, mappings, entityType, importType);
+
+            // 处理图片导入
+            if (hasImageFields && parseResult != null && parseResult.HasImages)
+            {
+                try
+                {
+                    await ProcessImageImportAsync(parseResult, mappings, result, entityType);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"图片导入处理失败: {ex.Message}");
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 处理图片导入
+        /// </summary>
+        private async System.Threading.Tasks.Task ProcessImageImportAsync(
+            ExcelParseResult parseResult, 
+            ColumnMappingCollection mappings, 
+            ImportResult importResult,
+            Type entityType)
+        {
+            var imageMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ExcelImage || m.IsImageColumn).ToList();
+            if (imageMappings.Count == 0) return;
+
+            // 确定图片输出目录
+            string outputDir = _imageOutputDirectory;
+            if (string.IsNullOrEmpty(outputDir))
+            {
+                // 使用默认目录
+                outputDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", entityType.Name);
+            }
+
+            if (!Directory.Exists(outputDir))
+            {
+                Directory.CreateDirectory(outputDir);
+            }
+
+            int totalImages = 0;
+
+            // 遍历所有数据行处理图片
+            for (int i = 0; i < parseResult.DataTable.Rows.Count; i++)
+            {
+                var images = parseResult.GetImagesForDataRow(i);
+                if (images == null || images.Count == 0) continue;
+
+                var row = parseResult.DataTable.Rows[i];
+
+                foreach (var mapping in imageMappings)
+                {
+                    var config = mapping.ImageConfig ?? new ExcelImageConfig();
+                    string namingColumn = config.NamingReferenceColumn;
+
+                    // 获取图片文件名基础
+                    string baseName = GetImageFileName(row, i, config, namingColumn, mappings);
+
+                    // 处理该行的所有图片
+                    for (int imgIdx = 0; imgIdx < images.Count; imgIdx++)
+                    {
+                        var imageInfo = images[imgIdx];
+                        string fileName = images.Count > 1 ? $"{baseName}_{imgIdx + 1}" : baseName;
+
+                        // 保存图片
+                        string savedPath = _excelParser.SaveImageToFile(imageInfo, outputDir, fileName);
+                        if (!string.IsNullOrEmpty(savedPath))
+                        {
+                            importResult.ImportedImagePaths.Add(savedPath);
+                            totalImages++;
+
+                            // 根据存储类型处理图片数据
+                            object valueToStore = GetImageStorageValue(savedPath, imageInfo, config);
+                            
+                            // 更新数据库中的图片字段值
+                            await UpdateEntityImageFieldAsync(entityType, row, mapping, valueToStore, mappings);
+                        }
+                    }
+                }
+            }
+
+            importResult.ImageCount = totalImages;
+        }
+
+        /// <summary>
+        /// 获取图片文件名
+        /// </summary>
+        private string GetImageFileName(DataRow row, int rowIndex, ExcelImageConfig config, string namingColumn, ColumnMappingCollection mappings)
+        {
+            switch (config.NamingRule)
+            {
+                case ImageNamingRule.ColumnValue:
+                    if (!string.IsNullOrEmpty(namingColumn) && row.Table.Columns.Contains(namingColumn))
+                    {
+                        string value = row[namingColumn]?.ToString();
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            // 清理文件名中的非法字符
+                            return string.Join("_", value.Split(Path.GetInvalidFileNameChars()));
+                        }
+                    }
+                    return $"Image_{rowIndex + 1}";
+
+                case ImageNamingRule.Guid:
+                    return Guid.NewGuid().ToString("N");
+
+                case ImageNamingRule.Timestamp:
+                    return DateTime.Now.ToString("yyyyMMddHHmmss") + "_" + rowIndex;
+
+                case ImageNamingRule.Combined:
+                    if (!string.IsNullOrEmpty(namingColumn) && row.Table.Columns.Contains(namingColumn))
+                    {
+                        string value = row[namingColumn]?.ToString();
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            string cleanValue = string.Join("_", value.Split(Path.GetInvalidFileNameChars()));
+                            return $"{cleanValue}_{rowIndex + 1}";
+                        }
+                    }
+                    return $"Image_{rowIndex + 1}";
+
+                case ImageNamingRule.AutoIncrement:
+                default:
+                    return $"Image_{rowIndex + 1}";
+            }
+        }
+
+        /// <summary>
+        /// 根据存储类型获取图片存储值
+        /// </summary>
+        private object GetImageStorageValue(string filePath, ExcelImageInfo imageInfo, ExcelImageConfig config)
+        {
+            switch (config.StorageType)
+            {
+                case ImageStorageType.Base64:
+                    return Convert.ToBase64String(imageInfo.ImageData);
+
+                case ImageStorageType.Binary:
+                    return imageInfo.ImageData;
+
+                case ImageStorageType.FilePath:
+                default:
+                    return filePath;
+            }
+        }
+
+        /// <summary>
+        /// 更新实体图片字段
+        /// </summary>
+        private async System.Threading.Tasks.Task UpdateEntityImageFieldAsync(Type entityType, DataRow row, ColumnMapping mapping, object value, ColumnMappingCollection mappings)
+        {
+            // 获取唯一标识字段用于定位记录
+            var uniqueMapping = mappings.GetUniqueKeyMapping();
+            if (uniqueMapping == null) return;
+
+            string uniqueField = uniqueMapping.SystemField?.Key;
+            string uniqueValue = row[uniqueMapping.SystemField?.Value]?.ToString();
+            if (string.IsNullOrEmpty(uniqueValue)) return;
+
+            string imageField = mapping.SystemField?.Key;
+            if (string.IsNullOrEmpty(imageField)) return;
+
+            try
+            {
+                // 构建更新SQL
+                string tableName = entityType.Name;
+                string sql = $"UPDATE {tableName} SET {imageField} = @value WHERE {uniqueField} = @uniqueValue";
+                
+                await _db.Ado.ExecuteCommandAsync(sql, new { value, uniqueValue });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"更新图片字段失败: {ex.Message}");
+            }
         }
 
         /// <summary>

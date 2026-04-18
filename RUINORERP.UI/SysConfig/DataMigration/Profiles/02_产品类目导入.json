@@ -1,0 +1,21 @@
+{
+  "ProfileName": "02_产品类目导入",
+  "TargetTable": "tb_ProdCategory",
+  "BusinessKeys": [ "CategoryCode" ],
+  "Dependencies": [],
+  "EnableIdRemapping": true,
+  "Mappings": [
+    {
+      "ExcelHeader": "类目编码",
+      "DbColumn": "CategoryCode",
+      "IsRequired": true,
+      "DataType": "String"
+    },
+    {
+      "ExcelHeader": "类目名称",
+      "DbColumn": "CategoryName",
+      "IsRequired": true,
+      "DataType": "String"
+    }
+  ]
+}

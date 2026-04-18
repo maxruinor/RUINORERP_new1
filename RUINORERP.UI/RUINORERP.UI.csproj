@@ -992,12 +992,6 @@
     <Compile Include="Common\TaskPool.cs" />
     <Compile Include="Common\TaskVoiceReminder.cs" />
     <Compile Include="Common\UIBizService.cs" />
-    <Compile Include="DevTools\UCDataCleanupTool.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DevTools\UCDataCleanupTool.Designer.cs">
-      <DependentUpon>UCDataCleanupTool.cs</DependentUpon>
-    </Compile>
     <Compile Include="FormProperty\frmBillInfo.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2254,18 +2248,6 @@
     <Compile Include="Common\UIProdCateHelper.cs" />
     <Compile Include="Common\UITools.cs" />
     <Compile Include="Common\ValidationHelper.cs" />
-    <Compile Include="DevTools\frmDbColumnToExlColumnConfig.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DevTools\frmDbColumnToExlColumnConfig.designer.cs">
-      <DependentUpon>frmDbColumnToExlColumnConfig.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DevTools\UCDataImportTool.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DevTools\UCDataImportTool.Designer.cs">
-      <DependentUpon>UCDataImportTool.cs</DependentUpon>
-    </Compile>
     <Compile Include="FM\UCExpenseClaim.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2495,6 +2477,7 @@
     <Compile Include="SysConfig\BasicDataImport\DynamicDataValidator.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicExcelParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicImporter.cs" />
+    <Compile Include="SysConfig\BasicDataImport\EnhancedExcelParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\EntityImportHelper.cs" />
     <Compile Include="SysConfig\BasicDataImport\ExcelDataParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\ForeignKeyService.cs" />
@@ -2535,8 +2518,10 @@
     <Compile Include="SysConfig\BasicDataImport\IForeignKeyService.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImageProcessor.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImportConfiguration.cs" />
+    <Compile Include="SysConfig\BasicDataImport\ImportTemplateManager.cs" />
     <Compile Include="SysConfig\BasicDataImport\MultiAttributeImportConfig.cs" />
     <Compile Include="SysConfig\BasicDataImport\MultiAttributeProductImporter.cs" />
+    <Compile Include="SysConfig\BasicDataImport\SmartColumnMatcher.cs" />
     <Compile Include="SysConfig\BasicDataImport\UCBasicDataImport.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -4307,9 +4292,6 @@
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="DevTools\UCDataCleanupTool.resx">
-      <DependentUpon>UCDataCleanupTool.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="EOP\UCEOPWaterStorage.resx">
       <DependentUpon>UCEOPWaterStorage.cs</DependentUpon>
     </EmbeddedResource>
@@ -4427,12 +4409,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmMultiSelector.resx">
       <DependentUpon>frmMultiSelector.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DevTools\frmDbColumnToExlColumnConfig.resx">
-      <DependentUpon>frmDbColumnToExlColumnConfig.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DevTools\UCDataImportTool.resx">
-      <DependentUpon>UCDataImportTool.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCExpenseClaim.resx">
       <DependentUpon>UCExpenseClaim.cs</DependentUpon>
@@ -5122,6 +5098,10 @@
     <Content Include="permission_rules.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="SysConfig\DataMigration\Profiles\01_供应商导入.json" />
+    <None Include="SysConfig\DataMigration\Profiles\02_产品类目导入.json" />
+    <None Include="SysConfig\DataMigration\Profiles\03_产品信息导入.json" />
+    <None Include="SysConfig\DataMigration\Profiles\示例_产品导入.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

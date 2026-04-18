@@ -1,0 +1,35 @@
+{
+  "ProfileName": "03_产品信息导入",
+  "TargetTable": "tb_Prod",
+  "BusinessKeys": [ "ProdCode" ],
+  "Dependencies": [ "tb_Supplier", "tb_ProdCategory" ],
+  "EnableIdRemapping": true,
+  "Mappings": [
+    {
+      "ExcelHeader": "产品编码",
+      "DbColumn": "ProdCode",
+      "IsRequired": true,
+      "DataType": "String"
+    },
+    {
+      "ExcelHeader": "产品名称",
+      "DbColumn": "ProdName",
+      "IsRequired": true,
+      "DataType": "String"
+    },
+    {
+      "ExcelHeader": "供应商编码",
+      "DbColumn": "SupplierId",
+      "IsRequired": true,
+      "DataType": "Long",
+      "TransformRule": "REF:tb_Supplier"
+    },
+    {
+      "ExcelHeader": "类目编码",
+      "DbColumn": "CategoryId",
+      "IsRequired": true,
+      "DataType": "Long",
+      "TransformRule": "REF:tb_ProdCategory"
+    }
+  ]
+}

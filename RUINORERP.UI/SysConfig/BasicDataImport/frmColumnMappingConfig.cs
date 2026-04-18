@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -30,6 +31,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 列映射配置管理器
         /// </summary>
         private ColumnMappingManager _columnMappingManager;
+
+        /// <summary>
+        /// 导入模板管理器
+        /// </summary>
+        private ImportTemplateManager _templateManager;
 
         /// <summary>
         /// 目标实体类型
@@ -80,6 +86,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ColumnMappings = new ColumnMappingCollection();
             ImportConfig = new ImportConfiguration();
             _columnMappingManager = new ColumnMappingManager();
+            _templateManager = new ImportTemplateManager();
         }
 
         /// <summary>
@@ -214,6 +221,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         string concatCols = string.Join("+", mapping.ConcatConfig?.SourceColumns ?? new List<string>());
                         mapping.ExcelColumn = $"[列拼接:{concatCols}] {systemField}";
                         break;
+
+                    case DataSourceType.ExcelImage:
+                        // 格式化显示Excel图片配置
+                        string namingRule = mapping.ImageConfig?.NamingRule.ToString() ?? "AutoIncrement";
+                        mapping.ExcelColumn = $"[Excel图片:{namingRule}] {systemField}";
+                        break;
                     }
 
                     // 从系统字段列表中移除
@@ -280,6 +293,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     else
                     {
                         mapping.ConcatConfig = null;
+                    }
+
+                    // 保存Excel图片配置
+                    if (propertyDialog.SelectedDataSourceType == DataSourceType.ExcelImage)
+                    {
+                        mapping.ImageConfig = propertyDialog.ImageConfig;
+                        mapping.IsImageColumn = true;
+                    }
+                    else if (!propertyDialog.IsImageColumn)
+                    {
+                        mapping.ImageConfig = null;
                     }
 
                     return true;
@@ -674,29 +698,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 加载已保存的映射配置
+        /// 加载已保存的映射配置和模板
+        /// 【优化】统一加载配置和模板
         /// </summary>
         private void LoadSavedMappings()
         {
             try
             {
-                comboBoxSavedMappings.Items.Clear();
-                comboBoxSavedMappings.Items.Add("-- 新建映射 --");
-
-                if (!Directory.Exists(_configFilePath))
-                {
-                    return;
-                }
-
-                // 获取所有配置文件
-                var configFiles = Directory.GetFiles(_configFilePath, "*.xml");
-                foreach (var file in configFiles)
-                {
-                    string mappingName = Path.GetFileNameWithoutExtension(file);
-                    comboBoxSavedMappings.Items.Add(mappingName);
-                }
-
-                comboBoxSavedMappings.SelectedIndex = 0;
+                // 【优化】使用新的 LoadTemplateList 方法
+                LoadTemplateList();
             }
             catch (Exception ex)
             {
@@ -792,14 +802,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 存储匹配结果的置信度信息（用于颜色标识）
+        /// </summary>
+        private Dictionary<string, double> _matchConfidenceScores = new Dictionary<string, double>();
+        
+        /// <summary>
         /// 更新映射列表显示
         /// </summary>
         private void UpdateMappingsList()
         {
             listBoxMappings.Items.Clear();
+            
             foreach (var mapping in ColumnMappings)
             {
                 string displayText = $"{mapping.ExcelColumn} -> {mapping.SystemField?.Value}";
+                string key = $"{mapping.ExcelColumn}->{mapping.SystemField?.Key}";
 
                 // 添加属性标识
                 List<string> flags = new List<string>();
@@ -845,6 +862,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 listBoxMappings.Items.Add(displayText);
             }
+        }
+        
+        /// <summary>
+        /// 设置匹配置信度分数（供智能匹配后调用）
+        /// </summary>
+        public void SetMatchConfidenceScores(Dictionary<string, double> scores)
+        {
+            _matchConfidenceScores = scores ?? new Dictionary<string, double>();
         }
 
         /// <summary>
@@ -982,7 +1007,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 加载已保存的映射配置
+        /// 加载已保存的映射配置或模板
+        /// 【优化】支持模板和配置的统一加载
         /// </summary>
         private void comboBoxSavedMappings_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -1005,6 +1031,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 OriginalMappingName = null;
                 SetWindowTitle();
                 return;
+            }
+
+            string selectedItem = comboBoxSavedMappings.SelectedItem.ToString();
+
+            // 【优化】处理模板选择
+            if (selectedItem.StartsWith("[模板] "))
+            {
+                string templateName = selectedItem.Substring(5); // 移除 "[模板] " 前缀
+                ApplyImportTemplate(templateName);
+                return;
+            }
+
+            // 【优化】处理配置选择
+            if (selectedItem.StartsWith("[配置] "))
+            {
+                selectedItem = selectedItem.Substring(5); // 移除 "[配置] " 前缀
             }
 
             try
@@ -1069,47 +1111,91 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
+                // 【优化】使用 SmartColumnMatcher 进行智能匹配
+                var matcher = new SmartColumnMatcher(MainForm.Instance.AppContext.Db);
+                
+                // 获取 Excel 列列表
+                var excelColumns = listBoxExcelColumns.Items.Cast<object>()
+                    .Select(item => item.ToString())
+                    .ToList();
+                
+                // 执行智能匹配
+                var matchResults = matcher.MatchColumns(excelColumns, TargetEntityType);
+                
+                if (matchResults.Count == 0)
+                {
+                    MessageBox.Show("未找到匹配的列，请手动配置映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                
                 // 清空现有映射
                 ColumnMappings.Clear();
-
-                // 自动匹配列名和字段名
-                foreach (var excelColumnItem in listBoxExcelColumns.Items)
+                
+                // 【优化】保存匹配置信度分数
+                var confidenceScores = new Dictionary<string, double>();
+                
+                // 根据匹配结果创建映射
+                foreach (var result in matchResults)
                 {
-                    string excelColumn = excelColumnItem.ToString();
-
-                    // 查找匹配的系统字段
-                    foreach (var systemFieldItem in listBoxSystemFields.Items)
+                    // 查找系统字段显示名称
+                    string systemFieldDisplay = null;
+                    foreach (var item in listBoxSystemFields.Items)
                     {
-                        string systemFieldDisplay = systemFieldItem.ToString();
-                        string systemField = systemFieldDisplay.StartsWith("* ")
-                            ? systemFieldDisplay.Substring(2)
-                            : systemFieldDisplay;
-
-                        // 简单的字符串匹配（忽略大小写和空格）
-                        if (string.Equals(excelColumn.Replace(" ", ""), systemField.Replace(" ", ""), StringComparison.OrdinalIgnoreCase))
+                        string display = item.ToString();
+                        string field = display.StartsWith("* ") ? display.Substring(2) : display;
+                        if (field == result.DbColumn)
                         {
-                            // 创建映射
-                            var mapping = new ColumnMapping
-                            {
-                                ExcelColumn = excelColumn,
-                                SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay)
-                            };
-
-                            ColumnMappings.Add(mapping);
-
-                            // 从两个列表中移除已选择的项
-                            RemoveFromExcelColumns(excelColumn);
-                            RemoveFromSystemFields(systemField);
-
+                            systemFieldDisplay = display;
                             break;
                         }
                     }
+                    
+                    if (systemFieldDisplay == null)
+                        continue;
+                    
+                    // 创建映射
+                    var mapping = new ColumnMapping
+                    {
+                        ExcelColumn = result.ExcelColumn,
+                        SystemField = new SerializableKeyValuePair<string>(result.DbColumn, systemFieldDisplay),
+                        IsUniqueValue = result.IsPrimaryKey  // 【优化】智能识别主键
+                    };
+                    
+                    ColumnMappings.Add(mapping);
+                    
+                    // 【优化】保存置信度分数
+                    string key = $"{result.ExcelColumn}->{result.DbColumn}";
+                    confidenceScores[key] = result.Score;
+                    
+                    // 从两个列表中移除已选择的项
+                    RemoveFromExcelColumns(result.ExcelColumn);
+                    RemoveFromSystemFields(result.DbColumn);
                 }
-
+                
+                // 【优化】设置置信度分数供界面显示使用
+                SetMatchConfidenceScores(confidenceScores);
+                
                 // 更新映射列表显示
                 UpdateMappingsList();
-
-                MessageBox.Show($"自动匹配完成，共找到 {ColumnMappings.Count} 个映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                // 【优化】显示详细的匹配结果统计
+                int highConfidence = matchResults.Count(r => r.Score >= 0.9);
+                int mediumConfidence = matchResults.Count(r => r.Score >= 0.75 && r.Score < 0.9);
+                int lowConfidence = matchResults.Count(r => r.Score < 0.75);
+                int primaryKeys = matchResults.Count(r => r.IsPrimaryKey);
+                
+                string message = $"智能匹配完成！\n\n" +
+                    $"✓ 总匹配数: {matchResults.Count}\n" +
+                    $"  - 高置信度(≥90%): {highConfidence}\n" +
+                    $"  - 中置信度(75-90%): {mediumConfidence}\n" +
+                    $"  - 低置信度(<75%): {lowConfidence}\n\n" +
+                    $"✓ 识别主键: {primaryKeys} 个\n\n" +
+                    $"请检查映射结果，如有需要请手动调整。";
+                
+                MessageBox.Show(message, "智能匹配结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                // 记录日志
+                MainForm.Instance.PrintInfoLog($"智能匹配完成: 实体={TargetEntityType?.Name}, 匹配数={matchResults.Count}, 主键数={primaryKeys}");
             }
             catch (Exception ex)
             {
@@ -1233,6 +1319,226 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 更新窗口标题
             SetWindowTitle();
         }
+
+        #region 【新增】模板管理功能
+
+        /// <summary>
+        /// 保存为导入模板
+        /// </summary>
+        private void SaveAsTemplate()
+        {
+            if (ColumnMappings.Count == 0)
+            {
+                MessageBox.Show("请添加至少一个映射后再保存模板", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 输入模板名称
+            string templateName = KryptonInputBox.Show("请输入模板名称:", "保存为模板", $"{TargetEntityType?.Name ?? "数据"}导入模板");
+            if (string.IsNullOrWhiteSpace(templateName))
+                return;
+
+            try
+            {
+                // 更新导入配置
+                ImportConfig.MappingName = textBoxMappingName.Text.Trim();
+                ImportConfig.EntityType = TargetEntityType?.FullName;
+                ImportConfig.ColumnMappings = ColumnMappings.ToList();
+                ImportConfig.EnableDeduplication = chkRemoveDuplicates.Checked;
+                ImportConfig.DeduplicateStrategy = (DeduplicateStrategy)kcmbDeduplicateStrategy.SelectedIndex;
+
+                // 创建模板
+                var template = _templateManager.CreateTemplateFromConfig(
+                    ImportConfig,
+                    templateName,
+                    $"{TargetEntityType?.Name ?? "数据"}导入模板 - {DateTime.Now:yyyy-MM-dd HH:mm}");
+
+                // 保存模板
+                _templateManager.SaveTemplate(template);
+
+                MessageBox.Show($"模板 [{templateName}] 保存成功！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 刷新模板列表
+                LoadTemplateList();
+
+                // 记录日志
+                MainForm.Instance.PrintInfoLog($"保存导入模板: {templateName}, 实体: {TargetEntityType?.Name}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"保存模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 应用导入模板
+        /// </summary>
+        private void ApplyImportTemplate(string templateName)
+        {
+            if (string.IsNullOrWhiteSpace(templateName))
+                return;
+
+            var template = _templateManager.LoadTemplate(templateName);
+            if (template == null)
+            {
+                MessageBox.Show($"模板 [{templateName}] 不存在或已损坏", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 检查实体类型是否匹配
+            if (template.EntityType != TargetEntityType?.FullName)
+            {
+                var result = MessageBox.Show(
+                    $"模板 [{templateName}] 是为实体 [{template.EntityType}] 创建的，\n" +
+                    $"当前实体是 [{TargetEntityType?.FullName}]。\n\n" +
+                    $"是否仍要应用此模板？",
+                    "实体类型不匹配",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result != DialogResult.Yes)
+                    return;
+            }
+
+            try
+            {
+                // 应用模板到当前配置
+                _templateManager.ApplyTemplate(ImportConfig, template);
+
+                // 更新列映射集合
+                ColumnMappings = new ColumnMappingCollection();
+                foreach (var mapping in ImportConfig.ColumnMappings)
+                {
+                    ColumnMappings.Add(mapping);
+                }
+
+                // 更新界面显示
+                UpdateMappingsList();
+
+                // 更新去重设置
+                chkRemoveDuplicates.Checked = template.EnableDeduplication;
+                if (template.DeduplicateStrategy == DeduplicateStrategy.LastOccurrence)
+                    kcmbDeduplicateStrategy.SelectedIndex = 1;
+                else
+                    kcmbDeduplicateStrategy.SelectedIndex = 0;
+
+                // 更新可用列列表
+                RefreshAvailableColumns();
+
+                MessageBox.Show($"模板 [{templateName}] 应用成功！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 记录日志
+                MainForm.Instance.PrintInfoLog($"应用导入模板: {templateName}, 映射数: {ColumnMappings.Count}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"应用模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 加载模板列表
+        /// </summary>
+        private void LoadTemplateList()
+        {
+            // 保存当前选择
+            string currentSelection = comboBoxSavedMappings.SelectedItem?.ToString();
+
+            comboBoxSavedMappings.Items.Clear();
+            comboBoxSavedMappings.Items.Add("-- 新建映射 --");
+
+            // 添加已保存的映射配置
+            var savedMappings = _columnMappingManager.GetAllMappingNames();
+            foreach (var mappingName in savedMappings)
+            {
+                comboBoxSavedMappings.Items.Add($"[配置] {mappingName}");
+            }
+
+            // 添加模板（按实体类型筛选）
+            var templates = _templateManager.GetTemplatesForEntity(TargetEntityType);
+            foreach (var template in templates)
+            {
+                comboBoxSavedMappings.Items.Add($"[模板] {template.TemplateName}");
+            }
+
+            // 恢复选择
+            if (!string.IsNullOrEmpty(currentSelection))
+            {
+                int index = comboBoxSavedMappings.Items.IndexOf(currentSelection);
+                if (index >= 0)
+                    comboBoxSavedMappings.SelectedIndex = index;
+                else
+                    comboBoxSavedMappings.SelectedIndex = 0;
+            }
+            else
+            {
+                comboBoxSavedMappings.SelectedIndex = 0;
+            }
+        }
+
+        /// <summary>
+        /// 刷新可用列列表（应用模板后）
+        /// </summary>
+        private void RefreshAvailableColumns()
+        {
+            // 重新加载所有列
+            LoadSystemFields();
+            if (ExcelData != null && ExcelData.Rows.Count > 0)
+            {
+                LoadExcelColumns();
+            }
+
+            // 从可用列表中移除已映射的列
+            foreach (var mapping in ColumnMappings)
+            {
+                if (!string.IsNullOrEmpty(mapping.ExcelColumn))
+                {
+                    RemoveFromExcelColumns(mapping.ExcelColumn);
+                }
+                if (mapping.SystemField != null)
+                {
+                    RemoveFromSystemFields(mapping.SystemField.Key);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 删除模板
+        /// </summary>
+        private void DeleteTemplate(string templateName)
+        {
+            if (string.IsNullOrWhiteSpace(templateName))
+                return;
+
+            var result = MessageBox.Show(
+                $"确定要删除模板 [{templateName}] 吗？\n此操作不可恢复。",
+                "确认删除",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result != DialogResult.Yes)
+                return;
+
+            try
+            {
+                if (_templateManager.DeleteTemplate(templateName))
+                {
+                    MessageBox.Show($"模板 [{templateName}] 删除成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadTemplateList();
+                    MainForm.Instance.PrintInfoLog($"删除导入模板: {templateName}");
+                }
+                else
+                {
+                    MessageBox.Show($"模板 [{templateName}] 不存在", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"删除模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 从Excel列列表中移除指定的列

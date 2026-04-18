@@ -158,6 +158,7 @@ namespace RUINORERP.UI.CRM
                 btnFastFollowUp.Text = plan.PlanStatus.ToString();
             }
 
+            base.BindData(entity);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

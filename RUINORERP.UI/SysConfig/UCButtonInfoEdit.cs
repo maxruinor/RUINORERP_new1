@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -38,6 +38,8 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<tb_ButtonInfo>(entity, t => t.IsEnabled, chkIsEnabled, false);
             DataBindingHelper.BindData4TextBox<tb_ButtonInfo>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             base.errorProviderForAllInput.DataSource = entity;
+
+            base.BindData(entity);
         }
 
         //public override void BindData(tb_ButtonInfo entity)

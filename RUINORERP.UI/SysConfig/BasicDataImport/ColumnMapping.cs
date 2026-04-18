@@ -54,7 +54,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 将Excel中的多个列值拼接后赋值给目标字段
         /// 例如：将"姓氏"和"名字"列拼接为"姓名"字段
         /// </summary>
-        ColumnConcat = 6
+        ColumnConcat = 6,
+
+        /// <summary>
+        /// Excel图片
+        /// 数据来源于Excel中的嵌入式图片
+        /// 支持提取图片并保存到指定目录
+        /// </summary>
+        ExcelImage = 7
     }
 
     /// <summary>
@@ -171,6 +178,142 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     }
 
     /// <summary>
+    /// Excel图片配置
+    /// 用于配置从Excel提取图片的规则
+    /// </summary>
+    [Serializable]
+    public class ExcelImageConfig
+    {
+        /// <summary>
+        /// 图片存储方式
+        /// </summary>
+        public ImageStorageType StorageType { get; set; } = ImageStorageType.FilePath;
+
+        /// <summary>
+        /// 图片输出目录（相对路径或绝对路径）
+        /// </summary>
+        public string OutputDirectory { get; set; }
+
+        /// <summary>
+        /// 图片命名规则
+        /// </summary>
+        public ImageNamingRule NamingRule { get; set; } = ImageNamingRule.AutoIncrement;
+
+        /// <summary>
+        /// 命名参考列（当使用指定列值命名时使用）
+        /// </summary>
+        public string NamingReferenceColumn { get; set; }
+
+        /// <summary>
+        /// 图片格式转换
+        /// </summary>
+        public ImageFormatConversion FormatConversion { get; set; } = ImageFormatConversion.KeepOriginal;
+
+        /// <summary>
+        /// 最大图片宽度（像素，0表示不限制）
+        /// </summary>
+        public int MaxWidth { get; set; }
+
+        /// <summary>
+        /// 最大图片高度（像素，0表示不限制）
+        /// </summary>
+        public int MaxHeight { get; set; }
+
+        /// <summary>
+        /// 图片质量（1-100，仅对JPEG有效）
+        /// </summary>
+        public int Quality { get; set; } = 90;
+
+        /// <summary>
+        /// 是否压缩图片
+        /// </summary>
+        public bool CompressImage { get; set; }
+
+        /// <summary>
+        /// 压缩阈值（KB，超过此大小才压缩）
+        /// </summary>
+        public int CompressThresholdKB { get; set; } = 500;
+    }
+
+    /// <summary>
+    /// 图片存储类型
+    /// </summary>
+    public enum ImageStorageType
+    {
+        /// <summary>
+        /// 存储为文件路径（数据库保存路径字符串）
+        /// </summary>
+        FilePath = 0,
+
+        /// <summary>
+        /// 存储为Base64（数据库保存Base64字符串）
+        /// </summary>
+        Base64 = 1,
+
+        /// <summary>
+        /// 存储为二进制（数据库保存byte[]）
+        /// </summary>
+        Binary = 2
+    }
+
+    /// <summary>
+    /// 图片命名规则
+    /// </summary>
+    public enum ImageNamingRule
+    {
+        /// <summary>
+        /// 自动递增（Image_1, Image_2...）
+        /// </summary>
+        AutoIncrement = 0,
+
+        /// <summary>
+        /// 使用指定列的值作为文件名
+        /// </summary>
+        ColumnValue = 1,
+
+        /// <summary>
+        /// 使用GUID作为文件名
+        /// </summary>
+        Guid = 2,
+
+        /// <summary>
+        /// 使用时间戳作为文件名
+        /// </summary>
+        Timestamp = 3,
+
+        /// <summary>
+        /// 组合命名（列值_序号）
+        /// </summary>
+        Combined = 4
+    }
+
+    /// <summary>
+    /// 图片格式转换
+    /// </summary>
+    public enum ImageFormatConversion
+    {
+        /// <summary>
+        /// 保持原始格式
+        /// </summary>
+        KeepOriginal = 0,
+
+        /// <summary>
+        /// 转换为JPEG
+        /// </summary>
+        ToJpeg = 1,
+
+        /// <summary>
+        /// 转换为PNG
+        /// </summary>
+        ToPng = 2,
+
+        /// <summary>
+        /// 转换为WebP
+        /// </summary>
+        ToWebP = 3
+    }
+
+    /// <summary>
     /// 列映射配置模型
     /// 用于存储Excel列与系统字段的映射关系
     /// </summary>
@@ -270,6 +413,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// Path: 图片路径（保存为字符串路径，但按图片逻辑处理）
         /// </summary>
         public ImageColumnType ImageColumnType { get; set; } = ImageColumnType.Path;
+
+        /// <summary>
+        /// Excel图片配置（当DataSourceType为ExcelImage时使用）
+        /// 配置图片提取和存储规则
+        /// </summary>
+        public ExcelImageConfig ImageConfig { get; set; }
 
         /// <summary>
         /// 是否必填字段

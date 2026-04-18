@@ -1216,8 +1216,33 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 获取导入类型标识（用于区分客户和供应商等使用相同表的情况）
                 string importType = GetImportType();
 
-                // 执行导入（异步）
-                var importResult = await _dynamicImporter.ImportAsync(importData, new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()), _selectedEntityType, importType);
+                // 检查是否有图片字段映射
+                var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
+                bool hasImageFields = mappings.Any(m => m.DataSourceType == DataSourceType.ExcelImage || m.IsImageColumn);
+
+                DynamicImporter.ImportResult importResult;
+
+                // 获取Excel文件路径
+                string excelFilePath = ktxtDynamicFilePath?.Text;
+
+                if (hasImageFields && !string.IsNullOrEmpty(excelFilePath) && File.Exists(excelFilePath))
+                {
+                    // 使用支持图片导入的方法
+                    int sheetIndex = kcmbDynamicSheetName.SelectedIndex;
+                    int headerRowIndex = 0; // 默认第一行为标题行
+                    importResult = await _dynamicImporter.ImportFromExcelAsync(
+                        excelFilePath, 
+                        mappings, 
+                        _selectedEntityType, 
+                        sheetIndex, 
+                        headerRowIndex,
+                        importType);
+                }
+                else
+                {
+                    // 执行普通导入（异步）
+                    importResult = await _dynamicImporter.ImportAsync(importData, mappings, _selectedEntityType, importType);
+                }
 
                 // 显示导入结果
                 DisplayImportResult(importResult);
@@ -1410,6 +1435,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             message.AppendLine($"失败记录数：{result.FailedCount}");
             message.AppendLine($"新增记录数：{result.InsertedCount}");
             message.AppendLine($"更新记录数：{result.UpdatedCount}");
+            
+            // 显示图片导入信息
+            if (result.ImageCount > 0)
+            {
+                message.AppendLine($"导入图片数：{result.ImageCount}");
+            }
+            
             message.AppendLine($"耗时：{result.ElapsedMilliseconds} 毫秒");
 
             if (result.FailedCount > 0)
@@ -1424,6 +1456,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (result.FailedRecords.Count > 10)
                 {
                     message.AppendLine($"\n... 还有 {result.FailedRecords.Count - 10} 条失败记录未显示");
+                }
+            }
+
+            // 显示图片保存路径信息
+            if (result.ImportedImagePaths?.Count > 0)
+            {
+                message.AppendLine($"\n图片保存路径：");
+                int displayPathCount = Math.Min(5, result.ImportedImagePaths.Count);
+                for (int i = 0; i < displayPathCount; i++)
+                {
+                    message.AppendLine($"  {result.ImportedImagePaths[i]}");
+                }
+                if (result.ImportedImagePaths.Count > 5)
+                {
+                    message.AppendLine($"  ... 还有 {result.ImportedImagePaths.Count - 5} 张图片");
                 }
             }
 

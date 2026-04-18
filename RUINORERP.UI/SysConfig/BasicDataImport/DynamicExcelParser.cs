@@ -12,37 +12,6 @@ using NPOI.XSSF.UserModel;
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     /// <summary>
-    /// Excel图片信息
-    /// </summary>
-    public class ExcelImageInfo
-    {
-        /// <summary>
-        /// 图片ID（从DISPIMG公式中提取）
-        /// </summary>
-        public string ImageId { get; set; }
-
-        /// <summary>
-        /// 图片数据
-        /// </summary>
-        public byte[] ImageData { get; set; }
-
-        /// <summary>
-        /// 图片格式
-        /// </summary>
-        public string ImageFormat { get; set; }
-
-        /// <summary>
-        /// 所在行号
-        /// </summary>
-        public int RowIndex { get; set; }
-
-        /// <summary>
-        /// 所在列号
-        /// </summary>
-        public int ColumnIndex { get; set; }
-    }
-
-    /// <summary>
     /// 动态Excel文件解析器
     /// 用于读取不同格式的Excel文件并转换为DataTable
     /// 支持提取Excel中的内嵌图片
@@ -206,6 +175,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 提取Excel工作表中的所有图片（公共方法）
+        /// </summary>
+        /// <param name="sheet">Excel工作表</param>
+        /// <param name="workbook">Excel工作簿</param>
+        /// <returns>图片信息列表</returns>
+        public List<ExcelImageInfo> ExtractImagesFromSheet(ISheet sheet, IWorkbook workbook)
+        {
+            return ExtractAllImages(workbook, sheet);
+        }
+
+        /// <summary>
         /// 提取Excel工作表中的所有图片
         /// </summary>
         /// <param name="workbook">Excel工作簿</param>
@@ -244,14 +224,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 var imageInfo = new ExcelImageInfo
                                 {
                                     // 尝试使用DISPIMG ID作为图片ID，否则使用GUID
-                                    ImageId = GetPictureId(picture),
-                                    ImageData = picture.PictureData.Data,
-                                    ImageFormat = GetImageFormat(picture.PictureData.MimeType),
                                     RowIndex = GetPictureRowIndex(picture),
-                                    ColumnIndex = GetPictureColumnIndex(picture)
+                                    ColumnIndex = GetPictureColumnIndex(picture),
+                                    ImageData = picture.PictureData.Data,
+                                    ImageType = GetImageFormat(picture.PictureData.MimeType)
                                 };
 
-                                System.Diagnostics.Debug.WriteLine($"[图片提取] 提取到图片: ID={imageInfo.ImageId}, 行={imageInfo.RowIndex}, 列={imageInfo.ColumnIndex}, 格式={imageInfo.ImageFormat}");
+                                System.Diagnostics.Debug.WriteLine($"[图片提取] 提取到图片: 行={imageInfo.RowIndex}, 列={imageInfo.ColumnIndex}, 格式={imageInfo.ImageType}");
                                 images.Add(imageInfo);
                             }
                         }
@@ -267,14 +246,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             {
                                 var imageInfo = new ExcelImageInfo
                                 {
-                                    ImageId = Guid.NewGuid().ToString(),
-                                    ImageData = pictureData.Data,
-                                    ImageFormat = GetImageFormat(pictureData.MimeType),
                                     RowIndex = 0,
-                                    ColumnIndex = 0
+                                    ColumnIndex = 0,
+                                    ImageData = pictureData.Data,
+                                    ImageType = GetImageFormat(pictureData.MimeType)
                                 };
 
-                                System.Diagnostics.Debug.WriteLine($"[图片提取] 备用方法提取到图片: ID={imageInfo.ImageId}, 格式={imageInfo.ImageFormat}");
+                                System.Diagnostics.Debug.WriteLine($"[图片提取] 备用方法提取到图片: 行={imageInfo.RowIndex}, 列={imageInfo.ColumnIndex}, 格式={imageInfo.ImageType}");
                                 images.Add(imageInfo);
                             }
                         }
@@ -301,14 +279,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                                 var imageInfo = new ExcelImageInfo
                                 {
-                                    ImageId = GetPictureId(picture),
-                                    ImageData = picture.PictureData.Data,
-                                    ImageFormat = GetImageFormat(picture.PictureData.MimeType),
                                     RowIndex = rowIndex,
-                                    ColumnIndex = colIndex
+                                    ColumnIndex = colIndex,
+                                    ImageData = picture.PictureData.Data,
+                                    ImageType = GetImageFormat(picture.PictureData.MimeType)
                                 };
 
-                                System.Diagnostics.Debug.WriteLine($"[图片提取] 提取到图片: 行={rowIndex}, 列={colIndex}, 格式={imageInfo.ImageFormat}");
+                                System.Diagnostics.Debug.WriteLine($"[图片提取] 提取到图片: 行={rowIndex}, 列={colIndex}, 格式={imageInfo.ImageType}");
                                 images.Add(imageInfo);
                             }
                         }
@@ -582,8 +559,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     string imageId = match.Groups[1].Value;
                     System.Diagnostics.Debug.WriteLine($"[公式处理] 提取到图片ID: {imageId}");
 
-                    // 查找对应的图片
-                    var image = imageDictionary.Values.FirstOrDefault(img => img.ImageId.Contains(imageId));
+                    // 查找对应的图片（通过行号列号匹配）
+                    var image = imageDictionary.Values.FirstOrDefault(img => img.RowIndex == rowIndex && img.ColumnIndex == colIndex);
                     if (image != null)
                     {
                         System.Diagnostics.Debug.WriteLine($"[公式处理] 找到匹配的图片，保存路径中...");
@@ -592,10 +569,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     else
                     {
                         System.Diagnostics.Debug.WriteLine($"[公式处理] 未找到匹配的图片，图片字典中有 {imageDictionary.Count} 张图片");
-                        // 打印所有图片ID用于调试
+                        // 打印所有图片位置用于调试
                         foreach (var img in imageDictionary.Values)
                         {
-                            System.Diagnostics.Debug.WriteLine($"[公式处理] 字典中的图片ID: {img.ImageId}");
+                            System.Diagnostics.Debug.WriteLine($"[公式处理] 字典中的图片位置: 行={img.RowIndex}, 列={img.ColumnIndex}");
                         }
                     }
                 }
@@ -647,17 +624,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 使用图片ID（DISPIMG中的ID）作为文件名的一部分
                 string fileName;
 
-                // 如果ImageId是DISPIMG格式（包含ID_xxx），使用它作为文件名
-                if (!string.IsNullOrEmpty(imageInfo.ImageId) &&
-                    (imageInfo.ImageId.Contains("ID_") || imageInfo.ImageId.Length > 10))
-                {
-                    fileName = $"{imageInfo.ImageId}{imageInfo.ImageFormat}";
-                }
-                else
-                {
-                    // 否则使用GUID
-                    fileName = $"image_r{rowIndex}_c{colIndex}_{Guid.NewGuid().ToString().Substring(0, 8)}{imageInfo.ImageFormat}";
-                }
+                // 使用行号列号和GUID生成文件名
+                fileName = $"image_r{rowIndex}_c{colIndex}_{Guid.NewGuid().ToString().Substring(0, 8)}{imageInfo.ImageType}";
 
                 string fullPath = Path.Combine(_imageSavePath, fileName);
 

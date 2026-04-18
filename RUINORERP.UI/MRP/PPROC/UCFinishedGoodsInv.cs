@@ -247,16 +247,6 @@ namespace RUINORERP.UI.PSI.PUR
             }
             ShowPrintStatus(lblPrintStatus, EditEntity);
 
-            ////创建表达式
-            //var lambda = Expressionable.Create<tb_CustomerVendor>()
-            //                .And(t => t.IsVendor == true)
-            //                .ToExpression();//注意 这一句 不能少
-            //BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-            //QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-            //queryFilterC.FilterLimitExpressions.Add(lambda);
-            //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-            //DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-
 
             tb_PurOrderController<tb_PurOrder> ctrPurorder = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
 
@@ -279,9 +269,8 @@ namespace RUINORERP.UI.PSI.PUR
             ControlBindingHelper.ConfigureControlFilter<tb_FinishedGoodsInv, tb_ManufacturingOrder>(entity, txtRef_BillNo, t => t.MONo,
              f => f.MONO, queryFilter, a => a.MOID, b => b.MOID, null, false);
 
+            base.BindData(entity);
 
-            //}
-          
         }
 
 

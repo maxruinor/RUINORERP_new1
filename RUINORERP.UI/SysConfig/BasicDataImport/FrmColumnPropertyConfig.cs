@@ -115,6 +115,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public ImageColumnType ImageColumnType { get; set; } = ImageColumnType.Path;
 
         /// <summary>
+        /// Excel图片配置
+        /// </summary>
+        public ExcelImageConfig ImageConfig { get; set; }
+
+        /// <summary>
         /// Excel列名列表
         /// </summary>
         public List<string> ExcelColumns { get; set; }
@@ -240,6 +245,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kcmbDataSourceType.Items.Add("自身字段引用");
                 kcmbDataSourceType.Items.Add("字段复制");
                 kcmbDataSourceType.Items.Add("列拼接");
+                kcmbDataSourceType.Items.Add("Excel图片");
                 kcmbDataSourceType.SelectedIndex = 0;
             }
             catch (Exception ex)
@@ -402,7 +408,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kryptonGroupBoxConcat.Visible = (dataSourceType == DataSourceType.ColumnConcat);
 
             // 控制图片配置GroupBox的显示和隐藏
-            kryptonGroupBoxImageType.Visible = kchkIsImageColumn.Checked;
+            kryptonGroupBoxImageType.Visible = (dataSourceType == DataSourceType.ExcelImage) || kchkIsImageColumn.Checked;
+
+            // 如果选择了Excel图片类型，自动勾选图片列
+            if (dataSourceType == DataSourceType.ExcelImage)
+            {
+                kchkIsImageColumn.Checked = true;
+            }
 
             // 处理默认值控件：选择默认值时动态生成控件
             if (dataSourceType == DataSourceType.DefaultValue)
@@ -769,6 +781,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 IsSystemGenerated = false;
                 DefaultValue = string.Empty;
             }
+            else if (dataSourceType == DataSourceType.ExcelImage)
+            {
+                // Excel图片类型
+                IsImageColumn = true;
+                IsForeignKey = false;
+                IsSystemGenerated = false;
+                DefaultValue = string.Empty;
+
+                // 构建图片配置
+                ImageConfig = new ExcelImageConfig
+                {
+                    StorageType = (ImageStorageType)(kcmbImageStorageType?.SelectedIndex ?? 0),
+                    NamingRule = (ImageNamingRule)(kcmbImageNamingRule?.SelectedIndex ?? 0),
+                    OutputDirectory = ktxtImageOutputDir?.Text ?? string.Empty,
+                    NamingReferenceColumn = kcmbImageNamingColumn?.SelectedItem?.ToString() ?? string.Empty
+                };
+            }
 
             // 根据数据来源类型设置属性
             if (dataSourceType == DataSourceType.ForeignKey)
@@ -906,6 +935,41 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.ColumnConcat)
             {
                 LoadConcatSourceColumns();
+            }
+
+            // 如果选择了Excel图片，加载图片命名参考列
+            if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.ExcelImage)
+            {
+                LoadImageNamingColumns();
+            }
+        }
+
+        /// <summary>
+        /// 加载图片命名参考列
+        /// </summary>
+        private void LoadImageNamingColumns()
+        {
+            try
+            {
+                if (kcmbImageNamingColumn == null) return;
+
+                kcmbImageNamingColumn.Items.Clear();
+                kcmbImageNamingColumn.Items.Add("使用自动递增命名");
+
+                // 加载Excel列作为命名参考
+                if (ExcelColumns != null && ExcelColumns.Count > 0)
+                {
+                    foreach (var column in ExcelColumns)
+                    {
+                        kcmbImageNamingColumn.Items.Add(column);
+                    }
+                }
+
+                kcmbImageNamingColumn.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载图片命名列失败: {ex.Message}");
             }
         }
 

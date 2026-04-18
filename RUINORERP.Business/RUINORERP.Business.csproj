@@ -68,6 +68,7 @@
     <Compile Remove="tb_Product_Group_DetailController.cs" />
     <Compile Remove="tb_Prod_Attr_RelationshipController.cs" />
     <Compile Remove="tb_SaleOutControllerPartial old.cs" />
+    <Compile Remove="tb_SaleOutControllerPartial_old.cs" />
     <Compile Remove="tb_sales_orderController.cs" />
     <Compile Remove="tb_sales_orderControllerPartial.cs" />
     <Compile Remove="tb_sales_order_detailController.cs" />

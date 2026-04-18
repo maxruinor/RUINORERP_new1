@@ -173,7 +173,23 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
         /// <summary>
-        /// 处理缓存同步命令 - 负责服务器与客户端之间的缓存数据同步
+        /// 处理缓存元数据同步命令 - 【登录后的首次元数据同步】
+        /// 
+        /// 【设计思路】：采用"轻量元数据协调 + 重量数据传输"的分层同步策略
+        /// 负责在用户登录成功后将服务器的缓存元数据同步到客户端
+        /// 
+        /// 【工作流程】：
+        /// 1. 服务器收集所有表的元数据（表名、数据行数、版本戳、更新时间等）
+        /// 2. 发送给客户端（仅几KB）
+        /// 3. 客户端比对本地版本，决策需要同步哪些表
+        /// 4. 客户端按需请求实际数据（避免盲目全量同步）
+        /// 
+        /// 【优势】：
+        /// - 登录快：元数据仅几KB，传输迅速
+        /// - 流量省：只同步变化的表，节省带宽
+        /// - 体验好：智能按需加载，避免内存爆炸
+        /// 
+        /// 【注意】：如果服务器刚启动且缓存尚未初始化完成，可能返回空元数据
         /// </summary>
         /// <param name="cmd">缓存同步命令</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -185,12 +201,24 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 缓存同步命令处理逻辑 - 可以复用现有逻辑或实现新的同步机制
                 if (cmd.Packet.Request is CacheMetadataSyncRequest cacheRequest)
                 {
-
                     // 获取当前服务器的所有缓存元数据
                     var serverSyncData = _cacheSyncMetadataManager.GetAllTableSyncInfo();
 
-                    // 创建同步请求
-                    var cacheMetadataResponse = new CacheMetadataSyncResponse(serverSyncData.Count, 0, serverSyncData);
+                    // 【重要】：即使服务器刚启动，也会返回空字典（不会为null）
+                    // 如果缓存尚未初始化，serverSyncData.Count == 0
+                    if (serverSyncData.Count == 0)
+                    {
+                        LogWarning("服务器缓存元数据为空，可能是服务器刚启动且缓存尚未初始化完成");
+                    }
+
+                    // 创建同步响应
+                    var cacheMetadataResponse = new CacheMetadataSyncResponse(
+                        serverSyncData.Count,  // UpdatedCount: 成功更新的表数量
+                        0,                     // SkippedCount: 跳过的表数量
+                        serverSyncData         // CacheMetadataData: 所有表的元数据字典
+                    );
+
+                    LogInfo($"响应客户端元数据请求: 表数量={serverSyncData.Count}");
 
                     // 返回成功响应
                     return cacheMetadataResponse;

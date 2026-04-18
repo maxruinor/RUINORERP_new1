@@ -515,19 +515,26 @@ namespace RUINORERP.UI.BaseForm
 
                 // 5. 字段显示权限控制
                 UIHelper.ControlForeignFieldInvisible<T>(this, false);
+                
+                // 【优化】提交按钮状态由状态管理器统一控制，不再根据ActionStatus硬编码
+                // 严格模式下：草稿状态允许提交，新建状态（已提交）不允许重复提交
+                // 只有在草稿状态且实体有数据时才允许提交
                 if (entity.ActionStatus == ActionStatus.新增)
                 {
+                    // 新增模式下禁用提交按钮（防止空数据提交）
                     toolStripbtnSubmit.Enabled = false;
                     if (entity.PrimaryKeyID > 0)
                     {
-                        toolStripbtnSubmit.Enabled = true;
+                        // 有主键ID时，根据状态管理器的规则判断是否允许提交
+                        toolStripbtnSubmit.Enabled = StateManager.GetButtonState(entity, "toolStripbtnSubmit");
                     }
                 }
-
-                if (entity.ActionStatus == ActionStatus.修改)
+                else if (entity.ActionStatus == ActionStatus.修改)
                 {
+                    // 修改模式下启用保存按钮
                     toolStripButtonSave.Enabled = true;
-                    toolStripbtnSubmit.Enabled = true;
+                    // 提交按钮由状态管理器控制（严格模式下已提交的单据不允许重复提交）
+                    toolStripbtnSubmit.Enabled = StateManager.GetButtonState(entity, "toolStripbtnSubmit");
                 }
 
             }

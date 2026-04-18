@@ -75,6 +75,14 @@ namespace RUINORERP.Repository.UnitOfWorks
         /// </summary>
         private void OnTransactionTimeout(TransactionContext context, int timeoutSeconds)
         {
+            // ✅ 关键修复: 检查事务是否已经结束
+            if (context == null || context.Status == TransactionStatus.Committed || 
+                context.Status == TransactionStatus.RolledBack || context.Depth == 0)
+            {
+                _logger.LogDebug($"[Transaction-{context?.TransactionId}] 超时回调触发,但事务已结束(Status={context?.Status}, Depth={context?.Depth}),忽略");
+                return;
+            }
+            
             var duration = (DateTime.UtcNow - context.StartTime).TotalSeconds;
             
             _logger.LogError(

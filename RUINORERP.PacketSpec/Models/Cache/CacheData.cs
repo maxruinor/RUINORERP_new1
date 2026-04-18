@@ -52,6 +52,13 @@ namespace RUINORERP.PacketSpec.Models.Cache
         public string Version { get; set; } = "1.0.0";
 
         /// <summary>
+        /// 数据版本戳（用于冲突检测）
+        /// 对应 CacheSyncInfo.VersionStamp
+        /// </summary>
+        [JsonProperty]
+        public long VersionStamp { get; set; } = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        /// <summary>
         /// 是否有更多数据
         /// </summary>
         public bool HasMoreData { get; set; } = false;
@@ -59,7 +66,12 @@ namespace RUINORERP.PacketSpec.Models.Cache
         /// <summary>
         /// 创建缓存数据
         /// </summary>
-        public static CacheData Create<T>(string tableName, T data, TimeSpan? expiration = null) where T : class
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="tableName">表名</param>
+        /// <param name="data">实体数据</param>
+        /// <param name="expiration">过期时间（可选）</param>
+        /// <param name="versionStamp">版本戳（可选，默认自动生成）</param>
+        public static CacheData Create<T>(string tableName, T data, TimeSpan? expiration = null, long versionStamp = 0) where T : class
         {
             return new CacheData
             {
@@ -67,7 +79,8 @@ namespace RUINORERP.PacketSpec.Models.Cache
                 EntityByte = JsonCompressionSerializationService.Serialize(data, true),
                 EntityTypeName = typeof(T).AssemblyQualifiedName, // 使用程序集限定名称
                 CacheTime = DateTime.Now,
-                ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1))
+                ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1)),
+                VersionStamp = versionStamp > 0 ? versionStamp : DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
             };
         }
 
@@ -76,7 +89,8 @@ namespace RUINORERP.PacketSpec.Models.Cache
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="data">实体数据</param>
-        public static CacheData Create(string tableName, object data, TimeSpan? expiration = null)
+        /// <param name="versionStamp">版本戳（可选，默认自动生成）</param>
+        public static CacheData Create(string tableName, object data, TimeSpan? expiration = null, long versionStamp = 0)
         {
             return new CacheData
             {
@@ -85,7 +99,8 @@ namespace RUINORERP.PacketSpec.Models.Cache
                 EntityTypeName = data.GetType().AssemblyQualifiedName,
                 CacheTime = DateTime.Now,
                 ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1)),
-                Version = "1.0.0"
+                Version = "1.0.0",
+                VersionStamp = versionStamp > 0 ? versionStamp : DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
             };
         }
 

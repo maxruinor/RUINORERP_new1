@@ -37,6 +37,13 @@ namespace RUINORERP.PacketSpec.Models.Cache
         public DateTime LastUpdateTime { get; set; }
 
         /// <summary>
+        /// 数据版本号（用于冲突检测）
+        /// 每次表数据发生变更时递增
+        /// </summary>
+        [JsonProperty]
+        public long VersionStamp { get; set; } = 1;
+
+        /// <summary>
         /// 过期时间
         /// </summary>
         [JsonProperty]
@@ -75,20 +82,21 @@ namespace RUINORERP.PacketSpec.Models.Cache
 
         /// <summary>
         /// 检查是否需要同步
-        /// 当数据数量不同或缓存已过期时需要同步
+        /// 基于版本戳或数据数量进行判断
         /// </summary>
         /// <param name="other">其他缓存同步信息</param>
         /// <returns>如果需要同步返回true</returns>
         public bool NeedsSync(CacheSyncInfo other)
         {
-            if (other == null)
-                return true;
+            if (other == null) return true;
 
-            // 检查是否过期
-            if (HasExpiration && ExpirationTime < DateTime.Now)
-                return true;
+            // 1. 检查是否过期
+            if (HasExpiration && ExpirationTime < DateTime.Now) return true;
 
-            // 检查数据数量是否不同
+            // 2. 优先使用版本戳比对（更精准）
+            if (VersionStamp != other.VersionStamp) return true;
+
+            // 3. 兼容旧逻辑：检查数据数量是否不同
             return DataCount != other.DataCount;
         }
 

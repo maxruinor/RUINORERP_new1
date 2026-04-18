@@ -102,17 +102,27 @@ namespace RUINORERP.Business.Cache
                 newSyncInfo.EstimatedSize = estimatedSize;
                 newSyncInfo.LastUpdateTime = DateTime.Now;
                 
+                // 【优化】：自动递增版本戳，用于冲突检测
+                // 注意：使用毫秒时间戳在极高并发下可能有冲突，当前架构下单服务器足以满足需求
+                // 如需更高可靠性，可考虑使用 Snowflake 算法或 Interlocked.Increment
+                if (_syncMetadata.TryGetValue(tableName, out var existingInfo))
+                {
+                    // 基于现有版本戳递增，确保单调递增
+                    newSyncInfo.VersionStamp = existingInfo.VersionStamp + 1;
+                    newSyncInfo.ExpirationTime = existingInfo.ExpirationTime;
+                    newSyncInfo.SourceInfo = existingInfo.SourceInfo;
+                }
+                else
+                {
+                    // 新表使用当前时间戳作为初始版本
+                    newSyncInfo.VersionStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                }
+                
                 // 使用AddOrUpdate确保原子性操作
                 _syncMetadata.AddOrUpdate(
                     tableName,
                     _ => newSyncInfo,
-                    (_, existingInfo) => 
-                    {
-                        // 复制现有信息中的其他属性
-                        newSyncInfo.ExpirationTime = existingInfo.ExpirationTime;
-                        newSyncInfo.SourceInfo = existingInfo.SourceInfo;
-                        return newSyncInfo;
-                    });
+                    (_, _) => newSyncInfo);
                 
                 // 特殊处理空表情况，确保空表缓存也能被正确记录和管理
                 if (dataCount == 0)

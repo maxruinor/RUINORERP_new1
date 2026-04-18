@@ -15,7 +15,20 @@ namespace RUINORERP.Server.Network.Services
 {
     /// <summary>
     /// 缓存元数据同步服务
+    /// 
+    /// 【设计思路】：采用"轻量元数据协调 + 重量数据传输"的分层同步策略
     /// 负责在用户登录成功后将服务器的缓存元数据同步到客户端
+    /// 
+    /// 【工作流程】：
+    /// 1. 服务器收集所有表的元数据（表名、数据行数、版本戳、更新时间等）
+    /// 2. 发送给客户端（仅几KB）
+    /// 3. 客户端比对本地版本，决策需要同步哪些表
+    /// 4. 客户端按需请求实际数据（避免盲目全量同步）
+    /// 
+    /// 【优势】：
+    /// - 登录快：元数据仅几KB，传输迅速
+    /// - 流量省：只同步变化的表，节省带宽
+    /// - 体验好：智能按需加载，避免内存爆炸
     /// </summary>
     public class CacheMetadataSyncService
     {
@@ -56,6 +69,16 @@ namespace RUINORERP.Server.Network.Services
                 if (serverSyncData == null || serverSyncData.Count == 0)
                 {
                     return true; // 不视为错误
+                }
+
+                // 【优化】：为即将发送的元数据打上最新的版本号戳
+                foreach (var kvp in serverSyncData)
+                {
+                    if (kvp.Value != null)
+                    {
+                        kvp.Value.VersionStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        kvp.Value.LastUpdateTime = DateTime.Now;
+                    }
                 }
 
                 // 创建同步请求

@@ -1458,7 +1458,7 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// 请求缓存数据 - UI友好的异步缓存加载（默认后台模式）1
+        /// 请求缓存数据 - UI友好的异步缓存加载（默认后台模式）11
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="type">实体类型，如果提供则使用实体的FKRelations属性获取外键关系</param>

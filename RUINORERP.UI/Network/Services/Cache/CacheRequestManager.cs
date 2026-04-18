@@ -26,6 +26,7 @@ namespace RUINORERP.UI.Network.Services.Cache
         private readonly ILogger<CacheRequestManager> _log;
         private readonly ClientCommunicationService _communicationService;
         private readonly IEntityCacheManager _cacheManager;
+        private readonly ICacheSyncMetadata _cacheSyncMetadata; // 缓存同步元数据管理器
         private readonly ConcurrentDictionary<string, DateTime> _lastRequestTimes = new ConcurrentDictionary<string, DateTime>();
         private const int RequestIntervalSeconds = 5; // 请求间隔限制
         private const int MaxCacheAgeMinutes = 30; // 缓存最大有效时间（分钟）
@@ -33,11 +34,16 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// <summary>
         /// 构造函数
         /// </summary>
-        public CacheRequestManager(ILogger<CacheRequestManager> log, ClientCommunicationService communicationService, IEntityCacheManager cacheManager)
+        public CacheRequestManager(
+            ILogger<CacheRequestManager> log, 
+            ClientCommunicationService communicationService, 
+            IEntityCacheManager cacheManager,
+            ICacheSyncMetadata cacheSyncMetadata)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
+            _cacheSyncMetadata = cacheSyncMetadata ?? throw new ArgumentNullException(nameof(cacheSyncMetadata));
         }
 
         /// <summary>
@@ -79,7 +85,16 @@ namespace RUINORERP.UI.Network.Services.Cache
 
 
         /// <summary>
-        /// 用户登录成功时向服务器请求所有缓存数据的元数据信息，就是一个总表，保存了各个表的最后更新时间戳，数据行数等信息
+        /// 用户登录成功时向服务器请求所有缓存数据的元数据信息
+        /// 
+        /// 【设计思路】：采用"轻量元数据协调 + 重量数据传输"的分层同步策略
+        /// 1. 先获取元数据（几KB），快速了解服务器有哪些表的缓存及其状态
+        /// 2. 客户端比对本地版本，决策需要同步哪些表
+        /// 3. 按需请求实际数据（避免盲目全量同步）
+        /// 
+        /// 【为什么不用 CacheSync 直接获取所有数据？】
+        /// - 如果有100个表，直接同步可能几百MB，登录会很慢
+        /// - 使用元数据同步，只同步变化的表，节省带宽和时间
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -97,7 +112,27 @@ namespace RUINORERP.UI.Network.Services.Cache
 
             try
             {
-                var cacheMetadata = await _communicationService.SendCommandWithResponseAsync<CacheMetadataSyncResponse>(CacheCommands.CacheSync, cacheRequest, cancellationToken);
+                // 【修复】：使用正确的命令 ID - CacheMetadataSync 而非 CacheSync
+                var cacheMetadata = await _communicationService.SendCommandWithResponseAsync<CacheMetadataSyncResponse>(
+                    CacheCommands.CacheMetadataSync,  // 修正：使用 CacheMetadataSync 命令
+                    cacheRequest, 
+                    cancellationToken);
+                
+                if (cacheMetadata != null && cacheMetadata.IsSuccess)
+                {
+                    _log.LogInformation("成功获取缓存元数据，表数量={Count}", cacheMetadata.CacheMetadataData?.Count ?? 0);
+                    
+                    // 更新本地缓存元数据
+                    if (_cacheSyncMetadata != null && cacheMetadata.CacheMetadataData != null)
+                    {
+                        _cacheSyncMetadata.BatchUpdateSyncMetadata(cacheMetadata.CacheMetadataData, overwriteExisting: true);
+                        _log.LogDebug("已更新本地缓存元数据，共 {Count} 个表", cacheMetadata.CacheMetadataData.Count);
+                    }
+                }
+                else
+                {
+                    _log.LogWarning("获取缓存元数据失败或返回空数据");
+                }
             }
             catch (OperationCanceledException oex)
             {
@@ -109,12 +144,7 @@ namespace RUINORERP.UI.Network.Services.Cache
                 _log.LogError(ex, "请求缓存失败，ex={0}, 操作类型={1}", ex.Message, cacheRequest.Operation);
             }
 
-            //按理要得到 cacheMetadata 中有元数据，然后更新本地缓存元数据，但目前业务层没有提供相关接口，先留空
-            // 利用业务层缓存管理器更新缓存（如果响应成功）
-            //if (response?.IsSuccess == true && response.CacheData != null)
-            //{
-            //    _cacheManager.(tableName, response.CacheData.GetData());
-            //}
+
         }
 
 

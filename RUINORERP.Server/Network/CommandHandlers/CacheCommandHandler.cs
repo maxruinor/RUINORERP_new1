@@ -1,42 +1,27 @@
-using Azure.Core;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
-using NetTaste;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
-using RUINORERP.Common;
 using RUINORERP.Common.Helper;
-using RUINORERP.Model;
-using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Errors;
-using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Cache;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Serialization;
-using RUINORERP.Server.BizService;
 using RUINORERP.Server.Comm;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
-using RUINORERP.Server.Network.Services;
 using SqlSugar;
-using SuperSocket.Server.Abstractions.Session;
 using System;
 using System.Collections.Generic;
-using System.IO.Packaging;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 
 namespace RUINORERP.Server.Network.CommandHandlers
@@ -128,54 +113,52 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
-        /// 处理缓存操作命令 - 统一处理各类缓存操作（Get、Set、Update、Delete、Clear等）
+        /// 处理缓存操作命令 - 【查询入口】
+        /// 职责：处理客户端发起的 CacheQuery (Get) 请求。
         /// </summary>
-        /// <param name="cmd">缓存操作命令</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>处理结果</returns>
         private async Task<IResponse> HandleCacheOperationAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                // 使用统一的业务逻辑处理方法
                 if (!(cmd.Packet.Request is CacheRequest cacheCommand))
                 {
                     return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的缓存命令格式", UnifiedErrorCodes.Command_ValidationFailed);
                 }
 
-                // 直接调用统一处理方法
+                // 仅处理 Get 操作，其他操作应走 CacheSync 流程
+                if (cacheCommand.Operation != CacheOperation.Get)
+                {
+                    LogWarning($"CacheOperation 命令接收到非 Get 操作: {cacheCommand.Operation}，建议改用 CacheSync 命令");
+                }
+
                 return await ProcessCacheRequestAsync(cacheCommand, cmd.Packet, cancellationToken);
             }
             catch (Exception ex)
             {
-                LogError($"处理缓存操作异常: {ex.Message}", ex);
-                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, $"处理缓存操作异常: {ex.Message}", UnifiedErrorCodes.System_InternalError);
+                LogError($"处理缓存查询异常: {ex.Message}", ex);
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, $"处理缓存查询异常: {ex.Message}", UnifiedErrorCodes.System_InternalError);
             }
         }
 
         /// <summary>
-        /// 处理缓存同步命令 - 负责服务器与客户端之间的缓存数据同步
+        /// 处理缓存同步命令 - 【同步与广播入口】
+        /// 职责：处理客户端上报的变更 (Client->Server) 并广播给其他订阅者 (Server->Client)。
         /// </summary>
-        /// <param name="cmd">缓存同步命令</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>处理结果</returns>
         private async Task<IResponse> HandleCacheSyncAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                // 缓存同步命令处理逻辑 - 可以复用现有逻辑或实现新的同步机制11
                 if (!(cmd.Packet.Request is CacheRequest cacheRequest))
                 {
                     return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的缓存同步命令格式", UnifiedErrorCodes.Command_ValidationFailed);
                 }
 
-                // 使用统一的处理方法
+                // 1. 在服务器端执行实际的缓存更新/删除
                 var result = await ProcessCacheSyncAsync(cacheRequest, cmd.Packet.ExecutionContext, cancellationToken);
 
-                // 同步完成后广播变更到其他客户端
+                // 2. 如果更新成功，则广播变更到其他在线客户端
                 if (result is CacheResponse cacheResponse && cacheResponse.IsSuccess)
                 {
-                    // 广播变更,请求中包含了要更新的缓存数据信息
                     await BroadcastCacheChangeAsync(cacheRequest, cmd.Packet.ExecutionContext.SessionId, cancellationToken);
                 }
 
@@ -331,6 +314,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 广播缓存变更到订阅该表的客户端(增强版 - 包含完整数据)
+        /// 
+        /// 【设计思路】：使用 CacheSync 命令进行实时数据推送
+        /// - 当某个客户端修改数据后，服务器需要通知其他订阅者
+        /// - 使用 CacheRequest 作为载体（因为服务器是发起方，符合“谁先发送谁请求”原则）
+        /// - 包含完整的实体数据，接收方可以直接更新本地缓存
+        /// 
+        /// 【与 CacheMetadataSync 的区别】：
+        /// - CacheMetadataSync: 传输元数据（统计信息），用于登录时决策
+        /// - CacheSync: 传输实际数据（实体内容），用于实时同步
         /// </summary>
         /// <param name="request">缓存请求数据</param>
         /// <param name="excludeSessionId">排除的会话ID（发起变更的客户端）</param>
@@ -362,22 +354,27 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return;
                 }
 
-                // 创建完整的缓存响应(包含数据和元数据)
-                var cacheResponse = new CacheResponse
+                // 【关键修正】：服务器主动推送变更时，应使用 CacheRequest（因为服务器是发起方）
+                // 符合“谁先发送谁请求”的原则
+                var pushRequest = new CacheRequest
                 {
-                    RequestId = request.RequestId,
+                    RequestId = Guid.NewGuid().ToString(), // 生成新的请求ID
                     TableName = request.TableName,
                     Operation = request.Operation,
-                    IsSuccess = true,
-                    Message = "服务器推送缓存更新",
                     CacheData = request.CacheData, // 包含完整的数据
                     Timestamp = DateTime.UtcNow,
-                    CacheTime = DateTime.UtcNow,
-                    ServerVersion = Program.AppVersion
+                    LastRequestTime = DateTime.UtcNow
                 };
 
+                // 【优化】：从元数据管理器获取最新的版本戳并同步到请求中
+                var syncInfo = _cacheSyncMetadataManager.GetTableSyncInfo(request.TableName);
+                if (syncInfo != null && pushRequest.CacheData != null)
+                {
+                    pushRequest.CacheData.VersionStamp = syncInfo.VersionStamp;
+                }
+
                 // 添加同步元数据,用于客户端验证
-                cacheResponse.Metadata = new Dictionary<string, object>
+                pushRequest.Parameters = new Dictionary<string, object>
                 {
                     { "SyncType", "ServerPush" },
                     { "ServerTimestamp", DateTime.UtcNow.ToString("O") },
@@ -402,8 +399,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     try
                     {
-                        // 使用ISessionService.SendPacketCoreAsync统一处理发送，包含打包、序列化、加密和发送过程
-                        await _sessionService.SendPacketCoreAsync<CacheRequest>(sessionInfo, CacheCommands.CacheSync, request, 30000, cancellationToken, PacketDirection.ServerResponse);
+                        // 服务器主动推送，使用 CacheRequest 作为载体
+                        await _sessionService.SendPacketCoreAsync<CacheRequest>(
+                            sessionInfo, 
+                            CacheCommands.CacheSync, 
+                            pushRequest, 
+                            30000, 
+                            cancellationToken, 
+                            PacketDirection.ServerRequest); // 注意：这里是 ServerRequest，表示服务器发起的请求
                         successCount++;
                         LogDebug($"成功推送缓存更新到会话: {sessionInfo.SessionID}, 表: {request.TableName}");
                     }
@@ -891,7 +894,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         if (session != null && !string.IsNullOrEmpty(session.SessionID))
                         {
                             // 使用ISessionService.SendPacketCoreAsync统一处理发送，包含加密和构建过程
-                            await _sessionService.SendPacketCoreAsync<CacheRequest>(session, CacheCommands.CacheSync, cacheRequest, 30000, CancellationToken.None, PacketDirection.ServerResponse);
+                            await _sessionService.SendPacketCoreAsync<CacheRequest>(session, CacheCommands.CacheSync, cacheRequest, 30000, CancellationToken.None, PacketDirection.ServerRequest);
                             successCount++;
                         }
                     }
@@ -1011,60 +1014,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
 
-        /// <summary>
-        /// 广播缓存变更给其他客户端
-        /// </summary>
-        /// <param name="senderSessionId">发送者会话ID</param>
-        /// <param name="request">缓存请求</param>
-        private async Task BroadcastCacheChangeAsync(string senderSessionId, CacheRequest request)
-        {
-            try
-            {
-                // 创建变更通知
-                var notification = new
-                {
-                    Type = request.Operation,
-                    request.TableName,
-                    Timestamp = DateTime.Now
-                };
-
-                // 只广播给订阅了该表的客户端（排除发送者）
-                var subscribers = _subscriptionManager.GetSubscribers(request.TableName);
-                var allSessions = _sessionService.GetAllUserSessions();
-                var targetSessions = allSessions
-                    .Where(s => subscribers.Contains(s.SessionID) && s.SessionID != senderSessionId)
-                    .ToList();
-
-                logger.Debug($"准备广播缓存变更: 表名={request.TableName}, 订阅者数量={subscribers.Count()}, 目标客户端数量={targetSessions.Count}");
-
-                int successCount = 0;
-                int failCount = 0;
-
-                foreach (var session in targetSessions)
-                {
-                    try
-                    {
-                        if (session != null && !string.IsNullOrEmpty(session.SessionID))
-                        {
-                            // 使用ISessionService.SendPacketCoreAsync统一处理发送，包含加密和构建过程
-                            await _sessionService.SendPacketCoreAsync<CacheRequest>(session, CacheCommands.CacheSync, request, 30000, CancellationToken.None, PacketDirection.ServerResponse);
-                            successCount++;
-                        }
-                    }
-                    catch (Exception sessionEx)
-                    {
-                        failCount++;
-                        logger.LogWarning(sessionEx, $"广播缓存变更到会话失败: {session?.SessionID ?? "Unknown"}");
-                    }
-                }
-
-                logger.Debug($"广播缓存变更完成: 表名={request.TableName}, 成功={successCount}, 失败={failCount}");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"广播缓存变更失败: 表名={request?.TableName}");
-            }
-        }
     }
 }
 

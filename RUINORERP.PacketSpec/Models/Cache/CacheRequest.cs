@@ -8,11 +8,29 @@ using RUINORERP.PacketSpec.Models.Core;
 namespace RUINORERP.PacketSpec.Models.Cache
 {
     /// <summary>
-    /// 统一缓存请求模型 - 用于所有缓存相关操作
-    /// 通过 OperationType 区分不同的缓存操作
+    /// 统一缓存请求模型
+    /// 
+    /// 【核心原则】：谁先发送谁就是请求方，没有固定的客户端=请求、服务器=响应的绑定关系
+    /// 
+    /// 【使用场景】
+    /// 1. 客户端 -> 服务器（查询）：CommandId = CacheOperation (0x0201)
+    ///    - 用途：客户端向服务器请求指定表的数据
+    ///    - 关键字段：TableName, ForceRefresh, LastRequestTime
+    /// 
+    /// 2. 客户端 -> 服务器（上报变更）：CommandId = CacheSync (0x0202)
+    ///    - 用途：客户端向服务器报告本地数据的增删改
+    ///    - 关键字段：TableName, Operation (Set/Remove), CacheData
+    /// 
+    /// 3. 服务器 -> 客户端（推送变更）：CommandId = CacheSync (0x0202)
+    ///    - 用途：服务器向订阅的客户端推送数据变更
+    ///    - 关键字段：TableName, Operation, CacheData
+    ///    - 注意：虽然方向是 Server->Client，但仍使用 CacheRequest 作为载体（因为服务器是发起方）
+    /// 
+    /// 4. 订阅管理：CommandId = CacheSubscription (0x0203)
+    ///    - 用途：管理客户端对特定表的订阅状态
+    ///    - 关键字段：TableName, SubscribeAction
     /// </summary>
     [Serializable]
-    
     public class CacheRequest : RequestBase
     {
         /// <summary>
@@ -22,6 +40,7 @@ namespace RUINORERP.PacketSpec.Models.Cache
 
         /// <summary>
         /// 缓存操作类型
+        /// 【注意】仅在 CacheSync 命令或 CacheOperation.Get 响应中使用
         /// </summary>
         public CacheOperation Operation { get; set; } = CacheOperation.Get;
 
@@ -32,7 +51,8 @@ namespace RUINORERP.PacketSpec.Models.Cache
 
 
         /// <summary>
-        /// 缓存数据
+        /// 缓存数据载荷
+        /// 【注意】仅在 CacheSync.Set 操作或查询响应中携带实际数据
         /// </summary>
         public CacheData CacheData { get; set; }
 

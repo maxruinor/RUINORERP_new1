@@ -557,13 +557,8 @@ namespace RUINORERP.UI
             // 注册AOP相关
             ConfigureAOP(builder);
 
-            // 注册工作单元
-            builder.RegisterType<UnitOfWorkManage>()
-                .As<IUnitOfWorkManage>()
-                .AsImplementedInterfaces()
-                .InstancePerLifetimeScope()
-                .EnableInterfaceInterceptors()
-                .InterceptedBy(typeof(BaseDataCacheAOP));
+            // ⚠️ UnitOfWorkManage 已在 RepositoryDIConfig 中注册,UI层不重复注册
+            // 遵循架构原则: 各层只注册自己的服务
         }
 
         /// <summary>
@@ -939,12 +934,7 @@ namespace RUINORERP.UI
                 .InstancePerLifetimeScope()
                 .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
 
-
-            //注入工作单元
-            builder.RegisterType<UnitOfWorkManage>().As<IUnitOfWorkManage>()
-            .AsImplementedInterfaces()
-            .InstancePerLifetimeScope()
-            .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
+            // ⚠️ UnitOfWorkManage 已在 RepositoryDIConfig 中注册,此处不重复注册
 
             // 图片管理服务注册已移除 - 相关类不存在
             // builder.RegisterType<RUINORERP.UI.Common.ImageManager.ImageManagerService>()

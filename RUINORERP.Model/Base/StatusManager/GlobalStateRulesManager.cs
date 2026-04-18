@@ -70,9 +70,9 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 全局提交修改规则模式
         /// 控制单据提交后是否允许修改的行为
-        /// 默认值：灵活模式（允许修改）
+        /// 默认值：严格模式（提交后不允许修改，只能审核或撤销提交）
         /// </summary>
-        public SubmitModifyRuleMode submitModifyRuleMode { get; set; } = SubmitModifyRuleMode.灵活模式;
+        public SubmitModifyRuleMode submitModifyRuleMode { get; set; } = SubmitModifyRuleMode.严格模式;
 
         /// <summary>
         /// 设置提交修改模式
@@ -259,7 +259,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 [DataStatus.草稿] = new List<object> { DataStatus.新建, DataStatus.作废 },
 
                 // 新建态（已提交/待审核）：可撤回/驳回（转草稿）、可审核通过（转确认）、可作废（待审核单据直接作废）
-                // 核心调整：删除 DataStatus.新建（去掉多次提交逻辑）, 新增 DataStatus.草稿（撤回/驳回路径）
+                // 严格模式：新建状态只能审核、撤销提交或作废，不能重复提交
                 [DataStatus.新建] = new List<object> { DataStatus.草稿, DataStatus.确认, DataStatus.作废 },
 
                 // 确认态（已审核）：可反审核（转新建）、可执行（转完结）、可结案（转完结）、可作废
@@ -655,9 +655,9 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 根据全局提交修改模式设置已新建状态的按钮规则
             // 灵活模式：允许修改；严格模式：不允许修改
-            // 新建状态：提交成功后禁用提交按钮，只允许审核和撤销提交
+            // 严格模式：新建状态禁用修改、保存和提交按钮，只允许审核和撤销提交
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
-            AddStandardButtonRules(DataStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: true);
+            AddStandardButtonRules(DataStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: allowModifyInSubmittedState, deleteEnabled: true, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: true);
 
             /// 确认状态：不允许修改和删除, 允许反审核, 可以结案或执行
             AddStandardButtonRules(DataStatus.确认, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: true, antiClosedEnabled: false, cancelSubmitEnabled: false);
@@ -970,7 +970,8 @@ namespace RUINORERP.Model.Base.StatusManager
             var strictModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
                 [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
-                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.审核 },//支持多次提交, 不能修改
+                // 严格模式：新建状态只能审核、撤销提交或作废，不允许修改和保存
+                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.撤回提交 },
                 [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.执行, MenuItemEnums.结案 },
                 [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增,MenuItemEnums.反结案,MenuItemEnums.反执行 },  // 【修复】添加反执行权限
                 [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }

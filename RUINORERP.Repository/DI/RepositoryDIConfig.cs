@@ -32,10 +32,10 @@ namespace RUINORERP.Repository.DI
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
                 
-            // 注册工作单元管理器
+            // 注册工作单元管理器(Repository层的核心服务)
             builder.RegisterType<UnitOfWorkManage>()
                 .As<IUnitOfWorkManage>()
-                .InstancePerLifetimeScope()
+                .InstancePerLifetimeScope()  // Scoped: 同一请求内共享,避免连接泄漏
                 .PropertiesAutowired();
 
 

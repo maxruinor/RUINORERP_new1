@@ -215,7 +215,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                     };
         
                     _asyncLocalClient.Value = new SqlSugarClient(newConfig);
-                    _logger.LogDebug($"为异步上下文创建了新的数据库连接实例，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
+                    _logger.LogInformation($"[Connection-{Guid.NewGuid().ToString("N").Substring(0, 8)}] 为异步上下文创建了新的数据库连接实例，线程 ID: {Thread.CurrentThread.ManagedThreadId}, AsyncLocal HashCode: {_asyncLocalClient.GetHashCode()}");
                 }
                 else
                 {
@@ -226,7 +226,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                         IsAutoCloseConnection = false,
                         InitKeyType = InitKeyType.Attribute
                     });
-                    _logger.LogDebug($"使用默认配置创建新连接，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
+                    _logger.LogInformation($"[Connection-{Guid.NewGuid().ToString("N").Substring(0, 8)}] 使用默认配置创建新连接，线程 ID: {Thread.CurrentThread.ManagedThreadId}, AsyncLocal HashCode: {_asyncLocalClient.GetHashCode()}");
                 }
             }
         

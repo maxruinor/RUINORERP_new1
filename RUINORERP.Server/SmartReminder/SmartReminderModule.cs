@@ -83,10 +83,7 @@ namespace RUINORERP.Server.SmartReminder
             // 注册Redis连接
             //RegisterRedis(builder);
 
-            // 注册单位工作管理器
-            builder.RegisterType<UnitOfWorkManage>()
-                .As<IUnitOfWorkManage>()
-                .SingleInstance();
+            // ⚠️ UnitOfWorkManage 已在 RepositoryDIConfig 中注册,Server层不重复注册
 
             // 注册规则引擎中心
             builder.RegisterType<RuleEngineCenter>().As<IRuleEngineCenter>().SingleInstance();

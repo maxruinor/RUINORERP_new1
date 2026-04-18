@@ -601,7 +601,7 @@ namespace RUINORERP.Server
             #endregion
 
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>)); // 注入仓储
-            services.AddTransient<IUnitOfWorkManage, UnitOfWorkManage>(); // 注入工作单元
+            // ⚠️ UnitOfWorkManage 已在 RepositoryDIConfig 中注册,Server层不重复注册
 
 
 

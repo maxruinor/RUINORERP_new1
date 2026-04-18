@@ -106,9 +106,9 @@ namespace RUINORERP.Server.Network.DI
             // 注册文件存储监控服务(单例,长期运行)
             services.AddSingleton<FileStorageMonitorService>();
 
-            // 注册图片缓存和HasAttachment同步服务(单例,长期运行)
-            //services.AddSingleton<ImageCacheService>();
-            services.AddSingleton<HasAttachmentSyncService>();
+            // 注册图片缓存和HasAttachment同步服务
+            // 注意: 改为Scoped以匹配IUnitOfWorkManage的生命周期,避免连接泄漏
+            services.AddScoped<HasAttachmentSyncService>();
 
         }
 
@@ -203,6 +203,9 @@ namespace RUINORERP.Server.Network.DI
 
             // 注册文件存储监控服务(单例,长期运行)
             builder.RegisterType<FileStorageMonitorService>().AsSelf().SingleInstance();
+            
+            // 注册HasAttachment同步服务 - 改为InstancePerLifetimeScope匹配UnitOfWorkManage
+            builder.RegisterType<HasAttachmentSyncService>().AsSelf().InstancePerLifetimeScope();
         }
 
         /// <summary>

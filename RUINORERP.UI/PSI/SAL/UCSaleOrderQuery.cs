@@ -246,7 +246,7 @@ namespace RUINORERP.UI.PSI.SAL
                             && m.EntityName == nameof(tb_FM_PreReceivedPayment) && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag).FirstOrDefault();
                             if (RelatedMenuInfo != null)
                             {
-                                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
+                                await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, rs.ReturnObject);
                                 rs.ReturnObject.HasChanged = true;
                             }
                             return;
@@ -315,7 +315,7 @@ namespace RUINORERP.UI.PSI.SAL
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_PurOrder) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, purOrder);
+                        menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, purOrder);
                     }
                     return;
                 }
@@ -366,7 +366,7 @@ namespace RUINORERP.UI.PSI.SAL
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOut) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut);
+                        await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, saleOut);
                     }
                     return;
                 }

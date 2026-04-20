@@ -2124,7 +2124,7 @@ namespace RUINORERP.UI.MRP.MP
             tb_MenuInfo RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_BuyingRequisition).Name && m.ClassPath.Contains("RUINORERP.UI.PSI.PUR." + typeof(UCBuyingRequisition).Name)).FirstOrDefault(); ;
             if (RelatedBillMenuInfo != null && EditEntity.tb_PurGoodsRecommendDetails.Count > 0)
             {
-                menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, buyingRequisition);
+                menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, buyingRequisition);
             }
             else
             {
@@ -2419,7 +2419,7 @@ namespace RUINORERP.UI.MRP.MP
                         {
                             MessageBox.Show("制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成,系统将打开已经存在的制令单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
-                            await menuPowerHelper.ExecuteEvents(MoRelatedBillMenuInfo, ExistMO);
+                            await menuPowerHelper.ExecuteEventsAsync(MoRelatedBillMenuInfo, ExistMO);
                         }
                         MainForm.Instance.uclog.AddLog($"制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成", UILogType.警告);
                         btnCreatePurRequisition.Enabled = false;
@@ -2445,7 +2445,7 @@ namespace RUINORERP.UI.MRP.MP
                     {
                         MessageBox.Show("制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成,系统将打开已经存在的制令单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
-                        await menuPowerHelper.ExecuteEvents(MoRelatedBillMenuInfo, ExistMO);
+                        await menuPowerHelper.ExecuteEventsAsync(MoRelatedBillMenuInfo, ExistMO);
                     }
                     MainForm.Instance.uclog.AddLog($"制成品建议中，当前选中目标行产品已经生成过制令单，无法重复生成", UILogType.警告);
                     btnCreatePurRequisition.Enabled = false;
@@ -2498,7 +2498,7 @@ namespace RUINORERP.UI.MRP.MP
             if (RelatedBillMenuInfo != null && ManufacturingOrder != null)
             {
                 //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
-                await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, ManufacturingOrder);
+                await menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, ManufacturingOrder);
             }
             else
             {

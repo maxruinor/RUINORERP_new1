@@ -218,7 +218,7 @@ namespace RUINORERP.UI.BI
                             if (RelatedMenuInfo != null)
                             {
 
-                                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
+                                await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, entity);
                                 if (entity is BaseEntity baseEntity)
                                 {
                                     baseEntity.HasChanged = true;

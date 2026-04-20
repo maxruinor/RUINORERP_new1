@@ -184,7 +184,7 @@ namespace RUINORERP.UI.BI
                             tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == objType.Name && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                             if (RelatedMenuInfo != null)
                             {
-                                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
+                                menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, entity);
                             }
                             return;
                         }

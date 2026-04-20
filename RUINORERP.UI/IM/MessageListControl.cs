@@ -683,7 +683,7 @@ namespace RUINORERP.UI.IM
 
                 // 执行导航操作
                 var instance = Activator.CreateInstance(tableType);
-                await menuPowerHelper.ExecuteEvents(menuInfo, instance, queryParameter);
+                await menuPowerHelper.ExecuteEventsAsync(menuInfo, instance, queryParameter);
 
                 // 标记相关消息为已读
                 MarkRelatedMessagesAsRead(businessId, bizType);

@@ -807,7 +807,7 @@ namespace RUINORERP.UI.IM
                 };
 
                 var instance = Activator.CreateInstance(tableType);
-                menuPowerHelper.ExecuteEvents(menuInfo, instance, queryParameter);
+                menuPowerHelper.ExecuteEventsAsync(menuInfo, instance, queryParameter);
             }
             catch (Exception ex)
             {

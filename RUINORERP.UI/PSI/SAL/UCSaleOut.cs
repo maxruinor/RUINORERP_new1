@@ -142,7 +142,7 @@ namespace RUINORERP.UI.PSI.SAL
                             tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                             if (RelatedMenuInfo != null)
                             {
-                                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut.tb_SaleOutRes[0]);
+                                await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, saleOut.tb_SaleOutRes[0]);
                                 saleOut.tb_SaleOutRes[0].HasChanged = true;
                                 return;
                             }

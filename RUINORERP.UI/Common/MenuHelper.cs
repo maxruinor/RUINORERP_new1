@@ -10,6 +10,7 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.BusinessService.SmartMenuService;
 using RUINORERP.UI.UserCenter;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -50,6 +51,12 @@ namespace RUINORERP.UI.Common
         public List<tb_MenuInfo> MenuList { get; private set; }
 
         public System.Windows.Forms.MenuStrip MainMenu { get; set; }
+
+        /// <summary>
+        /// 反射缓存：避免重复反射获取 PropertyInfo
+        /// </summary>
+        private static readonly ConcurrentDictionary<Type, PropertyInfo> _propertyCache 
+            = new ConcurrentDictionary<Type, PropertyInfo>();
 
         #endregion
 
@@ -278,7 +285,31 @@ namespace RUINORERP.UI.Common
 
         #region  处理菜单事件
 
-        public void doWithMenu(object sender, EventArgs e)
+        /// <summary>
+        /// 使用缓存设置 CurMenuInfo 属性
+        /// </summary>
+        /// <param name="menu">菜单对象</param>
+        /// <param name="menuInfo">菜单信息</param>
+        private void SetCurMenuInfoWithCache(object menu, tb_MenuInfo menuInfo)
+        {
+            try
+            {
+                var menuType = menu.GetType();
+                var propertyInfo = _propertyCache.GetOrAdd(menuType, type => 
+                    type.GetProperty("CurMenuInfo"));
+                
+                if (propertyInfo != null && propertyInfo.CanWrite)
+                {
+                    propertyInfo.SetValue(menu, menuInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogDebug(ex, "设置 CurMenuInfo 失败");
+            }
+        }
+
+        public async void doWithMenu(object sender, EventArgs e)
         {
             if (sender.ToString() != "窗口")
             {
@@ -296,16 +327,16 @@ namespace RUINORERP.UI.Common
                                 ///这判断 不太正确，需要完善
                                 if (!string.IsNullOrEmpty(pr.ClassPath))
                                 {
-                                    //执行委托事件  使用这种方式是为了 在项目中不引用插件API
+                                    //执行委托事件  使用这种方式 是为了 在项目中不引用插件 API
                                     if (OtherEvent != null)
                                     {
                                         OtherEvent(pr);
                                     }
-                                    ExecuteEvents(pr, null);
+                                    await ExecuteEventsAsync(pr, null);
                                 }
                                 else
                                 {
-                                    ExecuteEvents(pr, null);
+                                    await ExecuteEventsAsync(pr, null);
                                 }
                                 //if (this.MainMenu == null)
                                 //{
@@ -378,7 +409,7 @@ namespace RUINORERP.UI.Common
         /// <param name="nodeParameter">工作台待办事项点击过来带的条件</param>
         /// <param name="LoadItem">加载单实体</param>
         /// <param name="LoadItems">加载实体集合</param>
-        public async Task ExecuteEvents(tb_MenuInfo pr, object LoadItem = null, QueryParameter nodeParameter = null, object LoadItems = null)
+        public async Task ExecuteEventsAsync(tb_MenuInfo pr, object LoadItem = null, QueryParameter nodeParameter = null, object LoadItems = null)
         {
             if (pr == null)
             {
@@ -685,11 +716,12 @@ namespace RUINORERP.UI.Common
             }
         }
 
+ 
 
 
         /// <summary>
         /// 关闭的一个方法
-        /// 关闭事件 由tab左上的小x决定的
+        /// 关闭事件 由 tab 左上的小 x 决定的
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>

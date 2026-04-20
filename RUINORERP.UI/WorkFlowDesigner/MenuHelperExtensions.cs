@@ -34,7 +34,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
 
                 // 使用 MenuPowerHelper 执行菜单事件
                 var menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                await menuPowerHelper.ExecuteEvents(menuInfo);
+                await menuPowerHelper.ExecuteEventsAsync(menuInfo);
 
             }
             catch (Exception ex)
@@ -92,7 +92,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
 
                 // 使用 MenuPowerHelper 执行菜单事件
                 var menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                await menuPowerHelper.ExecuteEvents(menuInfo);
+                await menuPowerHelper.ExecuteEventsAsync(menuInfo);
 
             }
             catch (Exception ex)

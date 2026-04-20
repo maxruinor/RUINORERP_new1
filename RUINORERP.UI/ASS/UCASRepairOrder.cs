@@ -316,7 +316,7 @@ namespace RUINORERP.UI.ASS
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_RepairMaterialPickup) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                       await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, RepairOrder);
+                       await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, RepairOrder);
                         RepairOrder.HasChanged = true;
                     }
                     return;

@@ -160,7 +160,7 @@ namespace RUINORERP.UI.PSI.PUR
             .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+                menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, ReceivablePayable);
             }
 
         }

@@ -385,7 +385,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         tb_SaleOrderController<tb_SaleOrder> controller = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                         tb_SaleOrder MRPData = await controller.BaseQueryByIdNavAsync(pid);
                         //要把单据信息传过去
-                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, MRPData);
+                        menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, MRPData);
                     }
                 }
             }

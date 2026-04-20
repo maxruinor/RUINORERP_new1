@@ -177,7 +177,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         tb_SaleOrderController<tb_SaleOrder> controller = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                         tb_SaleOrder saleOrder = await controller.BaseQueryByIdNavAsync(pid);
                         //要把单据信息传过去
-                        await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, saleOrder);
+                        await menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, saleOrder);
                     }
 
                 }
@@ -382,7 +382,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         tb_StockInController<tb_StockIn> controller = Startup.GetFromFac<tb_StockInController<tb_StockIn>>();
                         tb_StockIn entity = await controller.BaseQueryByIdNavAsync(pid);
                         //要把单据信息传过去
-                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, entity);
                     }
 
                 }
@@ -403,7 +403,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         tb_StockOutController<tb_StockOut> controller = Startup.GetFromFac<tb_StockOutController<tb_StockOut>>();
                         tb_StockOut entity = await controller.BaseQueryByIdNavAsync(pid);
                         //要把单据信息传过去
-                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, entity);
                     }
 
                 }

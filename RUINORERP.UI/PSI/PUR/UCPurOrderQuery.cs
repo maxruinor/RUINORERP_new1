@@ -157,7 +157,7 @@ namespace RUINORERP.UI.PSI.PUR
                                 && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag).FirstOrDefault();
                                 if (RelatedMenuInfo != null)
                                 {
-                                    await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
+                                    await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, rs.ReturnObject);
                                     rs.ReturnObject.HasChanged = true;
                                 }
                                 return;
@@ -205,7 +205,7 @@ namespace RUINORERP.UI.PSI.PUR
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_PurEntry) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, purEntry);
+                        await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, purEntry);
                         purEntry.HasChanged = true;
                     }
                     return;

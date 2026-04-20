@@ -255,7 +255,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billNo.GetType() == typeof(long), c => c.PDID == billNo.ToLong())
                     .WhereIF(billNo.GetType() == typeof(string), c => c.PDNo == billNo.ToString())
                     .Single();
-                await menuPowerHelper.ExecuteEvents(menuInfo, obj);
+                await menuPowerHelper.ExecuteEventsAsync(menuInfo, obj);
             });
 
             // 注册 tb_BOM_S 的自定义加载器
@@ -268,7 +268,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billNo.GetType() == typeof(long), c => c.BOM_ID == billNo.ToLong())
                     .WhereIF(billNo.GetType() == typeof(string), c => c.BOM_No == billNo.ToString())
                     .Single();
-                await menuPowerHelper.ExecuteEvents(menuInfo, obj);
+                await menuPowerHelper.ExecuteEventsAsync(menuInfo, obj);
             });
         }
 
@@ -527,7 +527,7 @@ namespace RUINORERP.UI.Common
                     // 处理有收付款类型的特殊情况
                     relatedMenuInfo = GetMenuInfoForPaymentType(relatedMenuInfo,entity, tableName);
                     
-                    await menuPowerHelper.ExecuteEvents(relatedMenuInfo, entity);
+                    await menuPowerHelper.ExecuteEventsAsync(relatedMenuInfo, entity);
                     return;
                 }
             }

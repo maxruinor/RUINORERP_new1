@@ -200,7 +200,7 @@ namespace RUINORERP.UI.FM
                 .FirstOrDefault();
                 if (RelatedMenuInfo != null)
                 {
-                    menuPowerHelper.ExecuteEvents(RelatedMenuInfo, receivablePayable);
+                    menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, receivablePayable);
                 }
                 #endregion
             }

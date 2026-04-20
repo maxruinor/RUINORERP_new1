@@ -660,7 +660,7 @@ namespace RUINORERP.UI.PSI.PUR
                 if (RelatedBillMenuInfo != null && _PurOrder != null)
                 {
                     //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
-                    menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, _PurOrder);
+                    menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, _PurOrder);
                 }
                 else
                 {

@@ -3776,7 +3776,7 @@ namespace RUINORERP.UI.BaseForm
                 menuPowerHelper = Startup.ServiceProvider.GetService<MenuPowerHelper>();
             }
 
-            await menuPowerHelper.ExecuteEvents(menuInfo, entity);
+            await menuPowerHelper.ExecuteEventsAsync(menuInfo, entity);
         }
 
 
@@ -6492,7 +6492,7 @@ namespace RUINORERP.UI.BaseForm
 
                 if (RelatedMenuInfo != null)
                 {
-                    await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, result.Data);
+                    await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, result.Data);
                     if (result.Data is BaseEntity baseEntity)
                     {
                         baseEntity.HasChanged = true;

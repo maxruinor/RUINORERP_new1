@@ -95,7 +95,7 @@ namespace RUINORERP.UI.PSI.SAL
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOutre);
+                        await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, saleOutre);
                         saleOutre.HasChanged = true;
                     }
                     return;
@@ -171,7 +171,7 @@ namespace RUINORERP.UI.PSI.SAL
             .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-               await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+               await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, ReceivablePayable);
                 ReceivablePayable.HasChanged = true;
             }
 
@@ -234,7 +234,7 @@ namespace RUINORERP.UI.PSI.SAL
             .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-               await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+               await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, ReceivablePayable);
                 ReceivablePayable.HasChanged = true;
             }
 

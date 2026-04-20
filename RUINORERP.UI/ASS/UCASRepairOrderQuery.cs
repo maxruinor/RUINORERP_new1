@@ -140,7 +140,7 @@ namespace RUINORERP.UI.ASS
             .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+                menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, ReceivablePayable);
             }
         }
         #endregion

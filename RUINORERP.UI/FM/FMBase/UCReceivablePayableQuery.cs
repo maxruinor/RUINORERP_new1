@@ -351,7 +351,7 @@ namespace RUINORERP.UI.FM
                      .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+                await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, paymentRecord);
                 paymentRecord.HasChanged = true;
             }
         }

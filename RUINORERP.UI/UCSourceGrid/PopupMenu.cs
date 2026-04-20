@@ -229,7 +229,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 MainForm.Instance.PrintInfoLog("没有找到具体的转换单数据，只提供默认数据。");
             }
 
-            menuPowerHelper.ExecuteEvents(RelatedMenuInfo, prodConversion);
+            menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, prodConversion);
         }
 
         private void SiCustom_Click(object sender, EventArgs e)
@@ -377,7 +377,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 MainForm.Instance.PrintInfoLog("没有找到具体的转换单数据，只提供默认数据。");
             }
 
-            menuPowerHelper.ExecuteEvents(RelatedMenuInfo, prodConversion);
+            menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, prodConversion);
         }
 
         private void SiCustom_Click(object sender, EventArgs e)

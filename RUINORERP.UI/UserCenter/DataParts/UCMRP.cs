@@ -417,7 +417,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             tb_ProductionPlanController<tb_ProductionPlan> controller = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();
                             tb_ProductionPlan MRPData = await controller.BaseQueryByIdNavAsync(pid);
                             //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, MRPData);
+                            menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, MRPData);
                         }
                     }
                 }

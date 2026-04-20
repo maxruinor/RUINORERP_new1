@@ -862,7 +862,7 @@ namespace RUINORERP.UI.MRP.BOM
                 if (RelatedBillMenuInfo != null && basis != BoxRuleBasis.None)
                 {
                     //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
-                    menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, tb_Packing);
+                    menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, tb_Packing);
                     //隐藏提示信息
                     toolTip1.Hide(newSumDataGridView产品组合);
                 }

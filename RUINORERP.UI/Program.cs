@@ -166,6 +166,27 @@ namespace RUINORERP.UI
 
         private static Mutex _mutex;
         private const string AppGuid = "{11-22-33-4400}"; // 替换为你自己的GUID
+        
+        /// <summary>
+        /// 更新系统常量定义
+        /// 【P2优化】使用AutoUpdate.UpdateSystemConstants统一管理
+        /// </summary>
+        private static class UpdateConstants
+        {
+            // 为了向后兼容，保留原有常量名，但值来自统一常量类
+            public const int ProcessExitTimeoutMs = AutoUpdate.UpdateSystemConstants.ProcessExitTimeoutMs;
+            public const int ExtraWaitAfterExitMs = AutoUpdate.UpdateSystemConstants.ExtraWaitAfterExitMs;
+            public const int FileHandleReleaseWaitMs = AutoUpdate.UpdateSystemConstants.FileHandleReleaseWaitMs;
+            public const int UpdaterStartupWaitMs = AutoUpdate.UpdateSystemConstants.UpdaterStartupWaitMs;
+            
+            // 重试配置
+            public const int MaxRetryAttempts = AutoUpdate.UpdateSystemConstants.MaxRetryAttempts;
+            public const int RetryDelayBaseMs = AutoUpdate.UpdateSystemConstants.RetryDelayBaseMs;
+            
+            // 等待间隔
+            public const int WaitIntervalMs = AutoUpdate.UpdateSystemConstants.WaitIntervalMs;
+            public const int MaxWaitAttempts = AutoUpdate.UpdateSystemConstants.MaxWaitAttempts; // 总共等待约9秒
+        }
 
         /// <summary>
         /// 正在加载的程序集列表,用于防止AssemblyResolve事件中的无限递归
@@ -408,6 +429,7 @@ namespace RUINORERP.UI
         /// 激活已存在的实例或等待旧实例退出
         /// 【修复】优化更新场景的处理，增加对更新程序启动参数的检测
         /// 【关键修改】改进进程等待逻辑，确保Mutex正确释放
+        /// 【P0修复】使用轮询机制替代硬编码延迟，避免竞态条件
         /// </summary>
         private static bool ActivateExistingInstance()
         {
@@ -437,67 +459,27 @@ namespace RUINORERP.UI
             {
                 System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 从更新程序启动，执行特殊等待逻辑");
                 
-                int waitTimeout = 35000; // 35秒超时
-                int waitInterval = 300;
-                int elapsedTime = 0;
-                int checkCount = 0;
-                
-                while (elapsedTime < waitTimeout)
+                // 【P0修复】使用轮询+超时机制，替代硬编码延迟
+                if (WaitForProcessesToExit(processName, currentProcessId, UpdateConstants.ProcessExitTimeoutMs))
                 {
-                    checkCount++;
-                    
-                    // 刷新进程列表
-                    Process[] currentProcesses = Process.GetProcessesByName(processName)
-                        .Where(p => p.Id != currentProcessId).ToArray();
-                    
-                    if (currentProcesses.Length == 0)
+                    // 【P0修复】验证文件句柄是否释放
+                    string exePath = Process.GetCurrentProcess().MainModule.FileName;
+                    if (WaitForFileUnlock(exePath, UpdateConstants.FileHandleReleaseWaitMs))
                     {
-                        System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 所有旧进程已退出，检查次数: {checkCount}");
-                        Thread.Sleep(3000); // 额外等待确保Mutex完全释放
-                        System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 额外等待完成，允许当前进程启动");
+                        System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 文件句柄已释放，允许启动");
                         return true;
                     }
-                    
-                    // 尝试关闭旧进程
-                    foreach (Process process in currentProcesses)
+                    else
                     {
-                        try
-                        {
-                            if (!process.HasExited)
-                            {
-                                System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 尝试关闭进程: {process.ProcessName} (ID: {process.Id})");
-                                process.CloseMainWindow();
-                                if (!process.WaitForExit(200))
-                                {
-                                    process.Kill();
-                                    process.WaitForExit(500);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 关闭进程时出错: {ex.Message}");
-                        }
+                        System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 警告: 文件句柄未完全释放，但仍允许启动");
+                        return true;
                     }
-                    
-                    Thread.Sleep(waitInterval);
-                    elapsedTime += waitInterval;
-                }
-                
-                // 最终检查
-                Process[] finalCheck = Process.GetProcessesByName(processName)
-                    .Where(p => p.Id != currentProcessId).ToArray();
-                
-                if (finalCheck.Length == 0)
-                {
-                    System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 最终检查：所有旧进程已退出");
-                    Thread.Sleep(3000);
-                    return true;
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 警告: 等待超时，仍有 {finalCheck.Length} 个进程在运行");
-                    Thread.Sleep(3000);
+                    System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 警告: 等待进程退出超时");
+                    // 即使超时也尝试启动，但记录警告
+                    return true;
                 }
             }
 
@@ -513,26 +495,12 @@ namespace RUINORERP.UI
                     
                     if (runningTime.TotalSeconds < 30)
                     {
-                        int waitTimeout = 10;
-                        int waitInterval = 500;
-                        int maxRetries = (waitTimeout * 1000) / waitInterval;
-                        
                         System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 检测到可能的更新场景，等待旧进程退出");
                         
-                        for (int i = 0; i < maxRetries; i++)
+                        // 【P0修复】使用统一的等待方法
+                        if (WaitForSingleProcessToExit(process, UpdateConstants.ProcessExitTimeoutMs))
                         {
-                            if (process.HasExited)
-                            {
-                                System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 旧进程已退出");
-                                break;
-                            }
-                            Thread.Sleep(waitInterval);
-                        }
-
-                        if (process.HasExited)
-                        {
-                            Thread.Sleep(500);
-                            
+                            // 验证没有新进程启动
                             Process[] newProcesses = Process.GetProcessesByName(processName)
                                 .Where(p => p.Id != currentProcessId && !p.HasExited).ToArray();
 
@@ -564,6 +532,118 @@ namespace RUINORERP.UI
             }
             
             return true;
+        }
+        
+        /// <summary>
+        /// 【P0修复】等待所有指定名称的进程退出
+        /// 使用轮询机制替代硬编码延迟，避免竞态条件
+        /// </summary>
+        private static bool WaitForProcessesToExit(string processName, int excludeProcessId, int timeoutMs)
+        {
+            var startTime = DateTime.Now;
+            int checkCount = 0;
+            
+            while ((DateTime.Now - startTime).TotalMilliseconds < timeoutMs)
+            {
+                checkCount++;
+                
+                Process[] runningProcesses = Process.GetProcessesByName(processName)
+                    .Where(p => p.Id != excludeProcessId && !p.HasExited)
+                    .ToArray();
+                
+                if (runningProcesses.Length == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[进程等待] 所有进程已退出，检查次数: {checkCount}");
+                    // 额外短暂等待确保资源释放
+                    Thread.Sleep(UpdateConstants.ExtraWaitAfterExitMs);
+                    return true;
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"[进程等待] 仍有 {runningProcesses.Length} 个进程在运行，尝试关闭... (检查{checkCount})");
+                
+                // 主动尝试关闭进程
+                foreach (var process in runningProcesses)
+                {
+                    try
+                    {
+                        if (!process.HasExited)
+                        {
+                            process.CloseMainWindow();
+                            if (!process.WaitForExit(1000))
+                            {
+                                process.Kill();
+                                process.WaitForExit(2000);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[进程等待] 关闭进程失败: {ex.Message}");
+                    }
+                }
+                
+                Thread.Sleep(UpdateConstants.WaitIntervalMs);
+            }
+            
+            System.Diagnostics.Debug.WriteLine($"[进程等待] 超时: 等待{timeoutMs}ms后仍有进程在运行");
+            return false;
+        }
+        
+        /// <summary>
+        /// 【P0修复】等待单个进程退出
+        /// </summary>
+        private static bool WaitForSingleProcessToExit(Process process, int timeoutMs)
+        {
+            var startTime = DateTime.Now;
+            
+            while ((DateTime.Now - startTime).TotalMilliseconds < timeoutMs)
+            {
+                if (process.HasExited)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[进程等待] 进程 {process.Id} 已退出");
+                    Thread.Sleep(UpdateConstants.ExtraWaitAfterExitMs);
+                    return true;
+                }
+                
+                Thread.Sleep(UpdateConstants.WaitIntervalMs);
+            }
+            
+            System.Diagnostics.Debug.WriteLine($"[进程等待] 进程 {process.Id} 等待超时");
+            return false;
+        }
+        
+        /// <summary>
+        /// 【P0修复】等待文件解锁
+        /// 通过尝试打开文件来验证文件句柄是否已释放
+        /// </summary>
+        private static bool WaitForFileUnlock(string filePath, int timeoutMs)
+        {
+            var startTime = DateTime.Now;
+            
+            while ((DateTime.Now - startTime).TotalMilliseconds < timeoutMs)
+            {
+                try
+                {
+                    using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        // 成功打开，说明文件已解锁
+                        return true;
+                    }
+                }
+                catch (IOException)
+                {
+                    // 文件仍被锁定，继续等待
+                    Thread.Sleep(100);
+                }
+                catch
+                {
+                    // 其他错误（如文件不存在），认为可以继续使用
+                    return true;
+                }
+            }
+            
+            System.Diagnostics.Debug.WriteLine($"[文件等待] 文件解锁超时: {filePath}");
+            return false;
         }
 
         private static void OnApplicationExit(object sender, EventArgs e)

@@ -95,7 +95,7 @@ namespace RUINORERP.UI.PSI.INV
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_ProdReturning) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ProdReturning);
+                        await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, ProdReturning);
                         ProdReturning.HasChanged = true;
                     }
                     return;
@@ -123,7 +123,7 @@ namespace RUINORERP.UI.PSI.INV
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_ProfitLoss) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, profitLoss);
+                        await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, profitLoss);
                         profitLoss.HasChanged = true;
                     }
                     return;

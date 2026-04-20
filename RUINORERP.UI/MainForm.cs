@@ -859,7 +859,7 @@ namespace RUINORERP.UI
                         //按钮事件
                         try
                         {
-                            await menuPowerHelper.ExecuteEvents(menuInfo, null);
+                            await menuPowerHelper.ExecuteEventsAsync(menuInfo, null);
                         }
                         catch (Exception ex)
                         {
@@ -2159,7 +2159,7 @@ namespace RUINORERP.UI
             {
                 if (e.Node.Tag is tb_MenuInfo menuInfo)
                 {
-                    await menuPowerHelper.ExecuteEvents(menuInfo, null);
+                    await menuPowerHelper.ExecuteEventsAsync(menuInfo, null);
                 }
             }
         }
@@ -2985,7 +2985,7 @@ namespace RUINORERP.UI
                     {
                         try
                         {
-                            menuPowerHelper.ExecuteEvents(menuInfo, null);
+                            menuPowerHelper.ExecuteEventsAsync(menuInfo, null);
                         }
                         catch (Exception ex)
                         {

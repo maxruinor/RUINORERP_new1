@@ -128,7 +128,7 @@ namespace RUINORERP.UI.PSI.PUR
             .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+                await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, ReceivablePayable);
                 ReceivablePayable.HasChanged = true;
             }
 

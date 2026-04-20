@@ -146,7 +146,7 @@ namespace RUINORERP.UI.ASS
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_AfterSaleDelivery) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, DeliveryEntity);
+                        menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, DeliveryEntity);
                     }
                     return;
                 }

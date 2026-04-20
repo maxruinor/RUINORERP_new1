@@ -462,7 +462,7 @@ namespace RUINORERP.UI.FM
                          .FirstOrDefault();
                 if (RelatedMenuInfo != null)
                 {
-                    await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, statement);
+                    await menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, statement);
                     statement.HasChanged = true;
                 }
             }

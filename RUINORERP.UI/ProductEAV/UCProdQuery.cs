@@ -1504,7 +1504,7 @@ namespace RUINORERP.UI.ProductEAV
                 if (RelatedBillMenuInfo != null && basis != BoxRuleBasis.None)
                 {
                     //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
-                    menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, tb_Packing);
+                    menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, tb_Packing);
                     //隐藏提示信息
                     toolTip1.Hide(newSumDataGridView产品);
                 }
@@ -2074,7 +2074,7 @@ namespace RUINORERP.UI.ProductEAV
                 if (RelatedBillMenuInfo != null && packing != null)
                 {
                     //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
-                    menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, packing);
+                    menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, packing);
                 }
 
                 /*
@@ -2129,7 +2129,7 @@ namespace RUINORERP.UI.ProductEAV
                 if (RelatedBillMenuInfo != null && basis != BoxRuleBasis.None)
                 {
                     //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
-                    menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, tb_Packing);
+                    menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, tb_Packing);
                     //隐藏提示信息
                     toolTip1.Hide(newSumDataGridView产品组合);
                 }

@@ -797,7 +797,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             // 为了保持一致性，也使用相同的模式
                             _menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
                             _menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
-                            await _menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, nodeParameter);
+                            await _menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, instance, nodeParameter);
                             #endregion
                         }
                         else if (RelatedBillMenuInfos.Count == 1)
@@ -815,7 +815,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             // 重新注册事件处理程序
                             _menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
                             // 执行事件，由于内部使用BeginInvoke，实际执行是异步的
-                            await _menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, nodeParameter);
+                            await _menuPowerHelper.ExecuteEventsAsync(RelatedBillMenuInfo, instance, nodeParameter);
 
                             #endregion
                         }

@@ -150,6 +150,17 @@ namespace RUINORERP.UI.SysConfig
 
 
 
+        /// <summary>
+        /// 比较两个价格，计算价格变化的百分比
+        /// </summary>
+        /// <param name="oldPrice">原价</param>
+        /// <param name="newPrice">新价格</param>
+        /// <returns>
+        /// 返回价格变化的百分比：
+        /// - 如果原价为0，返回-1（无法计算百分比）
+        /// - 如果任一价格为负数，返回100（强制更新）
+        /// - 正常情况下返回价格变化的绝对百分比（四舍五入到2位小数）
+        /// </returns>
         //写一个方法来实现两个价格的比较 前一个为原价，后一个为最新价格。求最新价格大于前的价格的百分比。价格是ecimal类型
         private double ComparePrice(double oldPrice, double newPrice)
         {
@@ -184,7 +195,10 @@ namespace RUINORERP.UI.SysConfig
 
         }
 
-
+        /// <summary>
+        /// 查询需要更新的库存数据（有入库记录但成本为0的库存）
+        /// 查找那些有采购入库记录但库存成本为0的物料，这些是需要优先修复的对象
+        /// </summary>
         private async Task QueryInvNeedUpdate()
         {
             List<View_Inventory> inventories = new List<View_Inventory>();
@@ -233,7 +247,10 @@ namespace RUINORERP.UI.SysConfig
             richTextBoxLog.AppendText($"查询结果{inventories.Count} " + "\r\n");
         }
 
-
+        /// <summary>
+        /// 根据查询条件筛选库存数据
+        /// 支持按物料名称、规格、SKU、部门、类型等多条件组合查询
+        /// </summary>
         private async Task QueryInv()
         {
             List<View_Inventory> inventories = new List<View_Inventory>();
@@ -302,28 +319,69 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
+        /// <summary>
+        /// 全部更新：执行库存成本修复并同步更新关联业务数据
+        /// 
+        /// 这是成本修复的核心功能，执行以下操作：
+        /// 1. 获取用户选中的库存记录
+        /// 2. 调用UpdateInventoryCost计算并更新库存成本
+        /// 3. 调用UpdateRelatedCost同步更新关联的业务单据成本
+        /// 
+        /// 更新流程：
+        ///   选中库存 → 计算新成本 → 更新库存表 → 递归更新关联业务数据
+        /// 
+        /// 安全机制：
+        /// - 测试模式下仅预览不执行更新
+        /// - 执行前要求用户确认
+        /// - 使用事务保证数据一致性
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void 全部更新ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridViewInv.SelectedRows != null)
+            if (dataGridViewInv.SelectedRows == null || dataGridViewInv.SelectedRows.Count == 0)
             {
-                List<tb_Inventory> inventories = new List<tb_Inventory>();
-
-                foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
-                {
-                    if (dr.DataBoundItem is View_Inventory inventory)
-                    {
-                        inventories.Add(inventory.tb_inventory);
-                    }
-                }
-                await UpdateInventoryCost(inventories);
-                UpdateRelatedCost(inventories);
+                MessageBox.Show("请先选择要更新的库存数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
-            //if (dataGridViewInv.CurrentRow != null
-            //    && dataGridViewInv.CurrentRow.DataBoundItem is View_Inventory inventory)
-            //{
-            //    await CostFix(true, string.Empty, inventory.ProdDetailID.Value);
-            //}
+            if (chkTestMode.Checked)
+            {
+                var result = MessageBox.Show("当前处于测试模式，仅显示预览数据，不会执行实际更新操作。是否继续？", "测试模式确认", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                if (result != DialogResult.Yes)
+                    return;
+            }
+            else
+            {
+                var result = MessageBox.Show($"即将更新 {dataGridViewInv.SelectedRows.Count} 条库存数据的成本，此操作将同时更新关联的业务数据。\n\n是否确认执行？", "批量更新确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (result != DialogResult.Yes)
+                    return;
+            }
+
+            List<tb_Inventory> inventories = new List<tb_Inventory>();
+
+            foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
+            {
+                if (dr.DataBoundItem is View_Inventory inventory)
+                {
+                    inventories.Add(inventory.tb_inventory);
+                }
+            }
+
+            if (inventories.Count == 0)
+            {
+                MessageBox.Show("未获取到有效的库存数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            richTextBoxLog.AppendText($"========== 开始成本修复任务，合计 {inventories.Count} 条 ==========\r\n");
+            richTextBoxLog.AppendText($"测试模式：{(chkTestMode.Checked ? "是" : "否")}\r\n");
+            richTextBoxLog.AppendText($"开始时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}\r\n");
+
+            await UpdateInventoryCost(inventories);
+            await UpdateRelatedCost(inventories);
+
+            richTextBoxLog.AppendText($"========== 任务完成 ==========\r\n");
         }
 
         private void txtSearchKey_TextChanged(object sender, EventArgs e)
@@ -420,6 +478,16 @@ namespace RUINORERP.UI.SysConfig
             AddLoadRelatedData();
         }
 
+        /// <summary>
+        /// 加载选中库存对应的关联业务数据
+        /// 在右侧区域展示该物料相关的所有业务单据信息，包括：
+        /// - 采购入库明细
+        /// - 销售订单
+        /// - 销售出库
+        /// - 生产领料
+        /// - BOM配方等
+        /// 便于用户全面了解该物料的成本构成和流转情况
+        /// </summary>
         private async Task AddLoadRelatedData()
         {
             if (dataGridViewInv.CurrentRow == null)
@@ -1019,14 +1087,26 @@ namespace RUINORERP.UI.SysConfig
 
         /// <summary>
         /// 更新库存成本
+        /// 成本修复思路：
+        /// 1）成本本身修复：将所有入库明细按加权平均法计算新的成本单价，更新到库存表中
+        ///    - 排除单价为0的入库明细，只计算有效交易记录
+        ///    - 加权平均公式：(各笔入库数量×入库单价)之和 ÷ 入库数量总和
+        /// 2）targetCost参数：指定目标成本，传入大于0的值时强制使用该值作为新成本
+        /// 3）成本字段更新说明：
+        ///    - CostMovingWA：移动加权成本
+        ///    - Inv_AdvCost：先进先出成本
+        ///    - Inv_Cost：标准成本（主成本字段）
+        ///    - Inv_SubtotalCostMoney：成本金额小计（成本×数量）
         /// </summary>
         /// <param name="updateInvList">要更新的对象集合</param>
-        /// <returns></returns>
+        /// <param name="targetCost">指定目标成本，默认为0表示按加权平均计算</param>
+        /// <returns>返回更新后的库存列表</returns>
         private async Task<List<tb_Inventory>> UpdateInventoryCost
             (List<tb_Inventory> NeedUpdateInvList, decimal targetCost = 0)
         {
             List<tb_Inventory> updateInvList = new List<tb_Inventory>();
             List<tb_Inventory> Allitems = new List<tb_Inventory>();
+            bool hasError = false;
             try
             {
                 if (!chkTestMode.Checked)
@@ -1034,13 +1114,6 @@ namespace RUINORERP.UI.SysConfig
                     MainForm.Instance.AppContext.Db.Ado.BeginTran();
                 }
 
-                //MainForm.Instance.AppContext.Db.Insertable(new Order() { .....}).ExecuteCommand();
-                // MainForm.Instance.AppContext.Db.Insertable(new Order() { .....}).ExecuteCommand();
-                //成本修复思路
-                //1）成本本身修复，将所有入库明细按加权平均算一下。更新到库存里面。
-                //2）修复所有出库明细，主要是销售出库，当然还有其它，比方借出，成本金额是重要的指标数据
-                //3）成本修复 分  成品 外采和生产  因为这两种成本产生的方式不一样
-                #region 成本本身修复
                 long[] ids = NeedUpdateInvList.Select(c => c.Inventory_ID).ToArray();
 
                 Allitems = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
@@ -1049,64 +1122,136 @@ namespace RUINORERP.UI.SysConfig
                    .Includes(c => c.tb_proddetail, d => d.tb_prod)
                     .Where(c => ids.Contains(c.Inventory_ID)).ToListAsync();
 
+                decimal averagePrice = 0;
+                if (rdb大于平均价.Checked || rdb小于平均价.Checked || rdb与平均价差异大.Checked)
+                {
+                    var validItems = Allitems.Where(c => c.Inv_Cost > 0).ToList();
+                    if (validItems.Count > 0)
+                    {
+                        averagePrice = validItems.Average(c => c.Inv_Cost);
+                        richTextBoxLog.AppendText($"[平均价] 当前选中库存的平均成本价：{averagePrice:F4}\r\n");
+                    }
+                }
+
                 foreach (tb_Inventory item in Allitems)
                 {
+                    decimal newCost = 0;
+                    bool shouldUpdate = true;
+
                     if (item.tb_proddetail.tb_PurEntryDetails.Count > 0
                         && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.UnitPrice) > 0
                         && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.Quantity) > 0
                         )
                     {
-                        //参与成本计算的入库明细记录。要排除单价为0的项
                         var realDetails = item.tb_proddetail.tb_PurEntryDetails.Where(c => c.UnitPrice > 0).ToList();
-                        //每笔的入库的数量*成交价/总数量
-                        var transPrice = realDetails
+                        newCost = realDetails
                             .Where(c => c.UnitPrice > 0 && c.Quantity > 0 && c.UnitPrice > 0)
                             .Sum(c => c.UnitPrice * c.Quantity) / realDetails.Sum(c => c.Quantity);
                         if (targetCost > 0)
                         {
-                            transPrice = targetCost;
+                            newCost = targetCost;
                         }
-                        richTextBoxLog.AppendText($"要修复:{item.tb_proddetail.SKU} ,new:{transPrice}, old: {item.Inv_Cost}\r\n");
-                        item.CostMovingWA = transPrice;
-                        item.Inv_AdvCost = item.CostMovingWA;
-                        item.Inv_Cost = item.CostMovingWA;
-                        item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
-                        item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为：{transPrice}";
+                    }
+                    else
+                    {
+                        newCost = targetCost;
+                    }
+
+                    if (rdb成本为0的才修复.Checked && item.Inv_Cost != 0)
+                    {
+                        shouldUpdate = false;
+                    }
+                    else if (rdb小于指定成本.Checked && targetCost > 0 && item.Inv_Cost >= targetCost)
+                    {
+                        shouldUpdate = false;
+                    }
+                    else if (rdb大于单项成本.Checked && targetCost > 0 && item.Inv_Cost <= targetCost)
+                    {
+                        shouldUpdate = false;
+                    }
+                    else if (rdb大于平均价.Checked && averagePrice > 0 && item.Inv_Cost <= averagePrice)
+                    {
+                        shouldUpdate = false;
+                    }
+                    else if (rdb小于平均价.Checked && averagePrice > 0 && item.Inv_Cost >= averagePrice)
+                    {
+                        shouldUpdate = false;
+                    }
+                    else if (rdb与平均价差异大.Checked && averagePrice > 0)
+                    {
+                        decimal diffPercent = Math.Abs(item.Inv_Cost - averagePrice) / averagePrice * 100;
+                        if (diffPercent <= 10)
+                        {
+                            shouldUpdate = false;
+                        }
+                    }
+                    else if (rdb其它.Checked && Math.Abs(item.Inv_Cost - newCost) <= 0.01m)
+                    {
+                        shouldUpdate = false;
+                    }
+
+                    if (shouldUpdate)
+                    {
+                        richTextBoxLog.AppendText($"SKU:{item.tb_proddetail.SKU} | 原成本:{item.Inv_Cost:F4} | 新成本:{newCost:F4}\r\n");
+                        
+                        if (rdb小计总计.Checked)
+                        {
+                            item.Inv_SubtotalCostMoney = newCost * item.Quantity;
+                            item.Notes += $"\n{System.DateTime.Now:yyyy-MM-dd HH:mm} 小计金额修复为：{item.Inv_SubtotalCostMoney:F4}";
+                        }
+                        else
+                        {
+                            item.CostMovingWA = newCost;
+                            item.Inv_AdvCost = item.CostMovingWA;
+                            item.Inv_Cost = item.CostMovingWA;
+                            item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
+                            item.Notes += $"\n{System.DateTime.Now:yyyy-MM-dd HH:mm} 成本修复为：{newCost:F4}";
+                        }
                         updateInvList.Add(item);
                     }
                     else
                     {
-                        richTextBoxLog.AppendText($"要修复:{item.tb_proddetail.SKU} ,new:{targetCost}, old: {item.Inv_Cost}\r\n");
-                        item.CostMovingWA = targetCost;
-                        item.Inv_AdvCost = item.CostMovingWA;
-                        item.Inv_Cost = item.CostMovingWA;
-                        item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
-                        item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为指定值：{targetCost}";
-                        updateInvList.Add(item);
+                        richTextBoxLog.AppendText($"SKU:{item.tb_proddetail.SKU} | 原成本:{item.Inv_Cost:F4} | 跳过(不符合更新条件)\r\n");
                     }
-                    if (chkTestMode.Checked)
+                }
+
+                if (chkTestMode.Checked)
+                {
+                    richTextBoxLog.AppendText($"[测试模式] 预览修复行数: {updateInvList.Count} / {Allitems.Count}\r\n");
+                }
+                else if (updateInvList.Count > 0)
+                {
+                    int totalamountCounter;
+                    if (rdb小计总计.Checked)
                     {
-                        richTextBoxLog.AppendText($"要修复的行数为:{Allitems.Count}" + "\r\n");
+                        totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updateInvList)
+                            .UpdateColumns(t => new { t.Inv_SubtotalCostMoney, t.Notes })
+                            .ExecuteCommandAsync();
                     }
-                    if (!chkTestMode.Checked)
+                    else
                     {
-                        int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updateInvList).UpdateColumns(t => new { t.CostMovingWA, t.Inv_AdvCost, t.Inv_Cost }).ExecuteCommandAsync();
-                        richTextBoxLog.AppendText($"修复成本价格成功：{totalamountCounter} " + "\r\n");
+                        totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updateInvList)
+                            .UpdateColumns(t => new { t.CostMovingWA, t.Inv_AdvCost, t.Inv_Cost, t.Inv_SubtotalCostMoney, t.Notes })
+                            .ExecuteCommandAsync();
                     }
-                    #endregion
-                    if (!chkTestMode.Checked)
-                    {
-                        MainForm.Instance.AppContext.Db.Ado.CommitTran();
-                    }
+                    richTextBoxLog.AppendText($"库存成本更新完成，影响行数：{totalamountCounter}\r\n");
+                }
+            
+
+                if (!chkTestMode.Checked)
+                {
+                    MainForm.Instance.AppContext.Db.Ado.CommitTran();
                 }
             }
             catch (Exception ex)
             {
+                hasError = true;
                 if (!chkTestMode.Checked)
                 {
                     MainForm.Instance.AppContext.Db.Ado.RollbackTran();
                 }
-                throw ex;
+                richTextBoxLog.AppendText($"[错误] 更新库存成本失败：{ex.Message}\r\n");
+                MessageBox.Show($"更新库存成本时发生错误：\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return Allitems;
 
@@ -1117,9 +1262,28 @@ namespace RUINORERP.UI.SysConfig
 
 
         /// <summary>
-        /// 更新相关出库的明细中的成本
+        /// 更新相关业务单据中的成本数据
+        /// 当库存成本发生变化时，需要同步更新关联业务单据的成本信息，保持数据一致性
+        /// 
+        /// 关联业务类型包括：
+        /// 1. BOM物料清单 - 更新配方中的材料成本
+        /// 2. 制令单（生产制造单）- 更新生产订单中的材料成本
+        /// 3. 缴库单 - 更新成品入库的成本
+        /// 4. 销售订单 - 更新销售订单的成本
+        /// 5. 销售出库单 - 更新销售出库的成本（最重要，影响收入确认）
+        /// 6. 生产领料单 - 更新领料成本
+        /// 7. 借出单 - 更新借出成本
+        /// 8. 其他出库单 - 更新其他出库成本
+        /// 
+        /// 成本更新规则（根据用户选择的条件）：
+        /// - 成本为0的才修复：只更新成本为0的记录
+        /// - 小于指定成本：只更新成本小于设定值的记录
+        /// - 大于指定成本：只更新成本大于设定值的记录
+        /// - 其他（差异大于0.01）：只更新成本与新成本有差异的记录
         /// </summary>
-        /// <param name="updateInvList"></param>
+        /// <param name="updateInvList">库存数据列表，用于获取最新的成本价格</param>
+        /// <param name="SelectBizType">指定要更新的业务类型，默认为全部类型</param>
+        /// <param name="FixSubtotal">是否修复小计金额（单价×数量）</param>
         private async Task UpdateRelatedCost(List<tb_Inventory> updateInvList, BizType SelectBizType = BizType.无对应数据, bool FixSubtotal = false)
         {
 
@@ -2278,9 +2442,20 @@ namespace RUINORERP.UI.SysConfig
 
 
         /// <summary>
-        /// 将母件当子件查询。找他的上级。如果存在则更新他的本身的成本及他的BOM的总成本，直到没有。如果进入循环看最多次数为10层是不可能的
+        /// 递归更新上级BOM配方成本
+        /// 
+        /// 当子件成本发生变化时，需要向上递归更新包含该子件的所有上级配方
+        /// 例如：A是B的子件，B是C的子件，当A成本变化时，需要同时更新B和C配方
+        /// 
+        /// 递归逻辑：
+        /// 1. 查找哪些BOM配方使用了当前物料作为子件（母件包含该子件）
+        /// 2. 更新这些母件配方的总材料成本
+        /// 3. 如果母件本身又是其他配方的子件，继续向上递归
+        /// 4. 最大递归深度为6层，防止无限循环
+        /// 
+        /// 注意：如果发现配方存在循环引用（A->B->A），会抛出异常终止操作
         /// </summary>
-        /// <param name="bOM_S"></param>
+        /// <param name="bOM_S">当前成本发生变化的BOM配方</param>
         private async Task LoopUpdateBom(tb_BOM_S bOM_S)
         {
             if (bOM_S.SelfProductionAllCosts != bOM_S.OutProductionAllCosts)
@@ -2377,19 +2552,34 @@ namespace RUINORERP.UI.SysConfig
         {
             if (sender is ToolStripMenuItem toolStripMenu)
             {
-                if (tabControl.SelectedTab != null)
+                if (tabControl.SelectedTab == null)
+                {
+                    MessageBox.Show("请先选择数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                string confirmMsg = chkTestMode.Checked
+                    ? "当前处于测试模式，仅预览数据不执行更新。是否继续？"
+                    : "即将更新为当前成本，是否确认执行？";
+
+                var result = MessageBox.Show(confirmMsg, "确认操作", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (result != DialogResult.Yes)
+                    return;
+
+                try
                 {
                     List<Control> controls = tabControl.SelectedTab.Controls.CastToList<Control>();
                     DataGridView dgv = controls.FirstOrDefault(c => c.GetType().Name == "DataGridView") as DataGridView;
                     if (dgv != null)
                     {
                         dgv.ContextMenuStrip = null;
-                        // dgv.ContextMenuStrip = contextMenuStripCmd;
                         dgv.Dock = DockStyle.Fill;
+
                         if (!chkTestMode.Checked)
                         {
                             MainForm.Instance.AppContext.Db.Ado.BeginTran();
                         }
+
                         if (dgv.Tag is BizType bt)
                         {
                             switch (bt)
@@ -2398,11 +2588,17 @@ namespace RUINORERP.UI.SysConfig
                                     List<string> strings = new List<string>();
                                     foreach (DataGridViewRow dr in dgv.SelectedRows)
                                     {
-                                        string saleoutNo = dr.Cells[0].Value.ToString();
-                                        if (!strings.Contains(saleoutNo))
+                                        var cellValue = dr.Cells[0]?.Value?.ToString();
+                                        if (!string.IsNullOrEmpty(cellValue) && !strings.Contains(cellValue))
                                         {
-                                            strings.Add(saleoutNo);
+                                            strings.Add(cellValue);
                                         }
+                                    }
+
+                                    if (strings.Count == 0)
+                                    {
+                                        MessageBox.Show("未选择有效数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                        return;
                                     }
 
                                     List<tb_SaleOut> SaleOuts = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
@@ -2422,10 +2618,14 @@ namespace RUINORERP.UI.SysConfig
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(order.tb_SaleOutDetails).ExecuteCommandAsync();
                                         }
                                         await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(SaleOuts).ExecuteCommandAsync();
+                                        richTextBoxLog.AppendText($"更新为当前成本完成，影响单据数：{SaleOuts.Count}\r\n");
+                                    }
+                                    else
+                                    {
+                                        richTextBoxLog.AppendText($"[测试模式] 预览更新为当前成本，影响单据数：{SaleOuts.Count}\r\n");
                                     }
                                     break;
                             }
-
                         }
 
                         if (!chkTestMode.Checked)
@@ -2433,7 +2633,15 @@ namespace RUINORERP.UI.SysConfig
                             MainForm.Instance.AppContext.Db.Ado.CommitTran();
                         }
                     }
-
+                }
+                catch (Exception ex)
+                {
+                    if (!chkTestMode.Checked)
+                    {
+                        MainForm.Instance.AppContext.Db.Ado.RollbackTran();
+                    }
+                    MessageBox.Show($"更新为当前成本时发生错误：\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    richTextBoxLog.AppendText($"[错误] 更新为当前成本失败：{ex.Message}\r\n");
                 }
             }
         }
@@ -2442,19 +2650,34 @@ namespace RUINORERP.UI.SysConfig
         {
             if (sender is ToolStripMenuItem toolStripMenu)
             {
-                if (tabControl.SelectedTab != null)
+                if (tabControl.SelectedTab == null)
+                {
+                    MessageBox.Show("请先选择数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                string confirmMsg = chkTestMode.Checked
+                    ? "当前处于测试模式，仅预览数据不执行更新。是否继续？"
+                    : "即将修复小计总计，是否确认执行？";
+
+                var result = MessageBox.Show(confirmMsg, "确认操作", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (result != DialogResult.Yes)
+                    return;
+
+                try
                 {
                     List<Control> controls = tabControl.SelectedTab.Controls.CastToList<Control>();
                     DataGridView dgv = controls.FirstOrDefault(c => c.GetType().Name == "DataGridView") as DataGridView;
                     if (dgv != null)
                     {
                         dgv.ContextMenuStrip = null;
-                        // dgv.ContextMenuStrip = contextMenuStripCmd;
                         dgv.Dock = DockStyle.Fill;
+
                         if (!chkTestMode.Checked)
                         {
                             MainForm.Instance.AppContext.Db.Ado.BeginTran();
                         }
+
                         if (dgv.Tag is BizType bt)
                         {
                             switch (bt)
@@ -2463,11 +2686,17 @@ namespace RUINORERP.UI.SysConfig
                                     List<string> strings = new List<string>();
                                     foreach (DataGridViewRow dr in dgv.SelectedRows)
                                     {
-                                        string saleoutNo = dr.Cells[0].Value.ToString();
-                                        if (!strings.Contains(saleoutNo))
+                                        var cellValue = dr.Cells[0]?.Value?.ToString();
+                                        if (!string.IsNullOrEmpty(cellValue) && !strings.Contains(cellValue))
                                         {
-                                            strings.Add(saleoutNo);
+                                            strings.Add(cellValue);
                                         }
+                                    }
+
+                                    if (strings.Count == 0)
+                                    {
+                                        MessageBox.Show("未选择有效数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                        return;
                                     }
 
                                     List<tb_SaleOut> SaleOuts = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
@@ -2487,10 +2716,14 @@ namespace RUINORERP.UI.SysConfig
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(order.tb_SaleOutDetails).ExecuteCommandAsync();
                                         }
                                         await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(SaleOuts).ExecuteCommandAsync();
+                                        richTextBoxLog.AppendText($"修复小计总计完成，影响单据数：{SaleOuts.Count}\r\n");
+                                    }
+                                    else
+                                    {
+                                        richTextBoxLog.AppendText($"[测试模式] 预览修复小计总计，影响单据数：{SaleOuts.Count}\r\n");
                                     }
                                     break;
                             }
-
                         }
 
                         if (!chkTestMode.Checked)
@@ -2498,43 +2731,80 @@ namespace RUINORERP.UI.SysConfig
                             MainForm.Instance.AppContext.Db.Ado.CommitTran();
                         }
                     }
-
+                }
+                catch (Exception ex)
+                {
+                    if (!chkTestMode.Checked)
+                    {
+                        MainForm.Instance.AppContext.Db.Ado.RollbackTran();
+                    }
+                    MessageBox.Show($"修复小计总计时发生错误：\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    richTextBoxLog.AppendText($"[错误] 修复小计总计失败：{ex.Message}\r\n");
                 }
             }
         }
 
         private void 更新关联成本ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridViewInv.CurrentRow != null)
+            if (dataGridViewInv.CurrentRow == null)
             {
-                List<tb_Inventory> inventories = new List<tb_Inventory>();
-                if (dataGridViewInv.CurrentRow.DataBoundItem is View_Inventory inventory)
-                {
-                    inventories.Add(inventory.tb_inventory);
-                }
-
-                UpdateRelatedCost(inventories);
-                MainForm.Instance.ShowStatusText("更新关联成本完成。");
+                MessageBox.Show("请先选择要更新的库存数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
+            string confirmMsg = chkTestMode.Checked
+                ? "当前处于测试模式，仅预览数据不执行更新。是否继续？"
+                : "即将更新关联业务数据的成本，是否确认执行？";
+
+            var result = MessageBox.Show(confirmMsg, "确认操作", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result != DialogResult.Yes)
+                return;
+
+            List<tb_Inventory> inventories = new List<tb_Inventory>();
+            if (dataGridViewInv.CurrentRow.DataBoundItem is View_Inventory inventory)
+            {
+                inventories.Add(inventory.tb_inventory);
+            }
+
+            richTextBoxLog.AppendText($"========== 开始更新关联成本 ==========\r\n");
+            UpdateRelatedCost(inventories);
+            MainForm.Instance.ShowStatusText("更新关联成本完成。");
         }
 
         private async void 更新库存成本数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridViewInv.SelectedRows != null)
+            if (dataGridViewInv.SelectedRows == null || dataGridViewInv.SelectedRows.Count == 0)
             {
-                List<tb_Inventory> inventories = new List<tb_Inventory>();
-                foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
-                {
-                    if (dr.DataBoundItem is View_Inventory inventory)
-                    {
-                        inventories.Add(inventory.tb_inventory);
-                    }
-                }
-                await UpdateInventoryCost(inventories);
-                MainForm.Instance.ShowStatusText("更新库存成本完成。");
+                MessageBox.Show("请先选择要更新的库存数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
+            string confirmMsg = chkTestMode.Checked
+                ? "当前处于测试模式，仅预览数据不执行更新。是否继续？"
+                : $"即将更新 {dataGridViewInv.SelectedRows.Count} 条库存数据的成本，是否确认执行？";
+
+            var result = MessageBox.Show(confirmMsg, "确认操作", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result != DialogResult.Yes)
+                return;
+
+            List<tb_Inventory> inventories = new List<tb_Inventory>();
+            foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
+            {
+                if (dr.DataBoundItem is View_Inventory inventory)
+                {
+                    inventories.Add(inventory.tb_inventory);
+                }
+            }
+
+            if (inventories.Count == 0)
+            {
+                MessageBox.Show("未获取到有效的库存数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            richTextBoxLog.AppendText($"========== 开始更新库存成本 ==========\r\n");
+            await UpdateInventoryCost(inventories);
+            MainForm.Instance.ShowStatusText("更新库存成本完成。");
         }
 
 
@@ -2545,76 +2815,134 @@ namespace RUINORERP.UI.SysConfig
 
         private async void 将配方成本更新到库存ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (tabControl.SelectedTab != null)
+            if (tabControl.SelectedTab == null)
             {
-                List<Control> controls = tabControl.SelectedTab.Controls.CastToList<Control>();
-                DataGridView dgv = controls.FirstOrDefault(c => c.GetType().Name == "DataGridView") as DataGridView;
-                if (dgv != null)
+                MessageBox.Show("请先选择配方数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string confirmMsg = chkTestMode.Checked
+                ? "当前处于测试模式，仅预览数据不执行更新。是否继续？"
+                : "即将将配方成本更新到库存，是否确认执行？";
+
+            var result = MessageBox.Show(confirmMsg, "确认操作", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result != DialogResult.Yes)
+                return;
+
+            List<Control> controls = tabControl.SelectedTab.Controls.CastToList<Control>();
+            DataGridView dgv = controls.FirstOrDefault(c => c.GetType().Name == "DataGridView") as DataGridView;
+            if (dgv == null)
+            {
+                MessageBox.Show("未找到配方数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!tabControl.SelectedTab.Text.Contains("配方"))
+            {
+                MessageBox.Show("请在配方页面操作", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            dgv.AllowUserToAddRows = false;
+            int updateCount = 0;
+
+            foreach (DataGridViewRow item in dgv.SelectedRows)
+            {
+                if (dataGridViewInv.SelectedRows != null)
                 {
-                    dgv.AllowUserToAddRows = false;
-                    if (tabControl.SelectedTab.Text.Contains("配方"))
+                    List<tb_Inventory> inventories = new List<tb_Inventory>();
+                    foreach (DataGridViewRow dr in dataGridViewInv.Rows)
                     {
-                        foreach (DataGridViewRow item in dgv.SelectedRows)
+                        if (dr.DataBoundItem is View_Inventory inventory)
                         {
-                            if (dataGridViewInv.SelectedRows != null)
+                            var skuCell = item.Cells["母件SKU"]?.Value?.ToString();
+                            if (!string.IsNullOrEmpty(skuCell) && inventory.SKU == skuCell)
                             {
-                                List<tb_Inventory> inventories = new List<tb_Inventory>();
-                                foreach (DataGridViewRow dr in dataGridViewInv.Rows)
+                                decimal OutCost = 0;
+                                decimal SelfCost = 0;
+
+                                var outCostCell = item.Cells["外发总成本"]?.Value;
+                                var selfCostCell = item.Cells["自产总成本"]?.Value;
+
+                                if (outCostCell != null && decimal.TryParse(outCostCell.ToString(), out OutCost))
                                 {
-                                    if (dr.DataBoundItem is View_Inventory inventory)
-                                    {
-                                        if (inventory.SKU == item.Cells["母件SKU"].Value.ToString())
-                                        {
-                                            //inventory.tb_inventory.Inv_Cost= item.Cells["成本"].Value.ToString();
-                                            inventories.Add(inventory.tb_inventory);
-                                        }
-                                        decimal OutCost = 0;
-                                        decimal SelfCost = 0;
-                                        if (decimal.TryParse(item.Cells["外发总成本"].Value.ToString(), out OutCost))
-                                        {
-                                            inventory.tb_inventory.Inv_Cost = OutCost;
-                                        }
-                                        if (decimal.TryParse(item.Cells["自产总成本"].Value.ToString(), out SelfCost))
-                                        {
-                                            inventory.tb_inventory.Inv_Cost = SelfCost;
-                                        }
-                                        inventory.tb_inventory.Inv_Cost = Math.Max(OutCost, SelfCost);
-                                    }
+                                    inventory.tb_inventory.Inv_Cost = OutCost;
                                 }
-                                var result = await MainForm.Instance.AppContext.Db.Updateable(inventories).UpdateColumns(it => new
+                                if (selfCostCell != null && decimal.TryParse(selfCostCell.ToString(), out SelfCost))
                                 {
-                                    it.Inv_Cost,
-                                }).ExecuteCommandAsync();
-
-
+                                    inventory.tb_inventory.Inv_Cost = SelfCost;
+                                }
+                                inventory.tb_inventory.Inv_Cost = Math.Max(OutCost, SelfCost);
+                                inventories.Add(inventory.tb_inventory);
                             }
                         }
                     }
+
+                    if (inventories.Count > 0 && !chkTestMode.Checked)
+                    {
+                        var updateResult = await MainForm.Instance.AppContext.Db.Updateable(inventories).UpdateColumns(it => new
+                        {
+                            it.Inv_Cost,
+                        }).ExecuteCommandAsync();
+                        updateCount += updateResult;
+                    }
+                    else if (chkTestMode.Checked)
+                    {
+                        updateCount += inventories.Count;
+                    }
                 }
             }
+
+            richTextBoxLog.AppendText($"配方成本更新完成，影响行数：{updateCount}\r\n");
+            MainForm.Instance.ShowStatusText("配方成本更新完成。");
         }
 
+        /// <summary>
+        /// 将库存成本强制更新为用户指定的固定值
+        /// 适用于已知正确成本价的情况，直接覆盖现有成本
+        /// 注意：此操作仅更新库存成本，不自动更新关联业务数据
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void 库存成本更新为指定值ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridViewInv.SelectedRows != null)
+            if (dataGridViewInv.CurrentRow == null)
             {
-                List<tb_Inventory> inventories = new List<tb_Inventory>();
+                MessageBox.Show("请先选择要更新的库存数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-                if (dataGridViewInv.CurrentRow != null && dataGridViewInv.CurrentRow.DataBoundItem is View_Inventory inventory)
-                {
-                    inventories.Add(inventory.tb_inventory);
-                }
+            decimal targetCost;
+            if (!decimal.TryParse(txtUnitCost.Text, out targetCost) || targetCost < 0)
+            {
+                MessageBox.Show("请输入有效的成本数值（大于等于0）", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-                if (inventories.Count == 1)
-                {
-                    await UpdateInventoryCost(inventories, txtUnitCost.Text.ToDecimal());
-                }
-                else
-                {
-                    //只能操作一行库存数据
-                    MessageBox.Show($"一次只能操作一行库存数据，目前操作数行数：{inventories.Count}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+            string confirmMsg = chkTestMode.Checked
+                ? $"当前处于测试模式，仅预览数据不执行更新。\n\n目标成本：{targetCost}\n是否继续？"
+                : $"即将把库存成本更新为指定值：{targetCost}\n\n是否确认执行？";
+
+            var result = MessageBox.Show(confirmMsg, "确认操作", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result != DialogResult.Yes)
+                return;
+
+            List<tb_Inventory> inventories = new List<tb_Inventory>();
+            if (dataGridViewInv.CurrentRow.DataBoundItem is View_Inventory inventory)
+            {
+                inventories.Add(inventory.tb_inventory);
+            }
+
+            if (inventories.Count == 1)
+            {
+                richTextBoxLog.AppendText($"========== 开始将成本更新为指定值 ==========\r\n");
+                richTextBoxLog.AppendText($"目标成本: {targetCost:F4}\r\n");
+                await UpdateInventoryCost(inventories, targetCost);
                 MainForm.Instance.ShowStatusText("库存成本更新为指定值完成。");
+            }
+            else
+            {
+                MessageBox.Show($"一次只能操作一行库存数据，目前操作数行数：{inventories.Count}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 

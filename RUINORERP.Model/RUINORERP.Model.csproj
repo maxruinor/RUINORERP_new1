@@ -6,11 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="QueryDto\**" />
+    <!-- ✅ 启用QueryDto编译，用于动态查询UI生成 -->
+    <!-- <Compile Remove="QueryDto\**" /> -->
     <Compile Remove="QueryDto_back\**" />
-    <EmbeddedResource Remove="QueryDto\**" />
+    <!-- <EmbeddedResource Remove="QueryDto\**" /> -->
     <EmbeddedResource Remove="QueryDto_back\**" />
-    <None Remove="QueryDto\**" />
+    <!-- <None Remove="QueryDto\**" /> -->
     <None Remove="QueryDto_back\**" />
   </ItemGroup>
 

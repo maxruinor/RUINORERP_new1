@@ -62,6 +62,16 @@
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.grp查询条件 = new System.Windows.Forms.GroupBox();
+            this.grp成本更新规则 = new System.Windows.Forms.GroupBox();
+            this.kryptonLabel7 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
+            this.rdb无条件全部更新 = new System.Windows.Forms.RadioButton();
+            this.rdb大于平均价 = new System.Windows.Forms.RadioButton();
+            this.rdb小于平均价 = new System.Windows.Forms.RadioButton();
+            this.rdb与平均价差异大 = new System.Windows.Forms.RadioButton();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.rdb时间区间 = new System.Windows.Forms.RadioButton();
             this.ucAdvDateTimerPickerGroup1 = new RUINORERP.UI.AdvancedUIModule.UCAdvDateTimerPickerGroup();
@@ -378,29 +388,16 @@
             // kryptonHeaderGrouptop.Panel
             // 
             this.kryptonHeaderGrouptop.Panel.AutoScroll = true;
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.rdb更新配方及缴库);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.chk有入库记录成本为0);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.cmbdepartment);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel6);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtProp);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtCNName);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel4);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel3);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel2);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel1);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.groupBox1);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.chk指定成本);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtUnitCost);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.cmbType);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtSearchKey);
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.grp查询条件);
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.grp成本更新规则);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.chkTestMode);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.btnQuery);
-            this.kryptonHeaderGrouptop.Panel.MaximumSize = new System.Drawing.Size(0, 100);
-            this.kryptonHeaderGrouptop.Size = new System.Drawing.Size(1130, 130);
+            this.kryptonHeaderGrouptop.Panel.MaximumSize = new System.Drawing.Size(0, 180);
+            this.kryptonHeaderGrouptop.Size = new System.Drawing.Size(1130, 210);
             this.kryptonHeaderGrouptop.TabIndex = 0;
             this.kryptonHeaderGrouptop.ToolTipValues.Heading = "";
-            this.kryptonHeaderGrouptop.ValuesPrimary.Heading = "成本更新选项";
-            this.kryptonHeaderGrouptop.ValuesSecondary.Heading = "";
+            this.kryptonHeaderGrouptop.ValuesPrimary.Heading = "成本数据校正工具";
+            this.kryptonHeaderGrouptop.ValuesSecondary.Heading = "超级管理员专用工具";
             // 
             // buttonSpecHeaderGroup1
             // 
@@ -479,139 +476,313 @@
             this.kryptonLabel2.Values.Text = "产品SKU:";
             this.kryptonLabel2.Click += new System.EventHandler(this.kryptonLabel2_Click);
             // 
-            // kryptonLabel1
+            // grp查询条件
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(3, 8);
+            this.grp查询条件.Controls.Add(this.kryptonLabel1);
+            this.grp查询条件.Controls.Add(this.cmbType);
+            this.grp查询条件.Controls.Add(this.txtSearchKey);
+            this.grp查询条件.Controls.Add(this.kryptonLabel2);
+            this.grp查询条件.Controls.Add(this.txtCNName);
+            this.grp查询条件.Controls.Add(this.kryptonLabel3);
+            this.grp查询条件.Controls.Add(this.txtProp);
+            this.grp查询条件.Controls.Add(this.kryptonLabel4);
+            this.grp查询条件.Controls.Add(this.cmbdepartment);
+            this.grp查询条件.Controls.Add(this.kryptonLabel6);
+            this.grp查询条件.Controls.Add(this.chk有入库记录成本为0);
+            this.grp查询条件.Controls.Add(this.rdb更新配方及缴库);
+            this.grp查询条件.Location = new System.Drawing.Point(10, 10);
+            this.grp查询条件.Name = "grp查询条件";
+            this.grp查询条件.Size = new System.Drawing.Size(620, 140);
+            this.grp查询条件.TabIndex = 180;
+            this.grp查询条件.TabStop = false;
+            this.grp查询条件.Text = "查询条件";
+            // 
+            // kryptonLabel1 - 在grp查询条件内
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(10, 25);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel1.TabIndex = 169;
             this.kryptonLabel1.Values.Text = "产品类型:";
             // 
-            // groupBox1
+            // cmbType - 在grp查询条件内
             // 
-            this.groupBox1.Controls.Add(this.rdb时间区间);
-            this.groupBox1.Controls.Add(this.ucAdvDateTimerPickerGroup1);
-            this.groupBox1.Controls.Add(this.rdb大于单项成本);
-            this.groupBox1.Controls.Add(this.rdb小计总计);
-            this.groupBox1.Controls.Add(this.rdb其它);
-            this.groupBox1.Controls.Add(this.rdb小于指定成本);
-            this.groupBox1.Controls.Add(this.rdb成本为0的才修复);
-            this.groupBox1.Location = new System.Drawing.Point(648, 8);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(477, 85);
-            this.groupBox1.TabIndex = 168;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "关联数据修复更新选项";
+            this.cmbType.DropDownWidth = 100;
+            this.cmbType.IntegralHeight = false;
+            this.cmbType.Location = new System.Drawing.Point(80, 23);
+            this.cmbType.Name = "cmbType";
+            this.cmbType.Size = new System.Drawing.Size(130, 21);
+            this.cmbType.TabIndex = 161;
             // 
-            // rdb时间区间
+            // kryptonLabel2 - 在grp查询条件内
             // 
-            this.rdb时间区间.AutoSize = true;
-            this.rdb时间区间.Location = new System.Drawing.Point(21, 53);
-            this.rdb时间区间.Name = "rdb时间区间";
-            this.rdb时间区间.Size = new System.Drawing.Size(71, 16);
-            this.rdb时间区间.TabIndex = 6;
-            this.rdb时间区间.Text = "时间区间";
-            this.rdb时间区间.UseVisualStyleBackColor = true;
-            this.rdb时间区间.CheckedChanged += new System.EventHandler(this.rdb时间区间_CheckedChanged);
+            this.kryptonLabel2.Location = new System.Drawing.Point(220, 25);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(55, 20);
+            this.kryptonLabel2.TabIndex = 170;
+            this.kryptonLabel2.Values.Text = "SKU:";
             // 
-            // ucAdvDateTimerPickerGroup1
+            // txtSearchKey - 在grp查询条件内
             // 
-            this.ucAdvDateTimerPickerGroup1.Location = new System.Drawing.Point(98, 49);
-            this.ucAdvDateTimerPickerGroup1.Name = "ucAdvDateTimerPickerGroup1";
-            this.ucAdvDateTimerPickerGroup1.Size = new System.Drawing.Size(260, 25);
-            this.ucAdvDateTimerPickerGroup1.TabIndex = 5;
+            this.txtSearchKey.Location = new System.Drawing.Point(275, 23);
+            this.txtSearchKey.Name = "txtSearchKey";
+            this.txtSearchKey.Size = new System.Drawing.Size(130, 21);
+            this.txtSearchKey.TabIndex = 159;
+            this.txtSearchKey.TextChanged += new System.EventHandler(this.txtSearchKey_TextChanged);
+            // 
+            // kryptonLabel3 - 在grp查询条件内
+            // 
+            this.kryptonLabel3.Location = new System.Drawing.Point(10, 55);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel3.TabIndex = 171;
+            this.kryptonLabel3.Values.Text = "产品名称:";
+            // 
+            // txtCNName - 在grp查询条件内
+            // 
+            this.txtCNName.Location = new System.Drawing.Point(80, 53);
+            this.txtCNName.Name = "txtCNName";
+            this.txtCNName.Size = new System.Drawing.Size(325, 21);
+            this.txtCNName.TabIndex = 173;
+            // 
+            // kryptonLabel4 - 在grp查询条件内
+            // 
+            this.kryptonLabel4.Location = new System.Drawing.Point(420, 55);
+            this.kryptonLabel4.Name = "kryptonLabel4";
+            this.kryptonLabel4.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel4.TabIndex = 172;
+            this.kryptonLabel4.Values.Text = "产品属性:";
+            // 
+            // txtProp - 在grp查询条件内
+            // 
+            this.txtProp.Location = new System.Drawing.Point(490, 53);
+            this.txtProp.Name = "txtProp";
+            this.txtProp.Size = new System.Drawing.Size(120, 21);
+            this.txtProp.TabIndex = 174;
+            // 
+            // kryptonLabel6 - 在grp查询条件内
+            // 
+            this.kryptonLabel6.Location = new System.Drawing.Point(10, 88);
+            this.kryptonLabel6.Name = "kryptonLabel6";
+            this.kryptonLabel6.Size = new System.Drawing.Size(40, 20);
+            this.kryptonLabel6.TabIndex = 175;
+            this.kryptonLabel6.Values.Text = "部门:";
+            // 
+            // cmbdepartment - 在grp查询条件内
+            // 
+            this.cmbdepartment.DropDownWidth = 205;
+            this.cmbdepartment.IntegralHeight = false;
+            this.cmbdepartment.Location = new System.Drawing.Point(55, 86);
+            this.cmbdepartment.Name = "cmbdepartment";
+            this.cmbdepartment.Size = new System.Drawing.Size(155, 21);
+            this.cmbdepartment.TabIndex = 176;
+            // 
+            // chk有入库记录成本为0 - 在grp查询条件内
+            // 
+            this.chk有入库记录成本为0.Location = new System.Drawing.Point(230, 86);
+            this.chk有入库记录成本为0.Name = "chk有入库记录成本为0";
+            this.chk有入库记录成本为0.Size = new System.Drawing.Size(108, 20);
+            this.chk有入库记录成本为0.TabIndex = 177;
+            this.chk有入库记录成本为0.Values.Text = "有入库成本为0";
+            // 
+            // rdb更新配方及缴库 - 在grp查询条件内
+            // 
+            this.rdb更新配方及缴库.Location = new System.Drawing.Point(360, 86);
+            this.rdb更新配方及缴库.Name = "rdb更新配方及缴库";
+            this.rdb更新配方及缴库.Size = new System.Drawing.Size(114, 20);
+            this.rdb更新配方及缴库.TabIndex = 178;
+            this.rdb更新配方及缴库.Values.Text = "更新配方及缴库";
+            // 
+            // kryptonLabel7
+            // 
+            this.kryptonLabel7.Location = new System.Drawing.Point(15, 20);
+            this.kryptonLabel7.Name = "kryptonLabel7";
+            this.kryptonLabel7.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel7.TabIndex = 185;
+            this.kryptonLabel7.Values.Text = "成本更新规则:";
+            // 
+            // rdb无条件全部更新
+            // 
+            this.rdb无条件全部更新.AutoSize = true;
+            this.rdb无条件全部更新.Checked = true;
+            this.rdb无条件全部更新.Location = new System.Drawing.Point(15, 45);
+            this.rdb无条件全部更新.Name = "rdb无条件全部更新";
+            this.rdb无条件全部更新.Size = new System.Drawing.Size(95, 16);
+            this.rdb无条件全部更新.TabIndex = 186;
+            this.rdb无条件全部更新.TabStop = true;
+            this.rdb无条件全部更新.Text = "无条件全部更新";
+            this.rdb无条件全部更新.UseVisualStyleBackColor = true;
+            // 
+            // rdb成本为0的才修复
+            // 
+            this.rdb成本为0的才修复.AutoSize = true;
+            this.rdb成本为0的才修复.Location = new System.Drawing.Point(130, 45);
+            this.rdb成本为0的才修复.Name = "rdb成本为0的才修复";
+            this.rdb成本为0的才修复.Size = new System.Drawing.Size(95, 16);
+            this.rdb成本为0的才修复.TabIndex = 187;
+            this.rdb成本为0的才修复.Text = "成本为0才更新";
+            this.rdb成本为0的才修复.UseVisualStyleBackColor = true;
+            // 
+            // rdb小于指定成本
+            // 
+            this.rdb小于指定成本.AutoSize = true;
+            this.rdb小于指定成本.Location = new System.Drawing.Point(245, 45);
+            this.rdb小于指定成本.Name = "rdb小于指定成本";
+            this.rdb小于指定成本.Size = new System.Drawing.Size(95, 16);
+            this.rdb小于指定成本.TabIndex = 188;
+            this.rdb小于指定成本.Text = "小于指定成本";
+            this.rdb小于指定成本.UseVisualStyleBackColor = true;
             // 
             // rdb大于单项成本
             // 
             this.rdb大于单项成本.AutoSize = true;
-            this.rdb大于单项成本.Location = new System.Drawing.Point(193, 20);
+            this.rdb大于单项成本.Location = new System.Drawing.Point(360, 45);
             this.rdb大于单项成本.Name = "rdb大于单项成本";
             this.rdb大于单项成本.Size = new System.Drawing.Size(95, 16);
-            this.rdb大于单项成本.TabIndex = 4;
+            this.rdb大于单项成本.TabIndex = 189;
             this.rdb大于单项成本.Text = "大于指定成本";
             this.rdb大于单项成本.UseVisualStyleBackColor = true;
+            // 
+            // kryptonLabel8
+            // 
+            this.kryptonLabel8.Location = new System.Drawing.Point(15, 75);
+            this.kryptonLabel8.Name = "kryptonLabel8";
+            this.kryptonLabel8.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel8.TabIndex = 190;
+            this.kryptonLabel8.Values.Text = "对比平均价:";
+            // 
+            // rdb大于平均价
+            // 
+            this.rdb大于平均价.AutoSize = true;
+            this.rdb大于平均价.Location = new System.Drawing.Point(15, 100);
+            this.rdb大于平均价.Name = "rdb大于平均价";
+            this.rdb大于平均价.Size = new System.Drawing.Size(95, 16);
+            this.rdb大于平均价.TabIndex = 191;
+            this.rdb大于平均价.Text = "大于平均价";
+            this.rdb大于平均价.UseVisualStyleBackColor = true;
+            // 
+            // rdb小于平均价
+            // 
+            this.rdb小于平均价.AutoSize = true;
+            this.rdb小于平均价.Location = new System.Drawing.Point(130, 100);
+            this.rdb小于平均价.Name = "rdb小于平均价";
+            this.rdb小于平均价.Size = new System.Drawing.Size(95, 16);
+            this.rdb小于平均价.TabIndex = 192;
+            this.rdb小于平均价.Text = "小于平均价";
+            this.rdb小于平均价.UseVisualStyleBackColor = true;
+            // 
+            // rdb与平均价差异大
+            // 
+            this.rdb与平均价差异大.AutoSize = true;
+            this.rdb与平均价差异大.Location = new System.Drawing.Point(245, 100);
+            this.rdb与平均价差异大.Name = "rdb与平均价差异大";
+            this.rdb与平均价差异大.Size = new System.Drawing.Size(125, 16);
+            this.rdb与平均价差异大.TabIndex = 193;
+            this.rdb与平均价差异大.Text = "与平均价差异大于10%";
+            this.rdb与平均价差异大.UseVisualStyleBackColor = true;
+            // 
+            // kryptonLabel9
+            // 
+            this.kryptonLabel9.Location = new System.Drawing.Point(380, 75);
+            this.kryptonLabel9.Name = "kryptonLabel9";
+            this.kryptonLabel9.Size = new System.Drawing.Size(60, 20);
+            this.kryptonLabel9.TabIndex = 194;
+            this.kryptonLabel9.Values.Text = "指定成本:";
+            // 
+            // chk指定成本
+            // 
+            this.chk指定成本.Checked = true;
+            this.chk指定成本.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chk指定成本.Location = new System.Drawing.Point(445, 75);
+            this.chk指定成本.Name = "chk指定成本";
+            this.chk指定成本.Size = new System.Drawing.Size(75, 20);
+            this.chk指定成本.TabIndex = 164;
+            this.chk指定成本.Values.Text = "启用";
+            // 
+            // txtUnitCost
+            // 
+            this.txtUnitCost.Location = new System.Drawing.Point(380, 100);
+            this.txtUnitCost.Name = "txtUnitCost";
+            this.txtUnitCost.Size = new System.Drawing.Size(120, 21);
+            this.txtUnitCost.TabIndex = 162;
+            // 
+            // kryptonLabel10
+            // 
+            this.kryptonLabel10.Location = new System.Drawing.Point(15, 125);
+            this.kryptonLabel10.Name = "kryptonLabel10";
+            this.kryptonLabel10.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel10.TabIndex = 195;
+            this.kryptonLabel10.Values.Text = "其他选项:";
             // 
             // rdb小计总计
             // 
             this.rdb小计总计.AutoSize = true;
-            this.rdb小计总计.Location = new System.Drawing.Point(294, 19);
+            this.rdb小计总计.Location = new System.Drawing.Point(15, 150);
             this.rdb小计总计.Name = "rdb小计总计";
             this.rdb小计总计.Size = new System.Drawing.Size(95, 16);
-            this.rdb小计总计.TabIndex = 3;
+            this.rdb小计总计.TabIndex = 196;
             this.rdb小计总计.Text = "只改小计总计";
             this.rdb小计总计.UseVisualStyleBackColor = true;
             // 
             // rdb其它
             // 
             this.rdb其它.AutoSize = true;
-            this.rdb其它.Location = new System.Drawing.Point(407, 20);
+            this.rdb其它.Location = new System.Drawing.Point(130, 150);
             this.rdb其它.Name = "rdb其它";
             this.rdb其它.Size = new System.Drawing.Size(65, 16);
-            this.rdb其它.TabIndex = 2;
-            this.rdb其它.Text = "rdb其它";
+            this.rdb其它.TabIndex = 197;
+            this.rdb其它.Text = "有差异更新";
             this.rdb其它.UseVisualStyleBackColor = true;
             // 
-            // rdb小于指定成本
+            // rdb时间区间
             // 
-            this.rdb小于指定成本.AutoSize = true;
-            this.rdb小于指定成本.Location = new System.Drawing.Point(92, 20);
-            this.rdb小于指定成本.Name = "rdb小于指定成本";
-            this.rdb小于指定成本.Size = new System.Drawing.Size(95, 16);
-            this.rdb小于指定成本.TabIndex = 1;
-            this.rdb小于指定成本.Text = "小于指定成本";
-            this.rdb小于指定成本.UseVisualStyleBackColor = true;
+            this.rdb时间区间.AutoSize = true;
+            this.rdb时间区间.Location = new System.Drawing.Point(245, 150);
+            this.rdb时间区间.Name = "rdb时间区间";
+            this.rdb时间区间.Size = new System.Drawing.Size(71, 16);
+            this.rdb时间区间.TabIndex = 198;
+            this.rdb时间区间.Text = "时间区间";
+            this.rdb时间区间.UseVisualStyleBackColor = true;
+            this.rdb时间区间.CheckedChanged += new System.EventHandler(this.rdb时间区间_CheckedChanged);
             // 
-            // rdb成本为0的才修复
+            // ucAdvDateTimerPickerGroup1
             // 
-            this.rdb成本为0的才修复.AutoSize = true;
-            this.rdb成本为0的才修复.Checked = true;
-            this.rdb成本为0的才修复.Location = new System.Drawing.Point(21, 20);
-            this.rdb成本为0的才修复.Name = "rdb成本为0的才修复";
-            this.rdb成本为0的才修复.Size = new System.Drawing.Size(65, 16);
-            this.rdb成本为0的才修复.TabIndex = 0;
-            this.rdb成本为0的才修复.TabStop = true;
-            this.rdb成本为0的才修复.Text = "成本为0";
-            this.rdb成本为0的才修复.UseVisualStyleBackColor = true;
+            this.ucAdvDateTimerPickerGroup1.Location = new System.Drawing.Point(320, 146);
+            this.ucAdvDateTimerPickerGroup1.Name = "ucAdvDateTimerPickerGroup1";
+            this.ucAdvDateTimerPickerGroup1.Size = new System.Drawing.Size(260, 25);
+            this.ucAdvDateTimerPickerGroup1.TabIndex = 199;
             // 
-            // chk指定成本
+            // grp成本更新规则
             // 
-            this.chk指定成本.Checked = true;
-            this.chk指定成本.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chk指定成本.Location = new System.Drawing.Point(416, 10);
-            this.chk指定成本.Name = "chk指定成本";
-            this.chk指定成本.Size = new System.Drawing.Size(75, 20);
-            this.chk指定成本.TabIndex = 164;
-            this.chk指定成本.Values.Text = "指定成本";
-            // 
-            // txtUnitCost
-            // 
-            this.txtUnitCost.Location = new System.Drawing.Point(497, 10);
-            this.txtUnitCost.Name = "txtUnitCost";
-            this.txtUnitCost.Size = new System.Drawing.Size(67, 21);
-            this.txtUnitCost.TabIndex = 162;
-            // 
-            // cmbType
-            // 
-            this.cmbType.DropDownWidth = 100;
-            this.cmbType.IntegralHeight = false;
-            this.cmbType.Location = new System.Drawing.Point(69, 8);
-            this.cmbType.Name = "cmbType";
-            this.cmbType.Size = new System.Drawing.Size(113, 21);
-            this.cmbType.TabIndex = 161;
-            // 
-            // txtSearchKey
-            // 
-            this.txtSearchKey.Location = new System.Drawing.Point(266, 10);
-            this.txtSearchKey.Name = "txtSearchKey";
-            this.txtSearchKey.Size = new System.Drawing.Size(125, 21);
-            this.txtSearchKey.TabIndex = 159;
-            this.txtSearchKey.TextChanged += new System.EventHandler(this.txtSearchKey_TextChanged);
+            this.grp成本更新规则.Controls.Add(this.kryptonLabel7);
+            this.grp成本更新规则.Controls.Add(this.rdb无条件全部更新);
+            this.grp成本更新规则.Controls.Add(this.rdb成本为0的才修复);
+            this.grp成本更新规则.Controls.Add(this.rdb小于指定成本);
+            this.grp成本更新规则.Controls.Add(this.rdb大于单项成本);
+            this.grp成本更新规则.Controls.Add(this.kryptonLabel8);
+            this.grp成本更新规则.Controls.Add(this.rdb大于平均价);
+            this.grp成本更新规则.Controls.Add(this.rdb小于平均价);
+            this.grp成本更新规则.Controls.Add(this.rdb与平均价差异大);
+            this.grp成本更新规则.Controls.Add(this.kryptonLabel9);
+            this.grp成本更新规则.Controls.Add(this.chk指定成本);
+            this.grp成本更新规则.Controls.Add(this.txtUnitCost);
+            this.grp成本更新规则.Controls.Add(this.kryptonLabel10);
+            this.grp成本更新规则.Controls.Add(this.rdb小计总计);
+            this.grp成本更新规则.Controls.Add(this.rdb其它);
+            this.grp成本更新规则.Controls.Add(this.rdb时间区间);
+            this.grp成本更新规则.Controls.Add(this.ucAdvDateTimerPickerGroup1);
+            this.grp成本更新规则.Location = new System.Drawing.Point(640, 10);
+            this.grp成本更新规则.Name = "grp成本更新规则";
+            this.grp成本更新规则.Size = new System.Drawing.Size(480, 180);
+            this.grp成本更新规则.TabIndex = 181;
+            this.grp成本更新规则.TabStop = false;
+            this.grp成本更新规则.Text = "成本更新规则";
             // 
             // chkTestMode
             // 
             this.chkTestMode.Checked = true;
             this.chkTestMode.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkTestMode.Location = new System.Drawing.Point(521, 64);
+            this.chkTestMode.Location = new System.Drawing.Point(500, 115);
             this.chkTestMode.Name = "chkTestMode";
             this.chkTestMode.Size = new System.Drawing.Size(75, 20);
             this.chkTestMode.TabIndex = 1;
@@ -619,7 +790,7 @@
             // 
             // btnQuery
             // 
-            this.btnQuery.Location = new System.Drawing.Point(416, 63);
+            this.btnQuery.Location = new System.Drawing.Point(500, 140);
             this.btnQuery.Name = "btnQuery";
             this.btnQuery.Size = new System.Drawing.Size(99, 24);
             this.btnQuery.TabIndex = 0;
@@ -751,6 +922,8 @@
         private System.Windows.Forms.ToolStripMenuItem 更新关联成本ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 更新库存成本数据ToolStripMenuItem;
         private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox grp查询条件;
+        private System.Windows.Forms.GroupBox grp成本更新规则;
         private System.Windows.Forms.RadioButton rdb其它;
         private System.Windows.Forms.RadioButton rdb小于指定成本;
         private System.Windows.Forms.RadioButton rdb成本为0的才修复;
@@ -772,5 +945,13 @@
         private System.Windows.Forms.RadioButton rdb时间区间;
         private AdvancedUIModule.UCAdvDateTimerPickerGroup ucAdvDateTimerPickerGroup1;
         private System.Windows.Forms.ToolStripMenuItem 加载关联数据ToolStripMenuItem;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel7;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel8;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel9;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel10;
+        private System.Windows.Forms.RadioButton rdb无条件全部更新;
+        private System.Windows.Forms.RadioButton rdb大于平均价;
+        private System.Windows.Forms.RadioButton rdb小于平均价;
+        private System.Windows.Forms.RadioButton rdb与平均价差异大;
     }
 }

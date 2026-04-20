@@ -22,6 +22,8 @@ using RUINORERP.Business.Config;
 using RUINORERP.IServices;
 using RUINORERP.Model.Context;
 using RUINORERP.Business.EntityLoadService;
+using RUINORERP.Business.DataCorrectionServices;
+using System.Linq;
 
 namespace RUINORERP.Business.DI
 {
@@ -40,7 +42,8 @@ namespace RUINORERP.Business.DI
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
                   .Where(t => !t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) &&
                              !t.Name.EndsWith("Converter") &&
-                             t.Namespace != "RUINORERP.Business.Cache") // 排除缓存架构命名空间，使用单个注册方式
+                             t.Namespace != "RUINORERP.Business.Cache" &&  // 排除缓存架构命名空间，使用单个注册方式
+                             t.Namespace != "RUINORERP.Business.DataCorrectionServices")  // 排除数据校正服务命名空间，使用专用注册
                   .AsImplementedInterfaces()
                   .AsSelf()
                   .PropertiesAutowired()
@@ -258,6 +261,9 @@ namespace RUINORERP.Business.DI
                 .PreserveExistingDefaults(); // 确保不会覆盖已经存在的单例注册
 
             AddBizMapperService(builder);
+            
+            // 注册数据校正服务
+            RegisterDataCorrectionServices(builder);
         }
 
         /// <summary>
@@ -465,6 +471,40 @@ namespace RUINORERP.Business.DI
                 .SingleInstance()
                 .PropertiesAutowired();
 
+        }
+        
+        /// <summary>
+        /// 注册数据校正服务
+        /// </summary>
+        /// <param name="builder">Autofac容器构建器</param>
+        private static void RegisterDataCorrectionServices(ContainerBuilder builder)
+        {
+            try
+            {
+                // 自动发现并注册所有数据校正服务
+                var assembly = Assembly.GetAssembly(typeof(DataCorrectionServiceBase));
+                if (assembly == null) return;
+                
+                var serviceTypes = assembly.GetTypes()
+                    .Where(t => t.IsClass && !t.IsAbstract && typeof(IDataCorrectionService).IsAssignableFrom(t))
+                    .ToList();
+                
+                foreach (var type in serviceTypes)
+                {
+                    // 注册为自身类型和接口类型
+                    builder.RegisterType(type)
+                        .AsImplementedInterfaces()
+                        .AsSelf()
+                        .InstancePerLifetimeScope()  // 每个生命周期一个实例
+                        .PropertiesAutowired();
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"✅ 已注册 {serviceTypes.Count} 个数据校正服务");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ 注册数据校正服务失败: {ex.Message}");
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.DataCorrectionServices;
 using RUINORERP.Common;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -60,9 +61,61 @@ namespace RUINORERP.UI.SysConfig
     [MenuAttrAssemblyInfo("数据校正中心", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
     public partial class UCDataCorrectionCenter : UserControl
     {
+        /// <summary>
+        /// 数据修复项元数据
+        /// </summary>
+        public class CorrectionItemMetadata
+        {
+            /// <summary>
+            /// 功能名称
+            /// </summary>
+            public string FunctionName { get; set; }
+            
+            /// <summary>
+            /// 问题描述
+            /// </summary>
+            public string ProblemDescription { get; set; }
+            
+            /// <summary>
+            /// 影响表清单
+            /// </summary>
+            public List<string> AffectedTables { get; set; } = new List<string>();
+            
+            /// <summary>
+            /// 修复逻辑说明
+            /// </summary>
+            public string FixLogic { get; set; }
+            
+            /// <summary>
+            /// 发生情形
+            /// </summary>
+            public string OccurrenceScenario { get; set; }
+            
+            /// <summary>
+            /// TreeView节点文本（用于匹配）
+            /// </summary>
+            public string NodeText { get; set; }
+        }
+        
+        /// <summary>
+        /// 修复项元数据字典
+        /// </summary>
+        private Dictionary<string, CorrectionItemMetadata> _correctionItemsMetadata = new Dictionary<string, CorrectionItemMetadata>();
+        
+        /// <summary>
+        /// 预览数据缓存（用于执行时直接使用）
+        /// </summary>
+        private DataTable _previewData;
+        
+        /// <summary>
+        /// 当前选中的修复项
+        /// </summary>
+        private string _currentCorrectionItem;
+
         public UCDataCorrectionCenter()
         {
             InitializeComponent();
+            InitializeCorrectionItemsMetadata();
         }
 
 
@@ -76,15 +129,525 @@ namespace RUINORERP.UI.SysConfig
 
         private void UCDataFix_Load(object sender, EventArgs e)
         {
-            LoadTree();
-            treeView1.Nodes.Add(new TreeNode("应收付单据业务日期修复"));
+            // 设置应用上下文（服务已通过BusinessDIConfig自动注册）
+            try
+            {
+                var appContext = Startup.GetFromFac<RUINORERP.Model.Context.ApplicationContext>();
+                DataCorrectionServiceManager.SetApplicationContext(appContext);
+                
+                richTextBoxLog.AppendText("✅ 数据校正服务管理器初始化成功\r\n");
+            }
+            catch (Exception ex)
+            {
+                richTextBoxLog.AppendText($"⚠️ 数据修复服务初始化失败：{ex.Message}\r\n");
+            }
+            
+            // ✅ 动态加载所有已注册的服务
+            LoadCorrectionServices();
+        }
+        
+        /// <summary>
+        /// 动态加载所有已注册的数据校正服务
+        /// </summary>
+        private void LoadCorrectionServices()
+        {
+            try
+            {
+                richTextBoxLog.AppendText("正在加载数据校正服务...\r\n");
+                
+                // ✅ 从DI容器获取所有已注册的服务
+                var services = DataCorrectionServiceManager.GetAllServices();
+                
+                if (services == null || services.Count == 0)
+                {
+                    richTextBoxLog.AppendText("⚠️ 未找到任何数据校正服务\r\n");
+                    return;
+                }
+                
+                richTextBoxLog.AppendText($"发现 {services.Count} 个数据校正服务\r\n");
+                
+                // ✅ 清空TreeView
+                treeViewFunction.Nodes.Clear();
+                _correctionItemsMetadata.Clear();
+                
+                // ✅ 动态添加每个服务到TreeView和元数据字典
+                foreach (var service in services.OrderBy(s => s.FunctionName))
+                {
+                    // 添加到元数据字典
+                    var metadata = new CorrectionItemMetadata
+                    {
+                        FunctionName = service.FunctionName,
+                        ProblemDescription = service.ProblemDescription,
+                        AffectedTables = service.AffectedTables,
+                        FixLogic = service.FixLogic,
+                        OccurrenceScenario = service.OccurrenceScenario,
+                        NodeText = service.FunctionName  // 使用FunctionName作为节点文本
+                    };
+                    
+                    _correctionItemsMetadata[service.FunctionName] = metadata;
+                    
+                    // 添加到TreeView
+                    var node = new TreeNode(service.FunctionName)
+                    {
+                        Tag = service.CorrectionName  // 存储CorrectionName用于后续查找
+                    };
+                    
+                    treeViewFunction.Nodes.Add(node);
+                    
+                    richTextBoxLog.AppendText($"  - {service.FunctionName} ({service.CorrectionName})\r\n");
+                }
+                
+                richTextBoxLog.AppendText($"✅ 成功加载 {services.Count} 个服务\r\n\r\n");
+            }
+            catch (Exception ex)
+            {
+                richTextBoxLog.AppendText($"❌ 加载服务失败：{ex.Message}\r\n");
+                richTextBoxLog.AppendText($"详细信息：{ex.StackTrace}\r\n");
+            }
+        }
+        
+        /// <summary>
+        /// 初始化修复项元数据（已废弃，改为动态加载）
+        /// </summary>
+        [Obsolete("请使用 LoadCorrectionServices() 动态加载服务")]
+        private void InitializeCorrectionItemsMetadata()
+        {
+            // 菜单枚举类型修复
+            _correctionItemsMetadata["菜单枚举类型修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "菜单枚举类型修复",
+                ProblemDescription = "修复菜单设置中的BizType枚举值与代码中定义的枚举值不一致的问题。当代码维护修改枚举定义后，数据库中的菜单配置可能未同步更新。",
+                AffectedTables = new List<string> { "tb_MenuInfo", "tb_PrintTemplate", "tb_PrintConfig" },
+                FixLogic = "遍历所有菜单项，根据MenuName重新从硬编码的枚举映射中获取正确的BizType值，并更新到数据库。同时检查打印模板和打印配置的关联关系。",
+                OccurrenceScenario = "1. 开发人员修改了业务类型枚举定义；2. 新增菜单但未正确配置BizType；3. 系统升级后枚举值发生变化",
+                NodeText = "菜单枚举类型修复"
+            };
+            
+            // 采购订单价格修复
+            _correctionItemsMetadata["采购订单价格修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "采购订单价格修复",
+                ProblemDescription = "修复采购订单主表与明细表价格不一致的问题，包括单价、金额、税额等字段。",
+                AffectedTables = new List<string> { "tb_PurOrder", "tb_PurOrderDetail" },
+                FixLogic = "根据明细表的实际数据重新计算主表的汇总价格，确保主表TotalAmount、TotalTax等字段与明细表合计一致。",
+                OccurrenceScenario = "1. 手动修改明细价格后未更新主表；2. 并发操作导致数据不一致；3. 历史数据迁移错误",
+                NodeText = "采购订单价格修复"
+            };
+            
+            // 采购入库单价格修复
+            _correctionItemsMetadata["采购入库单价格修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "采购入库单价格修复",
+                ProblemDescription = "修复采购入库单主表与明细表价格不一致的问题。",
+                AffectedTables = new List<string> { "tb_PurIn", "tb_PurInDetail" },
+                FixLogic = "根据入库明细的实际数量和单价重新计算主表汇总金额，修正TotalAmount、TotalTax等字段。",
+                OccurrenceScenario = "1. 入库时调整价格未同步主表；2. 退货后价格计算错误；3. 系统bug导致数据异常",
+                NodeText = "采购入库单价格修复"
+            };
+            
+            // 销售订单成本数量修复
+            _correctionItemsMetadata["销售订单成本数量修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "销售订单成本数量修复",
+                ProblemDescription = "修复销售订单的成本价和数量字段异常，确保成本计算的准确性。",
+                AffectedTables = new List<string> { "tb_SaleOrder", "tb_SaleOrderDetail" },
+                FixLogic = "根据产品最新成本价更新订单明细的成本字段，重新计算订单总成本。检查数量字段的合理性。",
+                OccurrenceScenario = "1. 成本价调整后历史订单未更新；2. 负数数量或零数量异常；3. 成本计算逻辑变更",
+                NodeText = "销售订单成本数量修复"
+            };
+            
+            // 销售出库单成本数量修复
+            _correctionItemsMetadata["销售出库单成本数量修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "销售出库单成本数量修复",
+                ProblemDescription = "修复销售出库单的成本和数量数据，确保库存成本和毛利计算准确。",
+                AffectedTables = new List<string> { "tb_SaleOut", "tb_SaleOutDetail" },
+                FixLogic = "根据出库时的实际成本更新明细记录，重新计算出库单总成本。验证数量的合理性。",
+                OccurrenceScenario = "1. 出库时成本获取失败；2. 部分出库导致数量异常；3. 成本核算方式变更",
+                NodeText = "销售出库单成本数量修复"
+            };
+            
+            // 生产计划数量修复
+            _correctionItemsMetadata["生产计划数量修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "生产计划数量修复",
+                ProblemDescription = "修复生产计划的数量相关字段，包括计划数量、已完成数量、未完成数量等。",
+                AffectedTables = new List<string> { "tb_ProdPlan", "tb_ProdPlanDetail" },
+                FixLogic = "根据实际的生产任务单和入库单重新计算计划的完成进度，更新CompletedQty、UnfinishedQty等字段。",
+                OccurrenceScenario = "1. 生产任务取消后计划未更新；2. 超额生产导致数量异常；3. 手工调整未同步",
+                NodeText = "生产计划数量修复"
+            };
+            
+            // 制令单自制品修复
+            _correctionItemsMetadata["制令单自制品修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "制令单自制品修复",
+                ProblemDescription = "修复制令单中自制产品的标识和关联关系错误。",
+                AffectedTables = new List<string> { "tb_ProdWorkOrder", "tb_ProdDetail" },
+                FixLogic = "检查制令单关联的产品是否为自制类型，修正IsSelfMade标识。确保BOM关联正确。",
+                OccurrenceScenario = "1. 产品类型变更后制令单未更新；2. BOM配置错误；3. 数据导入时标识丢失",
+                NodeText = "制令单自制品修复"
+            };
+            
+            // 属性重复的SKU检测
+            _correctionItemsMetadata["属性重复的SKU检测"] = new CorrectionItemMetadata
+            {
+                FunctionName = "属性重复的SKU检测",
+                ProblemDescription = "检测并修复具有相同属性组合的重复SKU记录，避免数据冗余和查询歧义。",
+                AffectedTables = new List<string> { "tb_ProdDetail", "tb_SKUAttribute" },
+                FixLogic = "查找具有相同ProdID和相同属性值组合的多条SKU记录，标记重复项并提供合并或删除建议。",
+                OccurrenceScenario = "1. 多次创建相同属性的SKU；2. 数据导入时未去重；3. 属性修改导致重复",
+                NodeText = "属性重复的SKU检测"
+            };
+            
+            // 将销售客户转换为目标客户
+            _correctionItemsMetadata["将销售客户转换为目标客户"] = new CorrectionItemMetadata
+            {
+                FunctionName = "将销售客户转换为目标客户",
+                ProblemDescription = "将临时销售客户转换为正式的目标客户，建立完整的客户关系管理档案。",
+                AffectedTables = new List<string> { "tb_SaleOrder", "tb_CustomerVendor", "tb_CRM_TargetCustomer" },
+                FixLogic = "识别仅出现在销售订单中的临时客户，创建或关联到目标客户表，更新相关单据的客户引用。",
+                OccurrenceScenario = "1. 快速开单时使用临时客户；2. CRM系统上线后需要整合历史客户；3. 客户信息完善",
+                NodeText = "将销售客户转换为目标客户"
+            };
+            
+            // 销售数量与明细数量和的检测
+            _correctionItemsMetadata["销售数量与明细数量和的检测"] = new CorrectionItemMetadata
+            {
+                FunctionName = "销售数量与明细数量和的检测",
+                ProblemDescription = "检测销售订单主表数量与明细数量总和是否一致，修复不一致的数据。",
+                AffectedTables = new List<string> { "tb_SaleOrder", "tb_SaleOrderDetail" },
+                FixLogic = "计算每个订单明细数量的总和，与主表TotalQty对比，不一致则更新主表数量。",
+                OccurrenceScenario = "1. 增删明细后主表未更新；2. 并发修改导致不一致；3. 历史数据错误",
+                NodeText = "销售数量与明细数量和的检测"
+            };
+            
+            // 借出已还修复为完结
+            _correctionItemsMetadata["借出已还修复为完结"] = new CorrectionItemMetadata
+            {
+                FunctionName = "借出已还修复为完结",
+                ProblemDescription = "将已全部归还的借出单状态从'借出中'修正为'已完结'，确保状态准确性。",
+                AffectedTables = new List<string> { "tb_LendOut" },
+                FixLogic = "检查借出单的已还数量是否等于借出数量，如果相等且状态不是'完结'，则更新状态为完结。",
+                OccurrenceScenario = "1. 归还后状态未自动更新；2. 手工关闭遗漏；3. 状态流转逻辑bug",
+                NodeText = "借出已还修复为完结"
+            };
+            
+            // 成本修复
+            _correctionItemsMetadata["成本修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "成本修复",
+                ProblemDescription = "修复库存产品的成本价异常，包括零成本、负成本、成本波动过大等问题。",
+                AffectedTables = new List<string> { "tb_Inventory", "tb_ProdDetail", "tb_CostHistory" },
+                FixLogic = "根据最近的采购入库价、生产成本或标准成本重新计算库存成本。提供预览功能让用户确认后再执行。",
+                OccurrenceScenario = "1. 首次入库成本为零；2. 退货导致成本异常；3. 成本核算方法变更；4. 数据迁移错误",
+                NodeText = "成本修复"
+            };
+            
+            // 拟销在制在途修复
+            _correctionItemsMetadata["拟销在制在途修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "拟销在制在途修复",
+                ProblemDescription = "修复产品的拟销数量、在制数量、在途数量统计错误，确保可用量计算准确。",
+                AffectedTables = new List<string> { "tb_Inventory", "tb_SaleOrder", "tb_PurOrder", "tb_ProdPlan" },
+                FixLogic = "重新统计各产品的销售订单未交数量（拟销）、生产计划未完工数量（在制）、采购订单未入库数量（在途），更新库存表的对应字段。",
+                OccurrenceScenario = "1. 订单取消后统计未更新；2. 状态变更未触发重算；3. 定时任务失败",
+                NodeText = "拟销在制在途修复"
+            };
+            
+            // 修复CRM跟进计划状态
+            _correctionItemsMetadata["修复CRM跟进计划状态"] = new CorrectionItemMetadata
+            {
+                FunctionName = "修复CRM跟进计划状态",
+                ProblemDescription = "修复CRM跟进计划的状态与实际跟进情况不一致的问题。",
+                AffectedTables = new List<string> { "tb_CRM_FollowUpPlan" },
+                FixLogic = "根据最后跟进时间和计划下次跟进时间，自动更新跟进计划状态（待跟进、已逾期、已完成等）。",
+                OccurrenceScenario = "1. 跟进后状态未更新；2. 逾期判断逻辑错误；3. 批量导入数据状态缺失",
+                NodeText = "修复CRM跟进计划状态"
+            };
+            
+            // 用户密码加密
+            _correctionItemsMetadata["用户密码加密"] = new CorrectionItemMetadata
+            {
+                FunctionName = "用户密码加密",
+                ProblemDescription = "将明文存储的用户密码转换为加密存储，提升系统安全性。",
+                AffectedTables = new List<string> { "tb_User" },
+                FixLogic = "检测未加密的密码（非哈希格式），使用BCrypt或其他加密算法进行加密，更新PasswordHash字段。",
+                OccurrenceScenario = "1. 历史数据使用明文密码；2. 系统安全升级；3. 合规要求",
+                NodeText = "用户密码加密"
+            };
+            
+            // 配方数量成本的检测
+            _correctionItemsMetadata["配方数量成本的检测"] = new CorrectionItemMetadata
+            {
+                FunctionName = "配方数量成本的检测",
+                ProblemDescription = "检测BOM配方中子件数量与成本计算是否正确，发现异常配方。",
+                AffectedTables = new List<string> { "tb_BOM", "tb_BOMDetail", "tb_ProdDetail" },
+                FixLogic = "验证BOM子件数量总和是否符合预期，计算理论成本并与实际成本对比，标记差异过大的配方。",
+                OccurrenceScenario = "1. BOM录入错误；2. 子件成本变更后未重算；3. 配方版本管理混乱",
+                NodeText = "配方数量成本的检测"
+            };
+            
+            // 清空财务数据
+            _correctionItemsMetadata["清空财务数据"] = new CorrectionItemMetadata
+            {
+                FunctionName = "清空财务数据",
+                ProblemDescription = "【危险操作】清空指定期间的财务凭证、应收应付等数据，用于测试环境重置或错误数据清理。",
+                AffectedTables = new List<string> { "tb_FM_Voucher", "tb_FM_ARAP", "tb_FM_Payment", "tb_FM_Receipt" },
+                FixLogic = "根据选择的时间范围，删除相关的财务凭证和往来款项记录。需要二次确认，建议先备份数据。",
+                OccurrenceScenario = "1. 测试环境数据重置；2. 期初数据重新录入；3. 错误的批量操作需要回滚",
+                NodeText = "清空财务数据"
+            };
+            
+            // 佣金数据修复[tb_SaleOrder]
+            _correctionItemsMetadata["佣金数据修复[tb_SaleOrder]"] = new CorrectionItemMetadata
+            {
+                FunctionName = "佣金数据修复[tb_SaleOrder]",
+                ProblemDescription = "修复销售订单的佣金计算错误，包括佣金比例、佣金金额等字段。",
+                AffectedTables = new List<string> { "tb_SaleOrder", "tb_SaleOrderDetail", "tb_Employee" },
+                FixLogic = "根据销售人员、客户等级、产品类别重新计算佣金比例和金额，更新订单主表和明细表的佣金字段。",
+                OccurrenceScenario = "1. 佣金政策调整后历史订单未更新；2. 销售人员变更；3. 计算规则bug",
+                NodeText = "佣金数据修复[tb_SaleOrder]"
+            };
+            
+            // 佣金数据修复[tb_SaleOut]
+            _correctionItemsMetadata["佣金数据修复[tb_SaleOut]"] = new CorrectionItemMetadata
+            {
+                FunctionName = "佣金数据修复[tb_SaleOut]",
+                ProblemDescription = "修复销售出库单的佣金数据，确保与订单佣金一致或按出库规则重新计算。",
+                AffectedTables = new List<string> { "tb_SaleOut", "tb_SaleOutDetail", "tb_SaleOrder" },
+                FixLogic = "关联销售订单获取佣金信息，或根据出库规则重新计算出库佣金，更新出库单佣金字段。",
+                OccurrenceScenario = "1. 部分出库导致佣金分摊错误；2. 订单佣金变更后出库单未同步；3. 退货处理不当",
+                NodeText = "佣金数据修复[tb_SaleOut]"
+            };
+            
+            // 采购订单未交数量修复
+            _correctionItemsMetadata["采购订单未交数量修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "采购订单未交数量修复",
+                ProblemDescription = "修复采购订单的未交数量字段，确保与已入库数量的逻辑一致性。",
+                AffectedTables = new List<string> { "tb_PurOrder", "tb_PurOrderDetail", "tb_PurIn" },
+                FixLogic = "根据采购订单的订购数量和已入库数量，重新计算未交数量（UnDeliveredQty = OrderQty - ReceivedQty）。",
+                OccurrenceScenario = "1. 入库后未更新未交数量；2. 退货后未调整；3. 订单关闭逻辑错误",
+                NodeText = "采购订单未交数量修复"
+            };
+            
+            // 采购退货数量回写修复
+            _correctionItemsMetadata["采购退货数量回写修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "采购退货数量回写修复",
+                ProblemDescription = "修复采购退货后，原入库单和采购订单的数量回写错误。",
+                AffectedTables = new List<string> { "tb_PurReturn", "tb_PurIn", "tb_PurOrder" },
+                FixLogic = "根据退货单数量，扣减原入库单的已入库数量，更新采购订单的已入库和未交数量。",
+                OccurrenceScenario = "1. 退货后未回写上游单据；2. 多次退货累计错误；3. 跨月退货处理不当",
+                NodeText = "采购退货数量回写修复"
+            };
+            
+            // 生产计划结案子单状态检测
+            _correctionItemsMetadata["生产计划结案子单状态检测"] = new CorrectionItemMetadata
+            {
+                FunctionName = "生产计划结案子单状态检测",
+                ProblemDescription = "检测生产计划结案时，子计划或关联任务单的状态是否正确关闭。",
+                AffectedTables = new List<string> { "tb_ProdPlan", "tb_ProdWorkOrder" },
+                FixLogic = "检查已结案的生产计划下是否还有未完成的子计划或制令单，标记异常情况供人工处理。",
+                OccurrenceScenario = "1. 父计划结案但子任务仍在进行；2. 异常终止未正确关闭；3. 状态同步延迟",
+                NodeText = "生产计划结案子单状态检测"
+            };
+            
+            // 应收付单据业务日期修复
+            _correctionItemsMetadata["应收付单据业务日期修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "应收付单据业务日期修复",
+                ProblemDescription = "修复应收应付单据的业务日期与单据日期不一致的问题，确保账期计算准确。",
+                AffectedTables = new List<string> { "tb_FM_ARAP", "tb_FM_Payment", "tb_FM_Receipt" },
+                FixLogic = "检查业务日期（BusinessDate）是否合理，如为空或与单据日期相差过大，则根据业务规则修正。",
+                OccurrenceScenario = "1. 补录单据时日期填写错误；2. 跨期业务日期未调整；3. 系统默认值不合理",
+                NodeText = "应收付单据业务日期修复"
+            };
+            
+            // 采购订单结案状态修复
+            _correctionItemsMetadata["采购订单结案状态修复"] = new CorrectionItemMetadata
+            {
+                FunctionName = "采购订单结案状态修复",
+                ProblemDescription = "修复采购入库单审核后，采购订单相关数据未正确更新的问题。包括：\n" +
+                    "1. 订单明细的DeliveredQuantity（已交数量）未累加入库数量\n" +
+                    "2. 订单明细的UndeliveredQty（未交数量）未扣减入库数量\n" +
+                    "3. 订单主表的TotalUndeliveredQty（总未交数量）未汇总更新\n" +
+                    "4. 当所有明细都已入库完成时，订单状态DataStatus未更新为8（结案）",
+                AffectedTables = new List<string> { "tb_PurOrder", "tb_PurOrderDetail", "tb_PurEntry", "tb_PurEntryDetail" },
+                FixLogic = "1. 从入库单明细按PurOrder_ChildID汇总实际入库数量\n" +
+                    "2. 更新订单明细的DeliveredQuantity和UndeliveredQty\n" +
+                    "3. 汇总更新订单主表的TotalUndeliveredQty\n" +
+                    "4. 将TotalUndeliveredQty=0的订单状态更新为8（结案）",
+                OccurrenceScenario = "1. 2026年4月17-18日期间审核的采购入库单存在BUG\n" +
+                    "2. 入库单审核时未正确执行数量回写逻辑\n" +
+                    "3. 订单已全部入库但状态仍为'已审核'而非'结案'\n" +
+                    "4. 财务对账时发现订单数量与实际入库数量不一致",
+                NodeText = "采购订单结案状态修复"
+            };
         }
         // 在类开始处添加：
         private static IEntityCacheManager _cacheManager;
         private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
+        
+        /// <summary>
+        /// treeView1节点选择后，自动勾选左侧对应的表
+        /// </summary>
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            // 清空左侧所有勾选
+            UncheckAllTables();
+            
+            // 如果没有选中节点，清空当前选中项并返回
+            if (e.Node == null || string.IsNullOrEmpty(e.Node.Text))
+            {
+                _currentCorrectionItem = null;
+                richTextBoxLog.AppendText("ℹ️ 已取消功能选择，所有表已取消勾选\r\n");
+                return;
+            }
+            
+            string nodeName = e.Node.Text;
+            
+            // ✅ 关键：设置当前选中的修复项（与AfterCheck保持一致）
+            _currentCorrectionItem = nodeName;
+            
+            // ✅ 关键：显示选中修复项的详细信息
+            DisplayCorrectionItemDetails(nodeName);
+            
+            // 根据选中的功能节点，自动勾选对应的表
+            AutoCheckRelatedTables(nodeName);
+        }
+        
+        /// <summary>
+        /// 取消左侧所有表的勾选
+        /// </summary>
+        private void UncheckAllTables()
+        {
+            foreach (TreeNode node in treeViewTableList.Nodes)
+            {
+                UncheckNodeRecursive(node);
+            }
+        }
+        
+        /// <summary>
+        /// 递归取消节点勾选
+        /// </summary>
+        private void UncheckNodeRecursive(TreeNode node)
+        {
+            node.Checked = false;
+            foreach (TreeNode child in node.Nodes)
+            {
+                UncheckNodeRecursive(child);
+            }
+        }
+        
+        /// <summary>
+        /// 根据功能名称自动勾选相关的表
+        /// </summary>
+        private void AutoCheckRelatedTables(string functionName)
+        {
+            var checkedTables = new List<string>();
+            
+            // 尝试从元数据中获取影响的表
+            if (_correctionItemsMetadata.TryGetValue(functionName, out var metadata))
+            {
+                foreach (var tableName in metadata.AffectedTables)
+                {
+                    if (CheckTableByName(tableName))
+                    {
+                        checkedTables.Add(tableName);
+                    }
+                }
+            }
+            else
+            {
+                // 如果没有元数据，尝试从服务中获取
+                try
+                {
+                    var service = DataCorrectionServiceManager.GetService(functionName);
+                    if (service != null && service.AffectedTables != null)
+                    {
+                        foreach (var tableName in service.AffectedTables)
+                        {
+                            if (CheckTableByName(tableName))
+                            {
+                                checkedTables.Add(tableName);
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // 忽略错误，可能服务还未注册
+                }
+            }
+            
+            // 输出日志
+            if (checkedTables.Count > 0)
+            {
+                richTextBoxLog.AppendText($"   已自动勾选 {checkedTables.Count} 个表：\r\n");
+                foreach (var table in checkedTables)
+                {
+                    richTextBoxLog.AppendText($"   - {table}\r\n");
+                }
+            }
+            else
+            {
+                richTextBoxLog.AppendText($"   ⚠️ 未找到与 {functionName} 相关的表\r\n");
+            }
+        }
+        
+        /// <summary>
+        /// 根据表名勾选对应的节点
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>是否成功找到并勾选</returns>
+        private bool CheckTableByName(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return false;
+            
+            // 遍历左侧TreeView查找匹配的表
+            foreach (TreeNode node in treeViewTableList.Nodes)
+            {
+                if (CheckNodeByNameRecursive(node, tableName))
+                    return true;
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// 递归查找并勾选匹配的表节点
+        /// </summary>
+        private bool CheckNodeByNameRecursive(TreeNode node, string tableName)
+        {
+            // 检查当前节点是否匹配（通过Name或Text）
+            if (!string.IsNullOrEmpty(node.Name) && node.Name.Equals(tableName, StringComparison.OrdinalIgnoreCase))
+            {
+                node.Checked = true;
+                return true;
+            }
+            
+            if (!string.IsNullOrEmpty(node.Text) && node.Text.Equals(tableName, StringComparison.OrdinalIgnoreCase))
+            {
+                node.Checked = true;
+                return true;
+            }
+            
+            // 递归检查子节点
+            foreach (TreeNode child in node.Nodes)
+            {
+                if (CheckNodeByNameRecursive(child, tableName))
+                    return true;
+            }
+            
+            return false;
+        }
+        
         private async void treeView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (treeViewTableList.SelectedNode != null && treeView1.SelectedNode != null)
+            if (treeViewTableList.SelectedNode != null && treeViewFunction.SelectedNode != null)
             {
 
 
@@ -170,7 +733,7 @@ namespace RUINORERP.UI.SysConfig
 
 
 
-                if (treeView1.SelectedNode.Text == "菜单枚举类型修复")
+                if (treeViewFunction.SelectedNode.Text == "菜单枚举类型修复")
                 {
                     if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_MenuInfo).Name)
                     {
@@ -305,7 +868,7 @@ namespace RUINORERP.UI.SysConfig
                         #endregion
                     }
                 }
-                if (treeView1.SelectedNode.Text == "销售退货价格修复")
+                if (treeViewFunction.SelectedNode.Text == "销售退货价格修复")
                 {
 
                     if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_SaleOutRe).Name)
@@ -443,7 +1006,7 @@ namespace RUINORERP.UI.SysConfig
                         #endregion
                     }
                 }
-                if (treeView1.SelectedNode.Text == "采购订单价格修复")
+                if (treeViewFunction.SelectedNode.Text == "采购订单价格修复")
                 {
 
                     if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_PurOrderDetail).Name)
@@ -583,7 +1146,7 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
 
-                if (treeView1.SelectedNode.Text == "应收付单据业务日期修复")
+                if (treeViewFunction.SelectedNode.Text == "应收付单据业务日期修复")
                 {
 
                     if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_FM_ReceivablePayable).Name)
@@ -750,7 +1313,7 @@ namespace RUINORERP.UI.SysConfig
 
                 }
 
-                if (treeView1.SelectedNode.Text == "采购入库单价格修复")
+                if (treeViewFunction.SelectedNode.Text == "采购入库单价格修复")
                 {
 
                     if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_PurEntryDetail).Name)
@@ -944,7 +1507,7 @@ namespace RUINORERP.UI.SysConfig
                 }
 
 
-                if (treeView1.SelectedNode.Text == "生产计划结案子单状态检测")
+                if (treeViewFunction.SelectedNode.Text == "生产计划结案子单状态检测")
                 {
                     //要回写到采购入库及退货中
                     if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_ProductionPlan).Name)
@@ -1041,7 +1604,7 @@ namespace RUINORERP.UI.SysConfig
                     }
 
                 }
-                if (treeView1.SelectedNode.Text == "采购退货数量回写修复")
+                if (treeViewFunction.SelectedNode.Text == "采购退货数量回写修复")
                 {
                     //要回写到采购入库及退货中
                     if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_PurEntryRe).Name)
@@ -1184,7 +1747,7 @@ namespace RUINORERP.UI.SysConfig
                 }
 
 
-                if (treeView1.SelectedNode.Text == "借出已还修复为完结")
+                if (treeViewFunction.SelectedNode.Text == "借出已还修复为完结")
                 {
                     List<tb_ProdBorrowing> items = MainForm.Instance.AppContext.Db.Queryable<tb_ProdBorrowing>()
                        .Includes(c => c.tb_ProdBorrowingDetails)
@@ -1212,7 +1775,7 @@ namespace RUINORERP.UI.SysConfig
 
                 }
 
-                if (treeView1.SelectedNode.Text == "修复CRM跟进计划状态")
+                if (treeViewFunction.SelectedNode.Text == "修复CRM跟进计划状态")
                 {
                     #region 修复CRM跟进计划状态
                     List<tb_CRM_FollowUpPlans> followUpPlans = await MainForm.Instance.AppContext.Db.Queryable<tb_CRM_FollowUpPlans>()
@@ -1267,7 +1830,7 @@ namespace RUINORERP.UI.SysConfig
 
                 }
 
-                if (treeView1.SelectedNode.Text == "拟销在制在途修复")
+                if (treeViewFunction.SelectedNode.Text == "拟销在制在途修复")
                 {
                     List<tb_Inventory> UpdateInventories = new List<tb_Inventory>(); //要更新的Inventories
                     StringBuilder sb = new StringBuilder();
@@ -1434,7 +1997,7 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
 
-                if (treeView1.SelectedNode.Text == "用户密码加密")
+                if (treeViewFunction.SelectedNode.Text == "用户密码加密")
                 {
                     #region 用户密码加密
                     List<tb_UserInfo> AllUsers = MainForm.Instance.AppContext.Db.Queryable<tb_UserInfo>()
@@ -1464,12 +2027,12 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
 
-                if (treeView1.SelectedNode.Text == "成本修复")
+                if (treeViewFunction.SelectedNode.Text == "成本修复")
                 {
                     dataGridView1.DataSource = await CostFix(false);
                 }
 
-                if (treeView1.SelectedNode.Text == "销售订单成本数量修复")
+                if (treeViewFunction.SelectedNode.Text == "销售订单成本数量修复")
                 {
                     List<tb_SaleOrderDetail> saleOrderDetails = new List<tb_SaleOrderDetail>();
                     List<tb_SaleOrder> updatelist = new List<tb_SaleOrder>();
@@ -1639,7 +2202,7 @@ namespace RUINORERP.UI.SysConfig
                 }
 
 
-                if (treeView1.SelectedNode.Text == "销售出库单成本数量修复")
+                if (treeViewFunction.SelectedNode.Text == "销售出库单成本数量修复")
                 {
                     List<tb_SaleOutDetail> saleOutDetails = new List<tb_SaleOutDetail>();
                     List<tb_SaleOut> updatelist = new List<tb_SaleOut>();
@@ -1801,7 +2364,7 @@ namespace RUINORERP.UI.SysConfig
                 }
 
 
-                if (treeView1.SelectedNode.Text == "配方数量成本的检测")
+                if (treeViewFunction.SelectedNode.Text == "配方数量成本的检测")
                 {
                     List<tb_BOM_S> bomupdatelist = new();
 
@@ -1887,7 +2450,7 @@ namespace RUINORERP.UI.SysConfig
                     }
 
                 }
-                if (treeView1.SelectedNode.Text == "销售数量与明细数量和的检测")
+                if (treeViewFunction.SelectedNode.Text == "销售数量与明细数量和的检测")
                 {
                     #region 销售订单数量与明细数量和的检测
                     List<tb_SaleOrder> SaleOrders = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
@@ -1919,7 +2482,7 @@ namespace RUINORERP.UI.SysConfig
 
                 }
 
-                if (treeView1.SelectedNode.Text == "将销售客户转换为目标客户")
+                if (treeViewFunction.SelectedNode.Text == "将销售客户转换为目标客户")
                 {
                     MessageBox.Show("只能执行一次。已经执行过了。");
                     //crm数据修复 只能执行一次。这里要注释掉。
@@ -1949,7 +2512,7 @@ namespace RUINORERP.UI.SysConfig
                     #endregion
 
                 }
-                if (treeView1.SelectedNode.Text == "属性重复的SKU检测")
+                if (treeViewFunction.SelectedNode.Text == "属性重复的SKU检测")
                 {
                     //思路是将属性全查出来。将属性按规则排序后比较
 
@@ -2018,7 +2581,7 @@ namespace RUINORERP.UI.SysConfig
 
                 }
 
-                if (treeView1.SelectedNode.Text == "佣金数据修复[tb_SaleOrder]")
+                if (treeViewFunction.SelectedNode.Text == "佣金数据修复[tb_SaleOrder]")
                 {
                     if (treeViewTableList.SelectedNode.Tag != null)
                     {
@@ -2080,7 +2643,7 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
 
-                if (treeView1.SelectedNode.Text == "佣金数据修复[tb_SaleOut]")
+                if (treeViewFunction.SelectedNode.Text == "佣金数据修复[tb_SaleOut]")
                 {
                     if (treeViewTableList.SelectedNode.Tag != null)
                     {
@@ -2142,7 +2705,7 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
 
-                if (treeView1.SelectedNode.Text == "生产计划数量修复")
+                if (treeViewFunction.SelectedNode.Text == "生产计划数量修复")
                 {
 
                     if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_FinishedGoodsInv).Name)
@@ -2279,7 +2842,7 @@ namespace RUINORERP.UI.SysConfig
 
                     }
                 }
-                if (treeView1.SelectedNode.Text == "采购订单未交数量修复")
+                if (treeViewFunction.SelectedNode.Text == "采购订单未交数量修复")
                 {
                     List<tb_PurOrderDetail> updateDetaillist = new();
                     List<tb_PurOrder> yjList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
@@ -2317,7 +2880,7 @@ namespace RUINORERP.UI.SysConfig
                     richTextBoxLog.AppendText($"采购订单未交数量修复 主表 修复成功：{totalmasterCounter} " + "\r\n");
                 }
 
-                if (treeView1.SelectedNode.Text == "制令单自制品修复")
+                if (treeViewFunction.SelectedNode.Text == "制令单自制品修复")
                 {
                     if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_ManufacturingOrder).Name)
                     {
@@ -2355,7 +2918,7 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
 
-                if (treeView1.SelectedNode.Text == "清空财务数据")
+                if (treeViewFunction.SelectedNode.Text == "清空财务数据")
                 {
                     //核销表 付款表  应收付表 预收付表
                     var StatementController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
@@ -3087,7 +3650,62 @@ namespace RUINORERP.UI.SysConfig
             //TreeViewSingleSelectedAndChecked(TreeView1, e);
             e.Node.Checked = true;
             node_AfterCheck(sender, e);
-
+            
+            // 显示选中修复项的详细信息
+            DisplayCorrectionItemDetails(e.Node.Text);
+        }
+        
+        /// <summary>
+        /// 显示修复项的详细信息
+        /// </summary>
+        /// <param name="nodeText">节点文本</param>
+        private void DisplayCorrectionItemDetails(string nodeText)
+        {
+            _currentCorrectionItem = nodeText;
+            richTextBoxLog.Clear();
+            
+            if (_correctionItemsMetadata.TryGetValue(nodeText, out var metadata))
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("========================================");
+                sb.AppendLine($"功能名称：{metadata.FunctionName}");
+                sb.AppendLine("========================================");
+                sb.AppendLine();
+                sb.AppendLine("【问题描述】");
+                sb.AppendLine(metadata.ProblemDescription);
+                sb.AppendLine();
+                sb.AppendLine("【影响表清单】");
+                foreach (var table in metadata.AffectedTables)
+                {
+                    sb.AppendLine($"  - {table}");
+                }
+                sb.AppendLine();
+                sb.AppendLine("【修复逻辑】");
+                sb.AppendLine(metadata.FixLogic);
+                sb.AppendLine();
+                sb.AppendLine("【发生情形】");
+                sb.AppendLine(metadata.OccurrenceScenario);
+                sb.AppendLine();
+                sb.AppendLine("========================================");
+                sb.AppendLine("操作提示：");
+                sb.AppendLine("1. 点击【预览】按钮查看将要修改的数据");
+                sb.AppendLine("2. 确认数据无误后，点击【执行修复】按钮");
+                sb.AppendLine("3. 建议先在测试模式（勾选'测试模式'）下验证");
+                sb.AppendLine("========================================");
+                
+                richTextBoxLog.AppendText(sb.ToString());
+                
+                // ✅ 动态生成查询条件UI
+                GenerateQueryConditionUI(nodeText);
+            }
+            else
+            {
+                richTextBoxLog.AppendText($"未找到 '{nodeText}' 的详细说明。\r\n");
+                richTextBoxLog.AppendText("请确保该修复项已配置元数据信息。\r\n");
+                
+                // 清空查询条件面板
+                kryptonPanelQuery.Controls.Clear();
+            }
         }
 
 
@@ -3142,37 +3760,835 @@ namespace RUINORERP.UI.SysConfig
 
         private async void 执行选中数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (treeView1.SelectedNode.Text == "成本修复" && dataGridView1.CurrentRow != null
+            if (treeViewFunction.SelectedNode.Text == "成本修复" && dataGridView1.CurrentRow != null
                 && dataGridView1.CurrentRow.DataBoundItem is tb_Inventory inventory)
             {
                 await CostFix(true, string.Empty, inventory.ProdDetailID);
             }
         }
 
-        private void txtSearchKey_TextChanged(object sender, EventArgs e)
+       
+        
+        /// <summary>
+        /// 预览按钮点击事件 - 显示将要修改的数据
+        /// </summary>
+        private async void btnPreview_Click(object sender, EventArgs e)
         {
-
-            foreach (DataGridViewRow dr in dataGridView1.Rows)
+            if (string.IsNullOrEmpty(_currentCorrectionItem))
             {
-                if (dr.DataBoundItem is tb_Inventory Inventory)
+                MessageBox.Show("请先选择一个数据修复项！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+            // 获取对应的服务
+            var service = DataCorrectionServiceManager.GetService(_currentCorrectionItem);
+            if (service == null)
+            {
+                richTextBoxLog.AppendText($"未找到修复服务：{_currentCorrectionItem}\r\n");
+                richTextBoxLog.AppendText("请使用旧的方式执行修复。\r\n");
+                return;
+            }
+            
+            richTextBoxLog.Clear();
+            richTextBoxLog.AppendText($"正在预览【{service.FunctionName}】...\r\n\r\n");
+            Application.DoEvents();
+            
+            try
+            {
+                // ✅ 从动态生成的UI读取查询参数
+                var queryParameters = GetQueryParameters();
+                
+                if (queryParameters.Count > 0)
                 {
-                    string keywords = txtSearchKey.Text.ToLower().Trim();
-                    if (keywords.Length > 0)
+                    richTextBoxLog.AppendText($"🔍 应用查询条件：\r\n");
+                    foreach (var kvp in queryParameters)
                     {
-                        if (Inventory.ProdDetailID.ToString().Contains(keywords))
+                        richTextBoxLog.AppendText($"   {kvp.Key} = {kvp.Value}\r\n");
+                    }
+                    richTextBoxLog.AppendText($"\r\n");
+                }
+                
+                // 调用服务的预览方法，传入查询参数
+                var previewResults = await service.PreviewAsync(queryParameters);
+                
+                // ✅ 清空之前的数据
+                dataGridView1.DataSource = null;
+                dataGridView1.Columns.Clear();
+                
+                // ✅ 如果只有一个表，直接显示（原有逻辑）
+                if (previewResults.Count == 1)
+                {
+                    var previewResult = previewResults[0];
+                    richTextBoxLog.AppendText($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n");
+                    richTextBoxLog.AppendText($"表名：{previewResult.TableName}\r\n");
+                    richTextBoxLog.AppendText($"说明：{previewResult.Description}\r\n");
+                    richTextBoxLog.AppendText($"总记录数：{previewResult.TotalCount}\r\n");
+                    richTextBoxLog.AppendText($"需要修复：{previewResult.NeedFixCount}\r\n");
+                    richTextBoxLog.AppendText($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n\r\n");
+                    
+                    if (previewResult.Data != null)
+                    {
+                        // 创建带复选框和行号的DataTable
+                        var dtWithCheckbox = AddCheckboxColumn(previewResult.Data);
+                        dataGridView1.DataSource = dtWithCheckbox;
+                        
+                        // 设置复选框列为第一列
+                        if (dataGridView1.Columns.Count > 0)
                         {
-                            dr.Selected = true;
-                            // 滚动到选中行
-                            dataGridView1.CurrentCell = dr.Cells[0]; // 设置当前单元格为该行的第一个单元格
+                            dataGridView1.Columns[0].Width = 50;
+                            dataGridView1.Columns[0].HeaderText = "选择";
+                        }
+                    }
+                }
+                // ✅ 如果有多个表，使用TabControl展示（主子表场景）
+                else if (previewResults.Count > 1)
+                {
+                    ShowMultiTablePreview(previewResults);
+                }
+                
+                richTextBoxLog.AppendText($"\r\n共预览 {previewResults.Count} 个表的数据。\r\n");
+                richTextBoxLog.AppendText("请勾选需要修复的行，然后点击【执行修复】按钮。\r\n");
+                richTextBoxLog.AppendText("提示：不勾选则默认修复所有数据。\r\n");
+            }
+            catch (Exception ex)
+            {
+                richTextBoxLog.AppendText($"预览失败：{ex.Message}\r\n");
+                richTextBoxLog.AppendText($"详细信息：{ex.StackTrace}\r\n");
+            }
+        }
+        
+        /// <summary>
+        /// 为DataTable添加复选框列
+        /// </summary>
+        private DataTable AddCheckboxColumn(DataTable originalDt)
+        {
+            var dt = originalDt.Copy();
+            
+            // 在第一列插入复选框列
+            var checkboxCol = new DataColumn("_Selected", typeof(bool));
+            checkboxCol.DefaultValue = false;
+            dt.Columns.Add(checkboxCol);
+            
+            // 将复选框列移到第一列
+            checkboxCol.SetOrdinal(0);
+            
+            return dt;
+        }
+        
+        /// <summary>
+        /// DataGridView行绘制事件 - 显示行号
+        /// </summary>
+        private void dataGridView1_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
+        {
+            // 绘制行号
+            var grid = sender as DataGridView;
+            var rowIdx = (e.RowIndex + 1).ToString();
+            
+            var centerFormat = new StringFormat()
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+            
+            var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, grid.RowHeadersWidth, e.RowBounds.Height);
+            e.Graphics.DrawString(rowIdx, this.Font, SystemBrushes.ControlText, headerBounds, centerFormat);
+        }
+        
+        /// <summary>
+        /// 显示多表预览（使用TabControl）
+        /// </summary>
+        private void ShowMultiTablePreview(List<DataPreviewResult> previewResults)
+        {
+            // ✅ 清空splitContainer1.Panel2中的内容
+            splitContainerMain.Panel2.Controls.Clear();
+            
+            // ✅ 创建TabControl
+            var tabControl = new TabControl
+            {
+                Dock = DockStyle.Fill,
+                Name = "tabControlPreview"
+            };
+            
+            // ✅ 为每个表创建一个TabPage
+            foreach (var previewResult in previewResults)
+            {
+                var tabPage = new TabPage
+                {
+                    Text = $"{previewResult.TableName} ({previewResult.TotalCount}条)",
+                    Name = $"tab_{previewResult.TableName}"
+                };
+                
+                // 在日志中显示统计信息
+                richTextBoxLog.AppendText($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n");
+                richTextBoxLog.AppendText($"表名：{previewResult.TableName}\r\n");
+                richTextBoxLog.AppendText($"说明：{previewResult.Description}\r\n");
+                richTextBoxLog.AppendText($"总记录数：{previewResult.TotalCount}\r\n");
+                richTextBoxLog.AppendText($"需要修复：{previewResult.NeedFixCount}\r\n");
+                richTextBoxLog.AppendText($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n\r\n");
+                
+                if (previewResult.Data != null && previewResult.Data.Rows.Count > 0)
+                {
+                    // ✅ 创建带复选框的DataTable
+                    var dtWithCheckbox = AddCheckboxColumn(previewResult.Data);
+                    
+                    // ✅ 创建DataGridView
+                    var dgv = new DataGridView
+                    {
+                        DataSource = dtWithCheckbox,
+                        Dock = DockStyle.Fill,
+                        SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                        AllowUserToAddRows = false,
+                        AllowUserToDeleteRows = false,
+                        ReadOnly = false,
+                        RowHeadersVisible = true,  // ✅ 显示行头（用于绘制行号）
+                        AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells
+                    };
+                    
+                    // ✅ 注册RowPostPaint事件以显示行号
+                    dgv.RowPostPaint += dataGridView1_RowPostPaint;
+                    
+                    // ✅ 设置复选框列宽度
+                    if (dgv.Columns.Count > 0)
+                    {
+                        dgv.Columns[0].Width = 50;
+                        dgv.Columns[0].HeaderText = "选择";
+                    }
+                    
+                    tabPage.Controls.Add(dgv);
+                }
+                else
+                {
+                    var lblEmpty = new Label
+                    {
+                        Text = "没有数据",
+                        Dock = DockStyle.Fill,
+                        TextAlign = ContentAlignment.MiddleCenter,
+                        Font = new Font(this.Font, FontStyle.Italic)
+                    };
+                    tabPage.Controls.Add(lblEmpty);
+                }
+                
+                tabControl.TabPages.Add(tabPage);
+            }
+            
+            // ✅ 将TabControl添加到Panel2
+            splitContainerMain.Panel2.Controls.Add(tabControl);
+            
+            // ✅ 默认选中第一个Tab
+            if (tabControl.TabPages.Count > 0)
+            {
+                tabControl.SelectedIndex = 0;
+            }
+        }
+        
+        /// <summary>
+        /// 执行修复按钮点击事件
+        /// </summary>
+        private async void btnExecute_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(_currentCorrectionItem))
+            {
+                MessageBox.Show("请先选择一个数据修复项！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+            // 获取对应的服务
+            var service = DataCorrectionServiceManager.GetService(_currentCorrectionItem);
+            if (service == null)
+            {
+                MessageBox.Show($"未找到修复服务：{_currentCorrectionItem}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            
+            // 获取用户选中的行ID
+            var selectedIds = GetSelectedRowIds();
+            string selectInfo = "";
+            if (selectedIds != null && selectedIds.Count > 0)
+            {
+                selectInfo = $"\r\n已选中 {selectedIds.Count} 条记录进行修复。";
+            }
+            else
+            {
+                selectInfo = "\r\n未选中任何记录，将修复所有预览数据。";
+            }
+            
+            // 二次确认
+            DialogResult result = MessageBox.Show(
+                $"确定要执行【{service.FunctionName}】吗？{selectInfo}\r\n\r\n"
+                + $"{(chkTestMode.Checked ? "当前为测试模式，不会真正修改数据。" : "⚠️ 警告：当前为非测试模式，将真正修改数据库！")}\r\n"
+                + $"建议先在测试模式下验证结果。",
+                "确认执行",
+                MessageBoxButtons.YesNo,
+                chkTestMode.Checked ? MessageBoxIcon.Question : MessageBoxIcon.Warning);
+            
+            if (result != DialogResult.Yes)
+                return;
+            
+            richTextBoxLog.Clear();
+            richTextBoxLog.AppendText($"开始执行【{service.FunctionName}】...\r\n");
+            richTextBoxLog.AppendText($"时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}\r\n");
+            richTextBoxLog.AppendText($"模式：{(chkTestMode.Checked ? "测试模式" : "正式模式")}\r\n");
+            if (selectedIds != null && selectedIds.Count > 0)
+            {
+                richTextBoxLog.AppendText($"选中记录数：{selectedIds.Count}\r\n");
+            }
+            else
+            {
+                richTextBoxLog.AppendText("选中记录数：全部\r\n");
+            }
+            richTextBoxLog.AppendText($"\r\n");
+            Application.DoEvents();
+            
+            try
+            {
+                // 构建参数，包含选中的ID列表
+                var parameters = new Dictionary<string, object>();
+                if (selectedIds != null && selectedIds.Count > 0)
+                {
+                    parameters["SelectedIds"] = selectedIds;
+                }
+                
+                // 调用服务的执行方法
+                var executionResult = await service.ExecuteAsync(chkTestMode.Checked, parameters);
+                
+                // 显示执行结果
+                richTextBoxLog.AppendText($"\r\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n");
+                richTextBoxLog.AppendText($"执行结果：{(executionResult.Success ? "✅ 成功" : "❌ 失败")}\r\n");
+                richTextBoxLog.AppendText($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n\r\n");
+                
+                richTextBoxLog.AppendText($"影响表数：{executionResult.AffectedTables.Count}\r\n");
+                foreach (var kvp in executionResult.AffectedRows)
+                {
+                    richTextBoxLog.AppendText($"  - {kvp.Key}: {kvp.Value} 条记录\r\n");
+                }
+                
+                richTextBoxLog.AppendText($"\r\n详细日志：\r\n");
+                richTextBoxLog.AppendText($"----------------------------------------\r\n");
+                foreach (var log in executionResult.Logs)
+                {
+                    richTextBoxLog.AppendText($"{log}\r\n");
+                }
+                
+                if (!string.IsNullOrEmpty(executionResult.ErrorMessage))
+                {
+                    richTextBoxLog.AppendText($"\r\n❌ 错误信息：{executionResult.ErrorMessage}\r\n");
+                }
+                
+                richTextBoxLog.AppendText($"\r\n⏱ 耗时：{executionResult.ElapsedMilliseconds}ms\r\n");
+                richTextBoxLog.AppendText($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n");
+            }
+            catch (Exception ex)
+            {
+                richTextBoxLog.AppendText($"\r\n❌ 执行失败：{ex.Message}\r\n");
+                richTextBoxLog.AppendText($"详细信息：{ex.StackTrace}\r\n");
+            }
+        }
+        
+        /// <summary>
+        /// 获取用户选中的行ID列表（支持单表和多表场景）
+        /// </summary>
+        private List<long> GetSelectedRowIds()
+        {
+            var selectedIds = new List<long>();
+            
+            // ✅ 检查是否是多表TabControl场景
+            if (splitContainerMain.Panel2.Controls.Count > 0 && 
+                splitContainerMain.Panel2.Controls[0] is TabControl tabControl)
+            {
+                // ✅ 多表场景：遍历所有TabPage中的DataGridView
+                bool hasAnyChecked = false;
+                
+                foreach (TabPage tabPage in tabControl.TabPages)
+                {
+                    foreach (Control ctrl in tabPage.Controls)
+                    {
+                        if (ctrl is DataGridView dgv && dgv.DataSource is DataTable dt)
+                        {
+                            if (!dt.Columns.Contains("_Selected"))
+                                continue;
+                            
+                            foreach (DataRow row in dt.Rows)
+                            {
+                                if (row["_Selected"] != DBNull.Value && Convert.ToBoolean(row["_Selected"]))
+                                {
+                                    hasAnyChecked = true;
+                                    long id = ExtractRowId(row);
+                                    if (id > 0)
+                                    {
+                                        selectedIds.Add(id);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // 如果没有勾选任何行，返回null表示全选
+                return hasAnyChecked ? (selectedIds.Count > 0 ? selectedIds : null) : null;
+            }
+            // ✅ 单表场景：使用原有的dataGridView1
+            else if (dataGridView1.DataSource is DataTable dt)
+            {
+                // 检查是否有复选框列
+                if (!dt.Columns.Contains("_Selected"))
+                {
+                    return null; // 没有复选框列，返回null表示全选
+                }
+                
+                // 遍历所有行，找出勾选的行
+                bool hasChecked = false;
+                foreach (DataRow row in dt.Rows)
+                {
+                    if (row["_Selected"] != DBNull.Value && Convert.ToBoolean(row["_Selected"]))
+                    {
+                        hasChecked = true;
+                        
+                        // 尝试从行中获取ID字段（不同服务可能有不同的ID字段名）
+                        long id = ExtractRowId(row);
+                        if (id > 0)
+                        {
+                            selectedIds.Add(id);
+                        }
+                    }
+                }
+                
+                // 如果没有勾选任何行，返回null表示全选
+                if (!hasChecked)
+                {
+                    return null;
+                }
+            }
+            
+            return selectedIds.Count > 0 ? selectedIds : null;
+        }
+        
+        /// <summary>
+        /// 从DataRow中提取ID值
+        /// </summary>
+        private long ExtractRowId(DataRow row)
+        {
+            // 尝试常见的ID字段名
+            string[] idFieldNames = new[] 
+            { 
+                "订单ID", "Inv_ID", "PurOrder_ID", "SaleOrder_ID", 
+                "ProdDetailID", "ID", "主键", "_ID"
+            };
+            
+            foreach (var fieldName in idFieldNames)
+            {
+                if (row.Table.Columns.Contains(fieldName) && row[fieldName] != DBNull.Value)
+                {
+                    if (long.TryParse(row[fieldName].ToString(), out long id))
+                    {
+                        return id;
+                    }
+                }
+            }
+            
+            return 0;
+        }
+        
+        #region 预览功能实现
+        
+ 
+        /// <summary>
+        /// 预览采购订单价格修复
+        /// </summary>
+        private async Task PreviewPurOrderPriceFix()
+        {
+            richTextBoxLog.AppendText("正在分析采购订单价格数据...\r\n");
+            
+            var orders = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
+                .Includes(o => o.tb_PurOrderDetails)
+                .Where(o => o.Created_at.HasValue && o.Created_at.Value > DateTime.Now.AddMonths(-6))
+                .ToListAsync();
+            
+            DataTable dt = new DataTable();
+            dt.Columns.Add("订单号", typeof(string));
+            dt.Columns.Add("主表总金额", typeof(decimal));
+            dt.Columns.Add("明细合计", typeof(decimal));
+            dt.Columns.Add("差异", typeof(decimal));
+            dt.Columns.Add("是否一致", typeof(string));
+            
+            int inconsistencyCount = 0;
+            
+            foreach (var order in orders.Take(100))
+            {
+                if (order.tb_PurOrderDetails == null || order.tb_PurOrderDetails.Count == 0)
+                    continue;
+                
+                decimal detailTotal = order.tb_PurOrderDetails.Sum(d => d.SubtotalAmount);
+                decimal diff = Math.Abs(order.TotalAmount - detailTotal);
+                bool isConsistent = diff < 0.01m;
+                
+                if (!isConsistent)
+                    inconsistencyCount++;
+                
+                DataRow row = dt.NewRow();
+                row["订单号"] = order.PurOrderNo;
+                row["主表总金额"] = order.TotalAmount;
+                row["明细合计"] = detailTotal;
+                row["差异"] = diff;
+                row["是否一致"] = isConsistent ? "是" : "否";
+                
+                dt.Rows.Add(row);
+            }
+            
+            _previewData = dt;
+            dataGridView1.DataSource = dt;
+            
+            richTextBoxLog.AppendText($"检查了 {orders.Count} 个订单，发现 {inconsistencyCount} 个价格不一致的订单。\r\n");
+            richTextBoxLog.AppendText($"已加载 {dt.Rows.Count} 条预览数据。\r\n");
+        }
+        
+        /// <summary>
+        /// 预览销售订单成本数量修复
+        /// </summary>
+        private async Task PreviewSaleOrderCostFix()
+        {
+            richTextBoxLog.AppendText("正在分析销售订单成本数据...\r\n");
+            
+            var orders = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+                .Includes(o => o.tb_SaleOrderDetails)
+                .Where(o => o.Created_at.HasValue && o.Created_at.Value > DateTime.Now.AddMonths(-3))
+                .ToListAsync();
+            
+            DataTable dt = new DataTable();
+            dt.Columns.Add("订单号", typeof(string));
+            dt.Columns.Add("产品SKU", typeof(string));
+            dt.Columns.Add("订单成本", typeof(decimal));
+            dt.Columns.Add("最新成本", typeof(decimal));
+            dt.Columns.Add("差异%", typeof(decimal));
+            
+            int needFixCount = 0;
+            
+            foreach (var order in orders.Take(50))
+            {
+                if (order.tb_SaleOrderDetails == null)
+                    continue;
+                
+                foreach (var detail in order.tb_SaleOrderDetails.Take(5))
+                {
+                    // 获取最新成本
+                    var inventory = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
+                        .Where(i => i.ProdDetailID == detail.ProdDetailID)
+                        .FirstAsync();
+                    
+                    if (inventory != null && inventory.Inv_Cost > 0)
+                    {
+                        decimal diffPercent = 0;
+                        if (detail.Cost > 0)
+                        {
+                            diffPercent = Math.Abs(inventory.Inv_Cost - detail.Cost) / detail.Cost * 100;
+                        }
+                        
+                        if (diffPercent > 5) // 差异超过5%
+                        {
+                            needFixCount++;
+                            DataRow row = dt.NewRow();
+                            row["订单号"] = order.SOrderNo;
+                            row["产品SKU"] = detail.ProdDetailID;
+                            row["订单成本"] = detail.Cost;
+                            row["最新成本"] = inventory.Inv_Cost;
+                            row["差异%"] = Math.Round(diffPercent, 2);
+                            dt.Rows.Add(row);
+                        }
+                    }
+                }
+            }
+            
+            _previewData = dt;
+            dataGridView1.DataSource = dt;
+            
+            richTextBoxLog.AppendText($"发现 {needFixCount} 条成本差异较大的记录。\r\n");
+            richTextBoxLog.AppendText($"已加载 {dt.Rows.Count} 条预览数据。\r\n");
+        }
+        
+
+        #endregion
+        
+        #region 执行修复功能实现
+        
+        /// <summary>
+        /// 执行成本修复
+        /// </summary>
+        private async Task ExecuteCostFix()
+        {
+            richTextBoxLog.AppendText("开始执行成本修复...\r\n");
+            
+            // 调用现有的CostFix方法
+            var result = await CostFix(false);
+            
+            if (result != null && result.Count > 0)
+            {
+                richTextBoxLog.AppendText($"成本修复完成，共处理 {result.Count} 条库存记录。\r\n");
+                
+                // 显示统计信息
+                int fixedCount = result.Count(i => i.Inv_Cost > 0);
+                richTextBoxLog.AppendText($"成功修复 {fixedCount} 条记录。\r\n");
+            }
+            else
+            {
+                richTextBoxLog.AppendText("未发现需要修复的成本数据。\r\n");
+            }
+        }
+        
+        /// <summary>
+        /// 执行采购订单价格修复
+        /// </summary>
+        private async Task ExecutePurOrderPriceFix()
+        {
+            richTextBoxLog.AppendText("开始执行采购订单价格修复...\r\n");
+            
+            var orders = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
+                .Includes(o => o.tb_PurOrderDetails)
+                .ToListAsync();
+            
+            int fixedCount = 0;
+            List<tb_PurOrder> updateList = new List<tb_PurOrder>();
+            
+            foreach (var order in orders)
+            {
+                if (order.tb_PurOrderDetails == null || order.tb_PurOrderDetails.Count == 0)
+                    continue;
+                
+                decimal detailTotal = order.tb_PurOrderDetails.Sum(d => d.SubtotalAmount);
+                decimal diff = Math.Abs(order.TotalAmount - detailTotal);
+                
+                if (diff >= 0.01m)
+                {
+                    order.TotalAmount = detailTotal;
+                    updateList.Add(order);
+                    fixedCount++;
+                    
+                    richTextBoxLog.AppendText($"修复订单 {order.PurOrderNo}: {order.TotalAmount} -> {detailTotal}\r\n");
+                }
+            }
+            
+            if (!chkTestMode.Checked && updateList.Count > 0)
+            {
+                await MainForm.Instance.AppContext.Db.Updateable(updateList)
+                    .UpdateColumns(o => new { o.TotalAmount })
+                    .ExecuteCommandAsync();
+                
+                richTextBoxLog.AppendText($"\r\n已更新 {updateList.Count} 个订单的主表金额。\r\n");
+            }
+            else
+            {
+                richTextBoxLog.AppendText($"\r\n测试模式：共需修复 {fixedCount} 个订单，但未实际执行更新。\r\n");
+            }
+        }
+        
+        /// <summary>
+        /// 执行销售订单成本数量修复
+        /// </summary>
+        private async Task ExecuteSaleOrderCostFix()
+        {
+            richTextBoxLog.AppendText("开始执行销售订单成本修复...\r\n");
+            
+            var orders = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+                .Includes(o => o.tb_SaleOrderDetails)
+                .Where(o => o.Created_at.HasValue && o.Created_at.Value > DateTime.Now.AddMonths(-3))
+                .ToListAsync();
+            
+            int fixedCount = 0;
+            List<tb_SaleOrderDetail> updateDetails = new List<tb_SaleOrderDetail>();
+            
+            foreach (var order in orders)
+            {
+                if (order.tb_SaleOrderDetails == null)
+                    continue;
+                
+                foreach (var detail in order.tb_SaleOrderDetails)
+                {
+                    var inventory = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
+                        .Where(i => i.ProdDetailID == detail.ProdDetailID)
+                        .FirstAsync();
+                    
+                    if (inventory != null && inventory.Inv_Cost > 0)
+                    {
+                        decimal diffPercent = 0;
+                        if (detail.Cost > 0)
+                        {
+                            diffPercent = Math.Abs(inventory.Inv_Cost - detail.Cost) / detail.Cost * 100;
+                        }
+                        
+                        if (diffPercent > 5) // 差异超过5%
+                        {
+                            detail.Cost = inventory.Inv_Cost;
+                            detail.SubtotalCostAmount = (detail.Cost + detail.CustomizedCost) * detail.Quantity;
+                            updateDetails.Add(detail);
+                            fixedCount++;
+                        }
+                    }
+                }
+            }
+            
+            if (!chkTestMode.Checked && updateDetails.Count > 0)
+            {
+                await MainForm.Instance.AppContext.Db.Updateable(updateDetails)
+                    .UpdateColumns(d => new { d.Cost, d.SubtotalCostAmount })
+                    .ExecuteCommandAsync();
+                
+                richTextBoxLog.AppendText($"\r\n已更新 {fixedCount} 条订单明细的成本。\r\n");
+            }
+            else
+            {
+                richTextBoxLog.AppendText($"\r\n测试模式：共需修复 {fixedCount} 条明细，但未实际执行更新。\r\n");
+            }
+        }
+        
+        /// <summary>
+        /// 执行库存统计修复
+        /// </summary>
+        private async Task ExecuteInventoryStatisticsFix()
+        {
+            richTextBoxLog.AppendText("开始执行库存统计修复...\r\n");
+            richTextBoxLog.AppendText("此功能需要重新计算所有产品的拟销、在制、在途数量。\r\n");
+            richTextBoxLog.AppendText("由于计算复杂，建议在业务低峰期执行。\r\n\r\n");
+            
+            // 这里应该实现完整的统计重算逻辑
+            // 为简化，仅显示提示信息
+            
+            richTextBoxLog.AppendText("提示：完整的统计修复需要：\r\n");
+            richTextBoxLog.AppendText("1. 遍历所有未关闭的销售订单，统计拟销数量\r\n");
+            richTextBoxLog.AppendText("2. 遍历所有进行中的生产计划，统计在制数量\r\n");
+            richTextBoxLog.AppendText("3. 遍历所有未入库的采购订单，统计在途数量\r\n");
+            richTextBoxLog.AppendText("4. 更新库存表的对应字段\r\n\r\n");
+            
+            richTextBoxLog.AppendText("当前为演示版本，未实现完整逻辑。\r\n");
+        }
+        
+        #endregion
+        
+        #region 动态查询条件生成
+        
+        private BaseEntity _queryDtoProxy; // 查询DTO代理
+        
+        /// <summary>
+        /// 动态生成查询条件UI
+        /// </summary>
+        /// <param name="correctionItemName">修复项名称</param>
+        private void GenerateQueryConditionUI(string correctionItemName)
+        {
+            // 清空旧控件
+            kryptonPanelQuery.Controls.Clear();
+            
+            // 获取服务
+            var service = DataCorrectionServiceManager.GetService(correctionItemName);
+            if (service == null)
+            {
+                return;
+            }
+            
+            // 获取查询过滤器
+            var queryFilter = service.GetQueryFilter();
+            if (queryFilter == null)
+            {
+                // 不支持动态查询，显示提示
+                var lblHint = new Krypton.Toolkit.KryptonLabel
+                {
+                    Text = "此修复项暂不支持动态查询条件",
+                    Dock = DockStyle.Fill,
+                };
+                kryptonPanelQuery.Controls.Add(lblHint);
+                return;
+            }
+            
+            try
+            {
+                // ✅ 获取查询使用的实体类型
+                var queryEntityType = service.GetQueryEntityType();
+                if (queryEntityType == null)
+                {
+                    richTextBoxLog.AppendText($"❌ 服务未指定查询实体类型\r\n");
+                    return;
+                }
+                
+                // ✅ 使用 UIGenerateHelper 动态生成查询UI
+                _queryDtoProxy = RUINORERP.UI.AdvancedUIModule.UIGenerateHelper.CreateQueryUI(
+                    queryEntityType,             // 从服务获取的实体类型
+                    false,                       // 不使用Like查询
+                    kryptonPanelQuery,           // 容器面板
+                    queryFilter,                 // 查询过滤器
+                    null                         // 暂不支持个性化设置
+                );
+                
+                richTextBoxLog.AppendText($"✅ 已生成查询条件UI（实体类型：{queryEntityType.Name}）\r\n");
+            }
+            catch (Exception ex)
+            {
+                richTextBoxLog.AppendText($"❌ 生成查询条件UI失败：{ex.Message}\r\n");
+                System.Diagnostics.Debug.WriteLine($"生成查询条件UI失败: {ex}");
+            }
+        }
+        
+        /// <summary>
+        /// 从UI读取查询参数
+        /// </summary>
+        /// <returns>查询参数字典</returns>
+        private Dictionary<string, object> GetQueryParameters()
+        {
+            var parameters = new Dictionary<string, object>();
+            
+            if (_queryDtoProxy == null)
+            {
+                return parameters;
+            }
+            
+            try
+            {
+                // 遍历所有属性，读取用户输入
+                var properties = _queryDtoProxy.GetType().GetProperties();
+                foreach (var prop in properties)
+                {
+                    var value = prop.GetValue(_queryDtoProxy);
+                    if (value != null)
+                    {
+                        // 日期类型需要特殊处理
+                        if (prop.PropertyType == typeof(DateTime?) || prop.PropertyType == typeof(DateTime))
+                        {
+                            var dt = value.ToDateTime();
+                            if (dt.Year > 1) // 有效日期（不是 DateTime.MinValue）
+                            {
+                                parameters[prop.Name] = dt;
+                            }
+                        }
+                        else if (prop.PropertyType == typeof(int?) || prop.PropertyType == typeof(int))
+                        {
+                            var intVal = value.ToInt();
+                            if (intVal != -1 && intVal != 0) // 过滤无效值
+                            {
+                                parameters[prop.Name] = intVal;
+                            }
+                        }
+                        else if (prop.PropertyType == typeof(long?) || prop.PropertyType == typeof(long))
+                        {
+                            var longVal = value.ToLong();
+                            if (longVal != -1 && longVal != 0) // 过滤无效值
+                            {
+                                parameters[prop.Name] = longVal;
+                            }
                         }
                         else
                         {
-                            dr.Selected = false;
+                            // 其他类型直接添加
+                            if (!string.IsNullOrEmpty(value.ToString()))
+                            {
+                                parameters[prop.Name] = value;
+                            }
                         }
                     }
-
                 }
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"读取查询参数失败: {ex}");
+            }
+            
+            return parameters;
         }
+        
+        #endregion
     }
 }

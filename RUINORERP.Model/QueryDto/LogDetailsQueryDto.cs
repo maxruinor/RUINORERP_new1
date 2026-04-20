@@ -33,7 +33,7 @@ namespace RUINORERP.Model.QueryDto
     
      
 
-        private DateTime _LogDate= '(getdate())';
+        private DateTime _LogDate;
         /// <summary>
         /// 
         /// </summary>

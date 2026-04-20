@@ -3074,7 +3074,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     // 检查响应数据是否为空
                     if (responseData == null)
                     {
-                        _logger?.LogError("[{CommandId}] 服务器响应包的Response属性为空 - PacketId: {PacketId}, Status: {Status}, Direction: {Direction}, RequestId: {RequestId}",
+                        _logger?.LogDebug("[{CommandId}] 服务器响应包的Response属性为空 - PacketId: {PacketId}, Status: {Status}, Direction: {Direction}, RequestId: {RequestId}",
                             commandId.ToString(), packet.PacketId, packet.Status, packet.Direction, request?.RequestId);
                         return ResponseFactory.CreateSpecificErrorResponse<TResponse>("服务器返回了空响应数据");
                     }

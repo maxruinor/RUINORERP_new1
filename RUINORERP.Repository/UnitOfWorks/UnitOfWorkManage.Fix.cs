@@ -24,26 +24,32 @@ namespace RUINORERP.Repository.UnitOfWorks
         {
             try
             {
-                // 检查是否有活动的 DataReader
-                if (dbClient.Ado.IsCloseConnection == false)
-                {
-                    // 尝试关闭可能存在的 DataReader
-                    // SqlSugar 内部使用 DbConnection，需要确保没有未完成的读取
-                    _logger.LogDebug($"[Transaction-Clear] 检测到连接未关闭，检查挂起的 DataReader");
-                }
-                
-                // 关键修复：创建新连接来替换可能有挂起 DataReader 的连接
-                // 这样可以彻底清除任何挂起的状态
+                // 关键修复：检查连接状态
                 var currentConnection = dbClient.Ado.Connection;
                 if (currentConnection != null && currentConnection.State == ConnectionState.Open)
                 {
-                    // 不关闭当前连接，而是标记需要清理
-                    _logger.LogDebug($"[Transaction-Clear] 连接状态正常，继续执行");
+                    // ✅ P3 关键修复：SqlSugar 的 Ado 对象可能持有未关闭的 DataReader
+                    // 通过检查内部字段来判断是否有活动的 DataReader
+                    var adoType = dbClient.Ado.GetType();
+                    var readerField = adoType.GetField("_reader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (readerField != null)
+                    {
+                        var reader = readerField.GetValue(dbClient.Ado) as IDataReader;
+                        if (reader != null && !reader.IsClosed)
+                        {
+                            _logger.LogWarning($"[Transaction-Clear] 检测到未关闭的 DataReader，强制关闭");
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                    }
+                    
+                    _logger.LogDebug($"[Transaction-Clear] 连接状态正常");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, $"[Transaction-Clear] 清理挂起 DataReader 时发生异常");
+                // 忽略异常，避免影响主流程
+                _logger.LogDebug(ex, $"[Transaction-Clear] 清理挂起 DataReader 时发生异常 (可忽略)");
             }
         }
 

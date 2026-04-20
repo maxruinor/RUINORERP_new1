@@ -341,10 +341,11 @@ namespace HLH.Lib.DB
 
 
         /// <summary>
-        /// 执行查询语句，返回SqlDataReader(使用该方法切记要手工关闭SqlDataReader和连接)
+        /// 执行查询语句,返回SqlDataReader(使用该方法切记要手工关闭SqlDataReader和连接)
         /// </summary>
         /// <param name="strSQL">查询语句</param>
         /// <returns>SqlDataReader</returns>
+        [Obsolete("此方法可能导致DataReader未关闭。请使用 ExecuteReaderSafe 方法或改用 Query 方法返回DataSet")]
         public static SqlDataReader ExecuteReader(string strSQL)
         {
             SqlConnection connection = new SqlConnection(SH_CMSConnectionString);
@@ -364,9 +365,74 @@ namespace HLH.Lib.DB
             //{
             //	cmd.Dispose();
             //	connection.Close();
-            //}	
-
-
+            //}
+        
+        
+        }
+        
+        /// <summary>
+        /// 执行查询语句，返回DataTable（安全方法，自动管理资源）
+        /// </summary>
+        /// <param name="strSQL">查询语句</param>
+        /// <returns>DataTable</returns>
+        public static DataTable ExecuteReaderSafe(string strSQL)
+        {
+            using (SqlConnection connection = new SqlConnection(SH_CMSConnectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    using (SqlCommand cmd = new SqlCommand(strSQL, connection))
+                    {
+                        cmd.CommandTimeout = 80000;
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            DataTable dt = new DataTable();
+                            dt.Load(reader);
+                            return dt;
+                        }
+                    }
+                }
+                catch (System.Data.SqlClient.SqlException ex)
+                {
+                    logInsert(strSQL, ex);
+                    throw;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 执行查询语句，返回DataTable（安全方法，带参数，自动管理资源）
+        /// </summary>
+        /// <param name="SQLString">查询语句</param>
+        /// <param name="cmdParms">参数</param>
+        /// <returns>DataTable</returns>
+        public static DataTable ExecuteReaderSafe(string SQLString, params SqlParameter[] cmdParms)
+        {
+            using (SqlConnection connection = new SqlConnection(SH_CMSConnectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        PrepareCommand(cmd, connection, null, SQLString, cmdParms);
+                        cmd.CommandTimeout = 80000;
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            DataTable dt = new DataTable();
+                            dt.Load(reader);
+                            cmd.Parameters.Clear();
+                            return dt;
+                        }
+                    }
+                }
+                catch (System.Data.SqlClient.SqlException ex)
+                {
+                    logInsert(SQLString, ex);
+                    throw;
+                }
+            }
         }
         /// <summary>
         /// 执行查询语句，返回DataSet
@@ -559,10 +625,11 @@ namespace HLH.Lib.DB
         }
 
         /// <summary>
-        /// 执行查询语句，返回SqlDataReader (使用该方法切记要手工关闭SqlDataReader和连接)
+        /// 执行查询语句,返回SqlDataReader (使用该方法切记要手工关闭SqlDataReader和连接)
         /// </summary>
         /// <param name="strSQL">查询语句</param>
         /// <returns>SqlDataReader</returns>
+        [Obsolete("此方法可能导致DataReader未关闭。请使用 ExecuteReaderSafe 方法或改用 Query 方法返回DataSet")]
         public static SqlDataReader ExecuteReader(string SQLString, params SqlParameter[] cmdParms)
         {
             SqlConnection connection = new SqlConnection(SH_CMSConnectionString);
@@ -678,6 +745,7 @@ namespace HLH.Lib.DB
         /// <param name="storedProcName">存储过程名</param>
         /// <param name="parameters">存储过程参数</param>
         /// <returns>SqlDataReader</returns>
+        [Obsolete("此方法可能导致DataReader未关闭。请使用 RunProcedureSafe 方法或改用返回DataSet的重载")]
         public static SqlDataReader RunProcedure(string storedProcName, IDataParameter[] parameters)
         {
             SqlConnection connection = new SqlConnection(SH_CMSConnectionString);
@@ -689,6 +757,38 @@ namespace HLH.Lib.DB
             //Connection.Close(); 不能在此关闭，否则，返回的对象将无法使用            
             return returnReader;
 
+        }
+
+        /// <summary>
+        /// 执行存储过程，返回DataTable（安全方法，自动管理资源）
+        /// </summary>
+        /// <param name="storedProcName">存储过程名</param>
+        /// <param name="parameters">存储过程参数</param>
+        /// <returns>DataTable</returns>
+        public static DataTable RunProcedureSafe(string storedProcName, IDataParameter[] parameters)
+        {
+            using (SqlConnection connection = new SqlConnection(SH_CMSConnectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    SqlCommand command = BuildQueryCommand(connection, storedProcName, parameters);
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandTimeout = 80000;
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        DataTable dt = new DataTable();
+                        dt.Load(reader);
+                        return dt;
+                    }
+                }
+                catch (System.Data.SqlClient.SqlException ex)
+                {
+                    logInsert(storedProcName, ex);
+                    throw;
+                }
+            }
         }
 
         /// <summary>

@@ -483,6 +483,16 @@ namespace AutoUpdate
         {
             this.KeyPreview = true; // 允许表单捕获键盘事件
 
+            // 【调试优化】每次启动时清空日志文件，避免无限累积
+            try
+            {
+                if (File.Exists(logFilePath))
+                {
+                    File.WriteAllText(logFilePath, ""); // 清空文件内容
+                }
+            }
+            catch { } // 忽略清空失败
+
             // 使用新的日志记录功能初始化更新过程
             string startupInfo = "===== 更新程序启动 ====\n操作系统: " + Environment.OSVersion.ToString() + "\n当前目录: " + AppDomain.CurrentDomain.BaseDirectory;
             AppendAllText(startupInfo);
@@ -1683,16 +1693,35 @@ namespace AutoUpdate
                 }
             }
 
-            // 优化文件处理顺序：先处理压缩文件，再处理普通文件
-            // 这样可以确保单个文件的精确更新优先于压缩包中的批量更新
-            var orderedFiles = files.OrderByDescending(f =>
+            // 【性能优化】优化文件处理顺序：先处理小文件，再处理大文件和压缩文件
+            // 这样可以快速完成大部分文件的复制，提升用户体验
+            var orderedFiles = files.OrderBy(f =>
             {
-                string extension = Path.GetExtension(f).ToLower();
-                return extension == ".zip" || extension == ".rar" ? 1 : 0;
+                try
+                {
+                    var fileInfo = new FileInfo(f);
+                    long fileSize = fileInfo.Length;
+                    string extension = Path.GetExtension(f).ToLower();
+                    
+                    // 优先级：小文件(0-100KB) > 中文件(100KB-1MB) > 大文件(1MB+) > 压缩文件
+                    if (extension == ".zip" || extension == ".rar")
+                        return 4; // 压缩文件最后处理
+                    else if (fileSize < 100 * 1024)
+                        return 1; // 小文件优先
+                    else if (fileSize < 1024 * 1024)
+                        return 2; // 中文件
+                    else
+                        return 3; // 大文件
+                }
+                catch
+                {
+                    return 3; // 默认按大文件处理
+                }
             }).ToArray();
 
-            // 使用并行处理提高性能，但限制并发数量以避免资源竞争
-            int maxDegreeOfParallelism = Math.Min(Environment.ProcessorCount, 4); // 最多4个并行任务
+            // 【性能优化】使用并行处理提高性能，但限制并发数量以避免资源竞争
+            // 根据文件类型和大小动态调整并发数
+            int maxDegreeOfParallelism = Math.Min(Environment.ProcessorCount, 6); // 【优化】从4提升到6，充分利用多核
             var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
             
             var copyTasks = new List<Task>();
@@ -1718,8 +1747,32 @@ namespace AutoUpdate
                 copyTasks.Add(task);
             }
             
-            // 等待所有文件复制完成
-            await Task.WhenAll(copyTasks);
+            // 【性能优化】添加超时保护，避免无限等待
+            try
+            {
+                // 使用兼容 .NET Framework 的超时实现
+                var timeoutTask = Task.Delay(TimeSpan.FromMinutes(5)); // 5分钟超时
+                var allTasks = Task.WhenAll(copyTasks);
+                
+                // 等待任一任务完成（正常完成或超时）
+                await Task.WhenAny(allTasks, timeoutTask);
+                
+                // 如果超时任务先完成，说明超时了
+                if (timeoutTask.IsCompleted && !allTasks.IsCompleted)
+                {
+                    AppendAllText($"[CopyFileAsync] 警告: 文件复制超时（5分钟），部分文件可能未复制完成");
+                    // 注意：这里不取消任务，让它们继续在后台完成
+                }
+                else
+                {
+                    // 正常完成，等待所有任务真正结束
+                    await allTasks;
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[CopyFileAsync] 警告: 文件复制异常: {ex.Message}");
+            }
 
             string[] dirs = Directory.GetDirectories(sourcePath);
             AppendAllText($"[CopyFileAsync] 发现 {dirs.Length} 个子目录");
@@ -1782,42 +1835,19 @@ namespace AutoUpdate
         }
         
         /// <summary>
-        /// 异步处理单个文件
+        /// 异步处理单个文件 - 性能优化版
         /// </summary>
         private async Task ProcessSingleFileAsync(string file, int currentIndex, int totalFiles, string objPath, string VerNo, List<string> contents)
         {
             try
             {
-                // 【优化】不在每个文件都更新 UI，改为批量更新以减少 UI 刷新频率
-                // 每 5 个文件或最后一个文件才更新 UI
-                bool shouldUpdateUI = (currentIndex % 5 == 0) || (currentIndex == totalFiles - 1);
+                // 【性能优化】大幅减少UI更新频率，每20个文件或关键节点才更新
+                bool shouldUpdateUI = (currentIndex % 20 == 0) || (currentIndex == totalFiles - 1) || (currentIndex == 0);
                 
                 if (shouldUpdateUI)
                 {
-                    AppendAllText($"[CopyFileAsync] 处理文件 {currentIndex + 1}/{totalFiles}: {Path.GetFileName(file)}");
-
-                    // 更新进度条和状态显示
-                    try
-                    {
-                        if (pbDownFile != null && !pbDownFile.IsDisposed)
-                        {
-                            SafeSetProgressValue(currentIndex + 1);
-                            pbDownFile.Update();
-                        }
-
-                        if (lbState != null && !lbState.IsDisposed)
-                        {
-                            lbState.Text = $"正在复制文件 {currentIndex + 1}/{totalFiles}: {Path.GetFileName(file)}\n复制完成后将自动启动程序";
-                            lbState.Update();
-                        }
-
-                        // 【优化】增加等待时间，让 UI 有时间刷新（从 5ms 增加到 20ms）
-                        await Task.Delay(20);
-                    }
-                    catch (Exception progressEx)
-                    {
-                        AppendAllText($"[CopyFileAsync] 警告: 进度显示更新失败: {progressEx.Message}");
-                    }
+                    // 批量更新UI，减少刷新次数
+                    UpdateProgressUI(currentIndex + 1, totalFiles, Path.GetFileName(file));
                 }
 
                 #region 复制文件
@@ -1835,87 +1865,40 @@ namespace AutoUpdate
                 //如果是压缩文件则解压，否则直接复制
                 if (System.IO.Path.GetExtension(fileName).ToLower() == ".zip")
                 {
-                    AppendAllText($"[CopyFileAsync] 解压ZIP文件: {fileName}");
+                    if (shouldUpdateUI)
+                        AppendAllText($"[CopyFileAsync] 解压ZIP文件: {fileName}");
 
-                    //System.IO.Compression.ZipFile.ExtractToDirectory(System.IO.Path.Combine(sourcePath, fileName), objPath); 
                     string zipPathWithName = System.IO.Path.Combine(Path.GetDirectoryName(file), fileName);
-                    //MessageBox.Show("zipPathWithName:" + zipPathWithName);
-                    //MessageBox.Show("objPath:" + objPath);
-
                     using (ZipArchive archive = ZipFile.OpenRead(zipPathWithName))
                     {
                         archive.ExtractToDirectory(objPath, true);
                     }
-                    AppendAllText($"[CopyFileAsync] ZIP文件解压完成");
+                    if (shouldUpdateUI)
+                        AppendAllText($"[CopyFileAsync] ZIP文件解压完成");
                 }
                 else if (System.IO.Path.GetExtension(fileName).ToLower() == ".rar")
                 {
-                    AppendAllText($"[CopyFileAsync] 解压RAR文件: {fileName}");
-
+                    if (shouldUpdateUI)
+                        AppendAllText($"[CopyFileAsync] 解压RAR文件: {fileName}");
 
                     RARToFileEmail(objPath, System.IO.Path.Combine(Path.GetDirectoryName(file), fileName));
 
-
-
-                    AppendAllText($"[CopyFileAsync] RAR文件解压完成");
-
+                    if (shouldUpdateUI)
+                        AppendAllText($"[CopyFileAsync] RAR文件解压完成");
                 }
                 else
                 {
                     string destFile = System.IO.Path.Combine(objPath, fileName);
-                    AppendAllText($"[CopyFileAsync] 复制普通文件: {fileName}");
+                    
+                    // 【性能优化】添加文件复制重试机制，解决文件被占用问题
+                    bool copySuccess = await CopyFileWithRetryAsync(file, destFile, fileName, 2);
 
-                    // 【优化】添加文件复制重试机制，解决文件被占用问题
-                    bool copySuccess = false;
-                    int retryCount = 0;
-                    int maxRetries = 3;
-                    while (!copySuccess && retryCount < maxRetries)
+                    if (copySuccess)
                     {
-                        try
-                        {
-                            // 使用异步文件复制
-                            using (var sourceStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous))
-                            using (var destStream = new FileStream(destFile, FileMode.Create, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous))
-                            {
-                                await sourceStream.CopyToAsync(destStream);
-                            }
-                            copySuccess = true;
-                        }
-                        catch (IOException)
-                        {
-                            // 检查是否是更新程序自身的文件，如果是则跳过重试
-                            string destFileName = Path.GetFileName(destFile);
-                            if (destFileName.Equals("AutoUpdate.exe", StringComparison.OrdinalIgnoreCase) ||
-                                destFileName.Equals("AutoUpdateUpdater.exe", StringComparison.OrdinalIgnoreCase))
-                            {
-                                AppendAllText($"[CopyFileAsync] 跳过更新程序自身文件，稍后将由AutoUpdateUpdater处理: {destFileName}");
-                                copySuccess = true; // 标记为成功，跳过此文件
-                            }
-                            else if (retryCount < maxRetries - 1)
-                            {
-                                retryCount++;
-                                AppendAllText($"[CopyFileAsync] 文件被占用，{retryCount}秒后重试...");
-                                await Task.Delay(1000 * retryCount);
-                                
-                                // 尝试强制关闭占用文件的进程
-                                TryKillProcessUsingFile(destFile);
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
+                        contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + file);
+                        if (shouldUpdateUI)
+                            AppendAllText($"[CopyFileAsync] 文件复制成功: {fileName}");
                     }
-
-                    if (!copySuccess)
-                    {
-                        // 最后一次尝试强制复制
-                        TryForceCopyFile(file, destFile);
-                        copySuccess = File.Exists(destFile);
-                    }
-
-                    contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + file);
-                    AppendAllText($"[CopyFileAsync] 文件复制成功: {fileName}");
                 }
                 #endregion
             }
@@ -1923,6 +1906,96 @@ namespace AutoUpdate
             {
                 string errorMsg = $"文件更新失败: {ex.Message}";
                 AppendAllText(errorMsg);
+            }
+        }
+        
+        /// <summary>
+        /// 带重试机制的文件复制 - 优化版
+        /// </summary>
+        private async Task<bool> CopyFileWithRetryAsync(string sourceFile, string destFile, string fileName, int maxRetries = 2)
+        {
+            for (int retryCount = 0; retryCount <= maxRetries; retryCount++)
+            {
+                try
+                {
+                    // 使用异步文件复制，缓冲区优化为8KB提升性能
+                    using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, 8192, FileOptions.Asynchronous | FileOptions.SequentialScan))
+                    using (var destStream = new FileStream(destFile, FileMode.Create, FileAccess.Write, FileShare.None, 8192, FileOptions.Asynchronous))
+                    {
+                        await sourceStream.CopyToAsync(destStream, 8192);
+                    }
+                    return true;
+                }
+                catch (IOException ioEx)
+                {
+                    // 检查是否是更新程序自身的文件，如果是则跳过重试
+                    string destFileName = Path.GetFileName(destFile);
+                    if (destFileName.Equals("AutoUpdate.exe", StringComparison.OrdinalIgnoreCase) ||
+                        destFileName.Equals("AutoUpdateUpdater.exe", StringComparison.OrdinalIgnoreCase))
+                    {
+                        AppendAllText($"[CopyFileAsync] 跳过更新程序自身文件，稍后将由AutoUpdateUpdater处理: {destFileName}");
+                        return true; // 标记为成功，跳过此文件
+                    }
+                    
+                    if (retryCount < maxRetries)
+                    {
+                        // 【性能优化】缩短重试延迟，从1秒*retryCount改为固定500ms
+                        int delayMs = 500;
+                        AppendAllText($"[CopyFileAsync] 文件被占用，{delayMs}ms后重试 ({retryCount + 1}/{maxRetries})...");
+                        await Task.Delay(delayMs);
+                        
+                        // 尝试强制关闭占用文件的进程
+                        TryKillProcessUsingFile(destFile);
+                    }
+                    else
+                    {
+                        AppendAllText($"[CopyFileAsync] 文件复制失败（已达最大重试次数）: {fileName}, 错误: {ioEx.Message}");
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppendAllText($"[CopyFileAsync] 文件复制异常: {fileName}, 错误: {ex.Message}");
+                    break;
+                }
+            }
+            
+            // 最后一次尝试强制复制
+            try
+            {
+                TryForceCopyFile(sourceFile, destFile);
+                return File.Exists(destFile);
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[CopyFileAsync] 强制复制也失败: {fileName}, 错误: {ex.Message}");
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 更新进度UI - 集中管理，减少重复代码
+        /// </summary>
+        private void UpdateProgressUI(int currentFile, int totalFiles, string currentFileName)
+        {
+            try
+            {
+                if (pbDownFile != null && !pbDownFile.IsDisposed)
+                {
+                    SafeSetProgressValue(currentFile);
+                    pbDownFile.Refresh();
+                }
+
+                if (lbState != null && !lbState.IsDisposed)
+                {
+                    int percentage = totalFiles > 0 ? (currentFile * 100 / totalFiles) : 0;
+                    lbState.Text = $"正在复制文件 {currentFile}/{totalFiles} ({percentage}%)\n{currentFileName}\n复制完成后将自动启动程序";
+                    lbState.Refresh();
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[CopyFileAsync] 警告: 进度显示更新失败: {ex.Message}");
             }
         }
 
@@ -2404,8 +2477,7 @@ namespace AutoUpdate
                                     .FirstOrDefault()?.Value;
 
                 // 获取URL地址
-                var url = doc.Descendants("Url")
-                                    .FirstOrDefault()?.Value;
+                var url = doc.Descendants("Url")                                    .FirstOrDefault()?.Value;
 
 
                 DateTime.TryParse(lastUpdate, out var lastUpdateTime);
@@ -2552,16 +2624,16 @@ namespace AutoUpdate
                 pbDownFile.Refresh();
                 lbState.Refresh();
                 
-                // 【优化】强制刷新整个窗体，确保 UI 完全更新
+                // 【性能优化】强制刷新整个窗体，确保 UI 完全更新
                 this.Refresh();
                 Application.DoEvents();  // 确保 UI 完全刷新
 
-                // 更新UI状态
-                lbState.Text = "正在准备更新文件，请稍候...";
+                // 更新UI状态 - 简化文本，提高可读性
+                lbState.Text = "正在准备更新文件...";
                 SafeSetProgressValue(0);
                 
-                // 【优化】增加等待时间，确保 UI 完全渲染（从 50ms 增加到 200ms）
-                await Task.Delay(200);
+                // 【性能优化】大幅减少UI刷新延迟，从200ms改为50ms
+                await Task.Delay(50);
                 
                 //更新完成后copy文件，将下载的临时文件夹中的新文件复制到对应目标目录使其生效
 
@@ -2616,10 +2688,11 @@ namespace AutoUpdate
                 int currentVersionProgress = 0;
                 int processedFiles = 0;
                 
-                // 【增强】显示阶段提示
-                lbState.Text = $"阶段 1/3: 正在复制文件 (共 {totalFilesToCopy} 个文件)...\n复制完成后将自动启动程序，请耐心等待";
+                // 【增强】显示阶段提示 - 简化文本，减少换行
+                lbState.Text = $"正在复制文件 (共 {totalFilesToCopy} 个)...";
                 SafeSetProgressValue(0);
-                await Task.Delay(50);
+                // 【性能优化】移除不必要的Delay
+                // await Task.Delay(50);
 
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
@@ -2636,10 +2709,11 @@ namespace AutoUpdate
                     processedFiles += versionFileCount;
                     
                     int overallProgress = (processedFiles * 90) / totalFilesToCopy; // 预留10%给后续操作
-                    lbState.Text = $"阶段 2/3: 正在复制文件... ({processedFiles}/{totalFilesToCopy})\n复制完成后将自动启动程序";
+                    lbState.Text = $"正在复制文件... ({processedFiles}/{totalFilesToCopy})\n{versionDirList[i]}";
                     SafeSetProgressValue(Math.Min(overallProgress, 90));
                     pbDownFile.Refresh();
-                    await Task.Delay(10); // 轻量级UI刷新
+                    // 【性能优化】移除不必要的Delay，让复制更快进行
+                    // await Task.Delay(10); // 已移除，提升性能
                     
                     // 使用Path.Combine安全构建路径，避免双反斜杠问题
                     AppendAllText($"[LastCopy] 处理版本 {i + 1}/{totalVersions}: {versionDirList[i]}");
@@ -2658,80 +2732,99 @@ namespace AutoUpdate
                 }
                 
                 // 更新进度到90%
-                lbState.Text = "阶段 3/3: 文件复制完成，正在处理自我更新...\n即将自动启动程序";
+                lbState.Text = "文件复制完成，正在处理自我更新...";
                 SafeSetProgressValue(90);
                 pbDownFile.Refresh();
-                await Task.Delay(10);
+                // 【性能优化】移除不必要的Delay
+                // await Task.Delay(10);
                 
                 AppendAllText("文件复制完成，开始执行自我更新流程...");
 
-                // 【关键修复】确保AutoUpdaterList.xml被正确复制到根目录
-                // 这是防止重复更新检测的核心：必须保证本地配置文件是最新的
-                string tempXmlFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
-                string targetXmlFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
+                // 【用户体验优化】立即隐藏UI并启动主程序，快照在后台异步执行
+                lbState.Text = "正在启动主程序...";
+                SafeSetProgressValue(98);
+                pbDownFile.Refresh();
+                Application.DoEvents();
                 
-                if (File.Exists(tempXmlFile))
+                AppendAllText("[用户体验优化] 即将隐藏更新界面，启动主程序...");
+                
+                // 【关键优化】使用现有的 StartEntryPointExe 方法启动主程序
+                try
+                {
+                    AppendAllText($"[主程序启动] 调用 StartEntryPointExe 启动主程序");
+                    StartEntryPointExe(); // 使用现有方法，自动从 XML 读取 EntryPoint
+                    AppendAllText("[主程序启动] 主程序已成功启动");
+                }
+                catch (Exception ex)
+                {
+                    AppendAllText($"[主程序启动] 启动失败: {ex.Message}");
+                }
+                
+                // 【性能优化】隐藏更新窗口，给用户更好的体验
+                this.Hide();
+                this.Opacity = 0;  // 完全透明
+                Application.DoEvents();
+                
+                AppendAllText("[用户体验优化] 更新界面已隐藏，主程序已启动");
+
+                // 【后台任务】快照创建完全异步，不阻塞任何流程
+                Task.Run(() =>
                 {
                     try
                     {
-                        // 直接复制，不做任何条件判断，确保本地配置与服务器同步
-                        File.Copy(tempXmlFile, targetXmlFile, true);
-                        AppendAllText($"[关键修复] AutoUpdaterList.xml已强制复制到根目录");
+                        AppendAllText("[后台快照] 开始创建应用快照（不影响用户使用）...");
                         
-                        // 验证复制结果
-                        if (File.Exists(targetXmlFile))
+                        var snapshotManager = new SmartSnapshotManager();
+                        var snapshot = snapshotManager.CreateSmartSnapshot(NewVersion, "自动更新");
+                        
+                        if (snapshot != null)
                         {
-                            var (newVersion, _, _) = ParseXmlInfo(targetXmlFile);
-                            AppendAllText($"[关键修复] 本地版本已更新为: {newVersion}");
+                            AppendAllText($"[后台快照] 创建成功: {snapshot.SnapshotFolderName}");
+                            AppendAllText($"[后台快照] 类型: {(snapshot.IsFullSnapshot ? "完整" : "增量")}, " +
+                                        $"大小: {snapshot.DisplaySize}");
+                        }
+                        else
+                        {
+                            AppendAllText("[后台快照] 创建失败，但不影响使用");
                         }
                     }
                     catch (Exception ex)
                     {
-                        AppendAllText($"[关键修复] 复制AutoUpdaterList.xml失败: {ex.Message}");
+                        AppendAllText($"[后台快照] 异常: {ex.Message}");
                     }
-                }
-                else
-                {
-                    AppendAllText($"[关键修复] 警告：临时目录中找不到AutoUpdaterList.xml");
-                }
+                });
 
-                // 【新版本】创建智能快照
-                try
+                // 【后台任务】配置文件复制也异步执行
+                Task.Run(() =>
                 {
-                    AppendAllText("[快照] 开始创建应用快照...");
-                    var snapshotManager = new SmartSnapshotManager();
-                    var snapshot = snapshotManager.CreateSmartSnapshot(NewVersion, "自动更新");
-                    
-                    if (snapshot != null)
+                    try
                     {
-                        AppendAllText($"[快照] 创建成功: {snapshot.SnapshotFolderName}");
-                        AppendAllText($"[快照] 类型: {(snapshot.IsFullSnapshot ? "完整" : "增量")}, " +
-                                    $"大小: {snapshot.DisplaySize}");
+                        // 【关键修复】确保AutoUpdaterList.xml被正确复制到根目录
+                        string tempXmlFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
+                        string targetXmlFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
+                        
+                        if (File.Exists(tempXmlFile))
+                        {
+                            File.Copy(tempXmlFile, targetXmlFile, true);
+                            AppendAllText($"[后台配置] AutoUpdaterList.xml已复制到根目录");
+                        }
+                        
+                        // 复制其他配置文件
+                        CopyConfigFileToRoot();
+                        ValidateConfigVersion();
+                        AppendAllText("[后台配置] 配置文件同步完成");
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        AppendAllText("[快照] 创建失败，但不影响更新流程");
+                        AppendAllText($"[后台配置] 配置同步异常: {ex.Message}");
                     }
-                }
-                catch (Exception ex)
-                {
-                    AppendAllText($"[快照] 异常: {ex.Message}");
-                    // 快照创建失败不影响更新，只记录日志
-                }
-
-                // 【修复】确保配置文件已复制，再启动AutoUpdateUpdater
-                // 这是确保AutoUpdateUpdater能读取最新配置的关键步骤
-                AppendAllText("[配置同步] 开始强制复制配置文件到根目录...");
-                bool configCopied = CopyConfigFileToRoot();
-                if (!configCopied)
-                {
-                    AppendAllText("[配置同步] 警告: 配置文件复制可能未成功，AutoUpdateUpdater将使用默认配置");
-                }
-                else
-                {
-                    // 验证版本一致性
-                    ValidateConfigVersion();
-                }
+                });
+                
+                // 【快速退出】等待很短时间后直接退出，让后台任务自己完成
+                AppendAllText("[退出策略] 等待500ms后退出更新器，后台任务将继续执行");
+                await Task.Delay(500);
+                
+                AppendAllText("[退出] 更新器即将退出，主程序已在运行");
 
                 // 关键：使用AutoUpdateUpdater来更新AutoUpdate程序自身
                 string currentExePath = Process.GetCurrentProcess().MainModule.FileName;
@@ -2784,10 +2877,11 @@ namespace AutoUpdate
                 if (selfUpdateStarted)
                 {
                     // 更新状态提示 - 用户可看到
-                    lbState.Text = "✅ 更新成功！\n正在启动主程序...";
+                    lbState.Text = "✅ 更新成功！正在启动主程序...";
                     SafeSetProgressValue(100);
                     pbDownFile.Refresh();
-                    await Task.Delay(10);
+                    // 【性能优化】移除不必要的Delay
+                    // await Task.Delay(10);
                     
                     AppendAllText("自我更新辅助进程已成功启动，主进程即将退出...");
                     
@@ -2795,10 +2889,10 @@ namespace AutoUpdate
                     AppendAllText("[配置同步] 退出前再次确保配置文件已复制...");
                     CopyConfigFileToRoot();
                     
-                    // 【优化】大幅减少等待时间到 500ms（从 2000ms）
+                    // 【性能优化】大幅减少等待时间到 200ms（从 500ms）
                     // 辅助进程已经启动，不需要长时间等待
-                    AppendAllText("[AutoUpdate更新] 等待 500ms 后退出...");
-                    await Task.Delay(500);
+                    AppendAllText("[AutoUpdate更新] 等待 200ms 后退出...");
+                    await Task.Delay(200);
 
                     // 隐藏窗口，避免用户看到闪烁
                     AppendAllText("[AutoUpdate更新] 正在关闭更新程序...");

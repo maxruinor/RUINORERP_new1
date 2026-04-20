@@ -1994,7 +1994,7 @@ namespace RUINORERP.Business.Cache
                 // 记录详细的缓存清理日志
                 if (itemsToRemove.Any())
                 {
-                    _logger.LogWarning("缓存清理执行：移除了{Count}个最少使用的缓存项，包括表：{Tables}",
+                    _logger.LogDebug("缓存清理执行：移除了{Count}个最少使用的缓存项，包括表：{Tables}",
                         itemsToRemove.Count,
                         string.Join(", ", itemsToRemove.Select(k => _cacheItemStatistics[k].TableName)));
                 }

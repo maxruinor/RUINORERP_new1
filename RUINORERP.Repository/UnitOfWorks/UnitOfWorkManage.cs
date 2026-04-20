@@ -510,7 +510,16 @@ namespace RUINORERP.Repository.UnitOfWorks
                         }
                         else
                         {
-                            // ✅ 关键修复: 确保没有挂起的DataReader
+                            // ✅ P3 关键修复：检查事务健康状态
+                            if (!IsTransactionHealthy(dbClient, context))
+                            {
+                                _logger.LogError($"[Transaction-{context.TransactionId}] 事务健康检查失败，强制回滚");
+                                ForceRollback(dbClient);
+                                throw new InvalidOperationException("事务状态异常，已强制回滚");
+                            }
+                            
+                            // ✅ P3 关键修复：确保没有挂起的 DataReader
+                            ClearPendingDataReader(dbClient);
                             dbClient.Ado.CommitTran();
                             context.Status = TransactionStatus.Committed;
                             _logger.LogInformation($"[Transaction-{context.TransactionId}] 事务提交成功");
@@ -754,10 +763,18 @@ namespace RUINORERP.Repository.UnitOfWorks
                     }
                     else
                     {
+                        // ✅ P3 关键修复：清理挂起的 DataReader
+                        ClearPendingDataReader(dbClient);
                         dbClient.Ado.RollbackTran();
                         _logger.LogWarning($"[Transaction-{txId}] 强制回滚已执行");
                     }
                 }
+            }
+            catch (SqlException sqlEx) when (sqlEx.Message.Contains("挂起请求"))
+            {
+                // ✅ P3 关键修复：捕获"挂起请求"错误，重置连接
+                _logger.LogWarning(sqlEx, $"[Transaction-{txId}] 强制回滚失败 - 存在挂起的 DataReader，重置连接");
+                ResetDatabaseConnection();
             }
             catch (InvalidOperationException invEx) when (invEx.Message.Contains("已完成") || invEx.Message.Contains("Zombie"))
             {

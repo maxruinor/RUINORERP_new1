@@ -122,7 +122,15 @@ namespace RUINORERP.UI.Network.Services
                 // 检查连接状态
                 if (_communicationService?.ConnectionManager?.IsConnected != true)
                 {
-                    _logger?.LogWarning("重要事件无法上报: {Reason}, 网络未连接", reason ?? "未知");
+                    _logger?.LogWarning("重要事件无法上报：{Reason}, 网络未连接", reason ?? "未知");
+                    return;
+                }
+
+                // 检查登录状态：如果用户未在线，不上报
+                var appContext = MainForm.Instance?.AppContext;
+                if (appContext == null || !appContext.IsOnline || string.IsNullOrEmpty(appContext.SessionId))
+                {
+                    _logger?.LogDebug("用户未登录或登录已超时，跳过重要事件上报：{Reason}", reason ?? "未知");
                     return;
                 }
 
@@ -227,11 +235,18 @@ namespace RUINORERP.UI.Network.Services
                     return;
                 }
 
-                // ✅ 提前检查：Token有效性（避免进入发送流程后才失败）
+                // ✅ 提前检查：Token 有效性（避免进入发送流程后才失败）
                 var appContext = MainForm.Instance?.AppContext;
                 if (appContext == null || string.IsNullOrEmpty(appContext.SessionId))
                 {
-                    _logger?.LogDebug("会话未初始化或Token无效，跳过性能数据上报");
+                    _logger?.LogDebug("会话未初始化或 Token 无效，跳过性能数据上报");
+                    return;
+                }
+
+                // ✅ 登录状态检查：如果用户未在线，不上报性能数据
+                if (!appContext.IsOnline)
+                {
+                    _logger?.LogDebug("用户未在线，跳过性能数据上报");
                     return;
                 }
 

@@ -68,7 +68,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly SemaphoreSlim _globalSemaphore = new SemaphoreSlim(1, 1);
 
         // 配置参数
-        private readonly TimeSpan _lockRefreshInterval = TimeSpan.FromMinutes(0); // v2.1.2: 禁用定时刷新,改为事件驱动
+        private readonly TimeSpan _lockRefreshInterval = TimeSpan.FromMinutes(10); // v2.1.3: 低频刷新,仅用于异常检测和缓存更新
         private readonly TimeSpan _cacheCleanupInterval = TimeSpan.FromMinutes(5);
         private readonly TimeSpan _lockTimeoutThreshold = TimeSpan.FromMinutes(30);
         private readonly int _maxRetryAttempts = 3;
@@ -151,8 +151,8 @@ namespace RUINORERP.UI.Network.Services
                 if (_isDisposed)
                     throw new ObjectDisposedException(nameof(ClientLockManagementService));
 
-                // v2.1.2: 禁用定时刷新定时器,改为事件驱动
-                // _lockRefreshTimer.Change(TimeSpan.Zero, _lockRefreshInterval);  // ❌ 不再需要
+                // v2.1.3: 启用低频刷新定时器(10分钟),仅用于异常检测和缓存更新
+                _lockRefreshTimer.Change(TimeSpan.FromMinutes(2), _lockRefreshInterval); // 首次2分钟后执行
                 
                 // 启动缓存清理定时器
                 _cacheCleanupTimer.Change(TimeSpan.FromMinutes(1), _cacheCleanupInterval);
@@ -162,7 +162,8 @@ namespace RUINORERP.UI.Network.Services
 
                 // LockRecoveryManager不需要手动启动，构造函数中已初始化
                 
-                _logger.LogInformation("锁管理服务启动成功 (v2.1.2 - 事件驱动模式)");
+                _logger.LogInformation("锁管理服务启动成功 (v2.1.3 - 低频刷新模式: {Interval}分钟)", 
+                    _lockRefreshInterval.TotalMinutes);
             }
             finally
             {
@@ -918,7 +919,12 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 刷新所有活跃锁
-        /// 优化：使用并行处理，提高效率
+        /// v2.1.3: 低频刷新(10分钟),仅用于:
+        /// 1. 检测异常情况下未释放的锁(程序崩溃等)
+        /// 2. 更新本地缓存的过期时间,避免缓存失效
+        /// 3. 确保客户端与服务端锁状态一致
+        /// 
+        /// 注意:正常流程中,用户切换单据或关闭表单时会主动解锁,不依赖此机制
         /// </summary>
         private async Task RefreshAllLocksAsync()
         {
@@ -932,7 +938,7 @@ namespace RUINORERP.UI.Network.Services
             if (activeLockIds.Length == 0)
                 return;
 
-            _logger.LogDebug("开始刷新 {LockCount} 个活跃锁", activeLockIds.Length);
+            _logger.LogDebug("开始低频刷新 {LockCount} 个活跃锁 (v2.1.3)", activeLockIds.Length);
 
             // 分批次并行处理，避免创建过多任务
             const int batchSize = 20;

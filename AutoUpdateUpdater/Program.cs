@@ -14,13 +14,13 @@ namespace AutoUpdateUpdater
     static class Program
     {
         #region 常量定义
-        private const int PROCESS_WAIT_TIMEOUT_MS = 15000;   // 进程等待超时时间（优化为15秒）
-        private const int EXTRA_WAIT_AFTER_EXIT_MS = 1000;   // 进程退出后额外等待
-        private const int FILE_HANDLE_RELEASE_WAIT_MS = 3000; // 文件句柄释放等待（优化为3秒）
-        private const int FORCE_UNLOCK_WAIT_MS = 1000;       // 强制解锁后等待
-        private const int SAFE_RETRY_DELAY_BASE_MS = 1000;   // 安全操作重试基础延迟
+        private const int PROCESS_WAIT_TIMEOUT_MS = 8000;    // 【性能优化】进程等待超时时间（从15秒优化为8秒）
+        private const int EXTRA_WAIT_AFTER_EXIT_MS = 500;    // 【性能优化】进程退出后额外等待（从1秒优化为500ms）
+        private const int FILE_HANDLE_RELEASE_WAIT_MS = 1500; // 【性能优化】文件句柄释放等待（从3秒优化为1.5秒）
+        private const int FORCE_UNLOCK_WAIT_MS = 500;        // 【性能优化】强制解锁后等待（从1秒优化为500ms）
+        private const int SAFE_RETRY_DELAY_BASE_MS = 500;    // 【性能优化】安全操作重试基础延迟（从1秒优化为500ms）
         private const int CONFIG_READ_RETRY_COUNT = 3;       // 配置读取重试次数
-        private const int CONFIG_READ_RETRY_DELAY_MS = 500;  // 配置读取重试延迟
+        private const int CONFIG_READ_RETRY_DELAY_MS = 300;  // 【性能优化】配置读取重试延迟（从500ms优化为300ms）
         #endregion
         
         // 【新增】防止重复启动标志
@@ -863,8 +863,9 @@ namespace AutoUpdateUpdater
                     {
                         WriteLog("AutoUpdateUpdaterLog.txt", $"ERP系统启动成功（尝试{attempt}），进程ID: {process.Id}");
                         
-                        // 等待进程启动
-                        Thread.Sleep(2000);
+                        // 【性能优化】减少等待时间到 1000ms（从 2000ms）
+                        // ERP 启动是异步的，不需要长时间等待
+                        Thread.Sleep(1000);
                         
                         // 验证进程是否仍在运行
                         if (!process.HasExited)
@@ -900,8 +901,8 @@ namespace AutoUpdateUpdater
                 
                 if (!startupSuccess && attempt < maxRetries)
                 {
-                    WriteLog("AutoUpdateUpdaterLog.txt", $"等待3秒后重试...");
-                    Thread.Sleep(3000);
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"等待1.5秒后重试...");
+                    Thread.Sleep(1500);
                 }
             }
             

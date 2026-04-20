@@ -17,11 +17,11 @@ namespace AutoUpdate
     public class SelfUpdateHelper
     {
         #region 常量定义
-        private const int PROCESS_EXIT_WAIT_MS = 2000;      // 进程退出后额外等待时间
-        private const int FILE_HANDLE_RELEASE_WAIT_MS = 5000; // 文件句柄释放等待时间
-        private const int UPDATER_STARTUP_WAIT_MS = 1000;   // 更新器启动确认等待时间
-        private const int MAX_WAIT_ATTEMPTS = 10;           // 最大等待尝试次数
-        private const int WAIT_INTERVAL_MS = 500;           // 每次等待间隔
+        private const int PROCESS_EXIT_WAIT_MS = 1000;      // 【性能优化】进程退出后额外等待时间（从2秒优化为1秒）
+        private const int FILE_HANDLE_RELEASE_WAIT_MS = 3000; // 文件句柄释放等待时间
+        private const int UPDATER_STARTUP_WAIT_MS = 500;   // 【性能优化】更新器启动确认等待时间（从1秒优化为500ms）
+        private const int MAX_WAIT_ATTEMPTS = 8;           // 【性能优化】最大等待尝试次数（从10次优化为8次）
+        private const int WAIT_INTERVAL_MS = 400;          // 【性能优化】每次等待间隔（从500ms优化为400ms）
         #endregion
         /// <summary>
         /// 启动AutoUpdateUpdater来更新AutoUpdate程序自身
@@ -83,7 +83,7 @@ namespace AutoUpdate
                 
                 // 在启动 AutoUpdateUpdater 之前，确保当前进程完全释放资源
                 WriteLog("AutoUpdateLog.txt", "[启动更新器] 等待进程资源完全释放...");
-                Thread.Sleep(200);  // 【优化】从500ms减少到200ms
+                Thread.Sleep(100);  // 【性能优化】从200ms减少到100ms
                 
                 // 强制垃圾回收（优化：减少次数）
                 GC.Collect();
@@ -105,9 +105,9 @@ namespace AutoUpdate
                 {
                     WriteLog("AutoUpdateLog.txt", "AutoUpdateUpdater已成功启动");
                     
-                    // 【优化】减少等待时间到 300ms（从 1000ms）
+                    // 【性能优化】减少等待时间到 200ms（从 300ms）
                     // 辅助进程是独立的，不需要长时间确认
-                    Thread.Sleep(300);
+                    Thread.Sleep(200);
                     
                     return true;
                 }

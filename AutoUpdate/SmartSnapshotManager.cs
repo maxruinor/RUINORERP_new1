@@ -425,15 +425,18 @@ namespace AutoUpdate
         }
         
         /// <summary>
-        /// 计算文件的 SHA256 校验和
+        /// 计算文件的 SHA256 校验和（流式读取，避免内存溢出）
         /// </summary>
         private string CalculateFileChecksum(string filePath, SHA256 sha256)
         {
             try
             {
-                byte[] fileBytes = File.ReadAllBytes(filePath);
-                byte[] hash = sha256.ComputeHash(fileBytes);
-                return BitConverter.ToString(hash).Replace("-", "").ToLower();
+                // 【性能优化】使用流式读取，避免一次性加载大文件到内存
+                using (var stream = File.OpenRead(filePath))
+                {
+                    byte[] hash = sha256.ComputeHash(stream);
+                    return BitConverter.ToString(hash).Replace("-", "").ToLower();
+                }
             }
             catch
             {

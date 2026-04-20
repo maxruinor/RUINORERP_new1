@@ -1,4 +1,5 @@
 ﻿using Npgsql;
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Text;
@@ -143,6 +144,7 @@ int r = dbHelper.ExecuteNonQuery(connectionString, CommandType.Text,sql,new Npgs
         /// <summary>
         /// 执行查询，返回DataReader
         /// </summary>
+        [Obsolete("此方法可能导致DataReader未关闭。请使用 ExecuteReaderSafe 方法")]
         public DbDataReader ExecuteReader(string connectionString, CommandType cmdType, string cmdText,
           params DbParameter[] cmdParms)
         {
@@ -164,8 +166,38 @@ int r = dbHelper.ExecuteNonQuery(connectionString, CommandType.Text,sql,new Npgs
         }
 
         /// <summary>
+        /// 执行查询，返回DataTable（安全方法，自动管理资源）
+        /// </summary>
+        public DataTable ExecuteReaderSafe(string connectionString, CommandType cmdType, string cmdText,
+          params DbParameter[] cmdParms)
+        {
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+                    NpgsqlCommand cmd = new NpgsqlCommand();
+                    PrepareCommand(cmd, conn, null, cmdType, cmdText, cmdParms);
+                    
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        DataTable dt = new DataTable();
+                        dt.Load(reader);
+                        cmd.Parameters.Clear();
+                        return dt;
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
         /// 在事务中执行查询，返回DataReader
         /// </summary>
+        [Obsolete("此方法可能导致DataReader未关闭。请使用 ExecuteReaderSafeWithTrans 方法")]
         public DbDataReader ExecuteReader(DbTransaction trans, CommandType cmdType, string cmdText,
           params DbParameter[] cmdParms)
         {
@@ -174,6 +206,24 @@ int r = dbHelper.ExecuteNonQuery(connectionString, CommandType.Text,sql,new Npgs
             NpgsqlDataReader rdr = cmd.ExecuteReader(CommandBehavior.CloseConnection);
             cmd.Parameters.Clear();
             return rdr;
+        }
+
+        /// <summary>
+        /// 在事务中执行查询，返回DataTable（安全方法，自动管理资源）
+        /// </summary>
+        public DataTable ExecuteReaderSafeWithTrans(DbTransaction trans, CommandType cmdType, string cmdText,
+          params DbParameter[] cmdParms)
+        {
+            NpgsqlCommand cmd = new NpgsqlCommand();
+            PrepareCommand(cmd, trans.Connection, trans, cmdType, cmdText, cmdParms);
+            
+            using (NpgsqlDataReader reader = cmd.ExecuteReader())
+            {
+                DataTable dt = new DataTable();
+                dt.Load(reader);
+                cmd.Parameters.Clear();
+                return dt;
+            }
         }
 
         /// <summary>

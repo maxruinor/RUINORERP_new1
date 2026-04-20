@@ -397,10 +397,28 @@ namespace HLH.Lib.DB
             return this.CreateCommand(sql, parameters).ExecuteNonQuery();
         }
 
+        [Obsolete("此方法可能导致DataReader未关闭。请使用 ExecuteReaderSafe 方法")]
         public SQLiteDataReader ExecuteReader(string sql, List<SQLiteParameter> parameters)
         {
             this.EnableConnection();
             return this.CreateCommand(sql, parameters).ExecuteReader();
+        }
+
+        /// <summary>
+        /// 执行查询，返回DataTable（安全方法，自动管理资源）
+        /// </summary>
+        public DataTable ExecuteReaderSafe(string sql, List<SQLiteParameter> parameters)
+        {
+            this.EnableConnection();
+            using (SQLiteCommand cmd = this.CreateCommand(sql, parameters))
+            {
+                using (SQLiteDataReader reader = cmd.ExecuteReader())
+                {
+                    DataTable dt = new DataTable();
+                    dt.Load(reader);
+                    return dt;
+                }
+            }
         }
         public int ExecuteScalar(string sql)
         {

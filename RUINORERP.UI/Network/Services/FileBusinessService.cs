@@ -300,7 +300,9 @@ namespace RUINORERP.UI.Network.Services
                 var fieldValue = propertyInfo.GetValue(entity);
                 if (fieldValue == null)
                 {
-                    return FileDownloadResponse.CreateFailure($"关联字段 {relatedField} 的值为 null");
+                    // 优化：降级为 Debug 级别，这是正常业务场景（新增单据时附件字段为空）
+                    _logger?.LogDebug("关联字段 {FieldName} 的值为 null，可能尚未上传附件", relatedField);
+                    return FileDownloadResponse.CreateFailure($"尚未上传附件，请先上传文件");
                 }
 
                 long fileId = GetFileIdFromValue(fieldValue);

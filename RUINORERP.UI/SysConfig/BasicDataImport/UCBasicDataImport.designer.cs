@@ -109,8 +109,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvImportData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvImportData.EnableFiltering = false;
             this.dgvImportData.EnablePagination = false;
+            this.dgvImportData.EnableVirtualMode = true;
             this.dgvImportData.IsShowSumRow = false;
             this.dgvImportData.Location = new System.Drawing.Point(0, 0);
+            this.dgvImportData.MenuId = null;
             this.dgvImportData.Name = "dgvImportData";
             this.dgvImportData.NeedSaveColumnsXml = true;
             this.dgvImportData.RowTemplate.Height = 23;
@@ -123,6 +125,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvImportData.UseCustomColumnDisplay = true;
             this.dgvImportData.UseSelectedColumn = false;
             this.dgvImportData.Use是否使用内置右键功能 = true;
+            this.dgvImportData.VirtualModeThreshold = 5000;
             this.dgvImportData.XmlFileName = "UCBasicDataImport";
             // 
             // contextMenuStrip1
@@ -167,11 +170,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvRawExcelData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvRawExcelData.EnableFiltering = false;
             this.dgvRawExcelData.EnablePagination = false;
+            this.dgvRawExcelData.EnableVirtualMode = true;
             this.dgvRawExcelData.IsShowSumRow = false;
             this.dgvRawExcelData.Location = new System.Drawing.Point(0, 0);
+            this.dgvRawExcelData.MenuId = null;
             this.dgvRawExcelData.Name = "dgvRawExcelData";
             this.dgvRawExcelData.NeedSaveColumnsXml = true;
-            this.dgvRawExcelData.Size = new System.Drawing.Size(867, 341);
+            this.dgvRawExcelData.Size = new System.Drawing.Size(915, 364);
             this.dgvRawExcelData.SumColumns = null;
             this.dgvRawExcelData.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.dgvRawExcelData.SumRowCellFormat = "N2";
@@ -180,6 +185,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvRawExcelData.UseCustomColumnDisplay = true;
             this.dgvRawExcelData.UseSelectedColumn = false;
             this.dgvRawExcelData.Use是否使用内置右键功能 = true;
+            this.dgvRawExcelData.VirtualModeThreshold = 5000;
             this.dgvRawExcelData.XmlFileName = "";
             // 
             // kryptonNavigatorMain
@@ -271,7 +277,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPageRawData.LastVisibleSet = true;
             this.kryptonPageRawData.MinimumSize = new System.Drawing.Size(150, 50);
             this.kryptonPageRawData.Name = "kryptonPageRawData";
-            this.kryptonPageRawData.Size = new System.Drawing.Size(867, 341);
+            this.kryptonPageRawData.Size = new System.Drawing.Size(915, 364);
             this.kryptonPageRawData.Text = "预览数据";
             this.kryptonPageRawData.TextTitle = "原始数据";
             this.kryptonPageRawData.ToolTipTitle = "Page ToolTip";
@@ -306,8 +312,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvParsedImportData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvParsedImportData.EnableFiltering = false;
             this.dgvParsedImportData.EnablePagination = false;
+            this.dgvParsedImportData.EnableVirtualMode = true;
             this.dgvParsedImportData.IsShowSumRow = false;
             this.dgvParsedImportData.Location = new System.Drawing.Point(0, 0);
+            this.dgvParsedImportData.MenuId = null;
             this.dgvParsedImportData.Name = "dgvParsedImportData";
             this.dgvParsedImportData.NeedSaveColumnsXml = true;
             this.dgvParsedImportData.Size = new System.Drawing.Size(915, 364);
@@ -319,6 +327,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvParsedImportData.UseCustomColumnDisplay = true;
             this.dgvParsedImportData.UseSelectedColumn = false;
             this.dgvParsedImportData.Use是否使用内置右键功能 = true;
+            this.dgvParsedImportData.VirtualModeThreshold = 5000;
             this.dgvParsedImportData.XmlFileName = "";
             // 
             // kryptonPanel5
@@ -463,8 +472,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvDynamicImportData.CustomRowNo = false;
             this.dgvDynamicImportData.EnableFiltering = false;
             this.dgvDynamicImportData.EnablePagination = false;
+            this.dgvDynamicImportData.EnableVirtualMode = true;
             this.dgvDynamicImportData.IsShowSumRow = false;
             this.dgvDynamicImportData.Location = new System.Drawing.Point(10, 132);
+            this.dgvDynamicImportData.MenuId = null;
             this.dgvDynamicImportData.Name = "dgvDynamicImportData";
             this.dgvDynamicImportData.NeedSaveColumnsXml = true;
             this.dgvDynamicImportData.RowTemplate.Height = 23;
@@ -477,6 +488,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvDynamicImportData.UseCustomColumnDisplay = true;
             this.dgvDynamicImportData.UseSelectedColumn = false;
             this.dgvDynamicImportData.Use是否使用内置右键功能 = true;
+            this.dgvDynamicImportData.VirtualModeThreshold = 5000;
             this.dgvDynamicImportData.XmlFileName = "UCBasicDataImport_Dynamic";
             // 
             // kryptonPanel6

@@ -428,15 +428,25 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     try
                     {
                         // 服务器主动推送，使用 CacheRequest 作为载体
+                        // 优化：创建独立的取消令牌，避免外部取消令牌影响推送
+                        using var pushCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                        pushCts.CancelAfter(30000); // 30 秒超时
+                        
                         await _sessionService.SendPacketCoreAsync<CacheRequest>(
                             sessionInfo, 
                             CacheCommands.CacheSync, 
                             pushRequest, 
                             30000, 
-                            cancellationToken, 
+                            pushCts.Token, 
                             PacketDirection.ServerRequest); // 注意：这里是 ServerRequest，表示服务器发起的请求
                         successCount++;
-                        LogDebug($"成功推送缓存更新到会话: {sessionInfo.SessionID}, 表: {request.TableName}");
+                        LogDebug($"成功推送缓存更新到会话：{sessionInfo.SessionID}, 表：{request.TableName}");
+                    }
+                    catch (OperationCanceledException ex)
+                    {
+                        failCount++;
+                        failedSessions.Add(sessionInfo.SessionID);
+                        LogWarning($"推送缓存更新到会话超时或被取消：{sessionInfo.SessionID}, 表：{request.TableName}, 错误：{ex.Message}");
                     }
                     catch (Exception ex)
                     {

@@ -171,13 +171,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         };
                     }
 
-                    // 使用UserId进行会话验证
+                    // ✅ 优化：优先使用UserId查找会话（更稳定，重连后不变）
                     var sessionInfo = SessionService.GetSession(heartbeatRequest.UserId);
 
                     if (sessionInfo == null)
                     {
                         // ⚠️ 会话不存在，可能是重连后登录尚未完成
-                        // 记录详细日志，帮助诊断问题
                         System.Diagnostics.Debug.WriteLine($"[心跳] 会话未找到: UserId={heartbeatRequest?.UserId ?? 0}, ClientId={heartbeatRequest?.ClientId ?? string.Empty}, ComputerName={heartbeatRequest?.ComputerName ?? string.Empty}");
 
                         // 返回特定响应，让客户端知道需要重新登录

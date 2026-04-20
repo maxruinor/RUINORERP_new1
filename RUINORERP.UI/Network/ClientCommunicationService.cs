@@ -94,8 +94,8 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 心跳相关字段（优化后）
-        private readonly int _heartbeatIntervalMs = 30000; // 固定心跳间隔30秒，更保守的设置
-        private readonly int _heartbeatTimeoutMs = 15000; // 心跳超时时间15秒
+        private readonly int _heartbeatIntervalMs = 30000; // 固定心跳间隔30秒
+        private readonly int _heartbeatTimeoutMs = 8000; // 心跳超时时间8秒（快速失败）
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
@@ -718,7 +718,7 @@ namespace RUINORERP.UI.Network
         private async Task HeartbeatLoopAsync(CancellationToken cancellationToken)
         {
             int consecutiveTimeouts = 0; // 连续超时计数
-            const int MAX_CONSECUTIVE_TIMEOUTS = 3; // 最大连续超时次数
+            const int MAX_CONSECUTIVE_TIMEOUTS = 5; // 最大连续超时次数（提高容错）
 
             while (!cancellationToken.IsCancellationRequested && _isHeartbeatRunning)
             {

@@ -1961,7 +1961,7 @@ namespace RUINORERP.Business.Cache
             // 如果缓存大小超过阈值，则进行清理
             if (currentSize >= _cacheSizeThreshold)
             {
-                _logger.LogWarning("缓存大小超过阈值，触发自动清理机制。当前大小：{CurrentSize}MB，阈值：{Threshold}MB",
+                _logger.Debug("缓存大小超过阈值，触发自动清理机制。当前大小：{CurrentSize}MB，阈值：{Threshold}MB",
                     currentSize / (1024 * 1024), _cacheSizeThreshold / (1024 * 1024));
 
                 // 执行缓存清理（移除最少使用的项目）

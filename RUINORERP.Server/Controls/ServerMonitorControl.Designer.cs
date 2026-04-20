@@ -90,6 +90,7 @@ namespace RUINORERP.Server.Controls
             lblTotalHandlers = new System.Windows.Forms.Label();
             lblMemoryUsageValue = new System.Windows.Forms.Label();
             lblMemoryUsage = new System.Windows.Forms.Label();
+            lblMemoryDistribution = new System.Windows.Forms.Label();
             lblUptimeValue = new System.Windows.Forms.Label();
             lblUptime = new System.Windows.Forms.Label();
             lblSystemTimeValue = new System.Windows.Forms.Label();
@@ -211,18 +212,18 @@ namespace RUINORERP.Server.Controls
             tabControl1.Margin = new System.Windows.Forms.Padding(4);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new System.Drawing.Size(1167, 965);
+            tabControl1.Size = new System.Drawing.Size(1496, 1082);
             tabControl1.TabIndex = 0;
             // 
             // tabPage1
             // 
-            tabPage1.Controls.Add(panelBottom);
             tabPage1.Controls.Add(panelTop);
+            tabPage1.Controls.Add(panelBottom);
             tabPage1.Location = new System.Drawing.Point(4, 26);
             tabPage1.Margin = new System.Windows.Forms.Padding(4);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new System.Windows.Forms.Padding(4);
-            tabPage1.Size = new System.Drawing.Size(1159, 935);
+            tabPage1.Size = new System.Drawing.Size(1488, 1052);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "服务器状态";
             tabPage1.UseVisualStyleBackColor = true;
@@ -233,7 +234,7 @@ namespace RUINORERP.Server.Controls
             panelBottom.Dock = System.Windows.Forms.DockStyle.Fill;
             panelBottom.Location = new System.Drawing.Point(4, 584);
             panelBottom.Name = "panelBottom";
-            panelBottom.Size = new System.Drawing.Size(1151, 347);
+            panelBottom.Size = new System.Drawing.Size(1480, 464);
             panelBottom.TabIndex = 7;
             // 
             // splitContainer1
@@ -249,14 +250,14 @@ namespace RUINORERP.Server.Controls
             splitContainer1.Panel2.Controls.Add(btnPerformanceReport);
             splitContainer1.Panel2.Controls.Add(btnRefresh);
             splitContainer1.Panel2.Controls.Add(btnResetStats);
-            splitContainer1.Size = new System.Drawing.Size(1151, 347);
-            splitContainer1.SplitterDistance = 750;
+            splitContainer1.Size = new System.Drawing.Size(1480, 464);
+            splitContainer1.SplitterDistance = 964;
             splitContainer1.TabIndex = 0;
             // 
             // btnDiagnosticsReport
             // 
             btnDiagnosticsReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnDiagnosticsReport.Location = new System.Drawing.Point(11, 246);
+            btnDiagnosticsReport.Location = new System.Drawing.Point(20, 17);
             btnDiagnosticsReport.Margin = new System.Windows.Forms.Padding(4);
             btnDiagnosticsReport.Name = "btnDiagnosticsReport";
             btnDiagnosticsReport.Size = new System.Drawing.Size(88, 33);
@@ -268,7 +269,7 @@ namespace RUINORERP.Server.Controls
             // btnErrorReport
             // 
             btnErrorReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnErrorReport.Location = new System.Drawing.Point(197, 246);
+            btnErrorReport.Location = new System.Drawing.Point(206, 17);
             btnErrorReport.Margin = new System.Windows.Forms.Padding(4);
             btnErrorReport.Name = "btnErrorReport";
             btnErrorReport.Size = new System.Drawing.Size(88, 33);
@@ -280,7 +281,7 @@ namespace RUINORERP.Server.Controls
             // btnPerformanceReport
             // 
             btnPerformanceReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnPerformanceReport.Location = new System.Drawing.Point(103, 246);
+            btnPerformanceReport.Location = new System.Drawing.Point(112, 17);
             btnPerformanceReport.Margin = new System.Windows.Forms.Padding(4);
             btnPerformanceReport.Name = "btnPerformanceReport";
             btnPerformanceReport.Size = new System.Drawing.Size(88, 33);
@@ -292,7 +293,7 @@ namespace RUINORERP.Server.Controls
             // btnRefresh
             // 
             btnRefresh.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnRefresh.Location = new System.Drawing.Point(14, 300);
+            btnRefresh.Location = new System.Drawing.Point(308, 17);
             btnRefresh.Margin = new System.Windows.Forms.Padding(4);
             btnRefresh.Name = "btnRefresh";
             btnRefresh.Size = new System.Drawing.Size(88, 33);
@@ -304,7 +305,7 @@ namespace RUINORERP.Server.Controls
             // btnResetStats
             // 
             btnResetStats.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnResetStats.Location = new System.Drawing.Point(110, 300);
+            btnResetStats.Location = new System.Drawing.Point(404, 17);
             btnResetStats.Margin = new System.Windows.Forms.Padding(4);
             btnResetStats.Name = "btnResetStats";
             btnResetStats.Size = new System.Drawing.Size(88, 33);
@@ -319,10 +320,11 @@ namespace RUINORERP.Server.Controls
             panelTop.Controls.Add(groupBox1);
             panelTop.Controls.Add(groupBox7);
             panelTop.Controls.Add(groupBox2);
+            panelTop.Controls.Add(lblMemoryDistribution);
             panelTop.Dock = System.Windows.Forms.DockStyle.Top;
             panelTop.Location = new System.Drawing.Point(4, 4);
             panelTop.Name = "panelTop";
-            panelTop.Size = new System.Drawing.Size(1151, 580);
+            panelTop.Size = new System.Drawing.Size(1480, 580);
             panelTop.TabIndex = 6;
             // 
             // groupBox3
@@ -339,16 +341,15 @@ namespace RUINORERP.Server.Controls
             groupBox3.Controls.Add(lblTotalHandlers);
             groupBox3.Controls.Add(lblMemoryUsageValue);
             groupBox3.Controls.Add(lblMemoryUsage);
-            groupBox3.Controls.Add(lblMemoryDistribution);
             groupBox3.Controls.Add(lblUptimeValue);
             groupBox3.Controls.Add(lblUptime);
             groupBox3.Controls.Add(lblSystemTimeValue);
             groupBox3.Controls.Add(lblSystemTime);
-            groupBox3.Location = new System.Drawing.Point(479, 18);
+            groupBox3.Location = new System.Drawing.Point(435, 18);
             groupBox3.Margin = new System.Windows.Forms.Padding(4);
             groupBox3.Name = "groupBox3";
             groupBox3.Padding = new System.Windows.Forms.Padding(4);
-            groupBox3.Size = new System.Drawing.Size(604, 450);
+            groupBox3.Size = new System.Drawing.Size(441, 268);
             groupBox3.TabIndex = 2;
             groupBox3.TabStop = false;
             groupBox3.Text = "服务器运行信息";
@@ -475,21 +476,19 @@ namespace RUINORERP.Server.Controls
             // 
             // lblMemoryDistribution
             // 
-            lblMemoryDistribution = new System.Windows.Forms.Label();
-            lblMemoryDistribution.AutoSize = false;
-            lblMemoryDistribution.Location = new System.Drawing.Point(23, 270);
-            lblMemoryDistribution.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            lblMemoryDistribution.Name = "lblMemoryDistribution";
-            lblMemoryDistribution.Size = new System.Drawing.Size(550, 150);
-            lblMemoryDistribution.TabIndex = 16;
-            lblMemoryDistribution.Text = "内存分布统计";
             lblMemoryDistribution.BackColor = System.Drawing.Color.WhiteSmoke;
             lblMemoryDistribution.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            lblMemoryDistribution.Location = new System.Drawing.Point(902, 20);
+            lblMemoryDistribution.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblMemoryDistribution.Name = "lblMemoryDistribution";
+            lblMemoryDistribution.Size = new System.Drawing.Size(534, 266);
+            lblMemoryDistribution.TabIndex = 16;
+            lblMemoryDistribution.Text = "内存分布统计";
             // 
             // lblUptimeValue
             // 
             lblUptimeValue.AutoSize = true;
-            lblUptimeValue.Location = new System.Drawing.Point(385, 28);
+            lblUptimeValue.Location = new System.Drawing.Point(370, 27);
             lblUptimeValue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             lblUptimeValue.Name = "lblUptimeValue";
             lblUptimeValue.Size = new System.Drawing.Size(31, 17);
@@ -499,7 +498,7 @@ namespace RUINORERP.Server.Controls
             // lblUptime
             // 
             lblUptime.AutoSize = true;
-            lblUptime.Location = new System.Drawing.Point(291, 28);
+            lblUptime.Location = new System.Drawing.Point(276, 27);
             lblUptime.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             lblUptime.Name = "lblUptime";
             lblUptime.Size = new System.Drawing.Size(68, 17);
@@ -548,7 +547,7 @@ namespace RUINORERP.Server.Controls
             groupBox1.Margin = new System.Windows.Forms.Padding(4);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            groupBox1.Size = new System.Drawing.Size(447, 278);
+            groupBox1.Size = new System.Drawing.Size(404, 278);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "基本服务器信息";
@@ -676,7 +675,7 @@ namespace RUINORERP.Server.Controls
             // lblPortValue
             // 
             lblPortValue.AutoSize = true;
-            lblPortValue.Location = new System.Drawing.Point(373, 28);
+            lblPortValue.Location = new System.Drawing.Point(334, 28);
             lblPortValue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             lblPortValue.Name = "lblPortValue";
             lblPortValue.Size = new System.Drawing.Size(31, 17);
@@ -686,7 +685,7 @@ namespace RUINORERP.Server.Controls
             // lblPort
             // 
             lblPort.AutoSize = true;
-            lblPort.Location = new System.Drawing.Point(257, 28);
+            lblPort.Location = new System.Drawing.Point(218, 28);
             lblPort.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             lblPort.Name = "lblPort";
             lblPort.Size = new System.Drawing.Size(44, 17);
@@ -735,9 +734,9 @@ namespace RUINORERP.Server.Controls
             groupBox7.Controls.Add(cbLblTotalRequests);
             groupBox7.Controls.Add(cbLblStatusValue);
             groupBox7.Controls.Add(cbLblStatus);
-            groupBox7.Location = new System.Drawing.Point(479, 306);
+            groupBox7.Location = new System.Drawing.Point(435, 306);
             groupBox7.Name = "groupBox7";
-            groupBox7.Size = new System.Drawing.Size(604, 218);
+            groupBox7.Size = new System.Drawing.Size(441, 259);
             groupBox7.TabIndex = 25;
             groupBox7.TabStop = false;
             groupBox7.Text = "熔断器监控";
@@ -745,7 +744,7 @@ namespace RUINORERP.Server.Controls
             // cbLblActiveExecutionsValue
             // 
             cbLblActiveExecutionsValue.AutoSize = true;
-            cbLblActiveExecutionsValue.Location = new System.Drawing.Point(530, 90);
+            cbLblActiveExecutionsValue.Location = new System.Drawing.Point(299, 201);
             cbLblActiveExecutionsValue.Name = "cbLblActiveExecutionsValue";
             cbLblActiveExecutionsValue.Size = new System.Drawing.Size(15, 17);
             cbLblActiveExecutionsValue.TabIndex = 19;
@@ -754,7 +753,7 @@ namespace RUINORERP.Server.Controls
             // cbLblActiveExecutions
             // 
             cbLblActiveExecutions.AutoSize = true;
-            cbLblActiveExecutions.Location = new System.Drawing.Point(420, 90);
+            cbLblActiveExecutions.Location = new System.Drawing.Point(189, 201);
             cbLblActiveExecutions.Name = "cbLblActiveExecutions";
             cbLblActiveExecutions.Size = new System.Drawing.Size(104, 17);
             cbLblActiveExecutions.TabIndex = 18;
@@ -763,7 +762,7 @@ namespace RUINORERP.Server.Controls
             // cbLblCircuitHalfOpensValue
             // 
             cbLblCircuitHalfOpensValue.AutoSize = true;
-            cbLblCircuitHalfOpensValue.Location = new System.Drawing.Point(310, 90);
+            cbLblCircuitHalfOpensValue.Location = new System.Drawing.Point(311, 153);
             cbLblCircuitHalfOpensValue.Name = "cbLblCircuitHalfOpensValue";
             cbLblCircuitHalfOpensValue.Size = new System.Drawing.Size(15, 17);
             cbLblCircuitHalfOpensValue.TabIndex = 17;
@@ -772,7 +771,7 @@ namespace RUINORERP.Server.Controls
             // cbLblCircuitHalfOpens
             // 
             cbLblCircuitHalfOpens.AutoSize = true;
-            cbLblCircuitHalfOpens.Location = new System.Drawing.Point(200, 90);
+            cbLblCircuitHalfOpens.Location = new System.Drawing.Point(189, 153);
             cbLblCircuitHalfOpens.Name = "cbLblCircuitHalfOpens";
             cbLblCircuitHalfOpens.Size = new System.Drawing.Size(104, 17);
             cbLblCircuitHalfOpens.TabIndex = 16;
@@ -781,7 +780,7 @@ namespace RUINORERP.Server.Controls
             // cbLblCircuitClosesValue
             // 
             cbLblCircuitClosesValue.AutoSize = true;
-            cbLblCircuitClosesValue.Location = new System.Drawing.Point(110, 90);
+            cbLblCircuitClosesValue.Location = new System.Drawing.Point(111, 153);
             cbLblCircuitClosesValue.Name = "cbLblCircuitClosesValue";
             cbLblCircuitClosesValue.Size = new System.Drawing.Size(15, 17);
             cbLblCircuitClosesValue.TabIndex = 15;
@@ -790,7 +789,7 @@ namespace RUINORERP.Server.Controls
             // cbLblCircuitCloses
             // 
             cbLblCircuitCloses.AutoSize = true;
-            cbLblCircuitCloses.Location = new System.Drawing.Point(10, 90);
+            cbLblCircuitCloses.Location = new System.Drawing.Point(11, 153);
             cbLblCircuitCloses.Name = "cbLblCircuitCloses";
             cbLblCircuitCloses.Size = new System.Drawing.Size(104, 17);
             cbLblCircuitCloses.TabIndex = 14;
@@ -799,7 +798,7 @@ namespace RUINORERP.Server.Controls
             // cbLblCircuitOpensValue
             // 
             cbLblCircuitOpensValue.AutoSize = true;
-            cbLblCircuitOpensValue.Location = new System.Drawing.Point(490, 60);
+            cbLblCircuitOpensValue.Location = new System.Drawing.Point(107, 201);
             cbLblCircuitOpensValue.Name = "cbLblCircuitOpensValue";
             cbLblCircuitOpensValue.Size = new System.Drawing.Size(15, 17);
             cbLblCircuitOpensValue.TabIndex = 13;
@@ -808,7 +807,7 @@ namespace RUINORERP.Server.Controls
             // cbLblCircuitOpens
             // 
             cbLblCircuitOpens.AutoSize = true;
-            cbLblCircuitOpens.Location = new System.Drawing.Point(390, 60);
+            cbLblCircuitOpens.Location = new System.Drawing.Point(11, 201);
             cbLblCircuitOpens.Name = "cbLblCircuitOpens";
             cbLblCircuitOpens.Size = new System.Drawing.Size(104, 17);
             cbLblCircuitOpens.TabIndex = 12;
@@ -817,7 +816,7 @@ namespace RUINORERP.Server.Controls
             // cbLblAvgResponseTimeValue
             // 
             cbLblAvgResponseTimeValue.AutoSize = true;
-            cbLblAvgResponseTimeValue.Location = new System.Drawing.Point(295, 60);
+            cbLblAvgResponseTimeValue.Location = new System.Drawing.Point(295, 106);
             cbLblAvgResponseTimeValue.Name = "cbLblAvgResponseTimeValue";
             cbLblAvgResponseTimeValue.Size = new System.Drawing.Size(32, 17);
             cbLblAvgResponseTimeValue.TabIndex = 11;
@@ -826,7 +825,7 @@ namespace RUINORERP.Server.Controls
             // cbLblAvgResponseTime
             // 
             cbLblAvgResponseTime.AutoSize = true;
-            cbLblAvgResponseTime.Location = new System.Drawing.Point(200, 60);
+            cbLblAvgResponseTime.Location = new System.Drawing.Point(189, 106);
             cbLblAvgResponseTime.Name = "cbLblAvgResponseTime";
             cbLblAvgResponseTime.Size = new System.Drawing.Size(92, 17);
             cbLblAvgResponseTime.TabIndex = 10;
@@ -835,7 +834,7 @@ namespace RUINORERP.Server.Controls
             // cbLblStateChangesValue
             // 
             cbLblStateChangesValue.AutoSize = true;
-            cbLblStateChangesValue.Location = new System.Drawing.Point(129, 60);
+            cbLblStateChangesValue.Location = new System.Drawing.Point(129, 106);
             cbLblStateChangesValue.Name = "cbLblStateChangesValue";
             cbLblStateChangesValue.Size = new System.Drawing.Size(15, 17);
             cbLblStateChangesValue.TabIndex = 9;
@@ -844,7 +843,7 @@ namespace RUINORERP.Server.Controls
             // cbLblStateChanges
             // 
             cbLblStateChanges.AutoSize = true;
-            cbLblStateChanges.Location = new System.Drawing.Point(10, 60);
+            cbLblStateChanges.Location = new System.Drawing.Point(11, 106);
             cbLblStateChanges.Name = "cbLblStateChanges";
             cbLblStateChanges.Size = new System.Drawing.Size(92, 17);
             cbLblStateChanges.TabIndex = 8;
@@ -853,7 +852,7 @@ namespace RUINORERP.Server.Controls
             // cbLblFailedRequestsValue
             // 
             cbLblFailedRequestsValue.AutoSize = true;
-            cbLblFailedRequestsValue.Location = new System.Drawing.Point(575, 25);
+            cbLblFailedRequestsValue.Location = new System.Drawing.Point(295, 62);
             cbLblFailedRequestsValue.Name = "cbLblFailedRequestsValue";
             cbLblFailedRequestsValue.Size = new System.Drawing.Size(15, 17);
             cbLblFailedRequestsValue.TabIndex = 7;
@@ -862,7 +861,7 @@ namespace RUINORERP.Server.Controls
             // cbLblFailedRequests
             // 
             cbLblFailedRequests.AutoSize = true;
-            cbLblFailedRequests.Location = new System.Drawing.Point(480, 25);
+            cbLblFailedRequests.Location = new System.Drawing.Point(189, 62);
             cbLblFailedRequests.Name = "cbLblFailedRequests";
             cbLblFailedRequests.Size = new System.Drawing.Size(80, 17);
             cbLblFailedRequests.TabIndex = 6;
@@ -871,7 +870,7 @@ namespace RUINORERP.Server.Controls
             // cbLblSuccessRateValue
             // 
             cbLblSuccessRateValue.AutoSize = true;
-            cbLblSuccessRateValue.Location = new System.Drawing.Point(411, 25);
+            cbLblSuccessRateValue.Location = new System.Drawing.Point(72, 62);
             cbLblSuccessRateValue.Name = "cbLblSuccessRateValue";
             cbLblSuccessRateValue.Size = new System.Drawing.Size(40, 17);
             cbLblSuccessRateValue.TabIndex = 5;
@@ -880,7 +879,7 @@ namespace RUINORERP.Server.Controls
             // cbLblSuccessRate
             // 
             cbLblSuccessRate.AutoSize = true;
-            cbLblSuccessRate.Location = new System.Drawing.Point(350, 25);
+            cbLblSuccessRate.Location = new System.Drawing.Point(11, 62);
             cbLblSuccessRate.Name = "cbLblSuccessRate";
             cbLblSuccessRate.Size = new System.Drawing.Size(56, 17);
             cbLblSuccessRate.TabIndex = 4;
@@ -898,7 +897,7 @@ namespace RUINORERP.Server.Controls
             // cbLblTotalRequests
             // 
             cbLblTotalRequests.AutoSize = true;
-            cbLblTotalRequests.Location = new System.Drawing.Point(200, 25);
+            cbLblTotalRequests.Location = new System.Drawing.Point(189, 25);
             cbLblTotalRequests.Name = "cbLblTotalRequests";
             cbLblTotalRequests.Size = new System.Drawing.Size(68, 17);
             cbLblTotalRequests.TabIndex = 2;
@@ -916,7 +915,7 @@ namespace RUINORERP.Server.Controls
             // cbLblStatus
             // 
             cbLblStatus.AutoSize = true;
-            cbLblStatus.Location = new System.Drawing.Point(10, 25);
+            cbLblStatus.Location = new System.Drawing.Point(11, 25);
             cbLblStatus.Name = "cbLblStatus";
             cbLblStatus.Size = new System.Drawing.Size(80, 17);
             cbLblStatus.TabIndex = 0;
@@ -950,7 +949,7 @@ namespace RUINORERP.Server.Controls
             groupBox2.Margin = new System.Windows.Forms.Padding(4);
             groupBox2.Name = "groupBox2";
             groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            groupBox2.Size = new System.Drawing.Size(437, 271);
+            groupBox2.Size = new System.Drawing.Size(394, 271);
             groupBox2.TabIndex = 1;
             groupBox2.TabStop = false;
             groupBox2.Text = "会话统计";
@@ -978,7 +977,7 @@ namespace RUINORERP.Server.Controls
             // lblRequestsPerSecondValue
             // 
             lblRequestsPerSecondValue.AutoSize = true;
-            lblRequestsPerSecondValue.Location = new System.Drawing.Point(373, 241);
+            lblRequestsPerSecondValue.Location = new System.Drawing.Point(330, 241);
             lblRequestsPerSecondValue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             lblRequestsPerSecondValue.Name = "lblRequestsPerSecondValue";
             lblRequestsPerSecondValue.Size = new System.Drawing.Size(31, 17);
@@ -988,7 +987,7 @@ namespace RUINORERP.Server.Controls
             // lblRequestsPerSecond
             // 
             lblRequestsPerSecond.AutoSize = true;
-            lblRequestsPerSecond.Location = new System.Drawing.Point(257, 241);
+            lblRequestsPerSecond.Location = new System.Drawing.Point(214, 241);
             lblRequestsPerSecond.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             lblRequestsPerSecond.Name = "lblRequestsPerSecond";
             lblRequestsPerSecond.Size = new System.Drawing.Size(56, 17);
@@ -1158,7 +1157,7 @@ namespace RUINORERP.Server.Controls
             // lblActiveSessionsValue
             // 
             lblActiveSessionsValue.AutoSize = true;
-            lblActiveSessionsValue.Location = new System.Drawing.Point(373, 28);
+            lblActiveSessionsValue.Location = new System.Drawing.Point(330, 28);
             lblActiveSessionsValue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             lblActiveSessionsValue.Name = "lblActiveSessionsValue";
             lblActiveSessionsValue.Size = new System.Drawing.Size(31, 17);
@@ -1168,7 +1167,7 @@ namespace RUINORERP.Server.Controls
             // lblActiveSessions
             // 
             lblActiveSessions.AutoSize = true;
-            lblActiveSessions.Location = new System.Drawing.Point(257, 28);
+            lblActiveSessions.Location = new System.Drawing.Point(214, 28);
             lblActiveSessions.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             lblActiveSessions.Name = "lblActiveSessions";
             lblActiveSessions.Size = new System.Drawing.Size(92, 17);
@@ -1459,7 +1458,7 @@ namespace RUINORERP.Server.Controls
             Controls.Add(tabControl1);
             Margin = new System.Windows.Forms.Padding(4);
             Name = "ServerMonitorControl";
-            Size = new System.Drawing.Size(1167, 965);
+            Size = new System.Drawing.Size(1496, 1082);
             Load += ServerMonitorControl_Load;
             Disposed += ServerMonitorControl_Disposed;
             tabControl1.ResumeLayout(false);

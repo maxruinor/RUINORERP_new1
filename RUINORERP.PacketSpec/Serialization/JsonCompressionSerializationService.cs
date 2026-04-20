@@ -10,6 +10,54 @@ using System.Text;
 namespace RUINORERP.PacketSpec.Serialization
 {
     /// <summary>
+    /// 自定义JSON序列化契约解析器
+    /// 用于排除服务端特有且可能导致并发问题的属性
+    /// </summary>
+    internal class ExcludingPropertiesContractResolver : DefaultContractResolver
+    {
+        private readonly HashSet<string> _excludedProperties = new HashSet<string>
+        {
+            "UserModList",
+            "UserButtonList",
+            "UserFieldList",
+            "UserMenuList",
+            "UserInfo",
+            "tb_Employee",
+            "DataQueue"
+        };
+
+        private readonly HashSet<string> _excludedTypes = new HashSet<string>
+        {
+            "CurrentUserInfo",
+            "SessionInfo",
+            "tb_UserInfo",
+            "tb_Employee"
+        };
+
+        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+        {
+            var properties = base.CreateProperties(type, memberSerialization);
+            
+            string typeName = type.Name;
+            
+            if (_excludedTypes.Contains(typeName))
+            {
+                properties.Clear();
+            }
+            
+            foreach (var prop in properties)
+            {
+                if (_excludedProperties.Contains(prop.PropertyName))
+                {
+                    prop.Ignored = true;
+                }
+            }
+            
+            return properties;
+        }
+    }
+
+    /// <summary>
     /// 自定义序列化绑定器，用于解决.NET Framework和.NET Core之间的程序集名称差异
     /// 特别是处理System.Private.CoreLib和mscorlib之间的映射问题
     /// </summary>
@@ -93,6 +141,8 @@ namespace RUINORERP.PacketSpec.Serialization
 
     public static class JsonCompressionSerializationService
     {
+        private static readonly ExcludingPropertiesContractResolver _contractResolver = new ExcludingPropertiesContractResolver();
+
         private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
         {
             // 空值处理：序列化时忽略对象中值为null的属性，减少数据传输量
@@ -107,15 +157,13 @@ namespace RUINORERP.PacketSpec.Serialization
             // 启用自定义序列化绑定器，解决跨平台程序集名称差异问题
             SerializationBinder = new CrossPlatformSerializationBinder(),
             
+            // 使用自定义契约解析器，排除服务端特有属性
+            ContractResolver = _contractResolver,
+            
             // 日期格式处理：使用ISO标准格式处理日期时间字符串，确保跨平台兼容性
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
             
             // 日期时间时区处理：设置为RoundtripKind以确保保持时间的原始状态
-            // 重要：此设置确保DateTime对象在序列化和反序列化过程中保持其原始时区信息
-            // - 本地时间(L)将保持为本地时间
-            // - UTC时间(U)将保持为UTC时间
-            // - 未指定时间(K)将保持为未指定
-            // 这样可以避免不必要的时区转换，完全按照原始数据格式处理
             DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
             
             // 引用循环处理：忽略对象之间的循环引用，避免序列化时出现StackOverflow异常
@@ -123,7 +171,7 @@ namespace RUINORERP.PacketSpec.Serialization
         };
 
         /// <summary>
-        /// 序列化并压缩（主要方法）11
+        /// 序列化并压缩（主要方法）
         /// </summary>
         public static byte[] Serialize<T>(T obj, bool compress = true)
         {

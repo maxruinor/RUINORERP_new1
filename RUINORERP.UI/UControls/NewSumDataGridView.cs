@@ -1964,6 +1964,10 @@ namespace RUINORERP.UI.UControls
 
                 #endregion
 
+                // ✅ 关键修复：临时禁用 AutoSizeColumnsMode，避免覆盖个性化列宽设置
+                var originalAutoSizeColumnsMode = this.AutoSizeColumnsMode;
+                this.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+
                 //加载列样式
                 foreach (ColDisplayController displayController in ColumnDisplays)
                 {
@@ -2014,6 +2018,9 @@ namespace RUINORERP.UI.UControls
                     }
 
                 }
+
+                // ✅ 恢复原来的 AutoSizeColumnsMode 设置
+                this.AutoSizeColumnsMode = originalAutoSizeColumnsMode;
 
                 //如果
                 if (this.Columns.Count != ColumnDisplays.Count && this.Columns.Count > 5)

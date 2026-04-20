@@ -2935,9 +2935,10 @@ namespace RUINORERP.UI.BaseForm
                         var deleteResult = await Delete();
                         if (deleteResult.Succeeded)
                         {
-                            Exit(this);
-                            // 状态同步已在删除方法内部处理，无需重复调用
-                            //Add();
+                            // 删除成功后直接进入新增模式，用户可以继续录入新单据
+                            // 例如：销售订单删除草稿后，可以立即重新录入
+                            Add();
+                            MainForm.Instance.PrintInfoLog("删除成功，已切换到新增模式");
                         }
                         else
                         {
@@ -8085,9 +8086,7 @@ namespace RUINORERP.UI.BaseForm
                         var updateData = ConvertToTodoUpdate(editEntity, TodoUpdateType.Deleted);
                         TodoSyncManager.Instance.PublishUpdate(updateData);
 
-                        //加载一个空的显示的UI
-                        bindingSourceSub.Clear();
-                        OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
+                        // 注意：不在这里调用 Add()，由删除按钮点击事件处理新增模式切换
                     }
                     else
                     {

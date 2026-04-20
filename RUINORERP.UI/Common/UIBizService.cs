@@ -821,10 +821,20 @@ namespace RUINORERP.UI.Common
 
             }
 
+            // ✅ 关键修复：确保个性化列设置（宽度、顺序、可见性）被正确应用
+            // 步骤 1：先应用个性化设置
+            dataGridView.BindColumnStyle();
+            
+            // 步骤 2：保存用户选择的自动列宽模式（供后续参考）
             dataGridView.AutoSizeColumnsMode = (DataGridViewAutoSizeColumnsMode)GridSetting.ColumnsMode;
             dataGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
-
-            dataGridView.BindColumnStyle();
+            
+            // 步骤 3：如果用户设置了个性化列宽（ColumnsMode 为 None），则确保宽度不被自动调整覆盖
+            if (GridSetting.ColumnsMode == 0) // None
+            {
+                // 再次应用列宽，确保不被 AutoSizeColumnsMode 覆盖
+                dataGridView.BindColumnStyle();
+            }
         }
 
 

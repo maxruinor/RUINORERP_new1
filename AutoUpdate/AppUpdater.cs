@@ -34,7 +34,8 @@ namespace AutoUpdate
         #region 成员变量定义
         private string _updaterUrl;
         private bool disposed = false;
-        private Component component = new Component();
+        // 【P2修复】移除未使用的Component对象，避免资源泄漏
+        // private Component component = new Component();
 
         public string UpdaterUrl
         {
@@ -64,7 +65,8 @@ namespace AutoUpdate
             {
                 if (disposing)
                 {
-                    component?.Dispose();
+                    // 【P2修复】已移除未使用的Component对象
+                    // component?.Dispose();
                 }
                 disposed = true;
             }
@@ -281,6 +283,7 @@ namespace AutoUpdate
         /// <summary>
         /// 比较两个版本号
         /// 使用.NET内置的Version类进行版本比较
+        /// 【P1修复】增强版本号解析，支持特殊格式（如 1.0.0-beta）
         /// </summary>
         /// <param name="oldVersion">旧版本号</param>
         /// <param name="newVersion">新版本号</param>
@@ -289,14 +292,40 @@ namespace AutoUpdate
         {
             try
             {
-                var v1 = new Version(oldVersion);
-                var v2 = new Version(newVersion);
+                // 【P1修复】清理版本号字符串，移除非数字和非点字符
+                string CleanVersion(string ver)
+                {
+                    if (string.IsNullOrEmpty(ver))
+                        return "0.0.0.0";
+                    
+                    // 移除所有非数字和非点的字符
+                    var cleaned = new System.Text.StringBuilder();
+                    foreach (char c in ver)
+                    {
+                        if (char.IsDigit(c) || c == '.')
+                        {
+                            cleaned.Append(c);
+                        }
+                    }
+                    
+                    string result = cleaned.ToString();
+                    return string.IsNullOrEmpty(result) ? "0.0.0.0" : result;
+                }
+                
+                string cleanOldVersion = CleanVersion(oldVersion);
+                string cleanNewVersion = CleanVersion(newVersion);
+                
+                var v1 = new Version(cleanOldVersion);
+                var v2 = new Version(cleanNewVersion);
                 return v1.CompareTo(v2);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"版本比较出错: {ex.Message}");
-                return 0;
+                // 【P1修复】记录详细错误信息
+                Debug.WriteLine($"版本比较失败: old={oldVersion}, new={newVersion}, error={ex.Message}");
+                
+                // 【安全策略】异常时保守处理，尝试字符串比较
+                return string.CompareOrdinal(oldVersion, newVersion);
             }
         }
 

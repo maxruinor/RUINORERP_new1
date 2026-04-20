@@ -17,11 +17,12 @@ namespace AutoUpdate
     public class SelfUpdateHelper
     {
         #region 常量定义
-        private const int PROCESS_EXIT_WAIT_MS = 1000;      // 【性能优化】进程退出后额外等待时间（从2秒优化为1秒）
-        private const int FILE_HANDLE_RELEASE_WAIT_MS = 3000; // 文件句柄释放等待时间
-        private const int UPDATER_STARTUP_WAIT_MS = 500;   // 【性能优化】更新器启动确认等待时间（从1秒优化为500ms）
-        private const int MAX_WAIT_ATTEMPTS = 8;           // 【性能优化】最大等待尝试次数（从10次优化为8次）
-        private const int WAIT_INTERVAL_MS = 400;          // 【性能优化】每次等待间隔（从500ms优化为400ms）
+        // 【P2优化】使用AutoUpdate.UpdateSystemConstants统一管理，这里保留向后兼容的别名
+        private const int PROCESS_EXIT_WAIT_MS = AutoUpdate.UpdateSystemConstants.ExtraWaitAfterExitMs;      // 进程退出后额外等待时间
+        private const int FILE_HANDLE_RELEASE_WAIT_MS = AutoUpdate.UpdateSystemConstants.FileHandleReleaseWaitMs; // 文件句柄释放等待时间
+        private const int UPDATER_STARTUP_WAIT_MS = AutoUpdate.UpdateSystemConstants.UpdaterStartupWaitMs;   // 更新器启动确认等待时间
+        private const int MAX_WAIT_ATTEMPTS = AutoUpdate.UpdateSystemConstants.MaxWaitAttempts;           // 最大等待尝试次数
+        private const int WAIT_INTERVAL_MS = AutoUpdate.UpdateSystemConstants.WaitIntervalMs;          // 每次等待间隔
         #endregion
         /// <summary>
         /// 启动AutoUpdateUpdater来更新AutoUpdate程序自身
@@ -238,6 +239,18 @@ namespace AutoUpdate
                 WriteLog("AutoUpdateLog.txt", "更新参数无效，无法执行自身更新");
                 WriteLog("AutoUpdateLog.txt", $"最终参数 - 源目录: {sourceDir}, 目标目录: {targetDir}, 可执行文件名: {exeName}");
                 
+                // 【P1修复】创建错误标记文件
+                string errorTargetDir = targetDir ?? Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                CreateCriticalErrorFile(errorTargetDir, "更新参数无效，无法执行自身更新");
+                
+                // 显示错误提示
+                MessageBox.Show(
+                    "更新参数无效，将使用当前版本启动。\n\n请联系管理员检查更新配置。",
+                    "更新失败",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                
                 // 更新失败时，确保启动主程序
                 StartERPApplication(targetDir);
                 return;
@@ -329,33 +342,75 @@ namespace AutoUpdate
                     {
                         WriteLog(logFilePath, $"更新完成，准备重启: {mainExePath}");
                         
-                        // 5. 【新版本】创建智能快照
-                        try
+                        // 5. 【P1修复】【P2优化】异步创建智能快照，避免阻塞UI，支持取消
+                        var snapshotCts = new System.Threading.CancellationTokenSource();
+                        
+                        Task.Run(() =>
                         {
-                            string currentVersion = File.ReadAllText(
-                                Path.Combine(targetDir, "CurrentVersion.txt"), Encoding.UTF8);
-                            
-                            WriteLog(logFilePath, $"[快照] 开始创建应用快照: {currentVersion}");
-                            var snapshotManager = new SmartSnapshotManager();
-                            var snapshot = snapshotManager.CreateSmartSnapshot(currentVersion, "自我更新");
-                            
-                            if (snapshot != null)
+                            try
                             {
-                                WriteLog(logFilePath, $"[快照] 创建成功: {snapshot.SnapshotFolderName}, " +
-                                                    $"类型: {(snapshot.IsFullSnapshot ? "完整" : "增量")}");
+                                if (snapshotCts.Token.IsCancellationRequested)
+                                {
+                                    WriteLog(logFilePath, "[快照] 后台创建已取消");
+                                    return;
+                                }
+                                
+                                string currentVersion = File.ReadAllText(
+                                    Path.Combine(targetDir, "CurrentVersion.txt"), Encoding.UTF8);
+                                
+                                WriteLog(logFilePath, $"[快照] 后台开始创建应用快照: {currentVersion}");
+                                var snapshotManager = new SmartSnapshotManager();
+                                var snapshot = snapshotManager.CreateSmartSnapshot(currentVersion, "自我更新");
+                                
+                                if (snapshot != null)
+                                {
+                                    WriteLog(logFilePath, $"[快照] 后台创建成功: {snapshot.SnapshotFolderName}, " +
+                                                        $"类型: {(snapshot.IsFullSnapshot ? "完整" : "增量")}");
+                                }
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteLog(logFilePath, $"[快照] 创建失败: {ex.Message}");
-                            // 快照创建失败不影响更新流程
-                        }
+                            catch (System.OperationCanceledException)
+                            {
+                                WriteLog(logFilePath, "[快照] 后台创建已取消");
+                            }
+                            catch (Exception ex)
+                            {
+                                WriteLog(logFilePath, $"[快照] 后台创建失败: {ex.Message}");
+                                // 快照创建失败不影响更新流程
+                            }
+                        }, snapshotCts.Token);
                         
                         // 6. 启动ERP系统（如果存在）
                         StartERPApplication(targetDir);
                         
-                        // 7. 重启主进程
-                        Process.Start(mainExePath);
+                        // 7. 【P1修复】重启主进程，检查返回值
+                        try
+                        {
+                            Process newProcess = Process.Start(mainExePath);
+                            if (newProcess != null)
+                            {
+                                WriteLog(logFilePath, $"成功启动主程序，进程ID: {newProcess.Id}");
+                                // 可选：等待一小段时间验证进程是否仍在运行
+                                Thread.Sleep(500);
+                                if (!newProcess.HasExited)
+                                {
+                                    WriteLog(logFilePath, "主程序正常运行");
+                                }
+                                else
+                                {
+                                    WriteLog(logFilePath, "警告: 主程序启动后立即退出");
+                                }
+                            }
+                            else
+                            {
+                                WriteLog(logFilePath, "错误: Process.Start 返回 null");
+                                CreateCriticalErrorFile(targetDir, "无法启动主程序，请手动启动。");
+                            }
+                        }
+                        catch (Exception startEx)
+                        {
+                            WriteLog(logFilePath, $"启动主程序失败: {startEx.Message}");
+                            CreateCriticalErrorFile(targetDir, $"启动主程序失败: {startEx.Message}");
+                        }
                     }
                     else
                     {
@@ -366,14 +421,76 @@ namespace AutoUpdate
                 {
                     // 7. 更新失败，执行回滚
                     WriteLog(logFilePath, $"更新失败，开始回滚到备份版本: {ex.Message}\r\n堆栈跟踪: {ex.StackTrace}");
-                    RollbackToBackup(targetDir, backupDir);
-                    WriteLog(logFilePath, "回滚完成，重启应用程序");
                     
-                    // 重启主进程
+                    // 【P0修复】验证回滚是否成功
+                    bool rollbackSuccess = false;
+                    try
+                    {
+                        rollbackSuccess = RollbackToBackup(targetDir, backupDir);
+                        
+                        if (!rollbackSuccess)
+                        {
+                            // 【关键】回滚失败，创建错误标记文件并阻止启动
+                            WriteLog(logFilePath, "严重错误: 回滚失败！");
+                            CreateCriticalErrorFile(targetDir, $"更新失败且自动回滚失败！\n\n错误信息: {ex.Message}\n\n请联系管理员手动恢复备份。");
+                            
+                            // 【安全策略】不要在损坏状态下启动程序
+                            MessageBox.Show(
+                                "更新失败且自动回滚失败！\n\n系统可能处于不稳定状态。\n请联系管理员手动恢复备份。",
+                                "严重错误",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error
+                            );
+                            return; // 【关键】不要启动程序
+                        }
+                        
+                        WriteLog(logFilePath, "回滚成功，准备重启应用程序");
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        // 【P0修复】回滚过程也抛出异常
+                        WriteLog(logFilePath, $"回滚过程也失败: {rollbackEx.Message}\r\n堆栈跟踪: {rollbackEx.StackTrace}");
+                        CreateCriticalErrorFile(targetDir, $"更新和回滚均失败！\n\n更新错误: {ex.Message}\n回滚错误: {rollbackEx.Message}\n\n请立即联系管理员！");
+                        
+                        MessageBox.Show(
+                            $"更新失败且回滚也失败！\n\n系统已处于不稳定状态。\n\n请立即联系管理员！\n\n详细信息: {rollbackEx.Message}",
+                            "严重错误",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+                        return; // 【关键】不要启动程序
+                    }
+                    
+                    // 【P0修复】只有回滚成功才启动程序
                     string mainExePath = Path.Combine(targetDir, exeName);
                     if (File.Exists(mainExePath))
                     {
-                        Process.Start(mainExePath);
+                        WriteLog(logFilePath, "回滚成功，重启应用程序");
+                        
+                        // 【P1修复】检查Process.Start返回值
+                        try
+                        {
+                            Process newProcess = Process.Start(mainExePath);
+                            if (newProcess != null)
+                            {
+                                WriteLog(logFilePath, $"回滚后成功启动主程序，进程ID: {newProcess.Id}");
+                            }
+                            else
+                            {
+                                WriteLog(logFilePath, "错误: 回滚后Process.Start返回null");
+                                CreateCriticalErrorFile(targetDir, "回滚成功但无法启动主程序，请手动启动。");
+                            }
+                        }
+                        catch (Exception startEx)
+                        {
+                            WriteLog(logFilePath, $"回滚后启动主程序失败: {startEx.Message}");
+                            CreateCriticalErrorFile(targetDir, $"回滚成功但启动主程序失败: {startEx.Message}");
+                        }
+                    }
+                    else
+                    {
+                        WriteLog(logFilePath, $"错误: 回滚后主程序文件不存在: {mainExePath}");
+                        CreateCriticalErrorFile(targetDir, "回滚后主程序文件丢失，请手动恢复备份。");
                     }
                 }
             }
@@ -799,6 +916,30 @@ namespace AutoUpdate
             }
             
             return string.Empty;
+        }
+        
+        /// <summary>
+        /// 【P0修复】创建严重错误标记文件
+        /// 让主程序可以检测到更新失败并提示用户
+        /// </summary>
+        /// <param name="targetDir">目标目录</param>
+        /// <param name="errorMessage">错误信息</param>
+        private static void CreateCriticalErrorFile(string targetDir, string errorMessage)
+        {
+            try
+            {
+                string errorFile = Path.Combine(targetDir, "CriticalUpdateError.txt");
+                string errorContent = $"[严重错误] 更新于 {DateTime.Now}\r\n" +
+                                     $"错误信息: {errorMessage}\r\n" +
+                                     $"\r\n请立即联系管理员进行手动恢复！";
+                
+                File.WriteAllText(errorFile, errorContent);
+                WriteLog("AutoUpdateLog.txt", $"已创建严重错误标记文件: {errorFile}");
+            }
+            catch (Exception ex)
+            {
+                WriteLog("AutoUpdateLog.txt", $"创建错误标记文件失败: {ex.Message}");
+            }
         }
 
     }

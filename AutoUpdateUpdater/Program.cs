@@ -14,13 +14,14 @@ namespace AutoUpdateUpdater
     static class Program
     {
         #region 常量定义
-        private const int PROCESS_WAIT_TIMEOUT_MS = 8000;    // 【性能优化】进程等待超时时间（从15秒优化为8秒）
-        private const int EXTRA_WAIT_AFTER_EXIT_MS = 500;    // 【性能优化】进程退出后额外等待（从1秒优化为500ms）
-        private const int FILE_HANDLE_RELEASE_WAIT_MS = 1500; // 【性能优化】文件句柄释放等待（从3秒优化为1.5秒）
-        private const int FORCE_UNLOCK_WAIT_MS = 500;        // 【性能优化】强制解锁后等待（从1秒优化为500ms）
-        private const int SAFE_RETRY_DELAY_BASE_MS = 500;    // 【性能优化】安全操作重试基础延迟（从1秒优化为500ms）
-        private const int CONFIG_READ_RETRY_COUNT = 3;       // 配置读取重试次数
-        private const int CONFIG_READ_RETRY_DELAY_MS = 300;  // 【性能优化】配置读取重试延迟（从500ms优化为300ms）
+        // 【P2优化】使用AutoUpdate.UpdateSystemConstants统一管理，这里保留向后兼容的别名
+        private const int PROCESS_WAIT_TIMEOUT_MS = AutoUpdate.UpdateSystemConstants.ProcessExitTimeoutMs;
+        private const int EXTRA_WAIT_AFTER_EXIT_MS = AutoUpdate.UpdateSystemConstants.ExtraWaitAfterExitMs;
+        private const int FILE_HANDLE_RELEASE_WAIT_MS = AutoUpdate.UpdateSystemConstants.FileHandleReleaseWaitMs;
+        private const int FORCE_UNLOCK_WAIT_MS = AutoUpdate.UpdateSystemConstants.ForceUnlockWaitMs;
+        private const int SAFE_RETRY_DELAY_BASE_MS = AutoUpdate.UpdateSystemConstants.SafeRetryDelayBaseMs;
+        private const int CONFIG_READ_RETRY_COUNT = AutoUpdate.UpdateSystemConstants.ConfigReadRetryCount;
+        private const int CONFIG_READ_RETRY_DELAY_MS = AutoUpdate.UpdateSystemConstants.ConfigReadRetryDelayMs;
         #endregion
         
         // 【新增】防止重复启动标志
@@ -343,32 +344,35 @@ namespace AutoUpdateUpdater
                     // 尝试关闭进程 - 使用更激进的策略
                     foreach (Process process in processes)
                     {
-                        try
+                        using (process) // 【P2修复】使用using语句确保资源释放
                         {
-                            if (!process.HasExited)
+                            try
                             {
-                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 尝试关闭进程: {process.ProcessName} (ID: {process.Id})");
-                                
-                                // 首先尝试优雅关闭
-                                process.CloseMainWindow();
-                                
-                                // 等待进程响应
-                                if (process.WaitForExit(1000))
+                                if (!process.HasExited)
                                 {
-                                    WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程正常退出: {process.ProcessName}");
-                                    continue;
+                                    WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 尝试关闭进程: {process.ProcessName} (ID: {process.Id})");
+                                    
+                                    // 首先尝试优雅关闭
+                                    process.CloseMainWindow();
+                                    
+                                    // 等待进程响应
+                                    if (process.WaitForExit(1000))
+                                    {
+                                        WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程正常退出: {process.ProcessName}");
+                                        continue;
+                                    }
+                                    
+                                    // 如果优雅关闭失败，强制终止
+                                    WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 强制终止进程: {process.ProcessName}");
+                                    process.Kill();
+                                    process.WaitForExit(2000);
+                                    WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程已强制终止: {process.ProcessName}");
                                 }
-                                
-                                // 如果优雅关闭失败，强制终止
-                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 强制终止进程: {process.ProcessName}");
-                                process.Kill();
-                                process.WaitForExit(2000);
-                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程已强制终止: {process.ProcessName}");
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 关闭进程时出错: {ex.Message}");
+                            catch (Exception ex)
+                            {
+                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 关闭进程时出错: {ex.Message}");
+                            }
                         }
                     }
                     
@@ -392,19 +396,22 @@ namespace AutoUpdateUpdater
                     // 即使超时也尝试最后一次强制终止
                     foreach (var process in finalCheck)
                     {
-                        try
+                        using (process) // 【P2修复】使用using语句确保资源释放
                         {
-                            if (!process.HasExited)
+                            try
                             {
-                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最后尝试强制终止: {process.ProcessName} (ID: {process.Id})");
-                                process.Kill();
-                                process.WaitForExit(2000);
-                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最终强制终止成功: {process.ProcessName}");
+                                if (!process.HasExited)
+                                {
+                                    WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最后尝试强制终止: {process.ProcessName} (ID: {process.Id})");
+                                    process.Kill();
+                                    process.WaitForExit(2000);
+                                    WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最终强制终止成功: {process.ProcessName}");
+                                }
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最终强制终止失败: {ex.Message}");
+                            catch (Exception ex)
+                            {
+                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 最终强制终止失败: {ex.Message}");
+                            }
                         }
                     }
                     

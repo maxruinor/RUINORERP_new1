@@ -483,15 +483,16 @@ namespace AutoUpdate
         {
             this.KeyPreview = true; // 允许表单捕获键盘事件
 
-            // 【调试优化】每次启动时清空日志文件，避免无限累积
+            // 【P1修复】【P2优化】日志轮转：保留最近7天的日志，单个文件不超过10MB
             try
             {
-                if (File.Exists(logFilePath))
-                {
-                    File.WriteAllText(logFilePath, ""); // 清空文件内容
-                }
+                RotateLogFile(logFilePath, maxDays: UpdateSystemConstants.LogMaxDays, maxSizeBytes: UpdateSystemConstants.LogMaxSizeBytes);
             }
-            catch { } // 忽略清空失败
+            catch (Exception ex)
+            {
+                // 忽略日志轮转失败，不影响主流程
+                AppendAllText($"[警告] 日志轮转失败: {ex.Message}");
+            }
 
             // 使用新的日志记录功能初始化更新过程
             string startupInfo = "===== 更新程序启动 ====\n操作系统: " + Environment.OSVersion.ToString() + "\n当前目录: " + AppDomain.CurrentDomain.BaseDirectory;
@@ -1129,6 +1130,63 @@ namespace AutoUpdate
 
         // 日志文件路径
         private string logFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "AutoUpdateLog.txt");
+        
+        /// <summary>
+        /// 【P1修复】【P2优化】日志轮转：保留最近N天的日志，单个文件不超过指定大小
+        /// 使用UpdateSystemConstants统一管理常量
+        /// </summary>
+        /// <param name="logFilePath">日志文件路径</param>
+        /// <param name="maxDays">保留的最大天数</param>
+        /// <param name="maxSizeBytes">最大文件大小（字节）</param>
+        private void RotateLogFile(string logFilePath, int maxDays = UpdateSystemConstants.LogMaxDays, long maxSizeBytes = UpdateSystemConstants.LogMaxSizeBytes)
+        {
+            try
+            {
+                if (!File.Exists(logFilePath))
+                    return;
+                
+                var fileInfo = new FileInfo(logFilePath);
+                
+                // 检查文件大小
+                if (fileInfo.Length > maxSizeBytes)
+                {
+                    // 重命名为归档文件
+                    string archivePath = $"{logFilePath}.{DateTime.Now:yyyyMMdd_HHmmss}.bak";
+                    File.Move(logFilePath, archivePath);
+                    
+                    // 【修复】先创建新日志文件，再写入轮转日志
+                    File.WriteAllText(logFilePath, ""); // 创建新的空日志文件
+                    
+                    // 现在可以安全地写入轮转日志到新文件
+                    AppendAllText($"[日志轮转] 日志文件已超过{maxSizeBytes / 1024 / 1024}MB，已归档为: {Path.GetFileName(archivePath)}");
+                    
+                    // 删除超过maxDays的归档文件
+                    var oldArchives = Directory.GetFiles(Path.GetDirectoryName(logFilePath), "*.bak")
+                        .Select(f => new FileInfo(f))
+                        .Where(f => (DateTime.Now - f.CreationTime).TotalDays > maxDays)
+                        .ToList();
+                    
+                    foreach (var archive in oldArchives)
+                    {
+                        try
+                        {
+                            archive.Delete();
+                            AppendAllText($"[日志轮转] 删除过期归档: {archive.Name}");
+                        }
+                        catch (Exception ex)
+                        {
+                            AppendAllText($"[日志轮转] 删除归档失败: {ex.Message}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 【修复】这里不应该调用 AppendAllText，因为日志文件可能不存在
+                // 应该直接忽略或使用 Debug.WriteLine
+                System.Diagnostics.Debug.WriteLine($"[日志轮转] 失败: {ex.Message}");
+            }
+        }
 
         /// <summary>
         /// 写入文本日志

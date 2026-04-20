@@ -407,24 +407,22 @@ namespace RUINORERP.Server.Network.Services
 
                 if (_sessions.TryRemove(sessionId, out var sessionInfo))
                 {
-                    lock (_lockObject)
-                    {
-                        _statistics.TotalDisconnections++;
-                        _statistics.CurrentConnections = ActiveSessionCount;
-                    }
-
                     if (sessionInfo != null)
                     {
                         sessionInfo.IsConnected = false;
                         sessionInfo.DisconnectTime = DateTime.Now;
 
+                        // 触发会话断开事件（在清理订阅和锁之前触发，确保其他组件能获取到完整的会话信息）
+                        SessionDisconnected?.Invoke(sessionInfo);
+
                         // 取消该会话的所有缓存订阅
                         _subscriptionManager.RemoveAllSubscriptionsAsync(sessionId);
 
-                        // 自动释放锁定的功能已移至IntegratedServerLockManager中，通过订阅SessionDisconnected事件实现
-
-                        // 触发会话断开事件
-                        SessionDisconnected?.Invoke(sessionInfo);
+                        lock (_lockObject)
+                        {
+                            _statistics.TotalDisconnections++;
+                            _statistics.CurrentConnections = ActiveSessionCount;
+                        }
 
                         var duration = sessionInfo.DisconnectTime - sessionInfo.ConnectedTime;
                         _logger.LogInformation($"会话已删除: {sessionId}, 连接时长={duration?.TotalMinutes:F2}分钟");

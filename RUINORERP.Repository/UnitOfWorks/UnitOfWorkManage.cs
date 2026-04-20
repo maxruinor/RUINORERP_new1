@@ -308,8 +308,10 @@ namespace RUINORERP.Repository.UnitOfWorks
                 // 嵌套事务：使用保存点（SQL Server 支持）
                 else
                 {
-                    // ✅ P2优化: 使用完整GUID避免极端场景下的重名
-                    var savePointName = $"SP_{context.TransactionId:N}_{context.Depth}";
+                    // ✅ P2修复: 缩短GUID为8位避免超过SQL Server 32字符限制
+                    // 格式: SP_<8位GUID>_<深度> = 3+8+1+2 = 14字符(安全)
+                    var guidShort = context.TransactionId.ToString("N").Substring(0, 8);
+                    var savePointName = $"SP_{guidShort}_{context.Depth}";
                     dbClient.Ado.ExecuteCommand($"SAVE TRANSACTION {savePointName}");
                     context.SavePointStack.Push(savePointName);
                     _logger.LogDebug($"[Transaction-{context.TransactionId}] 创建保存点：{savePointName}");
@@ -402,7 +404,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                 }
                 else
                 {
-                    var savePointName = $"SP_{context.TransactionId:N}_{context.Depth}";
+                    // ✅ P2修复: 缩短GUID为8位避免超过SQL Server 32字符限制
+                    var guidShort = context.TransactionId.ToString("N").Substring(0, 8);
+                    var savePointName = $"SP_{guidShort}_{context.Depth}";
                     await dbClient.Ado.ExecuteCommandAsync($"SAVE TRANSACTION {savePointName}");
                     context.SavePointStack.Push(savePointName);
                 }

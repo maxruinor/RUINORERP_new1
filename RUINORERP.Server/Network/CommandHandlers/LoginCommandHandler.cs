@@ -58,33 +58,52 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private const int DefaultMaxConcurrentUsers = 1000;
         
         /// <summary>
-        /// 获取最大并发用户数
+        /// 最大并发用户数缓存
+        /// </summary>
+        private int? _cachedMaxConcurrentUsers;
+        private DateTime _cacheExpiryTime;
+        private readonly object _maxUsersCacheLock = new object();
+        private readonly TimeSpan _maxUsersCacheDuration = TimeSpan.FromMinutes(5);
+        
+        /// <summary>
+        /// 获取最大并发用户数（异步+缓存优化版）
         /// 优先从注册信息中获取，如果注册服务不可用则使用默认值
         /// </summary>
-        private int MaxConcurrentUsers
+        private async Task<int> GetMaxConcurrentUsersAsync()
         {
-            get
+            lock (_maxUsersCacheLock)
             {
-                try
+                if (_cachedMaxConcurrentUsers.HasValue && DateTime.Now < _cacheExpiryTime)
                 {
-                    // 尝试从注册服务获取当前有效的注册信息
-                    if (RegistrationService != null)
+                    return _cachedMaxConcurrentUsers.Value;
+                }
+            }
+            
+            try
+            {
+                if (RegistrationService != null)
+                {
+                    var validationResult = await RegistrationService.ValidateSystemRegistrationAsync();
+                    if (validationResult?.RegistrationInfo != null && validationResult.IsValid)
                     {
-                        var validationResult = RegistrationService.ValidateSystemRegistrationAsync().Result;
-                        if (validationResult?.RegistrationInfo != null && validationResult.IsValid)
+                        var concurrentUsers = validationResult.RegistrationInfo.ConcurrentUsers;
+                        
+                        lock (_maxUsersCacheLock)
                         {
-                            return validationResult.RegistrationInfo.ConcurrentUsers;
+                            _cachedMaxConcurrentUsers = concurrentUsers;
+                            _cacheExpiryTime = DateTime.Now.Add(_maxUsersCacheDuration);
                         }
+                        
+                        return concurrentUsers;
                     }
                 }
-                catch (Exception ex)
-                {
-                    logger?.LogWarning(ex, "获取注册信息中的并发用户数失败，使用默认值");
-                }
-                
-                // 降级：使用默认值
-                return DefaultMaxConcurrentUsers;
             }
+            catch (Exception ex)
+            {
+                logger?.LogWarning(ex, "获取注册信息中的并发用户数失败，使用默认值");
+            }
+            
+            return DefaultMaxConcurrentUsers;
         }
         private static readonly ConcurrentDictionary<string, int> _loginAttempts = new ConcurrentDictionary<string, int>();
         /// <summary>
@@ -367,10 +386,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 验证凭据成功后，再检查并发用户数限制（针对已认证用户）
                 // 注意：这里检查的是已认证的唯一用户数，而不是总会话数
                 var authenticatedUserCount = SessionService.GetAllUserSessions().Select(s => s.UserId).Distinct().Count();
-                if (authenticatedUserCount >= MaxConcurrentUsers)
+                var maxUsers = await GetMaxConcurrentUsersAsync();
+                if (authenticatedUserCount >= maxUsers)
                 {
-                    logger?.LogWarning($"[登录失败] 并发用户数已达上限: CurrentCount={authenticatedUserCount}, MaxCount={MaxConcurrentUsers}, Username={loginRequest.Username}");
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, $"当前系统用户数已达到上限({MaxConcurrentUsers}人)，请稍后再试");
+                    logger?.LogWarning($"[登录失败] 并发用户数已达上限: CurrentCount={authenticatedUserCount}, MaxCount={maxUsers}, Username={loginRequest.Username}");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, $"当前系统用户数已达到上限({maxUsers}人)，请稍后再试");
+                }
+                else
+                {
+                    logger?.LogDebug($"[并发检查] 当前在线唯一用户数: {authenticatedUserCount}/{maxUsers}");
                 }
 
                 // 检查用户登录状态，分析重复登录情况
@@ -452,12 +476,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
                 // 添加心跳间隔信息到元数据
+                var maxUsersForMeta = await GetMaxConcurrentUsersAsync();
                 loginResponse.WithMetadata("HeartbeatIntervalMs", "30000") // 默认30秒心跳间隔
                     .WithMetadata("ServerInfo", new Dictionary<string, object>
                     {
                         ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                         ["ServerVersion"] = "1.0.0",
-                        ["MaxConcurrentUsers"] = MaxConcurrentUsers.ToString(),
+                        ["MaxConcurrentUsers"] = maxUsersForMeta.ToString(),
                         ["CurrentActiveUsers"] = SessionService.ActiveSessionCount.ToString()
                     });
 
@@ -540,25 +565,37 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                string TargetUserId = string.Empty;
+                string targetIdentifier = string.Empty;
                 if (request.AdditionalData != null && request.AdditionalData.ContainsKey("TargetUserId"))
                 {
-                    TargetUserId = request.AdditionalData["TargetUserId"].ToString();
+                    targetIdentifier = request.AdditionalData["TargetUserId"].ToString();
                 }
                         
                 // 新增: 记录强制下线请求的详细信息
-                logger?.LogInformation($"[强制下线请求] 来源SessionId={executionContext.SessionId}, 目标SessionId={TargetUserId}");
+                logger?.LogInformation($"[强制下线请求] 来源SessionId={executionContext.SessionId}, 目标标识={targetIdentifier}");
                         
-                // 查找目标用户会话
-                var targetSession = SessionService.GetSession(TargetUserId);
+                // 查找目标用户会话 - 增强逻辑：支持 SessionId 或 UserId
+                SessionInfo targetSession = null;
+                
+                // 1. 尝试直接作为 SessionId 查找
+                targetSession = SessionService.GetSession(targetIdentifier);
+                
+                // 2. 如果没找到且看起来像数字 ID，尝试作为 UserId 查找
+                if (targetSession == null && long.TryParse(targetIdentifier, out long userId))
+                {
+                    // 遍历所有已认证会话查找匹配的 UserId
+                    var allSessions = SessionService.GetAllUserSessions();
+                    targetSession = allSessions.FirstOrDefault(s => s.UserId.HasValue && s.UserId.Value == userId);
+                }
+
                 if (targetSession == null)
                 {
                     // 增强: 记录更详细的失败信息
-                    logger?.LogWarning($"[强制下线失败] 目标用户不在线或会话已失效: TargetSessionId={TargetUserId}");
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "目标用户不在线");
+                    logger?.LogWarning($"[强制下线失败] 目标用户不在线或会话已失效: TargetIdentifier={targetIdentifier}");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "目标用户不在线或会话ID无效");
                 }
                         
-                logger?.LogInformation($"[强制下线] 找到目标会话: UserName={targetSession.UserName}, ClientIp={targetSession.ClientIp}");
+                logger?.LogInformation($"[强制下线] 找到目标会话: SessionId={targetSession.SessionID}, UserName={targetSession.UserName}, ClientIp={targetSession.ClientIp}");
         
                 // 发送提示消息
                 try

@@ -82,15 +82,18 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="mode">新的提交修改模式</param>
         public void SetSubmitModifyRuleMode(SubmitModifyRuleMode mode)
         {
-            if (submitModifyRuleMode != mode)
+            lock (_initLock)
             {
-                submitModifyRuleMode = mode;
-
-                // 重新初始化规则以应用新模式
-                if (_isInitialized)
+                if (submitModifyRuleMode != mode)
                 {
-                    ResetAllRules();
-                    InitializeAllRules();
+                    submitModifyRuleMode = mode;
+
+                    // 重新初始化规则以应用新模式
+                    if (_isInitialized)
+                    {
+                        ResetAllRules();
+                        InitializeAllRules();
+                    }
                 }
             }
         }
@@ -115,6 +118,11 @@ namespace RUINORERP.Model.Base.StatusManager
         /// 规则是否已初始化标志
         /// </summary>
         private bool _isInitialized;
+
+        /// <summary>
+        /// 规则初始化锁（线程安全保护）
+        /// </summary>
+        private readonly object _initLock = new object();
 
         /// <summary>
         /// 获取状态转换规则字典（只读）
@@ -148,21 +156,24 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         public void InitializeAllRules()
         {
-            if (_isInitialized)
-                return;
+            lock (_initLock)
+            {
+                if (_isInitialized)
+                    return;
 
-            // 清空现有规则
-            _stateTransitionRules.Clear();
-            _uiButtonRules.Clear();
-            _actionPermissionRules.Clear();
+                // 清空现有规则
+                _stateTransitionRules.Clear();
+                _uiButtonRules.Clear();
+                _actionPermissionRules.Clear();
 
-            // 初始化各类规则
-            InitializeStateTransitionRules();
-            InitializeUIButtonRules();
-            InitializeActionPermissionRules();
+                // 初始化各类规则
+                InitializeStateTransitionRules();
+                InitializeUIButtonRules();
+                InitializeActionPermissionRules();
 
-            // 标记规则已初始化
-            _isInitialized = true;
+                // 标记规则已初始化
+                _isInitialized = true;
+            }
         }
 
         /// <summary>
@@ -170,10 +181,13 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         public void ResetAllRules()
         {
-            _stateTransitionRules.Clear();
-            _uiButtonRules.Clear();
-            _actionPermissionRules.Clear();
-            _isInitialized = false;
+            lock (_initLock)
+            {
+                _stateTransitionRules.Clear();
+                _uiButtonRules.Clear();
+                _actionPermissionRules.Clear();
+                _isInitialized = false;
+            }
         }
 
         #endregion
@@ -186,6 +200,7 @@ namespace RUINORERP.Model.Base.StatusManager
         public static readonly MenuItemEnums[] StateTransitionActions = new[]
         {
             MenuItemEnums.提交,
+            MenuItemEnums.撤回提交,  // 新增：撤回提交也是状态转换操作
             MenuItemEnums.审核,
             MenuItemEnums.反审,
             MenuItemEnums.结案,
@@ -263,8 +278,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 [DataStatus.新建] = new List<object> { DataStatus.草稿, DataStatus.确认, DataStatus.作废 },
 
                 // 确认态（已审核）：可反审核（转新建）、可执行（转完结）、可结案（转完结）、可作废
-                [DataStatus.确认] = new List<object> { DataStatus.新建,DataStatus.完结,DataStatus.作废 },
-                
+                [DataStatus.确认] = new List<object> { DataStatus.新建, DataStatus.完结, DataStatus.作废 },
+
                 // 完结态（已执行或已结案）：可反结案（转确认）
                 [DataStatus.完结] = new List<object> { DataStatus.确认 },
 
@@ -963,7 +978,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
                 [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.审核, MenuItemEnums.保存 }, // 支持多次提交
                 [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.执行, MenuItemEnums.结案 },
-                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增,MenuItemEnums.反结案,MenuItemEnums.反执行 },  // 【修复】添加反执行权限
+                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案, MenuItemEnums.反执行 },  // 【修复】添加反执行权限
                 [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
             };
 
@@ -973,7 +988,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 严格模式：新建状态只能审核、撤销提交或作废，不允许修改和保存
                 [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.撤回提交 },
                 [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.执行, MenuItemEnums.结案 },
-                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增,MenuItemEnums.反结案,MenuItemEnums.反执行 },  // 【修复】添加反执行权限
+                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案, MenuItemEnums.反执行 },  // 【修复】添加反执行权限
                 [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
             };
 
@@ -1251,6 +1266,8 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 case MenuItemEnums.提交:
                     return canExecute ? $"状态为【{statusName}】的单据可以提交审核" : $"状态为【{statusName}】的单据不能提交审核";
+                case MenuItemEnums.撤回提交:
+                    return canExecute ? $"状态为【{statusName}】的单据可以撤回提交" : $"状态为【{statusName}】的单据不能撤回提交";
                 case MenuItemEnums.审核:
                     return canExecute ? $"状态为【{statusName}】的单据可以审核通过" : $"状态为【{statusName}】的单据不能审核通过";
                 case MenuItemEnums.反审:

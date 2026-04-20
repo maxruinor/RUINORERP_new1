@@ -8513,7 +8513,7 @@ namespace RUINORERP.UI.BaseForm
                     // 撤回提交成功后统一使用状态管理体系更新UI按钮状态
                     UpdateAllUIStates(EditEntity as BaseEntity);
 
-                    KryptonMessageBox.Show($"单据 {billNo} 已撤回提交，回到草稿状态。", "撤回提交成功", KryptonMessageBoxButtons.OK, KryptonMessageBoxIcon.Information);
+                    MainForm.Instance?.ShowStatusText($"单据 {billNo} 已撤回提交，回到草稿状态");
                 }
                 else
                 {

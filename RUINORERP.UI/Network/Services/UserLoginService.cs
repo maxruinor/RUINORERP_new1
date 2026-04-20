@@ -26,9 +26,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly TokenRefreshService _tokenRefreshService;
         private readonly CacheClientService _cacheClientService;
         private bool _isLoggedIn = false; // 登录状态标志
-                                          //private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1); // 登录操作信号量防止并发登录请求
-                                          // 可以增加并发数，比如允许5个并发登录请求
-        private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(5, 5);
+                                          private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1);
 
         private readonly ILogger<UserLoginService> _logger;
         private bool _isDisposed = false;
@@ -81,7 +79,7 @@ namespace RUINORERP.UI.Network.Services
                 ct.ThrowIfCancellationRequested();
 
                 // 使用信号量确保同一时间只有一个登录请求
-                await _loginLock.WaitAsync(TimeSpan.FromSeconds(20), ct);
+                await _loginLock.WaitAsync(TimeSpan.FromSeconds(5), ct);
 
                 // 锁获取成功后，再次检查取消令牌状态
                 if (ct.IsCancellationRequested)
@@ -154,7 +152,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 else
                 {
-
+                    _logger?.LogWarning($"[登录警告] 登录成功但未收到Token: Username={username}, SessionId={response.SessionId}");
                 }
 
                 // 处理注册状态和到期提醒
@@ -461,11 +459,11 @@ namespace RUINORERP.UI.Network.Services
                 {
                     Username = "",
                     Password = "",
-
                     AdditionalData = new System.Collections.Generic.Dictionary<string, object>
                     {
                         ["Action"] = "你的账号在其它地方登录。当前连接即将断开。请保存数据。",
-                        ["TargetUserId"] = targetSessionId
+                        // ✅ 修复：确保传递的是 SessionId 而不是 UserId，以便服务器能准确定位会话
+                        ["TargetUserId"] = targetSessionId 
                     }
                 };
 

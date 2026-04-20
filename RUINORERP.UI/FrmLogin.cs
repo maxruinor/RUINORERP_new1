@@ -547,9 +547,12 @@ namespace RUINORERP.UI
                     // 验证服务器端口
                     if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
                     {
-                        MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        btnok.Enabled = true;
-                        btncancel.Text = "取消";
+                        InvokeIfRequired(() => 
+                        {
+                            MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            btnok.Enabled = true;
+                            btncancel.Text = "取消";
+                        });
                         return;
                     }
 
@@ -558,11 +561,14 @@ namespace RUINORERP.UI
 
                     if (!loginSucceed)
                     {
-                        errorProvider1.SetError(txtUserName, "账号密码有误");
-                        txtUserName.Focus();
-                        txtUserName.SelectAll();
-                        btnok.Enabled = true;
-                        btncancel.Text = "取消";
+                        InvokeIfRequired(() => 
+                        {
+                            errorProvider1.SetError(txtUserName, "账号密码有误");
+                            txtUserName.Focus();
+                            txtUserName.SelectAll();
+                            btnok.Enabled = true;
+                            btncancel.Text = "取消";
+                        });
                         return;
                     }
 
@@ -586,8 +592,11 @@ namespace RUINORERP.UI
             catch (OperationCanceledException)
             {
                 MainForm.Instance.PrintInfoLog("登录操作已取消");
-                btnok.Enabled = true;
-                btncancel.Text = "取消";
+                InvokeIfRequired(() => 
+                {
+                    btnok.Enabled = true;
+                    btncancel.Text = "取消";
+                });
             }
             catch (Exception ex)
             {
@@ -604,9 +613,12 @@ namespace RUINORERP.UI
                     ? "网络连接超时，请检查服务器地址是否正确或网络连接是否正常。"
                     : $"登录失败: {ex.Message}";
 
-                MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
-                btncancel.Text = "取消";
+                InvokeIfRequired(() => 
+                {
+                    MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
+                    btncancel.Text = "取消";
+                });
             }
             finally
             {
@@ -812,6 +824,40 @@ namespace RUINORERP.UI
         /// </summary>
         private const int DebounceDelayMs = 1500; // 1.5秒防抖
         private CancellationTokenSource _debounceCancellationTokenSource = null;
+
+        /// <summary>
+        /// ✅ UI线程安全辅助方法 - 确保Action在UI线程执行
+        /// </summary>
+        /// <param name="action">要在UI线程执行的操作</param>
+        private void InvokeIfRequired(Action action)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(action);
+            }
+            else
+            {
+                action();
+            }
+        }
+
+        /// <summary>
+        /// ✅ UI线程安全辅助方法 - 确保Func在UI线程执行并返回结果
+        /// </summary>
+        /// <typeparam name="T">返回值类型</typeparam>
+        /// <param name="func">要在UI线程执行的函数</param>
+        /// <returns>函数执行结果</returns>
+        private T InvokeIfRequired<T>(Func<T> func)
+        {
+            if (InvokeRequired)
+            {
+                return (T)Invoke(func);
+            }
+            else
+            {
+                return func();
+            }
+        }
 
         private async Task DebouncedReconnectAsync()
         {
@@ -1235,6 +1281,13 @@ namespace RUINORERP.UI
                             await connectionManager.DisconnectAsync();
                             return;
                         }
+                        // ✅ 修复：如果用户选择了强制下线，等待服务器处理完成后再继续
+                        else if (userAction == DuplicateLoginAction.ForceOfflineOthers)
+                        {
+                            MainForm.Instance.PrintInfoLog("正在执行强制下线操作...");
+                            // 注意：ShowDuplicateLoginDialog 内部已经调用了 HandleDuplicateLoginAsync
+                            // 这里只需要确保流程继续即可。如果强制下线失败，对话框会处理并返回 Cancel
+                        }
                     }
                 }
 
@@ -1327,20 +1380,12 @@ namespace RUINORERP.UI
                 // 启动心跳
                 MainForm.Instance.communicationService.StartHeartbeat();
 
-                // 在UI线程中完成登录
-                if (this.InvokeRequired)
-                {
-                    this.BeginInvoke(new Action(() =>
-                    {
-                        this.DialogResult = DialogResult.OK;
-                        this.Close();
-                    }));
-                }
-                else
+                // ✅ 使用UI线程安全辅助方法完成登录
+                InvokeIfRequired(() =>
                 {
                     this.DialogResult = DialogResult.OK;
                     this.Close();
-                }
+                });
             }
             catch (Exception ex)
             {

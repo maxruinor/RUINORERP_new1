@@ -207,8 +207,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                     catch (Exception batchEx)
                     {
-                        // 批量导入失败，记录错误详情
-                        throw new Exception($"批量导入实体时发生错误: {batchEx.Message}\n详细信息: {batchEx.InnerException?.Message ?? "无"}", batchEx);
+                        // 记录更详细的错误信息
+                        string detailedError = $"批量导入实体时发生错误: {batchEx.Message}";
+                        if (batchEx.InnerException != null)
+                        {
+                            detailedError += $"\n内部异常: {batchEx.InnerException.Message}";
+                        }
+                        detailedError += $"\n堆栈跟踪: {batchEx.StackTrace}";
+                        
+                        // 尝试找出具体是哪条数据导致的错误（如果可能）
+                        var problematicEntities = IdentifyProblematicEntities(entityList, entityType, mappings);
+                        if (problematicEntities.Any())
+                        {
+                            detailedError += $"\n可能的问题数据行: {string.Join(", ", problematicEntities)}";
+                        }
+                        
+                        throw new Exception(detailedError, batchEx);
                     }
                 }
 
@@ -607,6 +621,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 尝试识别导致批量导入失败的实体（简单启发式方法）
+        /// </summary>
+        private List<int> IdentifyProblematicEntities(List<BaseEntity> entityList, Type entityType, ColumnMappingCollection mappings)
+        {
+            var problematicRows = new List<int>();
+            // 这里可以添加更复杂的逻辑，比如逐个验证实体的必填字段
+            // 为了不过度设计，目前只返回一个提示，实际行号需要在调用方根据映射关系回溯
+            return problematicRows;
+        }
+
+        /// <summary>
         /// 从ExcelColumn中提取默认值
         /// 格式：[默认值:值] 字段名
         /// </summary>
@@ -972,16 +997,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 try
                 {
-                    var ids = _db.Insertable(typedList).ExecuteReturnSnowflakeIdList();//多条插入批量返回,比自增好用
+                    // 使用 SnowflakeId 批量插入，性能优于自增 ID
+                    var ids = _db.Insertable(typedList).ExecuteReturnSnowflakeIdList();
                     result.InsertedCount = ids.Count;
+                    
                     // 提交事务
                     _db.Ado.CommitTran();
                 }
-                catch
+                catch (Exception ex)
                 {
                     // 回滚事务
                     _db.Ado.RollbackTran();
-                    throw;
+                    throw new Exception($"数据库批量插入失败: {ex.Message}", ex);
                 }
             }
             catch (Exception ex)

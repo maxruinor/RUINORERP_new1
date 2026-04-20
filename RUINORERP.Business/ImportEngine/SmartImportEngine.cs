@@ -177,5 +177,197 @@ namespace RUINORERP.Business.ImportEngine
 
             return await Task.FromResult(report);
         }
+
+        /// <summary>
+        /// 执行宽表导入(支持多表拆分)
+        /// </summary>
+        public async Task<ImportReport> ExecuteWideTableImportAsync(string filePath, string profileName)
+        {
+            var report = new ImportReport();
+            try
+            {
+                // 1. 加载配置
+                var profilePath = Path.Combine(_profileDirectory, $"{profileName}.json");
+                if (!File.Exists(profilePath))
+                {
+                    throw new FileNotFoundException($"未找到导入方案配置文件: {profileName}");
+                }
+
+                var json = File.ReadAllText(profilePath);
+                var wideProfile = JsonConvert.DeserializeObject<WideTableImportProfile>(json);
+
+                if (wideProfile == null || wideProfile.MasterTable == null)
+                {
+                    throw new Exception("配置文件格式错误，缺少MasterTable配置");
+                }
+
+                // 2. 解析Excel
+                var rawData = await _excelParser.ParseAsync(filePath);
+                report.TotalRows = rawData.Rows.Count;
+
+                // 3. 初始化服务
+                var remapper = new IdRemappingEngine(_db);
+                var splitter = new DataSplitterService(remapper, _dbWriter, _db);
+
+                // 4. 执行宽表拆分
+                var splitTables = await splitter.SplitWideTableWithDependenciesAsync(rawData, wideProfile);
+
+                // 5. 按依赖顺序写入
+                int totalSuccess = 0;
+
+                // 先写依赖表(已在SplitWideTableWithDependenciesAsync中写入)
+                // 再写主表
+                if (splitTables.ContainsKey(wideProfile.MasterTable.TargetTable))
+                {
+                    var count = await _dbWriter.BatchUpsertAsync(
+                        splitTables[wideProfile.MasterTable.TargetTable],
+                        wideProfile.MasterTable,
+                        remapper
+                    );
+                    totalSuccess += count;
+                }
+
+                // 最后写子表
+                if (wideProfile.ChildTables != null)
+                {
+                    foreach (var childProfile in wideProfile.ChildTables)
+                    {
+                        if (splitTables.ContainsKey(childProfile.TargetTable))
+                        {
+                            var count = await _dbWriter.BatchUpsertAsync(
+                                splitTables[childProfile.TargetTable],
+                                childProfile,
+                                remapper
+                            );
+                            totalSuccess += count;
+                        }
+                    }
+                }
+
+                report.SuccessRows = totalSuccess;
+                report.IsSuccess = true;
+                report.Message = $"宽表导入成功，共处理 {totalSuccess} 条记录。";
+            }
+            catch (Exception ex)
+            {
+                report.IsSuccess = false;
+                report.Message = ex.Message;
+            }
+
+            return report;
+        }
+
+        /// <summary>
+        /// 分步导入 - 仅导入依赖表(基础数据)
+        /// 用于策略二: 先手动导入基础表
+        /// </summary>
+        public async Task<ImportReport> ImportDependencyTablesOnlyAsync(string filePath, string profileName)
+        {
+            var report = new ImportReport();
+            try
+            {
+                var profilePath = Path.Combine(_profileDirectory, $"{profileName}.json");
+                if (!File.Exists(profilePath))
+                {
+                    throw new FileNotFoundException($"未找到配置文件: {profileName}");
+                }
+
+                var json = File.ReadAllText(profilePath);
+                var wideProfile = JsonConvert.DeserializeObject<WideTableImportProfile>(json);
+
+                if (wideProfile.DependencyTables == null || !wideProfile.DependencyTables.Any())
+                {
+                    throw new Exception("该配置没有依赖表配置");
+                }
+
+                var rawData = await _excelParser.ParseAsync(filePath);
+                report.TotalRows = rawData.Rows.Count;
+
+                var remapper = new IdRemappingEngine(_db);
+                var splitter = new DataSplitterService(remapper, _dbWriter, _db);
+
+                // 仅处理依赖表
+                foreach (var depProfile in wideProfile.DependencyTables)
+                {
+                    var depData = ExtractTableFromRawData(rawData, depProfile);
+                    var count = await _dbWriter.BatchUpsertAsync(depData, depProfile, remapper);
+                    report.SuccessRows += count;
+                }
+
+                report.IsSuccess = true;
+                report.Message = $"依赖表导入成功，共处理 {report.SuccessRows} 条记录。";
+            }
+            catch (Exception ex)
+            {
+                report.IsSuccess = false;
+                report.Message = ex.Message;
+            }
+
+            return report;
+        }
+
+        /// <summary>
+        /// 分步导入 - 仅导入主表(需先导入依赖表)
+        /// 用于策略二: 基础数据已存在,直接导入主表
+        /// </summary>
+        public async Task<ImportReport> ImportMasterTableOnlyAsync(string filePath, string profileName)
+        {
+            var report = new ImportReport();
+            try
+            {
+                var profilePath = Path.Combine(_profileDirectory, $"{profileName}.json");
+                if (!File.Exists(profilePath))
+                {
+                    throw new FileNotFoundException($"未找到配置文件: {profileName}");
+                }
+
+                var json = File.ReadAllText(profilePath);
+                var wideProfile = JsonConvert.DeserializeObject<WideTableImportProfile>(json);
+
+                if (wideProfile.MasterTable == null)
+                {
+                    throw new Exception("该配置没有主表配置");
+                }
+
+                var rawData = await _excelParser.ParseAsync(filePath);
+                report.TotalRows = rawData.Rows.Count;
+
+                var remapper = new IdRemappingEngine(_db);
+                
+                // 预加载依赖表数据(从数据库查询已存在的基础数据)
+                if (wideProfile.DependencyTables != null && wideProfile.DependencyTables.Any())
+                {
+                    await remapper.PreloadDependencyTablesAsync(wideProfile.DependencyTables);
+                }
+
+                var splitter = new DataSplitterService(remapper, _dbWriter, _db);
+                
+                // 提取主表数据并注入外键ID
+                var masterData = splitter.ExtractTableDataForPublic(rawData, wideProfile.MasterTable);
+                await splitter.InjectForeignKeysIntoMasterTableAsyncPublic(masterData, wideProfile.MasterTable, wideProfile.DependencyTables);
+
+                var count = await _dbWriter.BatchUpsertAsync(masterData, wideProfile.MasterTable, remapper);
+                report.SuccessRows = count;
+
+                report.IsSuccess = true;
+                report.Message = $"主表导入成功，共处理 {count} 条记录。";
+            }
+            catch (Exception ex)
+            {
+                report.IsSuccess = false;
+                report.Message = ex.Message;
+            }
+
+            return report;
+        }
+
+        /// <summary>
+        /// 从原始数据中提取指定表的数据(公共方法)
+        /// </summary>
+        private DataTable ExtractTableFromRawData(DataTable rawData, ImportProfile profile)
+        {
+            var splitter = new DataSplitterService(new IdRemappingEngine(_db), _dbWriter, _db);
+            return splitter.ExtractTableDataForPublic(rawData, profile);
+        }
     }
 }

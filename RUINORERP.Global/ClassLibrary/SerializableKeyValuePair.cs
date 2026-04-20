@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace RUINORERP.Common
+namespace RUINORERP.Global
 {
     /// <summary>
     /// 可序列化键值对：支持XML序列化的键值对结构（双泛型版本）

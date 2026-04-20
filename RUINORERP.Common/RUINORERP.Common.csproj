@@ -116,6 +116,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj" />
+    <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj" />
     <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
   </ItemGroup>
 

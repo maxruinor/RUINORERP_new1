@@ -87,7 +87,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 外键来源列（Excel中的列名）
         /// 用于指定Excel中作为外键关联依据的来源列（如"供应商名称"列）
         /// </summary>
-        public ForeignKeySourceColumnConfig ForeignKeySourceColumn { get; set; }
+        public SerializableKeyValuePair<string> ForeignKeySourceColumn { get; set; }
 
         /// <summary>
         /// 列拼接配置
@@ -314,15 +314,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     ForeignKeySourceColumn = CurrentMapping.ForeignConfig.ForeignKeySourceColumn;
                 }
                 LoadForeignKeySourceColumns();
-                if (ForeignKeySourceColumn != null && !string.IsNullOrEmpty(ForeignKeySourceColumn.ExcelColumnName))
+                if (ForeignKeySourceColumn != null && !string.IsNullOrEmpty(ForeignKeySourceColumn.Key))
                 {
                     // 查找匹配的项
-                    string searchText = ForeignKeySourceColumn.ExcelColumnName;
+                    string searchText = ForeignKeySourceColumn.Key;
 
                     for (int i = 0; i < kcmbForeignExcelSourceColumn.Items.Count; i++)
                     {
                         if (kcmbForeignExcelSourceColumn.Items[i].ToString() == searchText ||
-                            kcmbForeignExcelSourceColumn.Items[i].ToString().Contains($"({ForeignKeySourceColumn.ExcelColumnName})"))
+                            kcmbForeignExcelSourceColumn.Items[i].ToString().Contains($"({ForeignKeySourceColumn.Key})"))
                         {
                             kcmbForeignExcelSourceColumn.SelectedIndex = i;
                             break;
@@ -552,7 +552,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 如果有已选中的字段，保持选中状态
-                string selectedDisplayName = ForeignKeySourceColumn?.DisplayName;
+                string selectedDisplayName = ForeignKeySourceColumn?.Value;
                 if (!string.IsNullOrEmpty(selectedDisplayName))
                 {
                     int index = kcmbForeignDbSourceColumn.Items.IndexOf(selectedDisplayName);
@@ -705,11 +705,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
 
                     // 构建外键来源列配置
-                    ForeignKeySourceColumn = new ForeignKeySourceColumnConfig
+                    ForeignKeySourceColumn = new SerializableKeyValuePair<string>
                     {
-                        ExcelColumnName = excelColumnName,
-                        DisplayName = columnDisplayName,
-                        DatabaseFieldName = dbFieldName
+                        Key = excelColumnName,
+                        Value = columnDisplayName
                     };
                 }
                 else
@@ -1161,7 +1160,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (field.Value != null)
             {
                 // 如果已经有Excel列名，更新数据库字段名部分
-                string excelColumnName = ForeignKeySourceColumn?.ExcelColumnName ?? string.Empty;
+                string excelColumnName = ForeignKeySourceColumn?.Key ?? string.Empty;
                 if (string.IsNullOrEmpty(excelColumnName))
                 {
                     excelColumnName = kcmbForeignExcelSourceColumn.SelectedItem.ToString();
@@ -1169,11 +1168,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
 
                 // 构建外键来源列配置
-                ForeignKeySourceColumn = new ForeignKeySourceColumnConfig
+                ForeignKeySourceColumn = new SerializableKeyValuePair<string>
                 {
-                    ExcelColumnName = excelColumnName,
-                    DisplayName = field.Value,
-                    DatabaseFieldName = field.Key
+                    Key = excelColumnName,
+                    Value = field.Value
                 };
             }
 

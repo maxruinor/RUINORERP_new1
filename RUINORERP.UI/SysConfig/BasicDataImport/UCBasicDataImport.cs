@@ -45,6 +45,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private DataTable _rawExcelData;           // 原始Excel数据（预览用）
         private DataTable _parsedImportData;         // 根据映射配置解析后的数据
         private Type _selectedEntityType;
+        
+        // 宽表导入相关字段
+        private RUINORERP.Business.ImportEngine.SmartImportEngine _wideTableEngine;
+        private bool _isWideTableMode = false;  // 是否启用宽表模式
 
         /// <summary>
         /// 实体类型映射字典
@@ -123,6 +127,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _currentConfig = new ImportConfiguration();
             _rawExcelData = new DataTable();
             _parsedImportData = new DataTable();
+            
+            // 初始化宽表导入引擎
+            _wideTableEngine = new RUINORERP.Business.ImportEngine.SmartImportEngine(_db);
 
             // 初始化数据网格视图
             dgvRawExcelData.AutoGenerateColumns = true;
@@ -151,6 +158,67 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 初始状态：未选择实体类型时禁用映射配置相关按钮
             UpdateMappingControlStates();
+            
+            // 添加宽表Profile管理按钮(如果不存在)
+            AddWideTableProfileManagementButton();
+        }
+
+        /// <summary>
+        /// 添加宽表Profile管理按钮
+        /// </summary>
+        private void AddWideTableProfileManagementButton()
+        {
+            try
+            {
+                // 在kbtnDynamicMap后面添加一个新按钮
+                var btnManageProfiles = new Krypton.Toolkit.KryptonButton();
+                btnManageProfiles.Text = "管理宽表Profile";
+                btnManageProfiles.Location = new System.Drawing.Point(
+                    kbtnDynamicMap.Location.X + kbtnDynamicMap.Width + 10,
+                    kbtnDynamicMap.Location.Y
+                );
+                btnManageProfiles.Size = new System.Drawing.Size(120, 25);
+                btnManageProfiles.Click += async (s, e) =>
+                {
+                    await OpenWideTableProfileEditor();
+                };
+
+                // 添加到父容器
+                if (kbtnDynamicMap.Parent != null)
+                {
+                    kbtnDynamicMap.Parent.Controls.Add(btnManageProfiles);
+                    btnManageProfiles.BringToFront();
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.ShowStatusText($"添加Profile管理按钮失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 打开宽表Profile编辑器
+        /// </summary>
+        private async Task OpenWideTableProfileEditor()
+        {
+            try
+            {
+                var frm = new FrmWideTableProfileEditor(_db);
+                var result = frm.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    // 重新加载Profile列表
+                    LoadWideTableProfiles();
+                    MessageBox.Show("Profile已保存,请从下拉框中选择", "提示", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开Profile编辑器失败: {ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
@@ -228,8 +296,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (kcmbDynamicMappingName.SelectedIndex <= 0)
                 {
                     _currentConfig = new ImportConfiguration();
+                    _isWideTableMode = false;
                     UpdateMappingControlStates();
                     return;
+                }
+
+                string selectedText = kcmbDynamicMappingName.SelectedItem.ToString();
+                
+                // 检查是否为宽表Profile
+                if (selectedText.StartsWith("[宽表] "))
+                {
+                    _isWideTableMode = true;
+                    MainForm.Instance.ShowStatusText($"已选择宽表导入模式: {selectedText}");
+                    
+                    // 宽表模式不需要选择实体类型和映射配置
+                    kbtnDynamicParse.Enabled = false;  // 禁用解析按钮(宽表不需要预览解析)
+                    kbtnDynamicMap.Enabled = false;    // 禁用映射配置按钮
+                    
+                    return;
+                }
+                else
+                {
+                    _isWideTableMode = false;
                 }
 
                 // 加载选中的映射配置
@@ -459,6 +547,57 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void LoadMappingConfigs()
         {
             LoadMappingConfigsForEntityType();
+            
+            // 同时加载宽表Profile配置
+            LoadWideTableProfiles();
+        }
+
+        /// <summary>
+        /// 加载宽表Profile配置列表
+        /// </summary>
+        private void LoadWideTableProfiles()
+        {
+            try
+            {
+                var profileDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SysConfig", "DataMigration", "Profiles");
+                if (!Directory.Exists(profileDirectory))
+                {
+                    return;
+                }
+
+                // 查找所有宽表Profile文件(包含MasterTable字段的JSON)
+                var wideTableProfiles = new List<string>();
+                foreach (var jsonFile in Directory.GetFiles(profileDirectory, "*.json"))
+                {
+                    try
+                    {
+                        var content = File.ReadAllText(jsonFile);
+                        if (content.Contains("\"MasterTable\"") || content.Contains("\"DependencyTables\""))
+                        {
+                            var profileName = Path.GetFileNameWithoutExtension(jsonFile);
+                            wideTableProfiles.Add(profileName);
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略无法读取的文件
+                    }
+                }
+
+                // 将宽表Profile添加到下拉框(用特殊前缀标识)
+                foreach (var profile in wideTableProfiles.OrderBy(p => p))
+                {
+                    // 检查是否已存在
+                    if (!kcmbDynamicMappingName.Items.Contains($"[宽表] {profile}"))
+                    {
+                        kcmbDynamicMappingName.Items.Add($"[宽表] {profile}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.ShowStatusText($"加载宽表Profile失败: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -687,9 +826,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (mapping.DataSourceType == DataSourceType.ForeignKey &&
                         mapping.ForeignConfig != null &&
                         mapping.ForeignConfig.ForeignKeySourceColumn != null &&
-                        !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName))
+                        !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
                     {
-                        string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName;
+                        string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
 
                         // 检查源数据中是否包含该列
                         if (sourceData.Columns.Contains(sourceColumnName) && !addedColumns.Contains(sourceColumnName))
@@ -775,9 +914,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 // 在导入时需要通过关联表查询获取值
                                 // 显示外键来源列的值和关联信息
                                 string foreignKeySourceValue = "";
-                                string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.ExcelColumnName ?? mapping.ExcelColumn;
+                                string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
                                 // DisplayName = 显示名称
-                                string sourceColumnDisplay = mapping.ForeignConfig?.ForeignKeySourceColumn?.DisplayName ?? sourceColumn;
+                                string sourceColumnDisplay = mapping.ForeignConfig?.ForeignKeySourceColumn?.Value ?? sourceColumn;
 
                                 if (!string.IsNullOrEmpty(sourceColumn) &&
                                     !sourceColumn.StartsWith("[") &&
@@ -795,11 +934,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                                 if (!string.IsNullOrEmpty(foreignKeySourceValue))
                                 {
-                                    targetRow[mapping.SystemField?.Value] = $"[通过关联外键:{sourceColumnDisplay}:{foreignKeySourceValue}->找{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
+                                    targetRow[mapping.SystemField?.Key] = $"[通过关联外键:{sourceColumnDisplay}:{foreignKeySourceValue}->找{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
                                 }
                                 else
                                 {
-                                    targetRow[mapping.SystemField?.Value] = $"[外键关联:{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
+                                    targetRow[mapping.SystemField?.Key] = $"[外键关联:{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
                                 }
                                 break;
 
@@ -1505,6 +1644,61 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
+                // 检查是否为宽表导入模式
+                if (_isWideTableMode)
+                {
+                    // 宽表导入模式
+                    if (kcmbDynamicMappingName.SelectedIndex <= 0)
+                    {
+                        MessageBox.Show("请先选择宽表导入Profile配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    string profileName = kcmbDynamicMappingName.SelectedItem.ToString();
+                    
+                    // 显示导入策略选择对话框
+                    var result = MessageBox.Show(
+                        $"请选择导入策略:\n\n" +
+                        $"【是】一键导入 - 自动处理所有表(推荐新手)\n" +
+                        $"【否】分步导入 - 先导入基础表,再导入主表(推荐高级用户)\n\n" +
+                        $"当前Profile: {profileName}",
+                        "宽表导入策略选择",
+                        MessageBoxButtons.YesNoCancel,
+                        MessageBoxIcon.Question
+                    );
+
+                    if (result == DialogResult.Yes)
+                    {
+                        // 一键导入
+                        await ExecuteWideTableImportOneClick(profileName);
+                    }
+                    else if (result == DialogResult.No)
+                    {
+                        // 分步导入 - 显示步骤选择
+                        var stepResult = MessageBox.Show(
+                            "分步导入:\n\n" +
+                            "【是】步骤1: 仅导入基础表(供应商/类目)\n" +
+                            "【否】步骤2: 仅导入主表(产品)\n\n" +
+                            "注意: 执行步骤2前必须先完成步骤1",
+                            "选择导入步骤",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question
+                        );
+
+                        if (stepResult == DialogResult.Yes)
+                        {
+                            await ExecuteWideTableImportStep1_DependencyTables(profileName);
+                        }
+                        else
+                        {
+                            await ExecuteWideTableImportStep2_MasterTable(profileName);
+                        }
+                    }
+                    // Cancel则不执行任何操作
+                    return;
+                }
+
+                // 原有单表导入逻辑
                 //导入前，通过当前配置找到这个配置中的列的情况，找到有外键关联的情况，再去找到具体关联的哪个表。
                 //再先从数据库中查找到结果集合。缓存起来。用于 外键服务类和验证服务类。
                 PreloadForeignKeyData();
@@ -1757,6 +1951,127 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 格式化失败不影响其他单元格
             }
         }
+
+        #region 宽表导入功能
+
+        /// <summary>
+        /// 执行宽表导入(一键式)
+        /// </summary>
+        private async Task ExecuteWideTableImportOneClick(string profileName)
+        {
+            try
+            {
+                MainForm.Instance.ShowStatusText("开始宽表导入...");
+                kbtnDynamicImport.Enabled = false;
+
+                var report = await _wideTableEngine.ExecuteWideTableImportAsync(
+                    ktxtDynamicFilePath.Text,
+                    profileName
+                );
+
+                if (report.IsSuccess)
+                {
+                    MessageBox.Show(
+                        $"宽表导入成功!\n\n总记录数: {report.TotalRows}\n成功记录: {report.SuccessRows}\n\n{report.Message}",
+                        "导入成功",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                    MainForm.Instance.ShowStatusText($"宽表导入完成: {report.SuccessRows} 条记录");
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"宽表导入失败:\n\n{report.Message}",
+                        "导入失败",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                    MainForm.Instance.ShowStatusText($"宽表导入失败: {report.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"宽表导入异常: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MainForm.Instance.ShowStatusText($"宽表导入异常: {ex.Message}");
+            }
+            finally
+            {
+                kbtnDynamicImport.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 执行分步导入 - 仅导入依赖表
+        /// </summary>
+        private async Task ExecuteWideTableImportStep1_DependencyTables(string profileName)
+        {
+            try
+            {
+                MainForm.Instance.ShowStatusText("步骤1: 导入基础表...");
+                
+                var report = await _wideTableEngine.ImportDependencyTablesOnlyAsync(
+                    ktxtDynamicFilePath.Text,
+                    profileName
+                );
+
+                if (report.IsSuccess)
+                {
+                    MessageBox.Show(
+                        $"基础表导入成功!\n\n处理记录: {report.SuccessRows}\n\n{report.Message}\n\n接下来可以执行步骤2: 导入主表",
+                        "步骤1完成",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                    MainForm.Instance.ShowStatusText($"基础表导入完成: {report.SuccessRows} 条记录");
+                }
+                else
+                {
+                    MessageBox.Show($"基础表导入失败:\n\n{report.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"基础表导入异常: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 执行分步导入 - 仅导入主表
+        /// </summary>
+        private async Task ExecuteWideTableImportStep2_MasterTable(string profileName)
+        {
+            try
+            {
+                MainForm.Instance.ShowStatusText("步骤2: 导入主表...");
+                
+                var report = await _wideTableEngine.ImportMasterTableOnlyAsync(
+                    ktxtDynamicFilePath.Text,
+                    profileName
+                );
+
+                if (report.IsSuccess)
+                {
+                    MessageBox.Show(
+                        $"主表导入成功!\n\n处理记录: {report.SuccessRows}\n\n{report.Message}",
+                        "步骤2完成",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                    MainForm.Instance.ShowStatusText($"主表导入完成: {report.SuccessRows} 条记录");
+                }
+                else
+                {
+                    MessageBox.Show($"主表导入失败:\n\n{report.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"主表导入异常: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
 
     }
 }

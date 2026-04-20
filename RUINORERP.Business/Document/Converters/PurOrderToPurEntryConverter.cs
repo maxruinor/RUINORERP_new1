@@ -15,7 +15,6 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将采购订单及其明细转换为采购入库单及其明细
     /// 复用业务层的核心转换逻辑（BuildPurEntryFromPurOrder），确保数据一致性
     /// </summary>
-    [System.ComponentModel.Description("转采购入库单")]
     public class PurOrderToPurEntryConverter : DocumentConverterBase<tb_PurOrder, tb_PurEntry>
     {
         private readonly ILogger<PurOrderToPurEntryConverter> _logger;

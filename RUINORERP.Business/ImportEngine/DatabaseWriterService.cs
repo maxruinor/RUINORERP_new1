@@ -91,6 +91,61 @@ namespace RUINORERP.Business.ImportEngine
         }
 
         /// <summary>
+        /// 批量插入并返回新生成的ID映射(用于依赖表自动创建场景)
+        /// </summary>
+        public async Task<Dictionary<string, long>> BatchInsertWithIdReturnAsync(
+            DataTable data,
+            ImportProfile profile,
+            string businessKeyName,
+            IdRemappingEngine remapper)
+        {
+            var idMapping = new Dictionary<string, long>();
+
+            if (data == null || data.Rows.Count == 0)
+            {
+                return idMapping;
+            }
+
+            await _db.Ado.UseTranAsync(async () =>
+            {
+                foreach (DataRow row in data.Rows)
+                {
+                    // 构建INSERT语句
+                    var columns = profile.ColumnMappings.Select(m => m.DbColumn).ToList();
+                    var columnNames = string.Join(", ", columns.Select(c => $"[{c}]"));
+                    var paramNames = string.Join(", ", columns.Select(c => $"@{c}"));
+
+                    var parameters = columns.Select(c =>
+                        new SugarParameter($"@{c}", row[c] == DBNull.Value ? null : row[c])
+                    ).ToArray();
+
+                    var sql = $"INSERT INTO [{profile.TargetTable}] ({columnNames}) VALUES ({paramNames}); SELECT SCOPE_IDENTITY() AS NewId;";
+
+                    var newId = await _db.Ado.GetScalarAsync(sql, parameters);
+
+                    if (newId != null)
+                    {
+                        long physicalId = Convert.ToInt64(newId);
+                        string businessKey = row[businessKeyName]?.ToString();
+
+                        if (!string.IsNullOrEmpty(businessKey))
+                        {
+                            idMapping[businessKey] = physicalId;
+                            
+                            // 注册到remapper
+                            if (remapper != null)
+                            {
+                                remapper.RegisterNewId(profile.TargetTable, businessKey, physicalId);
+                            }
+                        }
+                    }
+                }
+            });
+
+            return idMapping;
+        }
+
+        /// <summary>
         /// 分离需要插入和更新的数据
         /// </summary>
         private async Task<(List<DataRow> InsertRows, List<DataRow> UpdateRows)> SeparateInsertAndUpdateAsync(

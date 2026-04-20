@@ -13,6 +13,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using RUINORERP.Global;
+using RUINORERP.Model.ImportEngine.Models;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {

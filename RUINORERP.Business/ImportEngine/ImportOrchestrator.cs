@@ -20,11 +20,24 @@ namespace RUINORERP.Business.ImportEngine
         private readonly IdRemappingEngine _remapper;
         private readonly DataSplitterService _splitter;
 
-        public ImportOrchestrator(ISqlSugarClient db = null)
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="db">SqlSugar数据库客户端（必需）</param>
+        /// <exception cref="ArgumentNullException">当db参数为null时抛出</exception>
+        public ImportOrchestrator(ISqlSugarClient db)
         {
+            if (db == null)
+            {
+                throw new ArgumentNullException(nameof(db), "数据库客户端不能为空");
+            }
+
             _engine = new SmartImportEngine(db);
-            _remapper = new IdRemappingEngine(db);  // 修复：传入db参数
-            _splitter = new DataSplitterService(_remapper);
+            _remapper = new IdRemappingEngine(db);
+            
+            // 创建DatabaseWriterService实例供DataSplitterService使用
+            var dbWriter = new DatabaseWriterService(db);
+            _splitter = new DataSplitterService(_remapper, dbWriter, db);
         }
 
         /// <summary>

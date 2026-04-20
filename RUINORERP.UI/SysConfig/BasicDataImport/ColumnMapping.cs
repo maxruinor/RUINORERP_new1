@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
-using RUINORERP.Common;
+using RUINORERP.Global;
+using RUINORERP.Model.ImportEngine.Models;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -493,19 +494,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 获取外键表名（便捷属性）
         /// </summary>
         [XmlIgnore]
-        public string ForeignKeyTableName => ForeignConfig?.ForeignKeyTable?.Key;
+        public string ForeignKeyTableName => ForeignConfig?.ForeignKeyTable.Key;
 
         /// <summary>
         /// 获取外键字段名（便捷属性）
         /// </summary>
         [XmlIgnore]
-        public string ForeignKeyFieldName => ForeignConfig?.ForeignKeyField?.Key;
+        public string ForeignKeyFieldName => ForeignConfig?.ForeignKeyField.Key;
 
         /// <summary>
         /// 获取外键来源列名（便捷属性）
         /// </summary>
         [XmlIgnore]
-        public string ForeignKeySourceColumnName => ForeignConfig?.ForeignKeySourceColumn?.ExcelColumnName;
+        public string ForeignKeySourceColumnName => ForeignConfig?.ForeignKeySourceColumn?.Key;
     }
 
     /// <summary>

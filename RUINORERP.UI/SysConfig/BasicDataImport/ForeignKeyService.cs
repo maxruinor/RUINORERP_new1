@@ -1,4 +1,6 @@
+using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.Model.ImportEngine.Models;
 using SqlSugar;
 using System;
 using System.Collections.Concurrent;
@@ -74,25 +76,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="fieldName">字段名</param>
         public void PreloadForeignKeyData(ColumnMapping mapping)
         {
-            ForeignRelatedConfig ForeignRelated = mapping.ForeignConfig;
+            ForeignRelatedConfig foreignRelated = mapping.ForeignConfig;
             try
             {
-                string cacheKey = $"{ForeignRelated.ForeignKeyTable.Key}_{ForeignRelated.ForeignKeyField.Key}";
+                string cacheKey = $"{foreignRelated.ForeignKeyTable.Key}_{foreignRelated.ForeignKeyField.Key}";
                 if (_foreignKeyCache.ContainsKey(cacheKey))
                 {
                     return; // 已经缓存过
                 }
 
                 // 构建查询SQL
-                string sql = $"SELECT {ForeignRelated.ForeignKeyField.Key}, {mapping.SystemField.Key},{ForeignRelated.ForeignKeySourceColumn.DatabaseFieldName}  FROM {ForeignRelated.ForeignKeyTable.Key}";
+                string sql = $"SELECT {foreignRelated.ForeignKeyField.Key}, {mapping.SystemField.Key}, {foreignRelated.ForeignKeySourceColumn.Key} FROM {foreignRelated.ForeignKeyTable.Key}";
                 var data = _db.Ado.GetDataTable(sql);
 
                 // 构建缓存
                 var fieldValueToIdMap = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
                 foreach (DataRow row in data.Rows)
                 {
-                    object id = row[ForeignRelated.ForeignKeyField.Key];
-                    object fieldValue = row[ForeignRelated.ForeignKeySourceColumn.DatabaseFieldName];
+                    object id = row[foreignRelated.ForeignKeyField.Key];
+                    object fieldValue = row[foreignRelated.ForeignKeySourceColumn.Key];
                     if (fieldValue != DBNull.Value && fieldValue != null)
                     {
                         string key = fieldValue.ToString().Trim();
@@ -104,7 +106,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"预加载外键数据失败: {ForeignRelated.ForeignKeyTable}.{ForeignRelated.ForeignKeyField}, 错误: {ex.Message}");
+                Debug.WriteLine($"预加载外键数据失败: {foreignRelated.ForeignKeyTable.Key}.{foreignRelated.ForeignKeyField.Key}, 错误: {ex.Message}");
             }
         }
 
@@ -148,11 +150,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (mapping.ForeignConfig != null &&
                     !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyTable?.Key) &&
                     !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyField?.Key) &&
-                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.DatabaseFieldName))
+                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key))
                 {
                     string tableName = mapping.ForeignConfig.ForeignKeyTable.Key;
                     string relatedField = mapping.ForeignConfig.ForeignKeyField.Key;
-                    string sourceField = mapping.ForeignConfig.ForeignKeySourceColumn.DatabaseFieldName;
+                    string sourceField = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
                     
                     // 构建缓存键
                     string cacheKey = $"{tableName}_{relatedField}";
@@ -206,10 +208,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 优先从指定的外键来源列获取（Excel列）
             if (mapping.ForeignConfig?.ForeignKeySourceColumn != null && 
-                !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName))
+                !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
             {
-                sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName;
-                sourceColumnDisplayName = mapping.ForeignConfig.ForeignKeySourceColumn.DisplayName ?? sourceColumnName;
+                sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
+                sourceColumnDisplayName = mapping.ForeignConfig.ForeignKeySourceColumn.Value ?? sourceColumnName;
             }
             else if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
                      !mapping.ExcelColumn.StartsWith("[") &&
@@ -341,7 +343,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="cacheKey">缓存键</param>
         /// <param name="fieldValue">字段值</param>
         /// <param name="id">主键ID</param>
-        private void AddToCache(string cacheKey, string fieldValue, object id)
+        public void AddToCache(string cacheKey, string fieldValue, object id)
         {
             if (!_foreignKeyCache.ContainsKey(cacheKey))
             {
@@ -350,7 +352,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             if (_foreignKeyCache.TryGetValue(cacheKey, out var fieldValueToIdMap))
             {
-                fieldValueToIdMap.TryAdd(fieldValue, id);
+                fieldValueToIdMap.TryAdd(fieldValue.Trim(), id);
             }
         }
 

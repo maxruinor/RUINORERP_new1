@@ -17,7 +17,6 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将报销单及其明细转换为付款单及其明细
     /// 复用业务层的核心转换逻辑（BuildPaymentRecord），确保数据一致性
     /// </summary>
-    [System.ComponentModel.Description("转付款单")]
     public class ExpenseClaimToPaymentRecordConverter : DocumentConverterBase<tb_FM_ExpenseClaim, tb_FM_PaymentRecord>
     {
         private readonly ILogger<ExpenseClaimToPaymentRecordConverter> _logger;

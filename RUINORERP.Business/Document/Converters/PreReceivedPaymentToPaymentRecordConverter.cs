@@ -15,7 +15,6 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将已生效的预收付款单及其明细转换为收付款单及其明细
     /// 复用业务层的核心转换逻辑（BuildPaymentRecord），确保数据一致性
     /// </summary>
-    [System.ComponentModel.Description("转收付款单")]
     public class PreReceivedPaymentToPaymentRecordConverter : DocumentConverterBase<tb_FM_PreReceivedPayment, tb_FM_PaymentRecord>
     {
         private readonly ILogger<PreReceivedPaymentToPaymentRecordConverter> _logger;

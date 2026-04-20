@@ -161,13 +161,13 @@ namespace RUINORERP.Business.ImportEngine.Services
                 }
 
                 // 检查映射后的数据表是否包含SystemField列
-                if (!dataTable.Columns.Contains(mapping.SystemField?.Item2))
+                if (!dataTable.Columns.Contains(mapping.SystemField?.Value))
                 {
                     errors.Add(new ValidationError
                     {
                         RowNumber = -1,
-                        FieldName = mapping.SystemField?.Item1,
-                        ErrorMessage = $"映射后的数据表中不存在列 '{mapping.SystemField?.Item2}'",
+                        FieldName = mapping.SystemField?.Key,
+                        ErrorMessage = $"映射后的数据表中不存在列 '{mapping.SystemField?.Value}'",
                         ErrorType = "ColumnNotFound"
                     });
                 }
@@ -211,12 +211,12 @@ namespace RUINORERP.Business.ImportEngine.Services
                     }
 
                     // 检查列是否存在
-                    if (!dataTable.Columns.Contains(mapping.SystemField?.Item2))
+                    if (!dataTable.Columns.Contains(mapping.SystemField?.Value))
                     {
                         continue;
                     }
 
-                    object cellValue = row[mapping.SystemField?.Item2];
+                    object cellValue = row[mapping.SystemField?.Value];
                     if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
                     {
                         continue; // 空值跳过
@@ -253,7 +253,7 @@ namespace RUINORERP.Business.ImportEngine.Services
             }
 
             // 检查列是否存在
-            if (!dataTable.Columns.Contains(uniqueKeyMapping.SystemField?.Item2))
+            if (!dataTable.Columns.Contains(uniqueKeyMapping.SystemField?.Value))
             {
                 return;
             }
@@ -262,7 +262,7 @@ namespace RUINORERP.Business.ImportEngine.Services
 
             for (int i = 0; i < dataTable.Rows.Count; i++)
             {
-                object value = dataTable.Rows[i][uniqueKeyMapping.SystemField?.Item2];
+                object value = dataTable.Rows[i][uniqueKeyMapping.SystemField?.Value];
 
                 // 如果配置了忽略空值，则跳过空值的重复检查
                 bool isEmpty = value == DBNull.Value || string.IsNullOrEmpty(value?.ToString());
@@ -273,7 +273,7 @@ namespace RUINORERP.Business.ImportEngine.Services
                         errors.Add(new ValidationError
                         {
                             RowNumber = i + 2,
-                            FieldName = uniqueKeyMapping.SystemField?.Item1,
+                            FieldName = uniqueKeyMapping.SystemField?.Key,
                             ErrorMessage = "唯一键列不能为空",
                             ErrorType = "EmptyRequiredField"
                         });
@@ -297,7 +297,7 @@ namespace RUINORERP.Business.ImportEngine.Services
                     errors.Add(new ValidationError
                     {
                         RowNumber = rowNumber,
-                        FieldName = uniqueKeyMapping.SystemField?.Item1,
+                        FieldName = uniqueKeyMapping.SystemField?.Key,
                         ErrorMessage = $"唯一键列值 '{kvp.Key}' 重复，共出现 {kvp.Value.Count} 次",
                         ErrorType = "DuplicateValue"
                     });
@@ -354,8 +354,8 @@ namespace RUINORERP.Business.ImportEngine.Services
                             errors.Add(new ValidationError
                             {
                                 RowNumber = rowNumber,
-                                FieldName = mapping.SystemField?.Item1,
-                                ErrorMessage = $"外键字段 '{mapping.SystemField?.Item2}' 是必填字段，但值为空",
+                                FieldName = mapping.SystemField?.Key,
+                                ErrorMessage = $"外键字段 '{mapping.SystemField?.Value}' 是必填字段，但值为空",
                                 ErrorType = "EmptyRequiredField"
                             });
                         }
@@ -373,7 +373,7 @@ namespace RUINORERP.Business.ImportEngine.Services
                         errors.Add(new ValidationError
                         {
                             RowNumber = rowNumber,
-                            FieldName = mapping.SystemField?.Item1,
+                            FieldName = mapping.SystemField?.Key,
                             ErrorMessage = errorMessage,
                             ErrorType = "ForeignKeyValidationFailed"
                         });
@@ -389,9 +389,9 @@ namespace RUINORERP.Business.ImportEngine.Services
         {
             // 优先从指定的外键来源列获取
             if (mapping.ForeignConfig?.ForeignKeySourceColumn != null &&
-                !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName))
+                !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
             {
-                string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName;
+                string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
                 if (row.Table.Columns.Contains(sourceColumnName))
                 {
                     return row[sourceColumnName]?.ToString()?.Trim();
@@ -400,10 +400,10 @@ namespace RUINORERP.Business.ImportEngine.Services
 
             // 否则使用SystemField列
             if (mapping.SystemField != null && 
-                !string.IsNullOrEmpty(mapping.SystemField.Item2) &&
-                row.Table.Columns.Contains(mapping.SystemField.Item2))
+                !string.IsNullOrEmpty(mapping.SystemField.Value) &&
+                row.Table.Columns.Contains(mapping.SystemField.Value))
             {
-                return row[mapping.SystemField.Item2]?.ToString()?.Trim();
+                return row[mapping.SystemField.Value]?.ToString()?.Trim();
             }
 
             return null;

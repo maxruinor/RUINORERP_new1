@@ -68,7 +68,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly SemaphoreSlim _globalSemaphore = new SemaphoreSlim(1, 1);
 
         // 配置参数
-        private readonly TimeSpan _lockRefreshInterval = TimeSpan.FromMinutes(1);
+        private readonly TimeSpan _lockRefreshInterval = TimeSpan.FromMinutes(0); // v2.1.2: 禁用定时刷新,改为事件驱动
         private readonly TimeSpan _cacheCleanupInterval = TimeSpan.FromMinutes(5);
         private readonly TimeSpan _lockTimeoutThreshold = TimeSpan.FromMinutes(30);
         private readonly int _maxRetryAttempts = 3;
@@ -151,14 +151,18 @@ namespace RUINORERP.UI.Network.Services
                 if (_isDisposed)
                     throw new ObjectDisposedException(nameof(ClientLockManagementService));
 
-                // 启动定时器
-                _lockRefreshTimer.Change(TimeSpan.Zero, _lockRefreshInterval);
+                // v2.1.2: 禁用定时刷新定时器,改为事件驱动
+                // _lockRefreshTimer.Change(TimeSpan.Zero, _lockRefreshInterval);  // ❌ 不再需要
+                
+                // 启动缓存清理定时器
                 _cacheCleanupTimer.Change(TimeSpan.FromMinutes(1), _cacheCleanupInterval);
 
                 // 预热缓存（优化）
                 await WarmupCacheAsync();
 
                 // LockRecoveryManager不需要手动启动，构造函数中已初始化
+                
+                _logger.LogInformation("锁管理服务启动成功 (v2.1.2 - 事件驱动模式)");
             }
             finally
             {
@@ -942,6 +946,7 @@ namespace RUINORERP.UI.Network.Services
                         var response = await CheckLockStatusAsync(billId, 0, _cancellationTokenSource.Token);
                         if (response.IsSuccess && response.LockInfo != null)
                         {
+                            // v2.1.2: 由于禁用了定时刷新，此方法仅在手动调用时执行
                             // 检查锁是否仍然有效
                             if (response.LockInfo.IsExpired)
                             {
@@ -955,8 +960,6 @@ namespace RUINORERP.UI.Network.Services
                                         // 锁已过期，从_activeLocks中移除
                                         _activeLocks.TryRemove(billId, out _);
                                         _clientCache.ClearCache(billId);
-                                        // 延迟清理细粒度锁（让CleanupUnusedLock处理）
-                                        // _billLocks.TryRemove(billId, out _);  // ❌ 删除这行
                                     }
                                     finally
                                     {
@@ -966,13 +969,6 @@ namespace RUINORERP.UI.Network.Services
                             }
                             else
                             {
-                                // 更新刷新时间戳
-                                // 即使锁没有过期，也需要更新最后更新时间，这对于监控锁的活跃度很重要
-                                if (_activeLocks.TryGetValue(billId, out var clientLock))
-                                {
-                                    clientLock.LastUpdateTime = DateTime.Now;
-                                    clientLock.ExpireTime = DateTime.Now.AddMinutes(15);
-                                }
                                 // 更新缓存
                                 _clientCache.UpdateCacheItem(response.LockInfo);
                             }

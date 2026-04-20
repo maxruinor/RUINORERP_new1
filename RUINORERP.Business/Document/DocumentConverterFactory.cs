@@ -416,52 +416,71 @@ namespace RUINORERP.Business.Document
         /// <summary>
         /// 获取转换器的显示名称
         /// 
-        /// 优先级规则:
-        /// 1. 优先使用转换器自身的 DisplayName 属性(子类重写)
-        /// 2. 如果没有重写,根据转换类型和源单据类型生成默认名称:
-        ///    - ActionOperation: 直接使用目标单据名称
-        ///    - DocumentGeneration: 返回"转换为{目标单据}"
+        /// 职责分工:
+        /// 1. 【优先】如果子类重写了 DisplayName(非null),直接使用子类的值
+        ///    示例: "退还余款"、"订单取消作废"
         /// 
-        /// 注意:sourceDisplayName 已经根据源单据实例动态生成(如"收款"或"付款")
+        /// 2. 【默认】如果子类未重写(DisplayName为null),根据实例数据动态生成:
+        ///    - ActionOperation: 使用动态计算的 targetDisplayName(如"收款"或"付款")
+        ///    - DocumentGeneration: 使用"{sourceDisplayName}转{targetDisplayName}"格式
+        /// 
+        /// 关键点:
+        /// - sourceDisplayName/targetDisplayName 已根据源单据实例动态计算(工厂层传入)
+        /// - 例如: 预收款单 → targetDisplayName="收款", 预付款单 → targetDisplayName="付款"
         /// </summary>
         /// <param name="converter">转换器实例</param>
         /// <param name="sourceDisplayName">源单据显示名称(已根据实例动态生成)</param>
-        /// <param name="targetDisplayName">目标单据显示名称</param>
+        /// <param name="targetDisplayName">目标单据显示名称(已根据实例动态生成)</param>
         /// <param name="conversionType">转换类型</param>
         /// <returns>显示名称</returns>
         private string GetConverterDisplayName(object converter, string sourceDisplayName, string targetDisplayName, DocumentConversionType conversionType)
         {
             try
             {
-                // 尝试获取转换器的 DisplayName 属性
-                var displayNameProperty = converter.GetType().GetProperty("DisplayName");
-                if (displayNameProperty != null)
+                // 步骤1: 尝试获取转换器重写的 DisplayName
+                string converterDisplayName = null;
+                
+                // 优先通过 IConverterMeta 接口获取(避免反射)
+                if (converter is IConverterMeta meta)
                 {
-                    var displayName = displayNameProperty.GetValue(converter) as string;
-                    
-                    // 如果转换器重写了 DisplayName(非空),直接使用
-                    if (!string.IsNullOrEmpty(displayName))
+                    converterDisplayName = meta.DisplayName;
+                }
+                
+                // 兜底:通过反射获取 DisplayName 属性
+                if (string.IsNullOrEmpty(converterDisplayName))
+                {
+                    var displayNameProperty = converter.GetType().GetProperty("DisplayName");
+                    if (displayNameProperty != null)
                     {
-                        return displayName;
+                        converterDisplayName = displayNameProperty.GetValue(converter) as string;
                     }
                 }
                 
-                // 默认格式:根据转换类型生成
+                // 步骤2: 如果子类重写了 DisplayName(非null),直接使用
+                if (!string.IsNullOrEmpty(converterDisplayName))
+                {
+                    return converterDisplayName;
+                }
+                
+                // 步骤3: 子类未重写(null),根据实例数据动态生成
                 if (conversionType == DocumentConversionType.ActionOperation)
                 {
-                    // 动作操作型:直接使用目标单据名称
+                    // 动作操作型:直接使用动态计算的目标单据名称
+                    // 例如: "收款" 或 "付款"(由 GetEntityDisplayName 根据 ReceivePaymentType 计算)
                     return targetDisplayName;
                 }
                 else
                 {
-                    // 单据生成型:使用"转换为{目标单据}"格式
-                    return $"转换为{targetDisplayName}";
+                    // 单据生成型:简洁格式 "转为{目标单据}"
+                    // 例如: "转为收款"、"转为付款"、"转为销售出库单"
+                    // 用户已知当前单据,无需显示"从X转Y"
+                    return $"转为{targetDisplayName}";
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogWarning(ex, $"获取转换器 {converter.GetType().Name} 的显示名称失败");
-                return $"转换为{targetDisplayName}";
+                return $"转为{targetDisplayName}";
             }
         }
 

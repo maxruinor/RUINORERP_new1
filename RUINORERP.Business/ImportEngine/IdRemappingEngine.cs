@@ -32,7 +32,7 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 注册映射关系（供DatabaseWriterService调用）
+        /// 注册映射关系(供DatabaseWriterService调用)
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="logicalKey">逻辑键值</param>
@@ -44,6 +44,20 @@ namespace RUINORERP.Business
                 _tableKeyToIdMap[tableName] = new Dictionary<string, long>();
             }
             _tableKeyToIdMap[tableName][logicalKey] = physicalId;
+        }
+        
+        /// <summary>
+        /// 注册新生成的ID(用于子表引用)
+        /// </summary>
+        public void RegisterNewId(string tableName, string businessKeyValue, long newId)
+        {
+            if (!_tableKeyToIdMap.ContainsKey(tableName))
+                _tableKeyToIdMap[tableName] = new Dictionary<string, long>();
+                    
+            _tableKeyToIdMap[tableName][businessKeyValue] = newId;
+                    
+            // 同时更新全局缓存
+            CacheLogicalKey(tableName, businessKeyValue, newId);
         }
 
         /// <summary>
@@ -176,6 +190,192 @@ namespace RUINORERP.Business
             catch { /* 忽略动态查询错误 */ }
 
             return 0;
+        }
+
+        /// <summary>
+        /// 预加载依赖表数据到缓存
+        /// </summary>
+        public async Task PreloadDependencyTablesAsync(List<RUINORERP.Model.ImportEngine.Models.ImportProfile> dependencyProfiles)
+        {
+            foreach (var profile in dependencyProfiles)
+            {
+                await LoadExistingLogicalKeysByProfileAsync(profile);
+            }
+        }
+
+        /// <summary>
+        /// 根据Profile配置加载已存在的逻辑键
+        /// </summary>
+        private async Task LoadExistingLogicalKeysByProfileAsync(RUINORERP.Model.ImportEngine.Models.ImportProfile profile)
+        {
+            if (profile == null || profile.BusinessKeys == null || !profile.BusinessKeys.Any())
+                return;
+
+            string tableName = profile.TargetTable;
+            if (string.IsNullOrEmpty(tableName))
+                return;
+
+            // 构建查询条件
+            var whereConditions = profile.BusinessKeys.Select(k => $"[{k}] IS NOT NULL").ToList();
+            var whereClause = string.Join(" AND ", whereConditions);
+
+            // 查询已存在的记录
+            var sql = $"SELECT {string.Join(", ", profile.BusinessKeys.Select(k => $"[{k}]"))}, [ID] FROM [{tableName}] WHERE {whereClause}";
+            var dataTable = await _db.Ado.GetDataTableAsync(sql);
+
+            if (!_globalLogicalKeyCache.ContainsKey(tableName))
+            {
+                _globalLogicalKeyCache[tableName] = new Dictionary<string, long>();
+            }
+
+            foreach (System.Data.DataRow row in dataTable.Rows)
+            {
+                // 生成组合键
+                var keyParts = profile.BusinessKeys.Select(k => row[k]?.ToString()).ToList();
+                string logicalKey = string.Join("|", keyParts.Where(v => v != null));
+
+                if (!string.IsNullOrEmpty(logicalKey) && row["ID"] != null)
+                {
+                    long physicalId = Convert.ToInt64(row["ID"]);
+                    _globalLogicalKeyCache[tableName][logicalKey] = physicalId;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 缓存逻辑键映射
+        /// </summary>
+        private void CacheLogicalKey(string tableName, string logicalKey, long physicalId)
+        {
+            if (!_globalLogicalKeyCache.ContainsKey(tableName))
+            {
+                _globalLogicalKeyCache[tableName] = new Dictionary<string, long>();
+            }
+            _globalLogicalKeyCache[tableName][logicalKey] = physicalId;
+        }
+
+        /// <summary>
+        /// 获取或创建外键ID(混合来源解析核心逻辑)
+        /// </summary>
+        /// <param name="tableName">外键表名</param>
+        /// <param name="businessKeyName">业务键字段名</param>
+        /// <param name="businessKeyValue">业务键值(如供应商名称)</param>
+        /// <param name="sourceRow">源数据行(用于自动创建时提取其他字段)</param>
+        /// <param name="tableProfile">表配置(用于自动创建)</param>
+        /// <returns>物理ID</returns>
+        public async Task<long> GetOrCreateForeignKeyIdAsync(
+            string tableName,
+            string businessKeyName,
+            string businessKeyValue,
+            System.Data.DataRow sourceRow,
+            RUINORERP.Model.ImportEngine.Models.ImportProfile tableProfile)
+        {
+            if (string.IsNullOrEmpty(businessKeyValue))
+            {
+                throw new Exception($"外键业务键值不能为空");
+            }
+
+            // 1. 尝试从缓存获取
+            if (_globalLogicalKeyCache.ContainsKey(tableName) &&
+                _globalLogicalKeyCache[tableName].TryGetValue(businessKeyValue, out long cachedId))
+            {
+                return cachedId;
+            }
+
+            // 2. 查询数据库
+            var sql = $"SELECT TOP 1 [ID] FROM [{tableName}] WHERE [{businessKeyName}] = @val";
+            var result = await _db.Ado.GetScalarAsync(sql, new { val = businessKeyValue });
+
+            if (result != null && long.TryParse(result.ToString(), out long dbId))
+            {
+                // 缓存并返回
+                CacheLogicalKey(tableName, businessKeyValue, dbId);
+                return dbId;
+            }
+
+            // 3. 如果允许自动创建,则插入新记录
+            if (tableProfile != null && ShouldAutoCreateForProfile(tableProfile))
+            {
+                return await CreateNewRecordAndReturnIdAsync(tableName, businessKeyName, businessKeyValue, sourceRow, tableProfile);
+            }
+
+            throw new Exception($"外键值 '{businessKeyValue}' 在表 {tableName} 中不存在且不允许自动创建");
+        }
+
+        /// <summary>
+        /// 判断是否允许自动创建
+        /// </summary>
+        private bool ShouldAutoCreateForProfile(RUINORERP.Model.ImportEngine.Models.ImportProfile profile)
+        {
+            // 检查ColumnMappings中是否有ForeignKeyConfig配置了AutoCreateIfNotExists
+            if (profile.ColumnMappings != null)
+            {
+                foreach (var mapping in profile.ColumnMappings)
+                {
+                    if (mapping.ForeignConfig != null && mapping.ForeignConfig.AutoCreateIfNotExists)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 创建新记录并返回ID
+        /// </summary>
+        private async Task<long> CreateNewRecordAndReturnIdAsync(
+            string tableName,
+            string businessKeyName,
+            string businessKeyValue,
+            System.Data.DataRow sourceRow,
+            RUINORERP.Model.ImportEngine.Models.ImportProfile tableProfile)
+        {
+            // 构建INSERT语句
+            var columnsToInsert = new List<string>();
+            var parameters = new List<SqlSugar.SugarParameter>();
+
+            // 添加业务键字段
+            columnsToInsert.Add($"[{businessKeyName}]");
+            parameters.Add(new SqlSugar.SugarParameter($"@{businessKeyName}", businessKeyValue));
+
+            // 添加其他必填字段(从sourceRow中提取)
+            if (tableProfile.ColumnMappings != null)
+            {
+                foreach (var mapping in tableProfile.ColumnMappings)
+                {
+                    // 跳过已经添加的业务键
+                    if (mapping.DbColumn == businessKeyName)
+                        continue;
+
+                    // 只处理必填且有默认值的字段
+                    if (mapping.IsRequired && sourceRow.Table.Columns.Contains(mapping.ExcelHeader))
+                    {
+                        var value = sourceRow[mapping.ExcelHeader];
+                        if (value != null && value != DBNull.Value)
+                        {
+                            columnsToInsert.Add($"[{mapping.DbColumn}]");
+                            parameters.Add(new SqlSugar.SugarParameter($"@{mapping.DbColumn}", value));
+                        }
+                    }
+                }
+            }
+
+            var columnNames = string.Join(", ", columnsToInsert);
+            var paramNames = string.Join(", ", columnsToInsert.Select(c => c.Replace("[", "@").Replace("]", "")));
+
+            var insertSql = $"INSERT INTO [{tableName}] ({columnNames}) VALUES ({paramNames}); SELECT SCOPE_IDENTITY() AS NewId;";
+
+            var newId = await _db.Ado.GetScalarAsync(insertSql, parameters.ToArray());
+
+            if (newId != null && long.TryParse(newId.ToString(), out long physicalId))
+            {
+                // 注册新生成的ID
+                RegisterNewId(tableName, businessKeyValue, physicalId);
+                return physicalId;
+            }
+
+            throw new Exception($"创建表 {tableName} 的新记录失败");
         }
 
         private async Task ProcessChildEntitiesAsync<T>(List<T> parentEntities, string parentTableName) where T : BaseEntity

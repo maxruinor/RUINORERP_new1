@@ -1,4 +1,5 @@
 using RUINORERP.Common;
+using RUINORERP.Global;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -162,10 +163,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (mapping.DataSourceType == DataSourceType.ForeignKey &&
                         mapping.ForeignConfig != null &&
                         mapping.ForeignConfig.ForeignKeySourceColumn != null &&
-                        !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName))
+                        !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
                     {
                         // 添加外键来源列的Excel列名
-                        string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName;
+                        string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
                         if (!foreignSourceColumns.Contains(sourceColumnName))
                         {
                             resultFields.Add(sourceColumnName);

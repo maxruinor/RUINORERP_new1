@@ -16,7 +16,6 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将销售订单转换为预收款单,用于收取客户预付款
     /// 这是一个动作操作型转换,需要UI层先获取预收金额,然后执行生成操作
     /// </summary>
-    [System.ComponentModel.Description("预收货款")]
     public class SaleOrderToPrePaymentConverter : DocumentConverterBase<tb_SaleOrder, tb_FM_PreReceivedPayment>
     {
         private readonly ILogger<SaleOrderToPrePaymentConverter> _logger;

@@ -16,7 +16,6 @@ namespace RUINORERP.Business.Document.Converters
     /// 将预收/付款单的余额退还,生成红字收/付款单
     /// 这是一个单据生成型转换,会生成新的收付款单(金额为负数)
     /// </summary>
-    [System.ComponentModel.Description("退还余款")]
     public class PreReceivedPaymentToRefundConverter : DocumentConverterBase<tb_FM_PreReceivedPayment, tb_FM_PaymentRecord>
     {
         private readonly ILogger<PreReceivedPaymentToRefundConverter> _logger;

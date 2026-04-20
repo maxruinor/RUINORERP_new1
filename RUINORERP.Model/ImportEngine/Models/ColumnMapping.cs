@@ -1,4 +1,5 @@
 using System;
+using RUINORERP.Global;
 using RUINORERP.Model.ImportEngine.Enums;
 
 namespace RUINORERP.Model.ImportEngine.Models
@@ -26,7 +27,7 @@ namespace RUINORERP.Model.ImportEngine.Models
         /// <summary>
         /// 系统字段信息（Key:显示名称, Value:数据库字段名）
         /// </summary>
-        public Tuple<string, string> SystemField { get; set; }
+        public SerializableKeyValuePair<string> SystemField { get; set; }
         
         /// <summary>
         /// 是否必填

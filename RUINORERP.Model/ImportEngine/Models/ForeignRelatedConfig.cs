@@ -1,97 +1,53 @@
 using System;
+using RUINORERP.Global;
 
 namespace RUINORERP.Model.ImportEngine.Models
 {
     /// <summary>
-    /// 可序列化键值对（通用辅助类）
-    /// </summary>
-    [Serializable]
-    public class SerializableKeyValuePair<T>
-    {
-        /// <summary>
-        /// 键
-        /// </summary>
-        public T Key { get; set; }
-        
-        /// <summary>
-        /// 值
-        /// </summary>
-        public T Value { get; set; }
-        
-        public SerializableKeyValuePair()
-        {
-        }
-        
-        public SerializableKeyValuePair(T key, T value)
-        {
-            Key = key;
-            Value = value;
-        }
-    }
-    
-    /// <summary>
-    /// 外键来源列配置
-    /// </summary>
-    [Serializable]
-    public class ForeignKeySourceColumnConfig
-    {
-        /// <summary>
-        /// Excel列名
-        /// </summary>
-        public string ExcelColumnName { get; set; }
-
-        /// <summary>
-        /// 显示名称
-        /// </summary>
-        public string DisplayName { get; set; }
-
-        /// <summary>
-        /// 数据库真实字段名
-        /// </summary>
-        public string DatabaseFieldName { get; set; }
-    }
-
-    /// <summary>
-    /// 外键关联配置类
-    /// 用于存储外部关联类型的列配置信息
+    /// 外键关联配置(通用模型,供所有层使用)
     /// </summary>
     [Serializable]
     public class ForeignRelatedConfig
     {
         /// <summary>
-        /// 外键表引用（Key=英文表名, Value=中文表名）
+        /// 外键表引用(Key=英文表名, Value=中文表名)
         /// </summary>
         public SerializableKeyValuePair<string> ForeignKeyTable { get; set; }
 
         /// <summary>
-        /// 外键字段引用（Key=英文字段名, Value=中文显示名）
-        /// 用于指定关联表中用于匹配的字段（通常是编码字段）
+        /// 外键字段引用(Key=英文字段名, Value=中文显示名)
         /// </summary>
         public SerializableKeyValuePair<string> ForeignKeyField { get; set; }
 
         /// <summary>
-        /// 外键来源列配置
-        /// 指定Excel中作为外键关联依据的来源列
+        /// 是否在数据库中不存在时自动创建新记录
         /// </summary>
-        public ForeignKeySourceColumnConfig ForeignKeySourceColumn { get; set; }
+        public bool AutoCreateIfNotExists { get; set; } = false;
 
         /// <summary>
-        /// 是否允许创建新记录
-        /// 如果外键值在目标表中不存在，是否自动创建新记录
+        /// 外键来源列配置（用于指定从 Excel 的哪一列获取参考值）
         /// </summary>
-        public bool AllowCreateNew { get; set; }
+        public SerializableKeyValuePair<string> ForeignKeySourceColumn { get; set; }
 
         /// <summary>
-        /// 默认值（当外键匹配失败时使用）
+        /// 验证配置是否有效
         /// </summary>
-        public string DefaultValue { get; set; }
-
-        public ForeignRelatedConfig()
+        /// <param name="errorMessage">错误信息</param>
+        /// <returns>是否有效</returns>
+        public bool Validate(out string errorMessage)
         {
-            ForeignKeyTable = new SerializableKeyValuePair<string>();
-            ForeignKeyField = new SerializableKeyValuePair<string>();
-            ForeignKeySourceColumn = new ForeignKeySourceColumnConfig();
-            AllowCreateNew = false;
+            errorMessage = string.Empty;
+            if (ForeignKeyTable == null || string.IsNullOrEmpty(ForeignKeyTable.Key))
+            {
+                errorMessage = "外键关联表不能为空";
+                return false;
+            }
+            if (ForeignKeyField == null || string.IsNullOrEmpty(ForeignKeyField.Key))
+            {
+                errorMessage = "外键关联字段不能为空";
+                return false;
+            }
+            return true;
         }
     }
 }

@@ -24,7 +24,6 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将制令单及其明细转换为领料单及其明细
     /// 复用业务层的核心转换逻辑，确保数据一致性
     /// </summary>
-    [System.ComponentModel.Description("转领料单")]
     public class ManufacturingOrderToMaterialRequisitionConverter : DocumentConverterBase<tb_ManufacturingOrder, tb_MaterialRequisition>
     {
         private readonly IMapper _mapper;

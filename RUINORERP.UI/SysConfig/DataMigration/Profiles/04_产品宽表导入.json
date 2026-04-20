@@ -1,0 +1,108 @@
+{
+  "ProfileName": "产品宽表导入_含供应商类目",
+  "Description": "从单个Excel导入产品主表、供应商、类目及SKU明细",
+  
+  "MasterTable": {
+    "TargetTable": "tb_Prod",
+    "BusinessKeys": ["ProdCode"],
+    "EnableIdRemapping": true,
+    "ColumnMappings": [
+      {
+        "ExcelHeader": "产品编码",
+        "DbColumn": "ProdCode",
+        "IsRequired": true,
+        "DataType": "String"
+      },
+      {
+        "ExcelHeader": "产品名称",
+        "DbColumn": "ProdName",
+        "IsRequired": true,
+        "DataType": "String"
+      },
+      {
+        "ExcelHeader": "供应商名称",
+        "DbColumn": "SupplierId",
+        "DataType": "Long",
+        "TransformRule": "REF:tb_CustomerVendor:VendorName",
+        "ForeignConfig": {
+          "TableName": "tb_CustomerVendor",
+          "KeyField": "ID",
+          "SourceField": "VendorName",
+          "AutoCreateIfNotExists": true
+        }
+      },
+      {
+        "ExcelHeader": "类目名称",
+        "DbColumn": "CategoryId",
+        "DataType": "Long",
+        "TransformRule": "REF:tb_ProdCategories:CategoryName",
+        "ForeignConfig": {
+          "TableName": "tb_ProdCategories",
+          "KeyField": "ID",
+          "SourceField": "CategoryName",
+          "AutoCreateIfNotExists": false
+        }
+      }
+    ]
+  },
+  
+  "DependencyTables": [
+    {
+      "TargetTable": "tb_CustomerVendor",
+      "BusinessKeys": ["VendorName"],
+      "ColumnMappings": [
+        {
+          "ExcelHeader": "供应商名称",
+          "DbColumn": "VendorName",
+          "IsRequired": true
+        },
+        {
+          "ExcelHeader": "供应商编码",
+          "DbColumn": "VendorCode",
+          "IsRequired": false
+        }
+      ],
+      "DeduplicationStrategy": "FirstOccurrence"
+    },
+    {
+      "TargetTable": "tb_ProdCategories",
+      "BusinessKeys": ["CategoryName"],
+      "ColumnMappings": [
+        {
+          "ExcelHeader": "类目名称",
+          "DbColumn": "CategoryName",
+          "IsRequired": true
+        }
+      ]
+    }
+  ],
+  
+  "ChildTables": [
+    {
+      "TargetTable": "tb_ProdDetail",
+      "ParentTableRefField": "ProdId",
+      "ParentTableName": "tb_Prod",
+      "BusinessKeys": ["ProdId", "SKU"],
+      "ColumnMappings": [
+        {
+          "ExcelHeader": "产品编码",
+          "DbColumn": "ProdId",
+          "TransformRule": "REF:tb_Prod:ProdCode"
+        },
+        {
+          "ExcelHeader": "SKU编码",
+          "DbColumn": "SKU",
+          "IsRequired": true
+        },
+        {
+          "ExcelHeader": "规格",
+          "DbColumn": "Specification",
+          "DataType": "String"
+        }
+      ]
+    }
+  ],
+  
+  "EnableAIMapping": false,
+  "AISuggestedLogicalKey": "ProdCode"
+}

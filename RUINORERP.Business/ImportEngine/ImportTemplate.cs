@@ -24,13 +24,6 @@ namespace RUINORERP.Business
         public bool EnableChildImport { get; set; }
         
         // 子表配置
-        public ChildTableConfig ChildConfig { get; set; }
-    }
-
-    public class ChildTableConfig
-    {
-        public string ChildTableName { get; set; }
-        public string ForeignKeyField { get; set; } // 指向主表的外键
-        public Dictionary<string, string> ChildColumnMappings { get; set; } = new Dictionary<string, string>();
+        public RUINORERP.Model.ImportEngine.Models.ChildTableConfig ChildConfig { get; set; }
     }
 }

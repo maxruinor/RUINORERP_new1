@@ -16,7 +16,6 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将已审核的销售订单进行取消作废处理
     /// 这是一个动作操作型转换,执行订单取消的业务操作
     /// </summary>
-    [System.ComponentModel.Description("订单取消作废")]
     public class SaleOrderCancelConverter : DocumentConverterBase<tb_SaleOrder, tb_SaleOrder>
     {
         private readonly ILogger<SaleOrderCancelConverter> _logger;

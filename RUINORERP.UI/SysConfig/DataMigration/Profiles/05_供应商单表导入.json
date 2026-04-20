@@ -1,0 +1,35 @@
+{
+  "ProfileName": "05_供应商单表导入",
+  "Description": "单独导入供应商表(测试单表导入功能)",
+  
+  "MasterTable": {
+    "TargetTable": "tb_CustomerVendor",
+    "BusinessKeys": ["VendorName"],
+    "EnableIdRemapping": true,
+    "ColumnMappings": [
+      {
+        "ExcelHeader": "供应商名称",
+        "DbColumn": "VendorName",
+        "IsRequired": true,
+        "DataType": "String"
+      },
+      {
+        "ExcelHeader": "供应商编码",
+        "DbColumn": "VendorCode",
+        "IsRequired": false,
+        "DataType": "String"
+      },
+      {
+        "ExcelHeader": "联系电话",
+        "DbColumn": "ContactPhone",
+        "IsRequired": false,
+        "DataType": "String"
+      }
+    ]
+  },
+  
+  "DependencyTables": [],
+  "ChildTables": [],
+  
+  "EnableAIMapping": false
+}

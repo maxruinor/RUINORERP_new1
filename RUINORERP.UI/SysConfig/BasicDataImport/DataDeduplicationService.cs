@@ -144,7 +144,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             if (map.DataSourceType == DataSourceType.ForeignKey &&
                                 map.ForeignConfig != null &&
                                 map.ForeignConfig.ForeignKeySourceColumn != null &&
-                                map.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName == fieldName)
+                                map.ForeignConfig.ForeignKeySourceColumn.Key == fieldName)
                             {
                                 // 外键来源列直接使用Excel列名作为显示名称
                                 displayNames.Add(fieldName);

@@ -55,6 +55,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UpdateConfig.cs" />
+    <Compile Include="UpdaterConstants.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

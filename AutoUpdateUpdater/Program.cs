@@ -14,14 +14,14 @@ namespace AutoUpdateUpdater
     static class Program
     {
         #region 常量定义
-        // 【P2优化】使用AutoUpdate.UpdateSystemConstants统一管理，这里保留向后兼容的别名
-        private const int PROCESS_WAIT_TIMEOUT_MS = AutoUpdate.UpdateSystemConstants.ProcessExitTimeoutMs;
-        private const int EXTRA_WAIT_AFTER_EXIT_MS = AutoUpdate.UpdateSystemConstants.ExtraWaitAfterExitMs;
-        private const int FILE_HANDLE_RELEASE_WAIT_MS = AutoUpdate.UpdateSystemConstants.FileHandleReleaseWaitMs;
-        private const int FORCE_UNLOCK_WAIT_MS = AutoUpdate.UpdateSystemConstants.ForceUnlockWaitMs;
-        private const int SAFE_RETRY_DELAY_BASE_MS = AutoUpdate.UpdateSystemConstants.SafeRetryDelayBaseMs;
-        private const int CONFIG_READ_RETRY_COUNT = AutoUpdate.UpdateSystemConstants.ConfigReadRetryCount;
-        private const int CONFIG_READ_RETRY_DELAY_MS = AutoUpdate.UpdateSystemConstants.ConfigReadRetryDelayMs;
+        // 【P2优化】使用本项目的 UpdaterConstants 统一管理常量
+        private const int PROCESS_WAIT_TIMEOUT_MS = UpdaterConstants.ProcessExitTimeoutMs;
+        private const int EXTRA_WAIT_AFTER_EXIT_MS = UpdaterConstants.ExtraWaitAfterExitMs;
+        private const int FILE_HANDLE_RELEASE_WAIT_MS = UpdaterConstants.FileHandleReleaseWaitMs;
+        private const int FORCE_UNLOCK_WAIT_MS = UpdaterConstants.ForceUnlockWaitMs;
+        private const int SAFE_RETRY_DELAY_BASE_MS = UpdaterConstants.SafeRetryDelayBaseMs;
+        private const int CONFIG_READ_RETRY_COUNT = UpdaterConstants.ConfigReadRetryCount;
+        private const int CONFIG_READ_RETRY_DELAY_MS = UpdaterConstants.ConfigReadRetryDelayMs;
         #endregion
         
         // 【新增】防止重复启动标志

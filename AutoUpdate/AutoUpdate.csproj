@@ -186,6 +186,7 @@
     <Compile Include="SkipVersionManager.cs" />
     <Compile Include="SmartSnapshotManager.cs" />
     <Compile Include="UpdateConfig.cs" />
+    <Compile Include="UpdateSystemConstants.cs" />
     <Compile Include="VersionSnapshot.cs" />
     <Compile Include="ZipArchiveExtensions.cs" />
     <Content Include="App.ico" />

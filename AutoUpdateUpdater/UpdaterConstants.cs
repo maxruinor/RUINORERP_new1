@@ -1,13 +1,12 @@
 using System;
-using System.Linq;
 
-namespace AutoUpdate
+namespace AutoUpdateUpdater
 {
     /// <summary>
-    /// 自动更新系统统一常量定义
-    /// 【P2优化】统一管理所有魔法数字，提高代码可维护性
+    /// AutoUpdateUpdater 项目统一常量定义
+    /// 注意：这是独立项目的常量，与 AutoUpdate 项目解耦
     /// </summary>
-    public static class UpdateSystemConstants
+    public static class UpdaterConstants
     {
         #region 进程等待相关
         
@@ -30,11 +29,6 @@ namespace AutoUpdate
         /// 强制解锁后等待时间（毫秒）
         /// </summary>
         public const int ForceUnlockWaitMs = 500;
-        
-        /// <summary>
-        /// 更新器启动确认等待时间（毫秒）
-        /// </summary>
-        public const int UpdaterStartupWaitMs = 500;
         
         /// <summary>
         /// 轮询检查间隔（毫秒）
@@ -89,33 +83,10 @@ namespace AutoUpdate
         /// </summary>
         public const long LogMaxSizeBytes = 10 * 1024 * 1024;
         
-        #endregion
-        
-        #region 快照管理
-        
         /// <summary>
-        /// 是否启用异步快照创建
+        /// 默认日志文件名
         /// </summary>
-        public const bool AsyncSnapshotEnabled = true;
-        
-        #endregion
-        
-        #region ERP启动
-        
-        /// <summary>
-        /// ERP启动后验证等待时间（毫秒）
-        /// </summary>
-        public const int ErpStartupVerifyWaitMs = 1000;
-        
-        /// <summary>
-        /// ERP启动最大重试次数
-        /// </summary>
-        public const int ErpStartupMaxRetries = 3;
-        
-        /// <summary>
-        /// ERP启动重试间隔（毫秒）
-        /// </summary>
-        public const int ErpStartupRetryIntervalMs = 1500;
+        public const string DefaultLogFileName = "AutoUpdateUpdaterLog.txt";
         
         #endregion
         
@@ -135,25 +106,6 @@ namespace AutoUpdate
             "being used by another process",
             "The process cannot access the file"
         };
-        
-        #endregion
-        
-        #region 默认值
-        
-        /// <summary>
-        /// 默认主程序名称
-        /// </summary>
-        public const string DefaultMainAppExe = "企业数字化集成ERP.exe";
-        
-        /// <summary>
-        /// 默认日志文件名
-        /// </summary>
-        public const string DefaultLogFileName = "AutoUpdateLog.txt";
-        
-        /// <summary>
-        /// 默认更新器日志文件名
-        /// </summary>
-        public const string DefaultUpdaterLogFileName = "AutoUpdateUpdaterLog.txt";
         
         #endregion
         

@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
+using System.Windows.Forms;
+using System.Threading.Tasks;
 
 namespace AutoUpdate
 {
@@ -806,7 +808,8 @@ namespace AutoUpdate
         /// </summary>
         /// <param name="targetDir">目标目录</param>
         /// <param name="backupDir">备份目录</param>
-        private static void RollbackToBackup(string targetDir, string backupDir)
+        /// <returns>是否回滚成功</returns>
+        private static bool RollbackToBackup(string targetDir, string backupDir)
         {
             try
             {
@@ -828,10 +831,13 @@ namespace AutoUpdate
                 
                 // 清理备份目录
                 Directory.Delete(backupDir, true);
+                
+                return true; // 回滚成功
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"回滚到备份版本失败: {ex.Message}");
+                return false; // 回滚失败
             }
         }
         

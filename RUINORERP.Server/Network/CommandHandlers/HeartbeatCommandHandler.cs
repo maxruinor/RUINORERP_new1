@@ -16,6 +16,7 @@ using RUINORERP.Server.Network.Models;
 using RUINORERP.Model;
 using RUINORERP.Server.Network.Services;
 using RUINORERP.Server.Network.Monitoring;
+using RUINORERP.Common.LogHelper;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {
@@ -30,8 +31,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly ISessionService _sessionService;
         private readonly HeartbeatBatchProcessor _batchProcessor;
         private readonly HeartbeatPerformanceMonitor _performanceMonitor;
-        private static readonly ILogger _staticLogger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("HeartbeatCommandHandler");
-
 
         /// <summary>
         /// 构造函数 - 通过依赖注入获取服务
@@ -48,6 +47,38 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
             // 使用安全方法设置支持的命令
             SetSupportedCommands(SystemCommands.Heartbeat);
+
+            // ✅ 方案C：订阅会话断开事件，会话断开时立即清理心跳记录
+            _sessionService.SessionDisconnected += OnSessionDisconnected;
+        }
+
+        /// <summary>
+        /// ✅ 方案C：会话断开事件处理 - 立即清理对应的心跳记录
+        /// </summary>
+        private void OnSessionDisconnected(SessionInfo sessionInfo)
+        {
+            try
+            {
+                if (sessionInfo == null)
+                    return;
+
+                // 根据SessionID清理
+                if (!string.IsNullOrEmpty(sessionInfo.SessionID))
+                {
+                    _lastHeartbeatResponses.TryRemove(sessionInfo.SessionID, out _);
+                }
+
+                // 根据UserId清理（如果存在）
+                if (sessionInfo.UserId.HasValue && sessionInfo.UserId.Value > 0)
+                {
+                    var userIdStr = sessionInfo.UserId.Value.ToString();
+                    _lastHeartbeatResponses.TryRemove(userIdStr, out _);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"清理会话断开时的心跳记录异常: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -63,11 +94,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (commandId == SystemCommands.Heartbeat)
                 {
                     var response = await HandleHeartbeatAsync(cmd, cancellationToken);
-                    
+
                     // 记录处理时间
                     var processingTime = (DateTime.Now - startTime).TotalMilliseconds;
                     _performanceMonitor.RecordProcessingTime((long)processingTime);
-                    
+
                     return response;
                 }
                 else
@@ -89,7 +120,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 会话管理服务
         /// </summary>
         private ISessionService SessionService => _sessionService;
-        
+
         /// <summary>
         /// 缓存的心跳响应模板，减少序列化开销
         /// </summary>
@@ -104,17 +135,17 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 ["RecommendedInterval"] = 15000
             }
         };
-        
+
         /// <summary>
         /// 上次心跳响应时间缓存，用于响应合并
         /// </summary>
-        private static readonly ConcurrentDictionary<string, DateTime> _lastHeartbeatResponses = 
+        private static readonly ConcurrentDictionary<string, DateTime> _lastHeartbeatResponses =
             new ConcurrentDictionary<string, DateTime>();
 
         /// <summary>
         /// 清理定时器，用于定期清理过期的心跳记录
         /// </summary>
-        private static readonly Timer _cleanupTimer = new Timer(CleanupExpiredHeartbeatResponses, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
+        private static readonly Timer _cleanupTimer = new Timer(CleanupExpiredHeartbeatResponses, null, (int)TimeSpan.FromMinutes(10).TotalMilliseconds, (int)TimeSpan.FromMinutes(10).TotalMilliseconds);
 
         /// <summary>
         /// 处理心跳命令（优化版 - 快速响应）
@@ -147,8 +178,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         // ⚠️ 会话不存在，可能是重连后登录尚未完成
                         // 记录详细日志，帮助诊断问题
-                        _staticLogger.LogWarning($"[心跳] 会话未找到: UserId={heartbeatRequest.UserId}, ClientId={heartbeatRequest.ClientId}, ComputerName={heartbeatRequest.ComputerName}");
-                        
+                        System.Diagnostics.Debug.WriteLine($"[心跳] 会话未找到: UserId={heartbeatRequest?.UserId ?? 0}, ClientId={heartbeatRequest?.ClientId ?? string.Empty}, ComputerName={heartbeatRequest?.ComputerName ?? string.Empty}");
+
                         // 返回特定响应，让客户端知道需要重新登录
                         return new HeartbeatResponse
                         {
@@ -180,7 +211,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             ["RecommendedInterval"] = nextIntervalMs
                         }
                     };
-                    
+
                     // 异步更新用户操作信息（不阻塞响应）
                     if (heartbeatRequest.UserOperationInfo != null)
                     {
@@ -189,13 +220,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             try
                             {
                                 UpdateUserInfoBatch(sessionInfo, heartbeatRequest.UserOperationInfo);
-                                
+
                                 // 如果心跳请求中包含计算机名，也更新到会话信息
                                 if (!string.IsNullOrEmpty(heartbeatRequest.ComputerName))
                                 {
                                     sessionInfo.UserInfo.机器名 = heartbeatRequest.ComputerName;
                                 }
-                                
+
                                 SessionService.UpdateSessionLight(sessionInfo);
                             }
                             catch { /* 忽略异步更新错误 */ }
@@ -222,7 +253,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             _ = Task.Run(() => SessionService.UpdateSessionLight(sessionInfo));
                         }
                     }
-                    
+
                     return response;
                 }
                 else
@@ -283,7 +314,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
             return intervalMs;
         }
-        
+
         /// <summary>
         /// 批量更新用户操作信息
         /// </summary>
@@ -293,7 +324,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             if (sessionInfo?.UserInfo == null || userInfo == null)
                 return;
-                
+
             // 批量赋值，减少多次属性访问
             sessionInfo.UserInfo.用户名 = userInfo.用户名;
             sessionInfo.UserInfo.姓名 = userInfo.姓名;
@@ -311,7 +342,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             sessionInfo.UserInfo.CPU信息 = userInfo.CPU信息;
             sessionInfo.UserInfo.内存大小 = userInfo.内存大小;
         }
-        
+
         /// <summary>
         /// 创建优化的心跳响应
         /// </summary>
@@ -334,12 +365,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     NextIntervalMs = nextIntervalMs,
                     ServerInfo = new Dictionary<string, object>(_cachedSuccessResponse.ServerInfo)
                 };
-                
+
                 cachedResponse.ServerInfo["SessionId"] = sessionId;
                 cachedResponse.ServerInfo["ServerTime"] = currentTime.ToString("yyyy-MM-dd HH:mm:ss");
                 return cachedResponse;
             }
-            
+
             // 正常创建响应
             var response = new HeartbeatResponse
             {
@@ -356,12 +387,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     ["ProcessingDurationMs"] = 0
                 }
             };
-            
+
             // 更新最后一次响应时间
             _lastHeartbeatResponses[sessionId] = currentTime;
             return response;
         }
-        
+
         /// <summary>
         /// 判断是否应该合并响应
         /// </summary>
@@ -371,10 +402,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             if (string.IsNullOrEmpty(sessionId))
                 return false;
-                
+
             // 使用性能监控器的动态阈值
             var mergeThreshold = _performanceMonitor?.GetMergeThresholdSeconds() ?? 5;
-                
+
             if (_lastHeartbeatResponses.TryGetValue(sessionId, out var lastTime))
             {
                 // 使用动态合并阈值
@@ -382,20 +413,20 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             return false;
         }
-        
+
         /// <summary>
         /// 直接处理心跳（非批量模式）
         /// </summary>
         private async Task<IResponse> ProcessHeartbeatDirectly(
-            HeartbeatRequest heartbeatRequest, 
-            SessionInfo sessionInfo, 
-            int nextIntervalMs, 
+            HeartbeatRequest heartbeatRequest,
+            SessionInfo sessionInfo,
+            int nextIntervalMs,
             DateTime currentTime,
             CancellationToken cancellationToken)
         {
             // 创建优化的心跳响应
             var response = CreateOptimizedHeartbeatResponse(sessionInfo, nextIntervalMs, currentTime);
-            
+
             // 异步更新完整会话信息（不阻塞响应）
             if (heartbeatRequest.UserOperationInfo != null)
             {
@@ -406,7 +437,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         // 批量更新用户操作信息
                         UpdateUserInfoBatch(sessionInfo, heartbeatRequest.UserOperationInfo);
-                                        
+
                         // 异步更新到SessionService
                         await SessionService.UpdateSessionAsync(sessionInfo);
                     }
@@ -421,10 +452,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 如果没有用户操作信息，使用轻量级更新
                 _ = Task.Run(() => SessionService.UpdateSessionLight(sessionInfo));
             }
-            
+
             return response;
         }
-        
+
         /// <summary>
         /// 创建立即响应（批量处理模式）
         /// </summary>
@@ -445,10 +476,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     ["RecommendedInterval"] = nextIntervalMs
                 }
             };
-            
+
             return response;
         }
-        
+
         /// <summary>
         /// 判断是否应该使用批量处理
         /// </summary>
@@ -458,12 +489,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
             // 结合性能监控数据和队列状态做出决策
             var queueStats = _batchProcessor?.GetQueueStats();
             var performanceStats = _performanceMonitor?.GetPerformanceStats();
-            
+
             // 多重条件判断
             bool queueCondition = queueStats?.QueueLength > 5;
             bool performanceCondition = _performanceMonitor?.ShouldUseBatchProcessing() ?? false;
             bool loadCondition = (performanceStats?.AverageProcessingTime ?? 0) > 30;
-            
+
             return queueCondition || performanceCondition || loadCondition;
         }
 
@@ -496,12 +527,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 if (expiredSessions.Count > 0)
                 {
-                    _staticLogger.LogInformation("清理了 {Count} 个过期的心跳记录", expiredSessions.Count);
+                    System.Diagnostics.Debug.WriteLine($"清理了 {expiredSessions.Count} 个过期的心跳记录");
                 }
             }
             catch (Exception ex)
             {
-                _staticLogger.LogError(ex, "清理过期心跳记录时发生异常");
+                System.Diagnostics.Debug.WriteLine($"清理过期心跳记录时发生异常: {ex.Message}");
             }
         }
 

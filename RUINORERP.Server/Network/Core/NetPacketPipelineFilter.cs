@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using Microsoft.Extensions.Logging;
 using SuperSocket.ProtoBase;
@@ -30,12 +30,31 @@ namespace RUINORERP.Server.Network.Core
     public class PacketPipelineFilter : FixedHeaderPipelineFilter<ServerPackageInfo>
     {
         private static readonly int HeaderLength = 18; // 与PacketSerializer保持一致
-        private static readonly ILogger _logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("PacketPipelineFilter");
+        
+        // ⚠️ SuperSocket PipelineFilter通过反射创建，无法使用依赖注入
+        // 这里使用静态LoggerFactory是唯一可行的方案
+        private static readonly ILogger _logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<PacketPipelineFilter>();
 
         // 无参数构造函数，用于SuperSocket的反射创建
         public PacketPipelineFilter()
             : base(HeaderLength)
         {
+        }
+
+        /// <summary>
+        /// 业务上通过包头18个里面的内容 解释出 还有多少len是一个完整的包。
+        /// </summary>
+        private void LogWarning(string message)
+        {
+            try { _logger?.LogWarning(message); } catch { }
+        }
+        
+        /// <summary>
+        /// 业务上通过包头18个里面的内容 解释出 还有多少len是一个完整的包。
+        /// </summary>
+        private void LogError(Exception ex, string message)
+        {
+            try { _logger?.LogError(ex, message); } catch { }
         }
 
         /// <summary>
@@ -66,7 +85,7 @@ namespace RUINORERP.Server.Network.Core
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "第一次尝试解析包头失败，尝试备用方法");
+                LogWarning("第一次尝试解析包头失败，尝试备用方法");
             }
 
             // 备用解析逻辑
@@ -79,7 +98,7 @@ namespace RUINORERP.Server.Network.Core
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "所有包头解析方法均失败");
+                LogError(ex, "所有包头解析方法均失败");
                 throw new InvalidDataException("无法解析数据包头部", ex);
             }
         }
@@ -124,14 +143,14 @@ namespace RUINORERP.Server.Network.Core
                 else
                 {
                     // 数据包无效，记录详细信息
-                    _logger?.LogWarning("接收到无效的数据包");
+                    LogWarning("接收到无效的数据包");
                     return null;
                 }
             }
             catch (Exception ex)
             {
                 // 记录详细的异常信息
-                _logger?.LogError(ex, "解码数据包时发生异常");
+                LogError(ex, "解码数据包时发生异常");
                 // 记录异常但不抛出，避免影响其他处理
                 return null;
             }

@@ -28,6 +28,7 @@ namespace RUINORERP.Server.SmartReminder
             return await _cache.GetOrCreateAsync(cacheKey, async entry =>
             {
                 entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+                entry.SetSize(1); // ✅ 添加SetSize，确保缓存项被计入SizeLimit
                 return await base.EvaluateAsync(rule, context);
             });
         }

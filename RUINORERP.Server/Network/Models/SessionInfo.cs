@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Core;
@@ -17,6 +16,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.Server.Network.Models
 {
@@ -26,7 +26,10 @@ namespace RUINORERP.Server.Network.Models
     /// </summary>
     public class SessionInfo : AppSession
     {
-        private static readonly ILogger _logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("SessionInfo");
+        // ⚠️ SuperSocket AppSession通过反射创建，无法使用依赖注入
+        // 这里使用静态LoggerFactory是唯一可行的方案
+        private static readonly ILogger _logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<SessionInfo>();
+        
         /// <summary>
         /// 客户端IP地址
         /// </summary>
@@ -97,7 +100,19 @@ namespace RUINORERP.Server.Network.Models
                 this.LastError = $"会话连接处理错误: {ex.Message}";
             }
         }
+        
+        /// <summary>
+        /// DataQueue最大容量限制，防止内存无限增长
+        /// </summary>
+        private const int MaxDataQueueSize = 100;
+        
         public ConcurrentQueue<byte[]> DataQueue = new ConcurrentQueue<byte[]>();
+        
+        /// <summary>
+        /// DataQueue被清理的次数（用于监控）
+        /// </summary>
+        public int DataQueueCleanupCount { get; private set; }
+        
         /// <summary>
         /// 添加加密后的数据
         /// 通常这个用于广播。一次加密码好多次使用
@@ -107,6 +122,21 @@ namespace RUINORERP.Server.Network.Models
         {
             try
             {
+                // 限制队列大小，防止内存无限增长
+                int cleanupCount = 0;
+                while (DataQueue.Count >= MaxDataQueueSize)
+                {
+                    DataQueue.TryDequeue(out _);
+                    cleanupCount++;
+                }
+                
+                // 仅在Debug模式下记录清理信息（生产环境不输出）
+                if (cleanupCount > 0)
+                {
+                    DataQueueCleanupCount += cleanupCount;
+                    System.Diagnostics.Debug.WriteLine($"[SessionInfo] Session {SessionID}: 清理了 {cleanupCount} 个积压数据包, 当前队列: {DataQueue.Count}");
+                }
+                
                 // 使用新的通讯组件，保持向后兼容
                 if (gde.Head != null && gde.Head.Length > 0)
                 {
@@ -127,7 +157,8 @@ namespace RUINORERP.Server.Network.Models
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "发送数据时出错：DataQueue AddSendData");
+                // 静默处理异常，避免因日志问题影响正常业务
+                System.Diagnostics.Debug.WriteLine($"发送数据时出错: {ex.Message}");
             }
         }
  
@@ -185,13 +216,13 @@ namespace RUINORERP.Server.Network.Models
                 Status = SessionStatus.Disconnected;
                 IsConnected = false;
                 // 添加主动断开连接警告日志
-                _logger?.LogWarning($"[主动断开连接] 网络错误导致会话断开: SessionID={SessionID}, Error={ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[主动断开连接] 网络错误导致会话断开: SessionID={SessionID}, Error={ex.Message}");
             }
             catch (Exception ex)
             {
                 // 其他错误
                 LastError = $"发送数据时发生异常: {ex.Message}";
-                _logger?.LogWarning(ex, $"Session {SessionID} 发送数据失败");
+                System.Diagnostics.Debug.WriteLine($"Session {SessionID} 发送数据失败: {ex.Message}");
             }
         }
         
@@ -234,7 +265,7 @@ namespace RUINORERP.Server.Network.Models
             catch (Exception ex)
             {
                 LastError = $"处理数据队列时发生异常: {ex.Message}";
-                _logger?.LogError(ex, $"Session {SessionID} 处理队列失败");
+                System.Diagnostics.Debug.WriteLine($"Session {SessionID} 处理队列失败: {ex.Message}");
             }
         }
         

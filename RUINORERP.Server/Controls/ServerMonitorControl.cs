@@ -8,6 +8,7 @@ using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Network.Services;
+using RUINORERP.Server.Services;
 using RUINORERP.Server.SmartReminder;
 using System;
 using System.Collections.Generic;
@@ -36,6 +37,8 @@ namespace RUINORERP.Server.Controls
         // ✅ 新增：性能监控相关服务
         private readonly PerformanceDataStorageService _performanceDataStorageService;
         private PerformanceMonitorControl _performanceMonitorControl;
+        // ✅ 内存分布统计服务
+        private readonly MemoryDistributionService _memoryDistributionService;
         // 不再使用独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
         private readonly System.Windows.Forms.Timer _refreshTimer;
 
@@ -65,6 +68,9 @@ namespace RUINORERP.Server.Controls
             
             // ✅ 新增：获取性能监控相关服务
             _performanceDataStorageService = Startup.GetFromFac<PerformanceDataStorageService>();
+            
+            // ✅ 内存分布统计服务
+            _memoryDistributionService = Startup.GetFromFac<MemoryDistributionService>();
             
             // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
@@ -107,6 +113,9 @@ namespace RUINORERP.Server.Controls
             // ✅ 新增：获取性能监控相关服务
             _performanceDataStorageService = Startup.GetFromFac<PerformanceDataStorageService>();
             
+            // ✅ 内存分布统计服务
+            _memoryDistributionService = Startup.GetFromFac<MemoryDistributionService>();
+            
             // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
             // 初始化定时器
@@ -116,7 +125,7 @@ namespace RUINORERP.Server.Controls
 
             // 初始化UI
             InitializeUI();
-            
+
             // ✅ 新增：初始化性能监控Tab页
             InitializePerformanceMonitorTab();
 
@@ -274,6 +283,9 @@ namespace RUINORERP.Server.Controls
 
                 // 更新心跳性能监控数据
                 UpdateHeartbeatPerformanceData();
+
+                // 更新内存分布统计
+                UpdateMemoryDistribution();
             }
             catch (Exception ex)
             {
@@ -1202,6 +1214,45 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 _logger.LogDebug($"更新心跳性能监控数据时出错: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 更新内存分布统计显示
+        /// </summary>
+        private void UpdateMemoryDistribution()
+        {
+            try
+            {
+                if (_memoryDistributionService == null)
+                    return;
+
+                var snapshot = _memoryDistributionService.GetCurrentSnapshot();
+                
+                // 更新内存分布显示
+                var lblMemoryDist = Controls.Find("lblMemoryDistribution", true).FirstOrDefault() as Label;
+                if (lblMemoryDist != null)
+                {
+                    var distributionText = $"总托管: {snapshot.TotalManagedMemoryMB} MB\n";
+                    distributionText += $"工作集: {snapshot.TotalWorkingSetMB} MB\n\n";
+                    
+                    if (snapshot.ModuleStatistics != null)
+                    {
+                        foreach (var mod in snapshot.ModuleStatistics)
+                        {
+                            distributionText += $"{mod.ModuleName}: ~{mod.EstimatedMemoryMB} MB";
+                            if (mod.ObjectCount > 0)
+                                distributionText += $" ({mod.ObjectCount}对象)";
+                            distributionText += "\n";
+                        }
+                    }
+                    
+                    lblMemoryDist.Text = distributionText;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"更新内存分布统计时出错: {ex.Message}");
             }
         }
 

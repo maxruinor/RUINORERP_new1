@@ -2685,15 +2685,7 @@ namespace RUINORERP.Server
         {
             try
             {
-                var sut = new ServiceCollection()
-                    .AddMemoryCache()
-                    .AddDistributedMemoryCache() // 为测试使用内存实现模拟，而不使用redis等
-                    .AddSingleton<ICacheAdapter, MemoryCacheAdapter>()  // 添加缓存适配器
-                    .AddSingleton<ICacheAdapter>(i => new DistributedCacheAdapter(i.GetRequiredService<IDistributedCache>(), "distribute"))
-                    .BuildServiceProvider();
-
-                IDistributedCache cache = sut.GetService<IDistributedCache>() as IDistributedCache;
-
+                // 读取配置文件
                 ConfigurationBuilder builder = new ConfigurationBuilder();
                 builder.AddJsonFile("configuration.json");
                 var configuration = builder.Build();

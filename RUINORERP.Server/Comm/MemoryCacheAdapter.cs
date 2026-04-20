@@ -49,7 +49,10 @@ namespace RUINORERP.Server.Comm
         {
             try
             {
-                _cache.Set(key, value, expiry);
+                var options = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(expiry)
+                    .SetSize(1); // ✅ 添加SetSize，确保缓存项被计入SizeLimit
+                _cache.Set(key, value, options);
             }
             catch (Exception ex)
             {
@@ -100,7 +103,10 @@ namespace RUINORERP.Server.Comm
         {
             foreach (var kvp in values)
             {
-                _cache.Set(kvp.Key, kvp.Value, expiry);
+                var options = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(expiry)
+                    .SetSize(1); // ✅ 添加SetSize，确保缓存项被计入SizeLimit
+                _cache.Set(kvp.Key, kvp.Value, options);
             }
             return Task.CompletedTask;
         }
@@ -117,7 +123,10 @@ namespace RUINORERP.Server.Comm
             var value = await loader();
 
             var actualExpiry = value == null ? NullValueExpiry : expiry;
-            _cache.Set(key, value, actualExpiry);
+            var options = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(actualExpiry)
+                .SetSize(1); // ✅ 添加SetSize，确保缓存项被计入SizeLimit
+            _cache.Set(key, value, options);
 
             return value;
         }
@@ -132,7 +141,10 @@ namespace RUINORERP.Server.Comm
         {
             var jitter = TimeSpan.FromTicks((long)(baseExpiry.Ticks * JitterRatio * (2 * _random.NextDouble() - 1)));
             var actualExpiry = baseExpiry + jitter;
-            _cache.Set(key, value, actualExpiry);
+            var options = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(actualExpiry)
+                .SetSize(1); // ✅ 添加SetSize，确保缓存项被计入SizeLimit
+            _cache.Set(key, value, options);
             await Task.CompletedTask;
         }
 

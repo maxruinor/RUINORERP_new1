@@ -70,9 +70,9 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 全局提交修改规则模式
         /// 控制单据提交后是否允许修改的行为
-        /// 默认值：严格模式（提交后不允许修改，只能审核或撤销提交）
+        /// 默认值：灵活模式（提交后允许修改）
         /// </summary>
-        public SubmitModifyRuleMode submitModifyRuleMode { get; set; } = SubmitModifyRuleMode.严格模式;
+        public SubmitModifyRuleMode submitModifyRuleMode { get; set; } = SubmitModifyRuleMode.灵活模式;
 
         /// <summary>
         /// 设置提交修改模式

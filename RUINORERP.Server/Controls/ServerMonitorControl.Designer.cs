@@ -339,6 +339,7 @@ namespace RUINORERP.Server.Controls
             groupBox3.Controls.Add(lblTotalHandlers);
             groupBox3.Controls.Add(lblMemoryUsageValue);
             groupBox3.Controls.Add(lblMemoryUsage);
+            groupBox3.Controls.Add(lblMemoryDistribution);
             groupBox3.Controls.Add(lblUptimeValue);
             groupBox3.Controls.Add(lblUptime);
             groupBox3.Controls.Add(lblSystemTimeValue);
@@ -347,7 +348,7 @@ namespace RUINORERP.Server.Controls
             groupBox3.Margin = new System.Windows.Forms.Padding(4);
             groupBox3.Name = "groupBox3";
             groupBox3.Padding = new System.Windows.Forms.Padding(4);
-            groupBox3.Size = new System.Drawing.Size(604, 268);
+            groupBox3.Size = new System.Drawing.Size(604, 450);
             groupBox3.TabIndex = 2;
             groupBox3.TabStop = false;
             groupBox3.Text = "服务器运行信息";
@@ -471,6 +472,19 @@ namespace RUINORERP.Server.Controls
             lblMemoryUsage.Size = new System.Drawing.Size(68, 17);
             lblMemoryUsage.TabIndex = 4;
             lblMemoryUsage.Text = "内存使用：";
+            // 
+            // lblMemoryDistribution
+            // 
+            lblMemoryDistribution = new System.Windows.Forms.Label();
+            lblMemoryDistribution.AutoSize = false;
+            lblMemoryDistribution.Location = new System.Drawing.Point(23, 270);
+            lblMemoryDistribution.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblMemoryDistribution.Name = "lblMemoryDistribution";
+            lblMemoryDistribution.Size = new System.Drawing.Size(550, 150);
+            lblMemoryDistribution.TabIndex = 16;
+            lblMemoryDistribution.Text = "内存分布统计";
+            lblMemoryDistribution.BackColor = System.Drawing.Color.WhiteSmoke;
+            lblMemoryDistribution.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             // 
             // lblUptimeValue
             // 
@@ -1517,6 +1531,7 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.Label lblUptime;
         private System.Windows.Forms.Label lblMemoryUsageValue;
         private System.Windows.Forms.Label lblMemoryUsage;
+        private System.Windows.Forms.Label lblMemoryDistribution;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Label lblDispatcherInitializedValue;
         private System.Windows.Forms.Label lblDispatcherInitialized;

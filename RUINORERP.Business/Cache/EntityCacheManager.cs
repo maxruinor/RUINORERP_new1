@@ -93,12 +93,13 @@ namespace RUINORERP.Business.Cache
         private readonly object _statisticsLock = new object();
 
         /// <summary>
-        /// 最大缓存大小（已调整为 400MB 以降低内存占用）
+        /// 最大缓存大小（已调整为 100MB 以降低内存占用）
+        /// 50用户场景下，100MB足够缓存常用小表
         /// </summary>
-        private readonly long _maxCacheSize = 400 * 1024 * 1024;
+        private readonly long _maxCacheSize = 100 * 1024 * 1024;
 
         /// <summary>
-        /// 缓存大小检查阈值（达到最大大小的 70% 时触发清理，降低内存压力）
+        /// 缓存大小检查阈值（达到最大大小的 60% 时触发清理，降低内存压力）
         /// </summary>
         private readonly long _cacheSizeThreshold;
         #endregion
@@ -341,7 +342,7 @@ namespace RUINORERP.Business.Cache
             {
                 // 这里可以从配置文件、数据库或其他配置源获取过期时间
                 // 目前返回默认值，后续可以扩展为从配置中心获取
-                return TimeSpan.FromHours(2); // 默认2小时过期
+                return TimeSpan.FromMinutes(60); // 默认60分钟过期，加快缓存周转
             }
             catch (Exception ex)
             {
@@ -418,8 +419,8 @@ namespace RUINORERP.Business.Cache
             _tableSchemaManager = tableSchemaManager ?? throw new ArgumentNullException(nameof(tableSchemaManager));
             _cacheDataProvider = cacheDataProvider;
             _cacheSyncMetadata = cacheSyncMetadata; // 可选依赖
-            // 设置缓存大小阈值（最大大小的 70%，降低内存压力）
-            _cacheSizeThreshold = (long)(_maxCacheSize * 0.7);
+            // 设置缓存大小阈值（最大大小的 60%，降低内存压力）
+            _cacheSizeThreshold = (long)(_maxCacheSize * 0.6);
 
             // 初始化统一缓存管理器 - 优化：使用单一缓存管理器，统一存储结构
             _cacheManager = CacheFactory.Build<object>(settings =>

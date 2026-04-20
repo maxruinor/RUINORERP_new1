@@ -123,7 +123,7 @@ namespace RUINORERP.PacketSpec.Serialization
         };
 
         /// <summary>
-        /// 序列化并压缩（主要方法）
+        /// 序列化并压缩（主要方法）11
         /// </summary>
         public static byte[] Serialize<T>(T obj, bool compress = true)
         {

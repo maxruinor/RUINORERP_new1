@@ -242,10 +242,12 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         /// <param name="sessionService">会话管理服务（系统已有）</param>
         /// <param name="logger">日志记录器</param>
+        /// <param name="orphanedLockDetectorLogger">孤儿锁检测器日志记录器</param>
         /// <param name="broadcastService">广播服务</param>
         public ServerLockManager(
             ISessionService sessionService,
             ILogger<ServerLockManager> logger,
+            ILogger<OrphanedLockDetector> orphanedLockDetectorLogger,
             IGeneralBroadcastService broadcastService)
         {
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
@@ -257,12 +259,8 @@ namespace RUINORERP.Server.Network.Services
             // ✅ 初始化监控数据收集器
             _metricsCollector = new DocumentLockMetricsCollector();
 
-            // 初始化孤儿锁检测器
-            // 注意：这里通过LoggerFactory创建特定于OrphanedLockDetector的日志记录器
-            // 由于OrphanedLockDetector是ServerLockManager的内部依赖，直接实例化是合理的
-            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-            var orphanedLogger = loggerFactory.CreateLogger<OrphanedLockDetector>();
-            _orphanedLockDetector = new OrphanedLockDetector(this, orphanedLogger);
+            // 初始化孤儿锁检测器 - 使用依赖注入的ILogger，避免创建新的LoggerFactory
+            _orphanedLockDetector = new OrphanedLockDetector(this, orphanedLockDetectorLogger);
 
             // 初始化定时器
             _cleanupTimer = new Timer(CleanupCallback, null, Timeout.Infinite, Timeout.Infinite);

@@ -618,14 +618,14 @@ namespace RUINORERP.Server
             services.AddOptions();
             services.AddMemoryCache(options =>
             {
-                // 设置内存缓存大小限制为500MB
-                options.SizeLimit = 500 * 1024 * 1024;
+                // 设置内存缓存大小限制为200MB（50用户场景优化）
+                options.SizeLimit = 200 * 1024 * 1024;
 
-                // 当内存压力达到75%时，开始压缩缓存
-                options.CompactionPercentage = 0.25;
+                // 当内存压力达到60%时，开始压缩缓存
+                options.CompactionPercentage = 0.4;
 
-                // 每1分钟扫描一次过期缓存
-                options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
+                // 每30秒扫描一次过期缓存，加快缓存周转
+                options.ExpirationScanFrequency = TimeSpan.FromSeconds(30);
             });
 
             // 注释掉重复的缓存注册，避免多个独立的内存池
@@ -667,6 +667,9 @@ namespace RUINORERP.Server
 
             // 注册内存监控服务
             services.AddSingleton<MemoryMonitoringService>();
+
+            // 注册内存分布统计服务
+            services.AddSingleton<MemoryDistributionService>();
 
         }
         

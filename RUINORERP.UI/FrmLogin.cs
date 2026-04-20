@@ -308,22 +308,14 @@ namespace RUINORERP.UI
 
             try
             {
-                // 在UI线程中读取服务器配置
+                // ✅ 在UI线程中读取服务器配置
                 await Task.Run(() =>
                 {
-                    if (this.InvokeRequired)
-                    {
-                        this.Invoke(new Action(() =>
-                        {
-                            serverIP = txtServerIP.Text.Trim();
-                            int.TryParse(txtPort.Text.Trim(), out serverPort);
-                        }));
-                    }
-                    else
+                    InvokeIfRequired(() =>
                     {
                         serverIP = txtServerIP.Text.Trim();
                         int.TryParse(txtPort.Text.Trim(), out serverPort);
-                    }
+                    });
                 });
 
                 MainForm.Instance?.PrintInfoLog("开始初始化连接和欢迎流程...");
@@ -1163,8 +1155,13 @@ namespace RUINORERP.UI
                 await SaveUserConfig(isInitPwd);
 
                 Program.AppContextData.IsOnline = true;
-                this.DialogResult = DialogResult.OK;
-                this.Close();
+                
+                // ✅ 使用UI线程安全辅助方法完成登录
+                InvokeIfRequired(() =>
+                {
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                });
             }
             catch (Exception ex)
             {
@@ -1401,23 +1398,14 @@ namespace RUINORERP.UI
         {
             return Task.Run(() =>
             {
-                if (this.InvokeRequired)
-                {
-                    return (DuplicateLoginAction)this.Invoke(new Func<DuplicateLoginAction>(() =>
-                    {
-                        // 由于DuplicateLoginDialog现在处理了完整的强制下线逻辑，这里只需要返回用户选择
-                        using var dialog = new Forms.DuplicateLoginDialog(_userLoginService, duplicateResult, txtUserName.Text, txtPassWord.Text, txtServerIP.Text, int.Parse(txtPort.Text));
-                        var result = dialog.ShowDialog(this);
-                        return result == DialogResult.OK ? DuplicateLoginAction.ForceOfflineOthers : DuplicateLoginAction.Cancel;
-                    }));
-                }
-                else
+                // ✅ 使用UI线程安全辅助方法显示对话框
+                return InvokeIfRequired(() =>
                 {
                     // 由于DuplicateLoginDialog现在处理了完整的强制下线逻辑，这里只需要返回用户选择
                     using var dialog = new Forms.DuplicateLoginDialog(_userLoginService, duplicateResult, txtUserName.Text, txtPassWord.Text, txtServerIP.Text, int.Parse(txtPort.Text));
                     var result = dialog.ShowDialog(this);
                     return result == DialogResult.OK ? DuplicateLoginAction.ForceOfflineOthers : DuplicateLoginAction.Cancel;
-                }
+                });
             });
         }
 

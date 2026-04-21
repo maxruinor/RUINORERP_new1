@@ -56,9 +56,29 @@ namespace RUINORERP.Business.Document.Converters
         }
 
         /// <summary>
-        /// 转换唯一标识符
+        /// 子类重写此方法以实现具体的业务规则验证
         /// </summary>
-        public override string ConversionIdentifier => "Normal";
+        protected override Task<ValidationResult> OnValidateBusinessRulesAsync(tb_SaleOrder source)
+        {
+            var result = new ValidationResult { CanConvert = true };
+
+            // 规则1：必须是已审核状态
+            if (source.ApprovalStatus != (int)ApprovalStatus.审核通过)
+            {
+                result.CanConvert = false;
+                result.ErrorMessage = "只有【已审核】的销售订单才能生成出库单";
+                return Task.FromResult(result);
+            }
+
+            // 规则2：不能是已结案或作废状态
+            if (source.DataStatus == (int)DataStatus.完结 || source.DataStatus == (int)DataStatus.作废)
+            {
+                result.CanConvert = false;
+                result.ErrorMessage = "该订单已结案或作废，无法生成出库单";
+            }
+
+            return Task.FromResult(result);
+        }
 
         /// <summary>
         /// 执行单据转换 - 直接调用业务层核心逻辑 SaleOrderToSaleOut

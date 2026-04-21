@@ -100,15 +100,28 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
-                // 检查应收应付款单状态
-                if (source.ARAPStatus != (int)ARAPStatus.待支付 &&
-                    source.ARAPStatus != (int)ARAPStatus.部分支付 ||
-                    source.ApprovalStatus != (int)ApprovalStatus.审核通过 ||
-                    !source.ApprovalResults.HasValue ||
-                    !source.ApprovalResults.Value)
+                // 检查审核状态 - 必须已审核通过
+                if (source.ApprovalStatus != (int)ApprovalStatus.审核通过)
                 {
                     result.CanConvert = false;
-                    result.ErrorMessage = $"应收应付款单{source.ARAPNo}状态不符合转换条件，只能转换已审核且状态为[待支付]或[部分支付]的应收应付款单";
+                    result.ErrorMessage = $"应收应付款单{source.ARAPNo}未审核通过，只能转换已审核的单据";
+                    return result;
+                }
+
+                // 检查支付状态 - 必须是待支付或部分支付
+                if (source.ARAPStatus != (int)ARAPStatus.待支付 &&
+                    source.ARAPStatus != (int)ARAPStatus.部分支付)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = $"应收应付款单{source.ARAPNo}支付状态为【{(ARAPStatus)source.ARAPStatus}】，只能转换【待支付】或【部分支付】状态的单据";
+                    return result;
+                }
+
+                // 检查是否已结案（结案后不允许再收付款）
+                if (source.ARAPStatus == (int)ARAPStatus.全部支付 && source.ARAPStatus == (int)ARAPStatus.已冲销)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = $"应收应付款单{source.ARAPNo}已结案，不允许再进行收付款操作";
                     return result;
                 }
 

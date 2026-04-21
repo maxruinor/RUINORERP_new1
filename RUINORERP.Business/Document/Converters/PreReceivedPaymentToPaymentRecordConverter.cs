@@ -37,14 +37,8 @@ namespace RUINORERP.Business.Document.Converters
         /// <summary>
         /// 转换唯一标识符
         /// </summary>
-            public override string ConversionIdentifier => "Normal";
+        public override string ConversionIdentifier => "Normal";
 
-        /// <summary>
-        /// 转换器显示名称
-        /// 注意:由于预收付款单的 ReceivePaymentType 在运行时才能确定,
-        /// 这里返回通用文本,实际菜单显示由 DocumentConverterFactory 根据具体单据动态调整
-        /// </summary>
-        public override string DisplayName => "转为收付款单";
 
         /// <summary>
         /// 执行单据转换 - 直接调用业务层核心逻辑 BuildPaymentRecord
@@ -72,12 +66,12 @@ namespace RUINORERP.Business.Document.Converters
         protected override Task<ValidationResult> OnValidateBusinessRulesAsync(tb_FM_PreReceivedPayment source)
         {
             var result = new ValidationResult { CanConvert = true };
-
+            var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
             // 规则：数据状态必须为“已生效”才能转收款单
             if (source.PrePaymentStatus != (int)PrePaymentStatus.已生效)
             {
                 result.CanConvert = false;
-                result.ErrorMessage = "只有【已生效】状态的预收款单才能转为收付款单";
+                result.ErrorMessage = $"只有【已生效】状态的预收款单才能转为{paymentType}单";
             }
 
             return Task.FromResult(result);

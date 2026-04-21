@@ -194,6 +194,14 @@ namespace RUINORERP.Business.Document.Converters
                 }
 
                 // 检查订单状态 - 必须是已确认且已审核通过的订单
+                if (source.ApprovalStatus != (int)ApprovalStatus.审核通过)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = $"当前订单{source.SOrderNo}未审核通过,无法进行预收款";
+                    return result;
+                }
+
+                // 检查数据状态 - 必须为确认状态
                 if (source.DataStatus != (int)DataStatus.确认)
                 {
                     result.CanConvert = false;
@@ -201,12 +209,11 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
-                if (source.ApprovalStatus != (int)ApprovalStatus.审核通过 ||
-                    !source.ApprovalResults.HasValue ||
-                    !source.ApprovalResults.Value)
+                // 检查是否已结案（结案后不允许再预收款）
+                if (source.DataStatus == (int)DataStatus.完结)
                 {
                     result.CanConvert = false;
-                    result.ErrorMessage = $"当前订单{source.SOrderNo}未审核通过,无法进行预收款";
+                    result.ErrorMessage = $"订单{source.SOrderNo}已完结，不允许再进行预收款操作";
                     return result;
                 }
 

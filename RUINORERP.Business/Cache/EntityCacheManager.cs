@@ -2084,14 +2084,44 @@ namespace RUINORERP.Business.Cache
                 // 值类型的大小估算
                 if (obj is ValueType)
                 {
-                    try
+                    // 仅对可编组类型使用 Marshal.SizeOf
+                    var type = obj.GetType();
+                    bool isStruct = type.IsValueType && !type.IsPrimitive && !type.IsEnum;
+                    
+                    if (type.IsPrimitive || type.IsEnum || isStruct)
                     {
-                        return Marshal.SizeOf(obj.GetType());
+                        try
+                        {
+                            // 检查类型是否可编组
+                            if (type.IsGenericType)
+                            {
+                                // 泛型结构体可能无法编组，使用保守估计
+                                return IntPtr.Size * 2; // 保守估计为 2 个指针大小
+                            }
+                            
+                            // 检查是否包含引用类型字段
+                            var hasReferenceFields = type.GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public)
+                                                        .Any(f => !f.FieldType.IsValueType);
+                            
+                            if (hasReferenceFields)
+                            {
+                                // 包含引用类型的结构体，使用保守估计
+                                return IntPtr.Size * 2;
+                            }
+                            
+                            // 安全可编组的值类型
+                            return Marshal.SizeOf(type);
+                        }
+                        catch
+                        {
+                            // 编组失败，使用保守估计
+                            return IntPtr.Size;
+                        }
                     }
-                    catch
+                    else
                     {
-                        // 如果无法编组，使用默认值
-                        return IntPtr.Size; // 指针大小，通常 4 或 8 字节
+                        // 不可编组的类型，使用保守估计
+                        return IntPtr.Size;
                     }
                 }
 
@@ -2115,13 +2145,32 @@ namespace RUINORERP.Business.Cache
                             else if (value is ValueType valueType)
                             {
                                 // 安全地获取值类型大小
-                                try
+                                var valueTypeObj = valueType.GetType();
+                                bool isValueTypeStruct = valueTypeObj.IsValueType && !valueTypeObj.IsPrimitive && !valueTypeObj.IsEnum;
+                                
+                                if (valueTypeObj.IsPrimitive || valueTypeObj.IsEnum || isValueTypeStruct)
                                 {
-                                    estimatedSize += Marshal.SizeOf(valueType.GetType());
+                                    try
+                                    {
+                                        // 检查泛型结构体
+                                        if (valueTypeObj.IsGenericType)
+                                        {
+                                            estimatedSize += IntPtr.Size * 2;
+                                        }
+                                        else
+                                        {
+                                            estimatedSize += Marshal.SizeOf(valueTypeObj);
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        // 无法编组的值类型，使用默认估计
+                                        estimatedSize += IntPtr.Size;
+                                    }
                                 }
-                                catch
+                                else
                                 {
-                                    // 无法编组的值类型，使用默认估计
+                                    // 其他值类型，使用保守估计
                                     estimatedSize += IntPtr.Size;
                                 }
                             }

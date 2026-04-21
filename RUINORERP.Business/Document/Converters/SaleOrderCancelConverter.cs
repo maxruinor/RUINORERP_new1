@@ -55,6 +55,24 @@ namespace RUINORERP.Business.Document.Converters
         public override DocumentConversionType ConversionType => DocumentConversionType.ActionOperation;
 
         /// <summary>
+        /// 子类重写此方法以实现具体的业务规则验证
+        /// </summary>
+        protected override Task<ValidationResult> OnValidateBusinessRulesAsync(tb_SaleOrder source)
+        {
+            var result = new ValidationResult { CanConvert = true };
+
+            // 规则：只有“已审核”且未结案的订单才能取消作废
+            if (source.ApprovalStatus != (int)ApprovalStatus.审核通过 || 
+                source.DataStatus == (int)DataStatus.完结)
+            {
+                result.CanConvert = false;
+                result.ErrorMessage = "只有【已审核】且未完结的订单才能执行取消作废";
+            }
+
+            return Task.FromResult(result);
+        }
+
+        /// <summary>
         /// 执行动作操作 - 取消订单
         /// 业务逻辑:
         /// 1. 验证订单状态和关联单据

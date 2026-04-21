@@ -89,16 +89,28 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
-                // 检查对账单状态
-                if (source.StatementStatus != (int)StatementStatus.确认 &&
-                    source.StatementStatus != (int)StatementStatus.部分结算 ||
-                    source.ApprovalStatus != (int)ApprovalStatus.审核通过 ||
-                    !source.ApprovalResults.HasValue ||
-                    !source.ApprovalResults.Value)
+                // 检查审核状态 - 必须已审核通过
+                if (source.ApprovalStatus != (int)ApprovalStatus.审核通过)
                 {
-                    var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
                     result.CanConvert = false;
-                    result.ErrorMessage = $"对账单{source.StatementNo}状态不符合转换条件，只能转换已审核且状态为[已确认]或[部分结算]的对账单";
+                    result.ErrorMessage = $"对账单{source.StatementNo}未审核通过，只能转换已审核的单据";
+                    return result;
+                }
+
+                // 检查对账状态 - 必须是确认或部分结算
+                if (source.StatementStatus != (int)StatementStatus.确认 &&
+                    source.StatementStatus != (int)StatementStatus.部分结算)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = $"对账单{source.StatementNo}状态为【{(StatementStatus)source.StatementStatus}】，只能转换【已确认】或【部分结算】状态的单据";
+                    return result;
+                }
+
+                // 检查是否已结案（结案后不允许再收付款）
+                if (source.StatementStatus.HasValue && source.StatementStatus.Value == (int)StatementStatus.全部结清)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = $"对账单{source.StatementNo}已结案，不允许再进行收付款操作";
                     return result;
                 }
 

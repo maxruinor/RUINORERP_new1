@@ -94,14 +94,19 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
-                // 检查报销单状态
-                if (source.DataStatus != (int)DataStatus.确认 ||
-                    source.ApprovalStatus != (int)ApprovalStatus.审核通过 ||
-                    !source.ApprovalResults.HasValue ||
-                    !source.ApprovalResults.Value)
+                // 检查报销单状态 - 必须已审核通过
+                if (source.ApprovalStatus != (int)ApprovalStatus.审核通过)
                 {
                     result.CanConvert = false;
-                    result.ErrorMessage = $"报销单{source.ClaimNo}状态不符合转换条件，只能转换已审核且状态为[已确认]的报销单";
+                    result.ErrorMessage = $"报销单{source.ClaimNo}未审核通过，只能转换已审核的报销单";
+                    return result;
+                }
+
+                // 检查数据状态 - 必须为确认状态
+                if (source.DataStatus != (int)DataStatus.确认)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = $"报销单{source.ClaimNo}数据状态异常，无法转换";
                     return result;
                 }
 

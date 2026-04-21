@@ -34,6 +34,13 @@ namespace RUINORERP.Business.Document
         private readonly ILogger<ActionManager> _logger;
         private readonly Model.Base.StatusManager.IUnifiedStateManager _stateManager;
         private readonly Model.Context.ApplicationContext _applicationContext;
+        
+        /// <summary>
+        /// 类型查找缓存（类型名称 -> 类型）
+        /// 避免重复遍历程序集查找类型
+        /// </summary>
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Type> _typeCache = 
+            new System.Collections.Concurrent.ConcurrentDictionary<string, Type>();
 
         /// <summary>
         /// 构造函数
@@ -54,13 +61,54 @@ namespace RUINORERP.Business.Document
         /// <summary>
         /// 执行单据联动操作（非泛型版本，供子类重写）
         /// </summary>
-        /// <param name="actionId">操作ID</param>
+        /// <param name="actionId">操作 ID</param>
         /// <param name="sourceDoc">源单据对象</param>
         /// <returns>操作结果</returns>
         public virtual async Task ExecuteActionAsync(string actionId, object sourceDoc)
         {
             // 默认实现，子类可以重写此方法
             throw new NotImplementedException("基类未实现此方法，请使用泛型版本或在子类中重写");
+        }
+
+        /// <summary>
+        /// 根据类型名称查找类型（带缓存）
+        /// 优先从缓存中获取，缓存未命中时才遍历程序集
+        /// </summary>
+        /// <param name="typeName">类型名称</param>
+        /// <returns>找到的类型，未找到返回 null</returns>
+        private Type FindTypeByName(string typeName)
+        {
+            if (string.IsNullOrEmpty(typeName))
+            {
+                return null;
+            }
+
+            // 尝试从缓存获取
+            if (_typeCache.TryGetValue(typeName, out Type cachedType))
+            {
+                return cachedType;
+            }
+
+            // 缓存未命中，遍历程序集查找
+            try
+            {
+                var targetTypeInfo = AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(s => s.GetTypes())
+                    .FirstOrDefault(p => p.Name == typeName);
+
+                if (targetTypeInfo != null)
+                {
+                    // 添加到缓存
+                    _typeCache.TryAdd(typeName, targetTypeInfo);
+                    return targetTypeInfo;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"查找类型 {typeName} 时发生异常");
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -217,10 +265,8 @@ namespace RUINORERP.Business.Document
                             // 【关键逻辑】：通过转换器验证当前状态是否允许转换
                             try
                             {
-                                // 修复：使用全限定名查找目标类型，防止 Type.GetType 返回 null
-                                var targetTypeInfo = AppDomain.CurrentDomain.GetAssemblies()
-                                    .SelectMany(s => s.GetTypes())
-                                    .FirstOrDefault(p => p.Name == action.TargetType);
+                                // 修复：使用缓存查找目标类型，提高性能
+                                var targetTypeInfo = FindTypeByName(action.TargetType);
                                 
                                 if (targetTypeInfo == null)
                                 {

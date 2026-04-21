@@ -605,7 +605,11 @@ namespace HLH.Lib.DB
                 if (domain.ShadowCopyFiles)
                     result = (System.Web.HttpContext.Current.GetType() != null);
             }
-            catch (System.Exception) { }
+            catch (System.Exception)
+            {
+                // 【稳定性优化】非Web环境或HttpContext不可用时忽略，这是预期情况
+                System.Diagnostics.Debug.WriteLine("SQLiteHelper: 非Web环境，跳过HttpContext检查");
+            }
             return result;
         }
 

@@ -784,24 +784,12 @@ namespace RUINORERP.UI.Common
                     // 更新现有列设置
                     dataGridView.ColumnDisplays[index] = oldCol;
                 }
-
-                //// 检查existingConditions中是否已经存在相同的条件
-                //if (!dataGridView.ColumnDisplays.Any(ec => ec.ColName == oldCol.ColName))
-                //{
-                //    // 如果不存在 
-                //    dataGridView.ColumnDisplays.Add(oldCol);
-                //}
-                //else
-                //{
-                //    //更新一下标题
-                //    var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName);
-                //    colset = oldCol;
-                //}
+ 
             }
 
             if (SaveGridSetting)
             {
-                SaveGridSettingData(CurMenuInfo, dataGridView, GridSourceType);
+               await SaveGridSettingData(CurMenuInfo, dataGridView, GridSourceType);
                 return;
             }
 
@@ -816,7 +804,7 @@ namespace RUINORERP.UI.Common
                 set.ColumnDisplays = dataGridView.ColumnDisplays;
                 if (set.ShowDialog() == DialogResult.OK)
                 {
-                    SaveGridSettingData(CurMenuInfo, dataGridView, GridSourceType);
+                   await SaveGridSettingData(CurMenuInfo, dataGridView, GridSourceType);
                 }
 
             }

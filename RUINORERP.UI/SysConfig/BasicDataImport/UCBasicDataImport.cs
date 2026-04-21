@@ -45,6 +45,59 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private DataTable _rawExcelData;           // 原始Excel数据（预览用）
         private DataTable _parsedImportData;         // 根据映射配置解析后的数据
         private Type _selectedEntityType;
+
+        #region 图片缓存管理
+        // 【内存优化】图片缓存，防止重复加载同一图片
+        private readonly Dictionary<string, Image> _imageCache = new Dictionary<string, Image>();
+        private readonly object _imageCacheLock = new object();
+        private const int MaxImageCacheSize = 100; // 最多缓存100张图片
+
+        /// <summary>
+        /// 注册图片到缓存（线程安全）
+        /// </summary>
+        private void RegisterImageCache(Image image, string key)
+        {
+            if (image == null || string.IsNullOrEmpty(key)) return;
+
+            lock (_imageCacheLock)
+            {
+                // 如果缓存已满，清理最旧的图片
+                if (_imageCache.Count >= MaxImageCacheSize)
+                {
+                    var keysToRemove = _imageCache.Keys.Take(10).ToList();
+                    foreach (var k in keysToRemove)
+                    {
+                        if (_imageCache.TryGetValue(k, out var oldImg))
+                        {
+                            oldImg?.Dispose();
+                        }
+                        _imageCache.Remove(k);
+                    }
+                }
+
+                // 避免重复添加相同键
+                if (!_imageCache.ContainsKey(key))
+                {
+                    _imageCache[key] = image;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 清理所有缓存的图片资源
+        /// </summary>
+        private void ClearImageCache()
+        {
+            lock (_imageCacheLock)
+            {
+                foreach (var img in _imageCache.Values)
+                {
+                    img?.Dispose();
+                }
+                _imageCache.Clear();
+            }
+        }
+        #endregion
         
         // 宽表导入相关字段
         private RUINORERP.Business.ImportEngine.SmartImportEngine _wideTableEngine;
@@ -1993,12 +2046,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
                                 if (File.Exists(imagePath))
                                 {
-                                    Image img = Image.FromFile(imagePath);
-                                    // 缩放图片以适应单元格
-                                    int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
-                                    Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
-                                    e.Value = scaledImg;
-                                    img.Dispose();
+                                    // 【内存优化】使用 using 确保原始图片及时释放
+                                    using (Image img = Image.FromFile(imagePath))
+                                    {
+                                        // 缩放图片以适应单元格
+                                        int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
+                                        // 【内存优化】创建缩略图副本，DataGridView需要独立实例
+                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
+                                        e.Value = scaledImg;
+                                        // 注意：scaledImg 由 DataGridView 管理，在 CellFormatting 中无法主动释放
+                                        // 通过缓存键追踪，后续可通过 ClearImageCache() 清理
+                                        RegisterImageCache(scaledImg, cellValue);
+                                    }
                                 }
                             }
                             catch
@@ -2017,11 +2076,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     // 尝试作为Base64解码
                                     byte[] imageBytes = Convert.FromBase64String(cellValue);
                                     using (MemoryStream ms = new MemoryStream(imageBytes))
+                                    using (Image img = Image.FromStream(ms))
                                     {
-                                        Image img = Image.FromStream(ms);
                                         int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
                                         Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
                                         e.Value = scaledImg;
+                                        RegisterImageCache(scaledImg, $"binary_{e.RowIndex}_{e.ColumnIndex}");
                                     }
                                 }
                                 else
@@ -2030,11 +2090,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
                                     if (File.Exists(imagePath))
                                     {
-                                        Image img = Image.FromFile(imagePath);
-                                        int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
-                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
-                                        e.Value = scaledImg;
-                                        img.Dispose();
+                                        using (Image img = Image.FromFile(imagePath))
+                                        {
+                                            int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
+                                            Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
+                                            e.Value = scaledImg;
+                                            RegisterImageCache(scaledImg, cellValue);
+                                        }
                                     }
                                 }
                             }
@@ -2094,12 +2156,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
                                 if (File.Exists(imagePath))
                                 {
-                                    Image img = Image.FromFile(imagePath);
-                                    // 缩放图片以适应单元格
-                                    int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
-                                    Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
-                                    e.Value = scaledImg;
-                                    img.Dispose();
+                                    // 【内存优化】使用 using 确保原始图片及时释放
+                                    using (Image img = Image.FromFile(imagePath))
+                                    {
+                                        // 缩放图片以适应单元格
+                                        int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
+                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
+                                        e.Value = scaledImg;
+                                        RegisterImageCache(scaledImg, cellValue);
+                                    }
                                 }
                             }
                             catch
@@ -2118,11 +2183,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     // 尝试作为Base64解码
                                     byte[] imageBytes = Convert.FromBase64String(cellValue);
                                     using (MemoryStream ms = new MemoryStream(imageBytes))
+                                    using (Image img = Image.FromStream(ms))
                                     {
-                                        Image img = Image.FromStream(ms);
                                         int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
                                         Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
                                         e.Value = scaledImg;
+                                        RegisterImageCache(scaledImg, $"binary_{e.RowIndex}_{e.ColumnIndex}");
                                     }
                                 }
                                 else
@@ -2131,11 +2197,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
                                     if (File.Exists(imagePath))
                                     {
-                                        Image img = Image.FromFile(imagePath);
-                                        int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
-                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
-                                        e.Value = scaledImg;
-                                        img.Dispose();
+                                        using (Image img = Image.FromFile(imagePath))
+                                        {
+                                            int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
+                                            Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
+                                            e.Value = scaledImg;
+                                            RegisterImageCache(scaledImg, cellValue);
+                                        }
                                     }
                                 }
                             }

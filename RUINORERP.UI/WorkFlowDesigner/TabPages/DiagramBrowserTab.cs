@@ -278,7 +278,8 @@ namespace RUINORERP.UI.WorkFlowDesigner
 						mediator.Output("Found '" + card.FileName.Text + "' in directory.",Netron.GraphLib.OutputInfoLevels.Info);
 #if !DEBUG
 						mediator.parent.RaiseLoading("...found diagram '" + card.FileName.Text +"'");
-						System.Threading.Thread.Sleep(300);
+						// 【性能优化】使用 Application.DoEvents() 让UI有响应机会，替代 Thread.Sleep
+						Application.DoEvents();
 #endif
 					
 					}
@@ -373,10 +374,13 @@ namespace RUINORERP.UI.WorkFlowDesigner
 				try
 				{
 					File.Delete(path);
-					System.Threading.Thread.Sleep(1300);	
+					// 【性能优化】短暂延迟确保文件系统操作完成
+					// 【原值1300ms】改为使用 Application.DoEvents() 配合短延迟
+					Application.DoEvents();
+					System.Threading.Thread.Sleep(100); // 短暂等待文件系统释放
 					this.baseList.Controls.Remove(currentCard);
 				}
-				catch{}//could happen if the deletion doesn't occur fast enough and the directory is reloaded
+				catch { }//could happen if the deletion doesn't occur fast enough and the directory is reloaded
 				
 				//LoadDirectory(currentDirectory);
 			}

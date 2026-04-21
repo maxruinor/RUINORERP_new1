@@ -36,7 +36,11 @@ namespace RUINORERP.Common.AppConfig
                         return File.ReadAllText(item).Trim();
                     }
                 }
-                catch (System.Exception) { }
+                catch (System.Exception ex)
+                {
+                    // 【稳定性优化】配置文件读取失败时忽略，fallback到下一个配置源
+                    System.Diagnostics.Debug.WriteLine($"AppSecretConfig: 配置文件读取失败({item}): {ex.Message}");
+                }
             }
 
             return "";

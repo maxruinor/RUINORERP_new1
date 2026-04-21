@@ -585,6 +585,53 @@ namespace RUINORERP.Model
         /// </summary>
         private static readonly ConcurrentDictionary<string, Dictionary<string, FKRelationInfo>> _fkRelationsByTableName = new ConcurrentDictionary<string, Dictionary<string, FKRelationInfo>>();
 
+        #region 静态缓存清理方法（内存优化）
+
+        /// <summary>
+        /// 缓存条目计数（用于监控）
+        /// </summary>
+        public static (int PropertyCache, int ImportableFieldsCache, int FieldNameListCache, int FKRelationsCache, int FKRelationsByTableNameCache) CacheStatistics =>
+        (
+            _propertyCache.Count,
+            _importableFieldsCache.Count,
+            _fieldNameListCache.Count,
+            _fkRelationsCache.Count,
+            _fkRelationsByTableName.Count
+        );
+
+        /// <summary>
+        /// 清理指定类型的反射缓存（通常在程序集加载大量新类型后调用）
+        /// </summary>
+        /// <param name="type">要清理缓存的实体类型，传入null则清理所有</param>
+        public static void ClearReflectionCaches(Type type = null)
+        {
+            if (type == null)
+            {
+                // 清理所有缓存
+                _propertyCache.Clear();
+                _importableFieldsCache.Clear();
+                _fieldNameListCache.Clear();
+                _fkRelationsCache.Clear();
+                _fkRelationsByTableName.Clear();
+                System.Diagnostics.Debug.WriteLine("BaseEntity: 已清理所有反射缓存");
+            }
+            else
+            {
+                // 清理指定类型的缓存
+                _propertyCache.TryRemove(type, out _);
+                _importableFieldsCache.TryRemove(type, out _);
+                _fieldNameListCache.TryRemove(type, out _);
+                _fkRelationsCache.TryRemove(type, out _);
+
+                // 清理表名缓存（需要遍历）
+                var tableName = GetTableName(type);
+                _fkRelationsByTableName.TryRemove(tableName, out _);
+
+                System.Diagnostics.Debug.WriteLine($"BaseEntity: 已清理类型 {type.Name} 的反射缓存");
+            }
+        }
+        #endregion
+
         /// <summary>
         /// 获取实体的所有外键关系信息
         /// </summary>

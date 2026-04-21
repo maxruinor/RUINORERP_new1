@@ -1120,8 +1120,13 @@ namespace RUINORERP.UI.WorkFlowDesigner
                 //if( SplashScreen.SplashForm != null )
                 //	SplashScreen.SplashForm.Owner = this;
                 //this.Activate();
-                System.Threading.Thread.Sleep(100);
-                SplashScreen.CloseForm();
+
+                // 【性能优化】使用 BeginInvoke 延迟执行，避免 Thread.Sleep 阻塞UI线程
+                this.BeginInvoke(new Action(() =>
+                {
+                    SplashScreen.CloseForm();
+                }));
+
                 //timer1.Start();
             }
         }

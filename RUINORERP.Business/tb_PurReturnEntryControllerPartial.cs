@@ -206,8 +206,12 @@ namespace RUINORERP.Business
                 for (int i = 0; i < entity.tb_purentryre.tb_PurEntryReDetails.Count; i++)
                 {
                     //如果当前采购退款明细行，不存在于采购退货入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
-                    string prodName = entity.tb_purentryre.tb_PurEntryReDetails[i].tb_proddetail.tb_prod.CNName +
-                              entity.tb_purentryre.tb_PurEntryReDetails[i].tb_proddetail.tb_prod.Specifications;
+                    var returnDetail = entity.tb_purentryre.tb_PurEntryReDetails[i];
+                    var pd = returnDetail?.tb_proddetail;
+                    var p = pd?.tb_prod;
+                    string prodName = p != null
+                        ? (p.CNName ?? "") + (p.Specifications ?? "")
+                        : $"[产品ID:{returnDetail.ProdDetailID}]";
                     //明细中有相同的产品或物品。
                     var aa = entity.tb_purentryre.tb_PurEntryReDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                     if (aa.Count > 0 && entity.tb_purentryre.tb_PurEntryReDetails[i].PurEntryRe_CID > 0)
@@ -510,14 +514,18 @@ namespace RUINORERP.Business
                         detailList.AddRange(item.tb_PurReturnEntryDetails);
                     }
 
-                    //分两种情况处理。
-                    for (int i = 0; i < entity.tb_purentryre.tb_PurEntryReDetails.Count; i++)
-                    {
-                        //如果当前退货单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
+                //分两种情况处理。
+                for (int i = 0; i < entity.tb_purentryre.tb_PurEntryReDetails.Count; i++)
+                {
+                    //如果当前退货单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
 
 
-                        string prodName = entity.tb_purentryre.tb_PurEntryReDetails[i].tb_proddetail.tb_prod.CNName +
-                                  entity.tb_purentryre.tb_PurEntryReDetails[i].tb_proddetail.tb_prod.Specifications;
+                    var returnDetail = entity.tb_purentryre.tb_PurEntryReDetails[i];
+                    var pd = returnDetail?.tb_proddetail;
+                    var p = pd?.tb_prod;
+                    string prodName = p != null
+                        ? (p.CNName ?? "") + (p.Specifications ?? "")
+                        : $"[产品ID:{returnDetail.ProdDetailID}]";
                         //明细中有相同的产品或物品。
                         var aa = entity.tb_purentryre.tb_PurEntryReDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                         if (aa.Count > 0 && entity.tb_purentryre.tb_PurEntryReDetails[i].PurEntryRe_CID > 0)

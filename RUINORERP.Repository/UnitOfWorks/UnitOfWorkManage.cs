@@ -277,6 +277,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                 // 最外层事务：开启物理事务
                 if (context.Depth == 1)
                 {
+                    // ✅ P3 关键修复: 先清理任何挂起的 DataReader
+                    ClearPendingDataReader(dbClient);
+                    
                     // ✅ 关键修复: 确保连接打开且无挂起的DataReader
                     if (dbClient.Ado.Connection.State != System.Data.ConnectionState.Open)
                     {
@@ -289,6 +292,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                         _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到残留事务对象，先回滚");
                         try { dbClient.Ado.RollbackTran(); } catch { }
                     }
+                    
+                    // ✅ P3 再次清理: 确保在开启事务前没有其他挂起操作
+                    ClearPendingDataReader(dbClient);
         
                     // 设置命令超时时间
                     dbClient.Ado.CommandTimeOut = _options.DefaultTransactionTimeoutSeconds;
@@ -374,6 +380,9 @@ namespace RUINORERP.Repository.UnitOfWorks
     
                 if (context.Depth == 1)
                 {
+                    // ✅ P3 关键修复: 先清理任何挂起的 DataReader
+                    ClearPendingDataReader(dbClient);
+                    
                     // 确保连接打开
                     if (dbClient.Ado.Connection.State != System.Data.ConnectionState.Open)
                     {
@@ -387,6 +396,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                         _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到残留事务对象，先回滚");
                         try { await dbClient.Ado.RollbackTranAsync(); } catch { }
                     }
+                    
+                    // ✅ P3 再次清理: 确保在开启事务前没有其他挂起操作
+                    ClearPendingDataReader(dbClient);
         
                     dbClient.Ado.CommandTimeOut = _options.DefaultTransactionTimeoutSeconds;
                                 

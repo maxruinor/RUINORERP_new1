@@ -574,8 +574,12 @@ namespace RUINORERP.Business
                     for (int i = 0; i < entity.tb_purorder.tb_PurOrderDetails.Count; i++)
                     {
                         //如果当前订单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
-                        string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
-                                  entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.Specifications;
+                        var orderDetail = entity.tb_purorder.tb_PurOrderDetails[i];
+                        var pd = orderDetail?.tb_proddetail;
+                        var p = pd?.tb_prod;
+                        string prodName = p != null
+                            ? (p.CNName ?? "") + (p.Specifications ?? "")
+                            : $"[产品ID:{orderDetail.ProdDetailID}]";
                         //明细中有相同的产品或物品。
                         var aa = entity.tb_purorder.tb_PurOrderDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                         if (aa.Count > 0 && entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID > 0)
@@ -882,9 +886,12 @@ namespace RUINORERP.Business
             // 分两种情况处理
             for (int i = 0; i < entity.tb_purorder.tb_PurOrderDetails.Count; i++)
             {
-                string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.SKU + "-" + 
-                                  entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
-                                  entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.Specifications;
+                var orderDetail = entity.tb_purorder.tb_PurOrderDetails[i];
+                var pd = orderDetail?.tb_proddetail;
+                var p = pd?.tb_prod;
+                string prodName = p != null
+                    ? (pd.SKU ?? "") + "-" + (p.CNName ?? "") + (p.Specifications ?? "")
+                    : $"[产品ID:{orderDetail.ProdDetailID}]";
 
                 // 明细中有相同的产品或物品
                 var aa = entity.tb_purorder.tb_PurOrderDetails.Select(c => c.ProdDetailID).ToList()
@@ -953,9 +960,12 @@ namespace RUINORERP.Business
             //分两种情况处理。
             for (int i = 0; i < entity.tb_purorder.tb_PurOrderDetails.Count; i++)
             {
-                string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.SKU + "-" +
-                                  entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
-                                  entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.Specifications;
+                var orderDetail = entity.tb_purorder.tb_PurOrderDetails[i];
+                var pd = orderDetail?.tb_proddetail;
+                var p = pd?.tb_prod;
+                string prodName = p != null
+                    ? (pd.SKU ?? "") + "-" + (p.CNName ?? "") + (p.Specifications ?? "")
+                    : $"[产品ID:{orderDetail.ProdDetailID}]";
 
                 //明细中有相同的产品或物品。
                 var aa = entity.tb_purorder.tb_PurOrderDetails.Select(c => c.ProdDetailID).ToList()
@@ -1052,9 +1062,8 @@ namespace RUINORERP.Business
                 && (entity.TotalQty == entity.tb_purorder.TotalQty || orderTotalDeliveredQty == entity.tb_purorder.TotalQty))
             {
                 entity.tb_purorder.DataStatus = (int)DataStatus.完结;
-                entity.tb_purorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + 
-                    _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + 
-                    "审核入库单:" + entity.PurEntryNo + "结案。";
+                string employeeName = _appContext.CurUserInfo?.UserInfo?.tb_employee?.Employee_Name ?? "系统";
+                entity.tb_purorder.CloseCaseOpinions = $"【系统自动结案】==》{DateTime.Now:yyyy-MM-dd HH:mm:ss}{employeeName}审核入库单:{entity.PurEntryNo}结案。";
             }
         }
 

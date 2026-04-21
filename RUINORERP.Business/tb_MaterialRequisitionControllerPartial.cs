@@ -161,8 +161,11 @@ namespace RUINORERP.Business
                     {
                         tb_ManufacturingOrderDetail moitem = entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == entity.tb_MaterialRequisitionDetails[i].ProdDetailID && c.Location_ID == entity.tb_MaterialRequisitionDetails[i].Location_ID);
 
-                        string prodName = string.Empty;
-                        prodName = moitem.tb_proddetail.tb_prod.CNName + moitem.tb_proddetail.tb_prod.Specifications;
+                        var pd = moitem?.tb_proddetail;
+                        var p = pd?.tb_prod;
+                        string prodName = p != null
+                            ? (p.CNName ?? "") + (p.Specifications ?? "")
+                            : $"[产品ID:{entity.tb_MaterialRequisitionDetails[i].ProdDetailID}]";
                         tb_ManufacturingOrderDetail mochild = new tb_ManufacturingOrderDetail();
 
                         if (SameItem.Count > 0)
@@ -359,7 +362,11 @@ namespace RUINORERP.Business
                                     // 所有实发的数量不能大于应发的数量，除非是补料
                                     if (!entity.ReApply)
                                     {
-                                        string prodName = child.tb_proddetail.tb_prod.CNName + child.tb_proddetail.tb_prod.Specifications;
+                                        var pd = child?.tb_proddetail;
+                                        var p = pd?.tb_prod;
+                                        string prodName = p != null
+                                            ? (p.CNName ?? "") + (p.Specifications ?? "")
+                                            : $"[产品ID:{child.ProdDetailID}]";
                                         string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量{totalActualSentQty}不能大于制令单对应行的应发数量{MoDeltail.ShouldSendQty}。";
                                         rrs.ErrorMsg = msg;
                                         _unitOfWorkManage.RollbackTran();
@@ -541,7 +548,8 @@ namespace RUINORERP.Business
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;
-                entity.ApprovalOpinions = $"由{_appContext.CurUserInfo.UserInfo.UserName}反审核";
+                string userName = _appContext.CurUserInfo?.UserInfo?.UserName ?? "系统";
+                entity.ApprovalOpinions = $"由{userName}反审核";
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 // 创建反向库存流水记录列表
@@ -645,8 +653,11 @@ namespace RUINORERP.Business
                         tb_ManufacturingOrderDetail moitem = entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == entity.tb_MaterialRequisitionDetails[i].ProdDetailID && c.Location_ID == entity.tb_MaterialRequisitionDetails[i].Location_ID
                        );
 
-                        string prodName = string.Empty;
-                        prodName = moitem.tb_proddetail.tb_prod.CNName + moitem.tb_proddetail.tb_prod.Specifications;
+                        var pd = moitem?.tb_proddetail;
+                        var p = pd?.tb_prod;
+                        string prodName = p != null
+                            ? (p.CNName ?? "") + (p.Specifications ?? "")
+                            : $"[产品ID:{entity.tb_MaterialRequisitionDetails[i].ProdDetailID}]";
                         tb_ManufacturingOrderDetail mochild = new tb_ManufacturingOrderDetail();
 
                         if (SameItem.Count > 0)

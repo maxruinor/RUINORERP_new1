@@ -171,7 +171,18 @@ namespace RUINORERP.Extensions
                             _logger?.LogWarning("获取缓存锁超时，直接执行创建操作。缓存键：{CacheKey}", cacheKey);
                         }
 
-                        return ExecuteCreateWithTimer(create);
+                        // ✅ P3修复：超时时不直接执行，而是使用 Task.Run 在独立线程池中执行
+                        // 这样可以避免因数据库连接问题导致的跨线程阻塞
+                        try
+                        {
+                            return Task.Run(() => ExecuteCreateWithTimer(create)).GetAwaiter().GetResult();
+                        }
+                        catch (Exception timeoutEx)
+                        {
+                            _logger?.LogError(timeoutEx, "缓存创建超时处理执行失败，缓存键：{CacheKey}", cacheKey);
+                            // 返回默认值，避免影响业务流程
+                            return default(V);
+                        }
                     }
 
                     lockTaken = true;

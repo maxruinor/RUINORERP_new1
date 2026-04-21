@@ -583,10 +583,15 @@ namespace RUINORERP.Business
                 topDetail.NotOutQty = item.NotIssueMaterialQty;
                 //这里要判断，如果计划来自销售订单，则需要减去当前销售订单的对应产品的数量
                 topDetail.NetRequirement = item.NeedQuantity - item.BookInventory + item.NotIssueMaterialQty - item.InTransitInventory - item.MakeProcessInventory + item.SaleQty;
-                if (demand.PPID > 0 && demand.tb_productionplan.tb_saleorder != null)
+                if (demand.PPID > 0 && demand.tb_productionplan?.tb_saleorder != null)
                 {
                     //减去销售订单
-                    topDetail.NetRequirement -= demand.tb_productionplan.tb_saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == topDetail.ProdDetailID && c.Location_ID == topDetail.Location_ID).Quantity;
+                    var saleDetail = demand.tb_productionplan.tb_saleorder.tb_SaleOrderDetails
+                        .FirstOrDefault(c => c.ProdDetailID == topDetail.ProdDetailID && c.Location_ID == topDetail.Location_ID);
+                    if (saleDetail != null)
+                    {
+                        topDetail.NetRequirement -= saleDetail.Quantity;
+                    }
                 }
                 if (topDetail.NetRequirement < 0)
                 {

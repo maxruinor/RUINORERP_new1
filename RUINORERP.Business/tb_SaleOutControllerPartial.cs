@@ -517,8 +517,11 @@ namespace RUINORERP.Business
                                 saleOutDetailCost = saleOutDetail.Cost;
                             }
 
-                            string prodName = entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.CNName +
-                                      entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.Specifications;
+                            var prodDetail = entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail;
+                            var prod = prodDetail?.tb_prod;
+                            string prodName = prod != null
+                                ? (prod.CNName ?? "") + (prod.Specifications ?? "")
+                                : $"[产品ID:{entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID}]";
                             //明细中有相同的产品或物品。
                             //2024-4-29 思路更新:如果订单中有相同的产品的多行情况。出库明细冗余了订单明细的行号ID，就容易分清具体行的数据
                             if (duplicateOrderProdDetailIds.Contains(entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID) && entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID > 0)
@@ -643,9 +646,8 @@ namespace RUINORERP.Business
                     if (needAutoClose)
                     {
                         entity.tb_saleorder.DataStatus = (int)DataStatus.完结;
-                        entity.tb_saleorder.CloseCaseOpinions = "【系统自动结案】" + System.DateTime.Now.ToString() + 
-                            _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + 
-                            "审核销售库单时:" + entity.SaleOutNo + "结案。";
+                        string employeeName = _appContext.CurUserInfo?.UserInfo?.tb_employee?.Employee_Name ?? "系统";
+                        entity.tb_saleorder.CloseCaseOpinions = $"【系统自动结案】{DateTime.Now:yyyy-MM-dd HH:mm:ss}{employeeName}审核销售库单时:{entity.SaleOutNo}结案。";
                         entity.tb_saleorder.TotalCost = entity.tb_SaleOutDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
 
                         var orderUpdateResult = await _unitOfWorkManage.GetDbClient()
@@ -1340,8 +1342,11 @@ namespace RUINORERP.Business
                     {
                         //如果当前订单明细行，不存在于出库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
 
-                        string prodName = entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.CNName +
-                                  entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.Specifications;
+                    var prodDetail2 = entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail;
+                    var prod2 = prodDetail2?.tb_prod;
+                    string prodName = prod2 != null
+                        ? (prod2.CNName ?? "") + (prod2.Specifications ?? "")
+                        : $"[产品ID:{entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID}]";
                         //明细中有相同的产品或物品。
                         if (duplicateOrderProdDetailIds2.Contains(entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID) && entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID > 0)
                         {

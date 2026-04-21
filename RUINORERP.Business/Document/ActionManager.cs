@@ -1,3 +1,4 @@
+
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
@@ -170,7 +171,7 @@ namespace RUINORERP.Business.Document
         /// <typeparam name="TSource">源单据类型</typeparam>
         /// <param name="source">源单据实例（可选）</param>
         /// <returns>可用操作列表</returns>
-        public List<ActionOption> GetAvailableActions<TSource>(TSource source = null) where TSource : BaseEntity
+        public async Task<List<ActionOption>> GetAvailableActionsAsync<TSource>(TSource source = null) where TSource : BaseEntity
         {
             var conversions = _converterFactory.GetAvailableConversions<TSource>(source);
             var result = conversions.ConvertAll(c => new ActionOption
@@ -213,6 +214,42 @@ namespace RUINORERP.Business.Document
                     {
                         if (action.ConversionType == DocumentConversionType.DocumentGeneration)
                         {
+                            // 【关键逻辑】：通过转换器验证当前状态是否允许转换
+                            try
+                            {
+                                // 修复：使用全限定名查找目标类型，防止 Type.GetType 返回 null
+                                var targetTypeInfo = AppDomain.CurrentDomain.GetAssemblies()
+                                    .SelectMany(s => s.GetTypes())
+                                    .FirstOrDefault(p => p.Name == action.TargetType);
+                                
+                                if (targetTypeInfo == null)
+                                {
+                                    _logger.LogWarning($"无法找到目标类型: {action.TargetType}");
+                                    continue;
+                                }
+
+                                var converter = _converterFactory.GetConverter(source.GetType(), targetTypeInfo);
+                                if (converter != null)
+                                {
+                                    // 使用 dynamic 调用泛型方法，避开编译时类型检查
+                                    dynamic dynConverter = converter;
+                                    var validationResult = await dynConverter.ValidateConversionAsync((dynamic)source);
+                                    
+                                    if (!validationResult.CanConvert)
+                                    {
+                                        // 如果业务验证不通过，直接隐藏该菜单项
+                                        action.IsVisible = false;
+                                        continue;
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, $"预验证转换器 {action.DisplayName} 时发生异常");
+                                // 验证出错时，为了安全起见，可以禁用或隐藏
+                                action.IsEnabled = false;
+                            }
+
 
 
 

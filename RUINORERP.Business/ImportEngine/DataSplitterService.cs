@@ -134,7 +134,15 @@ namespace RUINORERP.Business.ImportEngine
                     // 写入依赖表并注册ID映射
                     if (depData.Rows.Count > 0)
                     {
-                        await _dbWriter.BatchUpsertAsync(depData, depProfile, _remapper);
+                        try
+                        {
+                            await _dbWriter.BatchUpsertAsync(depData, depProfile, _remapper);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[DataSplitter] 依赖表 [{depProfile.TargetTable}] 写入失败: {ex.Message}");
+                            throw; // 抛出异常以触发上层事务回滚
+                        }
                     }
                     
                     result[depProfile.TargetTable] = depData;

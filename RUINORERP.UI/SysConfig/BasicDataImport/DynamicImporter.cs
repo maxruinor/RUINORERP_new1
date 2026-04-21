@@ -471,6 +471,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="entityType">实体类型</param>
         /// <param name="rowNumber">行号</param>
         /// <returns>实体对象</returns>
+        /// <summary>
+        /// 从数据行创建实体对象
+        /// </summary>
         private object CreateEntityFromRow(DataRow row, ColumnMappingCollection mappings, Type entityType, int rowNumber)
         {
             var entity = Activator.CreateInstance(entityType);

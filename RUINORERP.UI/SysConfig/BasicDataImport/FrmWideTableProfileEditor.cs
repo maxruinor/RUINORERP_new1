@@ -262,6 +262,46 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 自动填充依赖表和子表（基于元数据）
+        /// </summary>
+        private void kbtnAutoFill_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (kcmbMasterTable.SelectedItem == null)
+                {
+                    MessageBox.Show("请先选择主表", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                string tableName = kcmbMasterTable.SelectedItem.ToString();
+                var type = Type.GetType($"RUINORERP.Model.{tableName}, RUINORERP.Model");
+                
+                if (type == null || !typeof(RUINORERP.Model.BaseEntity).IsAssignableFrom(type))
+                {
+                    MessageBox.Show($"无法找到实体类型: {tableName}，请确保表名与实体类名一致。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 调用分析器
+                var result = RUINORERP.Business.ImportEngine.MetadataDependencyAnalyzer.Analyze(type);
+
+                // 清空并填充依赖表
+                dgvDependencyTables.Rows.Clear();
+                foreach (var depTable in result.DependencyTables.Distinct())
+                {
+                    dgvDependencyTables.Rows.Add(depTable, "ID", 0);
+                }
+
+                MessageBox.Show($"已根据实体 [{tableName}] 的元数据自动识别出 {result.DependencyTables.Count} 个依赖表。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"自动填充失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
         /// 取消
         /// </summary>
         private void kbtnCancel_Click(object sender, EventArgs e)

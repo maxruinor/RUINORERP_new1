@@ -1206,6 +1206,105 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// AI 辅助映射
+        /// </summary>
+        private async void kbtnAiMatch_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (TargetEntityType == null)
+                {
+                    MessageBox.Show("请先选择数据类型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var excelHeaders = GetExcelColumnsList();
+                if (!excelHeaders.Any())
+                {
+                    MessageBox.Show("未检测到 Excel 数据，请先加载文件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                kbtnAiMatch.Enabled = false;
+                kbtnAiMatch.Text = "AI 分析中...";
+
+                // 调用 Business 层的 AI 服务
+                var engine = new RUINORERP.Business.ImportEngine.SmartImportEngine(MainForm.Instance.AppContext.Db);
+                var result = await engine.GetAiMappingSuggestionsAsync(excelHeaders, TargetEntityType);
+
+                kbtnAiMatch.Enabled = true;
+                kbtnAiMatch.Text = "AI 辅助映射";
+
+                if (result.Mappings.Count == 0)
+                {
+                    MessageBox.Show("AI 未能生成有效的映射建议，请尝试手动匹配或检查 AI 服务配置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 应用 AI 建议
+                ApplyAiSuggestions(result);
+            }
+            catch (Exception ex)
+            {
+                kbtnAiMatch.Enabled = true;
+                kbtnAiMatch.Text = "AI 辅助映射";
+                MessageBox.Show($"AI 辅助映射失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 应用 AI 建议到当前映射列表
+        /// </summary>
+        private void ApplyAiSuggestions(RUINORERP.Business.AIServices.DataImport.IntelligentMappingResult aiResult)
+        {
+            // 清空现有映射
+            ColumnMappings.Clear();
+            
+            var confidenceScores = new Dictionary<string, double>();
+            
+            foreach (var kvp in aiResult.Mappings)
+            {
+                string excelCol = kvp.Key;
+                var suggestion = kvp.Value;
+                
+                // 查找对应的系统字段显示名
+                string systemFieldDisplay = null;
+                string systemFieldKey = suggestion.TargetField;
+                
+                foreach (var item in listBoxSystemFields.Items)
+                {
+                    string display = item.ToString();
+                    string field = display.StartsWith("* ") ? display.Substring(2) : display;
+                    if (field == systemFieldKey)
+                    {
+                        systemFieldDisplay = display;
+                        break;
+                    }
+                }
+                
+                if (systemFieldDisplay == null) continue;
+
+                var mapping = new ColumnMapping
+                {
+                    ExcelColumn = excelCol,
+                    SystemField = new SerializableKeyValuePair<string>(systemFieldKey, systemFieldDisplay),
+                    IsUniqueValue = (suggestion.TargetField == aiResult.SuggestedLogicalKey)
+                };
+                
+                ColumnMappings.Add(mapping);
+                confidenceScores[$"{excelCol}->{systemFieldKey}"] = suggestion.Confidence;
+                
+                RemoveFromExcelColumns(excelCol);
+                RemoveFromSystemFields(systemFieldKey);
+            }
+            
+            SetMatchConfidenceScores(confidenceScores);
+            UpdateMappingsList();
+            
+            MessageBox.Show($"已应用 AI 建议：共匹配 {aiResult.Mappings.Count} 个字段，建议逻辑主键为 [{aiResult.SuggestedLogicalKey}]。", "AI 辅助完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        /// <summary>
         /// 去重复选框改变事件
         /// </summary>
         private void chkRemoveDuplicates_CheckedChanged(object sender, EventArgs e)

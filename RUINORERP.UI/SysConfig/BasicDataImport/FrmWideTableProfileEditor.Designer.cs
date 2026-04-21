@@ -276,6 +276,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonPanel2
             // 
+            this.kryptonPanel2.Controls.Add(this.kbtnAutoFill);
             this.kryptonPanel2.Controls.Add(this.kbtnTest);
             this.kryptonPanel2.Controls.Add(this.kbtnSave);
             this.kryptonPanel2.Controls.Add(this.kbtnCancel);
@@ -284,6 +285,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel2.Name = "kryptonPanel2";
             this.kryptonPanel2.Size = new System.Drawing.Size(900, 60);
             this.kryptonPanel2.TabIndex = 1;
+            // 
+            // kbtnAutoFill
+            // 
+            this.kbtnAutoFill.Location = new System.Drawing.Point(500, 15);
+            this.kbtnAutoFill.Name = "kbtnAutoFill";
+            this.kbtnAutoFill.Size = new System.Drawing.Size(80, 30);
+            this.kbtnAutoFill.TabIndex = 3;
+            this.kbtnAutoFill.Values.Text = "自动填充";
+            this.kbtnAutoFill.Click += new System.EventHandler(this.kbtnAutoFill_Click);
             // 
             // kbtnTest
             // 
@@ -377,5 +387,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonButton kbtnAddDependency;
         private RUINORERP.UI.UControls.NewSumDataGridView dgvChildTables;
         private Krypton.Toolkit.KryptonButton kbtnAddChild;
+        private Krypton.Toolkit.KryptonButton kbtnAutoFill;
     }
 }

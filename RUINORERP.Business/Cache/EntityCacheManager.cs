@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using CacheManager.Core;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Common.Log4Net;
@@ -2011,6 +2012,7 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 估计对象大小（字节）
+        /// 使用优化的估算策略，避免序列化大对象列表
         /// </summary>
         /// <param name="obj">要估计大小的对象</param>
         /// <returns>估计的字节大小</returns>
@@ -2021,14 +2023,130 @@ namespace RUINORERP.Business.Cache
 
             try
             {
-                // 使用JSON序列化来粗略估计对象大小
-                string json = Newtonsoft.Json.JsonConvert.SerializeObject(obj);
-                return Encoding.UTF8.GetByteCount(json);
+                // 检查是否为集合类型
+                if (obj is IEnumerable enumerable && !(obj is string))
+                {
+                    int count = 0;
+                    long sampleSize = 0;
+                    int sampleCount = 0;
+                    const int maxSampleCount = 5;
+
+                    foreach (var item in enumerable)
+                    {
+                        count++;
+                        
+                        // 只采样前几个对象来估算平均大小
+                        if (sampleCount < maxSampleCount && item != null)
+                        {
+                            sampleSize += EstimateSingleObjectSize(item);
+                            sampleCount++;
+                        }
+                    }
+
+                    // 如果采样了对象，使用平均值计算总大小
+                    if (sampleCount > 0)
+                    {
+                        long avgSize = sampleSize / sampleCount;
+                        return count * avgSize;
+                    }
+
+                    // 空集合或无法采样的情况
+                    return count * 100; // 假设每个元素平均 100 字节
+                }
+                else
+                {
+                    // 单个对象
+                    return EstimateSingleObjectSize(obj);
+                }
             }
             catch
             {
-                // 如果序列化失败，返回一个保守估计值
+                // 如果估算失败，返回一个保守估计值
                 return 1024; // 1KB
+            }
+        }
+
+        /// <summary>
+        /// 估算单个对象的大小
+        /// </summary>
+        /// <param name="obj">要估算的单个对象</param>
+        /// <returns>估计的字节大小</returns>
+        private long EstimateSingleObjectSize(object obj)
+        {
+            try
+            {
+                // 对于简单类型，返回固定大小
+                if (obj is string str)
+                {
+                    return Encoding.UTF8.GetByteCount(str);
+                }
+                
+                // 值类型的大小估算
+                if (obj is ValueType)
+                {
+                    try
+                    {
+                        return Marshal.SizeOf(obj.GetType());
+                    }
+                    catch
+                    {
+                        // 如果无法编组，使用默认值
+                        return IntPtr.Size; // 指针大小，通常 4 或 8 字节
+                    }
+                }
+
+                // 对于复杂对象，使用简化的估算方法
+                // 基于对象属性数量进行估算
+                var properties = obj.GetType().GetProperties(
+                    BindingFlags.Public | BindingFlags.Instance);
+                
+                long estimatedSize = 0;
+                foreach (var prop in properties)
+                {
+                    try
+                    {
+                        var value = prop.GetValue(obj);
+                        if (value != null)
+                        {
+                            if (value is string strValue)
+                            {
+                                estimatedSize += Encoding.UTF8.GetByteCount(strValue);
+                            }
+                            else if (value is ValueType valueType)
+                            {
+                                // 安全地获取值类型大小
+                                try
+                                {
+                                    estimatedSize += Marshal.SizeOf(valueType.GetType());
+                                }
+                                catch
+                                {
+                                    // 无法编组的值类型，使用默认估计
+                                    estimatedSize += IntPtr.Size;
+                                }
+                            }
+                            else
+                            {
+                                // 复杂类型给一个基础估计值
+                                estimatedSize += 100;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // 属性访问失败，跳过
+                    }
+                }
+
+                // 添加对象头开销 (通常为 8-16 字节)
+                estimatedSize += 16;
+                
+                return estimatedSize;
+            }
+            catch
+            {
+                // 如果估算失败，返回默认值
+                return 512;
             }
         }
         #endregion

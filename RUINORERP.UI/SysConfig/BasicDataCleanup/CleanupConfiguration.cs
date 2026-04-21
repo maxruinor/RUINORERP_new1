@@ -122,6 +122,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         public string ModifiedBy { get; set; }
 
         /// <summary>
+        /// 清理模式：0-指定记录清理，1-全部清空
+        /// </summary>
+        [XmlElement("CleanupMode")]
+        public int CleanupMode { get; set; }
+
+        /// <summary>
+        /// 是否启用关联清理（自动清理依赖该表的其他表数据）
+        /// </summary>
+        [XmlElement("EnableRelatedCleanup")]
+        public bool EnableRelatedCleanup { get; set; }
+
+        /// <summary>
+        /// 关联清理的表列表（为空时自动检测）
+        /// </summary>
+        [XmlArray("RelatedTables")]
+        [XmlArrayItem("TableName")]
+        public List<string> RelatedTables { get; set; }
+
+        /// <summary>
+        /// 指定清理的记录 ID 列表（仅当 CleanupMode=0 时有效）
+        /// </summary>
+        [XmlArray("RecordIds")]
+        [XmlArrayItem("RecordId")]
+        public List<long> RecordIds { get; set; }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public CleanupConfiguration()
@@ -130,6 +156,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             ConfigName = string.Empty;
             Description = string.Empty;
             CleanupRules = new List<CleanupRule>();
+            RelatedTables = new List<string>();
+            RecordIds = new List<long>();
             EnableTransaction = true;
             TransactionBatchSize = 1000;
             EnableBackup = true;
@@ -137,6 +165,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             EnableDetailedLog = true;
             AllowTestMode = true;
             MaxProcessCount = 0;
+            CleanupMode = 0;
+            EnableRelatedCleanup = true;
             CreateTime = DateTime.Now;
             UpdateTime = DateTime.Now;
             Version = "1.0";

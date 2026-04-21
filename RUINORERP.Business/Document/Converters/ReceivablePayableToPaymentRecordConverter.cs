@@ -46,6 +46,11 @@ namespace RUINORERP.Business.Document.Converters
         }
 
         /// <summary>
+        /// 转换唯一标识符
+        /// </summary>
+        public override string ConversionIdentifier => "Normal";
+
+        /// <summary>
         /// 执行单据转换 - 直接调用业务层核心逻辑 BuildPaymentRecord
         /// 重写基类方法，完全控制转换过程
         /// </summary>

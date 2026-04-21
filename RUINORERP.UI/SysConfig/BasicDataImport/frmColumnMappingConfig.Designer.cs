@@ -34,6 +34,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbDeduplicateStrategy = new Krypton.Toolkit.KryptonComboBox();
             this.chkRemoveDuplicates = new Krypton.Toolkit.KryptonCheckBox();
             this.kbtnAutoMatch = new Krypton.Toolkit.KryptonButton();
+            this.kbtnAiMatch = new Krypton.Toolkit.KryptonButton();
             this.kbtnDeleteMapping = new Krypton.Toolkit.KryptonButton();
             this.kbtnSetColumnProperty = new Krypton.Toolkit.KryptonButton();
             this.kbtnRemoveMapping = new Krypton.Toolkit.KryptonButton();
@@ -62,6 +63,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.Controls.Add(this.kryptonLabelDeduplicateStrategy);
             this.kryptonPanel1.Controls.Add(this.kcmbDeduplicateStrategy);
             this.kryptonPanel1.Controls.Add(this.chkRemoveDuplicates);
+            this.kryptonPanel1.Controls.Add(this.kbtnAiMatch);
             this.kryptonPanel1.Controls.Add(this.kbtnAutoMatch);
             this.kryptonPanel1.Controls.Add(this.kbtnDeleteMapping);
             this.kryptonPanel1.Controls.Add(this.kbtnSetColumnProperty);
@@ -134,6 +136,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnAutoMatch.TabIndex = 11;
             this.kbtnAutoMatch.Values.Text = "自动匹配";
             this.kbtnAutoMatch.Click += new System.EventHandler(this.kbtnAutoMatch_Click);
+            // 
+            // kbtnAiMatch
+            // 
+            this.kbtnAiMatch.Location = new System.Drawing.Point(580, 246);
+            this.kbtnAiMatch.Name = "kbtnAiMatch";
+            this.kbtnAiMatch.Size = new System.Drawing.Size(100, 25);
+            this.kbtnAiMatch.TabIndex = 12;
+            this.kbtnAiMatch.Values.Text = "AI 辅助映射";
+            this.kbtnAiMatch.Click += new System.EventHandler(this.kbtnAiMatch_Click);
             // 
             // kbtnDeleteMapping
             // 
@@ -310,6 +321,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonButton kbtnRemoveMapping;
         private Krypton.Toolkit.KryptonButton kbtnSetColumnProperty;
         private Krypton.Toolkit.KryptonButton kbtnAutoMatch;
+        private Krypton.Toolkit.KryptonButton kbtnAiMatch;
         private Krypton.Toolkit.KryptonButton kbtnDeleteMapping;
         private Krypton.Toolkit.KryptonComboBox comboBoxSavedMappings;
         private Krypton.Toolkit.KryptonTextBox textBoxMappingName;

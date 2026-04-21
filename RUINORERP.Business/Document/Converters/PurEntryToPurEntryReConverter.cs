@@ -53,6 +53,11 @@ namespace RUINORERP.Business.Document.Converters
         }
 
         /// <summary>
+        /// 转换唯一标识符
+        /// </summary>
+        public override string ConversionIdentifier => "Normal";
+
+        /// <summary>
         /// 执行具体的转换逻辑 - 复用业务层核心逻辑
         /// </summary>
         /// <param name="source">源单据：采购入库单</param>

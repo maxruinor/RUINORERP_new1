@@ -103,6 +103,10 @@ namespace RUINORERP.Business.Document
 
                                 // 注册转换器
                                 registerMethod.Invoke(this, new[] { converter });
+                                string generatedKey = GetConverterKey(converter);
+                                var meta = converter as IConverterMeta;
+                                string identifier = meta?.ConversionIdentifier ?? "(NULL)";
+                                System.Diagnostics.Debug.WriteLine($"[Factory] 注册: {converterType.Name} | ID: [{identifier}] | Key: {generatedKey}");
 
                             }
                             catch (Exception ex)
@@ -137,7 +141,7 @@ namespace RUINORERP.Business.Document
                 throw new ArgumentNullException(nameof(converter));
             }
 
-            string key = GetConverterKey<TSource, TTarget>();
+            string key = GetConverterKey(converter);
             // 添加到缓存
             lock (_cacheLock)
             {
@@ -163,17 +167,36 @@ namespace RUINORERP.Business.Document
         /// </summary>
         /// <typeparam name="TSource">源单据类型</typeparam>
         /// <typeparam name="TTarget">目标单据类型</typeparam>
+        /// <param name="identifier">转换唯一标识符（可选，用于精确匹配）</param>
         /// <returns>转换器实例</returns>
-        public IDocumentConverter<TSource, TTarget> GetConverter<TSource, TTarget>()
+        public IDocumentConverter<TSource, TTarget> GetConverter<TSource, TTarget>(string identifier = null)
             where TSource : BaseEntity
             where TTarget : BaseEntity, new()
         {
-            string key = GetConverterKey<TSource, TTarget>();
+            var sourceType = typeof(TSource);
+            var targetType = typeof(TTarget);
+            var baseKey = $"{sourceType.FullName}:{targetType.FullName}";
+
             lock (_cacheLock)
             {
-                if (_convertersCache.TryGetValue(key, out var converter))
+                foreach (var kvp in _convertersCache)
                 {
-                    return converter as IDocumentConverter<TSource, TTarget>;
+                    // 如果提供了标识符，则进行精确匹配
+                    if (!string.IsNullOrEmpty(identifier))
+                    {
+                        if (kvp.Key == $"{baseKey}:{identifier}")
+                        {
+                            return kvp.Value as IDocumentConverter<TSource, TTarget>;
+                        }
+                    }
+                    else
+                    {
+                        // 如果没有提供标识符，返回第一个匹配的转换器（兼容旧逻辑）
+                        if (kvp.Key.StartsWith(baseKey + ":") || kvp.Key == baseKey)
+                        {
+                            return kvp.Value as IDocumentConverter<TSource, TTarget>;
+                        }
+                    }
                 }
             }
             return null;
@@ -277,9 +300,11 @@ namespace RUINORERP.Business.Document
             // 查找所有以该类型为源类型的转换器
             foreach (var kvp in _convertersCache)
             {
-                // 解析键值
+                // 解析键值：现在 Key 可能是 Source:Target 或 Source:Target:Identifier
                 var keyParts = kvp.Key.Split(':');
-                if (keyParts.Length == 2 && keyParts[0] == sourceType.FullName)
+                
+                // 只要第一部分（源类型）匹配即可
+                if (keyParts.Length >= 2 && keyParts[0] == sourceType.FullName)
                 {
                     var converter = kvp.Value;
                     var converterType = converter.GetType();
@@ -330,7 +355,8 @@ namespace RUINORERP.Business.Document
                                 TargetDocumentDisplayName = targetDisplayName,
                                 ConverterType = converterType,
                                 DisplayName = GetConverterDisplayName(converter, sourceDisplayName, targetDisplayName, conversionType),
-                                ConversionType = conversionType
+                                ConversionType = conversionType,
+                                ConversionIdentifier = meta?.ConversionIdentifier
                             });
                         }
                     }
@@ -350,12 +376,13 @@ namespace RUINORERP.Business.Document
             var sourceType = typeof(TSource);
 
             // 查找所有以该类型为源类型的转换器
-            // 转换类型和执行类型 要分开处理？
             foreach (var kvp in _convertersCache)
             {
-                // 解析键值
+                // 解析键值：现在 Key 可能是 Source:Target 或 Source:Target:Identifier
                 var keyParts = kvp.Key.Split(':');
-                if (keyParts.Length == 2 && keyParts[0] == sourceType.FullName)
+                
+                // 只要第一部分（源类型）匹配即可
+                if (keyParts.Length >= 2 && keyParts[0] == sourceType.FullName)
                 {
                     var converter = kvp.Value;
                     var converterType = converter.GetType();
@@ -404,7 +431,8 @@ namespace RUINORERP.Business.Document
                             TargetDocumentDisplayName = targetDisplayName,
                             ConverterType = converterType,
                             DisplayName = GetConverterDisplayName(converter, sourceDisplayName, targetDisplayName, conversionType),
-                            ConversionType = conversionType
+                            ConversionType = conversionType,
+                            ConversionIdentifier = meta?.ConversionIdentifier
                         });
                     }
                 }
@@ -579,15 +607,28 @@ namespace RUINORERP.Business.Document
 
         /// <summary>
         /// 生成转换器键
+        /// 格式: SourceType:TargetType[:ConversionIdentifier]
         /// </summary>
-        /// <typeparam name="TSource">源单据类型</typeparam>
-        /// <typeparam name="TTarget">目标单据类型</typeparam>
-        /// <returns>转换器键</returns>
-        private string GetConverterKey<TSource, TTarget>()
-            where TSource : BaseEntity
-            where TTarget : BaseEntity, new()
+        private string GetConverterKey(object converter)
         {
-            return $"{typeof(TSource).FullName}:{typeof(TTarget).FullName}";
+            var converterType = converter.GetType();
+            var interfaceType = converterType.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType &&
+                                   i.GetGenericTypeDefinition() == typeof(IDocumentConverter<,>));
+
+            if (interfaceType == null) return string.Empty;
+
+            var sourceType = interfaceType.GetGenericArguments()[0];
+            var targetType = interfaceType.GetGenericArguments()[1];
+            var baseKey = $"{sourceType.FullName}:{targetType.FullName}";
+
+            // 如果转换器提供了唯一标识符，则将其加入 Key
+            if (converter is IConverterMeta meta && !string.IsNullOrEmpty(meta.ConversionIdentifier))
+            {
+                return $"{baseKey}:{meta.ConversionIdentifier}";
+            }
+
+            return baseKey;
         }
 
         /// <summary>
@@ -652,7 +693,11 @@ namespace RUINORERP.Business.Document
         /// </summary>
         public DocumentConversionType ConversionType { get; set; } = DocumentConversionType.DocumentGeneration;
 
-
+        /// <summary>
+        /// 转换唯一标识符
+        /// 用于在多个源/目标类型相同的转换器中进行精确区分
+        /// </summary>
+        public string ConversionIdentifier { get; set; }
     }
 
 }

@@ -460,19 +460,27 @@ namespace RUINORERP.UI.Common
                                     //var ss = Startup.GetFromFac<RUINORERP.UI.PSI.INV.UCStocktake>();
                                     var menu = Startup.GetFromFacByName<BaseBillEdit>(pr.FormName);
                                     // BaseBillEditGeneric<T, C> 的 CurMenuInfo 是从基类继承的
-                                    try
+                                    if (menu != null)
                                     {
-                                        var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
-                                        if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                        try
                                         {
-                                            curMenuInfoProperty.SetValue(menu, pr);
+                                            var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
+                                            if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                            {
+                                                curMenuInfoProperty.SetValue(menu, pr);
+                                            }
                                         }
+                                        catch (Exception ex)
+                                        {
+                                            System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
+                                        }
+                                        page = NewPage(pr.CaptionCN, 1, menu);
                                     }
-                                    catch (Exception ex)
+                                    else
                                     {
-                                        System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
+                                        MessageBox.Show("未找到窗体:" + pr.FormName + " 请配置正确的菜单 ");
+                                        return;
                                     }
-                                    page = NewPage(pr.CaptionCN, 1, menu);
                                 }
                                 else
 
@@ -481,67 +489,99 @@ namespace RUINORERP.UI.Common
                                     var menu = Startup.GetFromFacByName<Krypton.Toolkit.KryptonForm>(pr.FormName);
                                     // BaseEditGeneric<T> 的 CurMenuInfo 是从基类继承的
                                     // 使用反射设置 CurMenuInfo 属性
-                                    try
+                                    if (menu != null)
                                     {
-                                        var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
-                                        if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                        try
                                         {
-                                            curMenuInfoProperty.SetValue(menu, pr);
+                                            var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
+                                            if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                            {
+                                                curMenuInfoProperty.SetValue(menu, pr);
+                                            }
                                         }
+                                        catch (Exception ex)
+                                        {
+                                            System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
+                                        }
+                                        page = NewPage(pr.CaptionCN, 1, menu);
                                     }
-                                    catch (Exception ex)
+                                    else
                                     {
-                                        System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
+                                        MessageBox.Show("未找到窗体:" + pr.FormName + " 请配置正确的菜单 ");
+                                        return;
                                     }
-                                    page = NewPage(pr.CaptionCN, 1, menu);
                                 }
                                 else
                                 if (pr.BIBaseForm.Contains("BaseListGeneric"))
                                 {
                                     var menu = Startup.GetFromFacByName<BaseUControl>(pr.FormName);
                                     // BaseListGeneric<T> 的 CurMenuInfo 是从基类继承的
-                                    try
+                                    if (menu != null)
                                     {
-                                        var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
-                                        if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                        try
                                         {
-                                            curMenuInfoProperty.SetValue(menu, pr);
+                                            var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
+                                            if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                            {
+                                                curMenuInfoProperty.SetValue(menu, pr);
+                                            }
                                         }
+                                        catch (Exception ex)
+                                        {
+                                            System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
+                                        }
+                                        page = NewPage(pr.CaptionCN, 1, menu);
                                     }
-                                    catch (Exception ex)
+                                    else
                                     {
-                                        System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
+                                        MessageBox.Show("未找到窗体:" + pr.FormName + " 请配置正确的菜单 ");
+                                        return;
                                     }
-                                    page = NewPage(pr.CaptionCN, 1, menu);
                                 }
                                 else
                                 if (pr.BIBaseForm.Contains("BaseListWithTree`1"))
                                 {
                                     var menu = Startup.GetFromFacByName<BaseListWithTree>(pr.FormName);
-                                    if (menu is BaseUControl baseListGeneric)
+                                    if (menu != null)
                                     {
-                                        menu.CurMenuInfo = pr;
+                                        if (menu is BaseUControl baseListGeneric)
+                                        {
+                                            menu.CurMenuInfo = pr;
+                                        }
+                                        page = NewPage(pr.CaptionCN, 1, menu);
                                     }
-                                    page = NewPage(pr.CaptionCN, 1, menu);
+                                    else
+                                    {
+                                        MessageBox.Show("未找到窗体:" + pr.FormName + " 请配置正确的菜单 ");
+                                        return;
+                                    }
                                 }
                                 else
                                 if (pr.BIBaseForm.Contains("BaseBillQueryMC"))
                                 {
                                     var menu = Startup.GetFromFacByName<BaseQuery>(pr.FormName);
                                     // BaseBillQueryMC<M, C> 的 CurMenuInfo 是从基类继承的
-                                    try
+                                    if (menu != null)
                                     {
-                                        var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
-                                        if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                        try
                                         {
-                                            curMenuInfoProperty.SetValue(menu, pr);
+                                            var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
+                                            if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                            {
+                                                curMenuInfoProperty.SetValue(menu, pr);
+                                            }
                                         }
+                                        catch (Exception ex)
+                                        {
+                                            System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
+                                        }
+                                        page = NewPage(pr.CaptionCN, 1, menu);
                                     }
-                                    catch (Exception ex)
+                                    else
                                     {
-                                        System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
+                                        MessageBox.Show("未找到窗体:" + pr.FormName + " 请配置正确的菜单 ");
+                                        return;
                                     }
-                                    page = NewPage(pr.CaptionCN, 1, menu);
                                 }
                                 else
                                 if (pr.BIBaseForm.Contains("BaseNavigatorGeneric"))
@@ -550,12 +590,28 @@ namespace RUINORERP.UI.Common
                                     if (string.IsNullOrEmpty(pr.BizInterface))
                                     {
                                         var menu = Startup.GetFromFacByName<UserControl>(pr.FormName);
-                                        page = NewPage(pr.CaptionCN, 1, menu);
+                                        if (menu != null)
+                                        {
+                                            page = NewPage(pr.CaptionCN, 1, menu);
+                                        }
+                                        else
+                                        {
+                                            MessageBox.Show("未找到窗体:" + pr.FormName + " 请配置正确的菜单 ");
+                                            return;
+                                        }
                                     }
                                     else
                                     {
                                         var menu = Startup.GetFromFacByName<BaseNavigator>(pr.FormName);
-                                        page = NewPage(pr.CaptionCN, 1, menu);
+                                        if (menu != null)
+                                        {
+                                            page = NewPage(pr.CaptionCN, 1, menu);
+                                        }
+                                        else
+                                        {
+                                            MessageBox.Show("未找到窗体:" + pr.FormName + " 请配置正确的菜单 ");
+                                            return;
+                                        }
                                     }
 
                                 }
@@ -563,8 +619,16 @@ namespace RUINORERP.UI.Common
                                 if (pr.BIBaseForm.Contains("UCBaseClass"))
                                 {
                                     var menu = Startup.GetFromFacByName<UCBaseClass>(pr.FormName);
-                                    menu.CurMenuInfo = pr;
-                                    page = NewPage(pr.CaptionCN, 1, menu);
+                                    if (menu != null)
+                                    {
+                                        menu.CurMenuInfo = pr;
+                                        page = NewPage(pr.CaptionCN, 1, menu);
+                                    }
+                                    else
+                                    {
+                                        MessageBox.Show("未找到窗体:" + pr.FormName + " 请配置正确的菜单 ");
+                                        return;
+                                    }
                                 }
                                 else
                                 if (!pr.BIBaseForm.Contains("BaseBillEditGeneric") && !pr.BIBaseForm.Contains("BaseEditGeneric") && !pr.BIBaseForm.Contains("BaseListGeneric"))

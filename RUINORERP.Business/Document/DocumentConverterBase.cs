@@ -35,8 +35,50 @@ namespace RUINORERP.Business.Document
         }
         /// <summary>
         /// 默认验证通过
+        /// 增强版：结合统一状态管理体系进行校验
         /// </summary>
-        public virtual Task<ValidationResult> ValidateConversionAsync(TSource source)
+        public virtual async Task<ValidationResult> ValidateConversionAsync(TSource source)
+        {
+            // 1. 基础业务验证（子类重写）- 优先级最高
+            var businessValidation = await OnValidateBusinessRulesAsync(source);
+            if (!businessValidation.CanConvert)
+            {
+                return businessValidation;
+            }
+
+            // 2. 状态管理验证（如果源单据支持状态管理）
+            if (source is BaseEntity baseEntity && baseEntity.StateManager != null)
+            {
+                try
+                {
+                    // 询问状态管理器：在当前状态下，是否允许执行“联动”动作？
+                    var canExecute = baseEntity.StateManager.CanExecuteActionWithMessage(baseEntity, Global.MenuItemEnums.联动);
+                    
+                    if (!canExecute.CanExecute)
+                    {
+                        // 记录日志但不一定直接返回失败，因为子类可能已经处理了更细致的逻辑
+                        _logger.LogDebug("状态管理器建议禁止转换: {Message}", canExecute.Message);
+                        
+                        // 只有当状态管理器给出明确的“终态”或“锁定”提示时，才在基类层面拦截
+                        if (canExecute.Message.Contains("终态") || canExecute.Message.Contains("锁定"))
+                        {
+                            return ValidationResult.Fail(canExecute.Message);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "状态管理验证异常，回退到仅业务验证");
+                }
+            }
+
+            return ValidationResult.Success;
+        }
+
+        /// <summary>
+        /// 子类重写此方法以实现具体的业务规则验证（如金额、必填项等）
+        /// </summary>
+        protected virtual Task<ValidationResult> OnValidateBusinessRulesAsync(TSource source)
         {
             return Task.FromResult(ValidationResult.Success);
         }
@@ -180,6 +222,20 @@ namespace RUINORERP.Business.Document
         ///   // 工厂层会根据实例的 ReceivePaymentType 动态生成"收款"或"付款"
         /// </summary>
         public virtual string DisplayName => null;
+
+        /// <summary>
+        /// 获取转换唯一标识符
+        /// 默认为空，子类可以根据业务逻辑重写（如 "Normal", "Refund", "Offset"）
+        /// </summary>
+        public virtual string ConversionIdentifier => GetConversionIdentifier();
+
+        /// <summary>
+        /// 供子类重写的标识符获取方法
+        /// </summary>
+        protected virtual string GetConversionIdentifier()
+        {
+            return string.Empty;
+        }
         
         /// <summary>
         /// 获取转换操作类型（单据生成型或动作操作型）

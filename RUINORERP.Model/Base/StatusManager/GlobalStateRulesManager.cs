@@ -221,7 +221,8 @@ namespace RUINORERP.Model.Base.StatusManager
             MenuItemEnums.保存,
             MenuItemEnums.查询,
             MenuItemEnums.打印,
-            MenuItemEnums.导出
+            MenuItemEnums.导出,
+            MenuItemEnums.联动 // 单据转换/联动操作，不改变源单据状态，但受当前状态约束
         };
 
         /// <summary>

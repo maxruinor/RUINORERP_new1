@@ -36,6 +36,11 @@ namespace RUINORERP.Business.Document.Converters
         }
 
         /// <summary>
+        /// 转换唯一标识符
+        /// </summary>
+        public override string ConversionIdentifier => "Refund";
+
+        /// <summary>
         /// 转换器显示名称
         /// 注意:由于预收付款单的 ReceivePaymentType 在运行时才能确定,
         /// 这里返回通用文本,实际菜单显示由 DocumentConverterFactory 根据具体单据动态调整
@@ -68,16 +73,38 @@ namespace RUINORERP.Business.Document.Converters
         }
 
         /// <summary>
-        /// 执行具体的转换逻辑 - 重写后不再使用基类的 target 参数模式
+        /// 子类重写此方法以实现具体的业务规则验证
         /// </summary>
-        /// <param name="source">源单据:预收付款单</param>
-        /// <param name="target">目标单据:收付款单(不再使用)</param>
-        /// <returns></returns>
-        protected override async Task PerformConversionAsync(tb_FM_PreReceivedPayment source, tb_FM_PaymentRecord target)
+        protected override Task<ValidationResult> OnValidateBusinessRulesAsync(tb_FM_PreReceivedPayment source)
         {
-            // 此方法不再使用,逻辑已移至 ConvertAsync
-            // 保留此方法以满足抽象类要求
-            await Task.CompletedTask;
+            var result = new ValidationResult { CanConvert = true };
+            var currentStatus = (PrePaymentStatus)source.PrePaymentStatus;
+
+            // 规则：数据状态必须为“待核销”或“处理中”才能退还余款
+            if (currentStatus != PrePaymentStatus.待核销 && currentStatus != PrePaymentStatus.处理中)
+            {
+                result.CanConvert = false;
+                result.ErrorMessage = $"当前状态【{currentStatus}】不支持退还余款，仅支持【待核销】或【处理中】状态";
+            }
+
+            // 额外检查：必须有余额可退
+            if (result.CanConvert && source.LocalBalanceAmount <= 0)
+            {
+                result.CanConvert = false;
+                result.ErrorMessage = "该预收款单没有可退余额";
+            }
+
+            return Task.FromResult(result);
+        }
+
+        /// <summary>
+        /// 执行具体的转换逻辑
+        /// 注意：本转换器已在 ConvertAsync 中通过 BuildPaymentRecord 完成全部逻辑，
+        /// 此方法仅用于满足基类抽象要求，不再执行实际业务。
+        /// </summary>
+        protected override Task PerformConversionAsync(tb_FM_PreReceivedPayment source, tb_FM_PaymentRecord target)
+        {
+            return Task.CompletedTask;
         }
 
         /// <summary>

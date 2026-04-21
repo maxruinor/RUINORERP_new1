@@ -72,6 +72,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             kchkEnableDetailedLog.Checked = Configuration.EnableDetailedLog;
             kchkAllowTestMode.Checked = Configuration.AllowTestMode;
             knumMaxProcessCount.Value = Configuration.MaxProcessCount;
+            kchkEnableRelatedCleanup.Checked = Configuration.EnableRelatedCleanup;
+            
+            // 清理模式
+            kradCleanupModeAll.Checked = Configuration.CleanupMode == 1;
+            kradCleanupModeSelected.Checked = Configuration.CleanupMode == 0;
+            
+            // 更新控件状态
+            UpdateControlStates();
+        }
+
+        /// <summary>
+        /// 更新控件状态
+        /// </summary>
+        private void UpdateControlStates()
+        {
+            // 关联清理选项
+            kchkEnableRelatedCleanup.Enabled = kradCleanupModeAll.Checked || kradCleanupModeSelected.Checked;
         }
 
         /// <summary>
@@ -99,6 +116,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 Configuration.EnableDetailedLog = kchkEnableDetailedLog.Checked;
                 Configuration.AllowTestMode = kchkAllowTestMode.Checked;
                 Configuration.MaxProcessCount = (int)knumMaxProcessCount.Value;
+                Configuration.EnableRelatedCleanup = kchkEnableRelatedCleanup.Checked;
+                Configuration.CleanupMode = kradCleanupModeAll.Checked ? 1 : 0;
 
                 this.DialogResult = DialogResult.OK;
                 this.Close();

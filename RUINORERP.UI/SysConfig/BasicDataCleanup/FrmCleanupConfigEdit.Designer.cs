@@ -91,6 +91,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             //
             // kryptonGroupBox1.Panel
             //
+            this.kryptonGroupBox1.Panel.Controls.Add(this.kchkEnableRelatedCleanup);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.kryptonLabel9);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.kradCleanupModeSelected);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.kradCleanupModeAll);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.kryptonLabel10);
             this.kryptonGroupBox1.Panel.Controls.Add(this.knumMaxProcessCount);
             this.kryptonGroupBox1.Panel.Controls.Add(this.kryptonLabel8);
             this.kryptonGroupBox1.Panel.Controls.Add(this.kchkAllowTestMode);
@@ -105,7 +110,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kryptonGroupBox1.Panel.Controls.Add(this.kryptonLabel2);
             this.kryptonGroupBox1.Panel.Controls.Add(this.ktxtConfigName);
             this.kryptonGroupBox1.Panel.Controls.Add(this.kryptonLabel1);
-            this.kryptonGroupBox1.Size = new System.Drawing.Size(550, 420);
+            this.kryptonGroupBox1.Size = new System.Drawing.Size(550, 470);
             this.kryptonGroupBox1.TabIndex = 1;
             this.kryptonGroupBox1.Values.Heading = "配置信息";
             //
@@ -133,6 +138,53 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kryptonLabel8.Size = new System.Drawing.Size(103, 20);
             this.kryptonLabel8.TabIndex = 12;
             this.kryptonLabel8.Values.Text = "最大处理记录数:";
+            //
+            // kchkEnableRelatedCleanup
+            //
+            this.kchkEnableRelatedCleanup = new Krypton.Toolkit.KryptonCheckBox();
+            this.kchkEnableRelatedCleanup.Checked = true;
+            this.kchkEnableRelatedCleanup.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.kchkEnableRelatedCleanup.Location = new System.Drawing.Point(130, 380);
+            this.kchkEnableRelatedCleanup.Name = "kchkEnableRelatedCleanup";
+            this.kchkEnableRelatedCleanup.Size = new System.Drawing.Size(200, 20);
+            this.kchkEnableRelatedCleanup.TabIndex = 17;
+            this.kchkEnableRelatedCleanup.Values.Text = "启用关联清理（自动清理关联表）";
+            //
+            // kryptonLabel9
+            //
+            this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel9.Location = new System.Drawing.Point(20, 380);
+            this.kryptonLabel9.Name = "kryptonLabel9";
+            this.kryptonLabel9.Size = new System.Drawing.Size(103, 20);
+            this.kryptonLabel9.TabIndex = 16;
+            this.kryptonLabel9.Values.Text = "关联清理:";
+            //
+            // kradCleanupModeSelected
+            //
+            this.kradCleanupModeSelected = new Krypton.Toolkit.KryptonRadioButton();
+            this.kradCleanupModeSelected.Location = new System.Drawing.Point(250, 350);
+            this.kradCleanupModeSelected.Name = "kradCleanupModeSelected";
+            this.kradCleanupModeSelected.Size = new System.Drawing.Size(120, 20);
+            this.kradCleanupModeSelected.TabIndex = 15;
+            this.kradCleanupModeSelected.Values.Text = "指定记录清理";
+            //
+            // kradCleanupModeAll
+            //
+            this.kradCleanupModeAll = new Krypton.Toolkit.KryptonRadioButton();
+            this.kradCleanupModeAll.Location = new System.Drawing.Point(130, 350);
+            this.kradCleanupModeAll.Name = "kradCleanupModeAll";
+            this.kradCleanupModeAll.Size = new System.Drawing.Size(100, 20);
+            this.kradCleanupModeAll.TabIndex = 14;
+            this.kradCleanupModeAll.Values.Text = "全部清空";
+            //
+            // kryptonLabel10
+            //
+            this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel10.Location = new System.Drawing.Point(20, 350);
+            this.kryptonLabel10.Name = "kryptonLabel10";
+            this.kryptonLabel10.Size = new System.Drawing.Size(103, 20);
+            this.kryptonLabel10.TabIndex = 13;
+            this.kryptonLabel10.Values.Text = "清理模式:";
             //
             // kchkAllowTestMode
             //
@@ -262,7 +314,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.kbtnCancel;
-            this.ClientSize = new System.Drawing.Size(550, 480);
+            this.ClientSize = new System.Drawing.Size(550, 530);
             this.Controls.Add(this.kryptonGroupBox1);
             this.Controls.Add(this.kryptonPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -303,5 +355,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private Krypton.Toolkit.KryptonCheckBox kchkAllowTestMode;
         private Krypton.Toolkit.KryptonNumericUpDown knumMaxProcessCount;
         private Krypton.Toolkit.KryptonLabel kryptonLabel8;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel9;
+        private Krypton.Toolkit.KryptonCheckBox kchkEnableRelatedCleanup;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel10;
+        private Krypton.Toolkit.KryptonRadioButton kradCleanupModeAll;
+        private Krypton.Toolkit.KryptonRadioButton kradCleanupModeSelected;
     }
 }

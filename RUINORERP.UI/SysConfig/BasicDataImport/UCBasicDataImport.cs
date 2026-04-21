@@ -49,6 +49,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         // 宽表导入相关字段
         private RUINORERP.Business.ImportEngine.SmartImportEngine _wideTableEngine;
         private bool _isWideTableMode = false;  // 是否启用宽表模式
+        
+        // 生成结果预览按钮
+        private Krypton.Toolkit.KryptonButton kbtnGeneratePreview;
 
         /// <summary>
         /// 实体类型映射字典
@@ -164,7 +167,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 添加宽表Profile管理按钮
+        /// 添加宽表Profile管理按钮和生成结果预览按钮
         /// </summary>
         private void AddWideTableProfileManagementButton()
         {
@@ -183,16 +186,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     await OpenWideTableProfileEditor();
                 };
 
+                // 添加"生成结果预览"按钮（在解析按钮后面）
+                kbtnGeneratePreview = new Krypton.Toolkit.KryptonButton();
+                kbtnGeneratePreview.Text = "生成结果预览";
+                kbtnGeneratePreview.Location = new System.Drawing.Point(
+                    kbtnDynamicParse.Location.X + kbtnDynamicParse.Width + 10,
+                    kbtnDynamicParse.Location.Y
+                );
+                kbtnGeneratePreview.Size = new System.Drawing.Size(120, 25);
+                kbtnGeneratePreview.Enabled = false;  // 初始禁用，需要先解析数据
+                kbtnGeneratePreview.Click += kbtnGeneratePreview_Click;
+
                 // 添加到父容器
                 if (kbtnDynamicMap.Parent != null)
                 {
                     kbtnDynamicMap.Parent.Controls.Add(btnManageProfiles);
                     btnManageProfiles.BringToFront();
+                    
+                    kbtnDynamicParse.Parent.Controls.Add(kbtnGeneratePreview);
+                    kbtnGeneratePreview.BringToFront();
                 }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.ShowStatusText($"添加Profile管理按钮失败: {ex.Message}");
+                MainForm.Instance.ShowStatusText($"添加按钮失败: {ex.Message}");
             }
         }
 
@@ -539,6 +556,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 解析按钮需要：有原始数据、选择了实体类型、有映射配置
             bool hasMappingConfig = _currentConfig != null && _currentConfig.ColumnMappings != null && _currentConfig.ColumnMappings.Count > 0;
             kbtnDynamicParse.Enabled = hasRawData && hasEntityType && hasMappingConfig;
+            
+            // 生成结果预览按钮：需要有解析后的数据
+            if (kbtnGeneratePreview != null)
+            {
+                kbtnGeneratePreview.Enabled = _parsedImportData != null && _parsedImportData.Rows.Count > 0;
+            }
+            
+            // 导入按钮：需要先生成结果预览
+            kbtnDynamicImport.Enabled = false;  // 默认禁用，只有生成预览后才启用
         }
 
         /// <summary>
@@ -718,7 +744,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 动态导入-解析文件按钮点击事件
-        /// 根据映射配置解析Excel数据
+        /// 根据映射配置解析Excel数据，仅做数据转换不查询外键
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
@@ -754,7 +780,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     0); // 0表示读取全部数据
 
                 //
-                // 根据映射配置转换数据
+                // 根据映射配置转换数据（不包含外键查询）
                 _parsedImportData = ApplyColumnMapping(fullData, _currentConfig.ColumnMappings);
 
                 // 应用去重复逻辑（如果配置了去重）
@@ -767,16 +793,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                     if (deduplicationResult.DuplicateCount > 0)
                     {
-                        MainForm.Instance.ShowStatusText($"根据映射配置解析完成，原始数据 {deduplicationResult.OriginalCount} 行，去重后 {_parsedImportData.Rows.Count} 行（移除 {deduplicationResult.DuplicateCount} 行重复数据）");
+                        MainForm.Instance.ShowStatusText($"数据转换完成，原始数据 {deduplicationResult.OriginalCount} 行，去重后 {_parsedImportData.Rows.Count} 行（移除 {deduplicationResult.DuplicateCount} 行重复数据）");
                     }
                     else
                     {
-                        MainForm.Instance.ShowStatusText($"根据映射配置解析完成，共 {_parsedImportData.Rows.Count} 行数据（无重复数据）");
+                        MainForm.Instance.ShowStatusText($"数据转换完成，共 {_parsedImportData.Rows.Count} 行数据（无重复数据）");
                     }
                 }
                 else
                 {
-                    MainForm.Instance.ShowStatusText($"根据映射配置解析完成，共 {_parsedImportData.Rows.Count} 行数据");
+                    MainForm.Instance.ShowStatusText($"数据转换完成，共 {_parsedImportData.Rows.Count} 行数据");
                 }
 
                 // 绑定到解析后数据表格
@@ -785,8 +811,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 切换到解析数据预览页面
                 kryptonNavigatorDynamic.SelectedPage = kryptonPageParsedData;
 
-                // 启用导入按钮
-                kbtnDynamicImport.Enabled = true;
+                // 启用生成结果预览按钮和导入按钮
+                kbtnGeneratePreview.Enabled = true;
+                kbtnDynamicImport.Enabled = false;  // 需要先生成结果预览才能导入
             }
             catch (Exception ex)
             {
@@ -870,7 +897,27 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                         // 如果是图片列，直接使用Excel中的值（图片路径）
                                         if (mapping.IsImageColumn)
                                         {
-                                            targetRow[mapping.SystemField?.Value] = cellValue?.ToString() ?? "";
+                                            // 尝试处理图片并保存
+                                            string imagePath = cellValue?.ToString();
+                                            if (!string.IsNullOrEmpty(imagePath) && File.Exists(imagePath))
+                                            {
+                                                try
+                                                {
+                                                    // 获取产品编码作为文件名前缀
+                                                    string productCode = sourceRow["ProductCode"]?.ToString() ?? "IMG";
+                                                    string savedPath = _imageProcessor.ProcessAndSaveImage(imagePath, productCode);
+                                                    targetRow[mapping.SystemField?.Value] = savedPath;
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    System.Diagnostics.Debug.WriteLine($"图片处理失败: {ex.Message}");
+                                                    targetRow[mapping.SystemField?.Value] = imagePath; // 失败则保留原路径
+                                                }
+                                            }
+                                            else
+                                            {
+                                                targetRow[mapping.SystemField?.Value] = imagePath ?? "";
+                                            }
                                         }
                                         else
                                         {
@@ -1081,6 +1128,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 绑定到原始数据预览表格
                 dgvRawExcelData.DataSource = _rawExcelData;
+
+                // 重置解析后的数据和按钮状态
+                _parsedImportData = new DataTable();
+                dgvParsedImportData.DataSource = _parsedImportData;
+                if (kbtnGeneratePreview != null)
+                {
+                    kbtnGeneratePreview.Enabled = false;
+                }
+                kbtnDynamicImport.Enabled = false;
 
                 // 启用解析按钮
                 kbtnDynamicParse.Enabled = true;
@@ -1636,6 +1692,139 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 生成结果预览按钮点击事件
+        /// 预加载外键数据并解析为真实值，供用户确认后再导入
+        /// </summary>
+        private async void kbtnGeneratePreview_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (_parsedImportData == null || _parsedImportData.Rows.Count == 0)
+                {
+                    MessageBox.Show("请先点击\"解析\"按钮转换数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                MainForm.Instance.ShowStatusText("正在生成结果预览...");
+                kbtnGeneratePreview.Enabled = false;
+
+                // 1. 预加载所有外键数据到缓存
+                PreloadForeignKeyData();
+
+                // 2. 创建带外键解析的数据副本
+                DataTable previewData = _parsedImportData.Copy();
+                
+                // 3. 解析外键字段为真实值
+                ResolveForeignKeysInPreview(previewData);
+
+                // 4. 显示预览
+                dgvParsedImportData.DataSource = previewData;
+
+                // 5. 启用导入按钮
+                kbtnDynamicImport.Enabled = true;
+
+                MainForm.Instance.ShowStatusText($"结果预览生成完成，共 {previewData.Rows.Count} 行数据，可以点击\"导入\"按钮保存到数据库");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"生成结果预览失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                kbtnGeneratePreview.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 在预览数据中解析外键为真实值
+        /// </summary>
+        private void ResolveForeignKeysInPreview(DataTable previewData)
+        {
+            try
+            {
+                var foreignKeyMappings = _currentConfig.ColumnMappings
+                    .Where(m => m.DataSourceType == DataSourceType.ForeignKey && m.ForeignConfig != null)
+                    .ToList();
+
+                if (!foreignKeyMappings.Any())
+                {
+                    return;
+                }
+
+                int resolvedCount = 0;
+
+                foreach (var mapping in foreignKeyMappings)
+                {
+                    string systemFieldName = mapping.SystemField?.Key;
+                    if (string.IsNullOrEmpty(systemFieldName) || !previewData.Columns.Contains(systemFieldName))
+                    {
+                        continue;
+                    }
+
+                    string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn?.Key;
+                    if (string.IsNullOrEmpty(sourceColumnName) || !previewData.Columns.Contains(sourceColumnName))
+                    {
+                        continue;
+                    }
+
+                    string targetTable = mapping.ForeignConfig.ForeignKeyTable?.Value;
+                    string targetField = mapping.ForeignConfig.ForeignKeyField?.Value;
+
+                    if (string.IsNullOrEmpty(targetTable) || string.IsNullOrEmpty(targetField))
+                    {
+                        continue;
+                    }
+
+                    // 遍历每一行，解析外键
+                    foreach (DataRow row in previewData.Rows)
+                    {
+                        object sourceValue = row[sourceColumnName];
+                        if (sourceValue == null || sourceValue == DBNull.Value || string.IsNullOrEmpty(sourceValue.ToString()))
+                        {
+                            continue;
+                        }
+
+                        // 从缓存中获取外键ID
+                        object foreignKeyId = _foreignKeyService.GetForeignKeyId(
+                            sourceValue.ToString(),
+                            targetTable,
+                            targetField
+                        );
+
+                        if (foreignKeyId != null)
+                        {
+                            // 更新系统字段的值为真实的ID
+                            row[systemFieldName] = foreignKeyId;
+                            
+                            // 添加一列显示关联信息（可选，用于调试）
+                            string displayColName = $"{systemFieldName}_关联信息";
+                            if (!previewData.Columns.Contains(displayColName))
+                            {
+                                previewData.Columns.Add(displayColName, typeof(string));
+                            }
+                            row[displayColName] = $"{sourceValue} → ID:{foreignKeyId}";
+                            
+                            resolvedCount++;
+                        }
+                        else
+                        {
+                            // 外键未找到，标记为错误
+                            string errorColName = $"{systemFieldName}_错误";
+                            if (!previewData.Columns.Contains(errorColName))
+                            {
+                                previewData.Columns.Add(errorColName, typeof(string));
+                            }
+                            row[errorColName] = $"未找到: {sourceValue}";
+                        }
+                    }
+                }
+
+                MainForm.Instance.ShowStatusText($"已解析 {resolvedCount} 个外键关联");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.ShowStatusText($"解析外键失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 动态导入-导入数据按钮点击事件
         /// </summary>
         /// <param name="sender">事件发送者</param>
@@ -1699,8 +1888,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 原有单表导入逻辑
-                //导入前，通过当前配置找到这个配置中的列的情况，找到有外键关联的情况，再去找到具体关联的哪个表。
-                //再先从数据库中查找到结果集合。缓存起来。用于 外键服务类和验证服务类。
+                // 确认导入
+                var confirmResult = MessageBox.Show(
+                    $"确定要导入 {_parsedImportData?.Rows.Count ?? 0} 条数据到 {_selectedEntityType?.Name} 吗？\n\n" +
+                    $"请确保已点击\"生成结果预览\"并检查数据无误。",
+                    "确认导入",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
+                if (confirmResult != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                // 预加载外键数据（确保缓存最新）
                 PreloadForeignKeyData();
 
                 // 执行动态导入（异步）

@@ -212,37 +212,40 @@ namespace RUINORERP.Business.ImportEngine
                 // 4. 执行宽表拆分
                 var splitTables = await splitter.SplitWideTableWithDependenciesAsync(rawData, wideProfile);
 
-                // 5. 按依赖顺序写入
+                // 5. 按依赖顺序写入（全局事务）
                 int totalSuccess = 0;
 
-                // 先写依赖表(已在SplitWideTableWithDependenciesAsync中写入)
-                // 再写主表
-                if (splitTables.ContainsKey(wideProfile.MasterTable.TargetTable))
+                await _db.Ado.UseTranAsync(async () =>
                 {
-                    var count = await _dbWriter.BatchUpsertAsync(
-                        splitTables[wideProfile.MasterTable.TargetTable],
-                        wideProfile.MasterTable,
-                        remapper
-                    );
-                    totalSuccess += count;
-                }
-
-                // 最后写子表
-                if (wideProfile.ChildTables != null)
-                {
-                    foreach (var childProfile in wideProfile.ChildTables)
+                    // 先写依赖表(已在SplitWideTableWithDependenciesAsync中写入)
+                    // 再写主表
+                    if (splitTables.ContainsKey(wideProfile.MasterTable.TargetTable))
                     {
-                        if (splitTables.ContainsKey(childProfile.TargetTable))
+                        var count = await _dbWriter.BatchUpsertAsync(
+                            splitTables[wideProfile.MasterTable.TargetTable],
+                            wideProfile.MasterTable,
+                            remapper
+                        );
+                        totalSuccess += count;
+                    }
+
+                    // 最后写子表
+                    if (wideProfile.ChildTables != null)
+                    {
+                        foreach (var childProfile in wideProfile.ChildTables)
                         {
-                            var count = await _dbWriter.BatchUpsertAsync(
-                                splitTables[childProfile.TargetTable],
-                                childProfile,
-                                remapper
-                            );
-                            totalSuccess += count;
+                            if (splitTables.ContainsKey(childProfile.TargetTable))
+                            {
+                                var count = await _dbWriter.BatchUpsertAsync(
+                                    splitTables[childProfile.TargetTable],
+                                    childProfile,
+                                    remapper
+                                );
+                                totalSuccess += count;
+                            }
                         }
                     }
-                }
+                });
 
                 report.SuccessRows = totalSuccess;
                 report.IsSuccess = true;
@@ -368,6 +371,55 @@ namespace RUINORERP.Business.ImportEngine
         {
             var splitter = new DataSplitterService(new IdRemappingEngine(_db), _dbWriter, _db);
             return splitter.ExtractTableDataForPublic(rawData, profile);
+        }
+
+        /// <summary>
+        /// 获取AI智能列映射建议
+        /// </summary>
+        public async Task<RUINORERP.Business.AIServices.DataImport.IntelligentMappingResult> GetAiMappingSuggestionsAsync(System.Collections.Generic.List<string> excelHeaders, Type targetEntityType)
+        {
+            try
+            {
+                // 1. 实例化实体以获取元数据
+                if (targetEntityType == null || !typeof(RUINORERP.Model.BaseEntity).IsAssignableFrom(targetEntityType))
+                {
+                    return new RUINORERP.Business.AIServices.DataImport.IntelligentMappingResult();
+                }
+
+                var instance = Activator.CreateInstance(targetEntityType) as RUINORERP.Model.BaseEntity;
+                if (instance == null) return new RUINORERP.Business.AIServices.DataImport.IntelligentMappingResult();
+
+                // 2. 提取字段信息（包含中文描述）
+                var dbFields = instance.ImportableFields.Select(f => new RUINORERP.Model.ImportFieldInfo
+                {
+                    ColumnName = f.ColumnName,
+                    Description = f.Description,
+                    IsPrimaryKey = f.IsPrimaryKey,
+                    IsForeignKey = f.IsForeignKey
+                }).ToList();
+
+                System.Diagnostics.Debug.WriteLine($"[AI Mapping] 开始分析: 实体={targetEntityType.Name}, Excel列数={excelHeaders.Count}, 数据库字段数={dbFields.Count}");
+
+                // 3. 调用 AI 服务
+                var aiService = new RUINORERP.Business.AIServices.DataImport.ColumnMappingService();
+                var result = await aiService.AnalyzeWithMetadataAsync(excelHeaders, dbFields);
+
+                if (result.Mappings.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[AI Mapping] 成功生成 {result.Mappings.Count} 个映射建议。");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[AI Mapping] AI 未返回有效建议，可能由于配置未开启或模型响应为空。");
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AI Mapping] 发生异常: {ex.Message}\n{ex.StackTrace}");
+                return new RUINORERP.Business.AIServices.DataImport.IntelligentMappingResult();
+            }
         }
     }
 }

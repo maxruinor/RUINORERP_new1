@@ -40,5 +40,13 @@ namespace RUINORERP.Business.ImportEngine
         /// 解析Excel文件为DataTable
         /// </summary>
         Task<DataTable> ParseExcelAsync(string filePath, int sheetIndex = 0);
+        
+        /// <summary>
+        /// 获取AI智能列映射建议
+        /// </summary>
+        /// <param name="excelHeaders">Excel表头列表</param>
+        /// <param name="targetEntityType">目标实体类型</param>
+        /// <returns>包含映射建议和逻辑主键的结果</returns>
+        Task<RUINORERP.Business.AIServices.DataImport.IntelligentMappingResult> GetAiMappingSuggestionsAsync(System.Collections.Generic.List<string> excelHeaders, Type targetEntityType);
     }
 }

@@ -39,6 +39,11 @@ namespace RUINORERP.Business.Document.Converters
         }
 
         /// <summary>
+        /// 转换唯一标识符
+        /// </summary>
+        public override string ConversionIdentifier => "Cancel";
+
+        /// <summary>
         /// 转换器显示名称
         /// 直接返回菜单文本,不需要基类的格式
         /// </summary>

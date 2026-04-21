@@ -18,5 +18,12 @@ namespace RUINORERP.Business.Document
         /// 如果子类重写了 DisplayName,返回子类的值;否则返回基类的智能默认值
         /// </summary>
         string DisplayName { get; }
+
+        /// <summary>
+        /// 转换唯一标识符
+        /// 用于区分同一源/目标类型下的不同转换逻辑（如：正常转单 vs 退款）
+        /// 建议格式：{Action} (例如: "Normal", "Refund", "Offset")
+        /// </summary>
+        string ConversionIdentifier { get; }
     }
 }

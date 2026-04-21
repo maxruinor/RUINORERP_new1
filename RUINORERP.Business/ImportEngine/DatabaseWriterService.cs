@@ -25,10 +25,6 @@ namespace RUINORERP.Business.ImportEngine
         /// <summary>
         /// 批量Upsert数据
         /// </summary>
-        /// <param name="data">待写入的数据表</param>
-        /// <param name="profile">导入配置</param>
-        /// <param name="remapper">ID重映射引擎（可选）</param>
-        /// <returns>成功写入的行数</returns>
         public async Task<int> BatchUpsertAsync(DataTable data, ImportProfile profile, IdRemappingEngine remapper = null)
         {
             if (data == null || data.Rows.Count == 0)
@@ -46,46 +42,53 @@ namespace RUINORERP.Business.ImportEngine
             int totalAffected = 0;
 
             // 使用事务确保数据一致性
-            await _db.Ado.UseTranAsync(async () =>
+            try
             {
-                // 1. 分离新增和更新的数据
-                var (insertRows, updateRows) = await SeparateInsertAndUpdateAsync(data, profile.TargetTable, businessKeys);
-
-                // 2. 执行插入
-                if (insertRows.Any())
+                await _db.Ado.UseTranAsync(async () =>
                 {
-                    var insertedCount = await InsertRowsAsync(insertRows, profile.TargetTable);
-                    totalAffected += insertedCount;
+                    // 1. 分离新增和更新的数据
+                    var (insertRows, updateRows) = await SeparateInsertAndUpdateAsync(data, profile.TargetTable, businessKeys);
 
-                    // 3. 如果启用了ID重映射，注册新插入记录的映射关系
-                    if (remapper != null && profile.EnableIdRemapping)
+                    // 2. 执行插入
+                    if (insertRows.Any())
                     {
-                        var idCol = data.Columns.Cast<DataColumn>().FirstOrDefault(c => c.ColumnName.ToUpper() == "ID")?.ColumnName;
-                        if (!string.IsNullOrEmpty(idCol))
+                        var insertedCount = await InsertRowsAsync(insertRows, profile.TargetTable);
+                        totalAffected += insertedCount;
+
+                        // 3. 如果启用了ID重映射，注册新插入记录的映射关系
+                        if (remapper != null && profile.EnableIdRemapping)
                         {
-                            // 简化方案：逐行回查（生产环境建议优化为批量 IN 查询）
-                            foreach (var row in insertRows)
+                            var idCol = data.Columns.Cast<DataColumn>().FirstOrDefault(c => c.ColumnName.ToUpper() == "ID")?.ColumnName;
+                            if (!string.IsNullOrEmpty(idCol))
                             {
-                                var sql = $"SELECT TOP 1 [{idCol}] FROM [{profile.TargetTable}] WHERE {string.Join(" AND ", businessKeys.Select(k => $"[{k}] = @{k}"))}";
-                                var ps = businessKeys.Select(k => new SugarParameter($"@{k}", row[k])).ToArray();
-                                var newId = await _db.Ado.GetScalarAsync(sql, ps);
-                                
-                                if (newId != null)
+                                foreach (var row in insertRows)
                                 {
-                                    var oldKey = string.Join("|", businessKeys.Select(k => row[k]?.ToString()));
-                                    remapper.RegisterMapping(profile.TargetTable, oldKey, Convert.ToInt64(newId));
+                                    var sql = $"SELECT TOP 1 [{idCol}] FROM [{profile.TargetTable}] WHERE {string.Join(" AND ", businessKeys.Select(k => $"[{k}] = @{k}"))}";
+                                    var ps = businessKeys.Select(k => new SugarParameter($"@{k}", row[k])).ToArray();
+                                    var newId = await _db.Ado.GetScalarAsync(sql, ps);
+                                    
+                                    if (newId != null)
+                                    {
+                                        var oldKey = string.Join("|", businessKeys.Select(k => row[k]?.ToString()));
+                                        remapper.RegisterMapping(profile.TargetTable, oldKey, Convert.ToInt64(newId));
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                // 4. 执行更新
-                if (updateRows.Any())
-                {
-                    totalAffected += await UpdateRowsAsync(updateRows, profile.TargetTable, businessKeys);
-                }
-            });
+                    // 4. 执行更新
+                    if (updateRows.Any())
+                    {
+                        totalAffected += await UpdateRowsAsync(updateRows, profile.TargetTable, businessKeys);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DatabaseWriter] Upsert 失败: {ex.Message}");
+                throw; // 重新抛出异常以便上层处理回滚或记录日志
+            }
 
             return totalAffected;
         }

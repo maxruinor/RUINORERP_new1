@@ -48,6 +48,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.CVCode);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Contact);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Notes);
+            queryFilter.SetQueryField<tb_CustomerVendor>(c => c.MobilePhone);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Phone);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Address);
 

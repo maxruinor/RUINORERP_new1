@@ -2470,12 +2470,14 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Startup.cs" />
+    <Compile Include="SysConfig\BasicDataCleanup\CascadeDeleteModels.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\CleanupConfiguration.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\CleanupConfigurationManager.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\CleanupDisplayNames.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\CleanupResult.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\CleanupRule.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\DataCleanupEngine.cs" />
+    <Compile Include="SysConfig\BasicDataCleanup\EntityRelationshipAnalyzer.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\FrmCleanupConfigEdit.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -4842,6 +4844,9 @@
     <EmbeddedResource Include="SS\SysInit.resx">
       <DependentUpon>SysInit.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SysConfig\BasicDataCleanup\UCBasicDataCleanup.resx">
+      <DependentUpon>UCBasicDataCleanup.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\BasicDataImport\frmColumnMappingConfig.resx">
       <DependentUpon>frmColumnMappingConfig.cs</DependentUpon>
     </EmbeddedResource>
@@ -5146,10 +5151,10 @@
     <Content Include="permission_rules.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="SysConfig\DataMigration\Profiles\01_供应商导入.json" />
-    <None Include="SysConfig\DataMigration\Profiles\02_产品类目导入.json" />
-    <None Include="SysConfig\DataMigration\Profiles\03_产品信息导入.json" />
-    <None Include="SysConfig\DataMigration\Profiles\示例_产品导入.json" />
+    <None Include="SysConfig\BasicDataImport\Profiles\01_供应商导入.json" />
+    <None Include="SysConfig\BasicDataImport\Profiles\02_产品类目导入.json" />
+    <None Include="SysConfig\BasicDataImport\Profiles\03_产品信息导入.json" />
+    <None Include="SysConfig\BasicDataImport\Profiles\示例_产品导入.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

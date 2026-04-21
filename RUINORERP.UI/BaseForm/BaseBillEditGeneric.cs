@@ -6164,7 +6164,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 获取所有可转换的目标单据类型(可能耗时,在后台执行)
                 var actionManager = Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
-                var availableActions = actionManager.GetAvailableActions<T>(EditEntity);
+                var availableActions = await actionManager.GetAvailableActionsAsync(EditEntity);
 
                 // 为每种可转换类型创建菜单项
                 menuItems = new List<ToolStripMenuItem>();

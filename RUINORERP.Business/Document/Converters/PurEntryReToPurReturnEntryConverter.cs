@@ -55,6 +55,11 @@ namespace RUINORERP.Business.Document.Converters
         }
 
         /// <summary>
+        /// 转换唯一标识符
+        /// </summary>
+        public override string ConversionIdentifier => "Normal";
+
+        /// <summary>
         /// 执行从采购退货单到采购退货入库单的转换
         /// </summary>
         /// <param name="source">源单据：采购退货单</param>

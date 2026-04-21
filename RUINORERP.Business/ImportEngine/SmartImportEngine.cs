@@ -12,15 +12,16 @@ using SqlSugar;
 namespace RUINORERP.Business.ImportEngine
 {
     /// <summary>
-    /// 智能导入引擎实现
+    /// 智能导入引擎 - 简化版
+    /// 移除IdRemappingEngine和DataSplitterService依赖，直接使用数据库操作
     /// </summary>
     public class SmartImportEngine : ISmartImportEngine
     {
         private readonly string _profileDirectory;
+        private readonly ISqlSugarClient _db;
         private readonly ExcelParserService _excelParser;
         private readonly ColumnMappingService _mappingService;
         private readonly DatabaseWriterService _dbWriter;
-        private readonly ISqlSugarClient _db;
 
         public SmartImportEngine(ISqlSugarClient db = null)
         {
@@ -29,11 +30,12 @@ namespace RUINORERP.Business.ImportEngine
             {
                 Directory.CreateDirectory(_profileDirectory);
             }
+            
+            _db = db ?? throw new ArgumentNullException(nameof(db), "请传入 SqlSugarClient 实例");
+            
+            // 初始化服务实例
             _excelParser = new ExcelParserService();
             _mappingService = new ColumnMappingService();
-            
-            // 必须通过构造函数传入 db 实例，避免 Business 层依赖 UI 层
-            _db = db ?? throw new ArgumentNullException(nameof(db), "请传入 SqlSugarClient 实例");
             _dbWriter = new DatabaseWriterService(_db);
         }
 
@@ -48,7 +50,19 @@ namespace RUINORERP.Business.ImportEngine
 
         public async Task<DataTable> PreviewDataAsync(string filePath, string profileName, int maxRows = 50)
         {
-            return await _excelParser.ParseAsync(filePath, 0, maxRows);
+            // 加载配置获取表索引
+            var profilePath = Path.Combine(_profileDirectory, $"{profileName}.json");
+            if (!File.Exists(profilePath))
+            {
+                throw new FileNotFoundException($"未找到导入方案配置文件: {profileName}");
+            }
+
+            var json = File.ReadAllText(profilePath);
+            var profile = JsonConvert.DeserializeObject<ImportProfile>(json);
+            int sheetIndex = profile?.SheetIndex ?? 0;
+
+            // 解析Excel
+            return await _excelParser.ParseAsync(filePath, sheetIndex, maxRows);
         }
 
         public async Task<DataTable> ParseExcelAsync(string filePath, int sheetIndex = 0)
@@ -64,12 +78,13 @@ namespace RUINORERP.Business.ImportEngine
             var report = new ImportReport();
             try
             {
-                // 1. 映射数据
+                // 映射数据
                 var mappedData = _mappingService.MapData(data, profile);
                 report.TotalRows = mappedData.Rows.Count;
 
-                // 2. 写入数据库
+                // 写入数据库
                 report.SuccessRows = await _dbWriter.BatchUpsertAsync(mappedData, profile, null);
+                
                 report.IsSuccess = true;
                 report.Message = $"表 [{profile.TargetTable}] 成功处理 {report.SuccessRows} 行。";
             }
@@ -89,14 +104,15 @@ namespace RUINORERP.Business.ImportEngine
             var report = new ImportReport();
             try
             {
-                // 1. 解析并映射数据
-                var rawData = await _excelParser.ParseAsync(filePath);
+                // 解析并映射数据
+                var rawData = await _excelParser.ParseAsync(filePath, profile.SheetIndex);
                 var mappedData = _mappingService.MapData(rawData, profile);
 
                 report.TotalRows = mappedData.Rows.Count;
 
-                // 2. 执行数据库写入
+                // 执行数据库写入
                 report.SuccessRows = await _dbWriter.BatchUpsertAsync(mappedData, profile, null);
+                
                 report.IsSuccess = true;
                 report.Message = $"导入成功，共处理 {report.SuccessRows} / {report.TotalRows} 行数据。";
             }
@@ -110,28 +126,12 @@ namespace RUINORERP.Business.ImportEngine
         }
 
         /// <summary>
-        /// 执行导入任务（内部方法，支持remapper）
+        /// 执行导入任务（兼容重载，保留接口）
         /// </summary>
-        public async Task<ImportReport> ExecuteWithDataTableAsync(DataTable data, ImportProfile profile, IdRemappingEngine remapper)
+        public async Task<ImportReport> ExecuteWithDataTableAsync(DataTable data, ImportProfile profile, object remapper)
         {
-            var report = new ImportReport();
-            try
-            {
-                // 1. 映射数据
-                var mappedData = _mappingService.MapData(data, profile);
-                report.TotalRows = mappedData.Rows.Count;
-
-                // 2. 写入数据库
-                report.SuccessRows = await _dbWriter.BatchUpsertAsync(mappedData, profile, remapper);
-                report.IsSuccess = true;
-                report.Message = $"表 [{profile.TargetTable}] 成功处理 {report.SuccessRows} 行。";
-            }
-            catch (Exception ex)
-            {
-                report.IsSuccess = false;
-                report.Message = ex.Message;
-            }
-            return report;
+            // 忽略remapper参数，使用简化实现
+            return await ExecuteWithDataTableAsync(data, profile);
         }
 
         public async Task<ImportReport> ExecuteAsync(string filePath, string profileName, bool isDryRun = false)
@@ -139,7 +139,7 @@ namespace RUINORERP.Business.ImportEngine
             var report = new ImportReport();
             try
             {
-                // 1. 加载配置
+                // 加载配置
                 var profilePath = Path.Combine(_profileDirectory, $"{profileName}.json");
                 if (!File.Exists(profilePath))
                 {
@@ -149,16 +149,21 @@ namespace RUINORERP.Business.ImportEngine
                 var json = File.ReadAllText(profilePath);
                 var profile = JsonConvert.DeserializeObject<ImportProfile>(json);
 
-                // 2. 解析并映射数据
-                var rawData = await _excelParser.ParseAsync(filePath);
+                if (profile == null)
+                {
+                    throw new Exception("配置文件格式错误");
+                }
+
+                // 解析并映射数据
+                var rawData = await _excelParser.ParseAsync(filePath, profile.SheetIndex);
                 var mappedData = _mappingService.MapData(rawData, profile);
 
                 report.TotalRows = mappedData.Rows.Count;
 
                 if (!isDryRun)
                 {
-                    // 3. 执行数据库写入（包含事务和 Upsert 逻辑）
-                    report.SuccessRows = await _dbWriter.BatchUpsertAsync(mappedData, profile);
+                    // 执行数据库写入
+                    report.SuccessRows = await _dbWriter.BatchUpsertAsync(mappedData, profile, null);
                     report.Message = $"导入成功，共处理 {report.SuccessRows} / {report.TotalRows} 行数据。";
                 }
                 else
@@ -175,11 +180,12 @@ namespace RUINORERP.Business.ImportEngine
                 report.Message = ex.Message;
             }
 
-            return await Task.FromResult(report);
+            return report;
         }
 
         /// <summary>
-        /// 执行宽表导入(支持多表拆分)
+        /// 执行宽表导入(支持多表拆分) - 简化实现
+        /// 使用宽表Profile配置，按依赖顺序导入
         /// </summary>
         public async Task<ImportReport> ExecuteWideTableImportAsync(string filePath, string profileName)
         {
@@ -202,45 +208,44 @@ namespace RUINORERP.Business.ImportEngine
                 }
 
                 // 2. 解析Excel
-                var rawData = await _excelParser.ParseAsync(filePath);
+                var rawData = await _excelParser.ParseAsync(filePath, wideProfile.MasterTable.SheetIndex);
                 report.TotalRows = rawData.Rows.Count;
 
-                // 3. 初始化服务
-                var remapper = new IdRemappingEngine(_db);
-                var splitter = new DataSplitterService(remapper, _dbWriter, _db);
-
-                // 4. 执行宽表拆分
-                var splitTables = await splitter.SplitWideTableWithDependenciesAsync(rawData, wideProfile);
-
-                // 5. 按依赖顺序写入（全局事务）
+                // 3. 使用全局事务按顺序导入
                 int totalSuccess = 0;
-
                 await _db.Ado.UseTranAsync(async () =>
                 {
-                    // 先写依赖表(已在SplitWideTableWithDependenciesAsync中写入)
-                    // 再写主表
-                    if (splitTables.ContainsKey(wideProfile.MasterTable.TargetTable))
+                    // 先导入依赖表
+                    if (wideProfile.DependencyTables != null)
                     {
-                        var count = await _dbWriter.BatchUpsertAsync(
-                            splitTables[wideProfile.MasterTable.TargetTable],
-                            wideProfile.MasterTable,
-                            remapper
-                        );
+                        foreach (var depProfile in wideProfile.DependencyTables)
+                        {
+                            var depData = ExtractAndMapTableData(rawData, depProfile);
+                            if (depData != null && depData.Rows.Count > 0)
+                            {
+                                var count = await _dbWriter.BatchUpsertAsync(depData, depProfile, null);
+                                totalSuccess += count;
+                            }
+                        }
+                    }
+
+                    // 再导入主表
+                    var masterData = ExtractAndMapTableData(rawData, wideProfile.MasterTable);
+                    if (masterData != null && masterData.Rows.Count > 0)
+                    {
+                        var count = await _dbWriter.BatchUpsertAsync(masterData, wideProfile.MasterTable, null);
                         totalSuccess += count;
                     }
 
-                    // 最后写子表
+                    // 最后导入子表
                     if (wideProfile.ChildTables != null)
                     {
                         foreach (var childProfile in wideProfile.ChildTables)
                         {
-                            if (splitTables.ContainsKey(childProfile.TargetTable))
+                            var childData = ExtractAndMapTableData(rawData, childProfile);
+                            if (childData != null && childData.Rows.Count > 0)
                             {
-                                var count = await _dbWriter.BatchUpsertAsync(
-                                    splitTables[childProfile.TargetTable],
-                                    childProfile,
-                                    remapper
-                                );
+                                var count = await _dbWriter.BatchUpsertAsync(childData, childProfile, null);
                                 totalSuccess += count;
                             }
                         }
@@ -283,18 +288,20 @@ namespace RUINORERP.Business.ImportEngine
                     throw new Exception("该配置没有依赖表配置");
                 }
 
-                var rawData = await _excelParser.ParseAsync(filePath);
+                // 解析Excel
+                var sheetIndex = wideProfile.DependencyTables[0].SheetIndex;
+                var rawData = await _excelParser.ParseAsync(filePath, sheetIndex);
                 report.TotalRows = rawData.Rows.Count;
-
-                var remapper = new IdRemappingEngine(_db);
-                var splitter = new DataSplitterService(remapper, _dbWriter, _db);
 
                 // 仅处理依赖表
                 foreach (var depProfile in wideProfile.DependencyTables)
                 {
-                    var depData = ExtractTableFromRawData(rawData, depProfile);
-                    var count = await _dbWriter.BatchUpsertAsync(depData, depProfile, remapper);
-                    report.SuccessRows += count;
+                    var depData = ExtractAndMapTableData(rawData, depProfile);
+                    if (depData != null && depData.Rows.Count > 0)
+                    {
+                        var count = await _dbWriter.BatchUpsertAsync(depData, depProfile, null);
+                        report.SuccessRows += count;
+                    }
                 }
 
                 report.IsSuccess = true;
@@ -332,28 +339,21 @@ namespace RUINORERP.Business.ImportEngine
                     throw new Exception("该配置没有主表配置");
                 }
 
-                var rawData = await _excelParser.ParseAsync(filePath);
+                // 解析Excel
+                var rawData = await _excelParser.ParseAsync(filePath, wideProfile.MasterTable.SheetIndex);
                 report.TotalRows = rawData.Rows.Count;
 
-                var remapper = new IdRemappingEngine(_db);
+                // 提取主表数据
+                var masterData = ExtractAndMapTableData(rawData, wideProfile.MasterTable);
                 
-                // 预加载依赖表数据(从数据库查询已存在的基础数据)
-                if (wideProfile.DependencyTables != null && wideProfile.DependencyTables.Any())
+                if (masterData != null && masterData.Rows.Count > 0)
                 {
-                    await remapper.PreloadDependencyTablesAsync(wideProfile.DependencyTables);
+                    var count = await _dbWriter.BatchUpsertAsync(masterData, wideProfile.MasterTable, null);
+                    report.SuccessRows = count;
                 }
 
-                var splitter = new DataSplitterService(remapper, _dbWriter, _db);
-                
-                // 提取主表数据并注入外键ID
-                var masterData = splitter.ExtractTableDataForPublic(rawData, wideProfile.MasterTable);
-                await splitter.InjectForeignKeysIntoMasterTableAsyncPublic(masterData, wideProfile.MasterTable, wideProfile.DependencyTables);
-
-                var count = await _dbWriter.BatchUpsertAsync(masterData, wideProfile.MasterTable, remapper);
-                report.SuccessRows = count;
-
                 report.IsSuccess = true;
-                report.Message = $"主表导入成功，共处理 {count} 条记录。";
+                report.Message = $"主表导入成功，共处理 {report.SuccessRows} 条记录。";
             }
             catch (Exception ex)
             {
@@ -365,12 +365,70 @@ namespace RUINORERP.Business.ImportEngine
         }
 
         /// <summary>
-        /// 从原始数据中提取指定表的数据(公共方法)
+        /// 从原始数据中提取并映射指定表的数据
         /// </summary>
-        private DataTable ExtractTableFromRawData(DataTable rawData, ImportProfile profile)
+        private DataTable ExtractAndMapTableData(DataTable rawData, ImportProfile profile)
         {
-            var splitter = new DataSplitterService(new IdRemappingEngine(_db), _dbWriter, _db);
-            return splitter.ExtractTableDataForPublic(rawData, profile);
+            if (rawData == null || profile == null) return null;
+
+            // 获取业务键列表（用于判断行是否有效）
+            var businessKeys = profile.BusinessKeys ?? new List<string>();
+            
+            // 根据配置筛选需要的列
+            var result = rawData.Clone();
+            
+            foreach (DataRow row in rawData.Rows)
+            {
+                // 检查是否应该包含此行（基于BusinessKeys判断）
+                bool shouldInclude = false;
+                
+                if (businessKeys.Any())
+                {
+                    // 有业务键配置，检查该行是否有值
+                    foreach (var key in businessKeys)
+                    {
+                        // 尝试在映射中查找对应的Excel列
+                        var mapping = profile.ColumnMappings?.FirstOrDefault(m => m.DbColumn == key);
+                        if (mapping != null)
+                        {
+                            var value = row[GetExcelColumnIndex(rawData, mapping.ExcelHeader)];
+                            if (value != null && !string.IsNullOrEmpty(value.ToString()))
+                            {
+                                shouldInclude = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // 没有业务键，所有非空行都包含
+                    shouldInclude = true;
+                }
+
+                if (shouldInclude)
+                {
+                    result.ImportRow(row);
+                }
+            }
+
+            // 映射列
+            return _mappingService.MapData(result, profile);
+        }
+
+        /// <summary>
+        /// 获取Excel列的索引
+        /// </summary>
+        private int GetExcelColumnIndex(DataTable dt, string columnName)
+        {
+            for (int i = 0; i < dt.Columns.Count; i++)
+            {
+                if (dt.Columns[i].ColumnName.Equals(columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
 
         /// <summary>
@@ -380,7 +438,6 @@ namespace RUINORERP.Business.ImportEngine
         {
             try
             {
-                // 1. 实例化实体以获取元数据
                 if (targetEntityType == null || !typeof(RUINORERP.Model.BaseEntity).IsAssignableFrom(targetEntityType))
                 {
                     return new RUINORERP.Business.AIServices.DataImport.IntelligentMappingResult();
@@ -389,7 +446,6 @@ namespace RUINORERP.Business.ImportEngine
                 var instance = Activator.CreateInstance(targetEntityType) as RUINORERP.Model.BaseEntity;
                 if (instance == null) return new RUINORERP.Business.AIServices.DataImport.IntelligentMappingResult();
 
-                // 2. 提取字段信息（包含中文描述）
                 var dbFields = instance.ImportableFields.Select(f => new RUINORERP.Model.ImportFieldInfo
                 {
                     ColumnName = f.ColumnName,
@@ -398,22 +454,8 @@ namespace RUINORERP.Business.ImportEngine
                     IsForeignKey = f.IsForeignKey
                 }).ToList();
 
-                System.Diagnostics.Debug.WriteLine($"[AI Mapping] 开始分析: 实体={targetEntityType.Name}, Excel列数={excelHeaders.Count}, 数据库字段数={dbFields.Count}");
-
-                // 3. 调用 AI 服务
                 var aiService = new RUINORERP.Business.AIServices.DataImport.ColumnMappingService();
-                var result = await aiService.AnalyzeWithMetadataAsync(excelHeaders, dbFields);
-
-                if (result.Mappings.Count > 0)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[AI Mapping] 成功生成 {result.Mappings.Count} 个映射建议。");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("[AI Mapping] AI 未返回有效建议，可能由于配置未开启或模型响应为空。");
-                }
-
-                return result;
+                return await aiService.AnalyzeWithMetadataAsync(excelHeaders, dbFields);
             }
             catch (Exception ex)
             {

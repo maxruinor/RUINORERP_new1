@@ -262,7 +262,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 自动填充依赖表和子表（基于元数据）
+        /// 自动填充依赖表（简化版：提示用户手动配置）
         /// </summary>
         private void kbtnAutoFill_Click(object sender, EventArgs e)
         {
@@ -275,29 +275,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 string tableName = kcmbMasterTable.SelectedItem.ToString();
-                var type = Type.GetType($"RUINORERP.Model.{tableName}, RUINORERP.Model");
                 
-                if (type == null || !typeof(RUINORERP.Model.BaseEntity).IsAssignableFrom(type))
-                {
-                    MessageBox.Show($"无法找到实体类型: {tableName}，请确保表名与实体类名一致。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                // 调用分析器
-                var result = RUINORERP.Business.ImportEngine.MetadataDependencyAnalyzer.Analyze(type);
-
-                // 清空并填充依赖表
-                dgvDependencyTables.Rows.Clear();
-                foreach (var depTable in result.DependencyTables.Distinct())
-                {
-                    dgvDependencyTables.Rows.Add(depTable, "ID", 0);
-                }
-
-                MessageBox.Show($"已根据实体 [{tableName}] 的元数据自动识别出 {result.DependencyTables.Count} 个依赖表。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 提示用户手动配置依赖表
+                // 自动分析功能已移除，请根据业务需求手动添加依赖表
+                MessageBox.Show(
+                    $"主表 [{tableName}] 已选定。\n\n" +
+                    "由于自动依赖分析功能已简化，请手动配置依赖表：\n" +
+                    "1. 在下方'依赖表列表'中点击'添加行'\n" +
+                    "2. 输入依赖表名称\n" +
+                    "3. 设置关联字段和Excel列\n\n" +
+                    "常用依赖表示例：\n" +
+                    "• 产品导入 → 可能需要先导入: 供应商表、类目表\n" +
+                    "• 销售订单 → 可能需要先导入: 客户表、产品表",
+                    "手动配置依赖表",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"自动填充失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"操作失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

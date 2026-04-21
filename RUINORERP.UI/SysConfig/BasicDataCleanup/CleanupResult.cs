@@ -88,6 +88,75 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
     }
 
     /// <summary>
+    /// 级联删除结果
+    /// </summary>
+    public class CascadeDeleteResult
+    {
+        /// <summary>
+        /// 是否成功
+        /// </summary>
+        public bool IsSuccess { get; set; }
+
+        /// <summary>
+        /// 总删除记录数
+        /// </summary>
+        public int TotalDeletedCount { get; set; }
+
+        /// <summary>
+        /// 错误信息
+        /// </summary>
+        public string ErrorMessage { get; set; }
+
+        /// <summary>
+        /// 执行开始时间
+        /// </summary>
+        public DateTime StartTime { get; set; }
+
+        /// <summary>
+        /// 执行结束时间
+        /// </summary>
+        public DateTime EndTime { get; set; }
+
+        /// <summary>
+        /// 总耗时(毫秒)
+        /// </summary>
+        public long TotalElapsedMs { get; set; }
+
+        /// <summary>
+        /// 是否为测试模式
+        /// </summary>
+        public bool IsTestMode { get; set; }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public CascadeDeleteResult()
+        {
+            IsSuccess = true;
+            StartTime = DateTime.Now;
+        }
+
+        /// <summary>
+        /// 完成执行
+        /// </summary>
+        public void Complete()
+        {
+            EndTime = DateTime.Now;
+            TotalElapsedMs = (long)(EndTime - StartTime).TotalMilliseconds;
+        }
+
+        /// <summary>
+        /// 标记为失败
+        /// </summary>
+        public void MarkAsFailed(string errorMessage)
+        {
+            IsSuccess = false;
+            ErrorMessage = errorMessage;
+            Complete();
+        }
+    }
+
+    /// <summary>
     /// 清理执行结果
     /// </summary>
     public class CleanupExecutionResult

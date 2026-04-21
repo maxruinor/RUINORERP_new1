@@ -26,7 +26,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 {
     /// <summary>
     /// 基础数据清理 UI 组件 - 简洁版
-    /// 用于基础数据的清理操作，支持级联删除
+    /// 使用 DataCleanupEngine 复用 BaseController.BaseDeleteByNavAsync
     /// </summary>
     [MenuAttrAssemblyInfo("基础数据清理", ModuleMenuDefine.模块定义.系统设置,ModuleMenuDefine.系统设置.系统工具)]
     public partial class UCBasicDataCleanup : UserControl
@@ -34,7 +34,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private ISqlSugarClient _db;
         private Type _selectedEntityType;
         private List<long> _selectedIds;
-        private EntityRelationshipAnalyzer _analyzer;
+        private DataCleanupEngine _cleanupEngine; // 使用新的清理引擎
 
         /// <summary>
         /// 实体类型映射字典
@@ -87,6 +87,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // 初始化数据库连接
             LoadDbConnection();
 
+            // 初始化清理引擎
+            _cleanupEngine = new DataCleanupEngine();
+            _cleanupEngine.OnLog += (sender, log) => MainForm.Instance.PrintInfoLog(log);
+            _cleanupEngine.OnProgressChanged += (sender, e) => 
+            {
+                MainForm.Instance.ShowStatusText($"{e.Message} ({e.Percentage}%)");
+            };
+
             // 初始化实体类型选择
             InitializeEntityTypes();
 
@@ -120,7 +128,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             try
             {
                 _db = MainForm.Instance.AppContext.Db;
-                _analyzer = new EntityRelationshipAnalyzer(_db);
             }
             catch (Exception ex)
             {
@@ -350,9 +357,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 return;
             }
 
-            // 显示级联删除确认
-            var cascadeInfo = BuildCascadeDeleteInfo();
-            var confirmMsg = $"确定要删除选中的 {_selectedIds.Count} 条记录吗？\n\n{cascadeInfo}\n\n此操作将同时删除所有关联数据！";
+            // 显示确认对话框
+            var confirmMsg = $"确定要删除选中的 {_selectedIds.Count} 条记录吗？\n\n此操作将同时删除所有关联数据(通过导航属性自动级联)！\n\n建议先备份重要数据。";
 
             if (MessageBox.Show(confirmMsg, "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
             {
@@ -362,55 +368,54 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             try
             {
                 kbtnDeleteSelected.Enabled = false;
+                kbtnRefresh.Enabled = false;
                 MainForm.Instance.ShowStatusText("正在删除数据...");
                 Application.DoEvents();
 
-                await DeleteRecordsAsync();
+                // 使用 DataCleanupEngine 执行级联删除
+                var result = await ExecuteCascadeDeleteAsync();
 
-                MessageBox.Show($"删除完成！共删除 {_selectedIds.Count} 条记录及其关联数据", "成功",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (result.IsSuccess)
+                {
+                    MessageBox.Show($"删除完成！\n共删除 {result.TotalDeletedCount} 条主记录及其关联数据\n耗时: {result.TotalElapsedMs}ms", 
+                        "成功",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                MainForm.Instance.ShowStatusText("删除完成");
+                    MainForm.Instance.ShowStatusText("删除完成");
 
-                // 重新加载数据
-                await LoadDataAsync();
+                    // 重新加载数据
+                    await LoadDataAsync();
+                }
+                else
+                {
+                    MessageBox.Show($"删除失败：{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MainForm.Instance.ShowStatusText("删除失败");
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"删除失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"删除失败：{ex.Message}\n\n详细信息:\n{ex.StackTrace}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 MainForm.Instance.ShowStatusText("删除失败");
             }
             finally
             {
                 kbtnDeleteSelected.Enabled = true;
+                kbtnRefresh.Enabled = true;
             }
         }
 
         /// <summary>
-        /// 构建级联删除信息
+        /// 执行级联删除(使用 DataCleanupEngine)
         /// </summary>
-        private string BuildCascadeDeleteInfo()
+        private async Task<CascadeDeleteResult> ExecuteCascadeDeleteAsync()
         {
-            var sb = new StringBuilder();
-            sb.AppendLine("级联删除范围:");
-
-            // 获取清理顺序
-            var cleanupOrder = _analyzer.GenerateCleanupOrder(_selectedEntityType);
-
-            foreach (var node in cleanupOrder)
-            {
-                if (node.EntityType != _selectedEntityType)
-                {
-                    sb.AppendLine($"  - {node.TableName} (关联数据)");
-                }
-            }
-
-            if (cleanupOrder.Count <= 1)
-            {
-                sb.AppendLine("  无关联数据");
-            }
-
-            return sb.ToString();
+            // 使用反射调用泛型方法 ExecuteCascadeDeleteAsync<T>
+            var method = typeof(DataCleanupEngine).GetMethod("ExecuteCascadeDeleteAsync");
+            var genericMethod = method.MakeGenericMethod(_selectedEntityType);
+            
+            var task = (Task<CascadeDeleteResult>)genericMethod.Invoke(_cleanupEngine, new object[] { _selectedIds, false });
+            
+            return await task;
         }
 
         /// <summary>
@@ -446,78 +451,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         }
 
         /// <summary>
-        /// 删除记录（包括关联数据）
-        /// </summary>
-        private async Task DeleteRecordsAsync()
-        {
-            // 生成清理顺序
-            var cleanupOrder = _analyzer.GenerateCleanupOrder(_selectedEntityType);
-
-            // 按顺序删除（从最外层关联开始删除）
-            foreach (var node in cleanupOrder)
-            {
-                MainForm.Instance.ShowStatusText($"正在删除：{node.TableName}");
-                Application.DoEvents();
-
-                if (node.EntityType == _selectedEntityType)
-                {
-                    // 目标表，根据 ID 删除
-                    await DeleteByIdsAsync(node.EntityType, _selectedIds);
-                }
-                else
-                {
-                    // 关联表，根据外键关系删除
-                    await DeleteRelatedAsync(node.EntityType, _selectedEntityType, _selectedIds);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 根据 ID 删除记录
-        /// </summary>
-        private async Task DeleteByIdsAsync(Type entityType, List<long> ids)
-        {
-            var deleteableMethod = typeof(SqlSugarClient).GetMethod("Deleteable", Type.EmptyTypes);
-            var genericDeleteable = deleteableMethod.MakeGenericMethod(entityType);
-            var deleteable = genericDeleteable.Invoke(_db, null);
-
-            var pkName = GetPrimaryKeyName(entityType);
-            var idsArray = ids.Cast<object>().ToArray();
-            var inMethod = deleteable.GetType().GetMethod("In", new[] { typeof(string), typeof(object[]) });
-            var filteredDeleteable = inMethod.Invoke(deleteable, new object[] { pkName, idsArray });
-
-            var executeMethod = filteredDeleteable.GetType().GetMethod("ExecuteCommandAsync");
-            var task = executeMethod.Invoke(filteredDeleteable, null);
-
-            await (Task)task;
-        }
-
-        /// <summary>
-        /// 删除关联数据
-        /// </summary>
-        private async Task DeleteRelatedAsync(Type relatedEntityType, Type mainEntityType, List<long> mainEntityIds)
-        {
-            // 获取外键字段
-            var foreignKeyField = _analyzer.GetForeignKeyField(relatedEntityType, mainEntityType);
-
-            if (!string.IsNullOrEmpty(foreignKeyField))
-            {
-                var deleteableMethod = typeof(SqlSugarClient).GetMethod("Deleteable", Type.EmptyTypes);
-                var genericDeleteable = deleteableMethod.MakeGenericMethod(relatedEntityType);
-                var deleteable = genericDeleteable.Invoke(_db, null);
-
-                var idsArray = mainEntityIds.Cast<object>().ToArray();
-                var inMethod = deleteable.GetType().GetMethod("In", new[] { typeof(string), typeof(object[]) });
-                var filteredDeleteable = inMethod.Invoke(deleteable, new object[] { foreignKeyField, idsArray });
-
-                var executeMethod = filteredDeleteable.GetType().GetMethod("ExecuteCommandAsync");
-                var task = executeMethod.Invoke(filteredDeleteable, null);
-
-                await (Task)task;
-            }
-        }
-
-        /// <summary>
         /// 获取主键名称
         /// </summary>
         private string GetPrimaryKeyName(Type entityType)
@@ -533,6 +466,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             var idProp = entityType.GetProperty("Id") ?? entityType.GetProperty("ID");
             return idProp?.Name ?? "Id";
         }
+
+
 
         /// <summary>
         /// 更新选中计数

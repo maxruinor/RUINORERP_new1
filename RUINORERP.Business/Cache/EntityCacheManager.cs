@@ -2205,6 +2205,26 @@ namespace RUINORERP.Business.Cache
                                             var underlyingType = Enum.GetUnderlyingType(valueTypeObj);
                                             estimatedSize += Marshal.SizeOf(underlyingType);
                                         }
+                                        else if (valueTypeObj == typeof(DateTime))
+                                        {
+                                            // DateTime 是 8 字节（long ticks）
+                                            estimatedSize += 8;
+                                        }
+                                        else if (valueTypeObj == typeof(Guid))
+                                        {
+                                            // Guid 是 16 字节
+                                            estimatedSize += 16;
+                                        }
+                                        else if (valueTypeObj == typeof(decimal))
+                                        {
+                                            // decimal 是 16 字节
+                                            estimatedSize += 16;
+                                        }
+                                        else if (valueTypeObj == typeof(TimeSpan))
+                                        {
+                                            // TimeSpan 是 8 字节（long ticks）
+                                            estimatedSize += 8;
+                                        }
                                         else
                                         {
                                             estimatedSize += Marshal.SizeOf(valueTypeObj);

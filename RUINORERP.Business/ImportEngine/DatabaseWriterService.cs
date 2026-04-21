@@ -25,7 +25,10 @@ namespace RUINORERP.Business.ImportEngine
         /// <summary>
         /// 批量Upsert数据
         /// </summary>
-        public async Task<int> BatchUpsertAsync(DataTable data, ImportProfile profile, IdRemappingEngine remapper = null)
+        /// <param name="data">数据表</param>
+        /// <param name="profile">导入配置</param>
+        /// <param name="remapper">ID重映射引擎（已废弃参数，忽略）</param>
+        public async Task<int> BatchUpsertAsync(DataTable data, ImportProfile profile, object remapper = null)
         {
             if (data == null || data.Rows.Count == 0)
             {
@@ -54,30 +57,9 @@ namespace RUINORERP.Business.ImportEngine
                     {
                         var insertedCount = await InsertRowsAsync(insertRows, profile.TargetTable);
                         totalAffected += insertedCount;
-
-                        // 3. 如果启用了ID重映射，注册新插入记录的映射关系
-                        if (remapper != null && profile.EnableIdRemapping)
-                        {
-                            var idCol = data.Columns.Cast<DataColumn>().FirstOrDefault(c => c.ColumnName.ToUpper() == "ID")?.ColumnName;
-                            if (!string.IsNullOrEmpty(idCol))
-                            {
-                                foreach (var row in insertRows)
-                                {
-                                    var sql = $"SELECT TOP 1 [{idCol}] FROM [{profile.TargetTable}] WHERE {string.Join(" AND ", businessKeys.Select(k => $"[{k}] = @{k}"))}";
-                                    var ps = businessKeys.Select(k => new SugarParameter($"@{k}", row[k])).ToArray();
-                                    var newId = await _db.Ado.GetScalarAsync(sql, ps);
-                                    
-                                    if (newId != null)
-                                    {
-                                        var oldKey = string.Join("|", businessKeys.Select(k => row[k]?.ToString()));
-                                        remapper.RegisterMapping(profile.TargetTable, oldKey, Convert.ToInt64(newId));
-                                    }
-                                }
-                            }
-                        }
                     }
 
-                    // 4. 执行更新
+                    // 3. 执行更新
                     if (updateRows.Any())
                     {
                         totalAffected += await UpdateRowsAsync(updateRows, profile.TargetTable, businessKeys);
@@ -87,65 +69,23 @@ namespace RUINORERP.Business.ImportEngine
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[DatabaseWriter] Upsert 失败: {ex.Message}");
-                throw; // 重新抛出异常以便上层处理回滚或记录日志
+                throw;
             }
 
             return totalAffected;
         }
 
         /// <summary>
-        /// 批量插入并返回新生成的ID映射(用于依赖表自动创建场景)
+        /// 批量插入数据
         /// </summary>
-        public async Task<Dictionary<string, long>> BatchInsertWithIdReturnAsync(
-            DataTable data,
-            ImportProfile profile,
-            string businessKeyName,
-            IdRemappingEngine remapper)
+        public async Task<int> BatchInsertAsync(DataTable data, ImportProfile profile)
         {
-            var idMapping = new Dictionary<string, long>();
-
             if (data == null || data.Rows.Count == 0)
             {
-                return idMapping;
+                return 0;
             }
 
-            await _db.Ado.UseTranAsync(async () =>
-            {
-                foreach (DataRow row in data.Rows)
-                {
-                    // 构建INSERT语句
-                    var columns = profile.ColumnMappings.Select(m => m.DbColumn).ToList();
-                    var columnNames = string.Join(", ", columns.Select(c => $"[{c}]"));
-                    var paramNames = string.Join(", ", columns.Select(c => $"@{c}"));
-
-                    var parameters = columns.Select(c =>
-                        new SugarParameter($"@{c}", row[c] == DBNull.Value ? null : row[c])
-                    ).ToArray();
-
-                    var sql = $"INSERT INTO [{profile.TargetTable}] ({columnNames}) VALUES ({paramNames}); SELECT SCOPE_IDENTITY() AS NewId;";
-
-                    var newId = await _db.Ado.GetScalarAsync(sql, parameters);
-
-                    if (newId != null)
-                    {
-                        long physicalId = Convert.ToInt64(newId);
-                        string businessKey = row[businessKeyName]?.ToString();
-
-                        if (!string.IsNullOrEmpty(businessKey))
-                        {
-                            idMapping[businessKey] = physicalId;
-                            
-                            // 注册到remapper
-                            if (remapper != null)
-                            {
-                                remapper.RegisterNewId(profile.TargetTable, businessKey, physicalId);
-                            }
-                        }
-                    }
-                }
-            });
-
-            return idMapping;
+            return await InsertRowsAsync(data.Rows.Cast<DataRow>().ToList(), profile.TargetTable);
         }
 
         /// <summary>

@@ -2470,38 +2470,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Startup.cs" />
-    <Compile Include="SysConfig\BasicDataCleanup\CascadeDeleteModels.cs" />
-    <Compile Include="SysConfig\BasicDataCleanup\CleanupConfiguration.cs" />
-    <Compile Include="SysConfig\BasicDataCleanup\CleanupConfigurationManager.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\CleanupDisplayNames.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\CleanupResult.cs" />
-    <Compile Include="SysConfig\BasicDataCleanup\CleanupRule.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\DataCleanupEngine.cs" />
-    <Compile Include="SysConfig\BasicDataCleanup\EntityRelationshipAnalyzer.cs" />
-    <Compile Include="SysConfig\BasicDataCleanup\FrmCleanupConfigEdit.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SysConfig\BasicDataCleanup\FrmCleanupConfigEdit.Designer.cs">
-      <DependentUpon>FrmCleanupConfigEdit.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SysConfig\BasicDataCleanup\FrmCleanupPreview.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SysConfig\BasicDataCleanup\FrmCleanupPreview.Designer.cs">
-      <DependentUpon>FrmCleanupPreview.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SysConfig\BasicDataCleanup\FrmCleanupResult.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SysConfig\BasicDataCleanup\FrmCleanupResult.Designer.cs">
-      <DependentUpon>FrmCleanupResult.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SysConfig\BasicDataCleanup\FrmCleanupRuleEdit.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SysConfig\BasicDataCleanup\FrmCleanupRuleEdit.Designer.cs">
-      <DependentUpon>FrmCleanupRuleEdit.cs</DependentUpon>
-    </Compile>
     <Compile Include="SysConfig\BasicDataCleanup\UCBasicDataCleanup.cs">
       <SubType>UserControl</SubType>
     </Compile>

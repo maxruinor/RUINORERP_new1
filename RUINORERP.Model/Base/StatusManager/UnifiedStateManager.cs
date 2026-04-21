@@ -393,12 +393,13 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (fromStatus.Value.Equals(toStatus.Value))
                     return StateTransitionResult.Allowed();
 
-                // 动态检查状态转换是否有效
-                Type statusType = fromStatus.Value.GetType();
-                bool isAllowed = (bool)typeof(GlobalStateRulesManager)
-                    .GetMethod("IsValidTransition")
-                    .MakeGenericMethod(statusType)
-                    .Invoke(GlobalStateRulesManager.Instance, new object[] { fromStatus.Value, toStatus.Value });
+                // 动态检查状态转换是否有效（使用缓存优化性能）
+                var isValidTransitionMethod = GetCachedGenericMethod("IsValidTransition", typeof(T));
+                if (isValidTransitionMethod == null)
+                {
+                    return StateTransitionResult.Denied("无法获取状态转换验证方法");
+                }
+                bool isAllowed = (bool)isValidTransitionMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { fromStatus.Value, toStatus.Value });
 
                 StateTransitionResult result;
                 if (isAllowed)
@@ -881,10 +882,11 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 验证状态转换
                 var validationResult = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
                 
-                // 获取执行条件说明
-                var conditionMethod = typeof(GlobalStateRulesManager).GetMethod("GetStateTransitionActionCondition");
-                var genericConditionMethod = conditionMethod.MakeGenericMethod(statusType);
-                var conditionMessage = (string)genericConditionMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { currentStatus, action });
+                // 获取执行条件说明（使用缓存优化性能）
+                var conditionMethod = GetCachedGenericMethod("GetStateTransitionActionCondition", statusType);
+                var conditionMessage = conditionMethod != null
+                    ? (string)conditionMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { currentStatus, action })
+                    : string.Empty;
 
                 // 根据验证结果返回相应的消息
                 if (validationResult.IsSuccess)

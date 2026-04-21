@@ -69,13 +69,6 @@ namespace RUINORERP.Server.Controls
         {
             tabControl1 = new System.Windows.Forms.TabControl();
             tabPage1 = new System.Windows.Forms.TabPage();
-            panelBottom = new System.Windows.Forms.Panel();
-            splitContainer1 = new System.Windows.Forms.SplitContainer();
-            btnDiagnosticsReport = new System.Windows.Forms.Button();
-            btnErrorReport = new System.Windows.Forms.Button();
-            btnPerformanceReport = new System.Windows.Forms.Button();
-            btnRefresh = new System.Windows.Forms.Button();
-            btnResetStats = new System.Windows.Forms.Button();
             panelTop = new System.Windows.Forms.Panel();
             groupBox3 = new System.Windows.Forms.GroupBox();
             lblAvgProcessingTimeValue = new System.Windows.Forms.Label();
@@ -90,7 +83,6 @@ namespace RUINORERP.Server.Controls
             lblTotalHandlers = new System.Windows.Forms.Label();
             lblMemoryUsageValue = new System.Windows.Forms.Label();
             lblMemoryUsage = new System.Windows.Forms.Label();
-            lblMemoryDistribution = new System.Windows.Forms.Label();
             lblUptimeValue = new System.Windows.Forms.Label();
             lblUptime = new System.Windows.Forms.Label();
             lblSystemTimeValue = new System.Windows.Forms.Label();
@@ -156,6 +148,14 @@ namespace RUINORERP.Server.Controls
             lblTotalSessions = new System.Windows.Forms.Label();
             lblActiveSessionsValue = new System.Windows.Forms.Label();
             lblActiveSessions = new System.Windows.Forms.Label();
+            lblMemoryDistribution = new System.Windows.Forms.Label();
+            panelBottom = new System.Windows.Forms.Panel();
+            splitContainer1 = new System.Windows.Forms.SplitContainer();
+            btnDiagnosticsReport = new System.Windows.Forms.Button();
+            btnErrorReport = new System.Windows.Forms.Button();
+            btnPerformanceReport = new System.Windows.Forms.Button();
+            btnRefresh = new System.Windows.Forms.Button();
+            btnResetStats = new System.Windows.Forms.Button();
             tabPage2 = new System.Windows.Forms.TabPage();
             groupBox6 = new System.Windows.Forms.GroupBox();
             lblTimeoutCommandsValue = new System.Windows.Forms.Label();
@@ -187,15 +187,15 @@ namespace RUINORERP.Server.Controls
             lblDispatcherInitialized = new System.Windows.Forms.Label();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
-            panelBottom.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
-            splitContainer1.Panel2.SuspendLayout();
-            splitContainer1.SuspendLayout();
             panelTop.SuspendLayout();
             groupBox3.SuspendLayout();
             groupBox1.SuspendLayout();
             groupBox7.SuspendLayout();
             groupBox2.SuspendLayout();
+            panelBottom.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
+            splitContainer1.Panel2.SuspendLayout();
+            splitContainer1.SuspendLayout();
             tabPage2.SuspendLayout();
             groupBox6.SuspendLayout();
             groupBox5.SuspendLayout();
@@ -228,92 +228,6 @@ namespace RUINORERP.Server.Controls
             tabPage1.Text = "服务器状态";
             tabPage1.UseVisualStyleBackColor = true;
             // 
-            // panelBottom
-            // 
-            panelBottom.Controls.Add(splitContainer1);
-            panelBottom.Dock = System.Windows.Forms.DockStyle.Fill;
-            panelBottom.Location = new System.Drawing.Point(4, 584);
-            panelBottom.Name = "panelBottom";
-            panelBottom.Size = new System.Drawing.Size(1480, 464);
-            panelBottom.TabIndex = 7;
-            // 
-            // splitContainer1
-            // 
-            splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            splitContainer1.Location = new System.Drawing.Point(0, 0);
-            splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel2
-            // 
-            splitContainer1.Panel2.Controls.Add(btnDiagnosticsReport);
-            splitContainer1.Panel2.Controls.Add(btnErrorReport);
-            splitContainer1.Panel2.Controls.Add(btnPerformanceReport);
-            splitContainer1.Panel2.Controls.Add(btnRefresh);
-            splitContainer1.Panel2.Controls.Add(btnResetStats);
-            splitContainer1.Size = new System.Drawing.Size(1480, 464);
-            splitContainer1.SplitterDistance = 964;
-            splitContainer1.TabIndex = 0;
-            // 
-            // btnDiagnosticsReport
-            // 
-            btnDiagnosticsReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnDiagnosticsReport.Location = new System.Drawing.Point(20, 17);
-            btnDiagnosticsReport.Margin = new System.Windows.Forms.Padding(4);
-            btnDiagnosticsReport.Name = "btnDiagnosticsReport";
-            btnDiagnosticsReport.Size = new System.Drawing.Size(88, 33);
-            btnDiagnosticsReport.TabIndex = 5;
-            btnDiagnosticsReport.Text = "诊断报告";
-            btnDiagnosticsReport.UseVisualStyleBackColor = true;
-            btnDiagnosticsReport.Click += btnDiagnosticsReport_Click;
-            // 
-            // btnErrorReport
-            // 
-            btnErrorReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnErrorReport.Location = new System.Drawing.Point(206, 17);
-            btnErrorReport.Margin = new System.Windows.Forms.Padding(4);
-            btnErrorReport.Name = "btnErrorReport";
-            btnErrorReport.Size = new System.Drawing.Size(88, 33);
-            btnErrorReport.TabIndex = 4;
-            btnErrorReport.Text = "错误报告";
-            btnErrorReport.UseVisualStyleBackColor = true;
-            btnErrorReport.Click += btnErrorReport_Click;
-            // 
-            // btnPerformanceReport
-            // 
-            btnPerformanceReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnPerformanceReport.Location = new System.Drawing.Point(112, 17);
-            btnPerformanceReport.Margin = new System.Windows.Forms.Padding(4);
-            btnPerformanceReport.Name = "btnPerformanceReport";
-            btnPerformanceReport.Size = new System.Drawing.Size(88, 33);
-            btnPerformanceReport.TabIndex = 3;
-            btnPerformanceReport.Text = "性能报告";
-            btnPerformanceReport.UseVisualStyleBackColor = true;
-            btnPerformanceReport.Click += btnPerformanceReport_Click;
-            // 
-            // btnRefresh
-            // 
-            btnRefresh.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnRefresh.Location = new System.Drawing.Point(308, 17);
-            btnRefresh.Margin = new System.Windows.Forms.Padding(4);
-            btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new System.Drawing.Size(88, 33);
-            btnRefresh.TabIndex = 2;
-            btnRefresh.Text = "刷新";
-            btnRefresh.UseVisualStyleBackColor = true;
-            btnRefresh.Click += btnRefresh_Click;
-            // 
-            // btnResetStats
-            // 
-            btnResetStats.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnResetStats.Location = new System.Drawing.Point(404, 17);
-            btnResetStats.Margin = new System.Windows.Forms.Padding(4);
-            btnResetStats.Name = "btnResetStats";
-            btnResetStats.Size = new System.Drawing.Size(88, 33);
-            btnResetStats.TabIndex = 1;
-            btnResetStats.Text = "重置统计";
-            btnResetStats.UseVisualStyleBackColor = true;
-            btnResetStats.Click += btnResetStats_Click;
-            // 
             // panelTop
             // 
             panelTop.Controls.Add(groupBox3);
@@ -324,7 +238,7 @@ namespace RUINORERP.Server.Controls
             panelTop.Dock = System.Windows.Forms.DockStyle.Top;
             panelTop.Location = new System.Drawing.Point(4, 4);
             panelTop.Name = "panelTop";
-            panelTop.Size = new System.Drawing.Size(1480, 580);
+            panelTop.Size = new System.Drawing.Size(1480, 590);
             panelTop.TabIndex = 6;
             // 
             // groupBox3
@@ -473,17 +387,6 @@ namespace RUINORERP.Server.Controls
             lblMemoryUsage.Size = new System.Drawing.Size(68, 17);
             lblMemoryUsage.TabIndex = 4;
             lblMemoryUsage.Text = "内存使用：";
-            // 
-            // lblMemoryDistribution
-            // 
-            lblMemoryDistribution.BackColor = System.Drawing.Color.WhiteSmoke;
-            lblMemoryDistribution.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            lblMemoryDistribution.Location = new System.Drawing.Point(902, 20);
-            lblMemoryDistribution.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            lblMemoryDistribution.Name = "lblMemoryDistribution";
-            lblMemoryDistribution.Size = new System.Drawing.Size(534, 266);
-            lblMemoryDistribution.TabIndex = 16;
-            lblMemoryDistribution.Text = "内存分布统计";
             // 
             // lblUptimeValue
             // 
@@ -1174,6 +1077,103 @@ namespace RUINORERP.Server.Controls
             lblActiveSessions.TabIndex = 0;
             lblActiveSessions.Text = "活动会话数量：";
             // 
+            // lblMemoryDistribution
+            // 
+            lblMemoryDistribution.BackColor = System.Drawing.Color.WhiteSmoke;
+            lblMemoryDistribution.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            lblMemoryDistribution.Location = new System.Drawing.Point(902, 20);
+            lblMemoryDistribution.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblMemoryDistribution.Name = "lblMemoryDistribution";
+            lblMemoryDistribution.Size = new System.Drawing.Size(534, 545);
+            lblMemoryDistribution.TabIndex = 16;
+            lblMemoryDistribution.Text = "内存分布统计";
+            // 
+            // panelBottom
+            // 
+            panelBottom.Controls.Add(splitContainer1);
+            panelBottom.Dock = System.Windows.Forms.DockStyle.Fill;
+            panelBottom.Location = new System.Drawing.Point(4, 4);
+            panelBottom.Name = "panelBottom";
+            panelBottom.Size = new System.Drawing.Size(1480, 1044);
+            panelBottom.TabIndex = 7;
+            // 
+            // splitContainer1
+            // 
+            splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            splitContainer1.Location = new System.Drawing.Point(0, 0);
+            splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel2
+            // 
+            splitContainer1.Panel2.Controls.Add(btnDiagnosticsReport);
+            splitContainer1.Panel2.Controls.Add(btnErrorReport);
+            splitContainer1.Panel2.Controls.Add(btnPerformanceReport);
+            splitContainer1.Panel2.Controls.Add(btnRefresh);
+            splitContainer1.Panel2.Controls.Add(btnResetStats);
+            splitContainer1.Size = new System.Drawing.Size(1480, 1044);
+            splitContainer1.SplitterDistance = 963;
+            splitContainer1.TabIndex = 0;
+            // 
+            // btnDiagnosticsReport
+            // 
+            btnDiagnosticsReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            btnDiagnosticsReport.Location = new System.Drawing.Point(21, 597);
+            btnDiagnosticsReport.Margin = new System.Windows.Forms.Padding(4);
+            btnDiagnosticsReport.Name = "btnDiagnosticsReport";
+            btnDiagnosticsReport.Size = new System.Drawing.Size(88, 33);
+            btnDiagnosticsReport.TabIndex = 5;
+            btnDiagnosticsReport.Text = "诊断报告";
+            btnDiagnosticsReport.UseVisualStyleBackColor = true;
+            btnDiagnosticsReport.Click += btnDiagnosticsReport_Click;
+            // 
+            // btnErrorReport
+            // 
+            btnErrorReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            btnErrorReport.Location = new System.Drawing.Point(207, 597);
+            btnErrorReport.Margin = new System.Windows.Forms.Padding(4);
+            btnErrorReport.Name = "btnErrorReport";
+            btnErrorReport.Size = new System.Drawing.Size(88, 33);
+            btnErrorReport.TabIndex = 4;
+            btnErrorReport.Text = "错误报告";
+            btnErrorReport.UseVisualStyleBackColor = true;
+            btnErrorReport.Click += btnErrorReport_Click;
+            // 
+            // btnPerformanceReport
+            // 
+            btnPerformanceReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            btnPerformanceReport.Location = new System.Drawing.Point(113, 597);
+            btnPerformanceReport.Margin = new System.Windows.Forms.Padding(4);
+            btnPerformanceReport.Name = "btnPerformanceReport";
+            btnPerformanceReport.Size = new System.Drawing.Size(88, 33);
+            btnPerformanceReport.TabIndex = 3;
+            btnPerformanceReport.Text = "性能报告";
+            btnPerformanceReport.UseVisualStyleBackColor = true;
+            btnPerformanceReport.Click += btnPerformanceReport_Click;
+            // 
+            // btnRefresh
+            // 
+            btnRefresh.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            btnRefresh.Location = new System.Drawing.Point(309, 597);
+            btnRefresh.Margin = new System.Windows.Forms.Padding(4);
+            btnRefresh.Name = "btnRefresh";
+            btnRefresh.Size = new System.Drawing.Size(88, 33);
+            btnRefresh.TabIndex = 2;
+            btnRefresh.Text = "刷新";
+            btnRefresh.UseVisualStyleBackColor = true;
+            btnRefresh.Click += btnRefresh_Click;
+            // 
+            // btnResetStats
+            // 
+            btnResetStats.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            btnResetStats.Location = new System.Drawing.Point(405, 597);
+            btnResetStats.Margin = new System.Windows.Forms.Padding(4);
+            btnResetStats.Name = "btnResetStats";
+            btnResetStats.Size = new System.Drawing.Size(88, 33);
+            btnResetStats.TabIndex = 1;
+            btnResetStats.Text = "重置统计";
+            btnResetStats.UseVisualStyleBackColor = true;
+            btnResetStats.Click += btnResetStats_Click;
+            // 
             // tabPage2
             // 
             tabPage2.Controls.Add(groupBox6);
@@ -1183,7 +1183,7 @@ namespace RUINORERP.Server.Controls
             tabPage2.Margin = new System.Windows.Forms.Padding(4);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new System.Windows.Forms.Padding(4);
-            tabPage2.Size = new System.Drawing.Size(1159, 935);
+            tabPage2.Size = new System.Drawing.Size(1488, 1052);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "指令处理状态";
             tabPage2.UseVisualStyleBackColor = true;
@@ -1463,10 +1463,6 @@ namespace RUINORERP.Server.Controls
             Disposed += ServerMonitorControl_Disposed;
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
-            panelBottom.ResumeLayout(false);
-            splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
-            splitContainer1.ResumeLayout(false);
             panelTop.ResumeLayout(false);
             groupBox3.ResumeLayout(false);
             groupBox3.PerformLayout();
@@ -1476,6 +1472,10 @@ namespace RUINORERP.Server.Controls
             groupBox7.PerformLayout();
             groupBox2.ResumeLayout(false);
             groupBox2.PerformLayout();
+            panelBottom.ResumeLayout(false);
+            splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
+            splitContainer1.ResumeLayout(false);
             tabPage2.ResumeLayout(false);
             groupBox6.ResumeLayout(false);
             groupBox6.PerformLayout();

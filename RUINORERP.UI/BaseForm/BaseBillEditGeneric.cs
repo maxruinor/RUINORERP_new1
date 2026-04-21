@@ -890,10 +890,15 @@ namespace RUINORERP.UI.BaseForm
                     BillOperationService = Startup.GetFromFac<IBillOperationService>();
 
                     // 添加扩展按钮（仅在 CurMenuInfo 不为 null 时）
-                    if (CurMenuInfo != null)
+                    if (CurMenuInfo == null)
                     {
-                        AddExtendButton(CurMenuInfo);
+                        CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName == this.GetType().Name && m.ClassPath == this.ToString()).FirstOrDefault();
+                        if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
+                        {
+                            return;
+                        }
                     }
+                    AddExtendButton(CurMenuInfo);
                 }
             }
         }
@@ -3336,9 +3341,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                         else
                         {
-                            // 状态同步已在审核方法内部处理，无需重复调用
-                            // 审核成功后更新所有UI状态，让按钮根据新状态重新评估
-                            UpdateAllUIStates(EditEntity);
+                            // UpdateAllUIStates已在Review方法内部调用，无需重复
                         }
                     }
                     catch (Exception ex)
@@ -6686,40 +6689,45 @@ namespace RUINORERP.UI.BaseForm
                     return null;
                 }
 
-                // 使用反射获取 ConversionIdentifier 属性（不需要创建实例）
-                var identifierProperty = converterType.GetProperty("ConversionIdentifier", 
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                if (identifierProperty != null)
+                // 【优化】：直接从工厂缓存中查找已注册的转换器实例，通过接口获取标识符
+                var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
+                
+                // 获取转换器的泛型参数
+                var sourceType = converterType.GetInterfaces()
+                    .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(RUINORERP.Business.Document.IDocumentConverter<,>))
+                    ?.GetGenericArguments()[0];
+                var targetType = converterType.GetInterfaces()
+                    .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(RUINORERP.Business.Document.IDocumentConverter<,>))
+                    ?.GetGenericArguments()[1];
+                
+                if (sourceType != null && targetType != null)
                 {
-                    // 尝试从已注册的转换器实例中获取
-                    var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
-                    var sourceType = converterType.GetInterfaces()
-                        .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDocumentConverter<,>))
-                        ?.GetGenericArguments()[0];
-                    var targetType = converterType.GetInterfaces()
-                        .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDocumentConverter<,>))
-                        ?.GetGenericArguments()[1];
-                    
-                    if (sourceType != null && targetType != null)
+                    // 通过反射访问工厂的私有缓存字段
+                    var cacheField = converterFactory.GetType().GetField("_convertersCache", 
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (cacheField != null)
                     {
-                        var getConverterMethod = converterFactory.GetType()
-                            .GetMethod("GetConverter", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
-                            ?.MakeGenericMethod(sourceType, targetType);
-                        
-                        if (getConverterMethod != null)
+                        var cache = cacheField.GetValue(converterFactory) as System.Collections.Concurrent.ConcurrentDictionary<string, object>;
+                        if (cache != null)
                         {
-                            var converter = getConverterMethod.Invoke(converterFactory, new object[] { null });
-                            if (converter != null)
+                            var baseKey = $"{sourceType.FullName}:{targetType.FullName}";
+                            foreach (var kvp in cache)
                             {
-                                var identifier = identifierProperty.GetValue(converter) as string;
-                                System.Diagnostics.Debug.WriteLine($"[GetConversionIdentifierFromConverterType] ✓ 获取成功：{converterType.Name}, ConversionIdentifier: {identifier}");
-                                return identifier;
+                                // 查找 Key 以 baseKey 开头且转换器类型匹配的项
+                                if ((kvp.Key.StartsWith(baseKey + ":") || kvp.Key == baseKey) && kvp.Value.GetType() == converterType)
+                                {
+                                    // 直接通过 IConverterMeta 接口获取标识符（避免反射属性）
+                                    var meta = kvp.Value as RUINORERP.Business.Document.IConverterMeta;
+                                    var identifier = meta?.ConversionIdentifier;
+                                    System.Diagnostics.Debug.WriteLine($"[GetConversionIdentifierFromConverterType] ✓ 获取成功：{converterType.Name}, ConversionIdentifier: {identifier ?? "null"}, Key: {kvp.Key}");
+                                    return identifier;
+                                }
                             }
                         }
                     }
                 }
-                
-                System.Diagnostics.Debug.WriteLine($"[GetConversionIdentifierFromConverterType] ✗ 无法获取 ConversionIdentifier");
+
+                System.Diagnostics.Debug.WriteLine($"[GetConversionIdentifierFromConverterType] ✗ 未找到匹配的转换器实例：{converterType.Name}");
             }
             catch (Exception ex)
             {
@@ -7302,7 +7310,9 @@ namespace RUINORERP.UI.BaseForm
                 // 保存修改时设置编辑属性（在保存时才设置，而不是在点击编辑时）
                 BusinessHelper.Instance.EditEntity(entity);
 
-                // 保存前检查锁定状态 - 优先从本地缓存检查
+                // 保存前检查锁定状态
+                // 注：DoButtonClick(保存)已调用过CheckLockStatusAndUpdateUI，此处依赖频率控制机制
+                // _frequencyController.ShouldDetectStatus会命中缓存直接返回，不会重复网络请求
                 var lockStatusSaveBefore = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                 if (!lockStatusSaveBefore.CanPerformCriticalOperations)
                 {
@@ -7361,17 +7371,11 @@ namespace RUINORERP.UI.BaseForm
                     long newkeyid = rmr.ReturnObject.PrimaryKeyID;
                     pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
 
-                    // 保存成功后的锁定状态管理
-                    await PostSaveLockManagement(entity, pkid);
+                    // 保存成功后的锁定状态管理和审计日志并行执行
+                    var lockTask = PostSaveLockManagement(entity, pkid);
+                    var logTask = MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
+                    await Task.WhenAll(lockTask, logTask);
                     MainForm.Instance.uclog.AddLog("保存成功");
-
-                    //保存是否需要提醒？状态？
-                    if (pkid > 0)
-                    {
-                        //var updateData = ConvertToTodoUpdate(entity);
-                        //TodoSyncManager.Instance.PublishUpdate(updateData);
-                    }
-                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
                 }
                 else
                 {
@@ -8196,13 +8200,8 @@ namespace RUINORERP.UI.BaseForm
                 {
                     return false;
                 }
-                StateTransitionResult stateTransitionResult = await StateManager.ValidateActionTransitionAsync(EditEntity, MenuItemEnums.提交);
-                if (!stateTransitionResult.IsSuccess)
-                {
-                    MessageBox.Show($"提交失败: {stateTransitionResult.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-
+                // 注：状态验证已在DoButtonClick中通过CanExecuteActionWithMessage完成
+                // 此处保留作为安全守卫（Submit也可能被非DoButtonClick路径调用）
                 if (!StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.提交).CanExecute)
                 {
                     return false;

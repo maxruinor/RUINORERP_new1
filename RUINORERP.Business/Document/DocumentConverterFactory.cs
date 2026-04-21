@@ -578,8 +578,9 @@ namespace RUINORERP.Business.Document
         /// <typeparam name="TSource">源单据类型</typeparam>
         /// <typeparam name="TTarget">目标单据类型</typeparam>
         /// <param name="source">源单据对象</param>
+        /// <param name="identifier">转换唯一标识符（可选，用于精确匹配）</param>
         /// <returns>转换后的目标单据对象</returns>
-        public async Task<TTarget> ConvertAsync<TSource, TTarget>(TSource source)
+        public async Task<TTarget> ConvertAsync<TSource, TTarget>(TSource source, string identifier = null)
             where TSource : BaseEntity
             where TTarget : BaseEntity, new()
         {
@@ -588,11 +589,12 @@ namespace RUINORERP.Business.Document
                 throw new ArgumentNullException(nameof(source));
             }
 
-            // 获取转换器
-            var converter = GetConverter<TSource, TTarget>();
+            // 获取转换器（使用 identifier 精确匹配）
+            var converter = GetConverter<TSource, TTarget>(identifier);
             if (converter == null)
             {
-                throw new InvalidOperationException($"未找到从 {typeof(TSource).Name} 到 {typeof(TTarget).Name} 的转换器");
+                throw new InvalidOperationException($"未找到从 {typeof(TSource).Name} 到 {typeof(TTarget).Name} 的转换器" +
+                    (!string.IsNullOrEmpty(identifier) ? $" (标识符：{identifier})" : string.Empty));
             }
 
             try
@@ -615,8 +617,9 @@ namespace RUINORERP.Business.Document
         /// <typeparam name="TSource">源单据类型</typeparam>
         /// <typeparam name="TTarget">目标单据类型</typeparam>
         /// <param name="source">源单据对象</param>
+        /// <param name="identifier">转换唯一标识符（可选，用于精确匹配）</param>
         /// <returns>验证结果</returns>
-        public async Task<ValidationResult> ValidateConversionAsync<TSource, TTarget>(TSource source)
+        public async Task<ValidationResult> ValidateConversionAsync<TSource, TTarget>(TSource source, string identifier = null)
             where TSource : BaseEntity
             where TTarget : BaseEntity, new()
         {
@@ -625,10 +628,11 @@ namespace RUINORERP.Business.Document
                 return ValidationResult.Fail("源单据对象不能为空");
             }
 
-            var converter = GetConverter<TSource, TTarget>();
+            var converter = GetConverter<TSource, TTarget>(identifier);
             if (converter == null)
             {
-                return ValidationResult.Fail($"未找到从 {typeof(TSource).Name} 到 {typeof(TTarget).Name} 的转换器");
+                return ValidationResult.Fail($"未找到从 {typeof(TSource).Name} 到 {typeof(TTarget).Name} 的转换器" +
+                    (!string.IsNullOrEmpty(identifier) ? $" (标识符：{identifier})" : string.Empty));
             }
 
             try

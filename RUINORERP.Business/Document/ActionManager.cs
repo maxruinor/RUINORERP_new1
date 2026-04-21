@@ -134,8 +134,8 @@ namespace RUINORERP.Business.Document
                     IsEnabled = true  // 默认可用，可根据权限设置
                 };
 
-                // 验证源单据
-                var validationResult = await _converterFactory.ValidateConversionAsync<TSource, TTarget>(source);
+                // 验证源单据（使用 ConversionIdentifier 精确匹配）
+                var validationResult = await _converterFactory.ValidateConversionAsync<TSource, TTarget>(source, options?.ConversionIdentifier);
                 if (!validationResult.CanConvert)
                 {
                     // 使用 FromValidationResult 方法创建失败结果，保留所有验证信息

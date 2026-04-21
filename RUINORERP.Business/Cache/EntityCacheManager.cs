@@ -104,6 +104,21 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         private readonly long _cacheSizeThreshold;
         #endregion
+
+        #region 反射方法缓存
+        /// <summary>
+        /// 反射方法缓存 - 避免重复反射调用提升性能
+        /// </summary>
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, System.Reflection.MethodInfo> _methodCache =
+            new System.Collections.Concurrent.ConcurrentDictionary<string, System.Reflection.MethodInfo>();
+
+        /// <summary>
+        /// 泛型方法缓存 - 缓存已构造的泛型方法
+        /// </summary>
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, System.Reflection.MethodInfo> _genericMethodCache =
+            new System.Collections.Concurrent.ConcurrentDictionary<string, System.Reflection.MethodInfo>();
+        #endregion
+
         #endregion
 
         #region 缓存更新辅助方法
@@ -137,7 +152,7 @@ namespace RUINORERP.Business.Cache
                 {
                     // 先尝试更新现有实体
                     updated = UpdateJArrayEntity(jArray, schemaInfo.PrimaryKeyField, entityId, entity);
-                    
+
                     // 如果没有找到匹配的实体，则添加新实体到列表末尾
                     if (!updated)
                     {
@@ -150,7 +165,7 @@ namespace RUINORERP.Business.Cache
                 {
                     // 先尝试更新现有实体
                     updated = UpdateExpandoListEntity(expandoList, schemaInfo.PrimaryKeyField, entityId, entity);
-                    
+
                     // 如果没有找到匹配的实体，则添加新实体到列表末尾
                     if (!updated)
                     {
@@ -172,7 +187,7 @@ namespace RUINORERP.Business.Cache
                 {
                     // 先尝试更新现有实体
                     updated = UpdateGenericListEntity(cachedListObj, schemaInfo.PrimaryKeyField, entityId, entity, tableName);
-                    
+
                     // 如果没有找到匹配的实体，则添加新实体到列表末尾
                     if (!updated)
                     {
@@ -180,7 +195,7 @@ namespace RUINORERP.Business.Cache
                         {
                             var listType = cachedListObj.GetType();
                             var itemType = listType.GenericTypeArguments[0];
-                            
+
                             // 确保实体类型与列表项类型兼容
                             if (itemType.IsAssignableFrom(entity.GetType()))
                             {
@@ -216,8 +231,8 @@ namespace RUINORERP.Business.Cache
                 if (updated)
                 {
                     _cacheManager.Put(listCacheKey, cachedListObj);
-                    
-                    if (cachedListObj is JArray || cachedListObj is List<ExpandoObject> || 
+
+                    if (cachedListObj is JArray || cachedListObj is List<ExpandoObject> ||
                         (cachedListObj is IList && cachedListObj.GetType().IsGenericType))
                     {
                         _logger?.LogDebug($"已成功更新或添加表 {tableName} 中ID为 {entityId} 的实体到列表缓存");
@@ -329,6 +344,36 @@ namespace RUINORERP.Business.Cache
                 }
             }
             return false;
+        }
+
+
+        #endregion
+
+        #region 反射方法缓存辅助方法
+        /// <summary>
+        /// 获取缓存的MethodInfo
+        /// </summary>
+        private System.Reflection.MethodInfo GetCachedMethod(string methodName, Type declaringType)
+        {
+            string cacheKey = $"{declaringType.FullName}.{methodName}";
+            return _methodCache.GetOrAdd(cacheKey, _ =>
+            {
+                var method = declaringType.GetMethod(methodName);
+                return method;
+            });
+        }
+
+        /// <summary>
+        /// 获取缓存的泛型MethodInfo
+        /// </summary>
+        private System.Reflection.MethodInfo GetCachedGenericMethod(string methodName, Type declaringType, Type genericType)
+        {
+            string cacheKey = $"{declaringType.FullName}.{methodName}`{genericType.FullName}";
+            return _genericMethodCache.GetOrAdd(cacheKey, _ =>
+            {
+                var method = GetCachedMethod(methodName, declaringType);
+                return method?.MakeGenericMethod(genericType);
+            });
         }
         #endregion
 
@@ -514,11 +559,10 @@ namespace RUINORERP.Business.Cache
                                 {
                                     _logger?.LogDebug($"检测到T是Object类型，从表名 {tableName} 获取实体类型: {entityType.Name}");
 
-                                    // 使用反射创建并调用正确类型的GetEntityListFromSource方法
-                                    var getListMethod = typeof(ICacheDataProvider).GetMethod("GetEntityListFromSource");
-                                    if (getListMethod != null)
+                                    // 使用缓存的反射方法获取数据
+                                    var genericMethod = GetCachedGenericMethod("GetEntityListFromSource", typeof(ICacheDataProvider), entityType);
+                                    if (genericMethod != null)
                                     {
-                                        var genericMethod = getListMethod.MakeGenericMethod(entityType);
                                         var stronglyTypedList = genericMethod.Invoke(_cacheDataProvider, new object[] { tableName }) as IEnumerable;
 
                                         if (stronglyTypedList != null)
@@ -602,7 +646,7 @@ namespace RUINORERP.Business.Cache
 
                 // 处理缓存中的列表类型与请求类型不完全匹配的情况
                 // 检查cachedList是否是任何List<>类型（但不是List<T>）
-                if (cachedList != null && cachedList.GetType().IsGenericType && 
+                if (cachedList != null && cachedList.GetType().IsGenericType &&
                     cachedList.GetType().GetGenericTypeDefinition() == typeof(List<>))
                 {
                     try
@@ -611,7 +655,7 @@ namespace RUINORERP.Business.Cache
                         // 这是一个简单且可靠的方式来处理不同类型间的转换
                         var json = Newtonsoft.Json.JsonConvert.SerializeObject(cachedList);
                         var convertedList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(json);
-                        
+
                         _logger?.LogDebug($"成功将缓存中的列表类型 {cachedList.GetType().FullName} 转换为 {typeof(List<T>).FullName}");
                         return convertedList ?? new List<T>();
                     }
@@ -720,11 +764,10 @@ namespace RUINORERP.Business.Cache
                                 {
                                     _logger?.LogDebug($"检测到T是Object类型，从表名 {tableName} 获取实体类型: {entityType.Name}");
 
-                                    // 使用反射创建并调用正确类型的GetEntityListFromSourceAsync方法
-                                    var getListMethod = typeof(ICacheDataProvider).GetMethod("GetEntityListFromSourceAsync");
-                                    if (getListMethod != null)
+                                    // 使用缓存的反射方法获取数据
+                                    var genericMethod = GetCachedGenericMethod("GetEntityListFromSourceAsync", typeof(ICacheDataProvider), entityType);
+                                    if (genericMethod != null)
                                     {
-                                        var genericMethod = getListMethod.MakeGenericMethod(entityType);
                                         var task = genericMethod.Invoke(_cacheDataProvider, new object[] { tableName }) as Task<IEnumerable>;
                                         if (task != null)
                                         {
@@ -803,7 +846,7 @@ namespace RUINORERP.Business.Cache
                     return typedList;
                 }
 
-                if (cachedList != null && cachedList.GetType().IsGenericType && 
+                if (cachedList != null && cachedList.GetType().IsGenericType &&
                     cachedList.GetType().GetGenericTypeDefinition() == typeof(List<>))
                 {
                     try
@@ -846,7 +889,7 @@ namespace RUINORERP.Business.Cache
                 // GetEntityList方法内部已经处理了缓存过期的情况
                 var list = GetEntityList<T>(tableName);
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-                if (schemaInfo==null)
+                if (schemaInfo == null)
                 {
                     _logger?.LogDebug($"表 {tableName} 的架构信息不存在，请检查代码。");
                 }
@@ -877,11 +920,10 @@ namespace RUINORERP.Business.Cache
                                 {
                                     _logger?.LogDebug($"检测到T是Object类型，从表名 {tableName} 获取实体类型: {entityType.Name}");
 
-                                    // 使用反射创建并调用正确类型的GetEntityFromSource方法
-                                    var getEntityMethod = typeof(ICacheDataProvider).GetMethod("GetEntityFromSource");
-                                    if (getEntityMethod != null)
+                                    // 使用缓存的反射方法获取数据
+                                    var genericMethod = GetCachedGenericMethod("GetEntityFromSource", typeof(ICacheDataProvider), entityType);
+                                    if (genericMethod != null)
                                     {
-                                        var genericMethod = getEntityMethod.MakeGenericMethod(entityType);
                                         entityFound = genericMethod.Invoke(_cacheDataProvider, new object[] { tableName, idValue }) as T;
 
                                         if (entityFound != null)
@@ -913,7 +955,7 @@ namespace RUINORERP.Business.Cache
                     }
                     return null;
                 }
-             
+
 
                 return default;
             }
@@ -1653,7 +1695,7 @@ namespace RUINORERP.Business.Cache
         #endregion
 
         #region 缓存初始化方法实现
-  
+
         /// <summary>
         /// 获取实体类型
         /// </summary>
@@ -1881,7 +1923,7 @@ namespace RUINORERP.Business.Cache
                                 isReplacingDataWithLessOrEmpty = true;
                                 // 这里可以添加断点或日志记录，帮助调试
                                 System.Diagnostics.Debug.WriteLine($"[缓存覆盖警告] 表 {tableName} - 缓存键: {cacheKey} 原数据行数: {existingList.Count}, 新数据行数: {newList.Count}");
-                             
+
                             }
                         }
                     }
@@ -1981,17 +2023,17 @@ namespace RUINORERP.Business.Cache
             {
                 // 优化：根据缓存大小动态调整清理比例
                 // 超过阈值 1.5 倍时，移除 33%；否则移除 25%
-                int removePercentage = EstimatedCacheSize >= _cacheSizeThreshold * 1.5 
-                    ? _cacheItemStatistics.Count / 3  
+                int removePercentage = EstimatedCacheSize >= _cacheSizeThreshold * 1.5
+                    ? _cacheItemStatistics.Count / 3
                     : _cacheItemStatistics.Count / 4;
-                    
+
                 // 获取所有缓存项并按最后访问时间排序（最久未使用的在前）
                 var itemsToRemove = _cacheItemStatistics.Values
                     .OrderBy(s => s.LastAccessedTime)
                     .Take(removePercentage)
                     .Select(s => s.Key)
                     .ToList();
-        
+
                 // 记录详细的缓存清理日志
                 if (itemsToRemove.Any())
                 {
@@ -1999,7 +2041,7 @@ namespace RUINORERP.Business.Cache
                         itemsToRemove.Count,
                         string.Join(", ", itemsToRemove.Select(k => _cacheItemStatistics[k].TableName)));
                 }
-        
+
                 // 移除选定的缓存项
                 foreach (var key in itemsToRemove)
                 {
@@ -2034,7 +2076,7 @@ namespace RUINORERP.Business.Cache
                     foreach (var item in enumerable)
                     {
                         count++;
-                        
+
                         // 只采样前几个对象来估算平均大小
                         if (sampleCount < maxSampleCount && item != null)
                         {
@@ -2080,14 +2122,14 @@ namespace RUINORERP.Business.Cache
                 {
                     return Encoding.UTF8.GetByteCount(str);
                 }
-                
+
                 // 值类型的大小估算
                 if (obj is ValueType)
                 {
                     // 仅对可编组类型使用 Marshal.SizeOf
                     var type = obj.GetType();
                     bool isStruct = type.IsValueType && !type.IsPrimitive && !type.IsEnum;
-                    
+
                     if (type.IsPrimitive || type.IsEnum || isStruct)
                     {
                         try
@@ -2098,17 +2140,17 @@ namespace RUINORERP.Business.Cache
                                 // 泛型结构体可能无法编组，使用保守估计
                                 return IntPtr.Size * 2; // 保守估计为 2 个指针大小
                             }
-                            
+
                             // 检查是否包含引用类型字段
                             var hasReferenceFields = type.GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public)
                                                         .Any(f => !f.FieldType.IsValueType);
-                            
+
                             if (hasReferenceFields)
                             {
                                 // 包含引用类型的结构体，使用保守估计
                                 return IntPtr.Size * 2;
                             }
-                            
+
                             // 安全可编组的值类型
                             return Marshal.SizeOf(type);
                         }
@@ -2129,7 +2171,7 @@ namespace RUINORERP.Business.Cache
                 // 基于对象属性数量进行估算
                 var properties = obj.GetType().GetProperties(
                     BindingFlags.Public | BindingFlags.Instance);
-                
+
                 long estimatedSize = 0;
                 foreach (var prop in properties)
                 {
@@ -2147,7 +2189,7 @@ namespace RUINORERP.Business.Cache
                                 // 安全地获取值类型大小
                                 var valueTypeObj = valueType.GetType();
                                 bool isValueTypeStruct = valueTypeObj.IsValueType && !valueTypeObj.IsPrimitive && !valueTypeObj.IsEnum;
-                                
+
                                 if (valueTypeObj.IsPrimitive || valueTypeObj.IsEnum || isValueTypeStruct)
                                 {
                                     try
@@ -2157,14 +2199,25 @@ namespace RUINORERP.Business.Cache
                                         {
                                             estimatedSize += IntPtr.Size * 2;
                                         }
+                                        else if (valueTypeObj.IsEnum)
+                                        {
+                                            // 枚举类型直接使用底层类型大小，避免 Marshal.SizeOf 失败
+                                            var underlyingType = Enum.GetUnderlyingType(valueTypeObj);
+                                            estimatedSize += Marshal.SizeOf(underlyingType);
+                                        }
                                         else
                                         {
                                             estimatedSize += Marshal.SizeOf(valueTypeObj);
                                         }
                                     }
-                                    catch
+                                    catch (ArgumentException)
                                     {
-                                        // 无法编组的值类型，使用默认估计
+                                        // 无法编组的值类型（如某些枚举），使用默认估计
+                                        estimatedSize += IntPtr.Size;
+                                    }
+                                    catch (Exception)
+                                    {
+                                        // 其他异常，使用保守估计
                                         estimatedSize += IntPtr.Size;
                                     }
                                 }
@@ -2189,7 +2242,7 @@ namespace RUINORERP.Business.Cache
 
                 // 添加对象头开销 (通常为 8-16 字节)
                 estimatedSize += 16;
-                
+
                 return estimatedSize;
             }
             catch

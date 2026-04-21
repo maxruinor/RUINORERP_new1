@@ -225,17 +225,14 @@ namespace RUINORERP.Business.Document
 
         /// <summary>
         /// 获取转换唯一标识符
-        /// 默认为空，子类可以根据业务逻辑重写（如 "Normal", "Refund", "Offset"）
+        /// 默认为 null，子类可以根据业务逻辑重写（如 "Normal", "Refund", "Offset"）
+        /// 
+        /// 重要说明:
+        /// - 返回 null 表示不使用标识符区分,工厂层会使用 "Source:Target" 作为Key
+        /// - 返回非空字符串时,工厂层会使用 "Source:Target:Identifier" 作为Key
+        /// - 子类应直接重写此属性,而不是重写 GetConversionIdentifier() 方法
         /// </summary>
-        public virtual string ConversionIdentifier => GetConversionIdentifier();
-
-        /// <summary>
-        /// 供子类重写的标识符获取方法
-        /// </summary>
-        protected virtual string GetConversionIdentifier()
-        {
-            return string.Empty;
-        }
+        public virtual string ConversionIdentifier => null;
         
         /// <summary>
         /// 获取转换操作类型（单据生成型或动作操作型）

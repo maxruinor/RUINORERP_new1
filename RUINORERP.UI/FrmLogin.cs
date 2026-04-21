@@ -1239,6 +1239,17 @@ namespace RUINORERP.UI
                 MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
                 btncancel.Text = "取消";
+                
+                // 取消时清理服务器会话，避免积累无效会话
+                try
+                {
+                    await _userLoginService.CancelLoginAsync(MainForm.Instance?.AppContext?.SessionId);
+                    await connectionManager.DisconnectAsync();
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance?.logger?.LogWarning(ex, "取消登录时清理资源失败");
+                }
             }
             finally
             {

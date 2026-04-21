@@ -1,0 +1,32 @@
+﻿
+        /// <summary>
+        /// 从转换器类型获取 ConversionIdentifier
+        /// </summary>
+        /// <param name="converterType">转换器类型</param>
+        /// <returns>ConversionIdentifier 值</returns>
+        private string GetConversionIdentifierFromConverterType(Type converterType)
+        {
+            try
+            {
+                if (converterType == null)
+                {
+                    return null;
+                }
+
+                // 尝试创建转换器临时实例以获取其 ConversionIdentifier
+                var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
+                var tempConverter = ActivatorUtilities.CreateInstance(converterFactory as IServiceProvider, converterType);
+                var identifierProperty = converterType.GetProperty("ConversionIdentifier");
+                if (identifierProperty != null)
+                {
+                    return identifierProperty.GetValue(tempConverter) as string;
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"获取转换器标识符失败：{converterType?.Name}, 错误：{ex.Message}", Global.UILogType.警告);
+            }
+
+            return null;
+        }
+

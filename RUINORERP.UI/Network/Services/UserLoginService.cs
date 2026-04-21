@@ -79,7 +79,14 @@ namespace RUINORERP.UI.Network.Services
                 ct.ThrowIfCancellationRequested();
 
                 // 使用信号量确保同一时间只有一个登录请求
-                await _loginLock.WaitAsync(TimeSpan.FromSeconds(5), ct);
+                // ✅ 延长超时到30秒，避免网络慢时快速失败
+                var lockAcquired = await _loginLock.WaitAsync(TimeSpan.FromSeconds(30), ct);
+                
+                if (!lockAcquired)
+                {
+                    _logger?.LogWarning("登录请求被拒绝: 获取锁超时，可能已有登录在进行");
+                    return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("正在登录中，请稍候...");
+                }
 
                 // 锁获取成功后，再次检查取消令牌状态
                 if (ct.IsCancellationRequested)
@@ -129,9 +136,12 @@ namespace RUINORERP.UI.Network.Services
                 {
                     //接收来自服务器的Token并保存
                     await _tokenManager.TokenStorage.SetTokenAsync(response.Token);
-                    if (MainForm.Instance?.AppContext != null)
+                    
+                    // 使用服务器返回的SessionId更新客户端上下文
+                    if (MainForm.Instance?.AppContext != null && !string.IsNullOrEmpty(response.SessionId))
                     {
                         MainForm.Instance.AppContext.SessionId = response.SessionId;
+                        _logger?.LogInformation($"[登录成功] 更新SessionId: {response.SessionId}");
                     }
 
                     // ✅ 如果不是自动登录，保存凭据供下次自动登录使用
@@ -476,6 +486,9 @@ namespace RUINORERP.UI.Network.Services
                     if (response.IsSuccess)
                     {
                         _logger?.LogInformation($"[强制下线成功] 服务器返回成功: TargetSessionId={targetSessionId}");
+                        
+                        // 等待短暂时间，确保服务器端会话清理完成
+                        await Task.Delay(500, ct);
                         return true;
                     }
                     else

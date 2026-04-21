@@ -1244,6 +1244,28 @@ namespace RUINORERP.Server.Controls
                             if (mod.ObjectCount > 0)
                                 distributionText += $" ({mod.ObjectCount}对象)";
                             distributionText += "\n";
+                            
+                            // 如果有子项统计，显示详细信息
+                            if (mod.SubItems != null && mod.SubItems.Count > 0)
+                            {
+                                foreach (var subItem in mod.SubItems)
+                                {
+                                    string sizeText = subItem.EstimatedMemoryKB >= 1024 
+                                        ? $"{(double)subItem.EstimatedMemoryKB / 1024:F2} MB" 
+                                        : $"{subItem.EstimatedMemoryKB} KB";
+                                    
+                                    distributionText += $"  ├─ {subItem.Name}: {sizeText}";
+                                    if (subItem.ObjectCount > 0)
+                                        distributionText += $" ({subItem.ObjectCount:N0})";
+                                    if (subItem.HitRatio > 0)
+                                        distributionText += $" [命中率:{subItem.HitRatio:P1}]";
+                                    if (!string.IsNullOrEmpty(subItem.Description))
+                                        distributionText += $" - {subItem.Description}";
+                                    distributionText += "\n";
+                                }
+                            }
+                            
+                            distributionText += "\n";
                         }
                     }
                     

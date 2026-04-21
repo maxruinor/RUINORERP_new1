@@ -453,7 +453,14 @@ namespace RUINORERP.Server.Network.Services
                 if (string.IsNullOrEmpty(sessionId))
                     return false;
 
-                return _sessions.ContainsKey(sessionId);
+                if (!_sessions.TryGetValue(sessionId, out var sessionInfo))
+                    return false;
+                
+                // 同时检查会话存在性和连接状态
+                lock (sessionInfo)
+                {
+                    return sessionInfo.IsConnected && sessionInfo.IsAuthenticated;
+                }
             }
             catch (Exception ex)
             {

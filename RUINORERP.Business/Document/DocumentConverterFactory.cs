@@ -176,16 +176,41 @@ namespace RUINORERP.Business.Document
             var sourceType = typeof(TSource);
             var targetType = typeof(TTarget);
             var baseKey = $"{sourceType.FullName}:{targetType.FullName}";
+            
+            System.Diagnostics.Debug.WriteLine($"");
+            System.Diagnostics.Debug.WriteLine($"========== [GetConverter 泛型] 开始 ==========");
+            System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型] 请求：{sourceType.Name} -> {targetType.Name}");
+            System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型] identifier: {(string.IsNullOrEmpty(identifier) ? "null/empty" : identifier)}");
+            System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型] baseKey: {baseKey}");
+            if (!string.IsNullOrEmpty(identifier))
+            {
+                System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型] 查找精确匹配 Key: {baseKey}:{identifier}");
+            }
 
             lock (_cacheLock)
             {
+                System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型] 缓存中的转换器数量：{_convertersCache.Count}");
+                System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型] 缓存中的所有 Key:");
+                foreach (var key in _convertersCache.Keys)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  - {key}");
+                }
+                
                 foreach (var kvp in _convertersCache)
                 {
                     // 如果提供了标识符，则进行精确匹配
                     if (!string.IsNullOrEmpty(identifier))
                     {
-                        if (kvp.Key == $"{baseKey}:{identifier}")
+                        var expectedKey = $"{baseKey}:{identifier}";
+                        var matches = kvp.Key == expectedKey;
+                        System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型] 检查 Key: {kvp.Key}");
+                        System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型]          期望：{expectedKey}");
+                        System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型]          匹配：{matches}");
+                        if (matches)
                         {
+                            System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型] ✓ 找到匹配：{kvp.Value.GetType().FullName}");
+                            System.Diagnostics.Debug.WriteLine($"========== [GetConverter 泛型] 结束 ==========");
+                            System.Diagnostics.Debug.WriteLine($"");
                             return kvp.Value as IDocumentConverter<TSource, TTarget>;
                         }
                     }
@@ -194,11 +219,17 @@ namespace RUINORERP.Business.Document
                         // 如果没有提供标识符，返回第一个匹配的转换器（兼容旧逻辑）
                         if (kvp.Key.StartsWith(baseKey + ":") || kvp.Key == baseKey)
                         {
+                            System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型] ✓ 找到匹配（无标识符）: {kvp.Value.GetType().FullName}");
+                            System.Diagnostics.Debug.WriteLine($"========== [GetConverter 泛型] 结束 ==========");
+                            System.Diagnostics.Debug.WriteLine($"");
                             return kvp.Value as IDocumentConverter<TSource, TTarget>;
                         }
                     }
                 }
             }
+            System.Diagnostics.Debug.WriteLine($"[GetConverter 泛型] ✗ 未找到转换器");
+            System.Diagnostics.Debug.WriteLine($"========== [GetConverter 泛型] 结束 ==========");
+            System.Diagnostics.Debug.WriteLine($"");
             return null;
         }
 
@@ -207,8 +238,9 @@ namespace RUINORERP.Business.Document
         /// </summary>
         /// <param name="sourceType">源单据类型</param>
         /// <param name="targetType">目标单据类型</param>
+        /// <param name="identifier">转换唯一标识符（可选，用于精确匹配）</param>
         /// <returns>转换器实例对象</returns>
-        public object GetConverter(Type sourceType, Type targetType)
+        public object GetConverter(Type sourceType, Type targetType, string identifier = null)
         {
             if (sourceType == null)
             {
@@ -220,12 +252,28 @@ namespace RUINORERP.Business.Document
                 throw new ArgumentNullException(nameof(targetType));
             }
 
-            string key = $"{sourceType.FullName}:{targetType.FullName}";
+            var baseKey = $"{sourceType.FullName}:{targetType.FullName}";
+            
             lock (_cacheLock)
             {
-                if (_convertersCache.TryGetValue(key, out var converter))
+                foreach (var kvp in _convertersCache)
                 {
-                    return converter;
+                    // 如果提供了标识符，则进行精确匹配
+                    if (!string.IsNullOrEmpty(identifier))
+                    {
+                        if (kvp.Key == $"{baseKey}:{identifier}")
+                        {
+                            return kvp.Value;
+                        }
+                    }
+                    else
+                    {
+                        // 如果没有提供标识符，返回第一个匹配的转换器（兼容旧逻辑）
+                        if (kvp.Key.StartsWith(baseKey + ":") || kvp.Key == baseKey)
+                        {
+                            return kvp.Value;
+                        }
+                    }
                 }
             }
             return null;

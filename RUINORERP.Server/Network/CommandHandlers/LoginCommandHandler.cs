@@ -560,6 +560,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 处理重复用户下线命令
+        /// 增强：添加会话有效性检查，避免对已断开的会话执行下线操作
         /// </summary>
         private async Task<IResponse> HandleDuplicateLoginAsync(LoginRequest request, CommandContext executionContext, CancellationToken cancellationToken)
         {
@@ -595,7 +596,18 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "目标用户不在线或会话ID无效");
                 }
                         
-                logger?.LogInformation($"[强制下线] 找到目标会话: SessionId={targetSession.SessionID}, UserName={targetSession.UserName}, ClientIp={targetSession.ClientIp}");
+                // 关键修复：检查目标会话是否仍然活跃连接
+                if (!targetSession.IsConnected)
+                {
+                    logger?.LogWarning($"[强制下线] 目标会话已断开，无需执行下线操作: SessionId={targetSession.SessionID}, UserName={targetSession.UserName}, DisconnectTime={targetSession.DisconnectTime}");
+                    
+                    // 会话已断开，清理残留的会话记录
+                    await SessionService.RemoveSessionAsync(targetSession.SessionID);
+                    
+                    return ResponseFactory.CreateSpecificSuccessResponse(executionContext, "目标用户已断开连接，无需强制下线");
+                }
+                        
+                logger?.LogInformation($"[强制下线] 找到目标会话: SessionId={targetSession.SessionID}, UserName={targetSession.UserName}, ClientIp={targetSession.ClientIp}, IsConnected={targetSession.IsConnected}");
         
                 // 发送提示消息
                 try
@@ -846,7 +858,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
-        /// 检查用户是否已登录（基于有效的Token）
+        /// 检查用户是否已登录（基于有效的Token和活跃连接）
+        /// 修复：过滤掉已断开的会话，避免"幽灵会话"导致的误判
         /// </summary>
         private IEnumerable<SessionInfo> CheckExistingUserSessions(string username)
         {
@@ -855,17 +868,29 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 获取指定用户名的所有会话
                 var allSessions = SessionService.GetUserSessions(username);
 
-                // 过滤出有有效Token的会话
+                // 过滤出有有效Token且连接活跃的会话
                 var validSessions = new List<SessionInfo>();
                 foreach (var session in allSessions)
                 {
                     // 检查会话是否已认证且有有效的Token
                     if (session.IsAuthenticated && !string.IsNullOrEmpty(session.SessionID))
                     {
-                        // 检查会话是否仍在活跃状态
+                        // 关键修复：检查会话是否仍在活跃连接状态
+                        // IsConnected 表示物理连接是否仍然活跃
+                        if (!session.IsConnected)
+                        {
+                            logger?.LogDebug($"[会话过滤] 跳过已断开的会话: SessionID={session.SessionID}, UserName={session.UserName}, DisconnectTime={session.DisconnectTime}");
+                            continue;
+                        }
+                        
+                        // 检查会话是否仍在SessionService中有效
                         if (SessionService.IsValidSession(session.SessionID))
                         {
                             validSessions.Add(session);
+                        }
+                        else
+                        {
+                            logger?.LogDebug($"[会话过滤] 跳过无效会话: SessionID={session.SessionID}, UserName={session.UserName}");
                         }
                     }
                 }
@@ -922,6 +947,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 检查用户是否已登录，并处理重复登录情况
         /// 支持多种重复登录处理策略，提供详细的会话信息
+        /// 修复：过滤掉已断开的会话，避免"幽灵会话"导致的误判
         /// </summary>
         private (bool hasExistingSessions, IEnumerable<SessionInfo> authorizedSessions, DuplicateLoginResult duplicateResult)
             CheckUserLoginStatus(string username, string currentSessionId)
@@ -931,12 +957,21 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 获取指定用户名的所有已认证会话
                 var userSessions = SessionService.GetUserSessions(username);
 
+                // 关键修复：过滤掉已断开的会话，只保留活跃连接
+                var activeSessions = userSessions.Where(s => s.IsConnected).ToList();
+                
+                if (activeSessions.Count != userSessions.Count())
+                {
+                    int filteredCount = userSessions.Count() - activeSessions.Count;
+                    logger?.LogDebug($"[重复登录检测] 过滤了 {filteredCount} 个已断开的会话");
+                }
+
                 // 过滤出已授权的会话
-                var authorizedSessions = userSessions.Where(s => IsSessionAuthorized(s)).ToList();
+                var authorizedSessions = activeSessions.Where(s => IsSessionAuthorized(s)).ToList();
 
                 if (!authorizedSessions.Any())
                 {
-                    // 没有其他会话，直接返回
+                    // 没有其他活跃会话，直接返回
                     return (false, authorizedSessions, new DuplicateLoginResult { HasDuplicateLogin = false });
                 }
 
@@ -1233,6 +1268,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 获取客户端真实IP地址(从服务器端Socket获取，防止伪造)
+        /// 增强版：添加详细日志和异常处理
         /// </summary>
         /// <param name="appSession">会话对象</param>
         /// <returns>客户端IP地址</returns>
@@ -1240,31 +1276,46 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 从RemoteEndPoint获取真实IP（服务器端视角）
-                if (appSession != null && appSession.RemoteEndPoint != null)
+                if (appSession == null)
                 {
-                    var ipEndpoint = appSession.RemoteEndPoint as System.Net.IPEndPoint;
-                    if (ipEndpoint != null)
-                    {
-                        string ip = ipEndpoint.Address.ToString();
-                        
-                        // 记录IP类型用于调试
-                        if (ipEndpoint.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
-                        {
-                            logger?.LogDebug($"[IP获取] 检测到IPv6客户端: {ip}, SessionID={appSession.SessionID}");
-                        }
-                        
-                        return ip;
-                    }
+                    logger?.LogWarning($"[IP获取] appSession为null");
+                    return "0.0.0.0";
                 }
+                
+                // 从RemoteEndPoint获取真实IP（服务器端视角）
+                var remoteEndPoint = appSession.RemoteEndPoint;
+                if (remoteEndPoint == null)
+                {
+                    logger?.LogWarning($"[IP获取] RemoteEndPoint为null, SessionID={appSession.SessionID}");
+                    return "0.0.0.0";
+                }
+                
+                var ipEndpoint = remoteEndPoint as System.Net.IPEndPoint;
+                if (ipEndpoint == null)
+                {
+                    logger?.LogWarning($"[IP获取] RemoteEndPoint不是IPEndPoint类型, 实际类型={remoteEndPoint.GetType().Name}, SessionID={appSession.SessionID}");
+                    return "0.0.0.0";
+                }
+                
+                string ip = ipEndpoint.Address.ToString();
+                
+                // 记录IP类型用于调试
+                if (ipEndpoint.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                {
+                    logger?.LogDebug($"[IP获取] 检测到IPv6客户端: {ip}, SessionID={appSession.SessionID}");
+                }
+                else
+                {
+                    logger?.LogDebug($"[IP获取] IPv4客户端: {ip}, SessionID={appSession.SessionID}, Port={ipEndpoint.Port}");
+                }
+                
+                return ip;
             }
             catch (Exception ex)
             {
-                logger?.LogWarning(ex, "获取客户端IP地址失败");
+                logger?.LogWarning(ex, $"[IP获取异常] 获取客户端IP地址失败, SessionID={appSession?.SessionID}");
+                return "0.0.0.0";
             }
-
-            // 如果无法获取IP，则返回默认值
-            return "0.0.0.0"; // 使用0.0.0.0表示未知IP
         }
 
 

@@ -138,16 +138,37 @@ namespace RUINORERP.Business.Document
                 var validationResult = await _converterFactory.ValidateConversionAsync<TSource, TTarget>(source);
                 if (!validationResult.CanConvert)
                 {
-                    // 使用FromValidationResult方法创建失败结果，保留所有验证信息
+                    // 使用 FromValidationResult 方法创建失败结果，保留所有验证信息
+                    _logger.LogWarning($"验证失败：{typeof(TSource).Name} -> {typeof(TTarget).Name}, 原因：{validationResult.ErrorMessage}");
                     return ActionResult<TTarget>.FromValidationResult(validationResult);
                 }
 
-                // 获取转换器
-                var converter = _converterFactory.GetConverter<TSource, TTarget>();
+                // 使用 ConversionIdentifier 获取转换器
+                var converterIdentifier = options?.ConversionIdentifier;
+                System.Diagnostics.Debug.WriteLine($"");
+                System.Diagnostics.Debug.WriteLine($"========== [ExecuteActionAsync] 开始 ==========");
+                System.Diagnostics.Debug.WriteLine($"[ExecuteActionAsync] 源类型：{typeof(TSource).Name}");
+                System.Diagnostics.Debug.WriteLine($"[ExecuteActionAsync] 目标类型：{typeof(TTarget).Name}");
+                System.Diagnostics.Debug.WriteLine($"[ExecuteActionAsync] ConversionIdentifier: {(string.IsNullOrEmpty(converterIdentifier) ? "null/empty" : converterIdentifier)}");
+                System.Diagnostics.Debug.WriteLine($"[ExecuteActionAsync] options 对象是否为 null：{(options == null ? "是" : "否")}");
+                if (options != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ExecuteActionAsync] options.ConversionIdentifier 值：{options.ConversionIdentifier ?? "null"}");
+                    System.Diagnostics.Debug.WriteLine($"[ExecuteActionAsync] options.SaveTarget: {options.SaveTarget}");
+                    System.Diagnostics.Debug.WriteLine($"[ExecuteActionAsync] options.UseTransaction: {options.UseTransaction}");
+                }
+                
+                var converter = _converterFactory.GetConverter<TSource, TTarget>(converterIdentifier);
+                System.Diagnostics.Debug.WriteLine($"[ExecuteActionAsync] 获取转换器结果：{converter?.GetType().FullName ?? "null"}");
                 if (converter == null)
                 {
-                    return ActionResult<TTarget>.Fail($"找不到从 {typeof(TSource).Name} 到 {typeof(TTarget).Name} 的转换器");
+                    System.Diagnostics.Debug.WriteLine($"[ExecuteActionAsync] ✗ 找不到转换器，Expected Key 格式：{typeof(TSource).FullName}:{typeof(TTarget).FullName}:{converterIdentifier ?? "null"}");
+                    return ActionResult<TTarget>.Fail($"找不到从 {typeof(TSource).Name} 到 {typeof(TTarget).Name} 的转换器" + 
+                        (options?.ConversionIdentifier != null ? $" (标识符：{options.ConversionIdentifier})" : string.Empty));
                 }
+                System.Diagnostics.Debug.WriteLine($"[ExecuteActionAsync] ✓ 成功获取转换器：{converter.GetType().Name}");
+                System.Diagnostics.Debug.WriteLine($"========== [ExecuteActionAsync] 结束 ==========");
+                System.Diagnostics.Debug.WriteLine($"");
 
                 // 执行转换
                 var target = await converter.ConvertAsync(source);
@@ -232,6 +253,7 @@ namespace RUINORERP.Business.Document
                 TargetDocumentDisplayName = c.TargetDocumentDisplayName,
                 ConverterType = c.ConverterType,
                 ConversionType = c.ConversionType, // 添加转换操作类型
+                ConversionIdentifier = c.ConversionIdentifier, // 添加转换标识符
                 IsVisible = true, // 默认可见，可根据权限设置
                 IsEnabled = true  // 默认可用，可根据权限设置
             });
@@ -274,7 +296,8 @@ namespace RUINORERP.Business.Document
                                     continue;
                                 }
 
-                                var converter = _converterFactory.GetConverter(source.GetType(), targetTypeInfo);
+                                // 使用 ConversionIdentifier 精确匹配转换器
+                                var converter = _converterFactory.GetConverter(source.GetType(), targetTypeInfo, action.ConversionIdentifier);
                                 if (converter != null)
                                 {
                                     // 使用 dynamic 调用泛型方法，避开编译时类型检查
@@ -287,6 +310,12 @@ namespace RUINORERP.Business.Document
                                         action.IsVisible = false;
                                         continue;
                                     }
+                                }
+                                else
+                                {
+                                    _logger.LogWarning($"无法获取转换器：{action.DisplayName} (标识符：{action.ConversionIdentifier})");
+                                    action.IsVisible = false;
+                                    continue;
                                 }
                             }
                             catch (Exception ex)
@@ -405,6 +434,12 @@ namespace RUINORERP.Business.Document
         public object ConversionContext { get; set; }
 
         /// <summary>
+        /// 转换唯一标识符
+        /// 用于在多个源/目标类型相同的转换器中进行精确区分
+        /// </summary>
+        public string ConversionIdentifier { get; set; }
+
+        /// <summary>
         /// 操作可见性，用于权限控制
         /// </summary>
         public bool IsVisible { get; set; } = true;
@@ -461,6 +496,12 @@ namespace RUINORERP.Business.Document
         /// 转换操作类型（单据生成型或动作操作型）
         /// </summary>
         public DocumentConversionType ConversionType { get; set; } = DocumentConversionType.DocumentGeneration;
+
+        /// <summary>
+        /// 转换唯一标识符
+        /// 用于在多个源/目标类型相同的转换器中进行精确区分
+        /// </summary>
+        public string ConversionIdentifier { get; set; }
 
         /// <summary>
         /// 操作可见性，用于权限控制

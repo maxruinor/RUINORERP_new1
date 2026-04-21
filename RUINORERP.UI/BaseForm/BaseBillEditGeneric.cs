@@ -6324,7 +6324,8 @@ namespace RUINORERP.UI.BaseForm
                 var options = new RUINORERP.Business.Document.ActionOptions
                 {
                     UseTransaction = true,
-                    SaveTarget = false
+                    SaveTarget = false,
+                    ConversionIdentifier = GetConversionIdentifierFromConverterType(converterType)
                 };
 
                 // 执行联动操作
@@ -6337,14 +6338,24 @@ namespace RUINORERP.UI.BaseForm
                                        m.IsGenericMethod &&
                                        m.GetParameters().Length == 2 &&
                                        m.GetParameters()[0].ParameterType.IsGenericParameter &&
-                                       m.GetParameters()[1].ParameterType.Name == "ActionOptions");
+                                       m.GetParameters()[1].ParameterType.FullName == "RUINORERP.Business.Document.ActionOptions");
 
                 if (method == null)
                 {
                     throw new InvalidOperationException("找不到合适的 ExecuteActionAsync 方法");
                 }
 
+                // 调试日志：记录转换器标识符
+                string conversionIdentifier = GetConversionIdentifierFromConverterType(converterType);
+                MainForm.Instance.uclog.AddLog($"【转换开始】源实体：{typeof(T).Name}, 目标实体：{targetType?.Name ?? "null"}", Global.UILogType.普通消息);
+                MainForm.Instance.uclog.AddLog($"【转换信息】转换器：{converterType?.Name ?? "null"}, ConversionIdentifier: {conversionIdentifier ?? "null"}, 菜单文本：{menuItemText}", Global.UILogType.普通消息);
+
+                // 确保 options 包含正确的 ConversionIdentifier
+                options.ConversionIdentifier = conversionIdentifier;
+                MainForm.Instance.uclog.AddLog($"【转换参数】options.ConversionIdentifier 已设置为：{options.ConversionIdentifier ?? "null"}", Global.UILogType.普通消息);
+
                 var genericMethod = method.MakeGenericMethod(typeof(T), targetType);
+                MainForm.Instance.uclog.AddLog($"【反射调用】方法：{genericMethod.Name}, 泛型参数：{typeof(T).Name}, {targetType?.Name ?? "null"}", Global.UILogType.普通消息);
                 var task = (Task)genericMethod.Invoke(actionManager, new object[] { EditEntity, options });
                 await task;
 
@@ -6659,6 +6670,64 @@ namespace RUINORERP.UI.BaseForm
                 System.Diagnostics.Debug.WriteLine($"获取实体 {entityType?.Name} 显示名称失败: {ex.Message}");
                 return entityType?.Name ?? "未知实体";
             }
+        }
+
+        /// <summary>
+        /// 从转换器类型获取 ConversionIdentifier
+        /// </summary>
+        /// <param name="converterType">转换器类型</param>
+        /// <returns>ConversionIdentifier 值</returns>
+        private string GetConversionIdentifierFromConverterType(Type converterType)
+        {
+            try
+            {
+                if (converterType == null)
+                {
+                    return null;
+                }
+
+                // 使用反射获取 ConversionIdentifier 属性（不需要创建实例）
+                var identifierProperty = converterType.GetProperty("ConversionIdentifier", 
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (identifierProperty != null)
+                {
+                    // 尝试从已注册的转换器实例中获取
+                    var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
+                    var sourceType = converterType.GetInterfaces()
+                        .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDocumentConverter<,>))
+                        ?.GetGenericArguments()[0];
+                    var targetType = converterType.GetInterfaces()
+                        .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDocumentConverter<,>))
+                        ?.GetGenericArguments()[1];
+                    
+                    if (sourceType != null && targetType != null)
+                    {
+                        var getConverterMethod = converterFactory.GetType()
+                            .GetMethod("GetConverter", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                            ?.MakeGenericMethod(sourceType, targetType);
+                        
+                        if (getConverterMethod != null)
+                        {
+                            var converter = getConverterMethod.Invoke(converterFactory, new object[] { null });
+                            if (converter != null)
+                            {
+                                var identifier = identifierProperty.GetValue(converter) as string;
+                                System.Diagnostics.Debug.WriteLine($"[GetConversionIdentifierFromConverterType] ✓ 获取成功：{converterType.Name}, ConversionIdentifier: {identifier}");
+                                return identifier;
+                            }
+                        }
+                    }
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"[GetConversionIdentifierFromConverterType] ✗ 无法获取 ConversionIdentifier");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"获取转换器标识符失败：{converterType?.Name}, 错误：{ex.Message}", Global.UILogType.警告);
+                System.Diagnostics.Debug.WriteLine($"[GetConversionIdentifierFromConverterType] ✗ 异常：{ex.Message}");
+            }
+
+            return null;
         }
 
 

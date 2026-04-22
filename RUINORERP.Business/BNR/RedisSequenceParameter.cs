@@ -74,101 +74,86 @@ namespace RUINORERP.Business.BNR
                 }
             }
             
-            var redisKey = key.ToString();
+            var redisKey = $"SEQ:{key.ToString()}";
             long number;
             
             try
             {
-                // 使用CacheManager的方式实现递增
-                // 如果缓存中存在键，增加计数
-                // 如果不存在，初始化为1
-                number = IncrementCounter(redisKey);
-            }
-            catch (Exception ex)
-            {
-                // 如果CacheManager方式失败，尝试回退到直接的Redis操作（如果可用）
-                if (_redisDB != null)
+                // 优先尝试通过 CacheManager 获取底层 Redis 连接进行原子递增
+                // 如果 CacheManager 不支持直接访问 IDatabase，则回退到原有逻辑
+                if (_cacheManager != null)
                 {
+                    // 尝试获取 StackExchange.Redis 的 IDatabase 实例
+                    // 注意：这里假设 CacheManager 内部封装了 SE.Redis，实际项目中可能需要根据具体配置调整
+                    var handle = _cacheManager.GetBaseHandle();
+                    if (handle is StackExchange.Redis.IDatabase db)
+                    {
+                        number = db.StringIncrement(redisKey);
+                    }
+                    else
+                    {
+                        // 降级方案：使用原有的非原子逻辑（仅在不支持原子操作的缓存实现下）
+                        number = IncrementCounterFallback(redisKey);
+                    }
+                }
+                else if (_redisDB != null)
+                {
+                    // 直接使用了注入的 IDatabase
                     number = _redisDB.StringIncrement(redisKey);
                 }
                 else
                 {
-                    throw new InvalidOperationException($"无法执行Redis递增操作: {ex.Message}");
+                    throw new InvalidOperationException("Redis 连接未正确初始化，无法生成原子序号。");
                 }
-            }
-            
-            sb.Append(number.ToString(properties[1]));
-        }
-        
-        /// <summary>
-        /// 使用CacheManager递增计数器
-        /// </summary>
-        /// <param name="key">缓存键</param>
-        /// <returns>递增后的值</returns>
-        private long IncrementCounter(string key)
-        {
-            try
-            {
-                // 尝试使用原子操作方式递增
-                // 如果缓存中不存在，初始化为1
-                long newValue = 1;
-                
-                // 这里使用一个循环来确保原子性操作
-                // 尝试最多3次，避免无限循环
-                int maxRetries = 3;
-                for (int i = 0; i < maxRetries; i++)
-                {    
-                    // 1. 先尝试获取当前值
-                    var currentValue = _cacheManager.Get<long?>(key);
-                    
-                    if (currentValue.HasValue)
-                    {
-                        // 2a. 如果值存在，使用Update方法更新
-                        newValue = currentValue.Value + 1;
-                        
-                        // 使用Update方法进行值更新
-                        object resultObj = _cacheManager.Update(key, v => (long)v + 1);
-                        long result = resultObj != null ? Convert.ToInt64(resultObj) : 1;
-                        
-                        // 设置过期时间
-                        _cacheManager.Expire(key, ExpirationMode.Absolute, TimeSpan.FromDays(30));
-                        
-                        return result;
-                    }
-                    else
-                    {
-                        // 2b. 如果值不存在，使用GetOrAdd添加初始值
-                        // GetOrAdd会返回现有值或添加新值并返回
-                        newValue = 1; // 初始值为1
-                        object resultObj = _cacheManager.GetOrAdd(key, newValue);
-                        long result = resultObj != null ? Convert.ToInt64(resultObj) : 1;
-                        
-                        // 设置过期时间
-                        _cacheManager.Expire(key, ExpirationMode.Absolute, TimeSpan.FromDays(30));
-                        
-                        // 如果GetOrAdd返回1，表示是新添加的值
-                        if (result == 1)
-                        {
-                            return 1;
-                        }
-                        // 如果返回值不是1，表示在并发情况下其他线程已经添加，需要重试
-                    }
-                    
-                    // 短暂等待后重试
-                    if (i < maxRetries - 1)
-                    {
-                        System.Threading.Thread.Sleep(10);
-                    }
-                }
-                
-                // 如果多次重试后仍未成功，尝试最后一次获取值
-                var finalValue = _cacheManager.Get<long?>(key);
-                return finalValue ?? 1;
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"CacheManager递增操作失败: {ex.Message}", ex);
+                throw new InvalidOperationException($"Redis 序号生成失败 (Key: {redisKey}): {ex.Message}", ex);
             }
+            
+            // 格式化输出
+            if (properties.Length > 1)
+            {
+                sb.Append(number.ToString(properties[1]));
+            }
+            else
+            {
+                sb.Append(number.ToString());
+            }
+        }
+        
+        /// <summary>
+        /// 降级方案：当无法获取原子 IDatabase 时使用
+        /// </summary>
+        private long IncrementCounterFallback(string key)
+        {
+            // 警告：此方法在高并发下可能存在竞争条件，仅作为最后手段
+            long newValue = 1;
+            int maxRetries = 5;
+            for (int i = 0; i < maxRetries; i++)
+            {    
+                var currentValue = _cacheManager.Get<long?>(key);
+                
+                if (currentValue.HasValue)
+                {
+                    newValue = currentValue.Value + 1;
+                    object resultObj = _cacheManager.Update(key, v => (long)v + 1);
+                    long result = resultObj != null ? Convert.ToInt64(resultObj) : newValue;
+                    _cacheManager.Expire(key, ExpirationMode.Absolute, TimeSpan.FromDays(30));
+                    return result;
+                }
+                else
+                {
+                    newValue = 1;
+                    object resultObj = _cacheManager.GetOrAdd(key, newValue);
+                    long result = resultObj != null ? Convert.ToInt64(resultObj) : 1;
+                    _cacheManager.Expire(key, ExpirationMode.Absolute, TimeSpan.FromDays(30));
+                    if (result == 1) return 1;
+                }
+                System.Threading.Thread.Sleep(10);
+            }
+            var finalValue = _cacheManager.Get<long?>(key);
+            return finalValue ?? 1;
         }
     
       

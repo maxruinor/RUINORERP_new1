@@ -1671,7 +1671,7 @@ namespace RUINORERP.Business
         AuthorizeController authorizeController = null;
 
         /// <summary>
-        /// 转换为销售出库单
+        /// 转换为销售出库单1
         /// </summary>
         /// <param name="saleorder"></param>
         public async Task<tb_SaleOut> SaleOrderToSaleOut(tb_SaleOrder saleorder)
@@ -1800,7 +1800,8 @@ namespace RUINORERP.Business
                 // 计算累计已出库数量和当前出库数量
                 decimal totalOrderQty = saleorder.TotalQty;
                 decimal totalDeliveredQty = saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty);
-                decimal currentOutQty = entity.TotalQty;
+                // 计算实际的当前出库数量，使用NewDetails的实时总数量
+                decimal currentOutQty = NewDetails.Sum(c => c.Quantity);
 
                 // 检查是否超量出库
                 if (totalDeliveredQty + currentOutQty > totalOrderQty)
@@ -1816,9 +1817,14 @@ namespace RUINORERP.Business
                     foreach (var detail in NewDetails)
                     {
                         // 计算调整后的数量 (使用 decimal 计算后再转换为 int)
-                        decimal adjustedQty = detail.Quantity * (currentOutQty / entity.TotalQty);
+                        decimal adjustedQty = detail.Quantity * (currentOutQty / NewDetails.Sum(c => c.Quantity));
                         detail.Quantity = (int)Math.Round(adjustedQty, 0, MidpointRounding.AwayFromZero);
                     }
+                    entity.TotalQty = (int)currentOutQty;
+                }
+                else
+                {
+                    // 如果没有超量，使用实际的当前出库数量
                     entity.TotalQty = (int)currentOutQty;
                 }
 

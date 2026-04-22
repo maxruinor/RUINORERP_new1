@@ -34,8 +34,12 @@ namespace RUINORERP.Business.BNR
         private const int CACHE_MAX_LIFETIME = 5000;
 
         // 批量更新阈值，当队列超过这个数量时触发批量更新
-        // 将常量改为可变的静态字段，支持动态调整
         private static int _batchUpdateThreshold = 20;
+
+        // 并发重试配置
+        private const int MAX_RETRY_COUNT = 5;
+        private const int RETRY_BASE_DELAY_MS = 10;
+        private const int RETRY_MAX_DELAY_MS = 1000;
 
         // 上次刷新时间
         private DateTime _lastFlushTime;
@@ -279,14 +283,14 @@ namespace RUINORERP.Business.BNR
 
                         if (existingRecord != null)
                         {
-                            // 直接更新为缓存值（内存缓存总是递增的，不需要条件判断）
+                            // 使用乐观锁条件更新：仅当新值大于当前值时才更新，防止数据覆盖
                             int affectedRows = _sqlSugarClient.Updateable<SequenceNumbers>()
                                 .SetColumns(s => new SequenceNumbers
                                 {
                                     CurrentValue = update.Value,
                                     LastUpdated = DateTime.Now
                                 })
-                                .Where(s => s.SequenceKey == update.SequenceKey)
+                                .Where(s => s.SequenceKey == update.SequenceKey && s.CurrentValue < update.Value)
                                 .ExecuteCommand();
 
                             if (affectedRows == 0)

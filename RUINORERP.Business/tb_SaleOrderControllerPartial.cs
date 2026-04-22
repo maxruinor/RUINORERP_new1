@@ -52,12 +52,16 @@ namespace RUINORERP.Business
 
             try
             {
-                // 开启事务
-                _unitOfWorkManage.BeginTran();
+                // 预处理阶段（事务外）
+                List<tb_SaleOrderDetail> existingDetails = new List<tb_SaleOrderDetail>();
+                List<long> idsToDelete = new List<long>();
+                List<tb_SaleOrderDetail> detailsToUpdate = new List<tb_SaleOrderDetail>();
+                List<tb_SaleOrderDetail> detailsToAdd = new List<tb_SaleOrderDetail>();
 
+                // 1. 保存主表
+                _unitOfWorkManage.BeginTran();
                 try
                 {
-                    // 1. 保存主表
                     if (isUpdate)
                     {
                         await db.Updateable(order).ExecuteCommandAsync();
@@ -66,56 +70,7 @@ namespace RUINORERP.Business
                     {
                         await db.Insertable(order).ExecuteReturnSnowflakeIdAsync();
                     }
-
-                    // 2. 处理明细
-                    if (order.SOrder_ID > 0 && details != null && details.Any())
-                    {
-                        // 2.1 查询已有明细
-                        var existingDetails = await db.Queryable<tb_SaleOrderDetail>()
-                            .Where(fk => fk.SOrder_ID == order.SOrder_ID)
-                            .ToListAsync();
-
-                        //// 获取主键
-                        //string pkName = "SaleOrderDetail_ID";
-
-                        // 2.2 分类处理
-                        var existingIds = existingDetails.Select(d => d.SaleOrderDetail_ID).ToHashSet();
-                        var currentIds = details.Where(d => d.SaleOrderDetail_ID > 0)
-                                               .Select(d => d.SaleOrderDetail_ID).ToHashSet();
-
-                        // 删除已移除的明细
-                        var idsToDelete = existingIds.Except(currentIds).ToList();
-                        if (idsToDelete.Any())
-                        {
-                            await db.Deleteable<tb_SaleOrderDetail>()
-                                .In(idsToDelete.ToArray())
-                                .ExecuteCommandAsync();
-                        }
-
-                        // 更新现有明细
-                        var detailsToUpdate = details.Where(d => d.SaleOrderDetail_ID > 0 && existingIds.Contains(d.SaleOrderDetail_ID)).ToList();
-                        if (detailsToUpdate.Any())
-                        {
-                            await db.Updateable(detailsToUpdate).ExecuteCommandAsync();
-                        }
-
-                        // 新增新明细
-                        var detailsToAdd = details.Where(d => d.SaleOrderDetail_ID == 0).ToList();
-                        if (detailsToAdd.Any())
-                        {
-                            foreach (var detail in detailsToAdd)
-                            {
-                                detail.SOrder_ID = order.SOrder_ID;
-                            }
-                            await db.Insertable(detailsToAdd).ExecuteCommandAsync();
-                        }
-                    }
-
-                    // 提交事务
                     _unitOfWorkManage.CommitTran();
-
-                    result.Succeeded = true;
-                    result.ReturnObject = order;
                 }
                 catch (Exception ex)
                 {
@@ -124,6 +79,70 @@ namespace RUINORERP.Business
                     result.ErrorMsg = ex.Message;
                     throw;
                 }
+
+                // 2. 处理明细
+                if (order.SOrder_ID > 0 && details != null && details.Any())
+                {
+                    // 2.1 查询已有明细（事务外）
+                    existingDetails = await db.Queryable<tb_SaleOrderDetail>()
+                        .Where(fk => fk.SOrder_ID == order.SOrder_ID)
+                        .ToListAsync();
+
+                    // 2.2 分类处理（事务外）
+                    var existingIds = existingDetails.Select(d => d.SaleOrderDetail_ID).ToHashSet();
+                    var currentIds = details.Where(d => d.SaleOrderDetail_ID > 0)
+                                           .Select(d => d.SaleOrderDetail_ID).ToHashSet();
+
+                    // 删除已移除的明细
+                    idsToDelete = existingIds.Except(currentIds).ToList();
+
+                    // 更新现有明细
+                    detailsToUpdate = details.Where(d => d.SaleOrderDetail_ID > 0 && existingIds.Contains(d.SaleOrderDetail_ID)).ToList();
+
+                    // 新增新明细
+                    detailsToAdd = details.Where(d => d.SaleOrderDetail_ID == 0).ToList();
+                    foreach (var detail in detailsToAdd)
+                    {
+                        detail.SOrder_ID = order.SOrder_ID;
+                    }
+
+                    // 批量处理明细（事务内）
+                    _unitOfWorkManage.BeginTran();
+                    try
+                    {
+                        // 批量删除
+                        if (idsToDelete.Any())
+                        {
+                            await db.Deleteable<tb_SaleOrderDetail>()
+                                .In(idsToDelete.ToArray())
+                                .ExecuteCommandAsync();
+                        }
+
+                        // 批量更新
+                        if (detailsToUpdate.Any())
+                        {
+                            await db.Updateable(detailsToUpdate).ExecuteCommandAsync();
+                        }
+
+                        // 批量插入
+                        if (detailsToAdd.Any())
+                        {
+                            await db.Insertable(detailsToAdd).ExecuteCommandAsync();
+                        }
+
+                        _unitOfWorkManage.CommitTran();
+                    }
+                    catch (Exception ex)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        result.Succeeded = false;
+                        result.ErrorMsg = ex.Message;
+                        throw;
+                    }
+                }
+
+                result.Succeeded = true;
+                result.ReturnObject = order;
             }
             catch (Exception ex)
             {
@@ -1038,8 +1057,12 @@ namespace RUINORERP.Business
                     }
                     #endregion
 
+                    // 设置结案状态和修改信息
+                    entitys[m].DataStatus = (int)DataStatus.完结;
+                    BusinessHelper.Instance.EditEntity(entitys[m]);
+
                     //只更新指定列
-                    var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entitys[m]).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions, it.Modified_by, it.Modified_at, it.Notes }).ExecuteCommandAsync();
+                    var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entitys[m]).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions, it.Modified_by, it.Modified_at }).ExecuteCommandAsync();
                 }
 
                 #endregion
@@ -1177,7 +1200,7 @@ namespace RUINORERP.Business
                     BusinessHelper.Instance.EditEntity(entitys[m]);
 
                     //只更新指定列
-                    var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entitys[m]).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions, it.Modified_by, it.Modified_at, it.Notes }).ExecuteCommandAsync();
+                    var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entitys[m]).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions, it.Modified_by, it.Modified_at }).ExecuteCommandAsync();
                 }
 
                 #endregion
@@ -1295,25 +1318,7 @@ namespace RUINORERP.Business
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
-
-                // ✅ 死锁优化：事务外批量预加载库存
-                var allKeysCancel = new List<(long ProdDetailID, long Location_ID)>();
-                foreach (var child in entity.tb_SaleOrderDetails)
-                {
-                    allKeysCancel.Add((child.ProdDetailID, child.Location_ID));
-                }
-
-                var invDict5 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
-                if (allKeysCancel.Count > 0)
-                {
-                    var requiredKeys = allKeysCancel.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
-                    var inventoryList = await _unitOfWorkManage.GetDbClient()
-                        .Queryable<tb_Inventory>()
-                        .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
-                        .ToListAsync();
-                    invDict5 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
-                }
-
+                
                 //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
                 if (entity.tb_SaleOuts != null
                     && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结)

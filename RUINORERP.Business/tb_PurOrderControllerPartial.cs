@@ -42,9 +42,10 @@ namespace RUINORERP.Business
     {
 
         /// <summary>
-        /// 批量结案  销售出库标记结案，数据状态为8,可以修改付款状态，同时检测销售订单的付款状态，也可以更新销售订单付款状态
+        /// 批量结案  采购订单标记结案，数据状态为结案
+        /// 如果还没有入库。但是结案的订单时。修正在途库存数量,将数量减掉。不需再进货了。
         /// 目前暂时是这个逻辑。后面再处理凭证财务相关的
-        /// 目前认为结案就是一个财务确认过程
+        /// 目前认为结案是仓库和采购确定这个订单不再执行的一个确认过程。
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -53,17 +54,19 @@ namespace RUINORERP.Business
             List<tb_PurOrder> entitys = new List<tb_PurOrder>();
             entitys = NeedCloseCaseList as List<tb_PurOrder>;
 
-
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var allKeys = new List<(long ProdDetailID, long LocationID)>();
                 var orderStatusMap = new Dictionary<tb_PurOrder, (decimal DeliveredQty, decimal OrderQty)>();
+                var ordersToProcess = new List<tb_PurOrder>();
+
                 foreach (var entity in entitys)
                 {
                     if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && entity.ApprovalResults.Value))
                     {
+                        ordersToProcess.Add(entity);
                         decimal deliveredQty = entity.tb_PurOrderDetails.Select(c => c.DeliveredQuantity).Sum();
                         decimal orderQty = entity.tb_PurOrderDetails.Select(c => c.Quantity).Sum();
                         orderStatusMap[entity] = (deliveredQty, orderQty);
@@ -89,195 +92,218 @@ namespace RUINORERP.Business
                 }
                 #endregion
 
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
-                #region 结案
-                foreach (var entity in entitys)
+                #region 处理库存更新（批量操作）
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                foreach (var entity in ordersToProcess)
                 {
-                    //结案的出库单。先要是审核成功通过的
-                    if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && entity.ApprovalResults.Value))
+                    if (orderStatusMap.TryGetValue(entity, out var status) && status.DeliveredQty < status.OrderQty)
                     {
-
-                        //更新在途库存
-                        //如果采购明细中的入库数量小于订单中数量，则在途数量要减去这个差值,比方说采购入库只入了一半，那么在途库存就要减去这个差值，另一半可能不要了。
-                        if (orderStatusMap.TryGetValue(entity, out var status) && status.DeliveredQty < status.OrderQty)
+                        foreach (var child in entity.tb_PurOrderDetails)
                         {
-                            tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                            List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
-                            foreach (var child in entity.tb_PurOrderDetails)
+                            var key = (child.ProdDetailID, child.Location_ID);
+                            if (!invDict.TryGetValue(key, out var inv) || inv == null)
                             {
-                                #region 库存表的更新 这里应该是必需有库存的数据，
-                                // ✅ 从预加载字典获取（死锁优化）
-                                var key = (child.ProdDetailID, child.Location_ID);
-                                if (!invDict.TryGetValue(key, out var inv) || inv == null)
-                                {
-                                    inv = new tb_Inventory();
-                                    inv.ProdDetailID = child.ProdDetailID;
-                                    inv.Location_ID = child.Location_ID;
-                                    inv.Quantity = 0;
-                                    inv.InitInventory =0;
-                                    inv.Notes = "采购订单创建";//后面修改数据库是不需要？
-                                                         //inv.LatestStorageTime = System.DateTime.Now;
-                                    BusinessHelper.Instance.InitEntity(inv);
-                                    invDict[key] = inv;
-                                }
-                                //更新在途库存
-                                inv.On_the_way_Qty -= (child.Quantity - child.DeliveredQuantity);
-                                BusinessHelper.Instance.EditEntity(inv);
-                                #endregion
-                                invUpdateList.Add(inv);
-
+                                inv = new tb_Inventory();
+                                inv.ProdDetailID = child.ProdDetailID;
+                                inv.Location_ID = child.Location_ID;
+                                inv.Quantity = 0;
+                                inv.InitInventory = 0;
+                                inv.Notes = "采购订单创建";
+                                BusinessHelper.Instance.InitEntity(inv);
+                                invDict[key] = inv;
                             }
-
-
-                            DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                            var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                            if (Counter == 0)
-                            {
-                                _logger.Debug($"{entity.PurOrderNo}更新库存结果为0行，请检查数据！");
-                            }
+                            //更新在途库存
+                            inv.On_the_way_Qty -= (child.Quantity - child.DeliveredQuantity);
+                            BusinessHelper.Instance.EditEntity(inv);
+                            invUpdateList.Add(inv);
                         }
+                    }
+                }
 
-                        #region  预付款单处理（结案时检查）
-                        AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
-                        if (authorizeController.EnableFinancialModule())
+                // 批量更新库存（事务内）
+                if (invUpdateList.Any())
+                {
+                    _unitOfWorkManage.BeginTran();
+                    try
+                    {
+                        DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                        var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                        if (Counter == 0)
                         {
-                            var PrePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                                .Where(p => p.SourceBillId == entity.PurOrder_ID && p.SourceBizType == (int)BizType.采购订单)
-                                .FirstAsync();
-                            if (PrePayment != null)
+                            _logger.Debug($"更新库存结果为0行，请检查数据！");
+                        }
+                        _unitOfWorkManage.CommitTran();
+                    }
+                    catch (Exception ex)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        rs.Succeeded = false;
+                        rs.ErrorMsg = ex.Message;
+                        return rs;
+                    }
+                }
+                #endregion
+
+                #region 处理预付款单（异步处理）
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                    // 异步处理财务相关操作，不影响主流程
+                    await Task.Run(async () =>
+                    {
+                        foreach (var entity in ordersToProcess)
+                        {
+                            try
                             {
-                                // 定义容差值，用于浮点数比较
-                                const decimal tolerance = 0.01m;
-                                
-                                if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.草稿 || 
-                                    PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核)
+                                var PrePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                                    .Where(p => p.SourceBillId == entity.PurOrder_ID && p.SourceBizType == (int)BizType.采购订单)
+                                    .FirstAsync();
+
+                                if (PrePayment != null)
                                 {
-                                    //没有付款记录的，直接删除关闭
-                                    await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
-                                    
-                                    #region  检测对应的付款单记录，如果没有支付也可以直接删除
-                                    var PaymentList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
-                                          .Includes(a => a.tb_FM_PaymentRecordDetails)
-                                         .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == PrePayment.PreRPID)).ToListAsync();
-                                    if (PaymentList != null && PaymentList.Count > 0)
+                                    // 定义容差值，用于浮点数比较
+                                    const decimal tolerance = 0.01m;
+
+                                    if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.草稿 ||
+                                        PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核)
                                     {
-                                        if (PaymentList.Count > 1 && PaymentList.Sum(c => c.TotalLocalAmount) == 0 && PaymentList.Any(c => c.IsReversed))
+                                        // 开启独立事务处理预付款单
+                                        _unitOfWorkManage.BeginTran();
+                                        try
+                                        {
+                                            //没有付款记录的，直接删除关闭
+                                            await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
+
+                                            // 检测对应的付款单记录，如果没有支付也可以直接删除
+                                            var PaymentList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
+                                                  .Includes(a => a.tb_FM_PaymentRecordDetails)
+                                                 .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == PrePayment.PreRPID)).ToListAsync();
+                                            if (PaymentList != null && PaymentList.Count > 0)
+                                            {
+                                                if (PaymentList.Count > 1 && PaymentList.Sum(c => c.TotalLocalAmount) == 0 && PaymentList.Any(c => c.IsReversed))
+                                                {
+                                                    _unitOfWorkManage.RollbackTran();
+                                                    _logger.LogWarning($"采购订单{PrePayment.SourceBillNo}的预付款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能作废结案，只能【预付款退款】作废。");
+                                                }
+                                                else
+                                                {
+                                                    tb_FM_PaymentRecord Payment = PaymentList[0];
+                                                    if (Payment.PaymentStatus == (int)PaymentStatus.草稿 || Payment.PaymentStatus == (int)PaymentStatus.待审核)
+                                                    {
+                                                        await _unitOfWorkManage.GetDbClient().DeleteNav(Payment)
+                                                            .Include(c => c.tb_FM_PaymentRecordDetails)
+                                                            .ExecuteCommandAsync();
+                                                    }
+                                                    else
+                                                    {
+                                                        _unitOfWorkManage.RollbackTran();
+                                                        _logger.LogWarning($"对应的预付款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，作废结案失败\r\n" +
+                                                            $"需将预付款单【退款】，对付款单{Payment.PaymentNo}进行冲销处理\r\n" +
+                                                            $"当前订单【作废结案】后，重新录入正确的采购订单。");
+                                                    }
+                                                }
+                                            }
+                                            _unitOfWorkManage.CommitTran();
+                                        }
+                                        catch (Exception ex)
                                         {
                                             _unitOfWorkManage.RollbackTran();
-                                            rs.ErrorMsg = $"采购订单{PrePayment.SourceBillNo}的预付款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能作废结案，只能【预付款退款】作废。";
-                                            rs.Succeeded = false;
-                                            return rs;
+                                            _logger.LogError(ex, $"处理采购订单{entity.PurOrderNo}的预付款单时出错");
+                                        }
+                                    }
+                                    else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.已生效)
+                                    {
+                                        //已生效表示审核通过，可以预收付，但还未实际收款
+                                        //检查是否已经有实际收款（余额=预定金额表示未收款，余额<预定金额表示已收款）
+                                        if (Math.Abs(PrePayment.LocalBalanceAmount - PrePayment.LocalPrepaidAmount) <= tolerance)
+                                        {
+                                            // 余额等于预定金额，表示还未实际收款，可以直接删除
+                                            await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
                                         }
                                         else
                                         {
-                                            tb_FM_PaymentRecord Payment = PaymentList[0];
-                                            if (Payment.PaymentStatus == (int)PaymentStatus.草稿 || Payment.PaymentStatus == (int)PaymentStatus.待审核)
-                                            {
-                                                await _unitOfWorkManage.GetDbClient().DeleteNav(Payment)
-                                                    .Include(c => c.tb_FM_PaymentRecordDetails)
-                                                    .ExecuteCommandAsync();
-                                            }
-                                            else
-                                            {
-                                                _unitOfWorkManage.RollbackTran();
-                                                rs.ErrorMsg = $"对应的预付款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，作废结案失败\r\n" +
-                                                    $"需将预付款单【退款】，对付款单{Payment.PaymentNo}进行冲销处理\r\n" +
-                                                    $"当前订单【作废结案】后，重新录入正确的采购订单。";
-                                                rs.Succeeded = false;
-                                                return rs;
-                                            }
+                                            // 已经有实际收款，需要退款后才能结案
+                                            _unitOfWorkManage.RollbackTran();
+                                            _logger.LogWarning($"采购订单存在预付款单{PrePayment.PreRPNO}，且已实际收款{PrePayment.LocalPrepaidAmount - PrePayment.LocalBalanceAmount}元，不能直接作废结案,请先完成【预付款退款】处理。");
                                         }
                                     }
-                                    #endregion
-                                }
-                                else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.已生效)
-                                {
-                                    //已生效表示审核通过，可以预收付，但还未实际收款
-                                    //检查是否已经有实际收款（余额=预定金额表示未收款，余额<预定金额表示已收款）
-                                    if (Math.Abs(PrePayment.LocalBalanceAmount - PrePayment.LocalPrepaidAmount) <= tolerance)
+                                    else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待核销
+                                        || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.处理中)
                                     {
-                                        // 余额等于预定金额，表示还未实际收款，可以直接删除
-                                        await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
+                                        //待核销表示已经收款，等待核销；处理中表示部分核销或部分退款
+                                        //这两种状态都需要先退款才能结案
+                                        if (Math.Abs(PrePayment.LocalBalanceAmount) > tolerance)
+                                        {
+                                            // 有余额，需要先退款
+                                            _unitOfWorkManage.RollbackTran();
+                                            _logger.LogWarning($"存在预付款单{PrePayment.PreRPNO}，状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus}，本币余额{PrePayment.LocalBalanceAmount}元，不能直接作废结案,请进行【退款】处理。");
+                                        }
+                                        // 余额为0，理论上不应该出现在这两个状态，但为了容错允许结案
                                     }
-                                    else
+                                    else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销
+                                        || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.混合结清
+                                        || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额退款
+                                        || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.结案)
                                     {
-                                        // 已经有实际收款，需要退款后才能结案
-                                        _unitOfWorkManage.RollbackTran();
-                                        rs.ErrorMsg = $"采购订单存在预付款单{PrePayment.PreRPNO}，且已实际收款{PrePayment.LocalPrepaidAmount - PrePayment.LocalBalanceAmount}元，不能直接作废结案,请先完成【预付款退款】处理。";
-                                        rs.Succeeded = false;
-                                        return rs;
+                                        //这些状态表示预付款已经处理完毕，如果余额为0，可以直接结案
+                                        if (Math.Abs(PrePayment.LocalBalanceAmount) > tolerance)
+                                        {
+                                            // 理论上不应该出现这种情况，但为了安全还是检查一下
+                                            _unitOfWorkManage.RollbackTran();
+                                            _logger.LogWarning($"存在预付款单，状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus}，但本币余额{PrePayment.LocalBalanceAmount}元不为0，数据异常，请联系管理员。");
+                                        }
                                     }
-                                }
-                                else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待核销
-                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.处理中)
-                                {
-                                    //待核销表示已经收款，等待核销；处理中表示部分核销或部分退款
-                                    //这两种状态都需要先退款才能结案
-                                    if (Math.Abs(PrePayment.LocalBalanceAmount) > tolerance)
-                                    {
-                                        // 有余额，需要先退款
-                                        _unitOfWorkManage.RollbackTran();
-                                        rs.ErrorMsg = $"存在预付款单{PrePayment.PreRPNO}，状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus}，本币余额{PrePayment.LocalBalanceAmount}元，不能直接作废结案,请进行【退款】处理。";
-                                        rs.Succeeded = false;
-                                        return rs;
-                                    }
-                                    // 余额为0，理论上不应该出现在这两个状态，但为了容错允许结案
-                                }
-                                else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销
-                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.混合结清
-                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额退款
-                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.结案)
-                                {
-                                    //这些状态表示预付款已经处理完毕，如果余额为0，可以直接结案
-                                    if (Math.Abs(PrePayment.LocalBalanceAmount) > tolerance)
-                                    {
-                                        // 理论上不应该出现这种情况，但为了安全还是检查一下
-                                        _unitOfWorkManage.RollbackTran();
-                                        rs.ErrorMsg = $"存在预付款单，状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus}，但本币余额{PrePayment.LocalBalanceAmount}元不为0，数据异常，请联系管理员。";
-                                        rs.Succeeded = false;
-                                        return rs;
-                                    }
-                                    // 余额为0，允许结案
                                 }
                             }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, $"处理采购订单{entity.PurOrderNo}的财务操作时出错");
+                            }
                         }
-                        #endregion
+                    });
+                }
+                #endregion
 
+                #region 更新订单状态（批量操作）
+                _unitOfWorkManage.BeginTran();
+                try
+                {
+                    foreach (var entity in ordersToProcess)
+                    {
+                        // 更新订单状态为结案
                         entity.DataStatus = (int)DataStatus.完结;
                         BusinessHelper.Instance.EditEntity(entity);
-                        //只更新指定列
-                        var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrder>(entity).UpdateColumns(it => new
+                        await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                         {
                             it.DataStatus,
                             it.CloseCaseOpinions,
                             it.Paytype_ID,
-                            it.Modified_by,
-                            it.Modified_at
+                            it.Modified_at,
+                            it.Modified_by
                         }).ExecuteCommandAsync();
-
                     }
+                    _unitOfWorkManage.CommitTran();
                 }
-
+                catch (Exception ex)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    rs.Succeeded = false;
+                    rs.ErrorMsg = ex.Message;
+                    return rs;
+                }
                 #endregion
-                // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-
-                _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
-                rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
+                rs.ErrorMsg = ex.Message;
+                _logger.Error(ex, "批量结案操作异常");
                 return rs;
             }
-
         }
-
-
 
         //  采购预付款（预付）	- 生成预付单
         //- 收货后核销预付 → 冲抵应付	- 预收付表：减少 RemainAmount
@@ -301,15 +327,15 @@ namespace RUINORERP.Business
             try
             {
                 // ========== 第一阶段: 预处理验证(无事务) ==========
-                
+
                 // 1.1 基础验证 - 检查重复审核
                 var existingEntity = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurOrder>()
                     .Where(c => c.PurOrder_ID == entity.PurOrder_ID)
                     .Select(c => new { c.DataStatus, c.ApprovalStatus, c.ApprovalResults })
                     .FirstAsync();
 
-                if (existingEntity != null && 
-                    existingEntity.DataStatus == (int)DataStatus.确认 && 
+                if (existingEntity != null &&
+                    existingEntity.DataStatus == (int)DataStatus.确认 &&
                     existingEntity.ApprovalStatus == (int)ApprovalStatus.审核通过)
                 {
                     rmrs.ErrorMsg = "采购订单已经审核通过，不能重复审核！";
@@ -385,7 +411,7 @@ namespace RUINORERP.Business
                 {
                     var key = (child.ProdDetailID, child.Location_ID);
                     decimal currentOnTheWayQty = child.Quantity;
-                    
+
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
                         #region 库存表的更新
@@ -430,7 +456,7 @@ namespace RUINORERP.Business
 
                 // ========== 第二阶段: 事务内执行核心业务 ==========
                 _unitOfWorkManage.BeginTran();
-                
+
                 try
                 {
                     // 2.1 更新库存(带死锁优化)
@@ -448,9 +474,14 @@ namespace RUINORERP.Business
                     BusinessHelper.Instance.ApproverEntity(entity);
 
                     var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
-                        .UpdateColumns(it => new { 
-                            it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, 
-                            it.ApprovalStatus, it.Approver_at, it.Approver_by 
+                        .UpdateColumns(it => new
+                        {
+                            it.DataStatus,
+                            it.ApprovalOpinions,
+                            it.ApprovalResults,
+                            it.ApprovalStatus,
+                            it.Approver_at,
+                            it.Approver_by
                         })
                         .ExecuteCommandHasChangeAsync();
 
@@ -459,7 +490,7 @@ namespace RUINORERP.Business
                     _logger.LogInformation($"采购订单{entity.PurOrderNo}审核：主事务提交成功");
 
                     // ========== 第三阶段: 后置处理(独立事务) ==========
-                    
+
                     // 3.1 财务处理(独立事务)
                     if (needProcessFinance)
                     {
@@ -573,7 +604,7 @@ namespace RUINORERP.Business
                                 Location_ID = key.Location_ID,
                                 Quantity = 0, // 初始数量
                                 Inv_Cost = 0, // 假设成本价需从其他地方获取，需根据业务补充
-                                Notes = "销售订单创建",
+                                Notes = "采购订单反审核",
                                 Sale_Qty = 0,
                                 LatestOutboundTime = DateTime.MinValue // 初始时间
                             };

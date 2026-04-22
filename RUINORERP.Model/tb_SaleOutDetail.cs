@@ -309,13 +309,13 @@ namespace RUINORERP.Model
 
  
 
-        private decimal? _SubtotalUntaxedAmount;
+        private decimal _SubtotalUntaxedAmount= ((0));
         /// <summary>
         /// 未税本位币
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalUntaxedAmount",ColDesc = "未税本位币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalUntaxedAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "未税本位币" )]
-        public decimal? SubtotalUntaxedAmount
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalUntaxedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "未税本位币" )]
+        public decimal SubtotalUntaxedAmount
         { 
             get{return _SubtotalUntaxedAmount;}
             set{

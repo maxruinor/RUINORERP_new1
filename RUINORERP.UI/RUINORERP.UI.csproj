@@ -893,6 +893,8 @@
     <Compile Include="BusinessService\CalculationService\SaleOutCoordinator.cs" />
     <Compile Include="BusinessService\CalculationService\SourceGridCoordinator.cs" />
     <Compile Include="BusinessService\IBillOperationService.cs" />
+    <Compile Include="BusinessService\RelatedBillMappingConfig.cs" />
+    <Compile Include="BusinessService\RelatedBillSyncService.cs" />
     <Compile Include="BusinessService\RepeatOperationGuardService.cs" />
     <Compile Include="BusinessService\SmartMenuService\MenuTracker.cs" />
     <Compile Include="BusinessService\SmartMenuService\MenuUseInfo.cs" />

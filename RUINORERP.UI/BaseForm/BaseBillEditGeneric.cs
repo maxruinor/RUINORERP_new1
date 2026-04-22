@@ -889,6 +889,9 @@ namespace RUINORERP.UI.BaseForm
                     _guardService = Startup.GetFromFac<RepeatOperationGuardService>();
                     BillOperationService = Startup.GetFromFac<IBillOperationService>();
 
+                    // 初始化关联单据同步服务
+                    InitializeRelatedBillSync();
+
                     // 添加扩展按钮（仅在 CurMenuInfo 不为 null 时）
                     if (CurMenuInfo == null)
                     {
@@ -923,6 +926,94 @@ namespace RUINORERP.UI.BaseForm
                 // EditEntity = LoadQueryConditionToUI();
             }
         }
+
+        #region 关联单据同步
+
+        /// <summary>
+        /// 关联单据同步服务实例
+        /// </summary>
+        private RelatedBillSyncService _relatedBillSyncService;
+
+        /// <summary>
+        /// 初始化关联单据同步服务
+        /// 订阅BillOperationService的事件,在下游单据操作完成后自动更新上游单据的待办
+        /// </summary>
+        private void InitializeRelatedBillSync()
+        {
+            try
+            {
+                // 获取关联单据同步服务
+                _relatedBillSyncService = Startup.GetFromFac<RelatedBillSyncService>();
+                
+                if (_relatedBillSyncService == null)
+                {
+                    logger?.LogWarning("无法获取RelatedBillSyncService实例,关联单据同步功能将不可用");
+                    return;
+                }
+                
+                // 订阅单据操作完成事件
+                // 注意: BillOperationService是静态事件,需要确保不会重复订阅
+                BillOperationService.BillOperationCompleted -= OnBillOperationCompletedForRelatedSync;
+                BillOperationService.BillOperationCompleted += OnBillOperationCompletedForRelatedSync;
+                
+                logger?.LogDebug("关联单据同步服务已初始化");
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "初始化关联单据同步服务失败");
+            }
+        }
+        
+        /// <summary>
+        /// 单据操作完成事件处理 - 用于关联单据同步
+        /// 当下游单据(如出库单、入库单)审核/结案成功后,触发上游单据(如订单)的待办更新
+        /// </summary>
+        private async void OnBillOperationCompletedForRelatedSync(object sender, RUINORERP.UI.BusinessService.BillOperationCompletedEventArgs e)
+        {
+            // 只处理成功的操作
+            if (e?.Result?.Success != true)
+                return;
+            
+            // 只处理审核和结案操作(这些操作会改变单据状态)
+            if (e.OperationType != MenuItemEnums.审核 && 
+                e.OperationType != MenuItemEnums.结案 &&
+                e.OperationType != MenuItemEnums.反审 &&
+                e.OperationType != MenuItemEnums.反结案)
+                return;
+            
+            // 确保实体不为空
+            if (e.Entity == null)
+                return;
+            
+            try
+            {
+                // 创建TodoUpdate对象
+                var todoUpdate = ConvertToTodoUpdate(e.Entity as T, TodoUpdateType.StatusChanged);
+                
+                if (todoUpdate != null)
+                {
+                    // 异步处理关联单据同步(不阻塞主流程)
+                    // 使用Task.Run避免async void导致的异常吞没问题
+                    _ = Task.Run(async () => 
+                    {
+                        try
+                        {
+                            await _relatedBillSyncService.HandleDownstreamBillStatusChangeAsync(todoUpdate);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger?.LogError(ex, "处理关联单据同步时发生未捕获的异常");
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "准备关联单据同步数据失败");
+            }
+        }
+
+        #endregion
 
 
         #region 锁状态管理

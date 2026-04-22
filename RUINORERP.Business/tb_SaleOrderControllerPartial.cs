@@ -1741,6 +1741,9 @@ namespace RUINORERP.Business
                         details[i].Quantity = item.Quantity - item.TotalDeliveredQty;// 已经出数量去掉
                         details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
                         details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
+                        // 关键修复：计算未税小计，与订单保持一致
+                        details[i].SubtotalUntaxedAmount = details[i].SubtotalTransAmount / (1 + details[i].TaxRate);
+                        details[i].SubtotalUntaxedAmount = Math.Round(details[i].SubtotalUntaxedAmount, authorizeController.GetMoneyDataPrecision());
                         if (details[i].Quantity > 0)
                         {
                             NewDetails.Add(details[i]);
@@ -1780,6 +1783,9 @@ namespace RUINORERP.Business
                         details[i].Quantity = details[i].Quantity - item.TotalDeliveredQty;// 减掉已经出库的数量
                         details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
                         details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
+                        // 关键修复：计算未税小计，与订单保持一致
+                        details[i].SubtotalUntaxedAmount = details[i].SubtotalTransAmount / (1 + details[i].TaxRate);
+                        details[i].SubtotalUntaxedAmount = Math.Round(details[i].SubtotalUntaxedAmount, authorizeController.GetMoneyDataPrecision());
 
                         if (details[i].Quantity > 0)
                         {

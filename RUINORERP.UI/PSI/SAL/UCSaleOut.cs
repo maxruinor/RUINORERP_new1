@@ -663,6 +663,8 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalTransAmount);
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
+            // 关键修复：添加未税小计的自动计算公式，与订单保持一致
+            listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.SubtotalTransAmount / (1 + b.TaxRate), c => c.SubtotalUntaxedAmount);
 
 
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.UnitCommissionAmount * b.Quantity, c => c.CommissionAmount);
@@ -796,6 +798,10 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+                
+                // 关键修复：添加未税总额的汇总计算
+                //EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
+                //EditEntity.TotalUntaxedAmount = Math.Round(EditEntity.TotalUntaxedAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
 
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;

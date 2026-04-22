@@ -846,16 +846,15 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalAmount = details.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
-                EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
+                EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
 
                 //不含税的总金额+不含税运费
                 if (EditEntity.ShipCost > 0 && EditEntity.TotalTaxAmount > 0)
                 {
-                    var FreightTaxRate = EditEntity.tb_PurOrderDetails.FirstOrDefault(c => c.TaxRate > 0);
+                    var FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0);
                     if (FreightTaxRate != null)
                     {
                         var UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate.TaxRate)); //计算列：不含税运费
-                        EditEntity.TotalUntaxedAmount = EditEntity.tb_PurOrderDetails.Sum(c => c.SubtotalUntaxedAmount);
                         EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
                     }
                 }
@@ -1080,16 +1079,19 @@ namespace RUINORERP.UI.PSI.PUR
 
                 //默认认为运费含税，税率随明细
 
-                EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
+                EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
 
 
                 //不含税的总金额+不含税运费
                 decimal UntaxedShippingCost = 0;
                 if (EditEntity.ShipCost > 0 && EditEntity.TotalTaxAmount > 0)
                 {
-                    decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
-                    UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
-                    EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+                    var FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0);
+                    if (FreightTaxRate != null)
+                    {
+                        UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate.TaxRate)); //计算列：不含税运费
+                        EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+                    }
                 }
 
                 if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))

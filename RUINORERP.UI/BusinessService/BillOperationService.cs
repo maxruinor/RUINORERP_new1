@@ -91,12 +91,18 @@ namespace RUINORERP.UI.BusinessService
         /// 操作时间
         /// </summary>
         public DateTime OperationTime { get; set; }
+        
+        /// <summary>
+        /// 操作的单据实体(用于关联单据同步等场景)
+        /// </summary>
+        public BaseEntity Entity { get; set; }
 
-        public BillOperationCompletedEventArgs(BillOperationResult result, MenuItemEnums operationType)
+        public BillOperationCompletedEventArgs(BillOperationResult result, MenuItemEnums operationType, BaseEntity entity = null)
         {
             Result = result;
             OperationType = operationType;
             OperationTime = DateTime.Now;
+            Entity = entity;
         }
     }
 
@@ -807,7 +813,7 @@ namespace RUINORERP.UI.BusinessService
                     Message = operationDescription,
                     OriginalStatus = previousStatus
                 };
-                var operationEventArgs = new BillOperationCompletedEventArgs(operationResult, operationType);
+                var operationEventArgs = new BillOperationCompletedEventArgs(operationResult, operationType, entity);
                 OnBillOperationCompleted(operationEventArgs);
 
                 // 异步执行状态同步任务

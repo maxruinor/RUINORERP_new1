@@ -25,6 +25,11 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
+            // 关键修复：验证未税小计不能为空或为零
+            RuleFor(x => x.SubtotalUntaxedAmount)
+                .NotNull().WithMessage("明细中，未税小计：不能为空。")
+                .NotEqual(0).When(x => x.SubtotalTransAmount > 0).WithMessage("明细中，成交小计大于零时，未税小计不能为零。请检查税率设置。");
+            
             RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("明细中，数量：要大于零。");
             RuleFor(x => x.Discount).GreaterThan(0).WithMessage("明细中，折扣：要大于零。");
             RuleFor(x => x.UnitCommissionAmount).GreaterThanOrEqualTo(0).WithMessage("明细中，单品佣金：要大于零。");
@@ -41,6 +46,25 @@ namespace RUINORERP.Business
             // 这里添加额外的初始化代码
             RuleFor(x => x.TransactionPrice * x.Quantity).GreaterThanOrEqualTo(x => x.SubtotalTransAmount).WithMessage("明细中，成交小计：要大于等于成交价*数量。");
             RuleFor(x => (x.Cost + x.CustomizedCost) * x.Quantity).GreaterThanOrEqualTo(x => x.SubtotalCostAmount).WithMessage("明细中，成本小计：要大于等于（成本价+定制成本）*数量。");
+            
+            // 验证未税小计的计算公式是否正确：SubtotalUntaxedAmount = SubtotalTransAmount / (1 + TaxRate)
+            RuleFor(x => x)
+                .Custom((detail, context) =>
+                {
+                    if (detail.SubtotalTransAmount > 0)
+                    {
+                        // 计算期望的未税小计
+                        decimal expectedUntaxedAmount = detail.SubtotalTransAmount / (1 + detail.TaxRate);
+                        expectedUntaxedAmount = Math.Round(expectedUntaxedAmount, 4);
+                        
+                        // 允许0.01的误差范围
+                        if (Math.Abs(detail.SubtotalUntaxedAmount - expectedUntaxedAmount) > 0.01m)
+                        {
+                            context.AddFailure("SubtotalUntaxedAmount", 
+                                $"明细中，未税小计计算错误。期望值：{expectedUntaxedAmount}，实际值：{detail.SubtotalUntaxedAmount}。公式：成交小计/(1+税率)");
+                        }
+                    }
+                });
         }
     }
 }

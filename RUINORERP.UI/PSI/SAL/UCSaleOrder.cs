@@ -776,6 +776,7 @@ namespace RUINORERP.UI.PSI.SAL
             //反算时还要加更复杂的逻辑：如果单价为0时，则可以反算到单价。折扣不变。（默认为1）， 如果单价有值。则反算折扣？成交价？
 
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
+            listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => a.SubtotalTransAmount / (1 + b.TaxRate), c => c.SubtotalUntaxedAmount);
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
 
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => a.UnitCommissionAmount * b.Quantity, c => c.CommissionAmount);
@@ -933,6 +934,8 @@ namespace RUINORERP.UI.PSI.SAL
             EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
             EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
             EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
+            EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
+            EditEntity.TotalUntaxedAmount = Math.Round(EditEntity.TotalUntaxedAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
 
             if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
             {
@@ -1041,6 +1044,8 @@ namespace RUINORERP.UI.PSI.SAL
                             }
                             c.SubtotalTaxAmount = c.SubtotalTransAmount / (1 + c.TaxRate) * c.TaxRate;
                             c.SubtotalTaxAmount = Math.Round(c.SubtotalTaxAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+                            c.SubtotalUntaxedAmount = c.SubtotalTransAmount / (1 + c.TaxRate);
+                            c.SubtotalUntaxedAmount = Math.Round(c.SubtotalUntaxedAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
 
                             if (c.CustomizedCost > 0)
                             {

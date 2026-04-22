@@ -625,10 +625,10 @@ namespace RUINORERP.UI.Common
                     if (item.GetType().Name == "KryptonComboBox")
                     {
                         KryptonComboBox ktb = item as KryptonComboBox;
-                        
+
                         // 启用智能搜索功能
                         ktb.EnableSearch = true;
-                        
+
                         //不重复添加
                         if (ktb.ButtonSpecs.Where(b => b.UniqueName == "btnQuery").Any())
                         {
@@ -664,6 +664,12 @@ namespace RUINORERP.UI.Common
                                 //这里调用权限判断
                                 //调用通用的查询编辑基础资料。
                                 //需要对应的类名，如果修改新增了数据要重新加载下拉数据
+                                //TODO 暂时写死吧，这里视图 fktableName="View_ProdDetail"
+                                if (fktableName == "View_ProdDetail")
+                                {
+                                    fktableName = "tb_ProdDetail";
+                                }
+
                                 tb_MenuInfo menuinfo = MainForm.Instance.MenuList.FirstOrDefault(t => t.EntityName == fktableName.ToString());
                                 if (menuinfo == null)
                                 {
@@ -772,7 +778,7 @@ namespace RUINORERP.UI.Common
                                                 }
                                                 else if (TypeHelper.IsJArrayList(listType))
                                                 {
-                                                   
+
                                                     #endregion
                                                 }
 
@@ -3700,11 +3706,11 @@ namespace RUINORERP.UI.Common
         public static void InitDataToCmb(BindingSource bs, string ValueMember, string DisplayMember, KryptonComboBox cmbBox)
         {
             //Business.CommService.ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
-            
+
             // 重要：必须在调用 InitDropList 之前启用搜索，因为 InitDropList 会检查 EnableSearch
             // 来决定是否使用 ComboBoxStyle.DropDown（搜索需要用户能输入）
             cmbBox.EnableSearch = true;
-            
+
             ComboBoxHelper.InitDropList(bs, cmbBox, ValueMember, DisplayMember, ComboBoxStyle.DropDownList, false);
         }
 

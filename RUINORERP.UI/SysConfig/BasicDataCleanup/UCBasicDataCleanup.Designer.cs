@@ -33,6 +33,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kryptonGroupBoxConfig = new Krypton.Toolkit.KryptonGroupBox();
             this.kryptonPanelConfig = new Krypton.Toolkit.KryptonPanel();
             this.kcmbEntityType = new Krypton.Toolkit.KryptonComboBox();
+            this.ktbSearchEntity = new Krypton.Toolkit.KryptonTextBox();
+            this.klblSearch = new Krypton.Toolkit.KryptonLabel();
             this.klblEntityType = new Krypton.Toolkit.KryptonLabel();
             this.kryptonGroupBoxPreview = new Krypton.Toolkit.KryptonGroupBox();
             this.kryptonPanelPreview = new Krypton.Toolkit.KryptonPanel();
@@ -43,7 +45,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kbtnSelectInvert = new Krypton.Toolkit.KryptonButton();
             this.kbtnSelectAll = new Krypton.Toolkit.KryptonButton();
             this.kbtnRefresh = new Krypton.Toolkit.KryptonButton();
-            this.kbtnExecute = new Krypton.Toolkit.KryptonButton();
             this.kbtnTestExecute = new Krypton.Toolkit.KryptonButton();
             this.kbtnPreview = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).BeginInit();
@@ -116,6 +117,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // kryptonPanelConfig
             // 
             this.kryptonPanelConfig.Controls.Add(this.kcmbEntityType);
+            this.kryptonPanelConfig.Controls.Add(this.ktbSearchEntity);
+            this.kryptonPanelConfig.Controls.Add(this.klblSearch);
             this.kryptonPanelConfig.Controls.Add(this.klblEntityType);
             this.kryptonPanelConfig.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelConfig.Location = new System.Drawing.Point(0, 0);
@@ -126,16 +129,34 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // kcmbEntityType
             // 
             this.kcmbEntityType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.kcmbEntityType.DropDownWidth = 200;
+            this.kcmbEntityType.DropDownWidth = 400;
             this.kcmbEntityType.IntegralHeight = false;
             this.kcmbEntityType.Location = new System.Drawing.Point(90, 15);
+            this.kcmbEntityType.MaxDropDownItems = 20;
             this.kcmbEntityType.Name = "kcmbEntityType";
             this.kcmbEntityType.Size = new System.Drawing.Size(405, 21);
             this.kcmbEntityType.TabIndex = 1;
+            this.kcmbEntityType.SelectedIndexChanged += new System.EventHandler(this.KcmbEntityType_SelectedIndexChanged);
+            // 
+            // ktbSearchEntity
+            // 
+            this.ktbSearchEntity.Location = new System.Drawing.Point(590, 15);
+            this.ktbSearchEntity.Name = "ktbSearchEntity";
+            this.ktbSearchEntity.Size = new System.Drawing.Size(300, 23);
+            this.ktbSearchEntity.TabIndex = 3;
+            this.ktbSearchEntity.TextChanged += new System.EventHandler(this.KtbSearchEntity_TextChanged);
+            // 
+            // klblSearch
+            // 
+            this.klblSearch.Location = new System.Drawing.Point(520, 18);
+            this.klblSearch.Name = "klblSearch";
+            this.klblSearch.Size = new System.Drawing.Size(65, 20);
+            this.klblSearch.TabIndex = 2;
+            this.klblSearch.Values.Text = "快速搜索:";
             // 
             // klblEntityType
             // 
-            this.klblEntityType.Location = new System.Drawing.Point(20, 15);
+            this.klblEntityType.Location = new System.Drawing.Point(20, 18);
             this.klblEntityType.Name = "klblEntityType";
             this.klblEntityType.Size = new System.Drawing.Size(65, 20);
             this.klblEntityType.TabIndex = 0;
@@ -173,7 +194,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.dgvDataPreview.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvDataPreview.Location = new System.Drawing.Point(0, 0);
             this.dgvDataPreview.Name = "dgvDataPreview";
-            this.dgvDataPreview.ReadOnly = true;
             this.dgvDataPreview.RowTemplate.Height = 23;
             this.dgvDataPreview.Size = new System.Drawing.Size(996, 552);
             this.dgvDataPreview.TabIndex = 1;
@@ -185,7 +205,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnSelectInvert);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnSelectAll);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnRefresh);
-            this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnExecute);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnTestExecute);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnPreview);
             this.kryptonPanelExecuteButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -196,7 +215,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // 
             // kbtnDeleteSelected
             // 
-            this.kbtnDeleteSelected.Location = new System.Drawing.Point(629, 10);
+            this.kbtnDeleteSelected.Location = new System.Drawing.Point(839, 6);
             this.kbtnDeleteSelected.Name = "kbtnDeleteSelected";
             this.kbtnDeleteSelected.Size = new System.Drawing.Size(90, 28);
             this.kbtnDeleteSelected.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
@@ -206,7 +225,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // 
             // kbtnSelectNone
             // 
-            this.kbtnSelectNone.Location = new System.Drawing.Point(513, 10);
+            this.kbtnSelectNone.Location = new System.Drawing.Point(513, 6);
             this.kbtnSelectNone.Name = "kbtnSelectNone";
             this.kbtnSelectNone.Size = new System.Drawing.Size(90, 28);
             this.kbtnSelectNone.TabIndex = 6;
@@ -215,7 +234,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // 
             // kbtnSelectInvert
             // 
-            this.kbtnSelectInvert.Location = new System.Drawing.Point(395, 10);
+            this.kbtnSelectInvert.Location = new System.Drawing.Point(395, 6);
             this.kbtnSelectInvert.Name = "kbtnSelectInvert";
             this.kbtnSelectInvert.Size = new System.Drawing.Size(90, 28);
             this.kbtnSelectInvert.TabIndex = 5;
@@ -224,7 +243,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // 
             // kbtnSelectAll
             // 
-            this.kbtnSelectAll.Location = new System.Drawing.Point(285, 10);
+            this.kbtnSelectAll.Location = new System.Drawing.Point(285, 6);
             this.kbtnSelectAll.Name = "kbtnSelectAll";
             this.kbtnSelectAll.Size = new System.Drawing.Size(90, 28);
             this.kbtnSelectAll.TabIndex = 4;
@@ -233,39 +252,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // 
             // kbtnRefresh
             // 
-            this.kbtnRefresh.Location = new System.Drawing.Point(30, 10);
+            this.kbtnRefresh.Location = new System.Drawing.Point(30, 6);
             this.kbtnRefresh.Name = "kbtnRefresh";
             this.kbtnRefresh.Size = new System.Drawing.Size(90, 28);
             this.kbtnRefresh.TabIndex = 3;
             this.kbtnRefresh.Values.Text = "刷新";
-            // 
-            // kbtnExecute
-            // 
-            this.kbtnExecute.Location = new System.Drawing.Point(898, 10);
-            this.kbtnExecute.Name = "kbtnExecute";
-            this.kbtnExecute.Size = new System.Drawing.Size(90, 28);
-            this.kbtnExecute.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
-            this.kbtnExecute.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-            this.kbtnExecute.TabIndex = 2;
-            this.kbtnExecute.Values.Text = "正式执行";
+            this.kbtnRefresh.Click += new System.EventHandler(this.KbtnRefresh_Click);
             // 
             // kbtnTestExecute
             // 
-            this.kbtnTestExecute.Location = new System.Drawing.Point(766, 10);
+            this.kbtnTestExecute.Location = new System.Drawing.Point(669, 6);
             this.kbtnTestExecute.Name = "kbtnTestExecute";
             this.kbtnTestExecute.Size = new System.Drawing.Size(90, 28);
             this.kbtnTestExecute.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
             this.kbtnTestExecute.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.kbtnTestExecute.TabIndex = 1;
             this.kbtnTestExecute.Values.Text = "测试执行";
+            this.kbtnTestExecute.Click += new System.EventHandler(this.KbtnTestExecute_Click);
             // 
             // kbtnPreview
             // 
-            this.kbtnPreview.Location = new System.Drawing.Point(140, 10);
+            this.kbtnPreview.Location = new System.Drawing.Point(140, 6);
             this.kbtnPreview.Name = "kbtnPreview";
             this.kbtnPreview.Size = new System.Drawing.Size(90, 28);
             this.kbtnPreview.TabIndex = 0;
             this.kbtnPreview.Values.Text = "数据预览";
+            this.kbtnPreview.Click += new System.EventHandler(this.KbtnPreview_Click);
             // 
             // UCBasicDataCleanup
             // 
@@ -311,6 +323,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private Krypton.Toolkit.KryptonPanel kryptonPanelConfig;
         private Krypton.Toolkit.KryptonLabel klblEntityType;
         private Krypton.Toolkit.KryptonComboBox kcmbEntityType;
+        private Krypton.Toolkit.KryptonTextBox ktbSearchEntity;
+        private Krypton.Toolkit.KryptonLabel klblSearch;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxPreview;
         private Krypton.Toolkit.KryptonPanel kryptonPanelPreview;
         private System.Windows.Forms.DataGridView dgvDataPreview;
@@ -320,7 +334,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private Krypton.Toolkit.KryptonButton kbtnSelectInvert;
         private Krypton.Toolkit.KryptonButton kbtnSelectAll;
         private Krypton.Toolkit.KryptonButton kbtnRefresh;
-        private Krypton.Toolkit.KryptonButton kbtnExecute;
         private Krypton.Toolkit.KryptonButton kbtnTestExecute;
         private Krypton.Toolkit.KryptonButton kbtnPreview;
     }

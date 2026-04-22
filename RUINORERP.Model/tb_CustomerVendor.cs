@@ -570,10 +570,6 @@ namespace RUINORERP.Model
         public virtual List<tb_Prod> tb_Prods { get; set; }
 
 
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_InvoiceInfo.CustomerVendor_ID))]
-        public virtual List<tb_InvoiceInfo> tb_InvoiceInfos { get; set; }
-
 
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntry.CustomerVendor_ID))]

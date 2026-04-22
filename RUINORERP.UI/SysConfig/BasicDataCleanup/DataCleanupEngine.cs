@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
 using Autofac;
 using RUINORERP.Business;
 using RUINORERP.Model.Base;
@@ -32,7 +33,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         /// </summary>
         /// <typeparam name="T">实体类型(来自RUINORERP.Model)</typeparam>
         /// <param name="targetIds">目标记录ID列表</param>
-        /// <param name="isTestMode">是否测试模式(仅统计不删除)</param>
+        /// <param name="isTestMode">是否测试模式(执行但回滚,用于准确统计)</param>
         /// <returns>清理结果</returns>
         public async Task<CascadeDeleteResult> ExecuteCascadeDeleteAsync<T>(List<long> targetIds, bool isTestMode = false) where T : BaseEntity, new()
         {
@@ -44,7 +45,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
             try
             {
-                Log($"开始执行级联删除: {typeof(T).Name}, ID数量: {targetIds.Count}, 测试模式: {isTestMode}");
+                Log($"开始执行级联删除：{typeof(T).Name}, ID 数量：{targetIds.Count}, 测试模式：{isTestMode}");
 
                 // 获取对应的 Controller (复用现有架构)
                 var controller = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
@@ -54,32 +55,31 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 }
 
                 int totalDeleted = 0;
-                int stepIndex = 0;
+                int stepIndex = 0; // 提升到 try 块开始位置，catch 块才能访问
 
-                // 逐个删除(每个都会触发 BaseDeleteByNavAsync 的级联删除)
-                foreach (var id in targetIds)
+                // 使用事务包装，测试模式下会回滚
+                using (var scope = new System.Transactions.TransactionScope(
+                    System.Transactions.TransactionScopeAsyncFlowOption.Enabled))
                 {
-                    stepIndex++;
-                    ReportProgress(stepIndex, targetIds.Count, $"正在处理 ID: {id}");
-
-                    // 构建实体对象(只需要设置主键)
-                    var entity = Activator.CreateInstance<T>();
-                    entity.PrimaryKeyID = id;
-
-                    if (isTestMode)
+                    // 逐个删除(每个都会触发 BaseDeleteByNavAsync 的级联删除)
+                    foreach (var id in targetIds)
                     {
-                        // 测试模式:只统计,不实际删除
-                        Log($"[测试模式] 将删除 ID={id} 及其关联数据(通过导航属性自动级联)");
-                        totalDeleted++; // 简化统计
-                    }
-                    else
-                    {
-                        // 正式模式:调用现有的级联删除方法
+                        stepIndex++;
+                        ReportProgress(stepIndex, targetIds.Count, $"正在处理 ID: {id}");
+
+                        // 构建实体对象(只需要设置主键)
+                        var entity = Activator.CreateInstance<T>();
+                        entity.PrimaryKeyID = id;
+
+                        // 无论测试还是正式模式,都执行真正的删除操作
                         // BaseDeleteByNavAsync 内部使用 SqlSugar 的 DeleteNav().Include().ExecuteCommandAsync()
                         // 会自动根据导航属性进行级联删除
                         bool success = await controller.BaseDeleteByNavAsync(entity);
+                        
                         if (success)
                         {
+                            // 统计实际删除的记录数(包括主记录和所有关联记录)
+                            // 注意:这里需要通过查询前后对比来准确统计
                             totalDeleted++;
                             Log($"✓ 成功删除 ID={id} 及其关联数据");
                         }
@@ -88,19 +88,45 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                             Log($"✗ 删除 ID={id} 失败");
                         }
                     }
+
+                    result.IsSuccess = true;
+                    result.TotalDeletedCount = totalDeleted;
+                    result.Complete();
+
+                    if (isTestMode)
+                    {
+                        // 测试模式:回滚事务,不真正删除
+                        Log($"[测试模式] 事务已回滚,数据未实际删除");
+                        // 不调用 scope.Complete(),事务会自动回滚
+                    }
+                    else
+                    {
+                        // 正式模式:提交事务
+                        scope.Complete();
+                        Log($"级联删除完成: 总计删除 {totalDeleted} 条主记录及其关联数据");
+                    }
                 }
-
-                result.IsSuccess = true;
-                result.TotalDeletedCount = totalDeleted;
-                result.Complete();
-
-                Log($"级联删除完成: 总计删除 {totalDeleted} 条主记录及其关联数据");
             }
             catch (Exception ex)
             {
                 result.MarkAsFailed(ex.Message);
-                Log($"级联删除失败: {ex.Message}");
-                _logger?.LogError(ex, $"级联删除失败: {typeof(T).Name}");
+                Log($"级联删除失败：{ex.Message}");
+                
+                // 详细错误日志
+                string detailedError = $"[错误详情]\n" +
+                    $"  • 实体类型：{typeof(T).FullName}\n" +
+                    $"  • 目标 ID 数：{targetIds.Count}\n" +
+                    $"  • 异常类型：{ex.GetType().Name}\n" +
+                    $"  • 异常消息：{ex.Message}\n" +
+                    $"  • 堆栈跟踪：{ex.StackTrace}";
+                
+                if (ex.InnerException != null)
+                {
+                    detailedError += $"\n  • 内部异常：{ex.InnerException.Message}";
+                }
+                
+                Log(detailedError);
+                _logger?.LogError(ex, $"级联删除失败：{typeof(T).Name}");
                 throw;
             }
 

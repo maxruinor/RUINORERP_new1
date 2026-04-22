@@ -35,33 +35,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private Type _selectedEntityType;
         private List<long> _selectedIds;
         private DataCleanupEngine _cleanupEngine; // 使用新的清理引擎
+        private List<EntityMetadata> _allEntities; // 所有实体元数据
+        private bool _isInitializing = false; // 防止搜索时触发递归
+        private Timer _searchTimer; // 用于搜索防抖
+        private bool _isBusy = false; // 防止重复操作
 
-        /// <summary>
-        /// 实体类型映射字典
-        /// </summary>
-        public static Dictionary<string, Type> EntityTypeMappings { get; private set; }
 
-        /// <summary>
-        /// 静态构造函数
-        /// </summary>
-        static UCBasicDataCleanup()
-        {
-            EntityTypeMappings = new Dictionary<string, Type>
-            {
-                { "供应商表", typeof(tb_CustomerVendor) },
-                { "客户表", typeof(tb_CustomerVendor) },
-                { "产品类目表", typeof(tb_ProdCategories) },
-                { "产品基本信息表", typeof(tb_Prod) },
-                { "产品详情信息表", typeof(tb_ProdDetail) },
-                { "产品属性表", typeof(tb_ProdProperty) },
-                { "产品属性值表", typeof(tb_ProdPropertyValue) },
-                { "库位表", typeof(tb_Location) },
-                { "货架表", typeof(tb_StorageRack) },
-                { "单位表", typeof(tb_Unit) },
-                { "产品类型表", typeof(tb_ProductType) },
-                { "部门表", typeof(tb_Department) },
-            };
-        }
 
         /// <summary>
         /// 构造函数
@@ -78,6 +57,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private void InitializeData()
         {
             _selectedIds = new List<long>();
+            _isInitializing = false;
+            _isBusy = false;
+            
+            // 初始化搜索防抖 Timer
+            _searchTimer = new Timer { Interval = 300 };
+            _searchTimer.Tick += SearchTimer_Tick;
             
             // 初始化数据网格视图
             dgvDataPreview.AutoGenerateColumns = true;
@@ -94,6 +79,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             {
                 MainForm.Instance.ShowStatusText($"{e.Message} ({e.Percentage}%)");
             };
+
+            // 加载所有实体元数据
+            _allEntities = EntityRegistry.Entities;
 
             // 初始化实体类型选择
             InitializeEntityTypes();
@@ -140,15 +128,90 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         /// </summary>
         private void InitializeEntityTypes()
         {
+            _isInitializing = true;
             kcmbEntityType.Items.Clear();
             kcmbEntityType.Items.Add("请选择");
-
-            foreach (var mapping in EntityTypeMappings)
+            
+            // 使用 EntityRegistry 获取分组数据
+            var groupedEntities = EntityRegistry.GetAllGrouped();
+            
+            foreach (var group in groupedEntities)
             {
-                kcmbEntityType.Items.Add(mapping.Key);
+                // 添加分组标题 (不可选)
+                kcmbEntityType.Items.Add($"--- {group.Key} ---");
+                
+                // 添加该分类下的所有实体
+                foreach (var entity in group.Value)
+                {
+                    kcmbEntityType.Items.Add(entity.DisplayName);
+                }
             }
-
+            
             kcmbEntityType.SelectedIndex = 0;
+            _isInitializing = false;
+        }
+
+        /// <summary>
+        /// 根据搜索关键词过滤实体类型
+        /// </summary>
+        /// <param name="searchText">搜索关键词</param>
+        private void FilterEntityTypes(string searchText)
+        {
+            _isInitializing = true;
+            kcmbEntityType.Items.Clear();
+            kcmbEntityType.Items.Add("请选择");
+            
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                // 无搜索条件时显示全部
+                var groupedEntities = EntityRegistry.GetAllGrouped();
+                foreach (var group in groupedEntities)
+                {
+                    kcmbEntityType.Items.Add($"--- {group.Key} ---");
+                    foreach (var entity in group.Value)
+                    {
+                        kcmbEntityType.Items.Add(entity.DisplayName);
+                    }
+                }
+            }
+            else
+            {
+                // 有搜索条件时只显示匹配的实体（不显示分组标题）
+                var keywords = searchText.Trim().Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+                
+                var matchedEntities = _allEntities.Where(e =>
+                {
+                    // 匹配 DisplayName、Description、TableName、Category
+                    string searchTextLower = searchText.ToLower();
+                    return e.DisplayName.ToLower().Contains(searchTextLower) ||
+                           e.Description.ToLower().Contains(searchTextLower) ||
+                           e.TableName.ToLower().Contains(searchTextLower) ||
+                           e.Category.ToLower().Contains(searchTextLower);
+                })
+                .OrderBy(e => e.Category)
+                .ThenBy(e => e.DisplayName)
+                .ToList();
+                
+                // 按分类显示匹配的实体
+                string currentCategory = "";
+                foreach (var entity in matchedEntities)
+                {
+                    if (currentCategory != entity.Category)
+                    {
+                        kcmbEntityType.Items.Add($"--- {entity.Category} ---");
+                        currentCategory = entity.Category;
+                    }
+                    kcmbEntityType.Items.Add(entity.DisplayName);
+                }
+                
+                if (matchedEntities.Count == 0)
+                {
+                    kcmbEntityType.Items.Add($"未找到匹配 \"{searchText}\" 的实体");
+                }
+            }
+            
+            kcmbEntityType.SelectedIndex = 0;
+            _isInitializing = false;
         }
 
         /// <summary>
@@ -157,11 +220,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private void BindEvents()
         {
             kcmbEntityType.SelectedIndexChanged += KcmbEntityType_SelectedIndexChanged;
+            ktbSearchEntity.TextChanged += KtbSearchEntity_TextChanged;
             kbtnRefresh.Click += KbtnRefresh_Click;
             kbtnSelectAll.Click += KbtnSelectAll_Click;
             kbtnSelectNone.Click += KbtnSelectNone_Click;
             kbtnSelectInvert.Click += KbtnSelectInvert_Click;
             kbtnDeleteSelected.Click += KbtnDeleteSelected_Click;
+            kbtnPreview.Click += KbtnPreview_Click; // 添加预览按钮事件
+            kbtnTestExecute.Click += KbtnTestExecute_Click; // 添加测试执行按钮事件
         }
 
         /// <summary>
@@ -169,6 +235,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         /// </summary>
         private void KcmbEntityType_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // 防止初始化时触发
+            if (_isInitializing)
+                return;
+            
             try
             {
                 if (kcmbEntityType.SelectedIndex <= 0)
@@ -179,9 +249,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 }
 
                 string selectedText = kcmbEntityType.SelectedItem.ToString();
-                if (EntityTypeMappings.ContainsKey(selectedText))
+                
+                // 跳过分组标题和提示信息
+                if (selectedText.StartsWith("---") || selectedText.StartsWith("未找到"))
                 {
-                    _selectedEntityType = EntityTypeMappings[selectedText];
+                    kcmbEntityType.SelectedIndex = 0;
+                    return;
+                }
+                
+                // 从 EntityRegistry 查找实体
+                var metadata = EntityRegistry.GetByDisplayName(selectedText);
+                if (metadata != null)
+                {
+                    _selectedEntityType = metadata.EntityType;
                 }
             }
             catch (Exception ex)
@@ -191,10 +271,63 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         }
 
         /// <summary>
+        /// 搜索防抖 Timer 事件
+        /// </summary>
+        private void SearchTimer_Tick(object sender, EventArgs e)
+        {
+            _searchTimer.Stop();
+            string searchText = ktbSearchEntity.Text;
+            FilterEntityTypes(searchText);
+            
+            // 如果有搜索结果且只有一个，自动选中
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var matchedEntities = _allEntities.Where(e =>
+                    e.DisplayName.ToLower().Contains(searchText.ToLower()) ||
+                    e.Description.ToLower().Contains(searchText.ToLower()) ||
+                    e.TableName.ToLower().Contains(searchText.ToLower()) ||
+                    e.Category.ToLower().Contains(searchText.ToLower())
+                ).ToList();
+                
+                if (matchedEntities.Count == 1)
+                {
+                    kcmbEntityType.SelectedItem = matchedEntities[0].DisplayName;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 搜索文本框变化事件 - 实时过滤实体类型
+        /// </summary>
+        private void KtbSearchEntity_TextChanged(object sender, EventArgs e)
+        {
+            // 防止初始化时触发
+            if (_isInitializing)
+                return;
+            
+            try
+            {
+                // 重启防抖 Timer
+                _searchTimer.Stop();
+                _searchTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"搜索实体类型失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
         /// 刷新数据按钮点击事件
         /// </summary>
         private async void KbtnRefresh_Click(object sender, EventArgs e)
         {
+            if (_isBusy)
+            {
+                // 静默返回,不弹出提示框打扰用户
+                return;
+            }
+
             if (_selectedEntityType == null)
             {
                 MessageBox.Show("请先选择要清理的数据表", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -203,9 +336,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
             try
             {
+                _isBusy = true;
                 kbtnRefresh.Enabled = false;
+                kbtnDeleteSelected.Enabled = false;
                 MainForm.Instance.ShowStatusText("正在查询数据...");
-                Application.DoEvents();
 
                 await LoadDataAsync();
 
@@ -218,25 +352,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             }
             finally
             {
+                _isBusy = false;
                 kbtnRefresh.Enabled = true;
+                kbtnDeleteSelected.Enabled = true;
             }
-        }
-
-        /// <summary>
-        /// 使用反射查询数据
-        /// </summary>
-        private async Task<List<object>> QueryDataAsync(Type entityType)
-        {
-            // 使用反射调用 Queryable<T>
-            var queryableMethod = typeof(SqlSugarClient).GetMethod("Queryable", Type.EmptyTypes);
-            var genericQueryable = queryableMethod.MakeGenericMethod(entityType);
-            var queryable = genericQueryable.Invoke(_db, null);
-
-            // 调用 ToListAsync 方法
-            var toListAsyncMethod = queryable.GetType().GetMethod("ToListAsync");
-            var task = toListAsyncMethod.Invoke(queryable, null);
-
-            return await (Task<List<object>>)task;
         }
 
         /// <summary>
@@ -244,31 +363,44 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         /// </summary>
         private async Task LoadDataAsync()
         {
+            // 清空数据和列(保留 CheckBox 列)
             dgvDataPreview.Rows.Clear();
+            
+            // 移除除 CheckBox 列外的所有列
+            var columnsToRemove = dgvDataPreview.Columns.Cast<DataGridViewColumn>()
+                .Where(c => c.Name != "colSelect")
+                .ToList();
+            
+            foreach (var column in columnsToRemove)
+            {
+                dgvDataPreview.Columns.Remove(column);
+            }
 
-            // 使用反射查询数据
-            var records = await QueryDataAsync(_selectedEntityType);
+            // 根据实体类型查询数据
+            var records = await QueryDataByTypeAsync(_selectedEntityType);
 
-            // 动态添加列（除了 CheckBox 列）
+            // 获取实体属性(限制显示列数)
             var properties = _selectedEntityType.GetProperties()
                 .Where(p => p.CanRead && p.CanWrite)
-                .Take(20) // 限制显示列数
+                .Take(20)
                 .ToList();
 
-            // 添加列
-            if (dgvDataPreview.Columns.Count <= 1)
+            // 动态添加列(优先使用 AdvQueryAttribute 的 ColDesc 作为标题)
+            foreach (var prop in properties)
             {
-                foreach (var prop in properties)
+                // 尝试获取 AdvQueryAttribute 特性
+                var advQueryAttr = prop.GetCustomAttribute<RUINORERP.Global.CustomAttribute.AdvQueryAttribute>();
+                string headerText = advQueryAttr?.ColDesc ?? prop.Name; // 如果有 ColDesc 则使用,否则使用属性名
+
+                var column = new DataGridViewTextBoxColumn
                 {
-                    var column = new DataGridViewTextBoxColumn
-                    {
-                        Name = $"col_{prop.Name}",
-                        HeaderText = prop.Name,
-                        DataPropertyName = prop.Name,
-                        Width = 120
-                    };
-                    dgvDataPreview.Columns.Add(column);
-                }
+                    Name = $"col_{prop.Name}",
+                    HeaderText = headerText,
+                    DataPropertyName = prop.Name,
+                    Width = 120,
+                    ReadOnly = true // 数据列设置为只读，只有 CheckBox 列可编辑
+                };
+                dgvDataPreview.Columns.Add(column);
             }
 
             // 添加数据行
@@ -291,6 +423,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             }
 
             UpdateSelectedCount();
+        }
+
+        /// <summary>
+        /// 根据实体类型查询数据(使用 EntityRegistry 统一查询)
+        /// </summary>
+        private async Task<List<object>> QueryDataByTypeAsync(Type entityType)
+        {
+            var db = MainForm.Instance.AppContext.Db;
+            return await EntityRegistry.QueryAsync(entityType, db);
         }
 
         /// <summary>
@@ -343,40 +484,52 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         /// </summary>
         private async void KbtnDeleteSelected_Click(object sender, EventArgs e)
         {
-            if (_selectedEntityType == null)
-            {
-                MessageBox.Show("请先选择要清理的数据表", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            _selectedIds = GetSelectedRecordIds();
-
-            if (_selectedIds.Count == 0)
-            {
-                MessageBox.Show("请先选择要删除的记录", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // 显示确认对话框
-            var confirmMsg = $"确定要删除选中的 {_selectedIds.Count} 条记录吗？\n\n此操作将同时删除所有关联数据(通过导航属性自动级联)！\n\n建议先备份重要数据。";
-
-            if (MessageBox.Show(confirmMsg, "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
-            {
-                return;
-            }
-
             try
             {
+                if (_isBusy)
+                {
+                    // 静默返回，不弹出提示打扰用户
+                    return;
+                }
+
+                if (_selectedEntityType == null)
+                {
+                    MessageBox.Show("请先选择要清理的数据表", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 获取选中的ID
+                _selectedIds = GetSelectedRecordIds();
+                MainForm.Instance.PrintInfoLog($"准备删除，选中记录数: {_selectedIds.Count}");
+
+                if (_selectedIds.Count == 0)
+                {
+                    MessageBox.Show("请先选择要删除的记录", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 显示确认对话框
+                var confirmMsg = $"确定要删除选中的 {_selectedIds.Count} 条记录吗？\n\n此操作将同时删除所有关联数据(通过导航属性自动级联)！\n\n建议先备份重要数据。";
+
+                if (MessageBox.Show(confirmMsg, "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                {
+                    MainForm.Instance.PrintInfoLog("用户取消删除操作");
+                    return;
+                }
+
+                _isBusy = true;
                 kbtnDeleteSelected.Enabled = false;
                 kbtnRefresh.Enabled = false;
+                // 移除进行中的弹窗提示，只更新状态栏
                 MainForm.Instance.ShowStatusText("正在删除数据...");
-                Application.DoEvents();
+                MainForm.Instance.PrintInfoLog($"开始删除 {_selectedEntityType.Name} 表的 {_selectedIds.Count} 条记录...");
 
                 // 使用 DataCleanupEngine 执行级联删除
-                var result = await ExecuteCascadeDeleteAsync();
+                var result = await ExecuteCascadeDeleteAsync(_selectedIds, isTestMode: false);
 
                 if (result.IsSuccess)
                 {
+                    MainForm.Instance.PrintInfoLog($"删除成功！共删除 {result.TotalDeletedCount} 条主记录及其关联数据，耗时: {result.TotalElapsedMs}ms");
                     MessageBox.Show($"删除完成！\n共删除 {result.TotalDeletedCount} 条主记录及其关联数据\n耗时: {result.TotalElapsedMs}ms", 
                         "成功",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -388,17 +541,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 }
                 else
                 {
+                    MainForm.Instance.PrintInfoLog($"[错误] 删除失败：{result.ErrorMessage}");
                     MessageBox.Show($"删除失败：{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     MainForm.Instance.ShowStatusText("删除失败");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"删除失败：{ex.Message}\n\n详细信息:\n{ex.StackTrace}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MainForm.Instance.PrintInfoLog($"[异常] 删除操作异常: {ex.Message}\n{ex.StackTrace}");
+                MessageBox.Show($"删除失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 MainForm.Instance.ShowStatusText("删除失败");
             }
             finally
             {
+                _isBusy = false;
                 kbtnDeleteSelected.Enabled = true;
                 kbtnRefresh.Enabled = true;
             }
@@ -407,15 +563,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         /// <summary>
         /// 执行级联删除(使用 DataCleanupEngine)
         /// </summary>
-        private async Task<CascadeDeleteResult> ExecuteCascadeDeleteAsync()
+        /// <param name="ids">要删除的ID列表，如果为null则使用 _selectedIds</param>
+        /// <param name="isTestMode">是否测试模式</param>
+        private async Task<CascadeDeleteResult> ExecuteCascadeDeleteAsync(List<long> ids = null, bool isTestMode = false)
         {
+            var targetIds = ids ?? _selectedIds;
+            
+            MainForm.Instance.PrintInfoLog($"ExecuteCascadeDeleteAsync 调用: 类型={_selectedEntityType?.Name}, ID数量={targetIds.Count}, 测试模式={isTestMode}");
+            
             // 使用反射调用泛型方法 ExecuteCascadeDeleteAsync<T>
             var method = typeof(DataCleanupEngine).GetMethod("ExecuteCascadeDeleteAsync");
+            if (method == null)
+            {
+                throw new InvalidOperationException("未找到 ExecuteCascadeDeleteAsync 方法");
+            }
+            
             var genericMethod = method.MakeGenericMethod(_selectedEntityType);
             
-            var task = (Task<CascadeDeleteResult>)genericMethod.Invoke(_cleanupEngine, new object[] { _selectedIds, false });
+            MainForm.Instance.PrintInfoLog($"开始调用泛型方法...");
+            var task = (Task<CascadeDeleteResult>)genericMethod.Invoke(_cleanupEngine, new object[] { targetIds, isTestMode });
             
-            return await task;
+            MainForm.Instance.PrintInfoLog($"等待任务完成...");
+            var result = await task;
+            
+            MainForm.Instance.PrintInfoLog($"任务完成，结果: IsSuccess={result.IsSuccess}, TotalDeletedCount={result.TotalDeletedCount}");
+            
+            return result;
         }
 
         /// <summary>
@@ -425,28 +598,49 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         {
             var selectedIds = new List<long>();
             var pkName = GetPrimaryKeyName(_selectedEntityType);
+            
+            MainForm.Instance.PrintInfoLog($"开始获取选中记录ID，主键字段: {pkName}，总行数: {dgvDataPreview.Rows.Count}");
 
             foreach (DataGridViewRow row in dgvDataPreview.Rows)
             {
-                if (row.Cells["colSelect"] is DataGridViewCheckBoxCell cell &&
-                    cell.Value != null && (bool)cell.Value)
+                if (row.Cells["colSelect"] is DataGridViewCheckBoxCell cell)
                 {
-                    var record = row.Tag;
-                    if (record != null)
+                    bool isChecked = cell.Value != null && Convert.ToBoolean(cell.Value);
+                    
+                    if (isChecked)
                     {
-                        var pkProp = _selectedEntityType.GetProperty(pkName);
-                        if (pkProp != null)
+                        var record = row.Tag;
+                        if (record != null)
                         {
-                            var idValue = pkProp.GetValue(record);
-                            if (long.TryParse(idValue?.ToString(), out long id))
+                            var pkProp = _selectedEntityType.GetProperty(pkName);
+                            if (pkProp != null)
                             {
-                                selectedIds.Add(id);
+                                var idValue = pkProp.GetValue(record);
+                                MainForm.Instance.PrintInfoLog($"  找到选中行，ID值: {idValue}");
+                                
+                                if (long.TryParse(idValue?.ToString(), out long id))
+                                {
+                                    selectedIds.Add(id);
+                                }
+                                else
+                                {
+                                    MainForm.Instance.PrintInfoLog($"  [错误] ID转换失败: {idValue}");
+                                }
                             }
+                            else
+                            {
+                                MainForm.Instance.PrintInfoLog($"  [错误] 未找到主键属性: {pkName}");
+                            }
+                        }
+                        else
+                        {
+                            MainForm.Instance.PrintInfoLog("  [错误] 行Tag为null");
                         }
                     }
                 }
             }
 
+            MainForm.Instance.PrintInfoLog($"最终获取到 {selectedIds.Count} 个选中ID");
             return selectedIds;
         }
 
@@ -499,10 +693,239 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private void KbtnDeleteRule_Click(object sender, EventArgs e) { }
         private void KbtnMoveUp_Click(object sender, EventArgs e) { }
         private void KbtnMoveDown_Click(object sender, EventArgs e) { }
-        private void KbtnPreview_Click(object sender, EventArgs e) { }
-        private void KbtnTestExecute_Click(object sender, EventArgs e) { }
-        private void KbtnExecute_Click(object sender, EventArgs e) { }
-        private void DgvRules_SelectionChanged(object sender, EventArgs e) { }
+        
+        /// <summary>
+        /// 预览按钮点击事件 - 显示将要删除的数据预览
+        /// </summary>
+        private async void KbtnPreview_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (_selectedEntityType == null)
+                {
+                    MessageBox.Show("请先选择要清理的数据表", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var selectedIds = GetSelectedRecordIds();
+                
+                if (selectedIds.Count == 0)
+                {
+                    MessageBox.Show("请先勾选要预览的记录", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                MainForm.Instance.PrintInfoLog($"预览模式：将检查 {selectedIds.Count} 条记录及其关联数据");
+
+                // 使用测试模式执行，不实际删除
+                var result = await ExecuteCascadeDeleteAsync(selectedIds, isTestMode: true);
+
+                if (result.IsSuccess)
+                {
+                    string previewMsg = $"【删除预览】\n\n" +
+                        $"选中主记录数: {selectedIds.Count}\n" +
+                        $"预计删除总数: {result.TotalDeletedCount} 条(含关联数据)\n" +
+                        $"实体类型: {_selectedEntityType.Name}\n" +
+                        $"\n注意：这只是预览，不会实际删除任何数据。";
+                    
+                    MessageBox.Show(previewMsg, "删除预览", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MainForm.Instance.PrintInfoLog($"预览完成：预计删除 {result.TotalDeletedCount} 条记录");
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog($"[错误] 预览失败：{result.ErrorMessage}");
+                    MessageBox.Show($"预览失败：{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog($"[异常] 预览异常: {ex.Message}");
+                MessageBox.Show($"预览失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 测试执行按钮点击事件 - 执行但不提交事务
+        /// </summary>
+        private async void KbtnTestExecute_Click(object sender, EventArgs e)
+        {
+            List<long> selectedIds = null; // 提升到 try 外部，catch 块才能访问
+            
+            try
+            {
+                if (_isBusy)
+                {
+                    MainForm.Instance.ShowStatusText("操作正在进行中，请稍候...");
+                    return;
+                }
+
+                if (_selectedEntityType == null)
+                {
+                    MessageBox.Show("请先选择要清理的数据表", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                selectedIds = GetSelectedRecordIds();
+                
+                if (selectedIds.Count == 0)
+                {
+                    MessageBox.Show("请先勾选要测试的记录", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var confirmMsg = $"【测试执行模式】\n\n将对 {selectedIds.Count} 条记录执行级联删除测试\n\n此模式会验证删除逻辑但不会真正删除数据。\n\n是否继续？";
+
+                if (MessageBox.Show(confirmMsg, "测试执行确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                _isBusy = true;
+                kbtnTestExecute.Enabled = false;
+                MainForm.Instance.ShowStatusText("正在测试执行...");
+                MainForm.Instance.PrintInfoLog($"开始测试执行 {_selectedEntityType.Name} 表的 {selectedIds.Count} 条记录...");
+
+                // 使用测试模式执行
+                var result = await ExecuteCascadeDeleteAsync(selectedIds, isTestMode: true);
+
+                if (result.IsSuccess)
+                {
+                    string testResultMsg = $"【测试执行结果】\n\n" +
+                        $"✅ 测试成功\n" +
+                        $"测试记录数: {selectedIds.Count}\n" +
+                        $"预计影响记录: {result.TotalDeletedCount} 条\n" +
+                        $"耗时: {result.TotalElapsedMs}ms\n\n" +
+                        $"注意：这只是测试，没有实际删除数据。\n" +
+                        $"如需正式删除，请使用“正式执行”按钮。";
+                    
+                    MessageBox.Show(testResultMsg, "测试执行结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MainForm.Instance.PrintInfoLog($"测试执行成功：预计删除 {result.TotalDeletedCount} 条记录");
+                }
+                else
+                {
+                    MessageBox.Show($"测试执行失败：{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MainForm.Instance.PrintInfoLog($"[错误] 测试执行失败：{result.ErrorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // 详细错误日志输出
+                string errorMsg = $"[异常] 测试执行异常:\n" +
+                    $"  • 实体类型：{_selectedEntityType?.FullName ?? "未知"}\n" +
+                    $"  • 选中记录数：{selectedIds?.Count ?? 0}\n" +
+                    $"  • 异常类型：{ex.GetType().Name}\n" +
+                    $"  • 异常消息：{ex.Message}\n" +
+                    $"  • 堆栈跟踪：{ex.StackTrace}";
+                
+                if (ex.InnerException != null)
+                {
+                    errorMsg += $"\n  • 内部异常：{ex.InnerException.Message}";
+                }
+                
+                MainForm.Instance.PrintInfoLog(errorMsg);
+                
+                // 显示用户友好的错误提示
+                string userMsg = $"❌ 测试执行失败!\n\n" +
+                    $"错误类型：{ex.GetType().Name}\n" +
+                    $"错误信息：{ex.Message}\n\n" +
+                    $"可能原因:\n" +
+                    $"  1. 数据正在被其他单据引用\n" +
+                    $"  2. 数据库连接异常\n\n" +
+                    $"详细日志已记录，请联系管理员查看。";
+                
+                MessageBox.Show(userMsg, "测试执行失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _isBusy = false;
+                kbtnTestExecute.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 正式执行按钮点击事件 - 真正删除数据
+        /// </summary>
+        private async void KbtnExecute_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (_isBusy)
+                {
+                    MainForm.Instance.ShowStatusText("操作正在进行中，请稍候...");
+                    return;
+                }
+
+                if (_selectedEntityType == null)
+                {
+                    MessageBox.Show("请先选择要清理的数据表", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var selectedIds = GetSelectedRecordIds();
+                
+                if (selectedIds.Count == 0)
+                {
+                    MessageBox.Show("请先勾选要删除的记录", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 显示严重警告确认对话框
+                var confirmMsg = $"⚠️ 【正式删除警告】⚠️\n\n" +
+                    $"您即将删除 {selectedIds.Count} 条主记录及其所有关联数据!\n\n" +
+                    $"• 此操作不可撤销\n" +
+                    $"• 将同时删除所有外键关联的记录\n" +
+                    $"• 建议先备份重要数据\n\n" +
+                    $"确定要继续吗?";
+
+                if (MessageBox.Show(confirmMsg, "⚠️ 严重警告 - 确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Error) != DialogResult.Yes)
+                {
+                    MainForm.Instance.PrintInfoLog("用户取消正式删除操作");
+                    return;
+                }
+
+                _isBusy = true;
+                kbtnRefresh.Enabled = false;
+                MainForm.Instance.ShowStatusText("正在执行正式删除...");
+                MainForm.Instance.PrintInfoLog($"开始正式删除 {_selectedEntityType.Name} 表的 {selectedIds.Count} 条记录...");
+
+                // 使用正式模式执行(会真正删除并提交事务)
+                var result = await ExecuteCascadeDeleteAsync(selectedIds, isTestMode: false);
+
+                if (result.IsSuccess)
+                {
+                    MainForm.Instance.PrintInfoLog($"删除成功！共删除 {result.TotalDeletedCount} 条主记录及其关联数据，耗时: {result.TotalElapsedMs}ms");
+                    
+                    string successMsg = $"✅ 删除完成!\n\n" +
+                        $"主记录数: {selectedIds.Count}\n" +
+                        $"总删除数: {result.TotalDeletedCount} 条(含关联数据)\n" +
+                        $"耗时: {result.TotalElapsedMs}ms\n\n" +
+                        $"数据已永久删除，无法恢复!";
+                    
+                    MessageBox.Show(successMsg, "删除成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MainForm.Instance.ShowStatusText("删除完成");
+
+                    // 重新加载数据
+                    await LoadDataAsync();
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog($"[错误] 删除失败：{result.ErrorMessage}");
+                    MessageBox.Show($"删除失败：{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MainForm.Instance.ShowStatusText("删除失败");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog($"[异常] 删除操作异常: {ex.Message}\n{ex.StackTrace}");
+                MessageBox.Show($"删除失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MainForm.Instance.ShowStatusText("删除失败");
+            }
+            finally
+            {
+                _isBusy = false;
+                kbtnRefresh.Enabled = true;
+            }
+        }
 
         #endregion
     }

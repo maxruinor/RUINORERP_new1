@@ -300,7 +300,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     case SubscribeAction.Unsubscribe:
                         if (string.IsNullOrEmpty(tableName))
                         {
-                            // 批量取消所有订阅（TableName为空时表示取消所有）
+                            // P2-3修复: 批量取消所有订阅（TableName为空时表示取消所有）
                             int unsubscribeCount = _subscriptionManager.RemoveAllSubscriptionsAsync(sessionId);
                             success = true;
                             message = $"客户端取消所有订阅: 会话={sessionId}, 共取消 {unsubscribeCount} 个表订阅";
@@ -308,7 +308,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         }
                         else
                         {
-                            // 单个表取消订阅
+                            // P2-3修复: 单个表取消订阅
                             _subscriptionManager.RemoveSubscriptionAsync(tableName, sessionId);
                             success = true;
                             message = $"客户端取消订阅缓存: 会话={sessionId}, 表名={tableName}";
@@ -438,7 +438,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             pushRequest, 
                             30000, 
                             pushCts.Token, 
-                            PacketDirection.ServerRequest); // 注意：这里是 ServerRequest，表示服务器发起的请求
+                            PacketDirection.ServerRequest); // 明确标记为服务器发起的请求
                         successCount++;
                         LogDebug($"成功推送缓存更新到会话：{sessionInfo.SessionID}, 表：{request.TableName}");
                     }
@@ -588,7 +588,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             return typeName;
         }
 
-        private Task<CacheResponse> ProcessCacheSyncAsync(IRequest request, CommandContext executionContext, CancellationToken cancellationToken)
+        private async Task<CacheResponse> ProcessCacheSyncAsync(IRequest request, CommandContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -596,16 +596,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 CacheRequest updateRequest = request as CacheRequest;
                 if (updateRequest == null)
                 {
-                    return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>("缓存更新请求数据不能为空" + UnifiedErrorCodes.Command_ValidationFailed.Message
-                     ));
+                    return ResponseFactory.CreateSpecificErrorResponse<CacheResponse>("缓存更新请求数据不能为空" + UnifiedErrorCodes.Command_ValidationFailed.Message
+                     );
                 }
 
                 // 验证请求数据
                 if (string.IsNullOrEmpty(updateRequest.TableName))
                 {
                     LogInfo("缓存更新表名为空");
-                    return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>("表名不能为空"
-                         ));
+                    return ResponseFactory.CreateSpecificErrorResponse<CacheResponse>("表名不能为空"
+                         );
                 }
 
                 #region
@@ -613,48 +613,50 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 ResponseBase errorRespnse = null;
                 try
                 {
-                    // 根据操作类型处理缓存变更
-                    switch (updateRequest.Operation)
+                    // P0-4修复: 使用Task.Run将同步操作移到线程池执行，避免阻塞命令调度线程
+                    await Task.Run(() =>
                     {
-                        case CacheOperation.Set:
-                            // 验证 CacheData 是否为 null
-                            if (updateRequest.CacheData == null)
-                            {
-                                logger.LogWarning($"缓存同步请求中 CacheData 为 null, TableName={updateRequest.TableName}");
-                                return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>(
-                                    $"缓存数据不能为空,表名: {updateRequest.TableName}"));
-                            }
-                            
-                            //CacheDataConverter.SerializeToBytes
-                            object entity = updateRequest.CacheData.GetData();
-                            
-                            // 验证反序列化后的实体是否为 null
-                            if (entity == null)
-                            {
-                                logger.LogWarning($"缓存数据反序列化失败, TableName={updateRequest.TableName}, EntityTypeName={updateRequest.CacheData.EntityTypeName}");
-                                return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>(
-                                    $"缓存数据反序列化失败,表名: {updateRequest.TableName}"));
-                            }
-                            
-                            _cacheManager.UpdateEntityList(updateRequest.TableName, entity);
-                            break;
-                        case CacheOperation.Remove:
-                            _cacheManager.DeleteEntity(updateRequest.TableName, updateRequest.PrimaryKeyValue);
-                            break;
-                        case CacheOperation.Clear:
-                            _cacheManager.DeleteEntityList(updateRequest.TableName);
-                            break;
-                        default:
-                            logger.LogWarning($"不支持的缓存操作类型: {updateRequest.Operation}");
-                            break;
-                    }
+                        // 根据操作类型处理缓存变更
+                        switch (updateRequest.Operation)
+                        {
+                            case CacheOperation.Set:
+                                // 验证 CacheData 是否为 null
+                                if (updateRequest.CacheData == null)
+                                {
+                                    logger.LogWarning($"缓存同步请求中 CacheData 为 null, TableName={updateRequest.TableName}");
+                                    return;
+                                }
+                                
+                                //CacheDataConverter.SerializeToBytes
+                                object entity = updateRequest.CacheData.GetData();
+                                
+                                // 验证反序列化后的实体是否为 null
+                                if (entity == null)
+                                {
+                                    logger.LogWarning($"缓存数据反序列化失败, TableName={updateRequest.TableName}, EntityTypeName={updateRequest.CacheData.EntityTypeName}");
+                                    return;
+                                }
+                                
+                                _cacheManager.UpdateEntityList(updateRequest.TableName, entity);
+                                break;
+                            case CacheOperation.Remove:
+                                _cacheManager.DeleteEntity(updateRequest.TableName, updateRequest.PrimaryKeyValue);
+                                break;
+                            case CacheOperation.Clear:
+                                _cacheManager.DeleteEntityList(updateRequest.TableName);
+                                break;
+                            default:
+                                logger.LogWarning($"不支持的缓存操作类型: {updateRequest.Operation}");
+                                break;
+                        }
+                    }, cancellationToken);
                     updateSuccess = true;
                 }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, $"处理缓存同步异常, TableName={updateRequest.TableName}, Operation={updateRequest.Operation}");
-                    return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>(
-                        $"处理缓存同步异常: {ex.Message}"));
+                    return ResponseFactory.CreateSpecificErrorResponse<CacheResponse>(
+                        $"处理缓存同步异常: {ex.Message}");
                 }
 
                 #endregion
@@ -662,18 +664,18 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (!updateSuccess)
                 {
                     LogError($"更新缓存数据失败: {updateRequest.TableName}");
-                    return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>($"更新缓存数据失败: 未知错误"));
+                    return ResponseFactory.CreateSpecificErrorResponse<CacheResponse>($"更新缓存数据失败: 未知错误");
                 }
 
                 var cacheResponse = new CacheResponse();
                 cacheResponse.Message = "缓存同步成功";
                 cacheResponse.IsSuccess = true;
-                return Task.FromResult<CacheResponse>(cacheResponse);
+                return cacheResponse;
             }
             catch (Exception ex)
             {
                 LogError($"处理缓存更新业务逻辑异常: {ex.Message}", ex);
-                return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>($"处理缓存更新业务逻辑异常: {ex.Message}"));
+                return ResponseFactory.CreateSpecificErrorResponse<CacheResponse>($"处理缓存更新业务逻辑异常: {ex.Message}");
             }
         }
 
@@ -788,7 +790,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             _syncMetadata.RemoveTableSyncInfo(tableName);
                         }
                     }
-                    catch { /* 忽略清理异常 */ }
+                    catch (Exception cleanupEx)
+                    {
+                        // P2-4修复: 至少记录日志而不是完全忽略
+                        Logger.LogDebug(cleanupEx, "清理表 {TableName} 的缓存元数据异常", tableName);
+                    }
 
                     throw;
                 }

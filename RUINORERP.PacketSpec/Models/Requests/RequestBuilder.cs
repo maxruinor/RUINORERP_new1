@@ -39,39 +39,8 @@ namespace RUINORERP.PacketSpec.Models.Requests
             return request;
         }
 
-        /// <summary>
-        /// 创建Token验证请求
-        /// </summary>
-        /// <param name="token">令牌信息</param>
-        /// <returns>Token验证请求对象</returns>
-        public static TokenValidationRequest CreateTokenValidationRequest(TokenInfo token)
-        {
-            if (token == null)
-                throw new ArgumentNullException(nameof(token));
-                
-            return CreateRequest(
-                AuthenticationCommands.ValidateToken,
-                new TokenValidationRequest { Token = token }
-            );
-        }
 
-        /// <summary>
-        /// 创建Token刷新请求
-        /// </summary>
-        /// <param name="token">当前令牌</param>
-        /// <param name="refreshToken">刷新令牌</param>
-        /// <returns>Token刷新请求对象</returns>
-        public static TokenRefreshRequest CreateTokenRefreshRequest(string token, string refreshToken)
-        {
-            return CreateRequest(
-                AuthenticationCommands.RefreshToken,
-                new TokenRefreshRequest
-                {
-                    RefreshToken = refreshToken
-                }
-            );
-        }
-        
+
          
         
         /// <summary>

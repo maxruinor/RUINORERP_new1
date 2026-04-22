@@ -29,7 +29,7 @@ namespace RUINORERP.UI.Network
         
         // IsConnected缓存机制 - 减少频繁的系统调用
         private volatile bool _cachedIsConnected = false;
-        private DateTime _lastConnectionCheckTime = DateTime.MinValue;
+        private long _lastConnectionCheckTimeTicks = 0; // 使用ticks+Interlocked保证原子性
         private const int CONNECTION_CHECK_CACHE_MS = 100; // 缓存100ms
 
         /// <summary>
@@ -107,11 +107,11 @@ namespace RUINORERP.UI.Network
         {
             get
             {
-                var now = DateTime.Now;
-                var elapsed = (now - _lastConnectionCheckTime).TotalMilliseconds;
+                var nowTicks = DateTime.UtcNow.Ticks;
+                var elapsedMs = (nowTicks - Interlocked.Read(ref _lastConnectionCheckTimeTicks)) / TimeSpan.TicksPerMillisecond;
                 
                 // 如果缓存有效，直接返回
-                if (elapsed < CONNECTION_CHECK_CACHE_MS)
+                if (elapsedMs < CONNECTION_CHECK_CACHE_MS)
                 {
                     return _cachedIsConnected;
                 }
@@ -119,12 +119,17 @@ namespace RUINORERP.UI.Network
                 // 否则重新检查
                 bool connected = CheckConnectionInternal();
                 
-                // 只有状态变化时才更新缓存和触发事件
+                // 更新缓存（仅在状态变化时更新时间戳，避免频繁写入）
                 if (connected != _cachedIsConnected)
                 {
                     _cachedIsConnected = connected;
-                    _lastConnectionCheckTime = now;
-                    ConnectionStateChanged?.Invoke(connected);
+                    Interlocked.Exchange(ref _lastConnectionCheckTimeTicks, nowTicks);
+                    // 注意：不在getter中触发ConnectionStateChanged事件
+                    // 事件应仅在OnClientConnected/OnClientClosed等明确状态变化点触发
+                }
+                else
+                {
+                    Interlocked.Exchange(ref _lastConnectionCheckTimeTicks, nowTicks);
                 }
                 
                 return connected;

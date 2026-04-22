@@ -141,6 +141,9 @@ namespace RUINORERP.PacketSpec.Serialization
 
     public static class JsonCompressionSerializationService
     {
+        // P1-2优化: 压缩阈值常量，小于1KB不压缩
+        private const int COMPRESSION_THRESHOLD_BYTES = 1024;
+
         private static readonly ExcludingPropertiesContractResolver _contractResolver = new ExcludingPropertiesContractResolver();
 
         private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
@@ -171,7 +174,8 @@ namespace RUINORERP.PacketSpec.Serialization
         };
 
         /// <summary>
-        /// 序列化并压缩（主要方法）
+        /// 序列化并压缩（智能压缩策略）
+        /// P1-2优化: 小于1KB的数据包不压缩，避免压缩开销
         /// </summary>
         public static byte[] Serialize<T>(T obj, bool compress = true)
         {
@@ -183,7 +187,14 @@ namespace RUINORERP.PacketSpec.Serialization
                 string json = JsonConvert.SerializeObject(obj, _jsonSettings);
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
 
-                return compress ? GZipCompress(jsonBytes) : jsonBytes;
+                // P1-2优化: 只有超过1KB且启用压缩时才执行GZip
+                if (compress && jsonBytes.Length > COMPRESSION_THRESHOLD_BYTES)
+                {
+                    return GZipCompress(jsonBytes);
+                }
+
+                // 小包直接返回，避免压缩开销
+                return jsonBytes;
             }
             catch (Exception ex)
             {
@@ -193,6 +204,7 @@ namespace RUINORERP.PacketSpec.Serialization
 
         /// <summary>
         /// 解压并反序列化（主要方法）
+        /// P1-2优化: 添加GZip魔数自动检测，智能判断是否需要解压
         /// </summary>
         public static T Deserialize<T>(byte[] data, bool decompress = true)
         {
@@ -201,7 +213,8 @@ namespace RUINORERP.PacketSpec.Serialization
 
             try
             {
-                byte[] jsonBytes = decompress ? GZipDecompress(data) : data;
+                // P1-2优化: 自动检测GZip压缩格式（魔数 0x1F 0x8B）
+                byte[] jsonBytes = ShouldDecompress(data, decompress) ? GZipDecompress(data) : data;
                 string json = Encoding.UTF8.GetString(jsonBytes);
 
                 return JsonConvert.DeserializeObject<T>(json, _jsonSettings);
@@ -214,6 +227,7 @@ namespace RUINORERP.PacketSpec.Serialization
 
         /// <summary>
         /// 动态反序列化（不知道具体类型时使用）
+        /// P1-2优化: 添加GZip魔数自动检测
         /// </summary>
         public static object DeserializeDynamic(byte[] data, bool decompress = true)
         {
@@ -222,7 +236,8 @@ namespace RUINORERP.PacketSpec.Serialization
 
             try
             {
-                byte[] jsonBytes = decompress ? GZipDecompress(data) : data;
+                // P1-2优化: 自动检测GZip压缩格式
+                byte[] jsonBytes = ShouldDecompress(data, decompress) ? GZipDecompress(data) : data;
                 string json = Encoding.UTF8.GetString(jsonBytes);
 
                 return JsonConvert.DeserializeObject(json, _jsonSettings);
@@ -255,6 +270,24 @@ namespace RUINORERP.PacketSpec.Serialization
                 gzip.CopyTo(output);
                 return output.ToArray();
             }
+        }
+
+        /// <summary>
+        /// P1-2优化: 判断是否需要解压（检测GZip魔数）
+        /// GZip格式以 0x1F 0x8B 开头
+        /// </summary>
+        private static bool ShouldDecompress(byte[] data, bool decompressFlag)
+        {
+            // 如果调用方明确指定不解压，直接返回
+            if (!decompressFlag)
+                return false;
+
+            // 检查GZip魔数（至少需要2个字节）
+            if (data.Length < 2)
+                return false;
+
+            // GZip魔数: 0x1F 0x8B
+            return data[0] == 0x1F && data[1] == 0x8B;
         }
         #endregion
     }

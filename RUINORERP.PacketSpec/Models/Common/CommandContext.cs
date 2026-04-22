@@ -83,7 +83,6 @@ namespace RUINORERP.PacketSpec.Models.Common
                 Token = this.Token != null ? new TokenInfo
                 {
                     AccessToken = this.Token.AccessToken,
-                    RefreshToken = this.Token.RefreshToken,
                     ExpiresAt = this.Token.ExpiresAt,
                     TokenType = this.Token.TokenType
                 } : null,

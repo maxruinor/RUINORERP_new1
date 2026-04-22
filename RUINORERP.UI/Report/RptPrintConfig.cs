@@ -96,7 +96,7 @@ namespace RUINORERP.UI.Report
                     {
                         if (template.Created_by != null)
                         {
-                            if (template.Created_by.Value != MainForm.Instance.AppContext.CurUserInfo.EmpID)
+                            if (template.Created_by.Value != MainForm.Instance.AppContext.CurUserInfo.EmployeeId)
                             {
                                 MessageBox.Show("只有创建人，才能删除打印配置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;

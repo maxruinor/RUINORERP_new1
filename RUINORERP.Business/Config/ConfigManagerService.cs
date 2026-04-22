@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Autofac;
 
 namespace RUINORERP.Business.Config
 {
@@ -14,7 +15,7 @@ namespace RUINORERP.Business.Config
     {
         private readonly ILogger<ConfigManagerService> _logger;
         private readonly IConfiguration _configuration;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly ILifetimeScope _autofacScope;  // ✅ 使用 Autofac 容器
         private readonly string _configDirectory;
 
         /// <summary>
@@ -22,15 +23,15 @@ namespace RUINORERP.Business.Config
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="configuration">配置对象</param>
-        /// <param name="serviceProvider">服务提供程序，用于获取泛型配置服务</param>
+        /// <param name="autofacScope">Autofac 生命周期作用域，用于解析泛型服务</param>
         public ConfigManagerService(
             ILogger<ConfigManagerService> logger,
             IConfiguration configuration,
-            IServiceProvider serviceProvider)
+            ILifetimeScope autofacScope)  // ✅ 改为接收 Autofac 容器
         {
             _logger = logger;
             _configuration = configuration;
-            _serviceProvider = serviceProvider;
+            _autofacScope = autofacScope ?? throw new ArgumentNullException(nameof(autofacScope));
             
             // 设置配置目录路径
             _configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
@@ -504,8 +505,9 @@ namespace RUINORERP.Business.Config
         {
             try
             {
+                // ✅ 使用 Autofac 容器解析泛型服务，确保与 Startup.GetFromFac 使用同一实例
                 var genericServiceType = typeof(IGenericConfigService<>).MakeGenericType(typeof(T));
-                var service = _serviceProvider.GetService(genericServiceType) as IGenericConfigService<T>;
+                var service = _autofacScope.Resolve(genericServiceType) as IGenericConfigService<T>;
                 
                 if (service == null)
                 {

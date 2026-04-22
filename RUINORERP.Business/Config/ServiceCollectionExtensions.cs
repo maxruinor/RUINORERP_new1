@@ -7,26 +7,28 @@ namespace RUINORERP.Business.Config
     /// <summary>
     /// 服务集合扩展
     /// 提供配置管理相关的扩展方法
+    /// 注意：此方法仅用于 Microsoft DI 兼容层，实际推荐使用 Autofac 模块化注册
     /// </summary>
     public static class ServiceCollectionExtensions
     {
         /// <summary>
-        /// 添加配置管理服务
+        /// 添加配置管理服务（仅注册非泛型服务）
+        /// 泛型服务应在 Autofac 中注册，避免双重注册导致实例不一致
         /// </summary>
         /// <param name="services">服务集合</param>
         /// <returns>服务集合</returns>
+        [Obsolete("建议使用 Autofac 模块化注册方式，参考 BusinessDIConfig.ConfigureContainer")]
         public static IServiceCollection AddConfigManagementServices(this IServiceCollection services)
         {
-            // 注册配置同步服务
+            // 只注册非泛型服务，泛型服务由 Autofac 管理
             services.AddSingleton<IConfigSyncService, ConfigSyncService>();
-            
-            // 注册配置管理相关服务
             services.AddSingleton<IConfigManagerService, ConfigManagerService>();
-            services.AddSingleton(typeof(IGenericConfigService<>), typeof(GenericConfigService<>));
             services.AddSingleton<IConfigValidationService, ConfigValidationService>();
             services.AddSingleton<IConfigEncryptionService, ConfigEncryptionService>();
             services.AddSingleton<IConfigVersionService, ConfigVersionService>();
-            services.AddSingleton(typeof(IGenericConfigVersionService<>), typeof(GenericConfigVersionService<>));
+            
+            // 注意：不再注册泛型服务 IGenericConfigService<>
+            // 泛型服务应在 Autofac 中通过 RegisterGeneric 注册
             
             return services;
         }

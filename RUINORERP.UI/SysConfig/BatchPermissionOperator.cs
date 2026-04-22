@@ -722,7 +722,7 @@ namespace RUINORERP.UI.SysConfig
                     RoleID = roleId,
                     IsVisble = menu.IsVisible,
                     Created_at = DateTime.Now,
-                    Created_by = MainForm.Instance.AppContext.CurUserInfo?.EmpID
+                    Created_by = MainForm.Instance.AppContext.CurUserInfo?.EmployeeId
                 };
                 menu.P4MenuId = await db.Insertable(entity).ExecuteReturnIdentityAsync();
             }
@@ -734,7 +734,7 @@ namespace RUINORERP.UI.SysConfig
                     {
                         IsVisble = menu.IsVisible,
                         Modified_at = DateTime.Now,
-                        Modified_by = MainForm.Instance.AppContext.CurUserInfo.EmpID
+                        Modified_by = MainForm.Instance.AppContext.CurUserInfo.EmployeeId
                     })
                     .Where(m => m.P4Menu_ID == menu.P4MenuId.Value)
                     .ExecuteCommandAsync();
@@ -757,7 +757,7 @@ namespace RUINORERP.UI.SysConfig
                     IsVisble = button.IsVisible,
                     IsEnabled = button.IsEnabled,
                     Created_at = DateTime.Now,
-                    Created_by = MainForm.Instance.AppContext.CurUserInfo?.EmpID
+                    Created_by = MainForm.Instance.AppContext.CurUserInfo?.EmployeeId
                 };
                 button.P4BtnId = await db.Insertable(entity).ExecuteReturnIdentityAsync();
             }
@@ -770,7 +770,7 @@ namespace RUINORERP.UI.SysConfig
                         IsVisble = button.IsVisible,
                         IsEnabled = button.IsEnabled,
                         Modified_at = DateTime.Now,
-                        Modified_by = MainForm.Instance.AppContext.CurUserInfo.EmpID
+                        Modified_by = MainForm.Instance.AppContext.CurUserInfo.EmployeeId
                     })
                     .Where(b => b.P4Btn_ID == button.P4BtnId.Value)
                     .ExecuteCommandAsync();
@@ -793,7 +793,7 @@ namespace RUINORERP.UI.SysConfig
                     IsVisble = field.IsVisible,
                     IsChild = field.IsChild,
                     Created_at = DateTime.Now,
-                    Created_by = MainForm.Instance.AppContext.CurUserInfo.EmpID
+                    Created_by = MainForm.Instance.AppContext.CurUserInfo.EmployeeId
                 };
                 field.P4FieldId = await db.Insertable(entity).ExecuteReturnIdentityAsync();
             }
@@ -805,7 +805,7 @@ namespace RUINORERP.UI.SysConfig
                     {
                         IsVisble = field.IsVisible,
                         Modified_at = DateTime.Now,
-                        Modified_by = MainForm.Instance.AppContext.CurUserInfo.EmpID
+                        Modified_by = MainForm.Instance.AppContext.CurUserInfo.EmployeeId
                     })
                     .Where(f => f.P4Field_ID == field.P4FieldId.Value)
                     .ExecuteCommandAsync();

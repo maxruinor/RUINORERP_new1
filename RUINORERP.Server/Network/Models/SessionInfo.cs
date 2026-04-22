@@ -21,35 +21,77 @@ using Microsoft.Extensions.Logging;
 namespace RUINORERP.Server.Network.Models
 {
     /// <summary>
-    /// 会话信息 - 用于会话管理和状态跟踪
+    /// ✅ 会话信息实体 - 重构版
     /// 继承自AppSession，既是会话信息也是SuperSocket会话
+    /// 
+    /// 【重构要点】
+    /// 1. 消除冗余字段 - UserId/UserName/ClientIp等统一从UserInfo获取
+    /// 2. 简化嵌套层级 - 直接引用UserInfo，避免重复定义
+    /// 3. 统一命名规范 - 核心属性使用标准命名
+    /// 4. 心跳数据集中管理
     /// </summary>
     public class SessionInfo : AppSession
     {
         // ⚠️ SuperSocket AppSession通过反射创建，无法使用依赖注入
-        // 这里使用静态LoggerFactory是唯一可行的方案
         private static readonly ILogger _logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<SessionInfo>();
         
+        #region 连接信息 (Client Info)
+
         /// <summary>
         /// 客户端IP地址
         /// </summary>
         public string ClientIp { get; set; }
 
         /// <summary>
-        /// 用户信息
+        /// 客户端端口
+        /// </summary>
+        public int ClientPort { get; set; }
+
+        /// <summary>
+        /// 设备信息（计算机名等）
+        /// </summary>
+        public string DeviceInfo { get; set; }
+
+        #endregion
+
+        #region 用户信息 (User Info) - 唯一数据源
+
+        /// <summary>
+        /// 用户信息 - 唯一数据源
+        /// 包含所有用户相关信息，避免在SessionInfo中重复定义
         /// </summary>
         public CurrentUserInfo UserInfo { get; set; } = new();
 
         /// <summary>
-        /// 客户端系统信息
+        /// 用户ID（用户名表主键）- 便捷访问属性
+        /// 数据来源: UserInfo.UserID
+        /// </summary>
+        public long? UserId => UserInfo?.UserID > 0 ? UserInfo.UserID : null;
+
+        /// <summary>
+        /// 用户名 - 便捷访问属性
+        /// 数据来源: UserInfo.UserName
+        /// </summary>
+        public string UserName => UserInfo?.UserName;
+
+        /// <summary>
+        /// 员工ID - 便捷访问属性
+        /// 数据来源: UserInfo.EmployeeId
+        /// </summary>
+        public long EmpId => UserInfo?.EmployeeId ?? 0;
+
+        #endregion
+
+        #region 客户端系统信息 (Client System Info)
+
+        /// <summary>
+        /// 客户端系统信息 - 包含客户端完整的系统、硬件、环境信息
         /// </summary>
         public ClientSystemInfo ClientSystemInfo { get; set; }
 
-        
-        /// <summary>
-        /// 客户端端口
-        /// </summary>
-        public int ClientPort { get; set; }
+        #endregion
+
+        #region 连接状态 (Connection State)
 
         /// <summary>
         /// 连接时间
@@ -62,7 +104,7 @@ namespace RUINORERP.Server.Network.Models
         public DateTime? ConnectTime => ConnectedTime;
 
         /// <summary>
-        /// 最后活动时间
+        /// 最后活动时间（核心时间戳）
         /// </summary>
         private long _lastActivityTime = DateTime.Now.ToBinary();
         
@@ -73,247 +115,13 @@ namespace RUINORERP.Server.Network.Models
         }
 
         /// <summary>
-        /// 最后心跳时间（兼容性属性）
+        /// 最后心跳时间 - 便捷访问属性
         /// </summary>
         public DateTime LastHeartbeat
         {
             get => LastActivityTime;
             set => LastActivityTime = value;
         }
-
-
-
-        protected override async ValueTask OnSessionConnectedAsync()
-        {
-            try
-            {
-                // 设置会话初始状态
-                this.ConnectedTime = DateTime.Now;
-                this.Status = SessionStatus.Connected;
-                this.UpdateActivity();
-                
-                await base.OnSessionConnectedAsync();
-            }
-            catch (Exception ex)
-            {
-                // 记录错误
-                this.LastError = $"会话连接处理错误: {ex.Message}";
-            }
-        }
-        
-        /// <summary>
-        /// DataQueue最大容量限制，防止内存无限增长
-        /// </summary>
-        private const int MaxDataQueueSize = 100;
-        
-        public ConcurrentQueue<byte[]> DataQueue = new ConcurrentQueue<byte[]>();
-        
-        /// <summary>
-        /// DataQueue被清理的次数（用于监控）
-        /// </summary>
-        public int DataQueueCleanupCount { get; private set; }
-        
-        /// <summary>
-        /// 添加加密后的数据
-        /// 通常这个用于广播。一次加密码好多次使用
-        /// </summary>
-        /// <param name="gde"></param>
-        public virtual void AddSendData(EncryptedData gde)
-        {
-            try
-            {
-                // 限制队列大小，防止内存无限增长
-                int cleanupCount = 0;
-                while (DataQueue.Count >= MaxDataQueueSize)
-                {
-                    DataQueue.TryDequeue(out _);
-                    cleanupCount++;
-                }
-                
-                // 仅在Debug模式下记录清理信息（生产环境不输出）
-                if (cleanupCount > 0)
-                {
-                    DataQueueCleanupCount += cleanupCount;
-                    System.Diagnostics.Debug.WriteLine($"[SessionInfo] Session {SessionID}: 清理了 {cleanupCount} 个积压数据包, 当前队列: {DataQueue.Count}");
-                }
-                
-                // 使用新的通讯组件，保持向后兼容
-                if (gde.Head != null && gde.Head.Length > 0)
-                {
-                    DataQueue.Enqueue(gde.Head);
-                }
-                else
-                {
-                    Comm.CommService.ShowExceptionMsg("包头长居然为0!");
-                }
-                if (gde.One != null && gde.One.Length > 0)
-                {
-                    DataQueue.Enqueue(gde.One);
-                }
-                if (gde.Two != null && gde.Two.Length > 0)
-                {
-                    DataQueue.Enqueue(gde.Two);
-                }
-            }
-            catch (Exception ex)
-            {
-                // 静默处理异常，避免因日志问题影响正常业务
-                System.Diagnostics.Debug.WriteLine($"发送数据时出错: {ex.Message}");
-            }
-        }
- 
-        
-        /// <summary>
-        /// 统一发送数据方法
-        /// 支持直接发送字节数组，并处理队列中的数据
-        /// </summary>
-        /// <param name="dataBytes">要发送的字节数组</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>发送任务</returns>
-        public virtual async ValueTask SendAsync(byte[] dataBytes, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                // 检查会话是否有效和连接状态
-                if (Status == SessionStatus.Disconnected || !IsConnected)
-                {
-                    LastError = "会话无效或已断开连接";    
-                    return;
-                }
-                
-                // 如果有数据要发送
-                if (dataBytes != null && dataBytes.Length > 0)
-                {
-                    if(this.IsConnected)
-                    {
-                        // 直接发送数据
-                        await ((IAppSession)this).SendAsync(dataBytes, cancellationToken);
-
-                        // 更新发送统计
-                        Interlocked.Increment(ref _sentPacketsCount);
-                        Interlocked.Add(ref _totalBytesSent, dataBytes.Length);
-
-                        // 更新会话活动时间
-                        UpdateActivity();
-                    }
-                    else
-                    {
-
-                    }
-                   
-             
-                }
-            }
-            catch (TaskCanceledException ex)
-            {
-                // 任务被取消，正常处理
-                LastError = $"发送取消: {ex.Message}";
-            }
-            catch (SocketException ex)
-            {
-                // 网络错误，标记会话为断开
-                LastError = $"网络错误: {ex.Message}";
-                Status = SessionStatus.Disconnected;
-                IsConnected = false;
-                // 添加主动断开连接警告日志
-                System.Diagnostics.Debug.WriteLine($"[主动断开连接] 网络错误导致会话断开: SessionID={SessionID}, Error={ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                // 其他错误
-                LastError = $"发送数据时发生异常: {ex.Message}";
-                System.Diagnostics.Debug.WriteLine($"Session {SessionID} 发送数据失败: {ex.Message}");
-            }
-        }
-        
-        /// <summary>
-        /// 记录接收数据统计
-        /// </summary>
-        /// <param name="dataLength">接收的数据长度</param>
-        public void RecordReceivedData(int dataLength)
-        {
-            Interlocked.Increment(ref _receivedPacketsCount);
-            Interlocked.Add(ref _totalBytesReceived, dataLength);
-            UpdateActivity();
-        }
-        
-        /// <summary>
-        /// 处理队列中的数据并发送
-        /// 用于批量处理和发送队列中的数据
-        /// </summary>
-        /// <param name="maxItemsToProcess">单次处理的最大项目数</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>处理任务</returns>
-        public virtual async ValueTask ProcessQueueAsync(int maxItemsToProcess = 100, CancellationToken cancellationToken = default)
-        {
-            if (!IsConnected || Status == SessionStatus.Disconnected)
-                return;
-            
-            int processedCount = 0;
-            try
-            {
-                // 处理队列中的数据，限制单次处理数量
-                while (processedCount < maxItemsToProcess && DataQueue.TryDequeue(out byte[] dataToSend))
-                {
-                    if (dataToSend != null && dataToSend.Length > 0)
-                    {
-                        await SendAsync(dataToSend, cancellationToken);
-                        processedCount++;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LastError = $"处理数据队列时发生异常: {ex.Message}";
-                System.Diagnostics.Debug.WriteLine($"Session {SessionID} 处理队列失败: {ex.Message}");
-            }
-        }
-        
-        /// <summary>
-        /// 获取会话性能统计信息
-        /// </summary>
-        /// <returns>会话性能统计对象</returns>
-        public SessionPerformanceStats GetPerformanceStats()
-        {
-            return new SessionPerformanceStats
-            {
-                SessionId = SessionID,
-                UserName = UserName,
-                Status = Status,
-                SentPackets = SentPacketsCount,
-                ReceivedPackets = ReceivedPacketsCount,
-                TotalBytesSent = TotalBytesSent,
-                TotalBytesReceived = TotalBytesReceived,
-                ConnectedDuration = DateTime.Now - ConnectedTime,
-                LastActivity = LastActivityTime,
-                IsConnected = IsConnected,
-                ClientInfo = $"{ClientIp}:{ClientPort}",
-                ClientVersion = UserInfo.客户端版本,
-                DeviceInfo = DeviceInfo
-            };
-        }
-        
-        protected override async ValueTask OnSessionClosedAsync(CloseEventArgs e)
-        {
-            //System.Diagnostics.Debug.WriteLine($@"{DateTime.Now} {SessionName} Session {RemoteEndPoint} closed: {e.Reason}.");
-            //if (User != null)
-            //{
-            //    if (User.在线状态)
-            //    {
-            //        // Tools.ShowMsg("非正常退出" + player.GameId);
-            //        // SephirothServer.CommandServer.RoleService.角色退出(this);
-            //    }
-            //    else
-            //    {
-            //        //Tools.ShowMsg("正常退出" + player.GameId);
-            //        // SephirothServer.CommandServer.RoleService.角色退出(this);
-            //    }
-            //}
-
-
-            await Task.Delay(0);
-        }
-
 
         /// <summary>
         /// 断开连接时间
@@ -326,39 +134,18 @@ namespace RUINORERP.Server.Network.Models
         public DateTime? LoginTime { get; set; }
 
         /// <summary>
-        /// 心跳计数器
+        /// 会话是否已连接
         /// </summary>
-        public int HeartbeatCount { get; set; }
-
-        /// <summary>
-        /// 心跳检查计数器
-        /// </summary>
-        public int HeartbeatCheckCount { get; set; }
-
-        /// <summary>
-        /// 心跳失败计数器
-        /// </summary>
-        public int HeartbeatFailedCount { get; set; }
+        public bool IsConnected { get; internal set; }
 
         /// <summary>
         /// 会话状态
         /// </summary>
         public SessionStatus Status { get; set; }
 
-        /// <summary>
-        /// 用户ID
-        /// </summary>
-        public long? UserId { get; set; }
+        #endregion
 
-        /// <summary>
-        /// 用户名
-        /// </summary>
-        public string UserName { get; set; }
-
-        /// <summary>
-        /// 是否已认证
-        /// </summary>
-        public bool IsAuthenticated { get; set; }
+        #region 认证状态 (Authentication State)
 
         /// <summary>
         /// 是否已验证（连接握手验证）
@@ -367,8 +154,17 @@ namespace RUINORERP.Server.Network.Models
         public bool IsVerified { get; set; } = false;
 
         /// <summary>
+        /// 是否已认证（登录验证）
+        /// </summary>
+        public bool IsAuthenticated { get; set; }
+
+        /// <summary>
+        /// 是否为管理员
+        /// </summary>
+        public bool IsAdmin { get; internal set; }
+
+        /// <summary>
         /// 欢迎消息发送时间
-        /// 用于超时检查
         /// </summary>
         public DateTime? WelcomeSentTime { get; set; }
 
@@ -377,10 +173,52 @@ namespace RUINORERP.Server.Network.Models
         /// </summary>
         public bool WelcomeAckReceived { get; set; } = false;
 
+        #endregion
+
+        #region 心跳管理 (Heartbeat Management) - 集中管理
+
+        /// <summary>
+        /// 心跳计数器
+        /// </summary>
+        public int HeartbeatCount { get; set; }
+
+        /// <summary>
+        /// 心跳失败计数器
+        /// </summary>
+        public int HeartbeatFailedCount { get; set; }
+
+        /// <summary>
+        /// 最后心跳序号（用于检测心跳丢失）
+        /// </summary>
+        public long LastHeartbeatSequence { get; set; }
+
         /// <summary>
         /// 会话超时时间（分钟）
         /// </summary>
-        public int TimeoutMinutes { get; set; } = 30; // 默认30分钟超时
+        public int TimeoutMinutes { get; set; } = 30;
+
+        /// <summary>
+        /// 记录一次心跳成功
+        /// </summary>
+        public void RecordHeartbeat()
+        {
+            HeartbeatCount++;
+            HeartbeatFailedCount = 0;
+            LastHeartbeatSequence++;
+            UpdateActivity();
+        }
+
+        /// <summary>
+        /// 记录一次心跳失败
+        /// </summary>
+        public void RecordHeartbeatFailure()
+        {
+            HeartbeatFailedCount++;
+        }
+
+        #endregion
+
+        #region 性能统计 (Performance Stats)
 
         /// <summary>
         /// 发送数据包计数
@@ -432,42 +270,178 @@ namespace RUINORERP.Server.Network.Models
             set => Interlocked.Exchange(ref _totalBytesReceived, value);
         }
 
+        #endregion
+
+        #region 错误和属性
+
         /// <summary>
         /// 最后错误信息
         /// </summary>
         public string LastError { get; set; }
 
-
-        /// <summary>
-        /// 设备信息
-        /// </summary>
-        public string DeviceInfo { get; set; }
-
         /// <summary>
         /// 会话属性字典，用于存储自定义会话属性
         /// </summary>
         public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
-        public bool IsConnected { get; internal set; }
-        public bool IsAdmin { get; internal set; }
+
+        #endregion
+
+        #region 数据队列
 
         /// <summary>
-        /// 创建会话信息
+        /// DataQueue最大容量限制
         /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <param name="clientIp">客户端IP</param>
-        /// <param name="clientPort">客户端端口</param>
-        /// <returns>会话信息对象</returns>
-        public static SessionInfo Create()
+        private const int MaxDataQueueSize = 100;
+        
+        /// <summary>
+        /// 数据队列（用于广播等场景）
+        /// </summary>
+        public ConcurrentQueue<byte[]> DataQueue = new ConcurrentQueue<byte[]>();
+        
+        /// <summary>
+        /// DataQueue被清理的次数
+        /// </summary>
+        public int DataQueueCleanupCount { get; private set; }
+
+        #endregion
+
+        #region SuperSocket 生命周期
+
+        protected override async ValueTask OnSessionConnectedAsync()
         {
-            var now = DateTime.Now;
-            var sessionInfo = new SessionInfo
+            try
             {
-                ConnectedTime = now,
-                Status = SessionStatus.Connected
-            };
-            sessionInfo.UpdateActivity();
-            return sessionInfo;
+                this.ConnectedTime = DateTime.Now;
+                this.Status = SessionStatus.Connected;
+                this.UpdateActivity();
+                await base.OnSessionConnectedAsync();
+            }
+            catch (Exception ex)
+            {
+                this.LastError = $"会话连接处理错误: {ex.Message}";
+            }
         }
+        
+        protected override async ValueTask OnSessionClosedAsync(CloseEventArgs e)
+        {
+            await Task.Delay(0);
+        }
+
+        #endregion
+
+        #region 数据发送
+
+        /// <summary>
+        /// 添加加密后的数据到发送队列
+        /// </summary>
+        public virtual void AddSendData(EncryptedData gde)
+        {
+            try
+            {
+                // 限制队列大小
+                int cleanupCount = 0;
+                while (DataQueue.Count >= MaxDataQueueSize)
+                {
+                    DataQueue.TryDequeue(out _);
+                    cleanupCount++;
+                }
+                
+                if (cleanupCount > 0)
+                {
+                    DataQueueCleanupCount += cleanupCount;
+                    System.Diagnostics.Debug.WriteLine($"[SessionInfo] Session {SessionID}: 清理了 {cleanupCount} 个积压数据包");
+                }
+                
+                if (gde.Head != null && gde.Head.Length > 0)
+                    DataQueue.Enqueue(gde.Head);
+                if (gde.One != null && gde.One.Length > 0)
+                    DataQueue.Enqueue(gde.One);
+                if (gde.Two != null && gde.Two.Length > 0)
+                    DataQueue.Enqueue(gde.Two);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"发送数据时出错: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 发送数据
+        /// </summary>
+        public virtual async ValueTask SendAsync(byte[] dataBytes, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (Status == SessionStatus.Disconnected || !IsConnected)
+                {
+                    LastError = "会话无效或已断开连接";    
+                    return;
+                }
+                
+                if (dataBytes != null && dataBytes.Length > 0 && IsConnected)
+                {
+                    await ((IAppSession)this).SendAsync(dataBytes, cancellationToken);
+                    Interlocked.Increment(ref _sentPacketsCount);
+                    Interlocked.Add(ref _totalBytesSent, dataBytes.Length);
+                    UpdateActivity();
+                }
+            }
+            catch (TaskCanceledException ex)
+            {
+                LastError = $"发送取消: {ex.Message}";
+            }
+            catch (SocketException ex)
+            {
+                LastError = $"网络错误: {ex.Message}";
+                Status = SessionStatus.Disconnected;
+                IsConnected = false;
+            }
+            catch (Exception ex)
+            {
+                LastError = $"发送数据时发生异常: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Session {SessionID} 发送数据失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 记录接收数据统计
+        /// </summary>
+        public void RecordReceivedData(int dataLength)
+        {
+            Interlocked.Increment(ref _receivedPacketsCount);
+            Interlocked.Add(ref _totalBytesReceived, dataLength);
+            UpdateActivity();
+        }
+        
+        /// <summary>
+        /// 处理队列中的数据并发送
+        /// </summary>
+        public virtual async ValueTask ProcessQueueAsync(int maxItemsToProcess = 100, CancellationToken cancellationToken = default)
+        {
+            if (!IsConnected || Status == SessionStatus.Disconnected)
+                return;
+            
+            int processedCount = 0;
+            try
+            {
+                while (processedCount < maxItemsToProcess && DataQueue.TryDequeue(out byte[] dataToSend))
+                {
+                    if (dataToSend != null && dataToSend.Length > 0)
+                    {
+                        await SendAsync(dataToSend, cancellationToken);
+                        processedCount++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LastError = $"处理数据队列时发生异常: {ex.Message}";
+            }
+        }
+
+        #endregion
+
+        #region 活动管理
 
         /// <summary>
         /// 更新最后活动时间
@@ -475,51 +449,89 @@ namespace RUINORERP.Server.Network.Models
         public void UpdateActivity()
         {
             Interlocked.Exchange(ref _lastActivityTime, DateTime.Now.ToBinary());
-            HeartbeatCount++;
-            //UpdateTimestamp();
         }
 
         /// <summary>
         /// 检查会话是否超时
         /// </summary>
-        /// <returns>是否超时</returns>
         public bool IsTimeout()
         {
             return (DateTime.Now - LastActivityTime).TotalMinutes > TimeoutMinutes;
         }
 
         /// <summary>
-        /// 检查心跳是否正常
-        /// </summary>
-        /// <returns>心跳是否正常</returns>
-        public bool IsHeartbeatNormal()
-        {
-            return HeartbeatCount > HeartbeatCheckCount;
-        }
-
-        /// <summary>
         /// 验证会话信息有效性
         /// </summary>
-        /// <returns>是否有效</returns>
         public bool IsValid()
         {
-            return
-                   !string.IsNullOrEmpty(ClientIp) &&
+            return !string.IsNullOrEmpty(ClientIp) &&
                    ConnectedTime <= DateTime.Now.AddMinutes(5) &&
                    ConnectedTime >= DateTime.Now.AddMinutes(-5);
         }
 
+        #endregion
+
+        #region 性能统计
+
+        /// <summary>
+        /// 获取会话性能统计信息
+        /// </summary>
+        public SessionPerformanceStats GetPerformanceStats()
+        {
+            return new SessionPerformanceStats
+            {
+                SessionId = SessionID,
+                UserName = UserName,
+                Status = Status,
+                SentPackets = SentPacketsCount,
+                ReceivedPackets = ReceivedPacketsCount,
+                TotalBytesSent = TotalBytesSent,
+                TotalBytesReceived = TotalBytesReceived,
+                ConnectedDuration = DateTime.Now - ConnectedTime,
+                LastActivity = LastActivityTime,
+                IsConnected = IsConnected,
+                ClientInfo = $"{ClientIp}:{ClientPort}",
+                ClientVersion = UserInfo?.ClientVersion,
+                DeviceInfo = DeviceInfo
+            };
+        }
+
+        #endregion
+
+        #region 工厂方法
+
+        /// <summary>
+        /// 创建会话信息
+        /// </summary>
+        public static SessionInfo Create()
+        {
+            var now = DateTime.Now;
+            var sessionInfo = new SessionInfo
+            {
+                ConnectedTime = now,
+                Status = SessionStatus.Connected,
+                UserInfo = new CurrentUserInfo()
+            };
+            sessionInfo.UpdateActivity();
+            return sessionInfo;
+        }
+
+        #endregion
+
+        #region ToString
+
         /// <summary>
         /// 转换为字符串表示
         /// </summary>
-        /// <returns>字符串表示</returns>
         public override string ToString()
         {
             return $"SessionId: {SessionID}, Client: {ClientIp}:{ClientPort}, Status: {Status}, User: {UserName}";
         }
+
+        #endregion
     }
 
-
+    #region 会话状态枚举
 
     /// <summary>
     /// 会话状态枚举
@@ -530,37 +542,35 @@ namespace RUINORERP.Server.Network.Models
         /// 已连接
         /// </summary>
         Connected = 0,
-
         /// <summary>
         /// 已认证
         /// </summary>
         Authenticated = 1,
-
         /// <summary>
         /// 活动中
         /// </summary>
         Active = 2,
-
         /// <summary>
         /// 空闲中
         /// </summary>
         Idle = 3,
-
         /// <summary>
         /// 已断开
         /// </summary>
         Disconnected = 4,
-
         /// <summary>
         /// 错误状态
         /// </summary>
         Error = 5,
-
         /// <summary>
         /// 超时状态
         /// </summary>
         Timeout = 6
     }
+
+    #endregion
+
+    #region 会话统计信息
 
     /// <summary>
     /// 会话统计信息
@@ -571,47 +581,66 @@ namespace RUINORERP.Server.Network.Models
         /// 总连接数
         /// </summary>
         public int TotalConnections { get; set; }
-
         /// <summary>
         /// 总断开连接数
         /// </summary>
         public int TotalDisconnections { get; set; }
-
         /// <summary>
         /// 当前连接数
         /// </summary>
         public int CurrentConnections { get; set; }
-
         /// <summary>
         /// 峰值连接数
         /// </summary>
         public int PeakConnections { get; set; }
-
         /// <summary>
         /// 超时会话数
         /// </summary>
         public int TimeoutSessions { get; set; }
-
         /// <summary>
         /// 心跳失败次数
         /// </summary>
         public int HeartbeatFailures { get; set; }
-
         /// <summary>
         /// 最后清理时间
         /// </summary>
         public DateTime LastCleanupTime { get; set; }
-
         /// <summary>
         /// 最后心跳检查时间
         /// </summary>
         public DateTime LastHeartbeatCheck { get; set; }
+        /// <summary>
+        /// 最大连接数
+        /// </summary>
+        public int MaxConnections { get; set; }
+        /// <summary>
+        /// 总数据发送量（字节）
+        /// </summary>
+        public long TotalBytesSent { get; set; }
+        /// <summary>
+        /// 总数据接收量（字节）
+        /// </summary>
+        public long TotalBytesReceived { get; set; }
+        /// <summary>
+        /// 总错误数
+        /// </summary>
+        public long TotalErrors { get; set; }
+        /// <summary>
+        /// 总请求数
+        /// </summary>
+        public long TotalRequests { get; set; }
+        /// <summary>
+        /// 服务器启动时间
+        /// </summary>
+        public DateTime ServerStartTime { get; set; } = DateTime.Now;
+        /// <summary>
+        /// 服务器运行时间
+        /// </summary>
+        public TimeSpan Uptime => DateTime.Now - ServerStartTime;
 
         /// <summary>
         /// 创建会话统计信息实例
         /// </summary>
-        /// <param name="maxSessions">最大会话数</param>
-        /// <returns>会话统计信息</returns>
         public static SessionStatistics Create(int maxSessions = 1000)
         {
             return new SessionStatistics
@@ -629,62 +658,20 @@ namespace RUINORERP.Server.Network.Models
         }
 
         /// <summary>
-        /// 最大连接数
-        /// </summary>
-        public int MaxConnections { get; set; }
-
-        /// <summary>
-        /// 总数据发送量（字节）
-        /// </summary>
-        public long TotalBytesSent { get; set; }
-
-        /// <summary>
-        /// 总数据接收量（字节）
-        /// </summary>
-        public long TotalBytesReceived { get; set; }
-
-        /// <summary>
-        /// 总错误数
-        /// </summary>
-        public long TotalErrors { get; set; }
-
-        /// <summary>
-        /// 总超时数
-        /// </summary>
-        public long TotalTimeouts { get; set; }
-
-        /// <summary>
-        /// 服务器启动时间
-        /// </summary>
-        public DateTime ServerStartTime { get; set; } = DateTime.Now;
-
-        /// <summary>
-        /// 服务器运行时间
-        /// </summary>
-        public TimeSpan Uptime => DateTime.Now - ServerStartTime;
-
-        /// <summary>
         /// 更新统计信息
         /// </summary>
-        /// <param name="connections">当前连接数</param>
-        /// <param name="bytesSent">发送字节数</param>
-        /// <param name="bytesReceived">接收字节数</param>
         public void UpdateConnectionStats(int connections, long bytesSent = 0, long bytesReceived = 0)
         {
             CurrentConnections = connections;
             TotalBytesSent += bytesSent;
             TotalBytesReceived += bytesReceived;
-
             if (connections > MaxConnections)
-            {
                 MaxConnections = connections;
-            }
         }
 
         /// <summary>
         /// 获取连接利用率
         /// </summary>
-        /// <returns>利用率百分比</returns>
         public double GetConnectionUtilization()
         {
             return MaxConnections > 0 ? (double)CurrentConnections / MaxConnections * 100 : 0;
@@ -693,28 +680,24 @@ namespace RUINORERP.Server.Network.Models
         /// <summary>
         /// 获取平均吞吐量（字节/秒）
         /// </summary>
-        /// <returns>平均吞吐量</returns>
         public double GetAverageThroughput()
         {
             var totalSeconds = Uptime.TotalSeconds;
             return totalSeconds > 0 ? (TotalBytesSent + TotalBytesReceived) / totalSeconds : 0;
         }
-        
+
         /// <summary>
-        /// 获取每秒处理请求数
+        /// 获取每秒请求数
         /// </summary>
-        /// <returns>每秒请求数</returns>
         public double GetRequestsPerSecond()
         {
             var totalSeconds = Uptime.TotalSeconds;
-            var totalRequests = TotalBytesSent + TotalBytesReceived; // 简化计算，实际应使用消息计数
-            return totalSeconds > 0 ? totalRequests / totalSeconds : 0;
+            return totalSeconds > 0 ? (double)TotalRequests / totalSeconds : 0;
         }
-        
+
         /// <summary>
         /// 获取系统健康状态
         /// </summary>
-        /// <returns>健康状态描述</returns>
         public string GetHealthStatus()
         {
             if (CurrentConnections >= MaxConnections * 0.9)
@@ -727,7 +710,6 @@ namespace RUINORERP.Server.Network.Models
     
     /// <summary>
     /// 会话性能统计信息
-    /// 用于服务器监控UI显示
     /// </summary>
     public class SessionPerformanceStats
     {
@@ -735,92 +717,109 @@ namespace RUINORERP.Server.Network.Models
         /// 会话ID
         /// </summary>
         public string SessionId { get; set; }
-        
         /// <summary>
         /// 用户名
         /// </summary>
         public string UserName { get; set; }
-        
         /// <summary>
         /// 会话状态
         /// </summary>
         public SessionStatus Status { get; set; }
-        
         /// <summary>
         /// 发送数据包数
         /// </summary>
         public long SentPackets { get; set; }
-        
         /// <summary>
         /// 接收数据包数
         /// </summary>
         public long ReceivedPackets { get; set; }
-        
         /// <summary>
         /// 发送总字节数
         /// </summary>
         public long TotalBytesSent { get; set; }
-        
         /// <summary>
         /// 接收总字节数
         /// </summary>
         public long TotalBytesReceived { get; set; }
-        
         /// <summary>
         /// 连接时长
         /// </summary>
         public TimeSpan ConnectedDuration { get; set; }
-        
         /// <summary>
         /// 最后活动时间
         /// </summary>
         public DateTime LastActivity { get; set; }
-        
         /// <summary>
         /// 是否已连接
         /// </summary>
         public bool IsConnected { get; set; }
-        
         /// <summary>
         /// 客户端信息
         /// </summary>
         public string ClientInfo { get; set; }
-        
         /// <summary>
         /// 客户端版本
         /// </summary>
         public string ClientVersion { get; set; }
-        
         /// <summary>
         /// 设备信息
         /// </summary>
         public string DeviceInfo { get; set; }
         
         /// <summary>
-        /// 获取格式化的连接时长
+        /// 格式化的连接时长
         /// </summary>
         public string FormattedDuration => $"{ConnectedDuration.Days}天 {ConnectedDuration.Hours}小时 {ConnectedDuration.Minutes}分钟";
         
         /// <summary>
-        /// 获取总流量（格式化）
+        /// 总流量（格式化）
         /// </summary>
         public string FormattedTotalTraffic => $"{FormatBytes(TotalBytesSent + TotalBytesReceived)}";
         
-        /// <summary>
-        /// 格式化字节数为可读字符串
-        /// </summary>
         private string FormatBytes(long bytes)
         {
             string[] suffix = { "B", "KB", "MB", "GB", "TB" };
             int i;
             double doubleBytes = bytes;
-
             for (i = 0; i < suffix.Length && bytes >= 1024; i++, bytes /= 1024)
-            {
                 doubleBytes = bytes / 1024.0;
-            }
-
             return $"{doubleBytes:F2} {suffix[i]}";
         }
     }
+
+    #endregion
+
+    #region DDoS防护
+
+    /// <summary>
+    /// 连接频率跟踪器
+    /// </summary>
+    public class ConnectionRateTracker
+    {
+        public int ConnectionCount { get; set; }
+        public DateTime FirstConnection { get; set; }
+        public DateTime LastConnection { get; set; }
+
+        public void RecordConnection()
+        {
+            ConnectionCount++;
+            LastConnection = DateTime.Now;
+            if (FirstConnection == default)
+                FirstConnection = DateTime.Now;
+        }
+
+        public bool IsExceedingLimit(int maxConnections, TimeSpan timeWindow)
+        {
+            var windowStart = DateTime.Now - timeWindow;
+            if (LastConnection < windowStart)
+            {
+                ConnectionCount = 0;
+                FirstConnection = DateTime.Now;
+                return false;
+            }
+            return ConnectionCount > maxConnections;
+        }
+    }
+
+    #endregion
 }

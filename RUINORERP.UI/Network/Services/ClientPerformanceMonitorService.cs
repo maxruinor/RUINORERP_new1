@@ -40,8 +40,8 @@ namespace RUINORERP.UI.Network.Services
             // 订阅PerformanceMonitoringBridge事件，实现跨层数据采集
             SubscribeToBridgeEvents();
 
-            // 初始化内存监控定时器（每30秒采集一次）
-            _memoryMonitorTimer = new Timer(MemoryMonitorCallback, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+            // 初始化内存监控定时器（每120秒采集一次）
+            _memoryMonitorTimer = new Timer(MemoryMonitorCallback, null, TimeSpan.FromSeconds(120), TimeSpan.FromSeconds(120));
 
             // 初始化UI响应监控（消息循环检测）
             InitializeUIMonitoring();

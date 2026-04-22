@@ -168,15 +168,39 @@ namespace RUINORERP.Server.Controls
                     if (lockManager != null)
                     {
                         _performanceMonitorControl.SetLockManager(lockManager);
-                        _logger.LogInformation("已为PerformanceMonitorControl注入ServerLockManager");
+                        _logger.LogInformation("已为 PerformanceMonitorControl 注入 ServerLockManager");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "获取ServerLockManager失败，单据锁定监控可能不可用");
+                    _logger.LogWarning(ex, "获取 ServerLockManager 失败，单据锁定监控可能不可用");
+                }
+                
+                // ✅ 注入性能监控采集器（如果 PerformanceMonitorControl 支持）
+                try
+                {
+                    // 通过反射调用 SetMetricsCollectors 方法（如果存在）
+                    var method = _performanceMonitorControl.GetType().GetMethod("SetMetricsCollectors", 
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    if (method != null)
+                    {
+                        var collectors = new List<IPerformanceMetricsCollector>
+                        {
+                            new BizCodeMetricsCollector(),
+                            new BroadcastMetricsCollector(),
+                            new CacheMetricsCollector(),
+                            new DatabaseMetricsCollector()
+                        };
+                        method.Invoke(_performanceMonitorControl, new object[] { collectors });
+                        _logger.LogInformation("已为 PerformanceMonitorControl 注入性能监控采集器");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "注入性能监控采集器失败，性能监控采集器可能不可用");
                 }
 
-                // 将控件添加到TabPage
+                // 将控件添加到 TabPage
                 tabPerformanceMonitor.Controls.Add(_performanceMonitorControl);
 
                 // 将TabPage添加到TabControl

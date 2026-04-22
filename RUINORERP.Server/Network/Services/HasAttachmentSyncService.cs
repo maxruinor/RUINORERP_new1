@@ -91,7 +91,7 @@ namespace RUINORERP.Server.Network.Services
                 {
                     // 更新HasAttachment标志为true
                     string updateSql = $"UPDATE {OwnerTableName} SET HasAttachment = 1 WHERE {idFieldName} = @BusinessId";
-                    int affectedRows = db.Ado.ExecuteCommand(updateSql, new { BusinessId = businessId });
+                    int affectedRows = await db.Ado.ExecuteCommandAsync(updateSql, new { BusinessId = businessId });
 
                     if (affectedRows > 0)
                     {
@@ -214,7 +214,7 @@ namespace RUINORERP.Server.Network.Services
                         AND IsActive = 1 
                         AND isdeleted = 0";
 
-                    int remainingCount = db.Ado.GetInt(checkSql, new
+                    int remainingCount = await db.Ado.GetIntAsync(checkSql, new
                     {
                         BusinessId = businessId,
                         OwnerTableName = OwnerTableName
@@ -310,7 +310,7 @@ namespace RUINORERP.Server.Network.Services
                         ) THEN 1 ELSE 0
                     END";
 
-                int affectedRows = db.Ado.ExecuteCommand(updateSql, new { OwnerTableName = OwnerTableName });
+                int affectedRows = await db.Ado.ExecuteCommandAsync(updateSql, new { OwnerTableName = OwnerTableName });
 
                 _logger?.LogDebug("批量同步完成: Table={Table}, UpdatedCount={Count}", tableName, affectedRows);
 
@@ -391,7 +391,7 @@ namespace RUINORERP.Server.Network.Services
                             AND IsActive = 1 
                             AND isdeleted = 0";
 
-                        int count = db.Ado.GetInt(checkSql, new
+                        int count = await db.Ado.GetIntAsync(checkSql, new
                         {
                             BusinessId = businessId,
                             OwnerTableName = OwnerTableName
@@ -480,7 +480,7 @@ namespace RUINORERP.Server.Network.Services
                     AND IsActive = 1 
                     AND isdeleted = 0";
 
-                int count = db.Ado.GetInt(checkSql, new
+                int count = await db.Ado.GetIntAsync(checkSql, new
                 {
                     BusinessId = businessId,
                     OwnerTableName = OwnerTableName

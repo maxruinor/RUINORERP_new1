@@ -63,7 +63,6 @@ using RUINORERP.UI.FM;
 using RUINORERP.UI.IM;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.UI.Network;
-using RUINORERP.UI.Network.Authentication;
 using RUINORERP.UI.Network.DI;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.UI.UserCenter.DataParts;

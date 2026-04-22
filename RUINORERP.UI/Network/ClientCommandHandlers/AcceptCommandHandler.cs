@@ -115,13 +115,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                     string message = $"系统将在 {delaySeconds} 秒后退出，这是管理员要求的操作。";
                                     string title = "系统即将退出";
                                     
-                                    // 创建一个新的线程来执行延时退出
-                                    ThreadPool.QueueUserWorkItem((state) =>
+                                    // 使用Task.Delay异步等待，避免占用线程池线程
+                                    _ = Task.Run(async () =>
                                     {
                                         try
                                         {
-                                            // 等待指定的延时时间
-                                            Thread.Sleep(delaySeconds * 1000);
+                                            await Task.Delay(delaySeconds * 1000);
                                             
                                             // 延时后执行系统退出
                                             System.Windows.Forms.Application.Exit();
@@ -162,13 +161,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                     string message = $"计算机将在 {delaySeconds} 秒后关闭，这是管理员要求的操作。\n请立即保存您的工作！";
                                     string title = "计算机即将关机";
                                     
-                                    // 创建一个新的线程来执行延时关机
-                                    ThreadPool.QueueUserWorkItem((state) =>
+                                    // 使用Task.Delay异步等待，避免占用线程池线程
+                                    _ = Task.Run(async () =>
                                     {
                                         try
                                         {
-                                            // 等待指定的延时时间
-                                            Thread.Sleep(delaySeconds * 1000);
+                                            await Task.Delay(delaySeconds * 1000);
                                             
                                             // 延时后执行关机
                                             ExecuteSystemShutdown();
@@ -222,10 +220,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 return; // 提前返回，不显示更新对话框
                             }
                             
-                            // 在UI线程显示更新提示
+                            // 在UI线程显示更新提示 - 使用BeginInvoke避免阻塞网络线程
                             if (MainForm.Instance.InvokeRequired)
                             {
-                                MainForm.Instance.Invoke(new Action(() =>
+                                MainForm.Instance.BeginInvoke(new Action(() =>
                                 {
                                     DialogResult result = MessageBox.Show(
                                         $"发现新版本: {updateInfo.Version}\n{updateInfo.Description}\n是否立即更新？",
@@ -456,9 +454,9 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     if (updateInfo.ForceUpdate)
                     {
                         // 使用异步方式退出应用，避免阻塞
-                        Task.Run(() =>
+                        _ = Task.Run(async () =>
                         {
-                            Thread.Sleep(1000); // 等待1秒让更新程序启动
+                            await Task.Delay(1000); // 等待1秒让更新程序启动
                             System.Windows.Forms.Application.Exit();
                         });
                     }
@@ -466,10 +464,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 else
                 {
                     _logger.LogError($"更新程序不存在: {updateExePath}");
-                    // 确保在UI线程中显示消息框
+                    // 确保在UI线程中显示消息框 - 使用BeginInvoke避免阻塞网络线程
                     if (MainForm.Instance.InvokeRequired)
                     {
-                        MainForm.Instance.Invoke(new Action(() =>
+                        MainForm.Instance.BeginInvoke(new Action(() =>
                         {
                             MessageBox.Show("更新程序不存在，请联系管理员。", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }));
@@ -483,10 +481,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "启动更新程序失败");
-                // 确保在UI线程中显示消息框
+                // 确保在UI线程中显示消息框 - 使用BeginInvoke避免阻塞网络线程
                 if (MainForm.Instance.InvokeRequired)
                 {
-                    MainForm.Instance.Invoke(new Action(() =>
+                    MainForm.Instance.BeginInvoke(new Action(() =>
                     {
                         MessageBox.Show($"启动更新程序失败: {ex.Message}", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }));
@@ -532,7 +530,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 using (PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"))
                 {
                     cpuCounter.NextValue(); // 第一次调用返回0
-                    Thread.Sleep(100);      // 等待短暂时间
+                    System.Threading.Thread.Sleep(100);      // 等待短暂时间（CPU采样需要，此处阻塞可接受）
                     statusInfo["CpuUsagePercent"] = cpuCounter.NextValue();
                 }
             }

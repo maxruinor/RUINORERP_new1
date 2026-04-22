@@ -6,7 +6,6 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.UI.Network;
-using RUINORERP.UI.Network.Authentication;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +22,6 @@ namespace RUINORERP.UI.Network.Services
     {
         private readonly IClientCommunicationService _communicationService;
         private readonly TokenManager _tokenManager;
-        private readonly TokenRefreshService _tokenRefreshService;
         private readonly CacheClientService _cacheClientService;
         private bool _isLoggedIn = false; // 登录状态标志
                                           private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1);
@@ -39,14 +37,12 @@ namespace RUINORERP.UI.Network.Services
             ClientEventManager eventManager,
             IClientCommunicationService communicationService,
             TokenManager tokenManager,
-            TokenRefreshService tokenRefreshService,
             CacheClientService cacheClientService,
             ILogger<UserLoginService> log = null)
         {
             _eventManager = eventManager ?? throw new ArgumentNullException(nameof(eventManager));
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
-            _tokenRefreshService = tokenRefreshService ?? throw new ArgumentNullException(nameof(tokenRefreshService));
             _cacheClientService = cacheClientService ?? throw new ArgumentNullException(nameof(cacheClientService));
             _logger = log;
 
@@ -269,28 +265,7 @@ namespace RUINORERP.UI.Network.Services
             return null;
         }
 
-        /// <summary>
-        /// 尝试静默刷新Token
-        /// 简化版：移除事件触发，专注于核心功能
-        /// </summary>
-        public async Task<bool> TrySilentRefreshAsync()
-        {
-            try
-            {
-                var tokenRefreshResponse = await _tokenRefreshService.RefreshTokenAsync(CancellationToken.None);
-                if (tokenRefreshResponse != null && !string.IsNullOrEmpty(tokenRefreshResponse.AccessToken))
-                {
-
-                    return true;
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-
-                return false;
-            }
-        }
+       
 
         /// <summary>
         /// 处理连接状态变更事件
@@ -315,11 +290,11 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                return await _tokenRefreshService.ValidateTokenAsync(token, CancellationToken.None);
+                // ✅ 简化：直接使用TokenManager验证，不再依赖TokenRefreshService
+                return await _tokenManager.ValidateTokenAsync(token);
             }
             catch (Exception ex)
             {
-
                 return false;
             }
         }

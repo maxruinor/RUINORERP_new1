@@ -9,63 +9,57 @@ using RUINORERP.Server.Network.Models;
 namespace RUINORERP.Server.Adapters
 {
     /// <summary>
-    /// SessionInfo与UserInfo之间的适配器
-    /// 用于将新的SessionInfo模型转换为旧的UserInfo模型，以便与现有UI代码兼容
+    /// ✅ SessionInfo与UserInfo之间的适配器 - 重构版
+    /// 
+    /// 【适配新结构】
+    /// - SessionInfo.UserId/UserName 等改为从 UserInfo 获取的只读属性
+    /// - 通过设置 SessionInfo.UserInfo 来间接设置这些值
+    /// - 提供双向转换的兼容方法
     /// </summary>
     public static class SessionInfoAdapter
     {
+        #region SessionInfo -> CurrentUserInfo 转换
+
         /// <summary>
-        /// 将SessionInfo转换为UserInfo
+        /// 将SessionInfo转换为CurrentUserInfo
         /// </summary>
-        /// <param name="sessionInfo">会话信息</param>
-        /// <returns>用户信息</returns>
         public static CurrentUserInfo ToUserInfo(SessionInfo sessionInfo)
         {
             if (sessionInfo == null)
                 return null;
 
+            // 如果SessionInfo已有UserInfo，则以此为基础
+            var baseUserInfo = sessionInfo.UserInfo ?? new CurrentUserInfo();
+
             var userInfo = new CurrentUserInfo
             {
-                SessionId = sessionInfo.SessionID,
-                用户名 = sessionInfo.UserName,
-                客户端IP = sessionInfo.RemoteEndPoint is IPEndPoint ipEndPoint ? ipEndPoint.Address.ToString() : sessionInfo.RemoteEndPoint?.ToString() ?? "",
-                登录时间 = sessionInfo.ConnectedTime,
-                心跳数 = sessionInfo.HeartbeatCount,
-                最后心跳时间 = sessionInfo.LastHeartbeat.ToString("yyyy-MM-dd HH:mm:ss"),
-                在线状态 = sessionInfo.IsConnected,
-                授权状态 = sessionInfo.IsAuthenticated,
-                UserID = sessionInfo.UserId ?? 0, // 添加空值检查，避免NullReferenceException
-                超级用户 = sessionInfo.IsAdmin,
-                操作系统 = sessionInfo.ClientSystemInfo?.OperatingSystem?.Version ?? "",
-                机器名 = sessionInfo.ClientIp ?? "未知", // HardwareInfo没有MachineName属性
-                CPU信息 = sessionInfo.ClientSystemInfo?.Hardware?.ProcessorInfo?.Name ?? "",
-                内存大小 = "" // ClientSystemInfo没有MemorySize属性
+                UserID = sessionInfo.UserId ?? baseUserInfo.UserID,
+                UserName = sessionInfo.UserName ?? baseUserInfo.UserName,
+                DisplayName = baseUserInfo.DisplayName,
+                EmployeeId = baseUserInfo.EmployeeId,
+                IsSuperUser = sessionInfo.IsAdmin,
+                IsAuthorized = sessionInfo.IsAuthenticated,
+                IsOnline = sessionInfo.IsConnected,
+                LoginTime = sessionInfo.LoginTime ?? sessionInfo.ConnectedTime,
+                HeartbeatCount = sessionInfo.HeartbeatCount,
+                LastHeartbeatTime = sessionInfo.LastHeartbeat,
+                CurrentModule = baseUserInfo.CurrentModule,
+                CurrentForm = baseUserInfo.CurrentForm,
+                ClientVersion = baseUserInfo.ClientVersion,
+                ClientIp = GetClientIp(sessionInfo),
+                IdleTime = baseUserInfo.IdleTime,
+                OperatingSystem = sessionInfo.ClientSystemInfo?.OperatingSystem?.Version ?? baseUserInfo.OperatingSystem,
+                MachineName = baseUserInfo.MachineName,
+                CpuInfo = baseUserInfo.CpuInfo,
+                MemorySize = baseUserInfo.MemorySize
             };
-
-            // 如果SessionInfo中有UserInfo对象，则复制其属性
-            if (sessionInfo.UserInfo != null)
-            {
-                userInfo.姓名 = sessionInfo.UserInfo.姓名;
-                userInfo.当前模块 = sessionInfo.UserInfo.当前模块;
-                userInfo.当前窗体 = sessionInfo.UserInfo.当前窗体;
-                userInfo.客户端版本 = sessionInfo.UserInfo.客户端版本;
-                userInfo.Employee_ID = sessionInfo.UserInfo.Employee_ID;
-                
-                // 如果SessionInfo中的用户名为空，则使用UserInfo中的用户名
-                if (string.IsNullOrEmpty(userInfo.用户名) && !string.IsNullOrEmpty(sessionInfo.UserInfo.用户名))
-                {
-                    userInfo.用户名 = sessionInfo.UserInfo.用户名;
-                }
-            }
 
             return userInfo;
         }
 
         /// <summary>
-        /// 将多个SessionInfo转换为多个UserInfo
+        /// 将多个SessionInfo转换为多个CurrentUserInfo
         /// </summary>
-        /// <param name="sessionInfos">会话信息列表</param>
-        /// <returns>用户信息列表</returns>
         public static List<CurrentUserInfo> ToUserInfoList(IEnumerable<SessionInfo> sessionInfos)
         {
             if (sessionInfos == null)
@@ -75,124 +69,122 @@ namespace RUINORERP.Server.Adapters
         }
 
         /// <summary>
-        /// 从SessionInfo中提取会话ID
+        /// 获取客户端IP地址
         /// </summary>
-        /// <param name="sessionInfo">会话信息</param>
-        /// <returns>会话ID</returns>
-        public static string GetSessionId(SessionInfo sessionInfo)
+        private static string GetClientIp(SessionInfo sessionInfo)
         {
-            return sessionInfo?.SessionID;
+            if (sessionInfo.RemoteEndPoint is IPEndPoint ipEndPoint)
+                return ipEndPoint.Address.ToString();
+            if (!string.IsNullOrEmpty(sessionInfo.ClientIp))
+                return sessionInfo.ClientIp;
+            return sessionInfo.RemoteEndPoint?.ToString() ?? "";
         }
 
-        /// <summary>
-        /// 从UserInfo中提取会话ID
-        /// </summary>
-        /// <param name="userInfo">用户信息</param>
-        /// <returns>会话ID</returns>
-        public static string GetSessionId(CurrentUserInfo userInfo)
-        {
-            return userInfo?.SessionId;
-        }
+        #endregion
+
+        #region CurrentUserInfo -> SessionInfo 转换
 
         /// <summary>
-        /// 将UserInfo转换为SessionInfo
+        /// 将CurrentUserInfo转换为SessionInfo
         /// </summary>
-        /// <param name="userInfo">用户信息</param>
-        /// <returns>会话信息</returns>
         public static SessionInfo ToSessionInfo(CurrentUserInfo userInfo)
         {
             if (userInfo == null)
                 return null;
 
-            // 创建新的SessionInfo实例
             var sessionInfo = SessionInfo.Create();
-            
-            // 设置基本属性 - SessionID是只读属性，不设置
-            sessionInfo.UserName = userInfo.用户名;
-            sessionInfo.UserId = userInfo.UserID;
-            sessionInfo.IsAdmin = userInfo.超级用户;
-            sessionInfo.IsAuthenticated = userInfo.授权状态;
-            sessionInfo.IsConnected = userInfo.在线状态;
-            sessionInfo.ConnectedTime = userInfo.登录时间;
-            sessionInfo.HeartbeatCount = userInfo.心跳数;
-            
-            // 尝试解析最后心跳时间
-            if (!string.IsNullOrEmpty(userInfo.最后心跳时间))
-            {
-                if (DateTime.TryParse(userInfo.最后心跳时间, out DateTime heartbeatTime))
-                {
-                    sessionInfo.LastHeartbeat = heartbeatTime;
-                }
-            }
-            
-            // 设置客户端IP和端口
-            if (!string.IsNullOrEmpty(userInfo.客户端IP))
-            {
-                sessionInfo.ClientIp = userInfo.客户端IP;
-                // 简单处理，不解析端口
-            }
-            
-            // 创建并设置UserInfo属性
-            sessionInfo.UserInfo = new CurrentUserInfo
-            {
-                SessionId = userInfo.SessionId,
-                用户名 = userInfo.用户名,
-                姓名 = userInfo.姓名,
-                当前模块 = userInfo.当前模块,
-                当前窗体 = userInfo.当前窗体,
-                登录时间 = userInfo.登录时间,
-                心跳数 = userInfo.心跳数,
-                最后心跳时间 = userInfo.最后心跳时间,
-                客户端版本 = userInfo.客户端版本,
-                客户端IP = userInfo.客户端IP,
-                静止时间 = userInfo.静止时间,
-                Employee_ID = userInfo.Employee_ID,
-                UserID = userInfo.UserID,
-                超级用户 = userInfo.超级用户,
-                在线状态 = userInfo.在线状态,
-                授权状态 = userInfo.授权状态,
-                操作系统 = userInfo.操作系统,
-                机器名 = userInfo.机器名,
-                CPU信息 = userInfo.CPU信息,
-                内存大小 = userInfo.内存大小
-            };
-            
-            // 设置客户端系统信息
-            if (!string.IsNullOrEmpty(userInfo.操作系统) || !string.IsNullOrEmpty(userInfo.机器名))
-            {
-                // ClientSystemInfo的属性是只读的，需要通过其他方式初始化
-                sessionInfo.ClientSystemInfo = new();
-                // 注意：这里不能直接设置OSVersion、MachineName、CPUInfo和MemorySize属性，因为它们是只读的
-            }
-            
+            UpdateSessionInfoFromUserInfo(sessionInfo, userInfo);
             return sessionInfo;
         }
 
         /// <summary>
-        /// 将数据库实体tb_UserInfo更新到SessionInfo
+        /// 从CurrentUserInfo更新SessionInfo
         /// </summary>
-        /// <param name="sessionInfo">会话信息</param>
-        /// <param name="userInfo">数据库用户实体</param>
-        /// <param name="isAdmin">是否为管理员</param>
-        public static void UpdateSessionInfoFromUserEntity(SessionInfo sessionInfo, tb_UserInfo userInfo, bool isAdmin = false)
+        public static void UpdateSessionInfoFromUserInfo(SessionInfo sessionInfo, CurrentUserInfo userInfo)
         {
             if (sessionInfo == null || userInfo == null)
                 return;
 
-            sessionInfo.UserId = (long?)userInfo.User_ID; // 添加类型转换
-            sessionInfo.UserName = userInfo.UserName;
+            // 确保UserInfo存在
+            if (sessionInfo.UserInfo == null)
+                sessionInfo.UserInfo = new CurrentUserInfo();
+
+            // 更新UserInfo（这是唯一的数据源）
+            sessionInfo.UserInfo.UserID = userInfo.UserID;
+            sessionInfo.UserInfo.UserName = userInfo.UserName;
+            sessionInfo.UserInfo.DisplayName = userInfo.DisplayName;
+            sessionInfo.UserInfo.EmployeeId = userInfo.EmployeeId;
+            sessionInfo.UserInfo.IsSuperUser = userInfo.IsSuperUser;
+            sessionInfo.UserInfo.IsAuthorized = userInfo.IsAuthorized;
+            sessionInfo.UserInfo.IsOnline = userInfo.IsOnline;
+            sessionInfo.UserInfo.LoginTime = userInfo.LoginTime;
+            sessionInfo.UserInfo.HeartbeatCount = userInfo.HeartbeatCount;
+            sessionInfo.UserInfo.LastHeartbeatTime = userInfo.LastHeartbeatTime;
+            sessionInfo.UserInfo.CurrentModule = userInfo.CurrentModule;
+            sessionInfo.UserInfo.CurrentForm = userInfo.CurrentForm;
+            sessionInfo.UserInfo.ClientVersion = userInfo.ClientVersion;
+            sessionInfo.UserInfo.ClientIp = userInfo.ClientIp;
+            sessionInfo.UserInfo.IdleTime = userInfo.IdleTime;
+            sessionInfo.UserInfo.OperatingSystem = userInfo.OperatingSystem;
+            sessionInfo.UserInfo.MachineName = userInfo.MachineName;
+            sessionInfo.UserInfo.CpuInfo = userInfo.CpuInfo;
+            sessionInfo.UserInfo.MemorySize = userInfo.MemorySize;
+
+            // 通过便捷属性更新会话状态
+            sessionInfo.IsAdmin = userInfo.IsSuperUser;
+            sessionInfo.IsAuthenticated = userInfo.IsAuthorized;
+            sessionInfo.IsConnected = userInfo.IsOnline;
+            sessionInfo.HeartbeatCount = userInfo.HeartbeatCount;
+            sessionInfo.LastHeartbeat = userInfo.LastHeartbeatTime;
+
+            // 设置客户端IP
+            if (!string.IsNullOrEmpty(userInfo.ClientIp))
+                sessionInfo.ClientIp = userInfo.ClientIp;
+        }
+
+        #endregion
+
+        #region 数据库实体 -> SessionInfo 转换
+
+        /// <summary>
+        /// 从数据库用户实体更新SessionInfo
+        /// </summary>
+        public static void UpdateSessionInfoFromUserEntity(SessionInfo sessionInfo, tb_UserInfo userEntity, bool isAdmin = false)
+        {
+            if (sessionInfo == null || userEntity == null)
+                return;
+
+            // 确保UserInfo存在
+            if (sessionInfo.UserInfo == null)
+                sessionInfo.UserInfo = new CurrentUserInfo();
+
+            // 更新UserInfo（核心数据源）
+            sessionInfo.UserInfo.UserID = userEntity.User_ID;
+            sessionInfo.UserInfo.UserName = userEntity.UserName;
+            sessionInfo.UserInfo.EmployeeId = userEntity.Employee_ID.HasValue ? (long)userEntity.Employee_ID.Value : 0;
+            sessionInfo.UserInfo.IsAuthorized = true; // 登录成功后授权
+
+            // 更新会话状态
             sessionInfo.IsAuthenticated = true;
             sessionInfo.IsAdmin = isAdmin;
+            sessionInfo.LoginTime = DateTime.Now;
             sessionInfo.UpdateActivity();
-
-            // 如果需要，还可以设置嵌套的UserInfo对象
-            if (sessionInfo.UserInfo == null)
-            {
-                sessionInfo.UserInfo = new CurrentUserInfo();
-            }
-            sessionInfo.UserInfo.UserID = userInfo.User_ID;
-            sessionInfo.UserInfo.用户名 = userInfo.UserName;
-            sessionInfo.UserInfo.Employee_ID = userInfo.Employee_ID.HasValue ? (long)userInfo.Employee_ID.Value : 0; // 添加显式类型转换
         }
+
+        #endregion
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 从SessionInfo中提取会话ID
+        /// </summary>
+        public static string GetSessionId(SessionInfo sessionInfo)
+        {
+            return sessionInfo?.SessionID;
+        }
+
+ 
+
+        #endregion
     }
 }

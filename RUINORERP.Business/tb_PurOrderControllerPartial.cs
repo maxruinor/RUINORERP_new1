@@ -1060,8 +1060,15 @@ namespace RUINORERP.Business
                     entity.CustomerVendor_ID = order.CustomerVendor_ID;
                     entity.PurOrder_NO = order.PurOrderNo;
                 }
+                // 使用带重试机制的编号生成（自动审核关键流程）
                 IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
-                entity.PurEntryNo = await bizCodeService.GenerateBizBillNoAsync(BizType.采购入库单, CancellationToken.None);
+                ILogger logger = _appContext.GetRequiredService<ILogger<tb_PurOrderController<T>>>();
+                entity.PurEntryNo = await RUINORERP.Business.Helpers.BizCodeHelper.GenerateBizBillNoWithRetryAsync(
+                    bizCodeService,
+                    BizType.采购入库单,
+                    maxRetries: 3,
+                    initialDelayMs: 500,
+                    logger: logger);
                 //保存到数据库
                 BusinessHelper.Instance.InitEntity(entity);
             }

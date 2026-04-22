@@ -16,6 +16,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using RUINORERP.Business.Helpers;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -89,7 +90,8 @@ namespace RUINORERP.Business.Document.Converters
                 // 生成领料单号（如果有则使用现有的）
                 if (string.IsNullOrEmpty(target.MaterialRequisitionNO))
                 {
-                    target.MaterialRequisitionNO = await _bizCodeService.GenerateBizBillNoAsync(BizType.生产领料单, CancellationToken.None);
+                    target.MaterialRequisitionNO = await BizCodeHelper.GenerateBizBillNoWithRetryAsync(
+                        _bizCodeService, BizType.生产领料单, maxRetries: 3, initialDelayMs: 500, logger: _logger);
                 }
                 target.DeliveryDate = DateTime.Now;
                 target.Notes = $"由制令单{source.MONO}生成";

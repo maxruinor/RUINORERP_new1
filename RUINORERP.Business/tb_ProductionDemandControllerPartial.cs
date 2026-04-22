@@ -1056,7 +1056,7 @@ namespace RUINORERP.Business
             List<tb_BuyingRequisitionDetail> BuyingDetails = mapper.Map<List<tb_BuyingRequisitionDetail>>(PurDetails);
             foreach (var item in BuyingDetails)
             {
-                BuyingRequisition.Purpose = $"由{_appContext.CurUserInfo.tb_Employee.Employee_Name}在生产需要分析{demand.PDNo}时自动生成";
+                BuyingRequisition.Purpose = $"由{_appContext.CurUserInfo.DisplayName}在生产需要分析{demand.PDNo}时自动生成";
                 //设置一个默认的需求日期
                 if (BuyingRequisition.RequirementDate == null && item.RequirementDate.HasValue)
                 {
@@ -1079,8 +1079,15 @@ namespace RUINORERP.Business
             //没有经验通过下面先不计算
 
             BaseController<tb_BuyingRequisition> ctrBuy = _appContext.GetRequiredServiceByName<BaseController<tb_BuyingRequisition>>(typeof(tb_BuyingRequisition).Name + "Controller");
+            // 使用带重试机制的编号生成（自动审核关键流程）
             IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
-            BuyingRequisition.PuRequisitionNo = await bizCodeService.GenerateBizBillNoAsync(BizType.请购单, CancellationToken.None);
+            ILogger logger = _appContext.GetRequiredService<ILogger<tb_ProductionDemandController<T>>>();
+            BuyingRequisition.PuRequisitionNo = await RUINORERP.Business.Helpers.BizCodeHelper.GenerateBizBillNoWithRetryAsync(
+                bizCodeService,
+                BizType.请购单,
+                maxRetries: 3,
+                initialDelayMs: 500,
+                logger: logger);
             BuyingRequisition.RefBillID = demand.PDID;
             BuyingRequisition.RefBillNO = demand.PDNo;
             BuyingRequisition.RefBizType = (int)BizType.需求分析;
@@ -1091,7 +1098,7 @@ namespace RUINORERP.Business
                 BuyingRequisition.DepartmentID = demand.tb_productionplan.DepartmentID;
 
             }
-            BuyingRequisition.Employee_ID = _appContext.CurUserInfo.EmpID;
+            BuyingRequisition.Employee_ID = _appContext.CurUserInfo.EmployeeId;
 
             BuyingRequisition.tb_BuyingRequisitionDetails = BuyingDetails;
             BuyingRequisition.ApplicationDate = System.DateTime.Now;
@@ -1200,8 +1207,15 @@ namespace RUINORERP.Business
             //人工成本 
             //ManufacturingOrder.LaborCost = MakingItem.l;
             // ManufacturingOrder.t = MakingItemBom.LaborCost;
+            // 使用带重试机制的编号生成（自动审核关键流程）
             IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
-            ManufacturingOrder.MONO = await bizCodeService.GenerateBizBillNoAsync(BizType.制令单, CancellationToken.None);
+            ILogger logger = _appContext.GetRequiredService<ILogger<tb_ProductionDemandController<T>>>();
+            ManufacturingOrder.MONO = await RUINORERP.Business.Helpers.BizCodeHelper.GenerateBizBillNoWithRetryAsync(
+                bizCodeService,
+                BizType.制令单,
+                maxRetries: 3,
+                initialDelayMs: 500,
+                logger: logger);
             ManufacturingOrder.PDID = demand.PDID;
 
             ManufacturingOrder.PDNO = demand.PDNo;
@@ -1244,7 +1258,7 @@ namespace RUINORERP.Business
             }
 
             // ManufacturingOrder.PeopleQty = bom.PeopleQty * item.RecommendQty;
-            ManufacturingOrder.Employee_ID = _appContext.CurUserInfo.EmpID;
+            ManufacturingOrder.Employee_ID = _appContext.CurUserInfo.EmployeeId;
 
             #region 明细
 

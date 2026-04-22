@@ -273,7 +273,8 @@ namespace RUINORERP.UI.PSI.SAL
 
                     if (string.IsNullOrEmpty(entity.SOrderNo))
                     {
-                        entity.SOrderNo = ClientBizCodeService.GetBizBillNo(BizType.销售订单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.SOrderNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售订单);
                     }
                     entity.CloseCaseOpinions = string.Empty;
                     entity.ApprovalOpinions = string.Empty;

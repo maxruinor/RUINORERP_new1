@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using RUINORERP.Business.Cache; // 添加缓存订阅管理器的引用
 using RUINORERP.Server.Network.CommandHandlers;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Commands.Authentication;
 
 namespace RUINORERP.Server.Network.DI
 {
@@ -109,7 +110,6 @@ namespace RUINORERP.Server.Network.DI
             // 注册图片缓存和HasAttachment同步服务
             // 注意: 改为Scoped以匹配IUnitOfWorkManage的生命周期,避免连接泄漏
             services.AddScoped<HasAttachmentSyncService>();
-
         }
 
         /// <summary>
@@ -206,6 +206,7 @@ namespace RUINORERP.Server.Network.DI
             
             // 注册HasAttachment同步服务 - 改为InstancePerLifetimeScope匹配UnitOfWorkManage
             builder.RegisterType<HasAttachmentSyncService>().AsSelf().InstancePerLifetimeScope();
+        
         }
 
         /// <summary>

@@ -205,49 +205,53 @@ namespace RUINORERP.Business.DI
             // 3. 注册动态查询帮助类
             builder.RegisterType<DynamicQueryHelper>().SingleInstance();
 
-            // 注册泛型配置服务
+            // 注册泛型配置服务（单例，确保整个应用中每个配置类型只有一个实例）
             builder.RegisterGeneric(typeof(GenericConfigService<>))
                 .As(typeof(IGenericConfigService<>))
-                .SingleInstance()
-                .InstancePerDependency()
+                .SingleInstance()  // ✅ 明确指定为单例，移除冲突的 InstancePerDependency
                 .PropertiesAutowired();
 
             // 注册泛型配置版本服务
             builder.RegisterGeneric(typeof(GenericConfigVersionService<>))
-                .As(typeof(GenericConfigVersionService<>))
-                .InstancePerDependency()
+                .As(typeof(IGenericConfigVersionService<>))
+                .SingleInstance()  // ✅ 统一为单例
                 .PropertiesAutowired();
 
-            // 为ConfigManagerService添加单独的注册，禁用接口拦截
-            // 这是因为ConfigManagerService实现的接口可能不是公开可见的，或者有其他问题导致不能使用接口拦截
+            // 为 ConfigManagerService 添加单独的注册，使用 Autofac 容器
+            // 这样可以确保它能正确解析泛型配置服务
             builder.RegisterType<ConfigManagerService>()
                 .As<IConfigManagerService>()
                 .AsSelf()
-                .SingleInstance()
-                .PropertiesAutowired()
-                .InstancePerDependency();
+                .SingleInstance()  // ✅ 单例，确保全局唯一
+                .PropertiesAutowired();
 
-            // 为ConfigEncryptionService添加单独的注册，禁用接口拦截
-            // 这是因为IConfigEncryptionService接口可能不是公开可见的，需要避免接口拦截
+            // 为 ConfigEncryptionService 添加单独的注册
             builder.RegisterType<ConfigEncryptionService>()
                 .As<IConfigEncryptionService>()
                 .AsSelf()
-                .PropertiesAutowired()
-                .InstancePerDependency();
+                .SingleInstance()
+                .PropertiesAutowired();
 
-            // 为ConfigValidationService添加单独的注册，禁用接口拦截
+            // 为 ConfigValidationService 添加单独的注册
             builder.RegisterType<ConfigValidationService>()
                 .As<IConfigValidationService>()
                 .AsSelf()
-                .PropertiesAutowired()
-                .InstancePerDependency();
+                .SingleInstance()
+                .PropertiesAutowired();
 
-            // 为ConfigVersionService添加单独的注册，禁用接口拦截
+            // 为 ConfigVersionService 添加单独的注册
             builder.RegisterType<ConfigVersionService>()
                 .As<IConfigVersionService>()
                 .AsSelf()
-                .PropertiesAutowired()
-                .InstancePerDependency();
+                .SingleInstance()
+                .PropertiesAutowired();
+
+            // 为 ConfigSyncService 添加单独的注册
+            builder.RegisterType<ConfigSyncService>()
+                .As<IConfigSyncService>()
+                .AsSelf()
+                .SingleInstance()
+                .PropertiesAutowired();
 
 
 

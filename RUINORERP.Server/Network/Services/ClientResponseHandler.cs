@@ -229,11 +229,11 @@ namespace RUINORERP.Server.Network.Services
                     sessionInfo.UserInfo = new CurrentUserInfo();
                 }
 
-                sessionInfo.UserInfo.客户端版本 = welcomeResponse.ClientVersion;
-                sessionInfo.UserInfo.操作系统 = welcomeResponse.ClientOS;
-                sessionInfo.UserInfo.机器名 = welcomeResponse.ClientMachineName;
-                sessionInfo.UserInfo.CPU信息 = welcomeResponse.ClientCPU;
-                sessionInfo.UserInfo.内存大小 = welcomeResponse.ClientMemoryMB > 0
+                sessionInfo.UserInfo.ClientVersion = welcomeResponse.ClientVersion;
+                sessionInfo.UserInfo.OperatingSystem = welcomeResponse.ClientOS;
+                sessionInfo.UserInfo.MachineName = welcomeResponse.ClientMachineName;
+                sessionInfo.UserInfo.CpuInfo = welcomeResponse.ClientCPU;
+                sessionInfo.UserInfo.MemorySize = welcomeResponse.ClientMemoryMB > 0
                     ? $"{welcomeResponse.ClientMemoryMB / 1024:F1} GB"
                     : "未知";
 

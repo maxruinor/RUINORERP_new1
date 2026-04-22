@@ -750,7 +750,7 @@ namespace RUINORERP.UI.Common
                                 IsEnabled = true,
                                 ButtonType = buttonTypeStr,
                                 Created_at = System.DateTime.Now,
-                                Created_by = _appContext.CurUserInfo?.EmpID
+                                Created_by = _appContext.CurUserInfo?.UserID
                             });
                         }
 

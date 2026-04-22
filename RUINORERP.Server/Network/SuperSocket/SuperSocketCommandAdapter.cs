@@ -59,6 +59,54 @@ namespace RUINORERP.Server.Network.SuperSocket
         private readonly IClientResponseHandler _clientResponseHandler; // 客户端响应处理器
 
         /// <summary>
+        /// Token验证缓存（TTL: 30秒）
+        /// Key: AccessToken, Value: (验证结果, 缓存时间)
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, (TokenValidationResult Result, DateTime CachedTime)> _tokenValidationCache 
+            = new ConcurrentDictionary<string, (TokenValidationResult, DateTime)>();
+
+        // P1-6修复: 按命令类别配置不同的超时时间(秒)
+        // 根据CommandCategory枚举定义,不同类别的命令设置合理的超时时间
+        private static readonly Dictionary<CommandCategory, int> CategoryTimeouts = new Dictionary<CommandCategory, int>
+        {
+            // 快速命令 (5-10秒): 心跳、Ping等保活命令
+            { CommandCategory.System, 10 },
+            { CommandCategory.Authentication, 10 },
+            
+            // 普通查询 (30秒): 缓存查询、消息查询等
+            { CommandCategory.Cache, 30 },
+            { CommandCategory.Message, 30 },
+            
+            // 数据操作 (60秒): 工作流、数据同步等
+            { CommandCategory.Workflow, 60 },
+            { CommandCategory.DataSync, 60 },
+            { CommandCategory.Config, 60 },
+            
+            // 文件操作 (120秒): 文件上传下载
+            { CommandCategory.File, 120 },
+            
+            // 锁管理 (30秒): 锁定解锁操作需要快速响应
+            { CommandCategory.Lock, 30 },
+            
+            // 业务编码 (30秒): 编号生成
+            { CommandCategory.BizCode, 30 },
+            
+            // 系统管理 (180秒): 服务器管理等复杂操作
+            { CommandCategory.SystemManagement, 180 },
+            { CommandCategory.Management, 180 },
+            
+            // 特殊功能 (180秒): 复合型命令等
+            { CommandCategory.Composite, 180 },
+            { CommandCategory.Special, 180 },
+            
+            // 连接管理 (10秒): 连接相关命令需要快速响应
+            { CommandCategory.Connection, 10 },
+            
+            // 异常处理 (30秒)
+            { CommandCategory.Exception, 30 }
+        };
+
+        /// <summary>
         /// 会话服务
         /// </summary>
         private ISessionService SessionService => _sessionService;
@@ -116,6 +164,26 @@ namespace RUINORERP.Server.Network.SuperSocket
 
             // 检查命令代码是否在过滤器中
             return _commandFilters.Contains((ushort)commandId);
+        }
+
+        /// <summary>
+        /// P1-6修复: 根据命令类别获取超时时间(秒)
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <returns>超时时间(秒)</returns>
+        private static int GetCommandTimeout(CommandId? commandId)
+        {
+            if (!commandId.HasValue)
+                return 300; // 默认超时300秒
+
+            var category = commandId.Value.Category;
+            
+            // 尝试从类别配置中获取超时时间
+            if (CategoryTimeouts.TryGetValue(category, out int timeout))
+                return timeout;
+
+            // 未配置的类别使用默认超时
+            return 300;
         }
 
         /// <summary>
@@ -274,8 +342,33 @@ namespace RUINORERP.Server.Network.SuperSocket
                     package.Packet.CommandId != AuthenticationCommands.Login)
                 {
                     // 会话存在但未验证，返回相应错误
+                    _logger?.LogWarning("[认证验证失败] SessionId={SessionId}, CommandId={CommandId}, IsVerified={IsVerified}, WelcomeAckReceived={WelcomeAckReceived}",
+                        sessionId, package.Packet.CommandId.ToString(), sessionInfo.IsVerified, sessionInfo.WelcomeAckReceived);
                     await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_ValidationFailed, CancellationToken.None);
                     return;
+                }
+
+                // ✅ Token验证：除WelcomeAck和Login外，所有命令都需要有效的Token
+                if (package.Packet.CommandId != SystemCommands.WelcomeAck &&
+                    package.Packet.CommandId != AuthenticationCommands.Login)
+                {
+                    var validationResult = ValidateTokenWithCache(package.Packet.ExecutionContext?.Token);
+                    if (!validationResult.IsValid)
+                    {
+                        _logger?.LogWarning("[Token验证失败] SessionId={SessionId}, CommandId={CommandId}, Error={ErrorMessage}, UserId={UserId}",
+                            sessionId, 
+                            package.Packet.CommandId.ToString(), 
+                            validationResult.ErrorMessage,
+                            sessionInfo.UserId);
+                        
+                        // 根据错误类型返回不同的错误码
+                        var errorCode = validationResult.ErrorMessage.Contains("过期") 
+                            ? UnifiedErrorCodes.Auth_TokenExpired 
+                            : UnifiedErrorCodes.Auth_TokenInvalid;
+                            
+                        await SendErrorResponseAsync(session, package, errorCode, CancellationToken.None);
+                        return;
+                    }
                 }
 
                 // 更新会话的最后活动时间
@@ -299,9 +392,9 @@ namespace RUINORERP.Server.Network.SuperSocket
                         linkedCts = new CancellationTokenSource();
                     }
 
-                    // 如果命令有设置超时时间，则使用命令的超时时间，否则使用默认300秒
-                    //这里设置大一点按执行时间算。每个处理类自己定义了不同的时间
-                    var timeout = TimeSpan.FromSeconds(300);
+                    // P1-6修复: 根据命令类别配置不同的超时时间
+                    var timeoutSeconds = GetCommandTimeout(package.Packet?.CommandId);
+                    var timeout = TimeSpan.FromSeconds(timeoutSeconds);
                     linkedCts.CancelAfter(timeout);
 
                     // 确保命令执行上下文包含全局服务提供者
@@ -738,6 +831,82 @@ namespace RUINORERP.Server.Network.SuperSocket
 
             // 发送响应
             await SendResponseAsync(session, errorResponse, cancellationToken);
+        }
+
+        /// <summary>
+        /// 验证Token有效性（带缓存）
+        /// </summary>
+        /// <param name="tokenInfo">Token信息</param>
+        /// <returns>验证结果</returns>
+        private TokenValidationResult ValidateTokenWithCache(TokenInfo tokenInfo)
+        {
+            if (tokenInfo == null || string.IsNullOrEmpty(tokenInfo.AccessToken))
+            {
+                return new TokenValidationResult 
+                { 
+                    IsValid = false, 
+                    ErrorMessage = "Token为空" 
+                };
+            }
+
+            var cacheKey = tokenInfo.AccessToken;
+            
+            // 检查缓存（TTL: 30秒）
+            if (_tokenValidationCache.TryGetValue(cacheKey, out var cached))
+            {
+                if ((DateTime.Now - cached.CachedTime).TotalSeconds < 30)
+                {
+                    return cached.Result;
+                }
+                else
+                {
+                    _tokenValidationCache.TryRemove(cacheKey, out _);
+                }
+            }
+
+            // 执行验证
+            var result = ValidateToken(tokenInfo);
+            
+            // 仅缓存有效Token
+            if (result.IsValid)
+            {
+                _tokenValidationCache.TryAdd(cacheKey, (result, DateTime.Now));
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 验证Token有效性（实际验证逻辑）
+        /// </summary>
+        /// <param name="tokenInfo">Token信息</param>
+        /// <returns>验证结果</returns>
+        private TokenValidationResult ValidateToken(TokenInfo tokenInfo)
+        {
+            try
+            {
+                var tokenService = Startup.GetFromFac<ITokenService>();
+                if (tokenService == null)
+                {
+                    _logger?.LogError("无法获取ITokenService实例");
+                    return new TokenValidationResult 
+                    { 
+                        IsValid = false, 
+                        ErrorMessage = "Token服务不可用" 
+                    };
+                }
+
+                return tokenService.ValidateToken(tokenInfo.AccessToken);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Token验证异常");
+                return new TokenValidationResult 
+                { 
+                    IsValid = false, 
+                    ErrorMessage = $"Token验证异常: {ex.Message}" 
+                };
+            }
         }
     }
 

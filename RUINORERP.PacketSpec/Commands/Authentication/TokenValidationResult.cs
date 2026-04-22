@@ -21,13 +21,5 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         public IDictionary<string, object> Claims { get; set; } = new Dictionary<string, object>();
 
         public TokenInfo Token { get; set; }
-        
-        /// <summary>
-        /// 是否是刷新令牌
-        /// </summary>
-        public bool IsRefreshToken { get; set; }
-
-        [JsonIgnore]
-        public string RefreshToken => Token?.RefreshToken;
     }
 }

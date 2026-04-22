@@ -1302,7 +1302,7 @@ namespace RUINORERP.UI
                 // 设置在线状态
                 if (MainForm.Instance?.AppContext?.CurUserInfo != null)
                 {
-                    MainForm.Instance.AppContext.CurUserInfo.在线状态 = true;
+                    MainForm.Instance.AppContext.CurUserInfo.IsOnline = true;
                 }
 
                 // 请求元数据同步
@@ -1377,9 +1377,9 @@ namespace RUINORERP.UI
                 }
 
                 // 记录登录时间
-                if (Program.AppContextData.CurUserInfo.登录时间 < DateTime.Now.AddYears(-30))
+                if (Program.AppContextData.CurUserInfo.LoginTime < DateTime.Now.AddYears(-30))
                 {
-                    Program.AppContextData.CurUserInfo.登录时间 = DateTime.Now;
+                    Program.AppContextData.CurUserInfo.LoginTime = DateTime.Now;
                 }
 
                 // 完成登录

@@ -19,7 +19,6 @@ using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Security;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.UI.Common;
-using RUINORERP.UI.Network.Authentication;
 using RUINORERP.UI.Network.ClientCommandHandlers;
 using RUINORERP.UI.Network.ErrorHandling;
 using RUINORERP.UI.Network.Exceptions;
@@ -616,13 +615,24 @@ namespace RUINORERP.UI.Network
             {
                 try
                 {
-                    // 使用短时间等待，避免长时间阻塞
-                    var timeoutTask = Task.Delay(2000);
-                    var completedTask = Task.WhenAny(heartbeatTaskToWait, timeoutTask).Result;
-                    
-                    if (completedTask == timeoutTask)
+                    // 使用Task.Run异步等待，避免.Result同步阻塞
+                    var waitTask = Task.Run(async () =>
                     {
-                        _logger?.LogWarning("心跳任务停止超时，强制终止");
+                        var timeoutTask = Task.Delay(2000);
+                        var completedTask = await Task.WhenAny(heartbeatTaskToWait, timeoutTask);
+                        return completedTask == timeoutTask;
+                    });
+                    
+                    if (waitTask.Wait(TimeSpan.FromSeconds(3)))
+                    {
+                        if (waitTask.Result)
+                        {
+                            _logger?.LogWarning("心跳任务停止超时，强制终止");
+                        }
+                    }
+                    else
+                    {
+                        _logger?.LogWarning("等待心跳任务完成超时");
                     }
                 }
                 catch (AggregateException ae)
@@ -808,6 +818,20 @@ namespace RUINORERP.UI.Network
                 }
                 catch (OperationCanceledException)
                 {
+                    // ✅ 优化：优雅处理心跳取消，确保资源正确释放
+                    _logger?.LogDebug("[心跳] 心跳循环被取消，退出心跳检测");
+                    
+                    // 标记心跳未运行（防止重启冲突）
+                    // 注意：这里不直接修改 _isHeartbeatRunning，而是依赖 StopHeartbeat 方法
+                    // 因为 StopHeartbeat 已经设置了 _isHeartbeatRunning = false
+                    
+                    // 如果是因为外部取消令牌取消的（不是心跳任务自身取消的）
+                    // 说明可能是系统正在关闭，不需要额外处理
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        _logger?.LogWarning("[心跳] 心跳任务被外部取消令牌停止，可能需要重启心跳");
+                    }
+                    
                     break;
                 }
                 catch (Exception ex)
@@ -911,21 +935,21 @@ namespace RUINORERP.UI.Network
 
                     heartbeatRequest.UserOperationInfo = new RUINORERP.Model.UserOperationInfo
                     {
-                        用户名 = curUserInfo.用户名,
-                        姓名 = curUserInfo.姓名,
-                        当前模块 = curUserInfo.当前模块,
-                        当前窗体 = curUserInfo.当前窗体,
-                        登录时间 = curUserInfo.登录时间,
-                        心跳数 = curUserInfo.心跳数 + 1,
-                        客户端版本 = curUserInfo.客户端版本,
-                        客户端IP = curUserInfo.客户端IP,
-                        静止时间 = latestIdleTime, // 使用实时获取的静止时间
-                        超级用户 = curUserInfo.超级用户,
-                        授权状态 = curUserInfo.授权状态,
-                        操作系统 = curUserInfo.操作系统,
-                        机器名 = curUserInfo.机器名,
-                        CPU信息 = curUserInfo.CPU信息,
-                        内存大小 = curUserInfo.内存大小
+                        UserName = curUserInfo.UserName,
+                        DisplayName = curUserInfo.DisplayName,
+                        CurrentModule = curUserInfo.CurrentModule,
+                        CurrentForm = curUserInfo.CurrentForm,
+                        LoginTime = curUserInfo.LoginTime,
+                        HeartbeatCount = curUserInfo.HeartbeatCount + 1,
+                        ClientVersion = curUserInfo.ClientVersion,
+                        ClientIp = curUserInfo.ClientIp,
+                        IdleTime = latestIdleTime,
+                        IsSuperUser = curUserInfo.IsSuperUser,
+                        IsAuthorized = curUserInfo.IsAuthorized,
+                        OperatingSystem = curUserInfo.OperatingSystem,
+                        MachineName = curUserInfo.MachineName,
+                        CpuInfo = curUserInfo.CpuInfo,
+                        MemorySize = curUserInfo.MemorySize
                     };
                 }
 
@@ -956,7 +980,7 @@ namespace RUINORERP.UI.Network
                             // 更新心跳数
                             if (curUserInfo != null)
                             {
-                                curUserInfo.心跳数 = curUserInfo.心跳数 + 1;
+                                curUserInfo.HeartbeatCount++;
                             }
 
                             if (MainForm.Instance?.lblServerInfo != null)
@@ -977,18 +1001,34 @@ namespace RUINORERP.UI.Network
                             {
                                 _logger?.LogWarning("⚠️ 服务器返回会话不存在，将尝试重新登录");
                                 
+                                // ✅ 关键修复：立即停止心跳，避免继续发送无效请求
+                                StopHeartbeat();
+                                
                                 // 异步触发重新登录，不阻塞当前心跳循环
-                                _ = Task.Run(async () =>
+                                try
                                 {
-                                    try
+                                    _logger?.LogDebug("启动后台重新登录任务...");
+                                    
+                                    var reloginTask = Task.Run(async () =>
                                     {
-                                        await TryRestoreLoginStateAsync();
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _logger?.LogError(ex, "心跳检测到会话失效后触发重新登录时发生异常");
-                                    }
-                                });
+                                        try
+                                        {
+                                            _logger?.LogDebug("开始执行TryRestoreLoginStateAsync...");
+                                            await TryRestoreLoginStateAsync();
+                                            _logger?.LogDebug("TryRestoreLoginStateAsync执行完成");
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _logger?.LogError(ex, "❌ TryRestoreLoginStateAsync执行过程中发生未捕获异常");
+                                        }
+                                    });
+                                    
+                                    _logger?.LogDebug("后台重新登录任务已启动，TaskId={TaskId}", reloginTask.Id);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger?.LogError(ex, "❌ 启动后台重新登录任务失败");
+                                }
                             }
                         }
                         return false;
@@ -1234,18 +1274,26 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 🆕 尝试恢复登录状态（后台执行，不显示登录窗体）
         /// 在重连成功后自动调用，检查Token有效性并决定是否需要重新登录
+        /// 优化：增强取消令牌传递和优雅的资源释放
         /// </summary>
         private async Task TryRestoreLoginStateAsync()
         {
+            // 创建本地取消令牌源，用于控制整个会话恢复流程
+            using var sessionRestoreCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var ct = sessionRestoreCts.Token;
+            
             try
             {
                 _logger?.LogDebug("开始尝试恢复登录状态...");
+
+                // 检查是否已取消
+                ct.ThrowIfCancellationRequested();
 
                 // 1. 首先检查是否有有效的Token
                 var userLoginService = GetUserLoginService();
                 if (userLoginService == null)
                 {
-                    _logger?.LogWarning("UserLoginService未初始化，跳过自动重新登录");
+                    _logger?.LogWarning("⚠️ UserLoginService未初始化，跳过自动重新登录 - 这可能是会话恢复失败的根本原因");
                     return;
                 }
 
@@ -1254,8 +1302,12 @@ namespace RUINORERP.UI.Network
                 {
                     try
                     {
-                        // 尝试验证现有Token
+                        // ✅ 优化：使用取消令牌进行Token验证
                         var isValid = await userLoginService.ValidateTokenAsync(currentToken);
+                        
+                        // 验证后再次检查取消状态
+                        ct.ThrowIfCancellationRequested();
+                        
                         if (isValid)
                         {
                             _logger?.LogInformation("✅ 现有Token仍然有效，无需重新登录");
@@ -1275,6 +1327,11 @@ namespace RUINORERP.UI.Network
                             _logger?.LogDebug("现有Token已失效，将尝试重新登录");
                         }
                     }
+                    catch (OperationCanceledException)
+                    {
+                        _logger?.LogDebug("Token验证被取消，跳过会话恢复");
+                        return;
+                    }
                     catch (Exception ex)
                     {
                         _logger?.LogDebug(ex, "Token验证失败，将尝试重新登录");
@@ -1284,6 +1341,9 @@ namespace RUINORERP.UI.Network
                 {
                     _logger?.LogDebug("没有有效的Token，将尝试重新登录");
                 }
+
+                // 检查是否已取消
+                ct.ThrowIfCancellationRequested();
 
                 // 2. Token无效或不存在，尝试自动重新登录
                 // 🆕 从 UserGlobalConfig 读取保存的凭据
@@ -1300,23 +1360,39 @@ namespace RUINORERP.UI.Network
                     LoginResponse loginResult = null;
                     try
                     {
-                        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                        // ✅ 优化：合并取消令牌，同时支持外部取消和超时取消
+                        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                        linkedCts.CancelAfter(TimeSpan.FromSeconds(15));
+                        
                         // ✅ 传递isAutoLogin=true，确保自动登录时不显示弹窗
                         loginResult = await userLoginService.LoginAsync(
                             username,
                             password,
-                            cts.Token,
+                            linkedCts.Token,
                             isAutoLogin: true
                         );
                     }
                     catch (OperationCanceledException)
                     {
-                        _logger?.LogWarning("自动登录请求超时");
+                        // ✅ 区分是会话恢复整体超时还是登录操作超时
+                        if (ct.IsCancellationRequested)
+                        {
+                            _logger?.LogWarning("会话恢复操作超时或被取消");
+                            NotifyUIManualLoginRequired();
+                        }
+                        else
+                        {
+                            _logger?.LogWarning("自动登录请求超时");
+                        }
+                        return; // 无论哪种取消，都不再重试
                     }
                     catch (Exception ex)
                     {
                         _logger?.LogError(ex, "自动登录过程中发生异常");
                     }
+
+                    // 检查登录结果前再次检查取消状态
+                    ct.ThrowIfCancellationRequested();
 
                     if (loginResult != null && loginResult.IsSuccess)
                     {
@@ -1337,7 +1413,7 @@ namespace RUINORERP.UI.Network
                         _logger?.LogWarning($"❌ 自动重新登录失败: Username={username}, Error={errorMsg}");
 
                         // ✅ 不清除 AutoSavePwd，保留用户凭据供下次重试
-                        // 只有在用户主动登出或取消“记住密码”时才清除
+                        // 只有在用户主动登出或取消"记住密码"时才清除
                         
                         // 通知用户需要手动登录
                         NotifyUIAutoReloginFailed(errorMsg);
@@ -1345,11 +1421,18 @@ namespace RUINORERP.UI.Network
                 }
                 else
                 {
-                    _logger?.LogDebug("未启用自动重新登录或凭据不完整，用户需要手动登录");
+                    _logger?.LogWarning("⚠️ 未启用自动重新登录或凭据不完整 - AutoSavePwd={AutoSavePwd}, UseName={UseName}, PassWord={PassWord}",
+                        UserGlobalConfig.Instance.AutoSavePwd,
+                        string.IsNullOrEmpty(UserGlobalConfig.Instance.UseName) ? "空" : "***",
+                        string.IsNullOrEmpty(UserGlobalConfig.Instance.PassWord) ? "空" : "***");
                     
                     // 通知UI需要手动登录
                     NotifyUIManualLoginRequired();
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                _logger?.LogDebug("会话恢复流程被取消");
             }
             catch (Exception ex)
             {
@@ -1845,49 +1928,30 @@ namespace RUINORERP.UI.Network
                 // 使用null条件运算符简化检查
                 if (_tokenManager?.TokenStorage == null)
                 {
-                    _logger?.LogDebug("TokenManager或TokenStorage未初始化，跳过Token附加");
+                    _logger?.LogDebug("TokenManager未初始化，跳过Token附加");
                     return;
                 }
 
-                // 获取令牌并验证有效性
                 var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
 
-                // ✅ 检查Token是否存在且未过期
+                // ✅ 简化：只检查Token是否存在且未过期
                 if (tokenInfo != null && !string.IsNullOrEmpty(tokenInfo.AccessToken))
                 {
-                    // 检查是否即将过期(提前5分钟)
-                    if (tokenInfo.IsExpired() || tokenInfo.WillExpireSoon(TimeSpan.FromMinutes(5)))
+                    if (tokenInfo.IsExpired())
                     {
-                        _logger?.LogInformation("Token已过期或即将过期,尝试刷新");
-                        
-                        // 尝试静默刷新Token
-                        var refreshService = Startup.GetFromFac<ITokenRefreshService>();
-                        if (refreshService != null)
-                        {
-                            try
-                            {
-                                var newToken = await refreshService.RefreshTokenAsync();
-                                if (newToken != null)
-                                {
-                                    executionContext.Token = newToken;
-                                    _logger?.LogInformation("Token刷新成功");
-                                    return;
-                                }
-                            }
-                            catch (Exception refreshEx)
-                            {
-                                _logger?.LogWarning(refreshEx, "Token刷新失败,将使用过期Token(可能导致请求失败)");
-                            }
-                        }
+                        _logger?.LogWarning("Token已过期，将触发重新登录");
+                        // Token过期时不尝试刷新，直接触发重新登录
+                        _ = TryRestoreLoginStateAsync();
+                        return;
                     }
                     
-                    // 使用现有Token(可能已过期,由服务端处理)
+                    // 附加Token
                     executionContext.Token = tokenInfo;
                     _logger?.LogDebug("Token附加成功");
                 }
                 else
                 {
-                    _logger?.LogDebug("TokenInfo为空或AccessToken为空，无法附加Token");
+                    _logger?.LogDebug("Token不存在，无法附加");
                 }
             }
             catch (Exception ex)
@@ -1917,7 +1981,7 @@ namespace RUINORERP.UI.Network
                     _applicationContext.SessionId = packet.SessionId;
                     if (_applicationContext.CurUserInfo != null)
                     {
-                        _applicationContext.CurUserInfo.SessionId = packet.SessionId;
+                        _applicationContext.SessionId = packet.SessionId;
                     }
                 }
 
@@ -2070,6 +2134,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
 
         /// <summary>
         /// 处理服务器主动推送的命令
+        /// 如服务器推送了缓存数据：CacheClientService.cs 这里会处理
         /// </summary>
         /// <param name="packet">数据包</param>
         private async Task HandleServerPushCommandAsync(PacketModel packet)
@@ -2079,7 +2144,10 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             try
             {
                 // 优先使用事件机制处理命令
-                _clientEventManager.OnServerPushCommandReceived(packet, packet.Response);
+                // 【设计原则】根据"谁先发送谁请求"原则：
+                // - 服务器推送时，服务器是请求方，数据在 packet.Request 中
+                // - 因此应该传递 packet.Request 而不是 packet.Response
+                _clientEventManager.OnServerPushCommandReceived(packet, packet.Request);
 
                 // 只有在没有事件订阅者时才使用调度器处理
                 if (!_clientEventManager.HasCommandSubscribers(packet))
@@ -2561,26 +2629,19 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     // 3. 授权检查：除登录命令外，其他命令都需要授权令牌
                     if (packet.ExecutionContext.Token == null)
                     {
-                        // ✅ 对于非关键命令（如性能数据上报、心跳），Token缺失时静默跳过而不是抛出异常
-                        bool isNonCriticalCommand = packet.CommandId == SystemCommands.PerformanceDataUpload ||
-                                                   packet.CommandId == SystemCommands.Heartbeat ||
-                                                   packet.CommandId == SystemCommands.PerformanceMonitorStatus;
-                        
-                        if (isNonCriticalCommand)
-                        {
-                            _logger?.LogDebug("非关键命令 {CommandId} Token未就绪，静默跳过执行", commandId.ToString());
-                            // 对于非关键命令，直接返回而不发送，避免抛出异常
-                            return;
-                        }
-                        
                         // 记录详细日志以便排查问题
                         _logger?.LogWarning("Token附加失败: CommandId={CommandId}, TokenInfo={TokenInfo}, TokenManager={TokenManagerStatus}",
                             commandId.ToString(),
                             _tokenManager?.TokenStorage != null ? "已初始化" : "未初始化",
                             _tokenManager != null ? "可用" : "不可用");
                         
-                        // 对于关键命令（包括登出），仍然抛出异常
-                        throw new Exception($"发送请求失败: 没有合法授权令牌, 指令：{commandId.ToString()}");
+                        // 对于所有命令（包括心跳），Token缺失时都抛出异常
+                        // 这样上层可以正确处理请求未发送的情况
+                        throw new NetworkCommunicationException(
+                            $"发送请求失败: 没有合法授权令牌, 指令：{commandId.ToString()}",
+                            null,
+                            commandId,
+                            commandId.Name);
                     }
                 }
                 
@@ -3112,10 +3173,27 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                             ex));
                     }
                     
-                    // 如果是操作取消异常，重新抛出1
+                    // ✅ 优化：优雅处理取消操作，不仅仅是重新抛出
                     if (ex is OperationCanceledException)
                     {
-                        throw;
+                        // 区分是用户取消还是超时取消
+                        bool wasUserCanceled = ct.IsCancellationRequested;
+                        
+                        if (wasUserCanceled)
+                        {
+                            _logger?.LogDebug("[{CommandId}] 用户取消了操作 - RequestId: {RequestId}",
+                                commandId.ToString(), request?.RequestId);
+                        }
+                        else
+                        {
+                            _logger?.LogDebug("[{CommandId}] 操作因超时被取消 - RequestId: {RequestId}, RetryCount: {RetryCount}",
+                                commandId.ToString(), request?.RequestId, retryCount);
+                        }
+                        
+                        // ✅ 不再重新抛出，而是返回取消响应，让调用方能更好地处理
+                        // 抛出取消异常可能导致调用栈崩溃
+                        return ResponseFactory.CreateSpecificErrorResponse<TResponse>(
+                            wasUserCanceled ? "操作已被用户取消" : "操作超时已被取消");
                     }
 
                     // 检查是否是可重试异常并且还有重试次数

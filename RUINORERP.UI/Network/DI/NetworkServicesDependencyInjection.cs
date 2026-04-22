@@ -3,7 +3,6 @@ using Autofac;
 using RUINORERP.UI.Network;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.UI.Network.Authentication;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using SourceLibrary.Security;
 using Microsoft.Extensions.Logging;
@@ -22,9 +21,7 @@ using RUINORERP.UI.SysConfig;
 using RUINORERP.UI.IM;
 using RUINORERP.UI.Network.ClientCommandHandlers;
 using System.Collections.Generic;
-using RUINORERP.Business.Network;
 using RUINORERP.IServices;
-using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -104,13 +101,13 @@ namespace RUINORERP.UI.Network.DI
                         var initializeMethod = typeof(ClientCommunicationService).GetMethod("InitializeClientCommandDispatcherAsync", BindingFlags.NonPublic | BindingFlags.Instance);
                         if (initializeMethod != null)
                         {
-                            // 使用Task.Run避免在依赖注入过程中产生死锁
-                            Task.Run(() =>
+                            // 使用async Task.Run避免在依赖注入过程中产生死锁
+                            _ = Task.Run(async () =>
                             {
                                 try
                                 {
                                     var task = (Task)initializeMethod.Invoke(service, null);
-                                    task.GetAwaiter().GetResult();
+                                    await task;
                                 }
                                 catch (Exception ex)
                                 {
@@ -162,9 +159,6 @@ namespace RUINORERP.UI.Network.DI
 
             // 注册TokenManager
             builder.RegisterType<TokenManager>().AsSelf().SingleInstance();
-
-            // 注册Token刷新服务
-            builder.RegisterType<TokenRefreshService>().AsSelf().SingleInstance();
 
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();

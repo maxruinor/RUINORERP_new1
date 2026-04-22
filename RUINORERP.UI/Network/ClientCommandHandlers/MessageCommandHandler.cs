@@ -23,16 +23,22 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
     {
         private readonly ILogger<MessageCommandHandler> _logger;
         private readonly MessageService _messageService;
+        private readonly IClientCommunicationService _communicationService;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="messageService">消息服务</param>
+        /// <param name="communicationService">通信服务</param>
         /// <param name="logger">日志记录器</param>
-        public MessageCommandHandler(MessageService messageService, ILogger<MessageCommandHandler> logger = null) :
+        public MessageCommandHandler(
+            MessageService messageService,
+            IClientCommunicationService communicationService,
+            ILogger<MessageCommandHandler> logger = null) :
             base(logger ?? Startup.GetFromFac<ILogger<BaseClientCommandHandler>>())
         {
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
+            _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _logger = logger ?? Startup.GetFromFac<ILogger<MessageCommandHandler>>();
 
             // 保留通过SetSupportedCommands方法设置命令的方式，使用枚举值而非硬编码字符串
@@ -126,7 +132,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 触发MessageService中的事件
                 _messageService.OnPopupMessageReceived(messageData);
-                _logger.LogDebug("弹窗消息已处理");
+                
+                // 【设计原则】：如果该命令是作为 ServerRequest 发送的，客户端应给予响应以完成通信闭环
+                // 这里我们发送一个简单的成功响应给服务器
+                var response = new MessageResponse { IsSuccess = true, Message = "弹窗已接收" };
+                await _communicationService.SendResponseAsync(MessageCommands.SendPopupMessage, response, messageData.MessageId.ToString());
+                
+                _logger.LogDebug("弹窗消息已处理并回传确认");
             }
             catch (Exception ex)
             {
@@ -231,7 +243,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _messageService.OnSystemNotificationReceived(messageData);
                 }
 
-                _logger.LogDebug("系统通知已处理");
+                // 【设计原则】：回传确认响应
+                var response = new MessageResponse { IsSuccess = true, Message = "通知已接收" };
+                await _communicationService.SendResponseAsync(MessageCommands.SendSystemNotification, response, messageData.MessageId.ToString());
+                
+                _logger.LogDebug("系统通知已处理并回传确认");
             }
             catch (Exception ex)
             {

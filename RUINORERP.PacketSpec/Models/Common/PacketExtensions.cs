@@ -105,13 +105,19 @@ namespace RUINORERP.PacketSpec.Models.Common
 
         /// <summary>
         /// 转换为二进制格式（用于网络传输）
+        /// P1-1优化: 使用JsonTextWriter直接写入MemoryStream，避免中间string分配
         /// </summary>
         /// <param name="packet">数据包实例</param>
         /// <returns>二进制数据</returns>
         public static byte[] ToBinary(this PacketModel packet)
         {
-            var json = packet.ToJson();
-            return Encoding.UTF8.GetBytes(json);
+            // P1-1优化: 使用JsonTextWriter直接写入MemoryStream，避免JSON string的中间分配
+            using var ms = new MemoryStream();
+            using var sw = new StreamWriter(ms, Encoding.UTF8, 1024, leaveOpen: true);
+            using var jw = new JsonTextWriter(sw);
+            JsonSerializer.CreateDefault().Serialize(jw, packet);
+            jw.Flush();
+            return ms.ToArray();
         }
  
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -10,7 +11,7 @@ namespace RUINORERP.Business.BNR
     /// </summary>
     public class LightweightBNRFactory
     {
-        private Dictionary<string, IParameterHandler> mHandlers = new Dictionary<string, IParameterHandler>();
+        private readonly ConcurrentDictionary<string, IParameterHandler> mHandlers = new ConcurrentDictionary<string, IParameterHandler>();
 
         /// <summary>
         /// 构造函数
@@ -53,7 +54,7 @@ namespace RUINORERP.Business.BNR
         public void Register(string name, IParameterHandler handler)
         {
             mHandlers[name] = handler;
-            mHandlers[name].Factory = this;
+            handler.Factory = this;
         }
 
         public void Register(Type type)
@@ -61,8 +62,9 @@ namespace RUINORERP.Business.BNR
             ParameterTypeAttribute[] result = (ParameterTypeAttribute[])type.GetCustomAttributes(typeof(ParameterTypeAttribute), false);
             if (result != null && result.Length > 0)
             {
-                mHandlers[result[0].Name] = (IParameterHandler)Activator.CreateInstance(type);
-                mHandlers[result[0].Name].Factory = this;
+                var handler = (IParameterHandler)Activator.CreateInstance(type);
+                mHandlers[result[0].Name] = handler;
+                handler.Factory = this;
             }
         }
 
@@ -158,8 +160,8 @@ namespace RUINORERP.Business.BNR
     [ParameterType("DB")]
     public class LightweightDatabaseSequenceParameter : IParameterHandler
     {
-        // 使用静态字典模拟序号存储
-        private static Dictionary<string, long> _sequenceStorage = new Dictionary<string, long>();
+        // 使用ConcurrentDictionary模拟序号存储，线程安全
+        private static readonly ConcurrentDictionary<string, long> _sequenceStorage = new ConcurrentDictionary<string, long>();
 
         public void Execute(StringBuilder sb, string value)
         {
@@ -176,16 +178,13 @@ namespace RUINORERP.Business.BNR
                 }
             }
 
-            // 获取或初始化序号
+            // 获取或初始化序号（线程安全的原子操作）
             string sequenceKey = key.ToString();
-            if (!_sequenceStorage.ContainsKey(sequenceKey))
-            {
-                _sequenceStorage[sequenceKey] = 0;
-            }
-
-            // 递增序号
-            _sequenceStorage[sequenceKey]++;
-            long number = _sequenceStorage[sequenceKey];
+            long number = _sequenceStorage.AddOrUpdate(
+                sequenceKey,
+                1,  // 如果不存在，初始值为1
+                (k, oldValue) => oldValue + 1  // 如果存在，递增
+            );
 
             // 格式化输出
             if (properties.Length > 1)
@@ -207,8 +206,8 @@ namespace RUINORERP.Business.BNR
     [ParameterType("N")]
     public class LightweightSequenceParameter : IParameterHandler
     {
-        // 使用静态字典模拟序号存储
-        private static Dictionary<string, long> _sequenceStorage = new Dictionary<string, long>();
+        // 使用ConcurrentDictionary模拟序号存储，线程安全
+        private static readonly ConcurrentDictionary<string, long> _sequenceStorage = new ConcurrentDictionary<string, long>();
 
         public void Execute(StringBuilder sb, string value)
         {
@@ -225,16 +224,13 @@ namespace RUINORERP.Business.BNR
                 }
             }
 
-            // 获取或初始化序号
+            // 获取或初始化序号（线程安全的原子操作）
             string sequenceKey = key.ToString();
-            if (!_sequenceStorage.ContainsKey(sequenceKey))
-            {
-                _sequenceStorage[sequenceKey] = 0;
-            }
-
-            // 递增序号
-            _sequenceStorage[sequenceKey]++;
-            long number = _sequenceStorage[sequenceKey];
+            long number = _sequenceStorage.AddOrUpdate(
+                sequenceKey,
+                1,  // 如果不存在，初始值为1
+                (k, oldValue) => oldValue + 1  // 如果存在，递增
+            );
 
             // 格式化输出
             if (properties.Length > 1)

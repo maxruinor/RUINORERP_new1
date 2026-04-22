@@ -129,6 +129,7 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 触发服务器推送命令事件
+        /// 如果服务器推送了缓存会在CacheClientService的RegisterCacheSyncHandler处理方法中处理
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <param name="data">数据</param>
@@ -136,14 +137,13 @@ namespace RUINORERP.UI.Network
         {
             ServerPushCommandReceived?.Invoke(packet, data);
 
-            // 触发特定命令处理
+            // 在锁内只获取委托引用，锁外调用，避免死锁风险
+            Action<PacketModel, object> handler;
             lock (_lock)
             {
-                if (_specificCommandHandlers.ContainsKey(packet.CommandId))
-                {
-                    _specificCommandHandlers[packet.CommandId]?.Invoke(packet, data);
-                }
+                _specificCommandHandlers.TryGetValue(packet.CommandId, out handler);
             }
+            handler?.Invoke(packet, data);
         }
 
         /// <summary>

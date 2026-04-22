@@ -16,6 +16,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using RUINORERP.Business.Helpers;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -86,8 +87,9 @@ namespace RUINORERP.Business.Document.Converters
                 target.Created_at = null;
                 target.Created_by = null;
 
-                // 生成缴库单号
-                target.DeliveryBillNo = await _bizCodeService.GenerateBizBillNoAsync(BizType.缴库单, CancellationToken.None);
+                // 生成缴库单号（使用重试机制）
+                target.DeliveryBillNo = await BizCodeHelper.GenerateBizBillNoWithRetryAsync(
+                    _bizCodeService, BizType.缴库单, maxRetries: 3, initialDelayMs: 500, logger: _logger);
                 target.DeliveryDate = DateTime.Now;
                 target.Notes = $"由制令单{source.MONO}生成";
 

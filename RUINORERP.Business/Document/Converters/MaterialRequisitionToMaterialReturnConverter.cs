@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using RUINORERP.Business.Helpers;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -100,8 +101,9 @@ namespace RUINORERP.Business.Document.Converters
                 target.MaterialRequisitionNO = source.MaterialRequisitionNO;
                 target.tb_materialrequisition = source;
 
-                // 生成退料单号
-                target.BillNo = await _bizCodeService.GenerateBizBillNoAsync(BizType.退料单, CancellationToken.None);
+                // 生成退料单号（使用重试机制）
+                target.BillNo = await BizCodeHelper.GenerateBizBillNoWithRetryAsync(
+                    _bizCodeService, BizType.退料单, maxRetries: 3, initialDelayMs: 500, logger: _logger);
 
                 // 初始化明细集合
                 if (target.tb_MaterialReturnDetails == null)

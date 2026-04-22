@@ -10,8 +10,8 @@ using Microsoft.IdentityModel.Tokens;
 namespace RUINORERP.PacketSpec.Commands.Authentication
 {
     /// <summary>
-    /// JWT令牌服务实现
-    /// 负责生成、验证和刷新JWT令牌，支持令牌撤销
+    /// JWT令牌服务实现（单令牌机制）
+    /// 负责生成、验证和撤销JWT令牌
     /// </summary>
     public class JwtTokenService : ITokenService
     {
@@ -53,27 +53,13 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         }
 
         /// <summary>
-        /// 生成令牌对（访问令牌和刷新令牌）
-        /// </summary>
-        /// <param name="userId">用户ID</param>
-        /// <param name="userName">用户名</param>
-        /// <param name="additionalClaims">附加声明（可选）</param>
-        /// <returns>包含访问令牌和刷新令牌的元组</returns>
-        public (string AccessToken, string RefreshToken) GenerateTokens(string userId, string userName, IDictionary<string, object> additionalClaims = null)
-        {
-            var accessToken = GenerateAccessToken(userId, userName, additionalClaims);
-            var refreshToken = GenerateRefreshToken(userId, userName);
-            return (AccessToken: accessToken, RefreshToken: refreshToken);
-        }
-
-        /// <summary>
-        /// 生成JWT访问令牌
+        /// 生成访问令牌
         /// </summary>
         /// <param name="userId">用户ID</param>
         /// <param name="userName">用户名</param>
         /// <param name="additionalClaims">附加声明（可选）</param>
         /// <returns>生成的JWT访问令牌字符串</returns>
-        private string GenerateAccessToken(string userId, string userName, IDictionary<string, object> additionalClaims = null)
+        public string GenerateAccessToken(string userId, string userName, IDictionary<string, object> additionalClaims = null)
         {
             var claims = new List<Claim>
             {
@@ -92,35 +78,6 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             }
 
             var expires = DateTime.Now.AddHours(_options.DefaultExpiryHours);
-
-            var token = new JwtSecurityToken(
-                issuer: _options.Issuer,
-                audience: _options.Audience,
-                claims: claims,
-                expires: expires,
-                signingCredentials: _signingCredentials
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        /// <summary>
-        /// 生成刷新令牌
-        /// </summary>
-        /// <param name="userId">用户ID</param>
-        /// <param name="userName">用户名</param>
-        /// <returns>生成的刷新令牌</returns>
-        private string GenerateRefreshToken(string userId, string userName)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, userId),
-                new Claim(JwtRegisteredClaimNames.UniqueName, userName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("token_type", "refresh")
-            };
-
-            var expires = DateTime.Now.AddDays(_options.RefreshTokenExpiryDays);  // ✅ 使用配置
 
             var token = new JwtSecurityToken(
                 issuer: _options.Issuer,
@@ -178,8 +135,12 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                 }
                 
                 result.IsValid = true;
-                result.UserId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-                result.UserName = principal.FindFirst(JwtRegisteredClaimNames.UniqueName)?.Value;
+                // 同时检查 JwtRegisteredClaimNames 和 ClaimTypes，因为验证后 claims 可能被重新映射
+                result.UserId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                    ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                result.UserName = principal.FindFirst(JwtRegisteredClaimNames.UniqueName)?.Value
+                    ?? principal.FindFirst(ClaimTypes.Name)?.Value
+                    ?? principal.Identity?.Name;
                 
                 if (validatedToken is JwtSecurityToken jwtToken)
                 {
@@ -203,9 +164,6 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                     ExpiresAt = result.ExpiryTime ?? DateTime.MinValue,
                     TokenType = "Bearer"
                 };
-                
-                var isRefreshToken = principal.FindFirst("token_type")?.Value == "refresh";
-                result.IsRefreshToken = isRefreshToken;
 
                 return result;
             }
@@ -229,24 +187,6 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             }
         }
 
-        /// <summary>
-        /// 刷新JWT令牌对
-        /// </summary>
-        /// <param name="refreshToken">刷新令牌</param>
-        /// <returns>包含新访问令牌和新刷新令牌的元组</returns>
-        /// <exception cref="ArgumentException">当刷新令牌为空时抛出</exception>
-        /// <exception cref="SecurityTokenException">当令牌验证失败时抛出</exception>
-        public (string AccessToken, string RefreshToken) RefreshTokens(string refreshToken)
-        {
-            if (string.IsNullOrEmpty(refreshToken))
-                throw new ArgumentException("刷新Token不能为空", nameof(refreshToken));
-
-            var refreshValidation = ValidateToken(refreshToken);
-            if (!refreshValidation.IsValid)
-                throw new SecurityTokenException($"刷新Token无效: {refreshValidation.ErrorMessage}");
-
-            return GenerateTokens(refreshValidation.UserId, refreshValidation.UserName);
-        }
         
         /// <summary>
         /// 撤销令牌（加入黑名单）

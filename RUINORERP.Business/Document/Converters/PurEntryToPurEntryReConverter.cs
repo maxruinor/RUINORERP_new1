@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using System;
 using System.Linq;
 using System.Text;
+using RUINORERP.Business.Helpers;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -84,8 +85,9 @@ namespace RUINORERP.Business.Document.Converters
                 target.Created_by = null;
                 target.Created_at = null;
 
-                // 生成退货单号
-                target.PurEntryReNo = await _bizCodeService.GenerateBizBillNoAsync(BizType.采购退货单);
+                // 生成退货单号（使用重试机制）
+                target.PurEntryReNo = await BizCodeHelper.GenerateBizBillNoWithRetryAsync(
+                    _bizCodeService, BizType.采购退货单, maxRetries: 3, initialDelayMs: 500, logger: _logger);
                 target.ReturnDate = DateTime.Now;
                 target.Notes = $"由采购入库单{source.PurEntryNo}生成";
 

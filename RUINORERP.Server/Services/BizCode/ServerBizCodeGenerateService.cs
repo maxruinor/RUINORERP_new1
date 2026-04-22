@@ -13,6 +13,7 @@ using RUINORERP.Server.Services.BizCode;
 using System.Text.RegularExpressions;
 using System.Numerics;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Caching.Memory;
 using RUINORERP.Server.Network.CommandHandlers;
 using RUINORERP.Business.BNR;
 using RUINORERP.PacketSpec.Models.BizCodeGenerate;
@@ -32,6 +33,10 @@ namespace RUINORERP.Server.Services.BizCode
         private readonly tb_sys_BillNoRuleController<tb_sys_BillNoRule> _ruleConfigService;
         private readonly ILogger<ServerBizCodeGenerateService> logger;
         private readonly ProductSKUCodeGenerator _productSKUCodeGenerator;
+        private readonly IMemoryCache _ruleCache;
+
+        // 缓存过期时间：10分钟（规则配置低频变更）
+        private static readonly TimeSpan RuleCacheExpiration = TimeSpan.FromMinutes(10);
 
         /// <summary>
         /// 构造函数
@@ -40,16 +45,19 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="bnrFactory">编号生成工厂实例</param>
         /// <param name="ruleConfigService">规则配置服务</param>
         /// <param name="productSKUCodeGenerator">产品SKU编码生成器</param>
+        /// <param name="ruleCache">规则配置缓存（可选）</param>
         public ServerBizCodeGenerateService(ILogger<ServerBizCodeGenerateService> logger,
             BNRFactory bnrFactory,
             tb_sys_BillNoRuleController<tb_sys_BillNoRule> ruleConfigService,
-            ProductSKUCodeGenerator productSKUCodeGenerator
+            ProductSKUCodeGenerator productSKUCodeGenerator,
+            IMemoryCache ruleCache = null
             )
         {
             this.logger = logger;
             _bnrFactory = bnrFactory;
             _ruleConfigService = ruleConfigService;
             _productSKUCodeGenerator = productSKUCodeGenerator;
+            _ruleCache = ruleCache;
         }
 
         #region 混淆/加密相关方法
@@ -423,17 +431,42 @@ namespace RUINORERP.Server.Services.BizCode
         /// 2. 返回tb_sys_BillNoRule对象，包含RulePattern（规则模式）、DisplayMode（显示模式）和EncryptionMethod（加密方法）
         /// 3. 只有IsActive为true的规则配置会被返回
         /// 4. 异常处理确保即使数据库查询失败也不会影响系统运行
+        /// 5. 使用IMemoryCache缓存规则配置，减少数据库查询压力
         /// </remarks>
         private async Task<tb_sys_BillNoRule> GetBillNoRuleConfigFromDatabaseAsync(int bizType, int ruleType, CancellationToken ct = default)
         {
+            // 尝试从缓存获取
+            if (_ruleCache != null)
+            {
+                string cacheKey = $"BillNoRule_{bizType}_{ruleType}";
+                
+                if (_ruleCache.TryGetValue(cacheKey, out tb_sys_BillNoRule cachedRule))
+                {
+                    logger?.LogDebug("命中规则配置缓存: BizType={BizType}, RuleType={RuleType}", bizType, ruleType);
+                    return cachedRule;
+                }
+            }
+
             try
             {
                 // 查询数据库中的规则配置
                 var rules = await _ruleConfigService.QueryAsync();
-                return rules?.FirstOrDefault(r => r.BizType == bizType && r.RuleType == ruleType && r.IsActive);
+                var rule = rules?.FirstOrDefault(r => r.BizType == bizType && r.RuleType == ruleType && r.IsActive);
+
+                // 写入缓存
+                if (_ruleCache != null && rule != null)
+                {
+                    string cacheKey = $"BillNoRule_{bizType}_{ruleType}";
+                    _ruleCache.Set(cacheKey, rule, RuleCacheExpiration);
+                    logger?.LogDebug("规则配置已缓存: BizType={BizType}, RuleType={RuleType}, 过期时间={Expiration}分钟", 
+                        bizType, ruleType, RuleCacheExpiration.TotalMinutes);
+                }
+
+                return rule;
             }
-            catch
+            catch (Exception ex)
             {
+                logger?.LogDebug(ex, "查询编号规则失败，将使用默认规则: BizType={BizType}, RuleType={RuleType}", bizType, ruleType);
                 // 如果查询失败，返回null，将使用默认规则
                 return null;
             }
@@ -1038,6 +1071,15 @@ namespace RUINORERP.Server.Services.BizCode
         {
             // 已经在模型中设置了默认值，这里不需要额外处理
             await _ruleConfigService.SaveOrUpdate(config);
+            
+            // 清除缓存（规则变更时）
+            if (_ruleCache != null && config.BizType != 0 && config.RuleType != 0)
+            {
+                string cacheKey = $"BillNoRule_{config.BizType}_{config.RuleType}";
+                _ruleCache.Remove(cacheKey);
+                logger?.LogInformation("规则配置已更新，缓存已清除: BizType={BizType}, RuleType={RuleType}", 
+                    config.BizType, config.RuleType);
+            }
         }
 
         /// <summary>
@@ -1048,7 +1090,31 @@ namespace RUINORERP.Server.Services.BizCode
         /// <returns>任务</returns>
         public async Task DeleteRuleConfigAsync(long id, CancellationToken ct = default)
         {
+            // 先查询规则，获取BizType和RuleType用于清除缓存
+            tb_sys_BillNoRule rule = null;
+            if (_ruleCache != null)
+            {
+                try
+                {
+                    var rules = await _ruleConfigService.QueryAsync();
+                    rule = rules?.FirstOrDefault(r => r.BillNoRuleID == id);
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogWarning(ex, "删除规则前查询失败，可能无法清除缓存: ID={Id}", id);
+                }
+            }
+            
             await _ruleConfigService.DeleteAsync(id);
+            
+            // 清除缓存（规则删除时）
+            if (_ruleCache != null && rule != null)
+            {
+                string cacheKey = $"BillNoRule_{rule.BizType}_{rule.RuleType}";
+                _ruleCache.Remove(cacheKey);
+                logger?.LogInformation("规则配置已删除，缓存已清除: ID={Id}, BizType={BizType}, RuleType={RuleType}", 
+                    id, rule.BizType, rule.RuleType);
+            }
         }
     }
 }

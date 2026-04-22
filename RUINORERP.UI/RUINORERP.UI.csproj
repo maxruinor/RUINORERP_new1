@@ -2342,10 +2342,9 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Network\Authentication\ITokenRefreshService.cs" />
     <!-- ClientTokenStorage.cs已移除，统一使用PacketSpec中的TokenManager -->
     <!-- SilentTokenRefresher.cs已删除，未使用的死代码 -->
-    <Compile Include="Network\Authentication\TokenRefreshService.cs" />
+    <!-- TokenRefreshService.cs和ITokenRefreshService.cs已删除，采用单令牌机制 -->
     <Compile Include="Network\BizPackageInfo.cs" />
     <Compile Include="Network\BizPipelineFilter.cs" />
     <Compile Include="Network\ClientCommandHandlers\BaseClientCommandHandler.cs" />

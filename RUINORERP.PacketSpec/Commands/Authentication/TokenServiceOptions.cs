@@ -18,12 +18,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// <summary>
         /// AccessToken默认过期时间（小时）
         /// </summary>
-        public int DefaultExpiryHours { get; set; } = 8;
-        
-        /// <summary>
-        /// RefreshToken默认过期时间（天）
-        /// </summary>
-        public int RefreshTokenExpiryDays { get; set; } = 7;
+        public int DefaultExpiryHours { get; set; } = 12;
         
         /// <summary>
         /// JWT签发者
@@ -69,9 +64,6 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                 
             if (DefaultExpiryHours <= 0)
                 throw new ArgumentException("Token服务配置错误：DefaultExpiryHours必须大于0", nameof(DefaultExpiryHours));
-                
-            if (RefreshTokenExpiryDays <= 0)
-                throw new ArgumentException("Token服务配置错误：RefreshTokenExpiryDays必须大于0", nameof(RefreshTokenExpiryDays));
                 
             if (ClockSkewSeconds < 0)
                 throw new ArgumentException("Token服务配置错误：ClockSkewSeconds不能为负数", nameof(ClockSkewSeconds));

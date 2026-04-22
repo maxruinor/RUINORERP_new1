@@ -47,6 +47,7 @@
     <Compile Remove="Ean13.cs" />
     <Compile Remove="Extensions\TaskStatusNotificationExtensions.cs" />
     <Compile Remove="LogicaService\LocTypeController.cs" />
+    <Compile Remove="Network\IServerCommunicationService.cs" />
     <Compile Remove="Processor\View_SaleOrderPerformanceAuto.cs" />
     <Compile Remove="SaleOrderController.cs" />
     <Compile Remove="Security\Credentials.cs" />
@@ -139,6 +140,7 @@
   <ItemGroup>
     <Folder Include="Extensions\" />
     <Folder Include="IocExtensions\" />
+    <Folder Include="Network\" />
     <Folder Include="Services\" />
     <Folder Include="Validator\Tests\" />
   </ItemGroup>

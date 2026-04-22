@@ -1494,7 +1494,7 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 if (_appContext != null && _appContext.CurUserInfo != null)
                 {
-                    entity.ApprovalOpinions += $"【被{_appContext.CurUserInfo.tb_Employee.Employee_Name}反审】";
+                    entity.ApprovalOpinions += $"【被{_appContext.CurUserInfo.DisplayName}反审】";
                 }
                 else
                 {
@@ -1918,8 +1918,15 @@ namespace RUINORERP.Business
                 entity.PlatformOrderNo = saleorder.PlatformOrderNo;
                 entity.IsFromPlatform = saleorder.IsFromPlatform;
 
+                // 使用带重试机制的编号生成（自动审核关键流程）
                 IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
-                entity.SaleOutNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售出库单, CancellationToken.None);
+                ILogger logger = _appContext.GetRequiredService<ILogger<tb_SaleOrderController<T>>>();
+                entity.SaleOutNo = await RUINORERP.Business.Helpers.BizCodeHelper.GenerateBizBillNoWithRetryAsync(
+                    bizCodeService, 
+                    BizType.销售出库单,
+                    maxRetries: 3,
+                    initialDelayMs: 500,
+                    logger: logger);
                
                 entity.tb_saleorder = saleorder;
 

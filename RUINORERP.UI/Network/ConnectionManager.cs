@@ -892,30 +892,29 @@ namespace RUINORERP.UI.Network
                 ReconnectAttempt = null;
                 ReconnectSucceeded = null;
 
-                // 断开连接 - 使用Task.Run避免阻塞，并添加超时保护
+                // 断开连接 - 优化：缩短超时，退出时快速释放
                 try
                 {
                     // 同步方式停止重连任务
                     StopReconnectTask();
 
-                    // 使用Task.Run在后台线程执行断开连接，避免阻塞调用线程
-                    // 添加超时机制，防止无限等待
-                    using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                    // 尝试优雅断开连接，但不长时间阻塞
+                    try
                     {
-                        var disconnectTask = Task.Run(async () =>
+                        var disconnectTask = DisconnectInternalAsync();
+                        // 退出场景下缩短超时为2秒，快速释放
+                        if (!disconnectTask.Wait(TimeSpan.FromSeconds(2)))
                         {
-                            return await DisconnectInternalAsync().ConfigureAwait(false);
-                        }, timeoutCts.Token);
-
-                        try
-                        {
-                            bool disconnectResult = disconnectTask.Result; // 这里等待结果，但已在后台线程
-                            _logger?.LogDebug("连接断开{Result}", disconnectResult ? "成功" : "失败");
+                            _logger?.LogDebug("连接断开操作超时(2秒)，已强制终止");
                         }
-                        catch (OperationCanceledException)
+                        else
                         {
-                            _logger?.LogDebug("连接断开操作超时，已强制终止");
+                            _logger?.LogDebug("连接断开{Result}", disconnectTask.Result ? "成功" : "失败");
                         }
+                    }
+                    catch (Exception disconnectEx)
+                    {
+                        _logger?.LogDebug(disconnectEx, "连接断开操作异常");
                     }
                 }
                 catch (Exception ex)

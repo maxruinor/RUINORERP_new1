@@ -576,9 +576,8 @@ namespace RUINORERP.Server
                 return performanceConfig;
             });
 
-            // 确保ConfigManagerService正确注册，使用新的构造函数
-            
-            // 使用扩展方法注册配置管理相关服务
+            // ✅ ConfigManagerService 已在 BusinessDIConfig 中通过 Autofac 注册
+            // 这里只注册非泛型配置服务（兼容性保留）
             services.AddConfigManagementServices();
 
             services.AddSingleton(typeof(frmMainNew));//MDI最大。才开一次才能单例

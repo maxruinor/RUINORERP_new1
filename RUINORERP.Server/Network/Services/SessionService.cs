@@ -319,14 +319,46 @@ namespace RUINORERP.Server.Network.Services
                 if (_sessions.TryGetValue(sessionInfo.SessionID, out var existingSession))
                 {
                     // 增强线程安全性：使用锁保护会话更新操作
-                    // 确保会话信息的多个字段更新是原子的，避免竞态条件
                     lock (existingSession)
                     {
-                        // 更新会话信息
-                        existingSession.UserId = sessionInfo.UserId;
-                        existingSession.UserName = sessionInfo.UserName;
+                        // ✅ 使用UserInfo作为唯一数据源更新用户信息
+                        if (sessionInfo.UserInfo != null)
+                        {
+                            // 复制UserInfo中的关键属性
+                            if (existingSession.UserInfo == null)
+                                existingSession.UserInfo = new CurrentUserInfo();
+
+                            // 核心标识
+                            existingSession.UserInfo.UserID = sessionInfo.UserInfo.UserID;
+                            existingSession.UserInfo.UserName = sessionInfo.UserInfo.UserName;
+                            existingSession.UserInfo.DisplayName = sessionInfo.UserInfo.DisplayName;
+                            existingSession.UserInfo.EmployeeId = sessionInfo.UserInfo.EmployeeId;
+                            
+                            // 认证状态
+                            existingSession.UserInfo.IsSuperUser = sessionInfo.UserInfo.IsSuperUser;
+                            existingSession.UserInfo.IsAuthorized = sessionInfo.UserInfo.IsAuthorized;
+                            
+                            // 客户端环境
+                            existingSession.UserInfo.ClientVersion = sessionInfo.UserInfo.ClientVersion;
+                            existingSession.UserInfo.ClientIp = sessionInfo.UserInfo.ClientIp;
+                            existingSession.UserInfo.OperatingSystem = sessionInfo.UserInfo.OperatingSystem;
+                            existingSession.UserInfo.MachineName = sessionInfo.UserInfo.MachineName;
+                            existingSession.UserInfo.CpuInfo = sessionInfo.UserInfo.CpuInfo;
+                            existingSession.UserInfo.MemorySize = sessionInfo.UserInfo.MemorySize;
+                            
+                            // 当前操作
+                            existingSession.UserInfo.CurrentModule = sessionInfo.UserInfo.CurrentModule;
+                            existingSession.UserInfo.CurrentForm = sessionInfo.UserInfo.CurrentForm;
+                            existingSession.UserInfo.HeartbeatCount = sessionInfo.UserInfo.HeartbeatCount;
+                            existingSession.UserInfo.IdleTime = sessionInfo.UserInfo.IdleTime;
+                            
+                            // 更新最后心跳时间
+                            existingSession.UserInfo.LastHeartbeatTime = DateTime.Now;
+                        }
+
+                        // 更新会话状态属性
                         existingSession.IsAuthenticated = sessionInfo.IsAuthenticated;
-                        //existingSession.IsAdmin = sessionInfo.IsAdmin;
+                        existingSession.IsAdmin = sessionInfo.IsAdmin;
                         existingSession.UpdateActivity();
                         existingSession.DataContext = sessionInfo.DataContext;
                     }
@@ -621,47 +653,54 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 发送欢迎消息到客户端（不等待响应）
-        /// 修改为发送即完成模式，避免阻塞后续登录流程
+        /// 发送欢迎消息到客户端（发后即忘模式）
+        /// P0-2修复: 改为后台任务执行，不阻塞登录流程
         /// </summary>
         /// <param name="sessionInfo">会话信息</param>
         /// <returns>异步任务</returns>
-        private async Task SendWelcomeMessageAsync(SessionInfo sessionInfo)
+        private Task SendWelcomeMessageAsync(SessionInfo sessionInfo)
         {
-            try
+            // P0-2修复: 启动后台任务发送欢迎消息，不阻塞登录流程
+            _ = Task.Run(async () =>
             {
-                // 从依赖注入容器中获取服务器配置
-                var serverConfig = Startup.GetFromFac<ServerGlobalConfig>();
+                try
+                {
+                    // 从依赖注入容器中获取服务器配置
+                    var serverConfig = Startup.GetFromFac<ServerGlobalConfig>();
 
-                string announcement = serverConfig?.Announcement ?? "欢迎使用RUINORERP系统！";
+                    string announcement = serverConfig?.Announcement ?? "欢迎使用RUINORERP系统！";
 
-                var welcomeRequest = WelcomeRequest.CreateWithAnnouncement(
-                    sessionInfo.SessionID,
-                    GetServerVersion(),
-                    announcement);
+                    var welcomeRequest = WelcomeRequest.CreateWithAnnouncement(
+                        sessionInfo.SessionID,
+                        GetServerVersion(),
+                        announcement);
 
-                sessionInfo.WelcomeSentTime = DateTime.Now;
+                    sessionInfo.WelcomeSentTime = DateTime.Now;
 
-                // 修改：使用SendPacketCoreAsync发送欢迎消息，不等待客户端响应
-                // 这样客户端收到后可以自行处理，不影响服务器后续的登录流程
-                await SendPacketCoreAsync(
-                    sessionInfo,
-                    SystemCommands.Welcome,
-                    welcomeRequest,
-                    5000,
-                    CancellationToken.None,
-                    PacketDirection.ServerRequest
-                );
+                    // P0-2修复: 缩短超时时间至2秒，使用独立取消令牌
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
 
-                // 标记欢迎消息已发送，但不需要等待响应
-                //sessionInfo.IsVerified = true; // 临时标记为已验证，等待实际响应时更新
+                    await SendPacketCoreAsync(
+                        sessionInfo,
+                        SystemCommands.Welcome,
+                        welcomeRequest,
+                        2000,
+                        cts.Token,
+                        PacketDirection.ServerRequest
+                    ).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogDebug($"欢迎消息发送超时（已忽略）: {sessionInfo.SessionID}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, $"欢迎消息发送失败（已忽略）: {sessionInfo.SessionID}");
+                }
+            }).ConfigureAwait(false);
 
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"欢迎消息发送失败: {sessionInfo.SessionID}");
-                // 不关闭连接，允许后续登录请求继续
-            }
+            // 立即返回，不等待发送完成
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -1618,22 +1657,19 @@ namespace RUINORERP.Server.Network.Services
 
         /// <summary>
         /// 清理和心跳检查回调
-        /// 合并清理超时会话和心跳检查到一个定时器中，减少系统开销
+        /// P2-2优化: 合并清理和心跳检查为一次遍历，异步执行清理任务
         /// </summary>
         private void CleanupAndHeartbeatCallback(object state)
         {
             try
             {
                 var currentTime = DateTime.Now;
-                
-                // 清理超时会话
-                var removedCount = CleanupTimeoutSessions();
 
-                // 检查心跳异常
-                var abnormalCount = HeartbeatCheck();
+                // P2-2优化: 合并清理和心跳检查为一次遍历
+                var (removedCount, abnormalCount) = CleanupAndHeartbeatCheckCombined();
 
-                // 清理过期的待处理请求
-                CleanupPendingRequests();
+                // P2-2优化: 异步清理待处理请求，不阻塞主流程
+                _ = Task.Run(() => CleanupPendingRequests()).ConfigureAwait(false);
 
                 // 收集心跳性能监控数据
                 CollectHeartbeatPerformanceData();
@@ -1650,6 +1686,70 @@ namespace RUINORERP.Server.Network.Services
             {
                 _logger.LogError(ex, "清理和心跳检查回调执行失败");
             }
+        }
+
+        /// <summary>
+        /// P2-2优化: 合并清理和心跳检查，减少遍历次数
+        /// </summary>
+        private (int removedCount, int abnormalCount) CleanupAndHeartbeatCheckCombined()
+        {
+            var allSessionIds = _sessions.Keys.ToList();
+            var sessionsToRemove = new List<string>();
+            int abnormalCount = 0;
+            var currentTime = DateTime.Now;
+
+            // 一次遍历完成两项检查
+            foreach (var sessionId in allSessionIds)
+            {
+                if (!_sessions.TryGetValue(sessionId, out var session))
+                    continue;
+
+                lock (session)
+                {
+                    // 检查1: 活动超时（60分钟无活动）
+                    var inactiveTime = currentTime - session.LastActivityTime;
+                    if (inactiveTime.TotalMinutes > 60)
+                    {
+                        sessionsToRemove.Add(sessionId);
+                        continue;
+                    }
+
+                    // 检查2: 心跳异常
+                    if (session.IsAuthenticated && session.IsConnected)
+                    {
+                        var timeSinceLastHeartbeat = currentTime - session.LastHeartbeat;
+                        if (timeSinceLastHeartbeat.TotalMinutes > 10)
+                        {
+                            session.HeartbeatFailedCount++;
+
+                            if (session.HeartbeatFailedCount >= 3 && timeSinceLastHeartbeat.TotalMinutes > 20)
+                            {
+                                sessionsToRemove.Add(sessionId);
+                            }
+                            else
+                            {
+                                abnormalCount++;
+                            }
+                        }
+                        else
+                        {
+                            session.HeartbeatFailedCount = 0;
+                        }
+                    }
+                }
+            }
+
+            // 批量移除超时会话
+            int removedCount = 0;
+            foreach (var sessionId in sessionsToRemove)
+            {
+                if (RemoveSession(sessionId))
+                {
+                    removedCount++;
+                }
+            }
+
+            return (removedCount, abnormalCount);
         }
 
         /// <summary>

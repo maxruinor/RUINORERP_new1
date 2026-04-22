@@ -64,41 +64,31 @@ namespace RUINORERP.Server.Network.Core
         /// <returns></returns>
         protected override int GetBodyLengthFromHeader(ref ReadOnlySequence<byte> buffer)
         {
-            //kx数据包，以18个头，通过头 解析 得到 第一部分长度和第二部分长度。
-            // 2. 从缓冲区读取原始包头（这是"干净的原始数据"，不做修改）
+            // P1-1修复: 移除重复解析逻辑，UnifiedEncryptionProtocol内部已有4密钥容错
             byte[] originalHead = new byte[HeaderLength];
             var reader = new SequenceReader<byte>(buffer);
-            // 读取18字节到originalHead（如果读取失败，需处理异常）
             if (!reader.TryCopyTo(originalHead) || originalHead.Length != HeaderLength)
             {
                 throw new InvalidDataException("无法读取完整的包头数据");
             }
 
-            int bodyLength = 0;
-            byte[] headCopy2 = new byte[HeaderLength];
-            Array.Copy(originalHead, headCopy2, HeaderLength);
-
             try
             {
-                bodyLength = UnifiedEncryptionProtocol.AnalyzeClientPacketHeader(headCopy2);
-                return bodyLength;  // 成功则立即返回
-            }
-            catch (Exception ex)
-            {
-                LogWarning("第一次尝试解析包头失败，尝试备用方法");
-            }
+                // P1-1优化: 只尝试一次，内部已包含4密钥遍历容错机制
+                int bodyLength = UnifiedEncryptionProtocol.AnalyzeClientPacketHeader(originalHead);
 
-            // 备用解析逻辑
-            byte[] headCopy3 = (byte[])originalHead.Clone();
+                // 验证返回值合理性
+                if (bodyLength < 0 || bodyLength > UnifiedEncryptionProtocol.MAX_PACKET_SIZE)
+                {
+                    LogWarning($"解析出异常的包体长度: {bodyLength}，返回默认值");
+                    return 256 - HeaderLength;
+                }
 
-            try
-            {
-                bodyLength = UnifiedEncryptionProtocol.AnalyzeClientPacketHeader(headCopy3);
                 return bodyLength;
             }
             catch (Exception ex)
             {
-                LogError(ex, "所有包头解析方法均失败");
+                LogError(ex, "包头解析失败");
                 throw new InvalidDataException("无法解析数据包头部", ex);
             }
         }

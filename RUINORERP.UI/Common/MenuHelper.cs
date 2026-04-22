@@ -93,16 +93,16 @@ namespace RUINORERP.UI.Common
             //两套逻辑 要区分处理
             if (appContext.CurUserInfo.UserInfo.UserName == "超级管理员")
             {
-                if (appContext.CurUserInfo.UserModList.Count == 0)
+                if (appContext.CurUserInfo.ModuleList.Count == 0)
                 {
                     var modlist = appContext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
                  .Includes(a => a.tb_MenuInfos, b => b.tb_ButtonInfos)
                  .Includes(a => a.tb_MenuInfos, b => b.tb_FieldInfos)
                  .ToList();
-                    appContext.CurUserInfo.UserModList = modlist;
+                    appContext.CurUserInfo.ModuleList = modlist;
                 }
                 // 没有配置时按默认的加载
-                foreach (var item in appContext.CurUserInfo.UserModList)
+                foreach (var item in appContext.CurUserInfo.ModuleList)
                 {
                     if (item.tb_MenuInfos != null)
                     {

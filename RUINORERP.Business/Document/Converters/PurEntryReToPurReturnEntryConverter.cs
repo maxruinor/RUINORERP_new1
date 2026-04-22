@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RUINORERP.Business.Helpers;
 
 namespace RUINORERP.Business.Document.Converters
 {

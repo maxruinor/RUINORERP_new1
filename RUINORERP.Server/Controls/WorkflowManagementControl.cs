@@ -384,7 +384,7 @@ namespace RUINORERP.Server.Controls
                 
                 foreach (var session in sessions)
                 {
-                    if (exData.ReceiverUserIDs != null && exData.ReceiverUserIDs.Contains(session.UserInfo.Employee_ID))
+                    if (exData.ReceiverUserIDs != null && exData.ReceiverUserIDs.Contains(session.UserInfo.UserID))
                     {
                         try
                         {

@@ -148,16 +148,6 @@ namespace RUINORERP.PacketSpec.Commands
         public const ushort Authentication_Logout = 0x0101;
 
         /// <summary>
-        /// 验证Token - 验证用户身份令牌的有效性
-        /// </summary>
-        public const ushort Authentication_ValidateToken = 0x0102;
-
-        /// <summary>
-        /// 刷新Token - 更新用户身份令牌
-        /// </summary>
-        public const ushort Authentication_RefreshToken = 0x0103;
-
-        /// <summary>
         /// 准备登录 - 登录前的准备工作
         /// </summary>
         public const ushort Authentication_PrepareLogin = 0x0104;

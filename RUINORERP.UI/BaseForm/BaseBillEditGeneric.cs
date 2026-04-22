@@ -2896,7 +2896,8 @@ namespace RUINORERP.UI.BaseForm
                             }
                             else
                             {
-                                Cancel();
+                                // 传递skipConfirm=true，避免Cancel()方法再次弹出确认提示
+                                Cancel(skipConfirm: true);
                             }
                         }
 
@@ -3828,6 +3829,24 @@ namespace RUINORERP.UI.BaseForm
                 {
                     logger?.LogWarning("锁定单据失败：单据ID或用户ID无效");
                     return false;
+                }
+
+                // 🔧 核心优化：若本地已持有锁，直接返回成功，不再查询服务器
+                // 场景：用户点击"修改"获得锁后，后续的提交、审核、反审等操作也会调用LockBill()
+                // 此时_activeLocks中已有记录，无需再次向服务器发送CheckLockStatus命令
+                if (BillLockHelper.IsHoldingLock(finalBillId))
+                {
+                    var heldInfo = BillLockHelper.GetHeldLockInfo(finalBillId);
+                    if (heldInfo != null)
+                    {
+                        if (heldInfo.LockedUserId == finalUserId)
+                        {
+                            // 自己持有的锁，直接返回成功
+                            if (tsBtnLocked != null && !IsDisposed)
+                                UpdateLockUI(true, heldInfo);
+                            return true;
+                        }
+                    }
                 }
 
                 // 核心步骤1: 使用BillLockHelper查询锁定状态
@@ -5001,7 +5020,8 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 取消添加 取消修改
         /// </summary>
-        protected virtual void Cancel()
+        /// <param name="skipConfirm">是否跳过确认提示（用于外部已确认的场景）</param>
+        protected virtual void Cancel(bool skipConfirm = false)
         {
             // 使用 HasUnsavedChanges 统一判断
             bool hasUnsavedChanges = HasUnsavedChanges;
@@ -5024,8 +5044,8 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-            // 如果有未保存的更改，显示确认提示
-            if (hasUnsavedChanges)
+            // 如果有未保存的更改且未跳过确认，显示确认提示
+            if (hasUnsavedChanges && !skipConfirm)
             {
                 DialogResult result = MessageBox.Show("当前数据尚未保存，是否放弃所有未保存数据？", "确认放弃未保存数据", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (result != DialogResult.Yes)
@@ -7524,6 +7544,20 @@ namespace RUINORERP.UI.BaseForm
 
             try
             {
+                // 🔧 核心优化：若本地已持有锁，直接返回，不再查询服务器
+                // 场景：用户点击"修改"获得锁后，后续的提交、审核、删除等操作无需再向服务器查询锁状态
+                // 退出/关闭窗体时才发送解锁命令，低频定时器负责异常情况检测
+                if (BillLockHelper.IsHoldingLock(billId))
+                {
+                    var heldInfo = BillLockHelper.GetHeldLockInfo(billId);
+                    if (heldInfo != null)
+                    {
+                        long curUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                        bool heldBySelf = heldInfo.LockedUserId == curUserId;
+                        return (true, heldBySelf, heldInfo);
+                    }
+                }
+
                 // 优化：应用智能频率控制，避免频繁检测
                 if (!_frequencyController.ShouldDetectStatus(billId))
                 {
@@ -7644,7 +7678,7 @@ namespace RUINORERP.UI.BaseForm
             /// </summary>
             public void CleanupExpiredRecords()
             {
-                var expiredTime = DateTime.Now - TimeSpan.FromMinutes(10);
+                var expiredTime = DateTime.Now - TimeSpan.FromMinutes(5);
                 var expiredKeys = _lastDetectionTimes
                     .Where(kvp => kvp.Value < expiredTime)
                     .Select(kvp => kvp.Key)

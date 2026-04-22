@@ -37,6 +37,7 @@ using Castle.Core.Resource;
 using SharpYaml.Tokens;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.EntityLoadService;
+using RUINORERP.Business.Helpers;
 
 
 namespace RUINORERP.Business
@@ -1743,7 +1744,9 @@ namespace RUINORERP.Business
                 }
 
                 IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
-                entity.ReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售退回单);
+                ILogger logger = _appContext.GetRequiredService<ILogger<tb_SaleOutController<T>>>();
+                entity.ReturnNo = await BizCodeHelper.GenerateBizBillNoWithRetryAsync(
+                    bizCodeService, BizType.销售退回单, maxRetries: 3, initialDelayMs: 500, logger: logger);
                 entity.tb_saleout = saleout;
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
 

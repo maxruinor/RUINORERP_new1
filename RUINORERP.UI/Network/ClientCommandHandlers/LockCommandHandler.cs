@@ -672,10 +672,15 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 // If no open forms or invoke not required, execute directly
                 action();
             }
-            catch
+            catch (Exception ex)
             {
-                // Swallow exceptions from UI invoke to avoid cascading failures
-                try { action(); } catch { }
+                // 记录Invoke失败日志，便于问题排查
+                _logger.LogWarning(ex, "InvokeOnUiThread失败，尝试直接执行");
+                try { action(); }
+                catch (Exception ex2)
+                {
+                    _logger.LogError(ex2, "直接执行action也失败");
+                }
             }
         }
 

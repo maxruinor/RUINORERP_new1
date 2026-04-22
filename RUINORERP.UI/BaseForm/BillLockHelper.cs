@@ -129,6 +129,49 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
+        /// 判断当前会话是否持有指定单据的锁（纯本地判断，无网络请求）
+        /// 核心优化：用户获得锁后，后续操作无需再查询服务器
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>是否持有锁</returns>
+        public static bool IsHoldingLock(long billId)
+        {
+            try
+            {
+                if (billId <= 0)
+                    return false;
+
+                var service = _lockService ?? Startup.GetFromFac<ClientLockManagementService>();
+                return service?.IsHoldingLock(billId) ?? false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取当前会话持有的锁信息（纯本地，无网络请求）
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>锁信息，未持有时返回null</returns>
+        public static LockInfo GetHeldLockInfo(long billId)
+        {
+            try
+            {
+                if (billId <= 0)
+                    return null;
+
+                var service = _lockService ?? Startup.GetFromFac<ClientLockManagementService>();
+                return service?.GetHeldLockInfo(billId);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 检查单据锁定状态
         /// </summary>
         public static async Task<LockInfo> CheckLockStatusAsync(long billId, long menuId = 0, ILogger logger = null)

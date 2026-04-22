@@ -67,7 +67,7 @@ namespace RUINORERP.Business.Security
                 #region superUser
 
                 CurrentUserInfo cuser = new CurrentUserInfo();
-                cuser.EmpID = 0;
+                cuser.EmployeeId = 0;
                 appcontext.CurUserInfo = cuser;
 
                 cuser.UserInfo = new tb_UserInfo();
@@ -103,7 +103,7 @@ namespace RUINORERP.Business.Security
                 // 重置计时器
                 queryStopwatch.Reset();
 
-                appcontext.CurUserInfo.UserModList = modlist;
+                appcontext.CurUserInfo.ModuleList = modlist;
                 loginSucceed = true;
                 #endregion
 
@@ -195,7 +195,7 @@ namespace RUINORERP.Business.Security
                         }
                         appcontext.log.UserName = user.UserName;
                         //获取本地计算机名+本地计算机登录名
-                        appcontext.log.MachineName = appcontext.CurUserInfo.客户端版本 + "-" + System.Environment.MachineName + "-" + System.Environment.UserName;
+                        appcontext.log.MachineName = appcontext.CurUserInfo.ClientVersion + "-" + System.Environment.MachineName + "-" + System.Environment.UserName;
 
                         //调用方法
                         MacAddressHelper macHelper = new MacAddressHelper();
@@ -247,15 +247,15 @@ namespace RUINORERP.Business.Security
 
             }
             // 将tb_UserInfo相关属性赋值到ApplicationContext.CurrentUser
-            appcontext.CurUserInfo.EmpID = user.tb_employee.Employee_ID;
-            appcontext.CurUserInfo.Employee_ID = user.tb_employee.Employee_ID;
+            // ✅ 使用统一的命名规范
+            appcontext.CurUserInfo.EmployeeId = user.tb_employee.Employee_ID;  // 消除 EmpID/Employee_ID 冗余
             appcontext.CurUserInfo.UserID = user.User_ID;
-            appcontext.CurUserInfo.用户名 = user.UserName;
-            appcontext.CurUserInfo.姓名 = user.tb_employee.Employee_Name;
-            appcontext.CurUserInfo.超级用户 = user.IsSuperUser;
-            appcontext.CurUserInfo.登录时间 = System.DateTime.Now;
-            appcontext.CurUserInfo.在线状态 = true;
-            appcontext.CurUserInfo.授权状态 = true;
+            appcontext.CurUserInfo.UserName = user.UserName;
+            appcontext.CurUserInfo.DisplayName = user.tb_employee.Employee_Name;
+            appcontext.CurUserInfo.IsSuperUser = user.IsSuperUser;
+            appcontext.CurUserInfo.LoginTime = System.DateTime.Now;
+            appcontext.CurUserInfo.IsOnline = true;
+            appcontext.CurUserInfo.IsAuthorized = true;
 
             // 设置超级用户标志
             if (user.IsSuperUser)

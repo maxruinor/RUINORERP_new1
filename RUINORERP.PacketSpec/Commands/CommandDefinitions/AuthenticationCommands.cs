@@ -20,16 +20,6 @@ namespace RUINORERP.PacketSpec.Commands
         public static readonly CommandId Logout = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_Logout & 0xFF));
 
         /// <summary>
-        /// 验证Token - 验证用户身份令牌的有效性
-        /// </summary>
-        public static readonly CommandId ValidateToken = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_ValidateToken & 0xFF));
-
-        /// <summary>
-        /// 刷新Token - 更新用户身份令牌
-        /// </summary>
-        public static readonly CommandId RefreshToken = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_RefreshToken & 0xFF));
-
-        /// <summary>
         /// T掉重复登录的人员 - 当检测到重复登录时，强制下线先前的会话1
         /// </summary>
         public static readonly CommandId DuplicateLogin = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_DuplicateLogin & 0xFF));

@@ -25,6 +25,7 @@ namespace RUINORERP.UI.Network
         private DateTime _lastSuccessfulCheck;
         private int _consecutiveFailures;
         private readonly object _stateLock = new object();
+        private readonly SemaphoreSlim _checkLock = new SemaphoreSlim(1, 1); // 防止Timer回调重叠
         
         // 用于检测连接状态变化的标志
         private bool _lastConnectionState;
@@ -72,8 +73,13 @@ namespace RUINORERP.UI.Network
             _consecutiveFailures = 0;
             _lastConnectionState = true;
 
-            // 创建定时器，但不立即启动
-            _healthCheckTimer = new Timer(async _ => await PerformHealthCheckAsync(), null, Timeout.Infinite, Timeout.Infinite);
+            // 创建定时器，使用SemaphoreSlim防止回调重叠
+            _healthCheckTimer = new Timer(async _ => 
+            {
+                if (!await _checkLock.WaitAsync(0)) return; // 非阻塞检查，已有检查在执行则跳过
+                try { await PerformHealthCheckAsync(); }
+                finally { _checkLock.Release(); }
+            }, null, Timeout.Infinite, Timeout.Infinite);
         }
 
         /// <summary>

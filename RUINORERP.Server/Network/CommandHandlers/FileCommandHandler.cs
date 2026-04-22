@@ -994,7 +994,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 获取并添加YYMM子目录（按时间倒序，减少数量）
                     try
                     {
-                        var subDirs = Directory.GetDirectories(baseBusinessPath)
+                        var subDirs = (await Task.Run(() => Directory.GetDirectories(baseBusinessPath)))
                                              .Where(dir => Directory.Exists(dir))
                                              .OrderByDescending(dir => dir)
                                              .Take(3); // 只搜索最近3个月的目录
@@ -1031,21 +1031,21 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     _logger?.LogDebug("在目录中搜索: {Directory}", directory);
                     foreach (var pattern in patternGroup)
                     {
-                        try
+                    try
+                    {
+                        _logger?.LogDebug("使用模式搜索: {Pattern}", pattern);
+                        var files = await Task.Run(() => Directory.GetFiles(directory, pattern));
+                        if (files.Length > 0)
                         {
-                            _logger?.LogDebug("使用模式搜索: {Pattern}", pattern);
-                            var files = Directory.GetFiles(directory, pattern);
-                            if (files.Length > 0)
-                            {
-                                _logger?.Debug("找到匹配的文件: {FilePath}", files[0]);
-                                return files[0];
-                            }
+                            _logger?.Debug("找到匹配的文件: {FilePath}", files[0]);
+                            return files[0];
                         }
-                        catch (Exception ex)
-                        {
-                            // 记录错误但继续搜索
-                            _logger?.LogWarning(ex, "搜索文件时出错: 目录={Directory}, 模式={Pattern}", directory, pattern);
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 记录错误但继续搜索
+                        _logger?.LogWarning(ex, "搜索文件时出错: 目录={Directory}, 模式={Pattern}", directory, pattern);
+                    }
                     }
                 }
             }
@@ -1230,22 +1230,22 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 string fullRelativePath = Path.Combine(fileStorageInfo.StoragePath, fileStorageInfo.StorageFileName);
                 var resolvedPath = FileStorageHelper.ResolveToAbsolutePath(fullRelativePath);
-                if (File.Exists(resolvedPath))
-                {
-                    try
+                    if (File.Exists(resolvedPath))
                     {
-                        _logger?.LogDebug("使用解析后的路径删除文件: {FilePath}", resolvedPath);
-                        File.Delete(resolvedPath);
-                        fileAlreadyDeleted = true;
+                        try
+                        {
+                            _logger?.LogDebug("使用解析后的路径删除文件: {FilePath}", resolvedPath);
+                            await Task.Run(() => File.Delete(resolvedPath));
+                            fileAlreadyDeleted = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            string errorMsg = $"使用解析后的路径删除文件失败: {resolvedPath}，错误: {ex.Message}";
+                            _logger?.LogError(ex, errorMsg);
+                            hasError = true;
+                            errorMessages.Add(errorMsg);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        string errorMsg = $"使用解析后的路径删除文件失败: {resolvedPath}，错误: {ex.Message}";
-                        _logger?.LogError(ex, errorMsg);
-                        hasError = true;
-                        errorMessages.Add(errorMsg);
-                    }
-                }
             }
 
             if (!fileAlreadyDeleted)
@@ -1263,7 +1263,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private async System.Threading.Tasks.Task<(bool HasError, List<string> ErrorMessages)> SearchAndDeleteFileAsync(tb_FS_FileStorageInfo fileStorageInfo, bool hasError, List<string> errorMessages)
         {
-            var searchPaths = BuildSearchPaths(fileStorageInfo);
+            var searchPaths = await BuildSearchPathsAsync(fileStorageInfo);
             var searchPatterns = BuildSearchPatterns(fileStorageInfo);
 
             if (searchPatterns.Count == 0)
@@ -1281,13 +1281,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     try
                     {
-                        var files = Directory.GetFiles(searchPath, pattern);
+                        var files = await Task.Run(() => Directory.GetFiles(searchPath, pattern));
                         if (files.Length > 0)
                         {
                             string targetFile = SelectTargetFile(files, fileStorageInfo.StorageFileName);
                             if (targetFile != null)
                             {
-                                File.Delete(targetFile);
+                                await Task.Run(() => File.Delete(targetFile));
                                 fileDeleted = true;
                                 _logger?.LogDebug("物理删除文件成功: {FilePath}", targetFile);
                             }
@@ -1318,7 +1318,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 构建搜索路径列表
         /// </summary>
-        private List<string> BuildSearchPaths(tb_FS_FileStorageInfo fileStorageInfo)
+        private async Task<List<string>> BuildSearchPathsAsync(tb_FS_FileStorageInfo fileStorageInfo)
         {
             var searchPaths = new List<string>();
 
@@ -1343,7 +1343,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                     try
                     {
-                        var subDirs = Directory.GetDirectories(baseBusinessPath)
+                        var subDirs = (await Task.Run(() => Directory.GetDirectories(baseBusinessPath)))
                             .Where(dir => Directory.Exists(dir))
                             .OrderByDescending(dir => dir)
                             .Take(6);

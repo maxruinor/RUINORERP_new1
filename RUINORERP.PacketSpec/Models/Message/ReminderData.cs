@@ -77,7 +77,7 @@ namespace RUINORERP.PacketSpec.Models.Message
         public double RemindInterval { get; set; } = 20;
         /// <summary>
         /// 可以提醒多个人,一定是能使用系统的用户
-        /// Employee_ID
+        /// UserID
         /// </summary>
         public List<long> ReceiverUserIDs { get; set; } = new List<long>();
 

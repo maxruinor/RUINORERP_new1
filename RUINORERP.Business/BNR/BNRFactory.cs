@@ -1,20 +1,23 @@
 using CacheManager.Core;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Business.BNR
 {
     public class BNRFactory
     {
-        private Dictionary<string, IParameterHandler> mHandlers = new Dictionary<string, IParameterHandler>();
+        private readonly ConcurrentDictionary<string, IParameterHandler> mHandlers = new ConcurrentDictionary<string, IParameterHandler>();
         private readonly DatabaseSequenceService _databaseSequenceService;
         private readonly ICacheManager<object> _cacheManager;
-        [ThreadStatic]
-        private static string _currentBusinessType;
+        
+        // 使用AsyncLocal替代ThreadStatic，确保异步上下文正确传播
+        private static readonly AsyncLocal<string> _currentBusinessType = new AsyncLocal<string>();
 
         /// <summary>
         /// 构造函数
@@ -52,7 +55,7 @@ namespace RUINORERP.Business.BNR
         /// <param name="businessType">业务类型</param>
         public static void SetCurrentBusinessType(string businessType)
         {
-            _currentBusinessType = businessType;
+            _currentBusinessType.Value = businessType;
         }
 
         /// <summary>
@@ -61,7 +64,7 @@ namespace RUINORERP.Business.BNR
         /// <returns>当前业务类型</returns>
         public static string GetCurrentBusinessType()
         {
-            return _currentBusinessType;
+            return _currentBusinessType.Value;
         }
 
         public void Initialize()
@@ -125,7 +128,7 @@ namespace RUINORERP.Business.BNR
         public void Register(string name, IParameterHandler handler)
         {
             mHandlers[name] = handler;
-            mHandlers[name].Factory = this;
+            handler.Factory = this;
         }
 
         private static BNRFactory mDefault = null;
@@ -143,8 +146,9 @@ namespace RUINORERP.Business.BNR
             ParameterTypeAttribute[] result = (ParameterTypeAttribute[])type.GetCustomAttributes(typeof(ParameterTypeAttribute), false);
             if (result != null && result.Length > 0)
             {
-                mHandlers[result[0].Name] = (IParameterHandler)Activator.CreateInstance(type);
-                mHandlers[result[0].Name].Factory = this;
+                var handler = (IParameterHandler)Activator.CreateInstance(type);
+                mHandlers[result[0].Name] = handler;
+                handler.Factory = this;
             }
         }
 

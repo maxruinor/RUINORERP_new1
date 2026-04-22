@@ -103,7 +103,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                     var sessions = _sessionService.GetAllUserSessions();
                     foreach (var session in sessions)
                     {
-                        if (exData.ReceiverUserIDs.Contains(session.UserInfo.Employee_ID))
+                        if (exData.ReceiverUserIDs.Contains(session.UserInfo.UserID))
                         {
                             try
                             {

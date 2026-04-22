@@ -7,18 +7,23 @@ using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Server.Network.Models;
+using SuperSocket.Connection;
 using SuperSocket.Server.Abstractions.Session;
 
 namespace RUINORERP.Server.Network.Interfaces.Services
 {
     /// <summary>
-    /// 会话管理服务接口 - 提供统一的会话生命周期管理
+    /// 会话管理服务接口 - 重构版
     /// 整合SuperSocket和Network会话管理器的功能
-    /// 简化后的架构只使用SessionInfo管理会话，SessionInfo继承自AppSession
+    /// 
+    /// 【重构要点】
+    /// 1. 简化接口方法签名
+    /// 2. 统一会话信息访问方式
+    /// 3. 明确返回值和异常处理
     /// </summary>
     public interface ISessionService : IDisposable
     {
-        #region 会话管理
+        #region 会话管理 - 基础属性
 
         /// <summary>
         /// 活动会话数量
@@ -30,26 +35,46 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// </summary>
         int MaxSessionCount { get; set; }
 
+        #endregion
+
+        #region 会话管理 - 创建和销毁
+
         /// <summary>
         /// 创建新会话
         /// </summary>
         /// <param name="sessionId">会话ID</param>
-        /// <param name="clientIp">客户端IP</param>
-        /// <param name="clientPort">客户端端口</param>
         /// <returns>会话信息</returns>
         SessionInfo CreateSession(string sessionId);
 
         /// <summary>
-        /// 获取会话信息
+        /// 删除会话
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <returns>删除是否成功</returns>
+        bool RemoveSession(string sessionId);
+
+        /// <summary>
+        /// 验证会话是否有效
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <returns>是否有效</returns>
+        bool IsValidSession(string sessionId);
+
+        #endregion
+
+        #region 会话管理 - 查询
+
+        /// <summary>
+        /// 获取会话信息（通过会话ID）
         /// </summary>
         /// <param name="sessionId">会话ID</param>
         /// <returns>会话信息</returns>
         SessionInfo GetSession(string sessionId);
 
         /// <summary>
-        /// 获取会话信息
+        /// 获取会话信息（通过用户ID）
         /// </summary>
-        /// <param name="sessionId">会话ID</param>
+        /// <param name="userId">用户ID（用户名表主键）</param>
         /// <returns>会话信息</returns>
         SessionInfo GetSession(long userId);
 
@@ -66,6 +91,17 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <param name="excludeSessionIds">可选：要排除的会话ID数组</param>
         /// <returns>已认证的用户会话列表</returns>
         IEnumerable<SessionInfo> GetAllUserSessions(params string[] excludeSessionIds);
+
+        /// <summary>
+        /// 获取SuperSocket会话
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <returns>SuperSocket会话</returns>
+        IAppSession GetAppSession(string sessionId);
+
+        #endregion
+
+        #region 会话管理 - 更新
 
         /// <summary>
         /// 更新会话信息
@@ -89,18 +125,20 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         bool UpdateSessionLight(SessionInfo sessionInfo);
 
         /// <summary>
-        /// 删除会话
+        /// 更新会话活动时间
         /// </summary>
         /// <param name="sessionId">会话ID</param>
-        /// <returns>删除是否成功</returns>
-        bool RemoveSession(string sessionId);
+        /// <returns>更新结果</returns>
+        bool UpdateSessionActivity(string sessionId);
 
         /// <summary>
-        /// 验证会话是否有效
+        /// 设置会话属性
         /// </summary>
         /// <param name="sessionId">会话ID</param>
-        /// <returns>是否有效</returns>
-        bool IsValidSession(string sessionId);
+        /// <param name="key">属性键</param>
+        /// <param name="value">属性值</param>
+        /// <returns>设置结果</returns>
+        bool SetSessionProperty(string sessionId, string key, object value);
 
         #endregion
 
@@ -150,58 +188,35 @@ namespace RUINORERP.Server.Network.Interfaces.Services
 
         #endregion
 
-        #region SuperSocket集成功能
+        #region SuperSocket集成
 
         /// <summary>
         /// 添加SuperSocket会话
         /// </summary>
-        /// <param name="session">SuperSocket会话</param>
-        /// <returns>添加结果</returns>
         Task<bool> AddSessionAsync(IAppSession session);
 
         /// <summary>
         /// 移除SuperSocket会话
         /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <returns>移除结果</returns>
         Task<bool> RemoveSessionAsync(string sessionId);
 
-        /// <summary>
-        /// 获取SuperSocket会话
-        /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <returns>SuperSocket会话</returns>
-        IAppSession GetAppSession(string sessionId);
+        #endregion
 
-        /// <summary>
-        /// 更新会话活动时间
-        /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <returns>更新结果</returns>
-        bool UpdateSessionActivity(string sessionId);
-
-        /// <summary>
-        /// 设置会话属性
-        /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <param name="key">属性键</param>
-        /// <param name="value">属性值</param>
-        /// <returns>设置结果</returns>
-        bool SetSessionProperty(string sessionId, string key, object value);
+        #region 连接管理
 
         /// <summary>
         /// 主动断开指定会话连接（T人功能）
         /// </summary>
         /// <param name="sessionId">要断开的会话ID</param>
-        /// <param name="reason">断开原因，默认为"服务器强制断开"</param>
+        /// <param name="reason">断开原因</param>
         /// <returns>断开是否成功</returns>
         Task<bool> DisconnectSessionAsync(string sessionId, string reason = "服务器强制断开");
 
         /// <summary>
-        /// 主动断开指定用户的所有会话连接（T人功能）
+        /// 主动断开指定用户的所有会话连接
         /// </summary>
         /// <param name="username">要断开的用户名</param>
-        /// <param name="reason">断开原因，默认为"服务器强制断开"</param>
+        /// <param name="reason">断开原因</param>
         /// <returns>成功断开的会话数量</returns>
         Task<int> DisconnectUserSessionsAsync(string username, string reason = "服务器强制断开");
 
@@ -212,12 +227,6 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <summary>
         /// 向指定会话发送命令并等待响应
         /// </summary>
-        /// <param name="sessionID">会话ID</param>
-        /// <param name="commandId">命令ID</param>
-        /// <param name="request">请求数据</param>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>响应数据包</returns>
         Task<PacketModel> SendCommandAndWaitForResponseAsync<TRequest>(
             string sessionID,
             CommandId commandId,
@@ -229,11 +238,6 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <summary>
         /// 向指定会话发送命令（单向，不等待响应）
         /// </summary>
-        /// <param name="sessionID">会话ID</param>
-        /// <param name="commandId">命令ID</param>
-        /// <param name="request">请求数据</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>发送是否成功</returns>
         Task<bool> SendCommandAsync<TRequest>(
             string sessionID,
             CommandId commandId,
@@ -244,14 +248,6 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <summary>
         /// 核心数据包发送方法
         /// </summary>
-        /// <typeparam name="TRequest">请求类型</typeparam>
-        /// <param name="sessionInfo">会话信息</param>
-        /// <param name="commandId">命令ID</param>
-        /// <param name="request">请求数据</param>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
-        /// <param name="ct">取消令牌</param>
-        /// <param name="packetDirection">数据包方向</param>
-        /// <param name="responseTypeName">响应类型名称</param>
         Task SendPacketCoreAsync<TRequest>(
             SessionInfo sessionInfo,
             CommandId commandId,
@@ -261,6 +257,49 @@ namespace RUINORERP.Server.Network.Interfaces.Services
             PacketDirection packetDirection = PacketDirection.ServerRequest,
             string responseTypeName = null)
             where TRequest : class, IRequest;
+
+        #endregion
+
+        #region 会话生命周期事件处理
+
+        /// <summary>
+        /// 处理会话连接事件
+        /// </summary>
+        ValueTask OnSessionConnectedAsync(IAppSession session);
+
+        /// <summary>
+        /// 处理会话断开事件
+        /// </summary>
+        ValueTask OnSessionClosedAsync(IAppSession session, CloseEventArgs closeReason);
+
+        /// <summary>
+        /// 用户认证成功事件处理
+        /// </summary>
+        Task OnUserAuthenticatedAsync(SessionInfo sessionInfo);
+
+        /// <summary>
+        /// 用户认证失败事件处理
+        /// </summary>
+        Task OnAuthenticationFailedAsync(SessionInfo sessionInfo, string reason);
+
+        /// <summary>
+        /// 会话超时事件处理
+        /// </summary>
+        Task OnSessionTimeoutAsync(SessionInfo sessionInfo);
+
+        /// <summary>
+        /// 会话错误事件处理
+        /// </summary>
+        Task OnSessionErrorAsync(SessionInfo sessionInfo, Exception error);
+
+        #endregion
+
+        #region 请求管理
+
+        /// <summary>
+        /// 尝试移除待处理请求
+        /// </summary>
+        bool TryRemovePendingRequest(string requestId, out TaskCompletionSource<PacketModel> taskCompletionSource);
 
         #endregion
     }

@@ -36,6 +36,19 @@ namespace RUINORERP.Server.Controls
         
         // ✅ 新增：图表控件
         private Chart _memoryChart;
+        
+        // ✅ 新增：性能指标采集器
+        private BizCodeMetricsCollector _bizCodeCollector;
+        private BroadcastMetricsCollector _broadcastCollector;
+        private CacheMetricsCollector _cacheCollector;
+        private DatabaseMetricsCollector _databaseCollector;
+        
+        // ✅ 新增：性能指标 UI 控件
+        private FlowLayoutPanel _performanceMetricsPanel;
+        private GroupBox _bizCodeGroupBox;
+        private GroupBox _broadcastGroupBox;
+        private GroupBox _cacheGroupBox;
+        private GroupBox _databaseGroupBox;
 
         /// <summary>
         /// 构造函数
@@ -64,7 +77,7 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
-        /// 初始化UI
+        /// 初始化 UI
         /// </summary>
         private void InitializeUI()
         {
@@ -74,10 +87,11 @@ namespace RUINORERP.Server.Controls
             var mainPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                RowCount = 4,
+                RowCount = 5,
                 ColumnCount = 1
             };
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 200)); // 性能指标面板
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 150)); // 图表区域
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 35));
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 65));
@@ -86,24 +100,68 @@ namespace RUINORERP.Server.Controls
             var toolbarPanel = CreateToolbarPanel();
             mainPanel.Controls.Add(toolbarPanel, 0, 0);
 
+            // ✅ 新增：性能指标面板
+            var metricsPanel = CreatePerformanceMetricsPanel();
+            mainPanel.Controls.Add(metricsPanel, 0, 1);
+
             // 趋势图表
             var chartPanel = CreateChartPanel();
-            mainPanel.Controls.Add(chartPanel, 0, 1);
+            mainPanel.Controls.Add(chartPanel, 0, 2);
 
             // 客户端列表
             var clientListPanel = CreateClientListPanel();
-            mainPanel.Controls.Add(clientListPanel, 0, 2);
+            mainPanel.Controls.Add(clientListPanel, 0, 3);
 
             // 统计详情
             var statisticsPanel = CreateStatisticsPanel();
-            mainPanel.Controls.Add(statisticsPanel, 0, 3);
+            mainPanel.Controls.Add(statisticsPanel, 0, 4);
 
             this.Controls.Add(mainPanel);
 
             // 初始化定时刷新
             _refreshTimer = new Timer();
-            _refreshTimer.Interval = 5000; // 5秒刷新一次
+            _refreshTimer.Interval = 5000; // 5 秒刷新一次
             _refreshTimer.Tick += (s, e) => RefreshData();
+            
+            // ✅ 初始化性能指标采集器
+            InitializeMetricsCollectors();
+        }
+        
+        /// <summary>
+        /// ✅ 初始化性能指标采集器
+        /// </summary>
+        private void InitializeMetricsCollectors()
+        {
+            var config = new PerformanceMonitoringConfig();
+            _bizCodeCollector = new BizCodeMetricsCollector(config);
+            _broadcastCollector = new BroadcastMetricsCollector(config);
+            _cacheCollector = new CacheMetricsCollector(config);
+            _databaseCollector = new DatabaseMetricsCollector(config);
+        }
+        
+        /// <summary>
+        /// ✅ 设置外部注入的性能监控采集器（由 ServerMonitorControl 注入）
+        /// </summary>
+        public void SetMetricsCollectors(IEnumerable<IPerformanceMetricsCollector> collectors)
+        {
+            foreach (var collector in collectors)
+            {
+                switch (collector.CollectorName)
+                {
+                    case "BizCodeMetrics":
+                        _bizCodeCollector = collector as BizCodeMetricsCollector;
+                        break;
+                    case "BroadcastMetrics":
+                        _broadcastCollector = collector as BroadcastMetricsCollector;
+                        break;
+                    case "CacheMetrics":
+                        _cacheCollector = collector as CacheMetricsCollector;
+                        break;
+                    case "DatabaseMetrics":
+                        _databaseCollector = collector as DatabaseMetricsCollector;
+                        break;
+                }
+            }
         }
 
         /// <summary>
@@ -281,6 +339,105 @@ namespace RUINORERP.Server.Controls
 
             return panel;
         }
+        
+        /// <summary>
+        /// ✅ 创建性能指标面板
+        /// </summary>
+        private Panel CreatePerformanceMetricsPanel()
+        {
+            var panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BorderStyle = BorderStyle.FixedSingle,
+                Padding = new Padding(5)
+            };
+
+            var lblTitle = new Label
+            {
+                Text = "实时性能指标",
+                Dock = DockStyle.Top,
+                Height = 20,
+                Font = new Font(this.Font, FontStyle.Bold)
+            };
+
+            // 创建 FlowLayoutPanel 用于放置各个指标组
+            _performanceMetricsPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                AutoScroll = true
+            };
+
+            // 创建编号生成指标组
+            _bizCodeGroupBox = CreateMetricGroupBox("编号生成性能", 
+                new[] { "平均响应时间：-- ms", "成功率：--%", "累计成功：0 次", "累计失败：0 次" });
+            _performanceMetricsPanel.Controls.Add(_bizCodeGroupBox);
+
+            // 创建广播服务指标组
+            _broadcastGroupBox = CreateMetricGroupBox("广播服务性能",
+                new[] { "平均延迟：-- ms", "成功率：--%", "当前并发：0", "累计广播：0 次" });
+            _performanceMetricsPanel.Controls.Add(_broadcastGroupBox);
+
+            // 创建缓存指标组
+            _cacheGroupBox = CreateMetricGroupBox("缓存服务性能",
+                new[] { "缓存命中率：--%", "累计命中：0 次", "累计未命中：0 次" });
+            _performanceMetricsPanel.Controls.Add(_cacheGroupBox);
+
+            // 创建数据库指标组
+            _databaseGroupBox = CreateMetricGroupBox("数据库性能",
+                new[] { "平均查询耗时：-- ms", "慢查询数：0 次", "累计查询：0 次" });
+            _performanceMetricsPanel.Controls.Add(_databaseGroupBox);
+
+            panel.Controls.Add(_performanceMetricsPanel);
+            panel.Controls.Add(lblTitle);
+
+            return panel;
+        }
+        
+        /// <summary>
+        /// ✅ 创建指标组控件
+        /// </summary>
+        private GroupBox CreateMetricGroupBox(string title, string[] metrics)
+        {
+            var groupBox = new GroupBox
+            {
+                Text = title,
+                Width = 280,
+                Height = 120,
+                Margin = new Padding(5),
+                Font = new Font(this.Font.FontFamily, 8.5F)
+            };
+
+            var tableLayoutPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                RowCount = 4,
+                ColumnCount = 2,
+                Padding = new Padding(5)
+            };
+
+            for (int i = 0; i < 4; i++)
+            {
+                tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 25));
+                var label = new Label
+                {
+                    Text = i < metrics.Length ? metrics[i] : "--",
+                    Dock = DockStyle.Fill,
+                    AutoSize = true,
+                    Tag = $"metric_{i}"
+                };
+                tableLayoutPanel.Controls.Add(label, i % 2, i / 2);
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            }
+
+            groupBox.Controls.Add(tableLayoutPanel);
+            return groupBox;
+        }
 
         /// <summary>
         /// 创建客户端列表面板
@@ -388,6 +545,9 @@ namespace RUINORERP.Server.Controls
                 var clientInfos = _storageService.GetAllClientInfos();
                 UpdateClientList(clientInfos);
                 UpdateMemoryChart(clientInfos);
+                
+                // ✅ 刷新性能指标
+                UpdatePerformanceMetrics();
 
                 var lblStatus = this.Controls.Find("lblStatus", true).FirstOrDefault() as Label;
                 if (lblStatus != null)
@@ -679,6 +839,94 @@ namespace RUINORERP.Server.Controls
         public void StopAutoRefresh()
         {
             _refreshTimer?.Stop();
+        }
+        
+        /// <summary>
+        /// ✅ 刷新性能指标
+        /// </summary>
+        private void UpdatePerformanceMetrics()
+        {
+            try
+            {
+                // 更新编号生成指标
+                if (_bizCodeCollector != null)
+                {
+                    var snapshots = _bizCodeCollector.GetCurrentSnapshots().ToList();
+                    UpdateGroupBox(_bizCodeGroupBox, snapshots);
+                }
+                
+                // 更新广播服务指标
+                if (_broadcastCollector != null)
+                {
+                    var snapshots = _broadcastCollector.GetCurrentSnapshots().ToList();
+                    UpdateGroupBox(_broadcastGroupBox, snapshots);
+                }
+                
+                // 更新缓存指标
+                if (_cacheCollector != null)
+                {
+                    var snapshots = _cacheCollector.GetCurrentSnapshots().ToList();
+                    UpdateGroupBox(_cacheGroupBox, snapshots);
+                }
+                
+                // 更新数据库指标
+                if (_databaseCollector != null)
+                {
+                    var snapshots = _databaseCollector.GetCurrentSnapshots().ToList();
+                    UpdateGroupBox(_databaseGroupBox, snapshots);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 静默处理，不影响其他功能
+                System.Diagnostics.Debug.WriteLine($"更新性能指标失败：{ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// ✅ 更新组控件的指标显示
+        /// </summary>
+        private void UpdateGroupBox(GroupBox groupBox, List<PerformanceMetricSnapshot> snapshots)
+        {
+            if (groupBox == null || groupBox.Controls.Count == 0)
+                return;
+                
+            var tableLayoutPanel = groupBox.Controls[0] as TableLayoutPanel;
+            if (tableLayoutPanel == null)
+                return;
+                
+            // 根据指标快照更新标签文本
+            foreach (Control control in tableLayoutPanel.Controls)
+            {
+                if (control is Label label && label.Tag != null)
+                {
+                    var tag = label.Tag.ToString();
+                    if (tag.StartsWith("metric_"))
+                    {
+                        int index = int.Parse(tag.Substring(7));
+                        if (index < snapshots.Count)
+                        {
+                            var snapshot = snapshots[index];
+                            var statusSymbol = snapshot.Status switch
+                            {
+                                MetricStatus.Normal => "✓",
+                                MetricStatus.Warning => "⚠",
+                                MetricStatus.Critical => "✗"
+                            };
+                            label.Text = $"{snapshot.MetricName}: {snapshot.CurrentValue:F2}{snapshot.Unit} {statusSymbol}";
+                            
+                            // 根据状态设置颜色
+                            label.ForeColor = snapshot.Status switch
+                            {
+                                MetricStatus.Normal => Color.Black,
+                                MetricStatus.Warning => Color.Orange,
+                                MetricStatus.Critical => Color.Red,
+                                _ => Color.Black
+                            };
+                        }
+                    }
+                }
+            }
         }
     }
 }

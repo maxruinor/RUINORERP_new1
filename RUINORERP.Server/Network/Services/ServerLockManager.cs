@@ -460,8 +460,19 @@ namespace RUINORERP.Server.Network.Services
                     existingLock.IsLocked = false;
                     existingLock.LastUpdateTime = DateTime.Now;
 
-                    // 广播锁定状态更新
-                    await BroadcastLockStatusAsync(existingLock);
+                    // 🔧 关键修复：异步广播，不阻塞命令处理线程
+                    // 广播失败不影响解锁操作的结果，避免级联超时
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await BroadcastLockStatusAsync(existingLock);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "广播锁状态更新失败（不影响解锁结果）: BillID={BillId}", lockInfo.BillID);
+                        }
+                    });
 
                     return new LockResponse
                     {
@@ -627,16 +638,33 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 int releasedCount = 0;
+                var broadcastList = new List<LockInfo>();
                 foreach (var lockInfo in locksToRelease)
                 {
                     // 移除锁定
                     if (_documentLocks.TryRemove(lockInfo.BillID, out _))
                     {
                         releasedCount++;
-                        // 广播锁定状态更新
                         lockInfo.IsLocked = false;
-                        await BroadcastLockStatusAsync(lockInfo);
+                        broadcastList.Add(lockInfo);
                     }
+                }
+
+                // 🔧 关键修复：合并广播，只发一次而不是逐个广播
+                // 之前每个锁都await BroadcastLockStatusAsync，N个锁会阻塞N次
+                if (broadcastList.Count > 0)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await BroadcastLockStatusAsync(broadcastList);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "批量广播锁状态更新失败: SessionId={SessionId}", sessionId);
+                        }
+                    });
                 }
 
                 return releasedCount;
@@ -756,7 +784,8 @@ namespace RUINORERP.Server.Network.Services
                 }
             }
 
-            // 移除过期锁并广播
+            // 移除过期锁
+            var broadcastList = new List<LockInfo>();
             foreach (var (billId, lockInfo) in expiredLocks)
             {
                 if (_documentLocks.TryRemove(billId, out _))
@@ -766,10 +795,26 @@ namespace RUINORERP.Server.Network.Services
                     // ✅ 记录锁超时
                     _metricsCollector.RecordLockTimeout();
                     
-                    // 广播锁状态更新（标记为未锁定）
+                    // 标记为未锁定并收集，稍后批量广播
                     lockInfo.IsLocked = false;
-                    await BroadcastLockStatusAsync(lockInfo);
+                    broadcastList.Add(lockInfo);
                 }
+            }
+
+            // 🔧 关键修复：合并广播，避免逐个await阻塞清理线程
+            if (broadcastList.Count > 0)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await BroadcastLockStatusAsync(broadcastList);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "清理过期锁后广播状态更新失败");
+                    }
+                });
             }
 
             if (expiredLocks.Count > 0)
@@ -1344,8 +1389,19 @@ namespace RUINORERP.Server.Network.Services
                     }
                     validation.LockInfo.IsLocked = false;
 
-                    // 广播锁定状态更新
-                    await BroadcastLockStatusAsync(validation.LockInfo);
+                    // 🔧 关键修复：异步广播，不阻塞命令处理线程
+                    // 解锁操作必须立即返回响应给客户端，广播延迟或失败不应阻塞解锁流程
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await BroadcastLockStatusAsync(validation.LockInfo);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "广播锁状态更新失败（不影响解锁结果）: BillID={BillId}", billId);
+                        }
+                    });
 
                     return new LockResponse
                     {
@@ -1499,8 +1555,19 @@ namespace RUINORERP.Server.Network.Services
                     // ✅ 记录锁获取成功
                     _metricsCollector.RecordLockAcquired();
                     
-                    // 广播锁定状态更新
-                    await BroadcastLockStatusAsync(serverLockInfo);
+                    // 🔧 关键修复：异步广播，不阻塞命令处理线程
+                    // 锁定操作必须立即返回响应给客户端，广播延迟或失败不应阻塞锁定流程
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await BroadcastLockStatusAsync(serverLockInfo);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "广播锁状态更新失败（不影响锁定结果）: BillID={BillId}", lockInfo.BillID);
+                        }
+                    });
 
                     _logger.LogDebug("单据 {BillId} 锁定成功: 用户={UserId}, 会话={SessionId}, 过期时间={ExpireTime}",
                         lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId, serverLockInfo.ExpireTime);

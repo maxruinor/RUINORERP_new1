@@ -38,14 +38,8 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 发送弹窗消息给指定用户并等待响应
+        /// 发送弹窗消息给指定用户并等待响应（适用于客户端间中转或重要通知）
         /// </summary>
-        /// <param name="targetUserName">目标用户ID</param>
-        /// <param name="message">消息内容</param>
-        /// <param name="title">消息标题</param>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>消息响应</returns>
         public async Task<MessageResponse> SendPopupMessageAsync(
             string targetUserName,
             string message,
@@ -53,33 +47,52 @@ namespace RUINORERP.Server.Network.Services
             int timeoutMs = 30000,
             CancellationToken ct = default)
         {
+            return await SendMessageWithResponseAsync(targetUserName, message, title, MessageType.Popup, MessageCommands.SendPopupMessage, timeoutMs, ct);
+        }
+
+        /// <summary>
+        /// 广播弹窗消息（单向，不等待响应，适用于服务器主动推送）
+        /// </summary>
+        public async Task<int> BroadcastPopupMessageAsync(string message, string title = "系统通知", CancellationToken ct = default)
+        {
+            return await BroadcastMessageAsync(message, title, MessageType.Popup, MessageCommands.SendPopupMessage, ct);
+        }
+
+        /// <summary>
+        /// 内部通用方法：发送消息并等待响应
+        /// </summary>
+        private async Task<MessageResponse> SendMessageWithResponseAsync(
+            string targetUserId,
+            string message,
+            string title,
+            MessageType messageType,
+            CommandId commandId,
+            int timeoutMs,
+            CancellationToken ct)
+        {
             try
             {
-                // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
                 var messageData = new MessageData
                 {
                     MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
-                    MessageType = MessageType.Popup,
+                    MessageType = messageType,
                     Title = title,
                     Content = message,
                     SenderName = "服务器消息",
-                    ReceiverIds = new List<long> { long.TryParse(targetUserName, out long userId) ? userId : 0 },
+                    ReceiverIds = new List<long> { long.TryParse(targetUserId, out long userId) ? userId : 0 },
                     SendTime = DateTime.Now
                 };
 
-                var request = new MessageRequest(MessageType.Popup, messageData);
+                var request = new MessageRequest(messageType, messageData);
+                var sessions = _sessionService.GetUserSessions(targetUserId);
 
-                // 获取目标用户的所有会话
-                var sessions = _sessionService.GetUserSessions(targetUserName);
-
-                // 向第一个会话发送消息并等待响应
                 foreach (var session in sessions)
                 {
                     if (session is SessionInfo sessionInfo)
                     {
                         var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
                             session.SessionID,
-                            MessageCommands.SendPopupMessage,
+                            commandId,
                             request,
                             timeoutMs,
                             ct);
@@ -88,13 +101,69 @@ namespace RUINORERP.Server.Network.Services
                                MessageResponse.Fail(MessageType.System, "未收到有效响应");
                     }
                 }
-
                 return MessageResponse.Fail(MessageType.System, "目标用户不在线");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "发送弹窗消息时发生异常");
+                _logger?.LogError(ex, "发送消息并等待响应时发生异常");
                 return MessageResponse.Fail(MessageType.System, $"发送消息失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 内部通用方法：广播消息（单向）
+        /// </summary>
+        private async Task<int> BroadcastMessageAsync(
+            string message,
+            string title,
+            MessageType messageType,
+            CommandId commandId,
+            CancellationToken ct)
+        {
+            try
+            {
+                var messageData = new MessageData
+                {
+                    MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
+                    MessageType = messageType,
+                    Title = title,
+                    Content = message,
+                    SenderName = "系统广播",
+                    SendTime = DateTime.Now
+                };
+
+                var request = new MessageRequest(messageType, messageData);
+                var sessions = _sessionService.GetAllUserSessions();
+                int successCount = 0;
+
+                foreach (var session in sessions)
+                {
+                    if (session is SessionInfo sessionInfo)
+                    {
+                        try
+                        {
+                            // 使用单向发送，不等待客户端响应
+                            await _sessionService.SendPacketCoreAsync(
+                                sessionInfo,
+                                commandId,
+                                request,
+                                5000,
+                                ct,
+                                RUINORERP.PacketSpec.Enums.Core.PacketDirection.ServerRequest);
+                            successCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, $"向会话 {session.SessionID} 广播消息失败");
+                        }
+                    }
+                }
+                return successCount;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "广播消息时发生异常");
+                return 0;
             }
         }
 

@@ -29,25 +29,23 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         }
 
         /// <summary>
-        /// 生成Token并存储 - 完整版，支持附加声明和刷新Token
+        /// 生成Token并存储（单令牌机制）
         /// </summary>
         /// <param name="userId">用户ID</param>
         /// <param name="userName">用户名</param>
         /// <param name="additionalClaims">附加声明，可选</param>
-        /// <returns>包含访问令牌和刷新令牌的TokenInfo</returns>
+        /// <returns>包含访问令牌的TokenInfo</returns>
         public async Task<TokenInfo> GenerateTokenAsync(string userId, string userName, Dictionary<string, object> additionalClaims = null)
         {
             try
             {
-                // 使用GenerateTokens方法生成令牌对
-                var (accessToken, refreshToken) = _tokenService.GenerateTokens(userId, userName, additionalClaims);
+                // 使用GenerateAccessToken方法生成单一访问令牌
+                var accessToken = _tokenService.GenerateAccessToken(userId, userName, additionalClaims);
                 
                 var tokenInfo = new TokenInfo
                 {
                     AccessToken = accessToken,
-                    RefreshToken = refreshToken,
-                    ExpiresAt = DateTime.Now.AddHours(_options.DefaultExpiryHours),  // ✅ 使用配置
-                    RefreshTokenExpiresAt = DateTime.Now.AddDays(_options.RefreshTokenExpiryDays)  // ✅ 使用配置
+                    ExpiresAt = DateTime.Now.AddHours(_options.DefaultExpiryHours)  // ✅ 使用配置
                 };
 
                 // 存储Token信息

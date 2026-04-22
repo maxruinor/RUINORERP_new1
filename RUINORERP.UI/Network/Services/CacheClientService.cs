@@ -106,7 +106,10 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 注册缓存同步命令处理器 - 【接收服务器推送】
         /// 职责：处理 Server -> Client 的 CacheSync 消息。
-        /// 注意：根据“谁先发送谁请求”原则，服务器推送时使用 CacheRequest 作为载体。
+        /// 【设计原则】根据"谁先发送谁请求"原则：
+        /// - 服务器推送时，服务器是请求方，数据在 packet.Request 中
+        /// - 事件回调的 data 参数对应 packet.Request
+        /// - 因此检查 data is CacheRequest 是正确的做法
         /// </summary>
         private void RegisterCacheSyncHandler()
         {
@@ -114,18 +117,18 @@ namespace RUINORERP.UI.Network.Services
             {
                 try
                 {
-                    // 【优先级 1】处理 CacheRequest 格式（服务器标准推送）
+                    // 【标准流程】处理 CacheRequest 格式（服务器标准推送）
                     if (data is CacheRequest cacheRequest)
                     {
                         ProcessServerPushedRequest(cacheRequest, packet.CommandId);
                         return;
                     }
 
-                    // 【优先级 2】兼容旧版或特殊场景下的 CacheResponse 推送
-                    if (packet.Response is CacheResponse cacheResponse)
+                    // 【备用方案】直接从 packet.Request 获取
+                    if (packet.Request is CacheRequest requestFromPacket)
                     {
-                        _log.LogDebug("接收到 CacheResponse 格式的推送（兼容模式），表名={0}", cacheResponse.TableName);
-                        ProcessServerPushedResponse(cacheResponse, packet.CommandId);
+                        _log.LogDebug("从 packet.Request 获取缓存请求，表名={0}", requestFromPacket.TableName);
+                        ProcessServerPushedRequest(requestFromPacket, packet.CommandId);
                         return;
                     }
 

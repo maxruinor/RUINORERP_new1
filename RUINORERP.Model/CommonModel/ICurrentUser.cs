@@ -1,42 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-
-namespace RUINORERP.Model
-
+﻿namespace RUINORERP.Model
 {
-    /*
-
-
     /// <summary>
-    /// 当前用户 认为任何系统都会有一个当前用户
+    /// 当前用户接口
+    /// 定义用户身份和会话信息的基本属性
     /// </summary>
-    public interface ICurrentUserInfo
+    public interface ICurrentUser
     {
         /// <summary>
-        /// 当前登录用户名称
+        /// 用户ID - 用户表主键
         /// </summary>
-        string Name { get; set; }
+        long UserID { get; set; }
+
         /// <summary>
-        /// 当前登录用户ID empID
+        /// 用户名 - 登录名称
         /// </summary>
-        long EmpID { get; set; }
+        string UserName { get; set; }
 
-
-        #region 数据库级别
-
-        List<tb_ModuleDefinition> UserModList { get; set; }
-        //List<tb_MenuInfo> UserMenuList { get; set; }
-        //List<tb_ButtonInfo> UserButtonList { get; set; }
-        //List<tb_FieldInfo> UserFieldList { get; set; }
         /// <summary>
-        /// 保存了所有的相关的菜单 按钮 字段最全的 角色  个性化数据
+        /// 员工ID - 员工表外键
+        /// </summary>
+        long EmployeeId { get; set; }
+
+        /// <summary>
+        /// 显示姓名
+        /// </summary>
+        string DisplayName { get; set; }
+
+        /// <summary>
+        /// 是否超级用户
+        /// </summary>
+        bool IsSuperUser { get; set; }
+
+        /// <summary>
+        /// 授权状态
+        /// </summary>
+        bool IsAuthorized { get; set; }
+
+        /// <summary>
+        /// 用户完整信息
         /// </summary>
         tb_UserInfo UserInfo { get; set; }
-
-        #endregion
     }
-
-    */
-
 }

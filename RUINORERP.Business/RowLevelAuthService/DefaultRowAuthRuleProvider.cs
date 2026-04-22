@@ -404,7 +404,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         {
             try
             {
-                return _context.CurUserInfo?.EmpID ?? 0;
+                return _context.CurUserInfo?.UserID ?? 0;
             }
             catch (Exception ex)
             {

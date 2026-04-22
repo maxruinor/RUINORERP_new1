@@ -90,8 +90,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 使用业务编码服务生成编号
-                string billNo = await _bizCodeService.GenerateBizBillNoAsync(request.BizType);
+                // 使用业务编码服务生成编号 - ✅ 传递cancellationToken
+                string billNo = await _bizCodeService.GenerateBizBillNoAsync(request.BizType, cancellationToken);
 
                 logger?.LogDebug($"成功生成业务单据编号: {billNo}, 业务类型: {request.BizType}");
 
@@ -125,7 +125,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 尝试将字符串转换为枚举类型
 
                 string baseInfoNo;
-                baseInfoNo = await _bizCodeService.GenerateBaseInfoNoAsync(request.BaseInfoType, request.ParaConst);
+                // ✅ 传递cancellationToken
+                baseInfoNo = await _bizCodeService.GenerateBaseInfoNoAsync(request.BaseInfoType, request.ParaConst, cancellationToken);
                 // 返回成功响应
                 return new BizCodeResponse
                 {
@@ -163,7 +164,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 使用常量参数生成编号
                     if (request.ProductParameter != null)
                     {
-                        baseInfoNo = await _bizCodeService.GenerateProductSKUCodeAsync(request.BaseInfoType, request.ProductParameter.prod, request.ProductParameter.prodDetail);
+                        // ✅ 传递cancellationToken
+                        baseInfoNo = await _bizCodeService.GenerateProductSKUCodeAsync(
+                            request.BaseInfoType, 
+                            request.ProductParameter.prod, 
+                            request.ProductParameter.prodDetail,
+                            ct: cancellationToken);
                     }
                     // 返回成功响应
                     return new BizCodeResponse
@@ -180,7 +186,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 使用常量参数生成编号
                     if (request.ProductParameter != null)
                     {
-                        baseInfoNo = await _bizCodeService.GenerateProductRelatedCodeAsync(request.BaseInfoType, request.ProductParameter.prod, request.ParaConst);
+                        // ✅ 传递cancellationToken
+                        baseInfoNo = await _bizCodeService.GenerateProductRelatedCodeAsync(
+                            request.BaseInfoType, 
+                            request.ProductParameter.prod, 
+                            request.ParaConst,
+                            ct: cancellationToken);
                     }
                     // 返回成功响应
                     return new BizCodeResponse
@@ -219,9 +230,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     throw new ArgumentException("条码生成参数不完整，缺少原始编码");
                 }
 
-                // 生成条码
-                string barcode = await _bizCodeService.GenerateBarCodeAsync(request.BarCodeParameter.OriginalCode,
-                    request.BarCodeParameter.PaddingChar);
+                // 生成条码 - ✅ 传递cancellationToken
+                string barcode = await _bizCodeService.GenerateBarCodeAsync(
+                    request.BarCodeParameter.OriginalCode,
+                    request.BarCodeParameter.PaddingChar,
+                    cancellationToken);
 
 
                 // 返回成功响应

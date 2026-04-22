@@ -166,7 +166,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
         //        AuthenticationCommands.Login,
         //        AuthenticationCommands.Logout,
         //        AuthenticationCommands.ValidateToken,
-        //        AuthenticationCommands.RefreshToken,
         //        AuthenticationCommands.DuplicateLogin
         //    );
         //}
@@ -191,12 +190,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
             managementService = _managementService;
             RegistrationService = _registrationService ?? throw new ArgumentNullException(nameof(_registrationService));
             TokenOptions = tokenOptions ?? throw new ArgumentNullException(nameof(tokenOptions));
-            // 使用安全方法设置支持的命令
+            // 使用安全方法设置支持的命令（单令牌机制，已移除RefreshToken）
             SetSupportedCommands(
                 AuthenticationCommands.Login,
                 AuthenticationCommands.Logout,
-                AuthenticationCommands.ValidateToken,
-                AuthenticationCommands.RefreshToken,
                 AuthenticationCommands.DuplicateLogin
             );
         }
@@ -217,12 +214,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 var commandId = cmd.Packet.CommandId;
                 
-                // 处理ValidateToken命令(使用TokenValidationRequest)
-                if (commandId == AuthenticationCommands.ValidateToken)
-                {
-                    return await ProcessTokenValidationAsync(cmd.Packet.ExecutionContext, cancellationToken);
-                }
-                
                 // 处理其他认证命令(使用LoginRequest)
                 if (cmd.Packet.Request is LoginRequest loginRequest)
                 {
@@ -238,10 +229,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     else if (commandId == AuthenticationCommands.Logout)
                     {
                         return await ProcessLogoutAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
-                    }
-                    else if (commandId == AuthenticationCommands.RefreshToken)
-                    {
-                        return await ProcessTokenRefreshAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
                     }
                     else if (commandId == AuthenticationCommands.DuplicateLogin)
                     {
@@ -503,60 +490,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
 
-
-        /// <summary>
-        /// 处理Token刷新
-        /// </summary>
-        private async Task<IResponse> ProcessTokenRefreshAsync(
-            LoginRequest loginRequest,
-            CommandContext executionContext,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 从请求中提取刷新Token和当前Token
-                string refreshToken = loginRequest.Token?.RefreshToken;
-                string currentToken = loginRequest.Token?.AccessToken;
-
-                // 验证Token
-                if (string.IsNullOrEmpty(refreshToken) || string.IsNullOrEmpty(currentToken))
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "刷新Token和当前Token不能为空");
-                }
-
-                // 使用TokenService刷新Token
-                string newAccessToken;
-                string newRefreshToken;
-                try
-                {
-                    var tokens = TokenService.RefreshTokens(refreshToken);
-                    newAccessToken = tokens.AccessToken;
-                    newRefreshToken = tokens.RefreshToken;
-                }
-                catch (Exception ex)
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, ex);
-                }
-
-                // 创建响应
-                var response = new TokenRefreshResponse
-                {
-                    IsSuccess = true,
-                    Message = "Token刷新成功",
-                    NewAccessToken = newAccessToken,
-                    NewRefreshToken = newRefreshToken, // 现在使用独立的刷新令牌
-                    ExpireTime = DateTime.Now.AddHours(TokenOptions.DefaultExpiryHours)  // ✅ 使用配置
-                };
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                return ResponseFactory.CreateSpecificErrorResponse(executionContext, ex);
-            }
-        }
-
-
+ 
 
         /// <summary>
         /// 处理重复用户下线命令
@@ -715,17 +649,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     await SessionService.RemoveSessionAsync(sessionId);
                 }
                 
-                // 撤销 Token（包含 AccessToken 和 RefreshToken）
+                // 撤销 Token
                 var token = executionContext.Token;
                 if (token != null)
                 {
                     if (!string.IsNullOrEmpty(token.AccessToken))
                     {
                         await TokenService.RevokeTokenAsync(token.AccessToken);
-                    }
-                    if (!string.IsNullOrEmpty(token.RefreshToken))
-                    {
-                        await TokenService.RevokeTokenAsync(token.RefreshToken);
                     }
                 }
 
@@ -743,50 +673,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 return ResponseFactory.CreateSpecificErrorResponse(executionContext, ex, "处理登出异常");
             }
         }
-
-        /// <summary>
-        /// 处理Token验证
-        /// </summary>
-        private async Task<IResponse> ProcessTokenValidationAsync(
-            CommandContext executionContext,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 从上下文中获取Token
-                string token = executionContext.Token?.AccessToken;
-                // 验证Token
-                if (string.IsNullOrEmpty(token))
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "Token不能为空");
-                }
-
-                // 使用TokenService验证Token
-                var validationResult = TokenService.ValidateToken(token);
-
-                // 创建响应
-                var response = new LoginResponse
-                {
-                    IsSuccess = validationResult.IsValid,
-                    Message = validationResult.IsValid ? "Token验证成功" : validationResult.ErrorMessage,
-                    UserId = validationResult.UserId != null ? Convert.ToInt64(validationResult.UserId) : 0,
-                    Username = validationResult.UserName
-                };
-
-                // 如果验证成功，设置Token信息
-                if (validationResult.IsValid)
-                {
-                    response.Token = new TokenInfo { AccessToken = token };
-                }
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                LogError($"处理Token验证异常: {ex.Message}", ex);
-                return ResponseFactory.CreateSpecificErrorResponse(executionContext, ex, "处理Token验证异常  ");
-            }
-        }
+ 
 
         #region 核心业务逻辑方法
 
@@ -1223,34 +1110,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             return validationResult;
         }
 
-        /// <summary>
-        /// 刷新Token - 使用TokenService提供Token刷新机制
-        /// </summary>
-        private async Task<(bool Success, string AccessToken, string ErrorMessage)> RefreshTokenAsync(string refreshToken, string currentToken)
-        {
-            await Task.Delay(30);
-
-            try
-            {
-                var tokens = TokenService.RefreshTokens(refreshToken);
-
-                if (!string.IsNullOrEmpty(tokens.AccessToken))
-                {
-                    return (true, tokens.AccessToken, null);
-                }
-
-                return (false, null, "无法生成有效的刷新令牌");
-            }
-            catch (Microsoft.IdentityModel.Tokens.SecurityTokenException ex)
-            {
-                return (false, null, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return (false, null, $"Token刷新失败: {ex.Message}");
-            }
-        }
-
+      
         /// <summary>
         /// 执行注销
         /// </summary>

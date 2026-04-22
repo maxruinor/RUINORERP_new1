@@ -223,7 +223,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 // 如果心跳请求中包含计算机名，也更新到会话信息
                                 if (!string.IsNullOrEmpty(heartbeatRequest.ComputerName))
                                 {
-                                    sessionInfo.UserInfo.机器名 = heartbeatRequest.ComputerName;
+                                    sessionInfo.UserInfo.MachineName = heartbeatRequest.ComputerName;
                                 }
 
                                 SessionService.UpdateSessionLight(sessionInfo);
@@ -240,7 +240,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             {
                                 try
                                 {
-                                    sessionInfo.UserInfo.机器名 = heartbeatRequest.ComputerName;
+                                    sessionInfo.UserInfo.MachineName = heartbeatRequest.ComputerName;
                                     SessionService.UpdateSessionLight(sessionInfo);
                                 }
                                 catch { /* 忽略异步更新错误 */ }
@@ -325,21 +325,23 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 return;
 
             // 批量赋值，减少多次属性访问
-            sessionInfo.UserInfo.用户名 = userInfo.用户名;
-            sessionInfo.UserInfo.姓名 = userInfo.姓名;
-            sessionInfo.UserInfo.当前模块 = userInfo.当前模块;
-            sessionInfo.UserInfo.当前窗体 = userInfo.当前窗体;
-            sessionInfo.UserInfo.登录时间 = userInfo.登录时间;
-            sessionInfo.UserInfo.心跳数 = userInfo.心跳数;
-            sessionInfo.UserInfo.客户端版本 = userInfo.客户端版本;
-            sessionInfo.UserInfo.客户端IP = userInfo.客户端IP;
-            sessionInfo.UserInfo.静止时间 = userInfo.静止时间;
-            sessionInfo.UserInfo.超级用户 = userInfo.超级用户;
-            sessionInfo.UserInfo.授权状态 = userInfo.授权状态;
-            sessionInfo.UserInfo.操作系统 = userInfo.操作系统;
-            sessionInfo.UserInfo.机器名 = userInfo.机器名;
-            sessionInfo.UserInfo.CPU信息 = userInfo.CPU信息;
-            sessionInfo.UserInfo.内存大小 = userInfo.内存大小;
+                
+
+            sessionInfo.UserInfo.UserName = userInfo.UserName;
+            sessionInfo.UserInfo.DisplayName = userInfo.DisplayName;
+            sessionInfo.UserInfo.CurrentModule = userInfo.CurrentModule;
+            sessionInfo.UserInfo.CurrentForm = userInfo.CurrentForm;
+            sessionInfo.UserInfo.LoginTime = userInfo.LoginTime;
+            sessionInfo.UserInfo.HeartbeatCount = userInfo.HeartbeatCount;
+            sessionInfo.UserInfo.ClientVersion = userInfo.ClientVersion;
+            sessionInfo.UserInfo.ClientIp = userInfo.ClientIp;
+            sessionInfo.UserInfo.IdleTime = userInfo.IdleTime;
+            sessionInfo.UserInfo.IsSuperUser = userInfo.IsSuperUser;
+            sessionInfo.UserInfo.IsAuthorized = userInfo.IsAuthorized;
+            sessionInfo.UserInfo.OperatingSystem = userInfo.OperatingSystem;
+            sessionInfo.UserInfo.MachineName = userInfo.MachineName;
+            sessionInfo.UserInfo.CpuInfo = userInfo.CpuInfo;
+            sessionInfo.UserInfo.MemorySize = userInfo.MemorySize;
         }
 
         /// <summary>

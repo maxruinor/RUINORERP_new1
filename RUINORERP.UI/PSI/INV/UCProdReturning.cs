@@ -104,7 +104,7 @@ namespace RUINORERP.UI.PSI.INV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdReturning).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public override void BindData(tb_ProdReturning entity, ActionStatus actionStatus)
+        public override async void BindData(tb_ProdReturning entity, ActionStatus actionStatus)
         {
 
             if (entity == null)
@@ -128,7 +128,8 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.ReturnNo))
                 {
-                    entity.ReturnNo = ClientBizCodeService.GetBizBillNo(BizType.归还单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.ReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.归还单);
                 }
                 entity.ReturnDate = System.DateTime.Now;
                 if (entity.tb_ProdReturningDetails != null && entity.tb_ProdReturningDetails.Count > 0)

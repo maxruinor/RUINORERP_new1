@@ -279,20 +279,19 @@ namespace RUINORERP.Business.BNR
 
                         if (existingRecord != null)
                         {
-                            // 记录存在，使用乐观锁更新
+                            // 直接更新为缓存值（内存缓存总是递增的，不需要条件判断）
                             int affectedRows = _sqlSugarClient.Updateable<SequenceNumbers>()
                                 .SetColumns(s => new SequenceNumbers
                                 {
                                     CurrentValue = update.Value,
                                     LastUpdated = DateTime.Now
                                 })
-                                .Where(s => s.SequenceKey == update.SequenceKey
-                                    && s.CurrentValue < update.Value) // 条件更新，避免覆盖新值
+                                .Where(s => s.SequenceKey == update.SequenceKey)
                                 .ExecuteCommand();
 
                             if (affectedRows == 0)
                             {
-                                LogInfo($"记录已存在且值较新，跳过更新: {update.SequenceKey}");
+                                LogInfo($"记录更新影响0行: {update.SequenceKey}");
                             }
                         }
                         else
@@ -494,38 +493,41 @@ namespace RUINORERP.Business.BNR
                 throw new ArgumentNullException(nameof(sequenceKey), "序列键不能为空");
             }
 
-            // 生成动态键（包含重置类型信息）
             string dynamicKey = GenerateDynamicKey(sequenceKey, resetType);
 
-            // 尝试从内存缓存中获取并递增序列值
-            // 使用原子操作确保线程安全
-            long nextValue = _sequenceCache.AddOrUpdate(
-                dynamicKey,
-                // 如果键不存在，使用行级锁从数据库加载（优化点）
-                (key) => GetNextValueWithRowLock(key, resetType, formatMask, description, businessType),
-                // 如果键存在，原子递增并异步更新数据库
-                (key, currentValue) =>
+            // 优化：缓存未命中时加锁，防止多个线程同时查数据库
+            var keyLock = _keyLocks.GetOrAdd(dynamicKey, k => new object());
+
+            long nextValue;
+            lock (keyLock)
+            {
+                // 再次检查缓存（可能其他线程已写入）
+                if (_sequenceCache.TryGetValue(dynamicKey, out var cachedValue))
                 {
-                    long next = currentValue + 1;
+                    nextValue = cachedValue + 1;
+                }
+                else
+                {
+                    // 缓存未命中，从数据库加载
+                    nextValue = GetNextValueWithRowLock(dynamicKey, resetType, formatMask, description, businessType);
+                    _sequenceCache[dynamicKey] = nextValue;
+                }
 
-                    // 将更新添加到队列，等待批量写入数据库
-                    _updateQueue.Enqueue(new SequenceUpdateInfo
-                    {
-                        SequenceKey = key,
-                        Value = next,
-                        ResetType = resetType,
-                        FormatMask = formatMask,
-                        Description = description,
-                        BusinessType = businessType
-                    });
-
-                    return next;
+                // 异步更新到数据库
+                _updateQueue.Enqueue(new SequenceUpdateInfo
+                {
+                    SequenceKey = dynamicKey,
+                    Value = nextValue,
+                    ResetType = resetType,
+                    FormatMask = formatMask,
+                    Description = description,
+                    BusinessType = businessType
                 });
+            }
 
-            // 检查是否需要立即刷新缓存到数据库（避免内存缓存过大）
+            // 检查是否需要立即刷新缓存到数据库
             if (_updateQueue.Count >= _batchUpdateThreshold)
             {
-                // 使用单独的任务刷新缓存，避免阻塞当前线程
                 Task.Run(async () =>
                 {
                     try
@@ -536,8 +538,6 @@ namespace RUINORERP.Business.BNR
                     {
                         System.Diagnostics.Debug.WriteLine($"后台刷新缓存时发生异常: {ex.Message}");
                         LogError("后台刷新缓存异常", ex);
-                        
-                        // 如果刷新失败，延迟重试
                         await Task.Delay(1000);
                         try
                         {

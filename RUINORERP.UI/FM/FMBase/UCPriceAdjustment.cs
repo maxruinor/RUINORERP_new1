@@ -151,7 +151,7 @@ namespace RUINORERP.UI.FM
         //}
 
         tb_FM_PriceAdjustmentController<tb_FM_PriceAdjustment> ctr = Startup.GetFromFac<tb_FM_PriceAdjustmentController<tb_FM_PriceAdjustment>>();
-        public override void BindData(tb_FM_PriceAdjustment entity, ActionStatus actionStatus)
+        public override async void BindData(tb_FM_PriceAdjustment entity, ActionStatus actionStatus)
         {
             if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
             {
@@ -200,11 +200,13 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.收款)
                     {
-                        entity.AdjustNo = ClientBizCodeService.GetBizBillNo(BizType.销售价格调整单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.AdjustNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售价格调整单);
                     }
                     else
                     {
-                        entity.AdjustNo = ClientBizCodeService.GetBizBillNo(BizType.采购价格调整单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.AdjustNo = await bizCodeService.GenerateBizBillNoAsync(BizType.采购价格调整单);
                     }
                 }
             }

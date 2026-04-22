@@ -81,7 +81,7 @@ namespace RUINORERP.UI.PSI.INV
 
         //private tb_StockTransfer _EditEntity;
         //public tb_StockTransfer EditEntity { get => _EditEntity; set => _EditEntity = value; }
-        public override void BindData(tb_StockTransfer entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_StockTransfer entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {
@@ -102,7 +102,8 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.StockTransferNo))
                 {
-                    entity.StockTransferNo = ClientBizCodeService.GetBizBillNo(BizType.调拨单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.StockTransferNo = await bizCodeService.GenerateBizBillNoAsync(BizType.调拨单);
                 }
                 entity.Transfer_date = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

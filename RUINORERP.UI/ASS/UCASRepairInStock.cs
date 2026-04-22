@@ -99,7 +99,7 @@ namespace RUINORERP.UI.ASS
             }
            await base.LoadRelatedDataToDropDownItemsAsync();
         }
-        public override void BindData(tb_AS_RepairInStock entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_AS_RepairInStock entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {
@@ -122,7 +122,8 @@ namespace RUINORERP.UI.ASS
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.RepairInStockNo))
                     {
-                        entity.RepairInStockNo = ClientBizCodeService.GetBizBillNo(BizType.维修入库单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.RepairInStockNo = await bizCodeService.GenerateBizBillNoAsync(BizType.维修入库单);
                     }
                     entity.Employee_ID = AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     if (entity.tb_AS_RepairInStockDetails != null && entity.tb_AS_RepairInStockDetails.Count > 0)

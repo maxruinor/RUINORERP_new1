@@ -134,7 +134,7 @@ namespace RUINORERP.UI.PSI.PUR
             .ToExpression();
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
-        public override void BindData(tb_PurReturnEntry entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_PurReturnEntry entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {
@@ -158,7 +158,8 @@ namespace RUINORERP.UI.PSI.PUR
 
                 if (string.IsNullOrEmpty(entity.PurReEntryNo))
                 {
-                    entity.PurReEntryNo = ClientBizCodeService.GetBizBillNo(BizType.采购退货入库);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.PurReEntryNo = await bizCodeService.GenerateBizBillNoAsync(BizType.采购退货入库);
                 }
                 if (entity.tb_purentryre != null && entity.tb_purentryre.Currency_ID.HasValue)
                 {

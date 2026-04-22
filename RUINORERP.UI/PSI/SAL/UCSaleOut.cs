@@ -339,7 +339,7 @@ namespace RUINORERP.UI.PSI.SAL
                 MainForm.Instance.uclog?.AddLog($"更新联查菜单失败: {ex.Message}", Global.UILogType.错误);
             }
         }
-        public override void BindData(tb_SaleOut entity, ActionStatus actionStatus)
+        public override async void BindData(tb_SaleOut entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -376,7 +376,8 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.OutDate = System.DateTime.Now;
                     if (string.IsNullOrEmpty(entity.SaleOutNo))
                     {
-                        entity.SaleOutNo = ClientBizCodeService.GetBizBillNo(BizType.销售出库单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.SaleOutNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售出库单);
                     }
 
                     if (entity.tb_SaleOutDetails != null && entity.tb_SaleOutDetails.Count > 0)

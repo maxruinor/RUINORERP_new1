@@ -2913,7 +2913,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     break;
                 case MenuItemEnums.复制性新增:
-                    AddByCopy();
+                    await AddByCopy();
                     toolStripbtnSubmit.Enabled = false;
                     break;
 
@@ -6760,10 +6760,10 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 1
+        /// 复制单据并返回新的实体对象
         /// </summary>
-        /// <returns></returns>
-        protected virtual T AddByCopy()
+        /// <returns>新的实体对象</returns>
+        protected virtual async Task<T> AddByCopy()
         {
             if (EditEntity == null)
             {
@@ -6810,7 +6810,7 @@ namespace RUINORERP.UI.BaseForm
 
             }
 
-            StateManager.SetActionStatusAsync(NewEditEntity, ActionStatus.新增, "复制性新增");
+            await StateManager.SetActionStatusAsync(NewEditEntity, ActionStatus.新增, "复制性新增");
             return NewEditEntity;
         }
 

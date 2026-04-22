@@ -70,9 +70,9 @@ namespace RUINORERP.UI.FM
         /// <summary>
         /// 取消操作，恢复原始图片状态
         /// </summary>
-        protected override void Cancel()
+        protected override void Cancel(bool skipConfirm = false)
         {
-            base.Cancel();
+            base.Cancel(skipConfirm);
 
             // 恢复图片状态 - 直接使用正确的 ImageStateManager
             try
@@ -162,7 +162,7 @@ namespace RUINORERP.UI.FM
             await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
-        public override void BindData(tb_FM_ExpenseClaim entity, ActionStatus actionStatus)
+        public override async void BindData(tb_FM_ExpenseClaim entity, ActionStatus actionStatus)
         {
 
             if (entity == null)
@@ -211,7 +211,8 @@ namespace RUINORERP.UI.FM
                 entity.DocumentDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.ClaimNo))
                 {
-                    entity.ClaimNo = ClientBizCodeService.GetBizBillNo(BizType.费用报销单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.ClaimNo = await bizCodeService.GenerateBizBillNoAsync(BizType.费用报销单);
                 }
 
                 //新增时，默认币别为人民币

@@ -46,7 +46,7 @@ namespace RUINORERP.UI.FM
 
         }
 
-        public override void BindData(tb_FM_PaymentApplication entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_FM_PaymentApplication entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             EditEntity = entity;
             if (entity == null)
@@ -92,7 +92,8 @@ namespace RUINORERP.UI.FM
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.ApplicationNo = ClientBizCodeService.GetBizBillNo(BizType.付款申请单);
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                entity.ApplicationNo = await bizCodeService.GenerateBizBillNoAsync(BizType.付款申请单);
                 entity.InvoiceDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 //清空

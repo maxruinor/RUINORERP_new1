@@ -73,7 +73,7 @@ namespace RUINORERP.UI.MRP.PQC
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_MRP_ReworkReturn).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public override void BindData(tb_MRP_ReworkReturn entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_MRP_ReworkReturn entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {
@@ -95,7 +95,8 @@ namespace RUINORERP.UI.MRP.PQC
                 entity.ReturnDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.ReworkReturnNo))
                 {
-                    entity.ReworkReturnNo = ClientBizCodeService.GetBizBillNo(BizType.返工退库单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.ReworkReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.返工退库单);
                 }
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_MRP_ReworkReturnDetails != null && entity.tb_MRP_ReworkReturnDetails.Count > 0)

@@ -133,7 +133,8 @@ namespace RUINORERP.UI.PSI.INV
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (string.IsNullOrEmpty(entity.MergeNo))
                 {
-                    entity.MergeNo = ClientBizCodeService.GetBizBillNo(BizType.产品组合单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.MergeNo = await bizCodeService.GenerateBizBillNoAsync(BizType.产品组合单);
                 }
                 entity.MergeDate = System.DateTime.Now;
                 cmbBOM_ID.DataSource = null;

@@ -349,7 +349,7 @@ namespace RUINORERP.UI.ASS
 
 
 
-        public override void BindData(tb_AS_RepairOrder entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_AS_RepairOrder entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {
@@ -390,7 +390,8 @@ namespace RUINORERP.UI.ASS
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.RepairOrderNo))
                     {
-                        entity.RepairOrderNo = ClientBizCodeService.GetBizBillNo(BizType.维修工单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.RepairOrderNo = await bizCodeService.GenerateBizBillNoAsync(BizType.维修工单);
                     }
                     entity.Employee_ID = AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     if (entity.tb_AS_RepairOrderDetails != null && entity.tb_AS_RepairOrderDetails.Count > 0)

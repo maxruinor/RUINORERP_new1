@@ -163,7 +163,7 @@ namespace RUINORERP.UI.MRP.MP
 
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_ProductionDemand entityPara, ActionStatus actionStatus)
+        public override async void BindData(tb_ProductionDemand entityPara, ActionStatus actionStatus)
         {
             tb_ProductionDemand entity = entityPara as tb_ProductionDemand;
             if (entity == null)
@@ -187,7 +187,8 @@ namespace RUINORERP.UI.MRP.MP
                     
                     if (entity.PDNo.IsNullOrEmpty())
                     {
-                        entity.PDNo = ClientBizCodeService.GetBizBillNo(BizType.需求分析);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.PDNo = await bizCodeService.GenerateBizBillNoAsync(BizType.需求分析);
                     }
                     entity.AnalysisDate = System.DateTime.Now;
                     if (entity.tb_ProductionDemandDetails != null && entity.tb_ProductionDemandDetails.Count > 0)
@@ -961,10 +962,10 @@ namespace RUINORERP.UI.MRP.MP
             return rss;
         }
 
-        protected override void Cancel()
+        protected override void Cancel(bool skipConfirm = false)
         {
             ClearData();
-            base.Cancel();
+            base.Cancel(skipConfirm);
         }
 
 

@@ -128,7 +128,7 @@ namespace RUINORERP.UI.FM
         public ReceivePaymentType PaymentType { get; set; }
 
         //草稿 → 已审核 → 部分生效 → 全部生效 或 草稿 → 已冲销
-        public override void BindData(tb_FM_PreReceivedPayment entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_FM_PreReceivedPayment entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             EditEntity = entity;
             if (entity == null)
@@ -214,11 +214,13 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.付款)
                     {
-                        entity.PreRPNO = ClientBizCodeService.GetBizBillNo(BizType.预付款单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.PreRPNO = await bizCodeService.GenerateBizBillNoAsync(BizType.预付款单);
                     }
                     else
                     {
-                        entity.PreRPNO = ClientBizCodeService.GetBizBillNo(BizType.预收款单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.PreRPNO = await bizCodeService.GenerateBizBillNoAsync(BizType.预收款单);
                     }
                 }
 

@@ -73,7 +73,7 @@ namespace RUINORERP.UI.FM.FMBase
             lblPrintStatus.Text = "";
             lblReview.Text = "";
         }
-        public override void BindData(tb_FM_ProfitLoss entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_FM_ProfitLoss entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {
@@ -99,7 +99,8 @@ namespace RUINORERP.UI.FM.FMBase
                     {
                         if (string.IsNullOrEmpty(entity.ProfitLossNo))
                         {
-                            entity.ProfitLossNo = ClientBizCodeService.GetBizBillNo(BizType.损失确认单);
+                            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                            entity.ProfitLossNo = await bizCodeService.GenerateBizBillNoAsync(BizType.损失确认单);
                         }
                     }
 
@@ -107,7 +108,8 @@ namespace RUINORERP.UI.FM.FMBase
                     {
                         if (string.IsNullOrEmpty(entity.ProfitLossNo))
                         {
-                            entity.ProfitLossNo = ClientBizCodeService.GetBizBillNo(BizType.溢余确认单);
+                            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                            entity.ProfitLossNo = await bizCodeService.GenerateBizBillNoAsync(BizType.溢余确认单);
                         }
                     }
                     entity.ProfitLossDirection = (int)profitLossDirect;

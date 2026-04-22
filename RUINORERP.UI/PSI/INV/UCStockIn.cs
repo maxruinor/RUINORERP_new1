@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -79,7 +79,7 @@ namespace RUINORERP.UI.PSI.INV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_StockIn).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public override void BindData(tb_StockIn entity, ActionStatus actionStatus)
+        public override async void BindData(tb_StockIn entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -100,7 +100,8 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.BillNo))
                 {
-                    entity.BillNo = ClientBizCodeService.GetBizBillNo(BizType.其他入库单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.BillNo = await bizCodeService.GenerateBizBillNoAsync(BizType.其他入库单);
                 }
                 entity.Bill_Date = System.DateTime.Now;
                 entity.Enter_Date = System.DateTime.Now;

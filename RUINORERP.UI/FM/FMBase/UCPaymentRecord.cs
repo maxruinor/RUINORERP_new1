@@ -202,13 +202,15 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.付款)
                     {
-                        entity.PaymentNo = ClientBizCodeService.GetBizBillNo(BizType.付款单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.付款单);
                         chkIsForCommission.Visible = true;
 
                     }
                     else
                     {
-                        entity.PaymentNo = ClientBizCodeService.GetBizBillNo(BizType.收款单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.收款单);
                         chkIsForCommission.Visible = false;
 
                     }

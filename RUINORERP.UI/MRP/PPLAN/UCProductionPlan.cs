@@ -111,7 +111,7 @@ namespace RUINORERP.UI.MRP.MP
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_ProductionPlan entityPara, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_ProductionPlan entityPara, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (actionStatus == ActionStatus.删除)
             {
@@ -139,7 +139,8 @@ namespace RUINORERP.UI.MRP.MP
                     entity.Priority = (int)Priority.正常;
                     if (entity.PPNo.IsNullOrEmpty())
                     {
-                        entity.PPNo = ClientBizCodeService.GetBizBillNo(BizType.生产计划单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.PPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.生产计划单);
                     }
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     entity.PlanDate = System.DateTime.Now;

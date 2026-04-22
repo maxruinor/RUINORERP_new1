@@ -1279,7 +1279,8 @@ namespace RUINORERP.UI.MRP.BOM
 
                 if (string.IsNullOrEmpty(entity.BOM_No))
                 {
-                    entity.BOM_No = ClientBizCodeService.GetBizBillNo(BizType.BOM物料清单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.BOM_No = await bizCodeService.GenerateBizBillNoAsync(BizType.BOM物料清单);
                 }
                 EditEntity.Effective_at = System.DateTime.Now;
                 EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -1489,14 +1490,14 @@ namespace RUINORERP.UI.MRP.BOM
             base.BindData(entity);
         }
 
-        protected override tb_BOM_S AddByCopy()
+        protected override async Task<tb_BOM_S> AddByCopy()
         {
             if (EditEntity == null)
             {
                 MessageBox.Show("请先选择一个BOM清单作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
-            EditEntity = base.AddByCopy();
+            EditEntity = await base.AddByCopy();
             EditEntity.ActionStatus = ActionStatus.新增;
             EditEntity.BOM_ID = 0;
             EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -1504,7 +1505,8 @@ namespace RUINORERP.UI.MRP.BOM
             EditEntity.Approver_at = null;
             EditEntity.ProdDetailID = 0;
             EditEntity.SKU = null;
-            EditEntity.BOM_No = ClientBizCodeService.GetBizBillNo(BizType.BOM物料清单);
+            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+            EditEntity.BOM_No = await bizCodeService.GenerateBizBillNoAsync(BizType.BOM物料清单);
             EditEntity.PrimaryKeyID = 0;
             BusinessHelper.Instance.InitEntity(EditEntity);
             foreach (var item in EditEntity.tb_BOM_SDetails)

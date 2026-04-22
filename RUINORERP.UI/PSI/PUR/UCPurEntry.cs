@@ -155,7 +155,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
               await  base.LoadRelatedDataToDropDownItemsAsync();
             }
-        public override void BindData(tb_PurEntry entity, ActionStatus actionStatus)
+        public override async void BindData(tb_PurEntry entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -178,7 +178,8 @@ namespace RUINORERP.UI.PSI.PUR
 
                 if (string.IsNullOrEmpty(entity.PurEntryNo))
                 {
-                    entity.PurEntryNo = ClientBizCodeService.GetBizBillNo(BizType.采购入库单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.PurEntryNo = await bizCodeService.GenerateBizBillNoAsync(BizType.采购入库单);
                 }
 
                 if (entity.tb_purorder != null)

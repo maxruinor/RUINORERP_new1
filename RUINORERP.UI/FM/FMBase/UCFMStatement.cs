@@ -312,7 +312,7 @@ namespace RUINORERP.UI.FM
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="actionStatus"></param>
-        public override void BindData(tb_FM_Statement entity, ActionStatus actionStatus)
+        public override async void BindData(tb_FM_Statement entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -354,7 +354,8 @@ namespace RUINORERP.UI.FM
                 //entity.DueDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.StatementNo))
                 {
-                    entity.StatementNo = ClientBizCodeService.GetBizBillNo(BizType.对账单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.StatementNo = await bizCodeService.GenerateBizBillNoAsync(BizType.对账单);
                 }
 
                 entity.StatementStatus = (int)StatementStatus.草稿;

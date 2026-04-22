@@ -111,7 +111,7 @@ namespace RUINORERP.UI.MRP.MP
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_ManufacturingOrder entityPara, ActionStatus actionStatus)
+        public override async void BindData(tb_ManufacturingOrder entityPara, ActionStatus actionStatus)
         {
             tb_ManufacturingOrder entity = entityPara as tb_ManufacturingOrder;
             if (entity == null)
@@ -149,7 +149,8 @@ namespace RUINORERP.UI.MRP.MP
 
                     if (entity.MONO.IsNullOrEmpty())
                     {
-                        entity.MONO = ClientBizCodeService.GetBizBillNo(BizType.制令单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.MONO = await bizCodeService.GenerateBizBillNoAsync(BizType.制令单);
                     }
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     entity.Created_at = System.DateTime.Now;

@@ -375,7 +375,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
             base.LoadRelatedDataToDropDownItemsAsync();
         }
-        public override void BindData(tb_SaleOutRe entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_SaleOutRe entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {
@@ -400,7 +400,8 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.ReturnNo))
                     {
-                        entity.ReturnNo = ClientBizCodeService.GetBizBillNo(BizType.销售退回单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.ReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售退回单);
                     }
 
                     if (entity.tb_SaleOutReDetails != null && entity.tb_SaleOutReDetails.Count > 0)

@@ -207,7 +207,7 @@ namespace RUINORERP.UI.ASS
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_RepairOrder) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, RepairOrder);
+                      await  menuPowerHelper.ExecuteEventsAsync(RelatedMenuInfo, RepairOrder);
                     }
                     return;
                 }
@@ -221,7 +221,7 @@ namespace RUINORERP.UI.ASS
 
 
 
-        public override void BindData(tb_AS_AfterSaleApply entityPara, ActionStatus actionStatus)
+        public override async void BindData(tb_AS_AfterSaleApply entityPara, ActionStatus actionStatus)
         {
             tb_AS_AfterSaleApply entity = entityPara as tb_AS_AfterSaleApply;
 
@@ -247,7 +247,8 @@ namespace RUINORERP.UI.ASS
                     entity.Priority = (int)Priority.正常;
                     if (string.IsNullOrEmpty(entity.ASApplyNo))
                     {
-                        entity.ASApplyNo = ClientBizCodeService.GetBizBillNo(BizType.售后申请单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.ASApplyNo = await bizCodeService.GenerateBizBillNoAsync(BizType.售后申请单);
                     }
                     entity.ASProcessStatus = (int)ASProcessStatus.登记;
                     entity.RepairEvaluationOpinion = string.Empty;

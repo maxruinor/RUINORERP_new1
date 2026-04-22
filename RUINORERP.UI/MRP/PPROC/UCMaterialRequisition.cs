@@ -110,7 +110,7 @@ namespace RUINORERP.UI.MRP.MP
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_MaterialRequisition entityPara, ActionStatus actionStatus)
+        public override async void BindData(tb_MaterialRequisition entityPara, ActionStatus actionStatus)
         {
             tb_MaterialRequisition entity = entityPara as tb_MaterialRequisition;
             if (entity == null)
@@ -135,7 +135,8 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.MaterialRequisitionNO.IsNullOrEmpty())
                     {
-                        entity.MaterialRequisitionNO = ClientBizCodeService.GetBizBillNo(BizType.生产领料单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.MaterialRequisitionNO = await bizCodeService.GenerateBizBillNoAsync(BizType.生产领料单);
                     }
                     entity.DeliveryDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

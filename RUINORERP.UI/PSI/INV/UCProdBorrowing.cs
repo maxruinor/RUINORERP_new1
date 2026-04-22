@@ -159,7 +159,7 @@ namespace RUINORERP.UI.PSI.INV
 
         //private tb_ProdBorrowing _EditEntity;
         //public tb_ProdBorrowing EditEntity { get => _EditEntity; set => _EditEntity = value; }
-        public override void BindData(tb_ProdBorrowing entity, ActionStatus actionStatus)
+        public override async void BindData(tb_ProdBorrowing entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -180,7 +180,8 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.BorrowNo))
                 {
-                    entity.BorrowNo = ClientBizCodeService.GetBizBillNo(BizType.借出单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.BorrowNo = await bizCodeService.GenerateBizBillNoAsync(BizType.借出单);
                 }
 
                 entity.DueDate = System.DateTime.Now.AddDays(30);//最长时间为30天

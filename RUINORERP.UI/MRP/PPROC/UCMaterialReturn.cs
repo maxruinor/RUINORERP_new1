@@ -92,7 +92,7 @@ namespace RUINORERP.UI.MRP.MP
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_MaterialReturn entityPara, ActionStatus actionStatus)
+        public override async void BindData(tb_MaterialReturn entityPara, ActionStatus actionStatus)
         {
             tb_MaterialReturn entity = entityPara as tb_MaterialReturn;
             if (entity == null)
@@ -118,7 +118,8 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.BillNo.IsNullOrEmpty())
                     {
-                        entity.BillNo = ClientBizCodeService.GetBizBillNo(BizType.生产退料单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.BillNo = await bizCodeService.GenerateBizBillNoAsync(BizType.生产退料单);
                     }
                     entity.ReturnDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

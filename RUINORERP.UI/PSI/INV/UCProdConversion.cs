@@ -80,7 +80,7 @@ namespace RUINORERP.UI.PSI.INV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdConversion).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public override void BindData(tb_ProdConversion entity, ActionStatus actionStatus)
+        public override async void BindData(tb_ProdConversion entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -101,7 +101,8 @@ namespace RUINORERP.UI.PSI.INV
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (string.IsNullOrEmpty(entity.ConversionNo))
                 {
-                    entity.ConversionNo = ClientBizCodeService.GetBizBillNo(BizType.产品转换单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.ConversionNo = await bizCodeService.GenerateBizBillNoAsync(BizType.产品转换单);
                 }
                 entity.ConversionDate = System.DateTime.Now;
                 if (entity.tb_ProdConversionDetails != null && entity.tb_ProdConversionDetails.Count > 0)

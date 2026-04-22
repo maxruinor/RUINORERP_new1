@@ -91,7 +91,7 @@ namespace RUINORERP.UI.ASS
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_AS_RepairMaterialPickup entityPara, ActionStatus actionStatus)
+        public override async void BindData(tb_AS_RepairMaterialPickup entityPara, ActionStatus actionStatus)
         {
             tb_AS_RepairMaterialPickup entity = entityPara as tb_AS_RepairMaterialPickup;
             if (entity == null)
@@ -116,7 +116,8 @@ namespace RUINORERP.UI.ASS
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.MaterialPickupNO.IsNullOrEmpty())
                     {
-                        entity.MaterialPickupNO = ClientBizCodeService.GetBizBillNo(BizType.维修领料单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.MaterialPickupNO = await bizCodeService.GenerateBizBillNoAsync(BizType.维修领料单);
                     }
                     entity.DeliveryDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

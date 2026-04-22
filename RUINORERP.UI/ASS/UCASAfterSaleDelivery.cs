@@ -122,7 +122,7 @@ namespace RUINORERP.UI.ASS
         }
 
 
-        public override void BindData(tb_AS_AfterSaleDelivery entityPara, ActionStatus actionStatus)
+        public override async void BindData(tb_AS_AfterSaleDelivery entityPara, ActionStatus actionStatus)
         {
             tb_AS_AfterSaleDelivery entity = entityPara as tb_AS_AfterSaleDelivery;
 
@@ -148,7 +148,8 @@ namespace RUINORERP.UI.ASS
 
                     if (string.IsNullOrEmpty(entity.ASDeliveryNo))
                     {
-                        entity.ASDeliveryNo = ClientBizCodeService.GetBizBillNo(BizType.售后交付单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.ASDeliveryNo = await bizCodeService.GenerateBizBillNoAsync(BizType.售后交付单);
                     }
                     entity.ApprovalOpinions = string.Empty;
                     entity.DeliveryDate = System.DateTime.Now;

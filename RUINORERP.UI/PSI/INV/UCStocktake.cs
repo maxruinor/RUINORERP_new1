@@ -119,13 +119,13 @@ namespace RUINORERP.UI.PSI.INV
 
         }
 
-        protected override void Cancel()
+        protected override void Cancel(bool skipConfirm = false)
         {
             cmbCheckMode.Enabled = true;
-            base.Cancel();
+            base.Cancel(skipConfirm);
             lblPrintStatus.Text = "";
         }
-        public override void BindData(tb_Stocktake _BaseEntity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_Stocktake _BaseEntity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             tb_Stocktake entity = _BaseEntity as tb_Stocktake;
             if (entity == null)
@@ -149,7 +149,8 @@ namespace RUINORERP.UI.PSI.INV
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.CheckNo))
                     {
-                        entity.CheckNo = ClientBizCodeService.GetBizBillNo(BizType.盘点单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.CheckNo = await bizCodeService.GenerateBizBillNoAsync(BizType.盘点单);
                     }
                     entity.Check_date = System.DateTime.Now;
                     entity.CarryingDate = System.DateTime.Now;

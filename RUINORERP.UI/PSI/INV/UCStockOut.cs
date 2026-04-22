@@ -82,7 +82,7 @@ namespace RUINORERP.UI.PSI.INV
 
         //private tb_StockOut _EditEntity;
         //public tb_StockOut EditEntity { get => _EditEntity; set => _EditEntity = value; }
-        public override void BindData(tb_StockOut entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_StockOut entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {
@@ -103,7 +103,8 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.BillNo))
                 {
-                    entity.BillNo = ClientBizCodeService.GetBizBillNo(BizType.其他出库单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.BillNo = await bizCodeService.GenerateBizBillNoAsync(BizType.其他出库单);
                 }
                 entity.Bill_Date = System.DateTime.Now;
                 entity.Out_date = System.DateTime.Now;

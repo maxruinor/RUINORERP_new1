@@ -74,7 +74,7 @@ namespace RUINORERP.UI.FM.FMBase
             lblReview.Text = "";
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
         }
-        public override void BindData(tb_FM_OtherExpense entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_FM_OtherExpense entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {
@@ -106,7 +106,8 @@ namespace RUINORERP.UI.FM.FMBase
                         entity.EXPOrINC = false;
                         if (string.IsNullOrEmpty(entity.ExpenseNo))
                         {
-                            entity.ExpenseNo = ClientBizCodeService.GetBizBillNo(BizType.其他费用支出);
+                            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                            entity.ExpenseNo = await bizCodeService.GenerateBizBillNoAsync(BizType.其他费用支出);
                         }
                     }
 
@@ -115,7 +116,8 @@ namespace RUINORERP.UI.FM.FMBase
                         entity.EXPOrINC = true;
                         if (string.IsNullOrEmpty(entity.ExpenseNo))
                         {
-                            entity.ExpenseNo = ClientBizCodeService.GetBizBillNo(BizType.其他费用收入);
+                            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                            entity.ExpenseNo = await bizCodeService.GenerateBizBillNoAsync(BizType.其他费用收入);
                         }
                     }
                 }

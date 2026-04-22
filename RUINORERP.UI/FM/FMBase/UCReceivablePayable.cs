@@ -291,7 +291,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-        public override void BindData(tb_FM_ReceivablePayable entity, ActionStatus actionStatus)
+        public override async void BindData(tb_FM_ReceivablePayable entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -372,14 +372,16 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.收款)
                     {
-                        entity.ARAPNo = ClientBizCodeService.GetBizBillNo(BizType.应收款单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应收款单);
                         chkIsForCommission.Visible = false;
                         chkIsFromPlatform.Visible = true;
 
                     }
                     else
                     {
-                        entity.ARAPNo = ClientBizCodeService.GetBizBillNo(BizType.应付款单);
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                        entity.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单);
                         chkIsForCommission.Visible = true;
                         chkIsFromPlatform.Visible = false;
                     }

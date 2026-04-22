@@ -114,7 +114,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
 
-        public override void BindData(tb_FinishedGoodsInv entity, ActionStatus actionStatus)
+        public override async void BindData(tb_FinishedGoodsInv entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -135,7 +135,8 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (string.IsNullOrEmpty(entity.DeliveryBillNo))
                 {
-                    entity.DeliveryBillNo = ClientBizCodeService.GetBizBillNo(BizType.缴库单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.DeliveryBillNo = await bizCodeService.GenerateBizBillNoAsync(BizType.缴库单);
                 }
                 entity.DeliveryDate = System.DateTime.Now;
                 if (entity.tb_FinishedGoodsInvDetails != null && entity.tb_FinishedGoodsInvDetails.Count > 0)

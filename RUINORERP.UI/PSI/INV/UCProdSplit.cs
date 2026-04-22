@@ -61,9 +61,9 @@ namespace RUINORERP.UI.PSI.INV
             BindData(Entity as tb_ProdSplit);
         }
 
-        protected override void Cancel()
+        protected override void Cancel(bool skipConfirm = false)
         {
-            base.Cancel();
+            base.Cancel(skipConfirm);
             lblPrintStatus.Text = "";
             lblReview.Text = "";
             cmbBOM_ID.DataSource = null;
@@ -146,7 +146,8 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.SplitNo))
                 {
-                    entity.SplitNo = ClientBizCodeService.GetBizBillNo(BizType.产品分割单);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    entity.SplitNo = await bizCodeService.GenerateBizBillNoAsync(BizType.产品分割单);
                 }
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 entity.SplitDate = System.DateTime.Now;

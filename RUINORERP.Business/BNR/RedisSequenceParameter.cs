@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using StackExchange.Redis;
+using RUINORERP.Extensions.Redis;
 
 namespace RUINORERP.Business.BNR
 {
@@ -79,26 +80,16 @@ namespace RUINORERP.Business.BNR
             
             try
             {
-                // 优先尝试通过 CacheManager 获取底层 Redis 连接进行原子递增
-                // 如果 CacheManager 不支持直接访问 IDatabase，则回退到原有逻辑
-                if (_cacheManager != null)
+                // 优先使用项目现有的 RedisConnectionHelper 获取原子递增
+                var redisConnection = RedisConnectionHelper.Instance;
+                if (redisConnection != null && redisConnection.IsConnected)
                 {
-                    // 尝试获取 StackExchange.Redis 的 IDatabase 实例
-                    // 注意：这里假设 CacheManager 内部封装了 SE.Redis，实际项目中可能需要根据具体配置调整
-                    var handle = _cacheManager.GetBaseHandle();
-                    if (handle is StackExchange.Redis.IDatabase db)
-                    {
-                        number = db.StringIncrement(redisKey);
-                    }
-                    else
-                    {
-                        // 降级方案：使用原有的非原子逻辑（仅在不支持原子操作的缓存实现下）
-                        number = IncrementCounterFallback(redisKey);
-                    }
+                    var db = redisConnection.GetDatabase();
+                    number = db.StringIncrement(redisKey);
                 }
                 else if (_redisDB != null)
                 {
-                    // 直接使用了注入的 IDatabase
+                    // 回退到直接注入的 IDatabase
                     number = _redisDB.StringIncrement(redisKey);
                 }
                 else
@@ -120,40 +111,6 @@ namespace RUINORERP.Business.BNR
             {
                 sb.Append(number.ToString());
             }
-        }
-        
-        /// <summary>
-        /// 降级方案：当无法获取原子 IDatabase 时使用
-        /// </summary>
-        private long IncrementCounterFallback(string key)
-        {
-            // 警告：此方法在高并发下可能存在竞争条件，仅作为最后手段
-            long newValue = 1;
-            int maxRetries = 5;
-            for (int i = 0; i < maxRetries; i++)
-            {    
-                var currentValue = _cacheManager.Get<long?>(key);
-                
-                if (currentValue.HasValue)
-                {
-                    newValue = currentValue.Value + 1;
-                    object resultObj = _cacheManager.Update(key, v => (long)v + 1);
-                    long result = resultObj != null ? Convert.ToInt64(resultObj) : newValue;
-                    _cacheManager.Expire(key, ExpirationMode.Absolute, TimeSpan.FromDays(30));
-                    return result;
-                }
-                else
-                {
-                    newValue = 1;
-                    object resultObj = _cacheManager.GetOrAdd(key, newValue);
-                    long result = resultObj != null ? Convert.ToInt64(resultObj) : 1;
-                    _cacheManager.Expire(key, ExpirationMode.Absolute, TimeSpan.FromDays(30));
-                    if (result == 1) return 1;
-                }
-                System.Threading.Thread.Sleep(10);
-            }
-            var finalValue = _cacheManager.Get<long?>(key);
-            return finalValue ?? 1;
         }
     
       

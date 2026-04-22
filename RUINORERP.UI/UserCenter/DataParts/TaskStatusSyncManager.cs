@@ -148,11 +148,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <param name="updates">需要分发的更新列表</param>
         private void DistributeUpdatesToSubscribers(List<TodoUpdate> updates)
         {
-            // 获取当前用户ID，用于过滤掉自己发起的更新
-            string currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID.ToString();
-
-            // 过滤掉当前用户自己发起的更新，避免自我通知
-            var filteredUpdates = updates.Where(u => u.InitiatorUserId != currentUserId).ToList();
+            // 修复：不再过滤当前用户自己发起的更新，确保用户在单据界面操作后工作台能立即刷新
+            // 原逻辑会导致用户自己操作后看不到工作台数量变化，影响用户体验
+            var filteredUpdates = updates;
 
             // 如果没有需要处理的更新，直接返回
             if (!filteredUpdates.Any())

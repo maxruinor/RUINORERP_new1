@@ -8190,8 +8190,13 @@ namespace RUINORERP.UI.BaseForm
                         await DeleteRemoteImages();
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
+                        
+                        // 统一状态同步 - 删除操作
                         var updateData = ConvertToTodoUpdate(editEntity, TodoUpdateType.Deleted);
-                        TodoSyncManager.Instance.PublishUpdate(updateData);
+                        if (updateData != null)
+                        {
+                            await SyncTodoStatusAsync(updateData, "删除");
+                        }
 
                         // 注意：不在这里调用 Add()，由删除按钮点击事件处理新增模式切换
                     }

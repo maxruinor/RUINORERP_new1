@@ -103,7 +103,7 @@ namespace RUINORERP.Business
         /// 行级权限过滤器服务（注入单例）
         /// </summary>
         private readonly SqlSugarRowLevelAuthFilter _rowLevelAuthFilter;
-        
+
         /// <summary>
         /// 实体状态保护器 - 用于在事务执行过程中保护实体状态
         /// </summary>
@@ -211,7 +211,7 @@ namespace RUINORERP.Business
         /// </code>
         /// </example>
         protected void ProtectEntitiesSelective<TEntity>(
-            TEntity entity, 
+            TEntity entity,
             params Expression<Func<TEntity, object>>[] propertyExpressions) where TEntity : BaseEntity
         {
             if (entity != null)
@@ -237,7 +237,7 @@ namespace RUINORERP.Business
         /// <param name="entity">要保护的实体</param>
         /// <param name="propertyExpressions">要保护的属性表达式列表</param>
         protected void BeginTranWithSelectiveProtection<TEntity>(
-            TEntity entity, 
+            TEntity entity,
             params Expression<Func<TEntity, object>>[] propertyExpressions) where TEntity : BaseEntity
         {
             // ✅ 先保护（事务外）
@@ -362,15 +362,15 @@ namespace RUINORERP.Business
             {
                 // ✅ 保存原始主键值,防止后续操作中被意外修改
                 long originalPrimaryKey = Convert.ToInt64(primaryKeyValue);
-                
+
                 // 更新实体状态
                 int currentStatusValue = GetSubmitStatus(entity, statusEnum);
-            
+
                 var update = await _unitOfWorkManage.GetDbClient().Updateable<object>()
                              .AS(typeof(T).Name)
                              .SetColumns(statusType.Name, currentStatusValue)
                              .Where(PrimaryKeyColName + "=" + primaryKeyValue).ExecuteCommandAsync();
-                
+
                 if (update > 0)
                 {
                     // ✅ 关键修复:重新从数据库加载最新实体,但必须验证主键一致性
@@ -378,7 +378,7 @@ namespace RUINORERP.Business
                         .Queryable<T>()
                         .Where(PrimaryKeyColName + "=" + originalPrimaryKey)  // 使用原始主键查询
                         .FirstAsync();
-                                
+
                     if (updatedEntity != null)
                     {
                         // ✅ 验证主键是否一致,如果不一致则记录严重错误并使用原始主键
@@ -389,7 +389,7 @@ namespace RUINORERP.Business
                             // 强制修正:将数据库实体的主键改回原始值,避免ID污染
                             ReflectionHelper.SetPropertyValue(updatedEntity, PrimaryKeyColName, originalPrimaryKey);
                         }
-                        
+
                         entity = updatedEntity;
                     }
                     else
@@ -397,7 +397,7 @@ namespace RUINORERP.Business
                         // 如果查询不到,说明数据可能被删除,保持原entity不变
                         _logger.LogWarning($"⚠️ 提交后无法从数据库加载实体,主键={originalPrimaryKey}, 保持原实体不变");
                     }
-            
+
                     // 自动审核逻辑
                     if (autoApprove && CanAutoApprove(entity))
                     {
@@ -408,10 +408,10 @@ namespace RUINORERP.Business
                             return result;
                         }
                     }
-            
+
                     // 执行子类特定的提交后逻辑
                     await AfterSubmit(entity);
-            
+
                     result.Succeeded = true;
                 }
                 else
@@ -419,7 +419,7 @@ namespace RUINORERP.Business
                     result.Succeeded = false;
                     result.ErrorMsg = $"状态更新失败,未影响任何行,主键={originalPrimaryKey}";
                 }
-            
+
                 // ✅ 最终验证:确保返回的实体主键与原始主键一致
                 long finalPrimaryKey = Convert.ToInt64(ReflectionHelper.GetPropertyValue(entity, PrimaryKeyColName));
                 if (finalPrimaryKey != originalPrimaryKey)
@@ -428,7 +428,7 @@ namespace RUINORERP.Business
                     // 强制修正
                     ReflectionHelper.SetPropertyValue(entity, PrimaryKeyColName, originalPrimaryKey);
                 }
-                
+
                 result.ReturnObject = (T)entity;
                 return result;
             }
@@ -654,7 +654,7 @@ namespace RUINORERP.Business
 
 
             //更重要的是提交如果产生了业务性的其它数据，则要恢复或清除。如销售订单提交后。可能会产生预收单等
-            
+
 
             try
             {
@@ -952,6 +952,199 @@ namespace RUINORERP.Business
             //return null;
         }
 
+        /// <summary>
+        /// ✅ 通用辅助方法:基于实体导航属性自动删除深层级关联数据
+        /// 用途:在 BaseDeleteByNavAsync 中调用,避免外键约束冲突
+        /// 原理:扫描实体的 OneToMany 导航属性,检查目标表是否有自己的子表,如有则先删除
+        /// </summary>
+        /// <param name="mainEntity">主实体实例</param>
+        /// <param name="maxDepth">最大递归深度(默认2层)</param>
+        protected async Task DeleteDeepLevelRelationsByNavigationAsync<TMain>(TMain mainEntity, int maxDepth = 2) where TMain : class
+        {
+            var db = _unitOfWorkManage.GetDbClient();
+            var entityType = typeof(TMain);
+
+            // 获取主键值
+            var pkProp = entityType.GetProperties()
+                .FirstOrDefault(p => p.GetCustomAttribute<SugarColumn>()?.IsPrimaryKey == true);
+
+            if (pkProp == null)
+            {
+                _logger?.LogWarning($"实体 {entityType.Name} 未找到主键,跳过深层级删除");
+                return;
+            }
+
+            var pkValue = pkProp.GetValue(mainEntity);
+            if (pkValue == null || pkValue.ToString() == "0")
+            {
+                _logger?.LogWarning($"实体 {entityType.Name} 的主键值为空或0,跳过深层级删除");
+                return;
+            }
+
+            // 扫描所有 OneToMany 导航属性
+            var navProperties = entityType.GetProperties()
+                .Where(p =>
+                {
+                    var navigateAttr = p.GetCustomAttribute<Navigate>();
+                    return navigateAttr != null &&
+                           navigateAttr.GetNavigateType() == NavigateType.OneToMany;
+                })
+                .ToList();
+
+            foreach (var navProp in navProperties)
+            {
+                try
+                {
+                    await ProcessOneToManyRelationAsync(db, mainEntity, pkProp, pkValue, navProp, maxDepth, currentDepth: 1);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, $"处理导航属性 {navProp.Name} 时出错,继续处理其他属性");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理单个一对多关系
+        /// </summary>
+        private async Task ProcessOneToManyRelationAsync(ISqlSugarClient db, object mainEntity, PropertyInfo mainPkProp, object mainPkValue, PropertyInfo navProp, int maxDepth, int currentDepth)
+        {
+            if (currentDepth > maxDepth)
+                return;
+
+            // 获取导航属性的目标类型
+            var targetType = GetNavigationTargetType(navProp);
+            if (targetType == null)
+                return;
+
+            // 获取导航属性的外键字段名(从 Navigate 特性中解析)
+            var navigateAttr = navProp.GetCustomAttribute<Navigate>();
+            if (navigateAttr == null)
+                return;
+
+            // Navigate.Name 是外键字段名,如 "CustomerVendor_ID"
+            var fkFieldName = navigateAttr.GetName();
+            if (string.IsNullOrEmpty(fkFieldName))
+                return;
+
+            // 目标表名从 targetType 获取
+            var fkTableName = targetType.Name; // 例如: tb_FM_Invoice
+
+            if (fkTableName== "tb_FM_ReceivablePayable")
+            {
+
+            }
+
+            // 检查目标表是否有自己的 OneToMany 导航属性(即是否有子表)
+            var targetNavProps = targetType.GetProperties()
+                .Where(p =>
+                {
+                    var attr = p.GetCustomAttribute<Navigate>();
+                    return attr != null && attr.GetNavigateType() == NavigateType.OneToMany;
+                })
+                .ToList();
+
+            if (!targetNavProps.Any())
+            {
+                // 目标表没有子表,不需要特殊处理
+                return;
+            }
+
+            // 目标表有子表,需要先查询出所有主表ID,然后删除子表数据
+            // 1. 查询所有关联的主表记录ID(使用原生SQL,最简单可靠)
+            var pkName = GetPrimaryKeyName(targetType);
+            var mainIds = await db.Ado.SqlQueryAsync<long>(
+                $"SELECT [{pkName}] FROM [{fkTableName}] WHERE [{fkFieldName}] = @0", 
+                mainPkValue);
+
+            if (!mainIds.Any())
+                return;
+
+            // 2. 对每个子表导航属性,删除对应的子表数据
+            foreach (var childNavProp in targetNavProps)
+            {
+                await DeleteChildTableDataAsync(db, targetType, mainIds, childNavProp, currentDepth + 1, maxDepth);
+            }
+
+            _logger?.LogInformation($"已清理 {targetType.Name} 的 {mainIds.Count} 条记录的子表数据");
+        }
+
+        /// <summary>
+        /// 删除子表数据
+        /// </summary>
+        private async Task DeleteChildTableDataAsync(ISqlSugarClient db, Type parentType, List<long> parentIds, PropertyInfo childNavProp, int currentDepth, int maxDepth)
+        {
+            if (currentDepth > maxDepth)
+                return;
+
+            var childType = GetNavigationTargetType(childNavProp);
+            if (childType == null)
+                return;
+
+            var navigateAttr = childNavProp.GetCustomAttribute<Navigate>();
+            if (navigateAttr == null)
+                return;
+   
+            // Navigate.Name 是外键字段名
+            var fkFieldName = navigateAttr.GetName();
+            if (string.IsNullOrEmpty(fkFieldName))
+                return;
+
+            // 使用无实体删除(推荐方式)
+            var childTableName = childType.Name;
+            var deletedCount = await db.Deleteable<object>()
+                .AS(childTableName)
+                .Where($"{fkFieldName} IN (@0)", parentIds)
+                .ExecuteCommandAsync();
+
+            if (deletedCount > 0)
+            {
+                _logger?.LogInformation($"已删除 {childType.Name} 的 {deletedCount} 条记录");
+            }
+        }
+
+        /// <summary>
+        /// 获取导航属性的目标类型
+        /// </summary>
+        private Type GetNavigationTargetType(PropertyInfo navProp)
+        {
+            var propType = navProp.PropertyType;
+
+            // 如果是 List<T> 或 IEnumerable<T>,提取 T
+            if (propType.IsGenericType)
+            {
+                var genericArgs = propType.GetGenericArguments();
+                if (genericArgs.Length > 0)
+                {
+                    return genericArgs[0];
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取实体的主键名称
+        /// </summary>
+        private string GetPrimaryKeyName(Type entityType)
+        {
+            var pkProp = entityType.GetProperties()
+                .FirstOrDefault(p => p.GetCustomAttribute<SugarColumn>()?.IsPrimaryKey == true);
+
+            if (pkProp != null)
+                return pkProp.Name;
+
+            // 尝试常见命名
+            var commonNames = new[] { "Id", "ID", entityType.Name + "_ID", entityType.Name + "Id" };
+            foreach (var name in commonNames)
+            {
+                if (entityType.GetProperty(name) != null)
+                    return name;
+            }
+
+            return "Id";
+        }
+
 
         /// <summary>
         /// 审核  审核本身就是一个特殊情况。所以不能批量处理
@@ -1010,7 +1203,7 @@ namespace RUINORERP.Business
             await Task.Delay(0); // 模拟异步操作
             return result; // 或者根据实际情况返回值
         }
-                
+
         /// <summary>
         /// 反执行（库存回滚）：回滚执行时的库存操作
         /// 将库存操作反向变动，并回退状态到确认
@@ -1024,7 +1217,7 @@ namespace RUINORERP.Business
             await Task.Delay(0);
             return result;
         }
-                
+
         public async virtual Task<ReturnResults<T>> ConfirmExecutionAsync(T entity)
         {
             ReturnResults<T> result = new ReturnResults<T>();
@@ -1356,7 +1549,7 @@ namespace RUINORERP.Business
         {
             return await _unitOfWorkManage.GetDbClient()
                 .Queryable<T>()
-                .With(SqlWith.NoLock)  
+                .With(SqlWith.NoLock)
                 .Where(whereExpression)
                 .FirstAsync();
         }

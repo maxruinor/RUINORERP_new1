@@ -67,7 +67,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 
                 try
                 {
-                    // 逐个删除(每个都会触发 BaseDeleteByNavAsync 的级联删除)
+                    // ✅ 关键修复:先删除所有深层级关联数据,再删除主表
+                    // 这样可以避免外键约束冲突
                     foreach (var id in targetIds)
                     {
                         stepIndex++;
@@ -145,23 +146,49 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             catch (Exception ex)
             {
                 result.MarkAsFailed(ex.Message);
-                Log($"级联删除失败：{ex.Message}");
-                
-                // 详细错误日志
+                Log($"级联删除失败:{typeof(T).Name}");
+                            
+                // ✅ 增强错误诊断:检测外键约束冲突
                 string detailedError = $"[错误详情]\n" +
-                    $"  • 实体类型：{typeof(T).FullName}\n" +
-                    $"  • 目标 ID 数：{targetIds.Count}\n" +
-                    $"  • 异常类型：{ex.GetType().Name}\n" +
-                    $"  • 异常消息：{ex.Message}\n" +
-                    $"  • 堆栈跟踪：{ex.StackTrace}";
-                
+                    $"  • 实体类型:{typeof(T).FullName}\n" +
+                    $"  • 目标 ID 数:{targetIds.Count}\n" +
+                    $"  • 异常类型:{ex.GetType().Name}\n" +
+                    $"  • 异常消息:{ex.Message}\n";
+                            
+                // 检测是否为外键约束冲突
+                if (ex.Message.Contains("REFERENCE constraint") || ex.Message.Contains("外键约束"))
+                {
+                    detailedError += $"\n[外键约束冲突分析]\n" +
+                        $"  ⚠️ 原因:Controller 的 BaseDeleteByNavAsync 方法中遗漏了某些关联表的 Include\n" +
+                        $"  💡 解决方案:\n" +
+                        $"    1. 检查 {typeof(T).Name}Controller.BaseDeleteByNavAsync 方法\n" +
+                        $"    2. 确保所有导航属性都已 Include\n" +
+                        $"    3. 特别注意明细表(如 xxxDetails)是否遗漏\n" +
+                        $"    4. 参考错误信息中的表和字段名定位缺失的关联\n";
+                                
+                    // 尝试从错误消息中提取冲突的表名
+                    var match = System.Text.RegularExpressions.Regex.Match(ex.Message, "table\\s+([\\w.]+)");
+                    if (match.Success)
+                    {
+                        detailedError += $"\n  🔍 冲突表名:{match.Groups[1].Value}\n";
+                    }
+                                                    
+                    var colMatch = System.Text.RegularExpressions.Regex.Match(ex.Message, "column\\s+'([^']+)'");
+                    if (colMatch.Success)
+                    {
+                        detailedError += $"  🔍 冲突字段:{colMatch.Groups[1].Value}\n";
+                    }
+                }
+                            
+                detailedError += $"\n  • 堆栈跟踪:{ex.StackTrace}";
+                            
                 if (ex.InnerException != null)
                 {
-                    detailedError += $"\n  • 内部异常：{ex.InnerException.Message}";
+                    detailedError += $"\n  • 内部异常:{ex.InnerException.Message}";
                 }
-                
+                            
                 Log(detailedError);
-                _logger?.LogError(ex, $"级联删除失败：{typeof(T).Name}");
+                _logger?.LogError(ex, $"级联删除失败:{typeof(T).Name}");
                 throw;
             }
 

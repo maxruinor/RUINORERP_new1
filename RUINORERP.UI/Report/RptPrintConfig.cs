@@ -162,7 +162,7 @@ namespace RUINORERP.UI.Report
             {
                 BusinessHelper.Instance.InitEntity(printConfig);
             }
-          
+
             if (this.PrintDataSources.Count > 0)
             {
                 CommBillData cbd = EntityMappingHelper.GetBillData(this.PrintDataSources[0].GetType(), this.PrintDataSources[0]);
@@ -238,8 +238,8 @@ namespace RUINORERP.UI.Report
 
         }
 
-      
-     
+
+
         //设计报表
         private void PrintReport(RptMode rptMode)
         {
@@ -264,7 +264,7 @@ namespace RUINORERP.UI.Report
                 //打印次数提醒
                 if (PrintDataSources.Count > 0 && PrintDataSources[0].ContainsProperty("PrintStatus"))
                 {
-                   var bizType = Business.BizMapperService.EntityMappingHelper.GetBizTypeByEntity(PrintDataSources[0]);
+                    var bizType = Business.BizMapperService.EntityMappingHelper.GetBizTypeByEntity(PrintDataSources[0]);
                     int printCounter = PrintDataSources[0].GetPropertyValue("PrintStatus").ToString().ToInt();
                     if (printCounter > 0)
                     {
@@ -436,7 +436,7 @@ namespace RUINORERP.UI.Report
                 listboxBIll.Items.Clear();
                 if (PrintDataSources != null)
                 {
-                  
+
                     foreach (var item in PrintDataSources)
                     {
                         try
@@ -501,7 +501,7 @@ namespace RUINORERP.UI.Report
                     if (_isPersonalConfig)
                     {
                         var personalConfig = GetMenuPersonalPrintConfig(_currentMenuId);
-                        if (personalConfig?.PrintConfigDict != null && 
+                        if (personalConfig?.PrintConfigDict != null &&
                             personalConfig.PrintConfigDict.TemplateId == template.ID)
                         {
                             // 使用浅蓝色背景高亮显示个人配置的模板
@@ -564,7 +564,7 @@ namespace RUINORERP.UI.Report
 
             _originalPrinterName = printerName;
             _originalTemplateId = templateId;
-      
+
             GroupBoxSelectPrinter.Visible = printerSelected;
 
             if (printerSelected && !string.IsNullOrEmpty(printerName))
@@ -615,7 +615,7 @@ namespace RUINORERP.UI.Report
         {
             string currentPrinter = cmbPrinterList.SelectedItem?.ToString();
             bool printerChanged = !string.Equals(_originalPrinterName, currentPrinter, StringComparison.OrdinalIgnoreCase);
-            
+
             // 获取当前选中的模板ID
             long currentTemplateId = 0;
             if (newSumDataGridView1.CurrentRow?.DataBoundItem is tb_PrintTemplate currentTemplate)
@@ -623,9 +623,9 @@ namespace RUINORERP.UI.Report
                 currentTemplateId = currentTemplate.ID;
             }
             bool templateChanged = currentTemplateId != _originalTemplateId;
-            
+
             bool hasChanged = printerChanged || templateChanged;
-            
+
             // 根据当前配置模式更新按钮状态
             if (_isPersonalConfig)
             {
@@ -733,12 +733,12 @@ namespace RUINORERP.UI.Report
                 }
 
                 var menuPersonalization = GetMenuPersonalPrintConfig(_currentMenuId);
-                
+
                 // 获取当前选择的模板信息
                 string selectedTemplateName = string.Empty;
                 long selectedTemplateId = 0;
                 bool isDefaultTemplate = true;
-                
+
                 if (newSumDataGridView1.CurrentRow?.DataBoundItem is tb_PrintTemplate selectedTemplate)
                 {
                     selectedTemplateId = selectedTemplate.ID;
@@ -754,7 +754,7 @@ namespace RUINORERP.UI.Report
                 }
 
                 string selectedPrinterName = cmbPrinterList.SelectedItem?.ToString() ?? string.Empty;
-                
+
                 // 显示确认对话框
                 string confirmMessage = $"确定要保存以下个人独有打印配置吗？\n\n" +
                     $"打印机：{(string.IsNullOrEmpty(selectedPrinterName) ? "未选择" : selectedPrinterName)}\n" +
@@ -799,7 +799,7 @@ namespace RUINORERP.UI.Report
                 _isPersonalConfig = true;
                 _originalPrinterName = configData.PrinterName;
                 _originalTemplateId = configData.TemplateId;
-                
+
                 UpdateFormTitle();
                 UpdateButtonStates();
                 // 重新加载打印机设置以反映新的个人配置
@@ -846,7 +846,7 @@ namespace RUINORERP.UI.Report
                         var defaultTemplate = printConfig.tb_PrintTemplates.FirstOrDefault(t => t.IsDefaultTemplate == true);
                         _originalTemplateId = defaultTemplate?.ID ?? 0;
                     }
-                    
+
                     UpdateFormTitle();
                     UpdateButtonStates();
                     // 重新加载打印机设置以反映系统配置
@@ -895,7 +895,7 @@ namespace RUINORERP.UI.Report
             {
                 printConfig.PrinterName = cmbPrinterList.SelectedItem.ToString();
             }
-        
+
             if (printConfig.PrintConfigID > 0)
             {
                 BusinessHelper.Instance.EditEntity(printConfig);
@@ -965,10 +965,10 @@ namespace RUINORERP.UI.Report
 
         }
 
-        private void 保存模板设置ToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void 保存模板设置ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             List<tb_PrintTemplate> Templates = bindingSourcePrintTemplate.DataSource as List<tb_PrintTemplate>;
-            MainForm.Instance.AppContext.Db.Updateable<tb_PrintTemplate>(Templates).ExecuteCommand();
+            await MainForm.Instance.AppContext.Db.Updateable<tb_PrintTemplate>(Templates).ExecuteCommandAsync();
         }
 
         private void btnToPDF_Click(object sender, EventArgs e)

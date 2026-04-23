@@ -332,54 +332,64 @@ namespace RUINORERP.Server.Services
                             {
                                 foreach (var session in sessionsEnum)
                                 {
-                                    var sessionId = "Unknown";
-                                    var userName = "Unknown";
-                                    int messageCount = 0;
-                                    long dataQueueSize = 0;
-                                    DateTime connectedTime = DateTime.Now;
-                                    
-                                    // 获取 SessionID
-                                    var sessionIdProp = session.GetType().GetProperty("SessionID");
-                                    if (sessionIdProp != null)
-                                        sessionId = sessionIdProp.GetValue(session)?.ToString() ?? "Unknown";
-                                    
-                                    // 获取 UserName
-                                    var userInfoProp = session.GetType().GetProperty("UserInfo");
-                                    if (userInfoProp != null)
+                                    try
                                     {
-                                        var userInfo = userInfoProp.GetValue(session);
-                                        if (userInfo != null)
+                                        if (session == null) continue;
+                                        
+                                        var sessionId = "Unknown";
+                                        var userName = "Unknown";
+                                        int messageCount = 0;
+                                        long dataQueueSize = 0;
+                                        DateTime connectedTime = DateTime.Now;
+                                        
+                                        // 获取 SessionID
+                                        var sessionIdProp = session.GetType().GetProperty("SessionID");
+                                        if (sessionIdProp != null)
+                                            sessionId = sessionIdProp.GetValue(session)?.ToString() ?? "Unknown";
+                                        
+                                        // 获取 UserName
+                                        var userInfoProp = session.GetType().GetProperty("UserInfo");
+                                        if (userInfoProp != null)
                                         {
-                                            var userNameProp = userInfo.GetType().GetProperty("UserName");
-                                            if (userNameProp != null)
-                                                userName = userNameProp.GetValue(userInfo)?.ToString() ?? "Anonymous";
-                                            
-                                            // 获取连接时间
-                                            var connectedTimeProp = userInfo.GetType().GetProperty("ConnectedTime");
-                                            if (connectedTimeProp != null)
+                                            var userInfo = userInfoProp.GetValue(session);
+                                            if (userInfo != null)
                                             {
-                                                var ctValue = connectedTimeProp.GetValue(userInfo);
-                                                if (ctValue is DateTime dt)
-                                                    connectedTime = dt;
+                                                var userNameProp = userInfo.GetType().GetProperty("UserName");
+                                                if (userNameProp != null)
+                                                    userName = userNameProp.GetValue(userInfo)?.ToString() ?? "Anonymous";
+                                                
+                                                // 获取连接时间
+                                                var connectedTimeProp = userInfo.GetType().GetProperty("ConnectedTime");
+                                                if (connectedTimeProp != null)
+                                                {
+                                                    var ctValue = connectedTimeProp.GetValue(userInfo);
+                                                    if (ctValue is DateTime dt)
+                                                        connectedTime = dt;
+                                                }
                                             }
                                         }
-                                    }
-                                    
-                                    // 获取 DataQueue
-                                    var dataQueueProperty = session.GetType().GetProperty("DataQueue");
-                                    if (dataQueueProperty != null)
-                                    {
-                                        var dataQueue = dataQueueProperty.GetValue(session) as System.Collections.ICollection;
-                                        if (dataQueue != null)
+                                        
+                                        // 获取 DataQueue
+                                        var dataQueueProperty = session.GetType().GetProperty("DataQueue");
+                                        if (dataQueueProperty != null)
                                         {
-                                            messageCount = dataQueue.Count;
-                                            dataQueueSize = dataQueue.Count * 1024; // 估算每个消息 1KB
-                                            totalQueuedMessages += messageCount;
-                                            totalDataQueueSize += dataQueueSize;
+                                            var dataQueue = dataQueueProperty.GetValue(session) as System.Collections.ICollection;
+                                            if (dataQueue != null)
+                                            {
+                                                messageCount = dataQueue.Count;
+                                                dataQueueSize = dataQueue.Count * 1024;
+                                                totalQueuedMessages += messageCount;
+                                                totalDataQueueSize += dataQueueSize;
+                                            }
                                         }
+                                        
+                                        sessionDetails.Add((sessionId, userName, dataQueueSize, messageCount, (long)(DateTime.Now - connectedTime).TotalMinutes));
                                     }
-                                    
-                                    sessionDetails.Add((sessionId, userName, dataQueueSize, messageCount, (long)(DateTime.Now - connectedTime).TotalMinutes));
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogDebug(ex, "处理会话详情时发生错误，跳过该会话");
+                                        continue;
+                                    }
                                 }
                             }
                         }
@@ -838,14 +848,24 @@ namespace RUINORERP.Server.Services
                             long totalRecords = 0;
                             foreach (var store in dataStores.Values)
                             {
-                                var totalCountProp = store.GetType().GetProperty("TotalCount");
-                                if (totalCountProp != null)
+                                try
                                 {
-                                    var count = totalCountProp.GetValue(store);
-                                    if (count != null)
+                                    if (store == null) continue;
+                                    
+                                    var totalCountProp = store.GetType().GetProperty("TotalCount");
+                                    if (totalCountProp != null)
                                     {
-                                        totalRecords += Convert.ToInt64(count);
+                                        var count = totalCountProp.GetValue(store);
+                                        if (count != null)
+                                        {
+                                            totalRecords += Convert.ToInt64(count);
+                                        }
                                     }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogDebug(ex, "获取性能数据存储详情时发生错误");
+                                    continue;
                                 }
                             }
                             
@@ -1034,9 +1054,16 @@ namespace RUINORERP.Server.Services
                                 if (runningWorkflows != null)
                                 {
                                     var count = 0;
-                                    foreach (var wf in runningWorkflows)
+                                    try
                                     {
-                                        count++;
+                                        foreach (var wf in runningWorkflows)
+                                        {
+                                            if (wf != null) count++;
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogDebug(ex, "遍历运行中的工作流时发生错误");
                                     }
 
                                     stat.ObjectCount = count;

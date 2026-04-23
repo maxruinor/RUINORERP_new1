@@ -40,12 +40,13 @@ namespace RUINORERP.UI.BI
         Binding endDate;
      
 
-        public override void BindData(BaseEntity entity)
+        public async override void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_Employee;
             if (_EditEntity.Employee_ID == 0)
             {
-                _EditEntity.Employee_NO = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Employee);
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                _EditEntity.Employee_NO = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.Employee);
                 _EditEntity.Is_enabled = true;
             }
 

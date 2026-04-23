@@ -137,7 +137,7 @@ namespace RUINORERP.UI.Common
                 // 处理模块和顶级菜单
                 var newModules = new List<tb_ModuleDefinition>();
                 var newMenus = new List<tb_MenuInfo>();
-
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                 foreach (var moduleDto in moduleDtoList)
                 {
                     // 查找或创建模块定义
@@ -149,7 +149,7 @@ namespace RUINORERP.UI.Common
                         {
                             ModuleName = moduleDto.Name,
                             //这里是系统初始化时需要的编号，需要使用本地编号的生成服务
-                            ModuleNo = ClientBizCodeService.GetLocalBaseInfoNo(BaseInfoType.ModuleDefinition),
+                            ModuleNo = await ClientBizCodeService.GetLocalBaseInfoNoAsync(BaseInfoType.ModuleDefinition),
                             Available = true,
                             Visible = true,
                             tb_MenuInfos = new List<tb_MenuInfo>() // 初始化菜单集合
@@ -1297,7 +1297,7 @@ namespace RUINORERP.UI.Common
                 //定义模块
                 tb_ModuleDefinition mod = new tb_ModuleDefinition();
                 mod.ModuleName = item.Name;
-                mod.ModuleNo = ClientBizCodeService.GetLocalBaseInfoNo(BaseInfoType.ModuleDefinition);
+                mod.ModuleNo =await ClientBizCodeService.GetLocalBaseInfoNoAsync(BaseInfoType.ModuleDefinition);
                 mod.Available = true;
                 mod.Visible = true;
                 tb_ModuleDefinition isExistt = ExistModuleList.FirstOrDefault(e => e.ModuleName == mod.ModuleName);

@@ -94,7 +94,7 @@ namespace RUINORERP.UI.Network
 
         // 心跳相关字段（优化后）
         private readonly int _heartbeatIntervalMs = 30000; // 固定心跳间隔30秒
-        private readonly int _heartbeatTimeoutMs = 8000; // 心跳超时时间8秒（快速失败）
+        private readonly int _heartbeatTimeoutMs = 12000; // ✅ 心跳超时时间12秒（从8秒增加，避免网络波动导致的误超时）
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
@@ -1008,40 +1008,9 @@ namespace RUINORERP.UI.Network
                             _logger?.LogWarning("⚠️ 心跳响应失败: Status={Status}, IsSuccess={IsSuccess}, ErrorMessage={ErrorMessage}, SessionId={SessionId}, UserId={UserId}",
                                 response?.Status, response?.IsSuccess, response?.ErrorMessage, sessionId, userId);
                             
-                            // ✅ 特殊处理：如果会话不存在，触发重新登录
-                            if (response?.Status == "Session Not Found")
-                            {
-                                _logger?.LogWarning("⚠️ 服务器返回会话不存在，将尝试重新登录");
-                                
-                                // ✅ 关键修复：立即停止心跳，避免继续发送无效请求
-                                StopHeartbeat();
-                                
-                                // 异步触发重新登录，不阻塞当前心跳循环
-                                try
-                                {
-                                    _logger?.LogDebug("启动后台重新登录任务...");
-                                    
-                                    var reloginTask = Task.Run(async () =>
-                                    {
-                                        try
-                                        {
-                                            _logger?.LogDebug("开始执行TryRestoreLoginStateAsync...");
-                                            await TryRestoreLoginStateAsync();
-                                            _logger?.LogDebug("TryRestoreLoginStateAsync执行完成");
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            _logger?.LogError(ex, "❌ TryRestoreLoginStateAsync执行过程中发生未捕获异常");
-                                        }
-                                    });
-                                    
-                                    _logger?.LogDebug("后台重新登录任务已启动，TaskId={TaskId}", reloginTask.Id);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger?.LogError(ex, "❌ 启动后台重新登录任务失败");
-                                }
-                            }
+                            // ✅ 关键修复：心跳失败只记录日志，不触发重连
+                            // 心跳是辅助检测手段，不应作为重连的主要依据
+                            // 真正的重连应该由Socket断开事件或业务请求失败触发
                         }
                         return false;
                     }
@@ -1885,7 +1854,12 @@ namespace RUINORERP.UI.Network
         /// <returns>超时时间(毫秒)</returns>
         private int GetTimeoutByCommandType(CommandId commandId)
         {
-            // 根据命令类型设置不同的超时时间
+            // ✅ 心跳请求使用较短超时，快速检测网络问题
+            if (commandId.Name.Contains("Heartbeat"))
+            {
+                return _heartbeatTimeoutMs; // 使用配置的心跳超时时间（12秒）
+            }
+            
             // 缓存相关请求设置较短超时,避免UI阻塞
             if (commandId.Name.Contains("Cache"))
             {
@@ -3029,43 +3003,50 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         {
             try
             {
+                // ✅ 记录清理前的统计信息
+                int pendingCount = _pendingRequests.Count;
+                int queuedCount = _queuedCommands.Count;
+                
+                if (pendingCount > 0 || queuedCount > 0)
+                {
+                    _logger?.LogWarning("[连接断开] 开始清理：待处理请求={PendingCount}, 命令队列={QueuedCount}", 
+                        pendingCount, queuedCount);
+                }
+                
                 // 清理命令队列
-
                 while (_queuedCommands.TryDequeue(out var command))
                 {
-                    SafeCancelTaskCompletionSource(command.CompletionSource, "命令队列");
-                    SafeCancelTaskCompletionSource(command.ResponseCompletionSource, "响应队列");
+                    // ✅ 使用标准异常，便于客户端识别连接断开
+                    var exception = new InvalidOperationException("连接已断开，请求被取消");
+                    
+                    command.CompletionSource?.TrySetException(exception);
+                    command.ResponseCompletionSource?.TrySetException(exception);
                 }
 
                 // 清理待处理请求
-
-                foreach (var pendingRequest in _pendingRequests.Values)
+                foreach (var kvp in _pendingRequests.ToList())
                 {
-                    SafeCancelTaskCompletionSource(pendingRequest.Tcs, "待处理请求");
+                    try
+                    {
+                        var exception = new InvalidOperationException($"连接已断开，请求 {kvp.Key} 被取消");
+                        
+                        kvp.Value.Tcs?.TrySetException(exception);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "[清理待处理请求] 取消请求 {RequestId} 时发生异常", kvp.Key);
+                    }
                 }
                 _pendingRequests.Clear();
+                
+                if (pendingCount > 0)
+                {
+                    _logger?.LogWarning("[连接断开] 已清理 {PendingCount} 个待处理请求", pendingCount);
+                }
             }
             catch (Exception ex)
             {
-
-            }
-        }
-
-        /// <summary>
-        /// 安全取消TaskCompletionSource（泛型版本）
-        /// </summary>
-        /// <typeparam name="T">TaskCompletionSource的类型参数</typeparam>
-        /// <param name="tcs">TaskCompletionSource对象</param>
-        /// <param name="sourceName">源名称（用于日志）</param>
-        private void SafeCancelTaskCompletionSource<T>(TaskCompletionSource<T> tcs, string sourceName)
-        {
-            try
-            {
-                tcs?.TrySetCanceled();
-            }
-            catch (Exception ex)
-            {
-
+                _logger?.LogError(ex, "[清理队列] 清理过程中发生异常");
             }
         }
 

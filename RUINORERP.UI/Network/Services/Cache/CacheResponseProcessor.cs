@@ -12,6 +12,7 @@ using RUINORERP.PacketSpec.Validation;
 using FluentValidation.Results;
 using RUINORERP.PacketSpec.Models.Cache;
 using System.Linq;
+using RUINORERP.PacketSpec.Serialization;
 
 namespace RUINORERP.UI.Network.Services.Cache
 {
@@ -406,6 +407,56 @@ namespace RUINORERP.UI.Network.Services.Cache
                     // 单个实体删除
                     ProcessSingleDelete(tableName, jObject, keyProperty);
                 }
+                else if (deleteData is byte[] byteArray && byteArray.Length > 0)
+                {
+                    // 处理字节数组格式的删除数据
+                    try
+                    {
+                        // 尝试反序列化为实体列表，然后提取ID进行删除
+                        var entities = JsonCompressionSerializationService.Deserialize<IList>(byteArray, true);
+                        if (entities != null && entities.Count > 0)
+                        {
+                            int successCount = 0;
+                            foreach (var entity in entities)
+                            {
+                                try
+                                {
+                                    // 从实体中提取主键值并删除
+                                    var entityId = keyProperty.GetValue(entity);
+                                    if (entityId != null && long.TryParse(entityId.ToString(), out long id))
+                                    {
+                                        _cacheManager.DeleteEntity(tableName, id);
+                                        successCount++;
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _log?.LogWarning(ex, "从实体中提取主键并删除失败");
+                                }
+                            }
+                            _log?.LogDebug("批量删除完成，表名={0}，成功={1}", tableName, successCount);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _log?.LogWarning(ex, "字节数组反序列化失败，尝试其他解析方式");
+                        
+                        // 如果直接反序列化失败，尝试将其转换为字符串再解析
+                        try
+                        {
+                            string jsonString = System.Text.Encoding.UTF8.GetString(byteArray);
+                            if (!string.IsNullOrEmpty(jsonString))
+                            {
+                                ProcessJsonDelete(tableName, jsonString, keyProperty);
+                            }
+                        }
+                        catch (Exception innerEx)
+                        {
+                            _log?.LogWarning(innerEx, "字节数组转字符串后解析也失败，执行整表清理");
+                            CleanCacheSafely(tableName);
+                        }
+                    }
+                }
                 else if (deleteData is string jsonString && !string.IsNullOrEmpty(jsonString))
                 {
                     // JSON字符串格式
@@ -696,6 +747,60 @@ namespace RUINORERP.UI.Network.Services.Cache
                     // 直接是单个对象
                     return JsonConvert.DeserializeObject(jObject.ToString(), entityType);
                 }
+                else if (data is byte[] byteArray)
+                {
+                    // ✅ 修复：即使空数组也要记录日志
+                    if (byteArray.Length == 0)
+                    {
+                        _log?.LogDebug("接收到空的字节数组数据");
+                        return null;
+                    }
+                    
+                    // 处理字节数组数据（通常是压缩的JSON数据）
+                    try
+                    {
+                        // 使用JsonCompressionSerializationService反序列化
+                        var result = JsonCompressionSerializationService.DeserializeDynamic(byteArray, true);
+                        if (result != null)
+                        {
+                            // 如果结果是JObject，转换为指定类型
+                            if (result is JObject resultJObject)
+                            {
+                                return JsonConvert.DeserializeObject(resultJObject.ToString(), entityType);
+                            }
+                            // 如果已经是目标类型，直接返回
+                            else if (entityType.IsInstanceOfType(result))
+                            {
+                                return result;
+                            }
+                            // 否则尝试转换
+                            else
+                            {
+                                return JsonConvert.DeserializeObject(JsonConvert.SerializeObject(result), entityType);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _log?.LogWarning(ex, "字节数组反序列化失败，尝试其他解析方式");
+                        
+                        // 如果直接反序列化失败，尝试将其转换为字符串再解析
+                        try
+                        {
+                            string jsonString = System.Text.Encoding.UTF8.GetString(byteArray);
+                            if (!string.IsNullOrEmpty(jsonString))
+                            {
+                                // 递归调用自身处理字符串格式
+                                return ConvertToSingleEntity(jsonString, entityType);
+                            }
+                        }
+                        catch (Exception innerEx)
+                        {
+                            _log?.LogWarning(innerEx, "字节数组转字符串后解析也失败");
+                        }
+                    }
+                    return null;
+                }
                 else if (data is string jsonString && !string.IsNullOrEmpty(jsonString))
                 {
                     try
@@ -752,6 +857,46 @@ namespace RUINORERP.UI.Network.Services.Cache
                         entityList.Add(entity);
                     }
                     return entityList;
+                }
+                else if (data is byte[] byteArray)
+                {
+                    // ✅ 修复：即使空数组也要记录日志，而不是报"不支持的数据类型"
+                    if (byteArray.Length == 0)
+                    {
+                        _log?.LogDebug("接收到空的字节数组数据，表名={0}", entityType.FullName);
+                        return null;
+                    }
+                    
+                    // 处理字节数组数据（通常是压缩的JSON数据）
+                    try
+                    {
+                        // 使用JsonCompressionSerializationService反序列化
+                        var entityList = JsonCompressionSerializationService.Deserialize<IList>(byteArray, true);
+                        if (entityList != null)
+                        {
+                            return entityList;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _log?.LogWarning(ex, "字节数组反序列化失败，尝试其他解析方式");
+                        
+                        // 如果直接反序列化失败，尝试将其转换为字符串再解析
+                        try
+                        {
+                            string jsonString = System.Text.Encoding.UTF8.GetString(byteArray);
+                            if (!string.IsNullOrEmpty(jsonString))
+                            {
+                                // 递归调用自身处理字符串格式
+                                return ConvertToEntityList(jsonString, entityType);
+                            }
+                        }
+                        catch (Exception innerEx)
+                        {
+                            _log?.LogWarning(innerEx, "字节数组转字符串后解析也失败");
+                        }
+                    }
+                    return null;
                 }
                 else if (data is string jsonString && !string.IsNullOrEmpty(jsonString))
                 {

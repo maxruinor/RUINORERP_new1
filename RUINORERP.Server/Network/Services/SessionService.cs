@@ -221,14 +221,26 @@ namespace RUINORERP.Server.Network.Services
                     return null;
                 }
 
-                // 查找匹配用户ID的会话
-                var sessionInfo = _sessions.Values.FirstOrDefault(s => s.UserId.HasValue && s.UserId.Value == userId);
+                // ✅ 优化：查找匹配用户ID且连接活跃的会话（优先）
+                var activeSession = _sessions.Values
+                    .FirstOrDefault(s => s.UserId.HasValue && s.UserId.Value == userId && s.IsConnected);
 
-                if (sessionInfo != null)
+                if (activeSession != null)
                 {
                     // 更新最后访问时间
-                    sessionInfo.UpdateActivity();
-                    return sessionInfo;
+                    activeSession.UpdateActivity();
+                    return activeSession;
+                }
+
+                // ✅ 容错：如果没有活跃会话，尝试查找任意匹配UserId的会话（可能是刚重连还未更新状态）
+                var anySession = _sessions.Values
+                    .FirstOrDefault(s => s.UserId.HasValue && s.UserId.Value == userId);
+
+                if (anySession != null)
+                {
+                    _logger?.LogDebug($"[GetSession] 找到非活跃会话: UserId={userId}, SessionId={anySession.SessionID}, IsConnected={anySession.IsConnected}");
+                    anySession.UpdateActivity();
+                    return anySession;
                 }
 
                 return null;

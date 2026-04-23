@@ -519,48 +519,6 @@ namespace RUINORERP.UI.Network.Services
         #region 静态方法（兼容旧的调用模式）
 
 
-        /// <summary>
-        /// 获取业务单据编号（静态方法，兼容旧的调用模式）
-        /// </summary>
-        /// <param name="bizType">业务类型枚举</param>
-        /// <returns>生成的业务单据编号</returns>
-        /// <exception cref="Exception">生成失败时抛出异常</exception>
-        /// <exception cref="TimeoutException">生成超时 (15 秒) 时抛出此异常</exception>
-        /// <remarks>
-        /// <para>⚠️ <strong>已废弃：</strong> 此方法会阻塞 UI 线程，可能导致界面卡顿。</para>
-        /// <para><strong>推荐使用：</strong> <see cref="GetBizBillNoAsync(BizType)"/> 异步方法。</para>
-        /// <para><strong>超时保护：</strong> 此方法包含 15 秒超时保护机制，避免无限阻塞。</para>
-        /// </remarks>
-        [Obsolete("请使用 GetBizBillNoAsync 代替，以避免 UI 线程阻塞")]
-        public static string GetBizBillNo(BizType bizType)
-        {
-            try
-            {
-                // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-                if (bizCodeService == null)
-                {
-                    throw new Exception("无法从容器中获取BizCodeService实例");
-                }
-
-                // 同步调用异步方法 - 添加超时保护，避免无限阻塞
-                var task = bizCodeService.GenerateBizBillNoAsync(bizType);
-                if (task.Wait(TimeSpan.FromSeconds(15)))
-                {
-                    return task.Result;
-                }
-                throw new TimeoutException("生成业务单据编号超时(15秒)，请检查网络连接");
-            }
-            catch (AggregateException ex)
-            {
-                // 解包AggregateException，获取内部异常
-                if (ex.InnerException != null)
-                {
-                    throw ex.InnerException;
-                }
-                throw;
-            }
-        }
 
         /// <summary>
         /// 获取业务单据编号（异步版本，推荐使用）
@@ -580,49 +538,7 @@ namespace RUINORERP.UI.Network.Services
             return await bizCodeService.GenerateBizBillNoAsync(bizType);
         }
 
-        /// <summary>
-        /// 获取基础信息编号（静态方法，兼容旧的调用模式，使用枚举参数）
-        /// </summary>
-        /// <param name="baseInfoType">基础信息类型枚举</param>
-        /// <param name="paraConst">参数常量（可选）</param>
-        /// <returns>生成的基础信息编号</returns>
-        /// <exception cref="Exception">生成失败时抛出异常</exception>
-        /// <exception cref="TimeoutException">生成超时 (15 秒) 时抛出此异常</exception>
-        /// <remarks>
-        /// <para>⚠️ <strong>已废弃：</strong> 此方法会阻塞 UI 线程，可能导致界面卡顿。</para>
-        /// <para><strong>推荐使用：</strong> <see cref="GetBaseInfoNoAsync(BaseInfoType, string)"/> 异步方法。</para>
-        /// <para><strong>超时保护：</strong> 此方法包含 15 秒超时保护机制，避免无限阻塞。</para>
-        /// </remarks>
-        [Obsolete("请使用 GetBaseInfoNoAsync 代替，以避免 UI 线程阻塞")]
-        public static string GetBaseInfoNo(BaseInfoType baseInfoType, string paraConst = null)
-        {
-            try
-            {
-                // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-                if (bizCodeService == null)
-                {
-                    throw new Exception("无法从容器中获取BizCodeService实例");
-                }
-
-                // 同步调用异步方法 - 添加超时保护，避免无限阻塞
-                var task = bizCodeService.GenerateBaseInfoNoAsync(baseInfoType, paraConst);
-                if (task.Wait(TimeSpan.FromSeconds(15)))
-                {
-                    return task.Result;
-                }
-                throw new TimeoutException("生成基础信息编号超时(15秒)，请检查网络连接");
-            }
-            catch (AggregateException ex)
-            {
-                // 解包AggregateException，获取内部异常
-                if (ex.InnerException != null)
-                {
-                    throw ex.InnerException;
-                }
-                throw;
-            }
-        }
+ 
 
         /// <summary>
         /// 获取基础信息编号（异步版本，推荐使用）
@@ -642,69 +558,7 @@ namespace RUINORERP.UI.Network.Services
 
             return await bizCodeService.GenerateBaseInfoNoAsync(baseInfoType, paraConst);
         }
-
-        /// <summary>
-        /// 本地获取基础信息编号（静态方法，兼容旧的调用模式）
-        /// [已废弃] 请使用 GetLocalBaseInfoNoAsync 代替
-        /// </summary>
-        /// <param name="baseInfoType">基础信息类型枚举</param>
-        /// <param name="paraConst">参数常量（可选）</param>
-        /// <returns>生成的基础信息编号</returns>
-        /// <exception cref="Exception">生成失败时抛出异常</exception>
-        /// <remarks>
-        /// 兜底策略：只有确定本地生成失败时才回退到远程方式
-        /// 排除超时等不确定异常，避免重复生成
-        /// </remarks>
-        [Obsolete("请使用 GetLocalBaseInfoNoAsync 代替，以避免UI线程阻塞")]
-        public static string GetLocalBaseInfoNo(BaseInfoType baseInfoType, string paraConst = null)
-        {
-            try
-            {
-                // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-                if (bizCodeService == null)
-                {
-                    throw new Exception("无法从容器中获取 BizCodeService 实例");
-                }
-        
-                // 同步调用本地异步方法 - 添加超时保护，避免无限阻塞
-                var task = bizCodeService.GenerateLocalBaseInfoNoAsync(baseInfoType, paraConst);
-                if (task.Wait(TimeSpan.FromSeconds(10)))
-                {
-                    return task.Result;
-                }
-                throw new TimeoutException("本地生成基础信息编号超时(10秒)");
-            }
-            catch (AggregateException ex)
-            {
-                // 解包 AggregateException，获取内部异常
-                var innerEx = ex.InnerException ?? ex;
-                        
-                // 判断是否为确定性失败（非超时类异常）
-                if (IsDefiniteFailure(innerEx))
-                {
-                    var logger = Startup.GetFromFac<ILogger<ClientBizCodeService>>();
-                    logger?.LogWarning(innerEx, "本地生成确认失败，回退到远程生成方式 - 类型：{BaseInfoType}", baseInfoType.ToString());
-                            
-                    // 回退到原有的远程生成方式
-                    return GetBaseInfoNo(baseInfoType, paraConst);
-                }
-                else
-                {
-                    // 不确定失败（可能是超时），直接抛出异常让调用方处理
-                    throw innerEx;
-                }
-            }
-            catch (Exception ex) when (IsDefiniteFailure(ex))
-            {
-                // 确定性失败，回退到远程方式
-                var logger = Startup.GetFromFac<ILogger<ClientBizCodeService>>();
-                logger?.LogWarning(ex, "本地生成确认失败，回退到远程生成方式 - 类型：{BaseInfoType}", baseInfoType.ToString());
-                        
-                return GetBaseInfoNo(baseInfoType, paraConst);
-            }
-        }
-
+ 
         /// <summary>
         /// 本地获取基础信息编号（异步版本，推荐使用）
         /// </summary>

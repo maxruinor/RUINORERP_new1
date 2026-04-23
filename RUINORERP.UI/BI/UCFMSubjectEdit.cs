@@ -37,7 +37,7 @@ namespace RUINORERP.UI.BI
         public tb_FM_Subject EditEntity { get => _EditEntity; set => _EditEntity = value; }
 
         public List<tb_FM_Subject> SubjectList { get; set; }
-        public override void BindData(BaseEntity entity)
+        public async override void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_FM_Subject;
             if (_EditEntity.Subject_id == 0)
@@ -47,7 +47,8 @@ namespace RUINORERP.UI.BI
                 {
                     上级代码 = _EditEntity.tb_FM_SubjectParent.subject_code;
                 }
-                _EditEntity.subject_code = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.FMSubject, 上级代码);
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                _EditEntity.subject_code = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.FMSubject, 上级代码);
             }
 
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_FM_Subject>(entity, t => t.Balance_direction, rdb贷, rdb借);

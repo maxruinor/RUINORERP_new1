@@ -30,12 +30,13 @@ namespace RUINORERP.UI.BI
 
 
         private tb_OnlineStoreInfo _EditEntity;
-        public override void BindData(BaseEntity entity)
+        public async override void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_OnlineStoreInfo;
             if (_EditEntity.Store_ID == 0)
             {
-                _EditEntity.StoreCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.StoreCode);
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                _EditEntity.StoreCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.StoreCode);
             }
             DataBindingHelper.BindData4TextBox<tb_OnlineStoreInfo>(entity, t => t.StoreCode, txtStoreCode, BindDataType4TextBox.Text, false);
 

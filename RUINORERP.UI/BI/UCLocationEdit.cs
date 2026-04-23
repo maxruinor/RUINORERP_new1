@@ -32,12 +32,13 @@ namespace RUINORERP.UI.BI
 
         private tb_Location _EditEntity;
 
-        public override void BindData(BaseEntity entity)
+        public override async void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_Location;
             if (_EditEntity.Location_ID == 0)
             {
-                _EditEntity.LocationCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Location);
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                _EditEntity.LocationCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.Location);
             }
             DataBindingHelper.BindData4Cmb<tb_LocationType>(entity, k => k.LocationType_ID, v=>v.TypeName, txtLocationType_ID);
             DataBindingHelper.BindData4TextBox<tb_Location>(entity, t => t.Name, txtName, BindDataType4TextBox.Text, false);

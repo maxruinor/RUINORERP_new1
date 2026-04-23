@@ -51,7 +51,8 @@ namespace RUINORERP.UI.BI
             {
                 if (Text.Contains("其他"))
                 {
-                    _EditEntity.CVCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.CVOther);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    _EditEntity.CVCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.CVOther);
                     //txtIsCustomer.Enabled = false;
                     //txtIsVendor.Enabled = false;
                     chkOther.Enabled = true;
@@ -59,7 +60,8 @@ namespace RUINORERP.UI.BI
                 }
                 if (Text.Contains("客户"))
                 {
-                    _EditEntity.CVCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Customer);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    _EditEntity.CVCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.Customer);
                     _EditEntity.IsCustomer = true;
                     chkNoNeedSource.Visible = true;
                     lblCustomerCreditDays.Visible = true;
@@ -75,7 +77,8 @@ namespace RUINORERP.UI.BI
                 }
                 if (Text.Contains("供应商"))
                 {
-                    _EditEntity.CVCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Supplier);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    _EditEntity.CVCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.Supplier);
                     _EditEntity.IsVendor = true;
                     chkNoNeedSource.Visible = true;
                     lblCustomerCreditDays.Visible = false;
@@ -91,7 +94,8 @@ namespace RUINORERP.UI.BI
                 }
                 if (string.IsNullOrEmpty(_EditEntity.CVCode))
                 {
-                    _EditEntity.CVCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.BusinessPartner);
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    _EditEntity.CVCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.BusinessPartner);
                 }
 
                 //新建时默认启用

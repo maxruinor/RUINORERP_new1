@@ -34,7 +34,7 @@ namespace RUINORERP.UI.CRM
         public tb_CRM_Region EditEntity { get => _EditEntity; set => _EditEntity = value; }
 
         List<tb_CRM_Region> list = new List<tb_CRM_Region>(0);
-        public override void BindData(BaseEntity entity)
+        public async override void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_CRM_Region;
             if (_EditEntity.Region_ID == 0)
@@ -44,7 +44,8 @@ namespace RUINORERP.UI.CRM
                 {
                     上级代码 = _EditEntity.tb_crm_region.Region_code;
                 }
-                _EditEntity.Region_code = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.CRM_RegionCode, 上级代码);
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                _EditEntity.Region_code = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.CRM_RegionCode, 上级代码);
             }
 
             DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Region_Name, txtRegion_Name, BindDataType4TextBox.Text, false);

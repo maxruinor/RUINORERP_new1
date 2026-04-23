@@ -32,12 +32,13 @@ namespace RUINORERP.UI.BI
 
         private tb_ProjectGroup _EditEntity;
 
-        public override void BindData(BaseEntity entity)
+        public async override void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_ProjectGroup;
             if (_EditEntity.ProjectGroup_ID == 0)
             {
-                _EditEntity.ProjectGroupCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ProjectGroupCode);
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                _EditEntity.ProjectGroupCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProjectGroupCode);
                 btnAssigneeEmployee.Visible = false;
             }
             DataBindingHelper.BindData4TextBox<tb_ProjectGroup>(entity, t => t.ProjectGroupCode, txtProjectGroupCode, BindDataType4TextBox.Text, false);

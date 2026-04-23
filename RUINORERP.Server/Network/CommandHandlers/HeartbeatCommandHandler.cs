@@ -177,15 +177,29 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     if (sessionInfo == null)
                     {
                         // ⚠️ 会话不存在，可能是重连后登录尚未完成
-                        System.Diagnostics.Debug.WriteLine($"[心跳] 会话未找到: UserId={heartbeatRequest?.UserId ?? 0}, ClientId={heartbeatRequest?.ClientId ?? string.Empty}, ComputerName={heartbeatRequest?.ComputerName ?? string.Empty}");
+                        Logger?.LogWarning($"[心跳] 会话未找到: UserId={heartbeatRequest?.UserId ?? 0}, ClientId={heartbeatRequest?.ClientId ?? string.Empty}, ComputerName={heartbeatRequest?.ComputerName ?? string.Empty}");
 
-                        // 返回特定响应，让客户端知道需要重新登录
+                        // ✅ 修复：延长重试间隔至5秒，避免心跳风暴
                         return new HeartbeatResponse
                         {
                             IsSuccess = false,
-                            Status = "Session Not Found",
-                            NextIntervalMs = 5000, // 缩短间隔，让客户端更快重试
-                            ErrorMessage = "会话不存在，可能需要重新登录"
+                            Status = "SessionNotReady", // ✅ 明确状态：会话未就绪
+                            NextIntervalMs = 5000, // ✅ 从3秒延长至5秒，避免请求风暴
+                            ErrorMessage = "会话未就绪，请稍后重试"
+                        };
+                    }
+                    
+                    // ✅ 新增：检查会话是否已断开，如果断开则快速失败
+                    if (!sessionInfo.IsConnected)
+                    {
+                        Logger?.LogWarning($"[心跳] 会话已断开: UserId={heartbeatRequest.UserId}, SessionId={sessionInfo.SessionID}");
+                        
+                        return new HeartbeatResponse
+                        {
+                            IsSuccess = false,
+                            Status = "Session Disconnected",
+                            NextIntervalMs = 2000, // ✅ 更短的间隔，促使客户端快速重连
+                            ErrorMessage = "会话已断开，请重新连接"
                         };
                     }
 

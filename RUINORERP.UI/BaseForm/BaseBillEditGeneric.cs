@@ -5501,44 +5501,6 @@ namespace RUINORERP.UI.BaseForm
             return null;
         }
 
-        /// <summary>
-        /// 根据图片ID查找对应的单元格和明细数据（已弃用，改用直接引用）
-        /// </summary>
-        [Obsolete("请使用 ImageInfo.Cell 直接获取单元格引用")]
-        private (SourceGrid.Cells.Cell cell, C detail) FindCellAndDetailByImageId(Grid grid, List<C> Details, string imageId)
-        {
-            try
-            {
-                // 遍历网格的所有行
-                for (int rowIndex = 1; rowIndex < grid.RowsCount; rowIndex++)
-                {
-                    var cell = grid[rowIndex, 0] as SourceGrid.Cells.Cell; // 假设第一列包含图片
-                    if (cell != null)
-                    {
-                        // 检查单元格的图片ID是否匹配
-                        var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                        if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
-                        {
-                            if (valueImageWeb.CellImageHashName == imageId || cell.Value?.ToString() == imageId)
-                            {
-                                // 获取对应的明细数据
-                                var rowData = grid.Rows[rowIndex].RowData;
-                                if (rowData is C detail)
-                                {
-                                    return (cell, detail);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "查找图片对应的单元格失败");
-            }
-
-            return (null, null);
-        }
 
         /// <summary>
         /// 更新单元格图片显示

@@ -30,12 +30,13 @@ namespace RUINORERP.UI.BI
             InitializeComponent();
         }
 
-        public override void BindData(BaseEntity entity)
+        public async override void BindData(BaseEntity entity)
         {
             tb_Department _EditEntity = entity as tb_Department;
             if (_EditEntity.DepartmentID == 0)
             {
-                _EditEntity.DepartmentCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Department);
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                _EditEntity.DepartmentCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.Department);
             }
             DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.DepartmentCode, txtDepartmentCode, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.DepartmentName, txtDepartmentName, BindDataType4TextBox.Text, false);

@@ -11,20 +11,7 @@ namespace RUINORERP.UI.BaseForm
         /// Clean up any resources being used.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-                if (disposing)
-                {
-                    // 清理其他资源
-                    BoundEntity = null;
-         
-                }
-            }
-            base.Dispose(disposing);
-        }
+        // Dispose 方法已在 BaseBillEdit.cs 中实现
 
         #region Windows Form Designer generated code
 

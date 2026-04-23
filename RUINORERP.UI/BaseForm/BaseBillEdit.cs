@@ -318,9 +318,42 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 清理资源
         /// </summary>
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            Dispose(true);
+            if (disposing)
+            {
+                // 清理设计器生成的组件
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+                
+                // 释放托管资源
+                _timeoutTimer4tips?.Dispose();
+                
+                // 取消事件订阅，防止内存泄漏
+                if (_ListDataSoure != null)
+                {
+                    _ListDataSoure.CurrentChanged -= ListDataSoure_CurrentChanged;
+                }
+                
+                if (BoundEntity != null)
+                {
+                    UnsubscribeEntityEvents(BoundEntity);
+                    BoundEntity = null;
+                }
+                
+                // 清理 BackgroundWorker（如果存在）
+                if (bwRemoting != null)
+                {
+                    bwRemoting.DoWork -= bwRemoting_DoWork;
+                    bwRemoting.RunWorkerCompleted -= bwRemoting_RunWorkerCompleted;
+                    bwRemoting.ProgressChanged -= bwRemoting_progressChanged;
+                    bwRemoting.Dispose();
+                }
+            }
+            
+            base.Dispose(disposing);
         }
 
 
@@ -430,7 +463,8 @@ namespace RUINORERP.UI.BaseForm
 
         private void bwRemoting_progressChanged(object sender, ProgressChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            // BackgroundWorker 进度更新处理（当前未使用）
+            // TODO: 如果需要上传进度显示，在此实现
         }
 
         private void bwRemoting_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -709,13 +743,16 @@ namespace RUINORERP.UI.BaseForm
         //}
 
         /// <summary>
-        /// 暂时只支持一级审核，将来可以设计配置 可选多级审核。并且能看到每级的审核情况
+        /// 审核单据（虚方法，子类必须重写）
         /// </summary>
+        /// <returns>审核结果</returns>
+        /// <remarks>子类必须重写此方法以实现具体的审核逻辑，不应返回 null</remarks>
         protected async virtual Task<ReviewResult> Review()
         {
             await Task.Delay(0);
-            MessageBox.Show("应该有选项 同意和同意，原因？");
-            return null;
+            // TODO: 实现审核对话框，提供同意/拒绝选项及原因输入
+            MessageBox.Show("应该有选项 同意和拒绝，原因？", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return new ReviewResult { Succeeded = false};
         }
 
         protected async virtual Task<bool> CancelSubmit()
@@ -736,18 +773,17 @@ namespace RUINORERP.UI.BaseForm
             //frm.ShowDialog();
         }
 
-        //errorProviderForAllInput 引用这个控件。使用在保存时直接触发所有控件的验证来更新数据源
-        private bool hasError = false;
-
         /// <summary>
-        /// 验证控件UI层次
-        ///<param name="NeedValidated">是否需要验证，缓存保存不要验证，正常时要</param>
+        /// 保存数据（虚方法，子类必须重写）
         /// </summary>
+        /// <param name="NeedValidated">是否需要验证</param>
+        /// <returns>保存是否成功</returns>
+        /// <remarks>子类必须重写此方法以实现具体的保存逻辑</remarks>
         protected virtual async Task<bool> Save(bool NeedValidated)
         {
+            // 基类不提供默认实现，子类必须重写
             await Task.Delay(1);
             return false;
-            //   errorProviderForAllInput.Clear();
         }
 
         protected virtual void Exit(object thisform)
@@ -801,29 +837,11 @@ namespace RUINORERP.UI.BaseForm
                 }
                 KryptonPage page = (thisform as Control).Parent as KryptonPage;
                 MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
-                /*
-                if (page == null)
-                {
-                    //浮动
-
-                }
-                else
-                {
-                    //活动内
-                    if (cell.Pages.Contains(page))
-                    {
-                        cell.Pages.Remove(page);
-                        page.Dispose();
-                    }
-                }
-                */
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-
+                logger?.LogError(ex, "关闭窗体时发生错误");
             }
-
         }
 
  
@@ -1004,6 +1022,12 @@ namespace RUINORERP.UI.BaseForm
         {
             get
             {
+                // 优先使用实体的 HasChanged 属性
+                if (BoundEntity != null)
+                {
+                    return BoundEntity.HasChanged;
+                }
+                // 兼容旧逻辑
                 return Edited;
             }
         }
@@ -1192,63 +1216,58 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        public void ProcessHelpInfo(bool fromBtn, object sender)
+        private void ProcessHelpInfo(bool fromBtn, object sender)
         {
             string tipTxt = string.Empty;
             //时长timeout默认值设置的是3000ms(也就是3秒)
             int timeout = 3000;
-            _timeoutTimer4tips = new System.Threading.Timer(OnTimerElapsed, null, timeout, System.Threading.Timeout.Infinite);
-            toolTipBase.Hide(this);
-            if (fromBtn)
+            
+            // 先释放旧 Timer，防止资源泄漏
+            _timeoutTimer4tips?.Dispose();
+            
+            try
             {
-                ButtonSpecAny bsa = sender as ButtonSpecAny;
-                tipTxt = GetHelpInfoByBinding((bsa.Owner as KryptonTextBox).DataBindings);
-                Control ctl = bsa.Owner as Control;
-                if (string.IsNullOrEmpty(tipTxt))
+                _timeoutTimer4tips = new System.Threading.Timer(OnTimerElapsed, null, timeout, System.Threading.Timeout.Infinite);
+                toolTipBase.Hide(this);
+                if (fromBtn)
                 {
-                    return;
-                }
-                toolTipBase.SetToolTip(ctl, tipTxt);
-                toolTipBase.Show(tipTxt, ctl);
-            }
-            else
-            {
-                #region F1
-                if (ActiveControl.GetType().ToString() == "ComponentFactory.Krypton.Toolkit.KryptonTextBox+InternalTextBox")
-                {
-                    KryptonTextBox txt = ActiveControl.Parent as KryptonTextBox;
-                    tipTxt = GetHelpInfoByBinding(txt.DataBindings);
-                    //if (txt.DataBindings.Count > 0)
-                    //{
-                    //    string filedName = txt.DataBindings[0].BindingMemberInfo.BindingField;
-                    //    string[] cns = txt.DataBindings[0].BindingManagerBase.Current.ToString().Split('.');
-                    //    string className = cns[cns.Length - 1];
-                    //    var obj = Startup.AutoFacContainer.ResolveNamed<BaseEntity>(className);
-                    //    if (obj.HelpInfos.ContainsKey(filedName))
-                    //    {
-                    //        tipTxt = "【" + obj.FieldNameList.Find(f => f.Key == filedName).Value.Trim() + "】";
-                    //        tipTxt += obj.HelpInfos[filedName].ToString();
-                    //    }
-
-                    //}
+                    ButtonSpecAny bsa = sender as ButtonSpecAny;
+                    tipTxt = GetHelpInfoByBinding((bsa.Owner as KryptonTextBox).DataBindings);
+                    Control ctl = bsa.Owner as Control;
+                    if (string.IsNullOrEmpty(tipTxt))
+                    {
+                        return;
+                    }
+                    toolTipBase.SetToolTip(ctl, tipTxt);
+                    toolTipBase.Show(tipTxt, ctl);
                 }
                 else
                 {
+                    #region F1
+                    if (ActiveControl.GetType().FullName?.StartsWith("ComponentFactory.Krypton.Toolkit.KryptonTextBox") == true)
+                    {
+                        KryptonTextBox txt = ActiveControl.Parent as KryptonTextBox;
+                        tipTxt = GetHelpInfoByBinding(txt.DataBindings);
+                    }
+                    else
+                    {
 
+                    }
+                    if (string.IsNullOrEmpty(tipTxt))
+                    {
+                        return;
+                    }
+                    toolTipBase.SetToolTip(ActiveControl, tipTxt);
+                    toolTipBase.Show(tipTxt, ActiveControl);
+                    #endregion
                 }
-                if (string.IsNullOrEmpty(tipTxt))
-                {
-                    return;
-                }
-                toolTipBase.SetToolTip(ActiveControl, tipTxt);
-                toolTipBase.Show(tipTxt, ActiveControl);
-                #endregion
             }
-
-
-
-
-
+            catch
+            {
+                // 异常时也要释放 Timer
+                _timeoutTimer4tips?.Dispose();
+                throw;
+            }
         }
 
 

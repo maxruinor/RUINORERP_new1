@@ -30,7 +30,7 @@ namespace RUINORERP.UI.Network.Services
     /// 采用与UserLoginService相似的设计模式，确保统一的网络通信和异常处理
     /// 同时提供静态方法以便兼容旧的调用模式
     /// </summary>
-    public sealed class ClientBizCodeService : IBizCodeGenerateService
+    public sealed class ClientBizCodeService : IBizCodeGenerateService, IDisposable
     {
         private readonly ClientCommunicationService _communicationService;
         private readonly ILogger<ClientBizCodeService> _logger;
@@ -184,14 +184,8 @@ namespace RUINORERP.UI.Network.Services
             // 准备属性信息列表（用于SKU编码生成）
             if (baseInfoType == BaseInfoType.SKU_No && prod.tb_Prod_Attr_Relations != null && prod.tb_Prod_Attr_Relations.Count > 0)
             {
-                foreach (var relation in prod.tb_Prod_Attr_Relations)
-                {
-                    // 确保有属性ID和属性值ID
-                    if (relation.Property_ID.HasValue && relation.PropertyValueID.HasValue)
-                    {
-                         
-                    }
-                }
+                // TODO: 处理产品属性关系，构建SKU属性部分
+                // 当前版本暂未实现属性编码逻辑，预留扩展点
             }
 
             var ProductParameter = new ProdParameter
@@ -243,14 +237,8 @@ namespace RUINORERP.UI.Network.Services
             // 准备属性信息列表（用于SKU编码生成）
             if (baseInfoType == BaseInfoType.SKU_No && prodDetail.tb_Prod_Attr_Relations != null && prodDetail.tb_Prod_Attr_Relations.Count > 0)
             {
-                foreach (var relation in prodDetail.tb_Prod_Attr_Relations)
-                {
-                    // 确保有属性ID和属性值ID
-                    if (relation.Property_ID.HasValue && relation.PropertyValueID.HasValue)
-                    {
-                        
-                    }
-                }
+                // TODO: 处理产品详情属性关系，构建SKU属性部分
+                // 当前版本暂未实现属性编码逻辑，预留扩展点
             }
 
             var ProductParameter = new ProdParameter
@@ -386,8 +374,8 @@ namespace RUINORERP.UI.Network.Services
         {
             // 创建带超时的取消令牌源
             using var timeoutCts = new CancellationTokenSource();
-            // 设置默认超时时间为 10 秒
-            timeoutCts.CancelAfter(TimeSpan.FromSeconds(10));
+            // 设置默认超时时间为 5 秒（平衡网络延迟和用户体验）
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(5));
         
             // 创建组合取消令牌，任一令牌取消都会导致操作取消
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
@@ -492,20 +480,26 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 释放资源（标准Dispose模式）
+        /// </summary>
+        /// <param name="disposing">是否正在 disposing</param>
+        private void Dispose(bool disposing)
+        {
             if (_isDisposed)
                 return;
         
+            if (disposing)
+            {
+                // 释放托管资源（当前无需释放特殊资源）
+                System.Diagnostics.Debug.WriteLine("ClientBizCodeService 托管资源已释放");
+            }
+            
             _isDisposed = true;
-        
-            try
-            {
-                // ✅ 无需释放信号量锁,已删除
-                System.Diagnostics.Debug.WriteLine("ClientBizCodeService 资源已释放");
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "释放 BizCodeService 资源时发生异常");
-            }
         }
 
         #region 静态方法（兼容旧的调用模式）

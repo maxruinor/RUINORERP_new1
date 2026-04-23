@@ -215,13 +215,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         }
                         detailedError += $"\n堆栈跟踪: {batchEx.StackTrace}";
                         
-                        // 尝试找出具体是哪条数据导致的错误（如果可能）
-                        var problematicEntities = IdentifyProblematicEntities(entityList, entityType, mappings);
-                        if (problematicEntities.Any())
-                        {
-                            detailedError += $"\n可能的问题数据行: {string.Join(", ", problematicEntities)}";
-                        }
-                        
                         throw new Exception(detailedError, batchEx);
                     }
                 }
@@ -451,8 +444,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // 构建更新SQL
+                // 验证表名和字段名是否合法（防止SQL注入）
                 string tableName = entityType.Name;
+                if (!IsValidSqlIdentifier(tableName) || !IsValidSqlIdentifier(imageField) || !IsValidSqlIdentifier(uniqueField))
+                {
+                    throw new ArgumentException("无效的表名或字段名");
+                }
+                
+                // 构建更新SQL
                 string sql = $"UPDATE {tableName} SET {imageField} = @value WHERE {uniqueField} = @uniqueValue";
                 
                 await _db.Ado.ExecuteCommandAsync(sql, new { value, uniqueValue });
@@ -461,6 +460,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 System.Diagnostics.Debug.WriteLine($"更新图片字段失败: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 验证SQL标识符是否合法（仅允许字母、数字、下划线）
+        /// </summary>
+        private bool IsValidSqlIdentifier(string identifier)
+        {
+            if (string.IsNullOrEmpty(identifier))
+                return false;
+            
+            // SQL标识符只能包含字母、数字、下划线，且不能以数字开头
+            return System.Text.RegularExpressions.Regex.IsMatch(identifier, @"^[a-zA-Z_][a-zA-Z0-9_]*$");
         }
 
         /// <summary>
@@ -623,46 +634,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             return entity;
         }
 
-        /// <summary>
-        /// 尝试识别导致批量导入失败的实体（简单启发式方法）
-        /// </summary>
-        private List<int> IdentifyProblematicEntities(List<BaseEntity> entityList, Type entityType, ColumnMappingCollection mappings)
-        {
-            var problematicRows = new List<int>();
-            // 这里可以添加更复杂的逻辑，比如逐个验证实体的必填字段
-            // 为了不过度设计，目前只返回一个提示，实际行号需要在调用方根据映射关系回溯
-            return problematicRows;
-        }
-
-        /// <summary>
-        /// 从ExcelColumn中提取默认值
-        /// 格式：[默认值:值] 字段名
-        /// </summary>
-        /// <param name="excelColumn">Excel列名</param>
-        /// <returns>默认值</returns>
-        private string ExtractDefaultValue(string excelColumn)
-        {
-            try
-            {
-                int startIndex = excelColumn.IndexOf('[') + 1;
-                int endIndex = excelColumn.IndexOf(']');
-                if (startIndex > 0 && endIndex > startIndex)
-                {
-                    string defaultValuePart = excelColumn.Substring(startIndex, endIndex - startIndex);
-                    // 提取冒号后面的值
-                    int colonIndex = defaultValuePart.IndexOf(':');
-                    if (colonIndex > -1)
-                    {
-                        return defaultValuePart.Substring(colonIndex + 1).Trim();
-                    }
-                }
-                return string.Empty;
-            }
-            catch
-            {
-                return string.Empty;
-            }
-        }
 
         /// <summary>
         /// 获取外键ID
@@ -830,7 +801,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
                 else if (underlyingType.IsEnum)
                 {
-                    return Enum.Parse(underlyingType, stringValue);
+                    // 使用 TryParse 避免异常
+                    try
+                    {
+                        var enumValue = Enum.Parse(underlyingType, stringValue, ignoreCase: true);
+                        return enumValue;
+                    }
+                    catch
+                    {
+                        throw new Exception($"值 '{stringValue}' 不是有效的 {underlyingType.Name} 枚举值");
+                    }
                 }
                 else
                 {
@@ -1000,9 +980,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 try
                 {
-                    // 使用 SnowflakeId 批量插入，性能优于自增 ID
-                    var ids = _db.Insertable(typedList).ExecuteReturnSnowflakeIdList();
-                    result.InsertedCount = ids.Count;
+                    // 使用 Storageable 实现插入或更新（Upsert）
+                    var storageResult = await _db.Storageable(typedList)
+                        .ExecuteCommandAsync();
+                    
+                    result.InsertedCount = storageResult;
+                    result.UpdatedCount = storageResult;
                     
                     // 提交事务
                     _db.Ado.CommitTran();
@@ -1011,7 +994,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     // 回滚事务
                     _db.Ado.RollbackTran();
-                    throw new Exception($"数据库批量插入失败: {ex.Message}", ex);
+                    System.Diagnostics.Debug.WriteLine($"批量导入失败，已回滚事务: {ex.Message}");
+                    throw; // 直接抛出原异常，保持堆栈完整
                 }
             }
             catch (Exception ex)

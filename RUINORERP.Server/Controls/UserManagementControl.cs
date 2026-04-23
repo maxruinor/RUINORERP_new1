@@ -1513,28 +1513,25 @@ namespace RUINORERP.Server.Controls
             var selectedSessions = SelectSessions();
             if (selectedSessions.Count == 0)
             {
-                MessageBox.Show("请先选择要发送消息的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Log(LogLevel.Warning, "请先选择要发送消息的会话");
                 return;
             }
 
             var validSessions = selectedSessions.Where(IsSessionValid).ToList();
             if (validSessions.Count == 0)
             {
-                MessageBox.Show("所选会话均无效或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log(LogLevel.Error, "所选会话均无效或已断开连接");
                 return;
             }
 
             var userList = validSessions.Select(s => s.UserInfo).Where(u => u != null).ToList();
             if (userList.Count == 0)
             {
-                MessageBox.Show("所选会话中没有有效的用户信息", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log(LogLevel.Error, "所选会话中没有有效的用户信息");
                 return;
             }
 
             HandleSendMessage(userList);
-
-            // 显示操作结果
-            MessageBox.Show($"已向 {userList.Count} 个用户发送消息", "操作完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
 
@@ -1586,9 +1583,8 @@ namespace RUINORERP.Server.Controls
                 }
             }
 
-            // 显示发送结果
-            string resultMessage = $"消息发送完成: 成功 {successCount} 个, 失败 {failedCount} 个";
-            MessageBox.Show(resultMessage, "发送结果", MessageBoxButtons.OK, successCount == users.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            // 仅在日志中记录结果，不弹出消息框
+            Log(LogLevel.Info, $"消息发送完成: 成功 {successCount} 个, 失败 {failedCount} 个");
         }
 
 
@@ -1603,51 +1599,81 @@ namespace RUINORERP.Server.Controls
             var selectedSessions = SelectSessions();
             if (selectedSessions.Count == 0)
             {
-                MessageBox.Show("请先选择要推送更新的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Log(LogLevel.Warning, "请先选择要推送更新的会话");
                 return;
             }
-            foreach (var session in selectedSessions)
-            {
-                if (session == null)
-                {
-                    MessageBox.Show($"用户 {session.UserInfo.DisplayName} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
 
-                // 确认推送更新
-                var result = MessageBox.Show($"确定要向用户 {session.UserInfo.DisplayName} 推送更新吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (result == DialogResult.Yes)
+            var validSessions = selectedSessions.Where(IsSessionValid).ToList();
+            if (validSessions.Count == 0)
+            {
+                Log(LogLevel.Error, "所选会话均无效或已断开连接");
+                return;
+            }
+
+            // 统一确认推送操作
+            var confirmResult = MessageBox.Show(
+                $"确定要向选中的 {validSessions.Count} 个会话推送更新吗？",
+                "确认推送更新",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirmResult != DialogResult.Yes)
+            {
+                return;
+            }
+
+            int successCount = 0;
+            int failedCount = 0;
+
+            foreach (var session in validSessions)
+            {
+                try
                 {
-                    // 发送推送更新命令 - 使用新的发送方法
+                    // 发送推送更新命令
                     SystemCommandRequest systemCommandRequest = new SystemCommandRequest();
                     systemCommandRequest.CommandType = SystemManagementType.PushVersionUpdate;
 
                     var success = _sessionService.SendCommandAsync(
                         session.SessionID,
                         SystemCommands.SystemManagement,
-                        systemCommandRequest).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                        systemCommandRequest).Result;
 
                     if (success)
                     {
-                        frmMainNew.Instance.PrintInfoLog($"已向用户 {session.UserInfo.DisplayName} 推送更新");
+                        successCount++;
+                        LogStatusChange(session, "已推送更新");
                     }
                     else
                     {
-                        MessageBox.Show("更新推送失败，请检查用户连接状态", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        failedCount++;
+                        LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 推送更新失败", null, session);
                     }
                 }
+                catch (Exception ex)
+                {
+                    failedCount++;
+                    LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 推送更新时出错", ex, session);
+                }
             }
+
+            // 显示操作结果
+            string resultMessage = $"更新推送完成: 成功 {successCount} 个会话, 失败 {failedCount} 个会话";
+            MessageBox.Show(
+                resultMessage,
+                "推送结果",
+                MessageBoxButtons.OK,
+                successCount == validSessions.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
         /// <summary>
         /// 推送系统配置到选中客户端
         /// 发送 SystemGlobalConfig 和 GlobalValidatorConfig 两个配置
         /// </summary>
-        private async void tsbtn推送系统配置_Click(object sender, EventArgs e)
+        private void tsbtn推送系统配置_Click(object sender, EventArgs e)
         {
             var selectedSessions = SelectSessions();
             if (selectedSessions.Count == 0)
             {
-                MessageBox.Show("请先选择要推送系统配置的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Log(LogLevel.Warning, "请先选择要推送系统配置的会话");
                 return;
             }
 
@@ -1655,7 +1681,7 @@ namespace RUINORERP.Server.Controls
             var validSessions = selectedSessions.Where(IsSessionValid).ToList();
             if (validSessions.Count == 0)
             {
-                MessageBox.Show("所选会话均无效或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log(LogLevel.Error, "所选会话均无效或已断开连接");
                 return;
             }
 
@@ -1796,7 +1822,7 @@ namespace RUINORERP.Server.Controls
             var selectedSessions = SelectSessions();
             if (selectedSessions.Count == 0)
             {
-                MessageBox.Show("请先选择要推送缓存的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Log(LogLevel.Warning, "请先选择要推送缓存的会话");
                 return;
             }
 
@@ -1804,7 +1830,7 @@ namespace RUINORERP.Server.Controls
             var validSessions = selectedSessions.Where(IsSessionValid).ToList();
             if (validSessions.Count == 0)
             {
-                MessageBox.Show("所选会话均无效或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log(LogLevel.Error, "所选会话均无效或已断开连接");
                 return;
             }
 
@@ -1943,7 +1969,7 @@ namespace RUINORERP.Server.Controls
                 var selectedSessions = SelectSessions();
                 if (selectedSessions.Count == 0)
                 {
-                    MessageBox.Show("请先选择要切换服务器的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Log(LogLevel.Warning, "请先选择要切换服务器的会话");
                     return;
                 }
 
@@ -1973,7 +1999,7 @@ namespace RUINORERP.Server.Controls
             {
                 if (listView1.Items.Count == 0)
                 {
-                    MessageBox.Show("当前没有在线会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Log(LogLevel.Warning, "当前没有在线会话");
                     return;
                 }
 
@@ -2109,16 +2135,8 @@ namespace RUINORERP.Server.Controls
                     }
                 }
 
-                // 显示操作结果
-                if (successCount > 0)
-                {
-                    MessageBox.Show($"成功发送切换服务器命令到 {successCount} 个会话", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-
-                if (failedCount > 0)
-                {
-                    MessageBox.Show($"有 {failedCount} 个会话切换服务器失败，请查看日志获取详情", "操作结果", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+                // 仅在日志中记录结果
+                Log(LogLevel.Info, $"切换服务器操作完成: 成功 {successCount} 个会话, 失败 {failedCount} 个会话");
 
                 // 刷新会话列表
                 FullRefreshFromSessions();
@@ -2140,7 +2158,7 @@ namespace RUINORERP.Server.Controls
                 var selectedSessions = SelectSessions();
                 if (selectedSessions.Count == 0)
                 {
-                    MessageBox.Show("请先选择要断开连接的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Log(LogLevel.Warning, "请先选择要断开连接的会话");
                     return;
                 }
 
@@ -2181,9 +2199,8 @@ namespace RUINORERP.Server.Controls
                     }
                 }
 
-                // 显示操作结果
-                string message = $"断开连接操作完成:\n成功: {disconnectedCount} 个会话\n失败: {failedCount} 个会话";
-                MessageBox.Show(message, "操作结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 仅在日志中记录结果，不弹出消息框
+                Log(LogLevel.Info, $"断开连接操作完成: 成功 {disconnectedCount} 个会话, 失败 {failedCount} 个会话");
 
                 // 刷新统计信息
                 UpdateStatistics();
@@ -2205,7 +2222,7 @@ namespace RUINORERP.Server.Controls
                 var selectedSessions = SelectSessions();
                 if (selectedSessions.Count == 0)
                 {
-                    MessageBox.Show("请先选择要关机的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Log(LogLevel.Warning, "请先选择要关机的会话");
                     return;
                 }
 
@@ -2288,9 +2305,8 @@ namespace RUINORERP.Server.Controls
                     }
                 }
 
-                // 显示操作结果
-                string message = $"关机命令发送完成:\n成功: {successCount} 个会话\n失败: {failedCount} 个会话";
-                MessageBox.Show(message, "操作结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 仅在日志中记录结果
+                Log(LogLevel.Info, $"关机命令发送完成: 成功 {successCount} 个会话, 失败 {failedCount} 个会话");
 
                 // 刷新统计信息
                 UpdateStatistics();
@@ -2310,7 +2326,7 @@ namespace RUINORERP.Server.Controls
             var selectedSessions = SelectSessions();
             if (selectedSessions.Count == 0)
             {
-                MessageBox.Show("请先选择要更新全局配置的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Log(LogLevel.Warning, "请先选择要更新全局配置的会话");
                 return;
             }
 
@@ -2318,7 +2334,7 @@ namespace RUINORERP.Server.Controls
             var validSessions = selectedSessions.Where(IsSessionValid).ToList();
             if (validSessions.Count == 0)
             {
-                MessageBox.Show("所选会话均无效或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log(LogLevel.Error, "所选会话均无效或已断开连接");
                 return;
             }
 
@@ -2384,13 +2400,8 @@ namespace RUINORERP.Server.Controls
                     }
                 }
 
-                // 显示操作结果
-                string resultMessage = $"全局配置更新完成: 成功 {successCount} 个会话, 失败 {failedCount} 个会话";
-                MessageBox.Show(
-                    resultMessage,
-                    "更新结果",
-                    MessageBoxButtons.OK,
-                    successCount == validSessions.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+                // 仅在日志中记录结果
+                Log(LogLevel.Info, $"全局配置更新完成: 成功 {successCount} 个会话, 失败 {failedCount} 个会话");
             }
             catch (Exception ex)
             {
@@ -2412,7 +2423,7 @@ namespace RUINORERP.Server.Controls
                 // 检查文件是否存在
                 if (!File.Exists(configPath))
                 {
-                    MessageBox.Show("列配置文件不存在，无需删除", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Log(LogLevel.Info, "列配置文件不存在，无需删除");
                     return;
                 }
 
@@ -2432,9 +2443,7 @@ namespace RUINORERP.Server.Controls
                 // 重新初始化列显示选项
                 InitializeColumnDisplayOptions();
 
-                // 显示操作结果
-                MessageBox.Show("列配置文件已删除，已恢复默认列显示设置", "操作完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
+                // 仅在日志中记录结果
                 LogStatusChange(null, "已删除列配置文件: UserManagementControl_ColumnConfig.json");
             }
             catch (Exception ex)
@@ -2454,7 +2463,7 @@ namespace RUINORERP.Server.Controls
                 var selectedSessions = SelectSessions();
                 if (selectedSessions.Count == 0)
                 {
-                    MessageBox.Show("请先选择要强制退出的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Log(LogLevel.Warning, "请先选择要强制退出的会话");
                     return;
                 }
 
@@ -2519,9 +2528,8 @@ namespace RUINORERP.Server.Controls
                     }
                 }
 
-                // 显示操作结果
-                string message = $"强制用户退出操作完成:\n成功: {successCount} 个会话\n失败: {failedCount} 个会话";
-                MessageBox.Show(message, "操作结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 仅在日志中记录结果
+                Log(LogLevel.Info, $"强制用户退出操作完成: 成功 {successCount} 个会话, 失败 {failedCount} 个会话");
 
                 // 刷新统计信息
                 UpdateStatistics();

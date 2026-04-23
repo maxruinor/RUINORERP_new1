@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Transactions;
 using Autofac;
 using RUINORERP.Business;
 using RUINORERP.Model.Base;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model;
+using RUINORERP.Repository.UnitOfWorks;
 
 namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 {
@@ -18,14 +18,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
     /// 2. 支持 SqlSugar 的 DeleteNav 导航删除(自动级联)
     /// 3. 通过泛型 T 直接指定 RUINORERP.Model 中的强类型实体
     /// 4. 无需重新实现复杂的关系分析和表达式树构建
+    /// 5. ✅ 使用 IUnitOfWorkManage 管理事务,避免 DataReader 挂起问题
     /// </summary>
     public class DataCleanupEngine
     {
         private readonly ILogger<DataCleanupEngine> _logger;
+        private readonly IUnitOfWorkManage _unitOfWork;
 
         public DataCleanupEngine()
         {
             _logger = Startup.GetFromFac<ILogger<DataCleanupEngine>>();
+            _unitOfWork = Startup.GetFromFac<IUnitOfWorkManage>();
         }
 
         /// <summary>
@@ -57,9 +60,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 int totalDeleted = 0;
                 int stepIndex = 0; // 提升到 try 块开始位置，catch 块才能访问
 
-                // 使用事务包装，测试模式下会回滚
-                using (var scope = new System.Transactions.TransactionScope(
-                    System.Transactions.TransactionScopeAsyncFlowOption.Enabled))
+                // ✅ 使用 IUnitOfWorkManage 管理事务(替代 TransactionScope)
+                // 优势: 自动处理 DataReader 清理、支持异步事务、自动超时保护
+                await _unitOfWork.BeginTranAsync();
+                
+                try
                 {
                     // 逐个删除(每个都会触发 BaseDeleteByNavAsync 的级联删除)
                     foreach (var id in targetIds)
@@ -96,15 +101,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                     if (isTestMode)
                     {
                         // 测试模式:回滚事务,不真正删除
+                        await _unitOfWork.RollbackTranAsync();
                         Log($"[测试模式] 事务已回滚,数据未实际删除");
-                        // 不调用 scope.Complete(),事务会自动回滚
                     }
                     else
                     {
                         // 正式模式:提交事务
-                        scope.Complete();
+                        await _unitOfWork.CommitTranAsync();
                         Log($"级联删除完成: 总计删除 {totalDeleted} 条主记录及其关联数据");
                     }
+                }
+                catch (Exception)
+                {
+                    // 发生异常时回滚事务
+                    await _unitOfWork.RollbackTranAsync();
+                    throw; // 重新抛出,让外层 catch 处理
                 }
             }
             catch (Exception ex)

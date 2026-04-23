@@ -177,10 +177,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 category.CategoryLevel = 1;
             }
 
-            // 4. 设置排序号
+            // 4. 设置排序号（按父级分类分别计算）
             if (!category.Sort.HasValue)
             {
-                int maxSort = 0;// db.Queryable<tb_ProdCategories>().Max(c => c.Sort) ?? 0;
+                int maxSort = await db.Queryable<tb_ProdCategories>()
+                    .WhereIF(category.Parent_id.HasValue, c => c.Parent_id == category.Parent_id)
+                    .MaxAsync(c => (int?)c.Sort) ?? 0;
                 category.Sort = maxSort + 1;
             }
 
@@ -243,7 +245,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 处理产品分类的特殊字段
         /// </summary>
-        /// <param name="category">产品分类实体</param>
+        /// <param name="prod">产品实体</param>
         /// <param name="db">数据库客户端</param>
         private static async System.Threading.Tasks.Task ProdBaseAsync(tb_Prod prod, ISqlSugarClient db)
         {
@@ -252,14 +254,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
             var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-            // 1. 自动生成分类编码（如果用户未指定）
+            if (bizCodeService == null)
+            {
+                throw new InvalidOperationException("无法获取ClientBizCodeService实例");
+            }
+            
+            // 1. 自动生成产品编号（如果用户未指定）
             if (string.IsNullOrWhiteSpace(prod.ProductNo))
             {
                 prod.ProductNo = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProductNo);
             }
             prod.Is_enabled = true;
             prod.DataStatus = (int)DataStatus.新建;
-            Business.BusinessHelper.Instance.InitEntity(prod);
         }
 
         private static async System.Threading.Tasks.Task ProdDetailAsync(tb_ProdDetail proddetail, ISqlSugarClient db)
@@ -269,7 +275,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
             var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-            // 1. 自动生成分类编码（如果用户未指定）
+            if (bizCodeService == null)
+            {
+                throw new InvalidOperationException("无法获取ClientBizCodeService实例");
+            }
+            
+            // 1. 自动生成SKU编码（如果用户未指定）
             if (string.IsNullOrWhiteSpace(proddetail.SKU))
             {
                 proddetail.SKU = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.SKU_No);
@@ -277,7 +288,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             proddetail.Is_enabled = true;
             proddetail.isdeleted = false;
             proddetail.DataStatus = (int)DataStatus.新建;
-            Business.BusinessHelper.Instance.InitEntity(proddetail);
         }
 
         /// <summary>

@@ -958,8 +958,8 @@ namespace RUINORERP.Business
         /// 原理:扫描实体的 OneToMany 导航属性,检查目标表是否有自己的子表,如有则先删除
         /// </summary>
         /// <param name="mainEntity">主实体实例</param>
-        /// <param name="maxDepth">最大递归深度(默认2层)</param>
-        protected async Task DeleteDeepLevelRelationsByNavigationAsync<TMain>(TMain mainEntity, int maxDepth = 2) where TMain : class
+        /// <param name="maxDepth">最大递归深度(默认3层,可处理如 PurOrder→PurEntry→PurEntryDetail 的3层关系)</param>
+        protected async Task DeleteDeepLevelRelationsByNavigationAsync<TMain>(TMain mainEntity, int maxDepth = 3) where TMain : class
         {
             var db = _unitOfWorkManage.GetDbClient();
             var entityType = typeof(TMain);
@@ -999,7 +999,9 @@ namespace RUINORERP.Business
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogWarning(ex, $"处理导航属性 {navProp.Name} 时出错,继续处理其他属性");
+                    _logger?.LogWarning(ex, $"处理导航属性 {navProp.Name} 时出错,继续处理其他属性\n" +
+                        $"💡 如果看到外键约束冲突,说明 Controller.BaseDeleteByNavAsync 中遗漏了某些 Include\n" +
+                        $"   请检查 {typeof(TMain).Name}Controller.BaseDeleteByNavAsync 方法,确保所有导航都已 Include");
                 }
             }
         }
@@ -1046,16 +1048,19 @@ namespace RUINORERP.Business
 
             if (!targetNavProps.Any())
             {
-                // 目标表没有子表,不需要特殊处理
+                // 目标表没有子表,但可能有其他表引用它(如 tb_FM_PayeeInfo 被 tb_PurOrder 引用)
+                _logger?.LogDebug($"{targetType.Name} 没有 OneToMany 导航属性,但可能存在反向引用,由外层 DeleteNav.Include 处理");
                 return;
             }
+            
+            _logger?.LogInformation($"{targetType.Name} 有 {targetNavProps.Count} 个子表导航: {string.Join(", ", targetNavProps.Select(p => p.Name))}");
 
             // 目标表有子表,需要先查询出所有主表ID,然后删除子表数据
             // 1. 查询所有关联的主表记录ID(使用原生SQL,最简单可靠)
             var pkName = GetPrimaryKeyName(targetType);
             var mainIds = await db.Ado.SqlQueryAsync<long>(
-                $"SELECT [{pkName}] FROM [{fkTableName}] WHERE [{fkFieldName}] = @0", 
-                mainPkValue);
+                $"SELECT [{pkName}] FROM [{fkTableName}] WHERE [{fkFieldName}] = @val", 
+                new { val = mainPkValue });
 
             if (!mainIds.Any())
                 return;
@@ -1094,7 +1099,7 @@ namespace RUINORERP.Business
             var childTableName = childType.Name;
             var deletedCount = await db.Deleteable<object>()
                 .AS(childTableName)
-                .Where($"{fkFieldName} IN (@0)", parentIds)
+                .Where($"{fkFieldName} IN (@ids)", new { ids = parentIds })
                 .ExecuteCommandAsync();
 
             if (deletedCount > 0)

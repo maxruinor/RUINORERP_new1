@@ -625,6 +625,17 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 清理会话记录
                     await SessionService.RemoveSessionAsync(targetSessionId);
                     logger?.LogInformation($"[强制下线] 已清理A的会话记录");
+                    
+                    // ✅ 新增：等待短暂延迟，确保会话完全清理（避免B重新登录时的时序问题）
+                    await Task.Delay(200, cancellationToken);
+                    
+                    // ✅ 新增：验证会话是否已完全移除
+                    var verifySession = SessionService.GetSession(targetSessionId);
+                    if (verifySession != null)
+                    {
+                        logger?.LogWarning($"[强制下线] 会话仍存在，再次尝试移除: SessionId={targetSessionId}");
+                        await SessionService.RemoveSessionAsync(targetSessionId);
+                    }
                 }
                 catch (Exception disconnectEx)
                 {
@@ -847,6 +858,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         {
                             logger?.LogDebug($"[会话过滤] 跳过无效会话: SessionID={session.SessionID}, UserName={session.UserName}");
                         }
+                    }
+                    else
+                    {
+                        logger?.LogDebug($"[会话过滤] 跳过未认证会话: SessionID={session.SessionID}, UserName={session.UserName}, IsAuthenticated={session.IsAuthenticated}");
                     }
                 }
 

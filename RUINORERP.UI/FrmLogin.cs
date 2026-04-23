@@ -1377,6 +1377,9 @@ namespace RUINORERP.UI
                         {
                             MainForm.Instance.PrintInfoLog("强制下线操作已完成");
                             
+                            // ✅ 关键修复：清理SessionId和Token，避免重新登录时使用旧状态
+                            await _userLoginService.CleanupLoginStateAsync();
+                            
                             // 断开当前连接
                             await connectionManager.DisconnectAsync();
                             

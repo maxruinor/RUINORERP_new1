@@ -15,6 +15,7 @@ using System.Threading;
 
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
@@ -161,6 +162,22 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 catch (Exception ex)
                                 {
                                     _logger.LogWarning(ex, "[强制下线] 断开连接时发生异常");
+                                }
+                                
+                                // ✅ 关键修复：清理本地Token和会话状态，避免重新启动时状态冲突
+                                try
+                                {
+                                    var userLoginService = RUINORERP.UI.Startup.GetFromFac<UserLoginService>();
+                                    if (userLoginService != null)
+                                    {
+                                        _logger.LogInformation("[强制下线] 正在清理本地Token和会话状态...");
+                                        await userLoginService.CleanupLoginStateAsync();
+                                        _logger.LogInformation("[强制下线] 本地状态清理完成");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning(ex, "[强制下线] 清理本地状态时发生异常");
                                 }
                                 
                                 // ✅ 第4步：再短暂延迟，确保服务器处理完断开事件

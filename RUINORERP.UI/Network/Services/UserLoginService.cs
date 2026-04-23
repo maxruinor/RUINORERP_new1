@@ -341,6 +341,12 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
+                // ✅ 关键修复：先清理SessionId，避免重新登录时使用旧状态
+                if (MainForm.Instance?.AppContext != null)
+                {
+                    MainForm.Instance.AppContext.SessionId = null;
+                }
+                
                 // 清除Token存储
                 await _tokenManager.TokenStorage.ClearTokenAsync();
                 // 重置登录状态
@@ -350,7 +356,7 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (Exception ex)
             {
-
+                _logger?.LogWarning(ex, "[清理登录状态] 发生异常");
             }
         }
 

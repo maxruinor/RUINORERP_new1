@@ -51,11 +51,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             };
             _predefinedFields["tb_Prod"] = new HashSet<string>
             {
-                GetFieldName<tb_Prod>(x => x.DataStatus),    
-                GetFieldName<tb_Prod>(x => x.Modified_at),    
-                GetFieldName<tb_Prod>(x => x.Modified_by),    
-                GetFieldName<tb_Prod>(x => x.Created_at),     
-                GetFieldName<tb_Prod>(x => x.Created_by)      
+                GetFieldName<tb_Prod>(x => x.DataStatus),
+                GetFieldName<tb_Prod>(x => x.Modified_at),
+                GetFieldName<tb_Prod>(x => x.Modified_by),
+                GetFieldName<tb_Prod>(x => x.Created_at),
+                GetFieldName<tb_Prod>(x => x.Created_by)
             };
 
             _predefinedFields["tb_ProdDetail"] = new HashSet<string>
@@ -109,7 +109,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="entity">实体对象</param>
         /// <param name="db">数据库客户端</param>
         /// <param name="importType">导入类型标识（用于区分客户和供应商等使用相同表的情况）</param>
-        public static void PreProcessEntity(Type entityType, BaseEntity entity, ISqlSugarClient db, string importType = null)
+        public static async System.Threading.Tasks.Task PreProcessEntityAsync(Type entityType, BaseEntity entity, ISqlSugarClient db, string importType = null)
         {
             if (entityType == null || entity == null)
             {
@@ -122,21 +122,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             switch (typeName)
             {
                 case "tb_ProdCategories":
-                    ProcessProdCategories(entity as tb_ProdCategories, db);
+                    await ProcessProdCategoriesAsync(entity as tb_ProdCategories, db);
                     break;
                 // TODO: 添加其他实体类型的处理
                 case "tb_CustomerVendor":
                     // 根据importType区分是客户还是供应商
                     bool isCustomer = importType == "客户表";
                     bool isVendor = importType == "供应商表";
-                    CustomerVendor(entity as tb_CustomerVendor, db, isCustomer, isVendor);
+                    await CustomerVendorAsync(entity as tb_CustomerVendor, db, isCustomer, isVendor);
                     break;
 
                 case "tb_Prod":
-                    ProdBase(entity as tb_Prod, db);
+                    await ProdBaseAsync(entity as tb_Prod, db);
                     break;
                 case "tb_ProdDetail":
-                    ProdDetail(entity as tb_ProdDetail, db);
+                    await ProdDetailAsync(entity as tb_ProdDetail, db);
                     break;
                 default:
                     // 默认处理
@@ -151,7 +151,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="category">产品分类实体</param>
         /// <param name="db">数据库客户端</param>
-        private static void ProcessProdCategories(tb_ProdCategories category, ISqlSugarClient db)
+        private static async System.Threading.Tasks.Task ProcessProdCategoriesAsync(tb_ProdCategories category, ISqlSugarClient db)
         {
             if (category == null)
             {
@@ -161,7 +161,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 1. 自动生成分类编码（如果用户未指定）
             if (string.IsNullOrWhiteSpace(category.CategoryCode))
             {
-                category.CategoryCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ProCategories);
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                category.CategoryCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProCategories);
             }
 
             // 2. 设置默认启用状态
@@ -197,11 +198,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="category">产品分类实体</param>
         /// <param name="db">数据库客户端</param>
-        private static void CustomerVendor(tb_CustomerVendor customerVendor, ISqlSugarClient db, bool IsCustomer = false, bool IsVendor = false)
+        private static async System.Threading.Tasks.Task CustomerVendorAsync(tb_CustomerVendor customerVendor, ISqlSugarClient db, bool IsCustomer = false, bool IsVendor = false)
         {
             if (customerVendor == null)
             {
                 return;
+            }
+            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+            if (bizCodeService == null)
+            {
+                throw new Exception("无法从容器中获取BizCodeService实例");
             }
 
             // 1. 自动生成分类编码（如果用户未指定）
@@ -209,11 +215,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 if (IsCustomer)
                 {
-                    customerVendor.CVCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Customer);
+                    customerVendor.CVCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.Customer);
                 }
                 else
                 {
-                    customerVendor.CVCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Supplier);
+                    customerVendor.CVCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.Supplier);
                 }
 
             }
@@ -239,37 +245,37 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="category">产品分类实体</param>
         /// <param name="db">数据库客户端</param>
-        private static void ProdBase(tb_Prod prod, ISqlSugarClient db)
+        private static async System.Threading.Tasks.Task ProdBaseAsync(tb_Prod prod, ISqlSugarClient db)
         {
             if (prod == null)
             {
                 return;
             }
-
+            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
             // 1. 自动生成分类编码（如果用户未指定）
             if (string.IsNullOrWhiteSpace(prod.ProductNo))
             {
-                prod.ProductNo = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ProductNo);
+                prod.ProductNo = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProductNo);
             }
             prod.Is_enabled = true;
             prod.DataStatus = (int)DataStatus.新建;
             Business.BusinessHelper.Instance.InitEntity(prod);
         }
 
-        private static void ProdDetail(tb_ProdDetail proddetail, ISqlSugarClient db)
+        private static async System.Threading.Tasks.Task ProdDetailAsync(tb_ProdDetail proddetail, ISqlSugarClient db)
         {
             if (proddetail == null)
             {
                 return;
             }
-
+            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
             // 1. 自动生成分类编码（如果用户未指定）
             if (string.IsNullOrWhiteSpace(proddetail.SKU))
             {
-                proddetail.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No);
+                proddetail.SKU = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.SKU_No);
             }
             proddetail.Is_enabled = true;
-            proddetail.isdeleted=false;
+            proddetail.isdeleted = false;
             proddetail.DataStatus = (int)DataStatus.新建;
             Business.BusinessHelper.Instance.InitEntity(proddetail);
         }

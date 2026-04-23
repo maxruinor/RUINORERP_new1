@@ -992,7 +992,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 导入前处理特殊字段
                 foreach (var entity in typedList)
                 {
-                    EntityImportHelper.PreProcessEntity(typeof(T), entity, _db, importType);
+                    await EntityImportHelper.PreProcessEntityAsync(typeof(T), entity, _db, importType);
                 }
 
                 // 开启事务

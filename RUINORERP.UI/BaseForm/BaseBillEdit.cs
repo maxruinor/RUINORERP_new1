@@ -987,7 +987,7 @@ namespace RUINORERP.UI.BaseForm
         private bool editflag;
 
         /// <summary>
-        /// 是否为编辑 如果为是则true1
+        /// 是否为编辑 如果为是则true
         /// [已废弃] 请使用 HasUnsavedChanges 代替
         /// </summary>
         [Obsolete("请使用 HasUnsavedChanges 代替此属性", false)]

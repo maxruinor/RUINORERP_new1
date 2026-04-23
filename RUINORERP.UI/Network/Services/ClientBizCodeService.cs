@@ -36,9 +36,6 @@ namespace RUINORERP.UI.Network.Services
         private readonly ILogger<ClientBizCodeService> _logger;
         
         // ✅ 移除细粒度锁 - 服务器端已有完善的并发控制,客户端加锁只会增加延迟
-        // private readonly ConcurrentDictionary<string, SemaphoreSlim> _typeLocks 
-        //     = new ConcurrentDictionary<string, SemaphoreSlim>();
-        
         private bool _isDisposed = false;
 
         /// <summary>
@@ -112,7 +109,6 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-
                 // 使用BNR架构的轻量级工厂来生成序号
                 LightweightBNRFactory bnrFactory = new LightweightBNRFactory();
 
@@ -398,10 +394,6 @@ namespace RUINORERP.UI.Network.Services
             var combinedCt = linkedCts.Token;
         
             // ✅ 删除锁相关代码 - 服务器端已有DatabaseSequenceService保证唯一性
-            // var lockKey = $"{commandId}_{request.BizType}_{request.BaseInfoType}";
-            // var operationLock = _typeLocks.GetOrAdd(lockKey, _ => new SemaphoreSlim(1, 1));
-            // await operationLock.WaitAsync(combinedCt);
-                    
             try
             {
                 // 检查连接状态
@@ -518,47 +510,6 @@ namespace RUINORERP.UI.Network.Services
 
         #region 静态方法（兼容旧的调用模式）
 
-
-
-        /// <summary>
-        /// 获取业务单据编号（异步版本，推荐使用）
-        /// </summary>
-        /// <param name="bizType">业务类型枚举</param>
-        /// <returns>生成的业务单据编号</returns>
-        /// <exception cref="Exception">生成失败时抛出异常</exception>
-        public static async Task<string> GetBizBillNoAsync(BizType bizType)
-        {
-            // 从依赖注入容器中获取服务实例
-            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-            if (bizCodeService == null)
-            {
-                throw new Exception("无法从容器中获取BizCodeService实例");
-            }
-
-            return await bizCodeService.GenerateBizBillNoAsync(bizType);
-        }
-
- 
-
-        /// <summary>
-        /// 获取基础信息编号（异步版本，推荐使用）
-        /// </summary>
-        /// <param name="baseInfoType">基础信息类型枚举</param>
-        /// <param name="paraConst">参数常量（可选）</param>
-        /// <returns>生成的基础信息编号</returns>
-        /// <exception cref="Exception">生成失败时抛出异常</exception>
-        public static async Task<string> GetBaseInfoNoAsync(BaseInfoType baseInfoType, string paraConst = null)
-        {
-            // 从依赖注入容器中获取服务实例
-            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-            if (bizCodeService == null)
-            {
-                throw new Exception("无法从容器中获取BizCodeService实例");
-            }
-
-            return await bizCodeService.GenerateBaseInfoNoAsync(baseInfoType, paraConst);
-        }
- 
         /// <summary>
         /// 本地获取基础信息编号（异步版本，推荐使用）
         /// </summary>
@@ -588,8 +539,13 @@ namespace RUINORERP.UI.Network.Services
                 // 确定性失败，回退到远程方式
                 var logger = Startup.GetFromFac<ILogger<ClientBizCodeService>>();
                 logger?.LogWarning(ex, "本地生成确认失败，回退到远程生成方式 - 类型：{BaseInfoType}", baseInfoType.ToString());
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                if (bizCodeService == null)
+                {
+                    throw new Exception("无法从容器中获取BizCodeService实例");
+                }
 
-                return await GetBaseInfoNoAsync(baseInfoType, paraConst);
+                return await bizCodeService.GenerateBaseInfoNoAsync(baseInfoType, paraConst);
             }
         }
         

@@ -1269,8 +1269,11 @@ namespace RUINORERP.Server.Controls
                                 distributionText += $" ({mod.ObjectCount}对象)";
                             distributionText += "\n";
                             
-                            // 如果有子项统计，显示详细信息
-                            if (mod.SubItems != null && mod.SubItems.Count > 0)
+                            // 实体缓存不显示明细，缓存管理中有具体的数据显示
+                            bool isEntityCache = mod.ModuleName != null && mod.ModuleName.Contains("实体缓存");
+                            
+                            // 如果有子项统计，显示详细信息（实体缓存除外）
+                            if (!isEntityCache && mod.SubItems != null && mod.SubItems.Count > 0)
                             {
                                 foreach (var subItem in mod.SubItems)
                                 {

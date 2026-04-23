@@ -34,11 +34,11 @@ namespace RUINORERP.UI.Network.Services
     {
         private readonly ClientCommunicationService _communicationService;
         private readonly ILogger<ClientBizCodeService> _logger;
-        /// <summary>
-        /// 按类型加锁的字典，用于并发控制（移除全局锁，改为细粒度锁）
-        /// </summary>
-        private readonly ConcurrentDictionary<string, SemaphoreSlim> _typeLocks 
-            = new ConcurrentDictionary<string, SemaphoreSlim>();
+        
+        // ✅ 移除细粒度锁 - 服务器端已有完善的并发控制,客户端加锁只会增加延迟
+        // private readonly ConcurrentDictionary<string, SemaphoreSlim> _typeLocks 
+        //     = new ConcurrentDictionary<string, SemaphoreSlim>();
+        
         private bool _isDisposed = false;
 
         /// <summary>
@@ -379,6 +379,7 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 发送业务编码生成命令的通用方法
+        /// ✅ 优化:移除客户端锁,让并发请求真正并行;减少重试次数降低延迟
         /// </summary>
         /// <typeparam name="TResponse">响应类型</typeparam>
         /// <param name="commandId">命令 ID</param>
@@ -396,11 +397,11 @@ namespace RUINORERP.UI.Network.Services
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
             var combinedCt = linkedCts.Token;
         
-            // 获取或创建对应类型的信号量（细粒度锁，允许不同类型的请求并发）
-            var lockKey = $"{commandId}_{request.BizType}_{request.BaseInfoType}";
-            var operationLock = _typeLocks.GetOrAdd(lockKey, _ => new SemaphoreSlim(1, 1));
+            // ✅ 删除锁相关代码 - 服务器端已有DatabaseSequenceService保证唯一性
+            // var lockKey = $"{commandId}_{request.BizType}_{request.BaseInfoType}";
+            // var operationLock = _typeLocks.GetOrAdd(lockKey, _ => new SemaphoreSlim(1, 1));
+            // await operationLock.WaitAsync(combinedCt);
                     
-            await operationLock.WaitAsync(combinedCt);
             try
             {
                 // 检查连接状态
@@ -410,26 +411,15 @@ namespace RUINORERP.UI.Network.Services
                     throw new Exception("未连接到服务器，请检查网络连接后重试");
                 }
 
-                // 使用重试机制发送请求
+                // 发送命令(✅ 减少重试次数,从2次改为1次,避免延迟累积)
                 BizCodeResponse response = null;
-                int maxRetries = 2;
+                int maxRetries = 1; // 从2改为1
                 int retryCount = 0;
-                // 记录开始时间，用于总超时控制
-                var startTime = DateTime.UtcNow;
-                // 最大允许的总重试时间为10秒
-                var maxTotalRetryTime = TimeSpan.FromSeconds(10);
 
                 while (retryCount <= maxRetries)
                 {
                     try
                     {
-                        // 检查总重试时间是否超过限制
-                        if (DateTime.UtcNow - startTime > maxTotalRetryTime)
-                        {
-                            _logger?.LogWarning("业务编码生成请求总重试时间超过限制 - 命令ID: {CommandId}", commandId.ToString());
-                            throw new TimeoutException("请求重试时间过长，请稍后重试");
-                        }
-
                         // 发送命令并获取响应
                         response = await _communicationService.SendCommandWithResponseAsync<BizCodeResponse>(
                             commandId, request, combinedCt);
@@ -440,9 +430,8 @@ namespace RUINORERP.UI.Network.Services
                         retryCount++;
                         _logger?.LogWarning(ex, "业务编码生成请求失败，正在重试 ({RetryCount}/{MaxRetries}) - 命令ID: {CommandId}",
                             retryCount, maxRetries, commandId.ToString());
-                        // 指数退避策略，增加随机因子避免重试风暴
-                        int delayMs = (int)(100 * Math.Pow(2, retryCount)) + new Random().Next(0, 100);
-                        await Task.Delay(delayMs, combinedCt);
+                        // ✅ 固定延迟100ms,不使用指数退避(更可控)
+                        await Task.Delay(100, combinedCt);
                     }
                 }
 
@@ -485,10 +474,8 @@ namespace RUINORERP.UI.Network.Services
                 _logger?.LogError(ex, "业务编码生成过程中发生未预期的异常 - 命令ID: {CommandId}", commandId.ToString());
                 throw new Exception("生成业务编码时发生错误，请稍后重试", ex);
             }
-            finally
-            {
-                operationLock.Release();
-            }
+            // ✅ 删除finally中的锁释放
+            // finally { operationLock.Release(); }
         }
 
         /// <summary>
@@ -520,12 +507,8 @@ namespace RUINORERP.UI.Network.Services
         
             try
             {
-                // 释放所有类型的信号量锁
-                foreach (var kvp in _typeLocks)
-                {
-                    kvp.Value.Dispose();
-                }
-                _typeLocks.Clear();
+                // ✅ 无需释放信号量锁,已删除
+                System.Diagnostics.Debug.WriteLine("ClientBizCodeService 资源已释放");
             }
             catch (Exception ex)
             {

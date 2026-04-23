@@ -1,4 +1,8 @@
-﻿CREATE INDEX IX_tb_CRM_Customer_Created_at ON tb_CRM_Customer(Created_at)
+﻿CREATE UNIQUE INDEX IX_SequenceKey ON SequenceNumbers(SequenceKey)
+--业务编号
+
+
+CREATE INDEX IX_tb_CRM_Customer_Created_at ON tb_CRM_Customer(Created_at)
 --建索引优化
 
 

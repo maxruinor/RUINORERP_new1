@@ -178,7 +178,8 @@ namespace RUINORERP.Business.BNR
             }
             
             // 强制刷写数据
-            _sequenceService.FlushAllToDatabase();
+            // ✅ 批次缓存模式下无需手动刷写,数据已实时写入数据库
+            // sequenceService.FlushAllToDatabase();
             
             // 验证数据库中的值
             var dbValue = _sequenceService.GetCurrentSequenceValue(persistenceKey);

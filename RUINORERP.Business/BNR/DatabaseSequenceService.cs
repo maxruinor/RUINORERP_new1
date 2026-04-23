@@ -17,167 +17,85 @@ namespace RUINORERP.Business.BNR
     {
         private readonly ISqlSugarClient _sqlSugarClient;
 
-        // 内存缓存，用于存储序列当前值，减少数据库访问
-        private readonly ConcurrentDictionary<string, long> _sequenceCache = new ConcurrentDictionary<string, long>();
+        // ✅ 方案B: 预分配批次缓存 - 每个序列键维护一个可用序号范围
+        // Key: sequenceKey, Value: (当前值, 批次上限值)
+        private readonly ConcurrentDictionary<string, SequenceBatchCache> _batchCaches = new ConcurrentDictionary<string, SequenceBatchCache>();
 
-        // 批量更新队列，存储需要写入数据库的序列值
-        private readonly ConcurrentQueue<SequenceUpdateInfo> _updateQueue = new ConcurrentQueue<SequenceUpdateInfo>();
+        // 按键分片锁,用于控制对同一序列键的并发访问
+        private readonly ConcurrentDictionary<string, SemaphoreSlim> _keyLocks = new ConcurrentDictionary<string, SemaphoreSlim>();
 
-        // 按键分片锁，用于控制对同一序列键的并发访问
-        // 优化：使用按键分片锁替代全局锁，不同序列键可并行处理
-        private readonly ConcurrentDictionary<string, object> _keyLocks = new ConcurrentDictionary<string, object>();
-
-        // 队列处理锁，用于控制队列更新的并发
-        private readonly object _queueLock = new object();
-
-        // 缓存最大生命周期（毫秒），超过这个时间会强制刷新到数据库
-        private const int CACHE_MAX_LIFETIME = 5000;
-
-        // 批量更新阈值，当队列超过这个数量时触发批量更新
-        private static int _batchUpdateThreshold = 20;
-
-        // 并发重试配置
-        private const int MAX_RETRY_COUNT = 5;
-        private const int RETRY_BASE_DELAY_MS = 10;
-        private const int RETRY_MAX_DELAY_MS = 1000;
-
-        // 上次刷新时间
-        private DateTime _lastFlushTime;
-
-        // 取消令牌，用于控制后台任务的停止
-        private CancellationTokenSource _cancellationTokenSource;
-
-        // 后台任务
-        private Task _backgroundTask;
-
-        // 数据刷写状态跟踪
-        private volatile bool _isFlushing = false;
-        private readonly object _flushLock = new object();
+        // 批量获取配置
+        private const int BATCH_SIZE = 50; // 每次从数据库预取50个序号
 
         /// <summary>
-        /// 构造函数
+        /// 构造函数 - 简化版,移除后台任务
         /// </summary>
         /// <param name="sqlSugarClient">SqlSugar客户端实例</param>
         public DatabaseSequenceService(ISqlSugarClient sqlSugarClient)
         {
             _sqlSugarClient = sqlSugarClient;
-            // 初始化最后刷新时间
-            _lastFlushTime = DateTime.Now;
-
-            // 初始化取消令牌
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            // 启动后台任务，定期将缓存中的序列值刷新到数据库
-            _backgroundTask = Task.Run(() => BackgroundFlushTask(_cancellationTokenSource.Token));
+            // ✅ 不再启动后台刷写任务,所有操作实时写入数据库
         }
 
         /// <summary>
-        /// 序列更新信息
+        /// 序号批次缓存 - 线程安全的序号分配器
         /// </summary>
-        public class SequenceUpdateInfo
+        private class SequenceBatchCache
         {
-            public string SequenceKey { get; set; }
-            public long Value { get; set; }
-            public string ResetType { get; set; }
-            public string FormatMask { get; set; }
-            public string Description { get; set; }
-            public string BusinessType { get; set; }
-        }
+            private long _currentValue;    // 当前已分配的序号
+            private long _batchUpperLimit; // 当前批次的上限值
+            private readonly object _lock = new object();
 
-        /// <summary>
-        /// 后台刷新任务，定期将缓存中的序列值写入数据库
-        /// </summary>
-        private async Task BackgroundFlushTask(CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
+            public SequenceBatchCache(long initialValue, long upperLimit)
             {
-                try
-                {
-                    // 等待一段时间，可取消
-                    await Task.Delay(1000, cancellationToken);
-
-                    // 检查是否需要刷新
-                    TimeSpan elapsed = DateTime.Now - _lastFlushTime;
-                    if (elapsed.TotalMilliseconds >= CACHE_MAX_LIFETIME || _updateQueue.Count >= _batchUpdateThreshold)
-                    {
-                        FlushCacheToDatabase();
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    // 任务被取消，正常退出循环
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"后台刷新任务异常: {ex.Message}");
-                    LogError("后台刷新任务异常", ex);
-                }
+                _currentValue = initialValue;
+                _batchUpperLimit = upperLimit;
             }
-        }
 
-        /// <summary>
-        /// 手动刷新所有缓存到数据库
-        /// 在服务关闭前调用此方法确保数据持久化
-        /// </summary>
-        public void FlushAllToDatabase()
-        {
-            FlushCacheToDatabase();
-        }
-
-        /// <summary>
-        /// 强制刷新所有数据，确保不丢失
-        /// </summary>
-        private void ForceFlushAllData()
-        {
-            int retryCount = 0;
-            const int maxRetries = 3;
-            
-            while (retryCount < maxRetries)
+            /// <summary>
+            /// 尝试从缓存中分配一个序号
+            /// </summary>
+            /// <param name="nextValue">输出的下一个序号</param>
+            /// <returns>是否成功分配(true=有可用序号, false=需要重新从数据库获取批次)</returns>
+            public bool TryAllocate(out long nextValue)
             {
-                try
+                lock (_lock)
                 {
-                    // 确保所有队列数据都被处理
-                    while (!_updateQueue.IsEmpty)
+                    if (_currentValue < _batchUpperLimit)
                     {
-                        FlushCacheToDatabase();
-                        System.Threading.Thread.Sleep(100); // 短暂等待
-                    }
-                    
-                    // 强制刷新内存缓存
-                    foreach (var kvp in _sequenceCache)
-                    {
-                        _updateQueue.Enqueue(new SequenceUpdateInfo
-                        {
-                            SequenceKey = kvp.Key,
-                            Value = kvp.Value,
-                            ResetType = "ForceFlush",
-                            FormatMask = null,
-                            Description = "应用关闭时强制刷写",
-                            BusinessType = null
-                        });
-                    }
-                    
-                    FlushCacheToDatabase();
-                    System.Diagnostics.Debug.WriteLine("数据强制刷写完成");
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    retryCount++;
-                    System.Diagnostics.Debug.WriteLine($"强制刷写失败 (尝试 {retryCount}/{maxRetries}): {ex.Message}");
-                    if (retryCount < maxRetries)
-                    {
-                        System.Threading.Thread.Sleep(500 * retryCount);
+                        nextValue = ++_currentValue;
+                        return true;
                     }
                     else
                     {
-                        // 最后一次失败，记录严重错误
-                        LogCriticalError($"数据刷写最终失败，可能存在数据丢失风险: {ex.Message}");
+                        nextValue = 0;
+                        return false; // 批次耗尽
                     }
                 }
             }
+
+            /// <summary>
+            /// 更新批次范围
+            /// </summary>
+            public void UpdateBatch(long newValue, long newUpperLimit)
+            {
+                lock (_lock)
+                {
+                    _currentValue = newValue;
+                    _batchUpperLimit = newUpperLimit;
+                }
+            }
+
+            /// <summary>
+            /// 获取当前值(用于监控)
+            /// </summary>
+            public long CurrentValue
+            {
+                get { lock (_lock) return _currentValue; }
+            }
         }
+
+        
 
         /// <summary>
         /// 释放资源
@@ -186,160 +104,23 @@ namespace RUINORERP.Business.BNR
         {
             try
             {
-                // 取消后台任务
-                _cancellationTokenSource?.Cancel();
-
-                // 等待后台任务完成，增加超时处理
-                if (_backgroundTask != null && !_backgroundTask.IsCompleted)
+                // 释放所有信号量锁
+                foreach (var kvp in _keyLocks)
                 {
-                    if (!_backgroundTask.Wait(5000)) // 等待最多5秒
-                    {
-                        System.Diagnostics.Debug.WriteLine("警告：后台任务未能在5秒内完成");
-                    }
+                    kvp.Value.Dispose();
                 }
+                _keyLocks.Clear();
 
-                // 强制刷新所有剩余数据
-                ForceFlushAllData();
-
-                // 释放取消令牌
-                _cancellationTokenSource?.Dispose();
+                System.Diagnostics.Debug.WriteLine("DatabaseSequenceService 资源已释放");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"释放 DatabaseSequenceService 资源时出错: {ex.Message}");
-                // 在生产环境中应该记录到正式日志系统
                 LogError("资源释放失败", ex);
             }
         }
 
-        /// <summary>
-        /// 将缓存中的序列值刷新到数据库
-        /// 优化：使用小事务批量更新 + 乐观锁，减少锁持有时间
-        /// </summary>
-        private void FlushCacheToDatabase()
-        {
-            // 防止重入和并发刷写
-            if (_isFlushing)
-                return;
-
-            lock (_flushLock)
-            {
-                if (_isFlushing)
-                    return;
-                    
-                _isFlushing = true;
-                
-                try
-                {
-                    InternalFlushCacheToDatabase();
-                }
-                finally
-                {
-                    _isFlushing = false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 内部实际执行刷写逻辑
-        /// </summary>
-        private void InternalFlushCacheToDatabase()
-        {
-            // 使用双重检查锁定模式，减少锁竞争
-            if (_updateQueue.IsEmpty)
-                return;
-
-            lock (_queueLock)
-            {
-                if (_updateQueue.IsEmpty)
-                    return;
-
-                List<SequenceUpdateInfo> batchUpdates = new List<SequenceUpdateInfo>();
-
-                // 从队列中取出一定数量的更新项
-                int count = 0;
-                while (_updateQueue.TryDequeue(out var updateInfo) && count < 100)
-                {
-                    batchUpdates.Add(updateInfo);
-                    count++;
-                }
-
-                if (batchUpdates.Count == 0)
-                {
-                    return;
-                }
-
-                System.Diagnostics.Debug.WriteLine($"开始批量更新 {batchUpdates.Count} 个序列值");
-
-                // 优化：不使用大事务，而是逐条更新以减少锁持有时间
-                foreach (var update in batchUpdates)
-                {
-                    try
-                    {
-                        // 先检查记录是否存在
-                        var existingRecord = _sqlSugarClient.Queryable<SequenceNumbers>()
-                            .Where(s => s.SequenceKey == update.SequenceKey)
-                            .First();
-
-                        if (existingRecord != null)
-                        {
-                            // 使用乐观锁条件更新：仅当新值大于当前值时才更新，防止数据覆盖
-                            int affectedRows = _sqlSugarClient.Updateable<SequenceNumbers>()
-                                .SetColumns(s => new SequenceNumbers
-                                {
-                                    CurrentValue = update.Value,
-                                    LastUpdated = DateTime.Now
-                                })
-                                .Where(s => s.SequenceKey == update.SequenceKey && s.CurrentValue < update.Value)
-                                .ExecuteCommand();
-
-                            if (affectedRows == 0)
-                            {
-                                LogInfo($"记录更新影响0行: {update.SequenceKey}");
-                            }
-                        }
-                        else
-                        {
-                            // 记录不存在，尝试插入
-                            try
-                            {
-                                _sqlSugarClient.Insertable(new SequenceNumbers
-                                {
-                                    SequenceKey = update.SequenceKey,
-                                    CurrentValue = update.Value,
-                                    LastUpdated = DateTime.Now,
-                                    CreatedAt = DateTime.Now,
-                                    ResetType = update.ResetType,
-                                    FormatMask = update.FormatMask,
-                                    Description = update.Description,
-                                    BusinessType = update.BusinessType
-                                }).ExecuteCommand();
-                            }
-                            catch (Exception insertEx) when (IsUniqueConstraintViolation(insertEx))
-                            {
-                                // 并发插入导致的唯一约束违反，这很正常
-                                LogInfo($"并发插入检测到重复键，忽略: {update.SequenceKey}");
-                            }
-                            catch (Exception insertEx)
-                            {
-                                LogError($"插入序列记录失败: {update.SequenceKey}", insertEx);
-                            }
-                        }
-
-                        // 记录处理成功
-                        LogInfo($"成功处理序列更新: {update.SequenceKey} = {update.Value}");
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine(
-                            $"更新序列值失败，键: {update.SequenceKey}，错误: {ex.Message}");
-                    }
-                }
-
-                _lastFlushTime = DateTime.Now;
-                System.Diagnostics.Debug.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
-            }
-        }
+        
 
 
 
@@ -481,16 +262,16 @@ namespace RUINORERP.Business.BNR
         }
 
         /// <summary>
-        /// 获取下一个序列值（支持按时间单位重置）
-        /// 优化：使用按键分片锁、行级锁和乐观锁机制，提升高并发性能
+        /// 获取下一个序列值(支持按时间单位重置)
+        /// ✅ 方案B: 使用预分配批次缓存,减少数据库访问频率
         /// </summary>
         /// <param name="sequenceKey">序列键</param>
-        /// <param name="resetType">重置类型（None、Daily、Monthly、Yearly）</param>
+        /// <param name="resetType">重置类型(None、Daily、Monthly、Yearly)</param>
         /// <param name="formatMask">格式掩码</param>
         /// <param name="description">描述</param>
         /// <param name="businessType">业务类型</param>
         /// <returns>下一个序列值</returns>
-        public long GetNextSequenceValue(string sequenceKey, string resetType = "None", string formatMask = null, string description = null, string businessType = null)
+        public async Task<long> GetNextSequenceValueAsync(string sequenceKey, string resetType = "None", string formatMask = null, string description = null, string businessType = null)
         {
             if (string.IsNullOrEmpty(sequenceKey))
             {
@@ -499,147 +280,124 @@ namespace RUINORERP.Business.BNR
 
             string dynamicKey = GenerateDynamicKey(sequenceKey, resetType);
 
-            // 优化：缓存未命中时加锁，防止多个线程同时查数据库
-            var keyLock = _keyLocks.GetOrAdd(dynamicKey, k => new object());
+            // 获取或创建该键的信号量锁(异步友好)
+            var keyLock = _keyLocks.GetOrAdd(dynamicKey, _ => new SemaphoreSlim(1, 1));
 
-            long nextValue;
-            lock (keyLock)
+            // ✅ 修复: 添加超时机制防止永久阻塞（编号生成应在毫秒级完成）
+            const int LOCK_TIMEOUT_SECONDS = 5;
+            bool lockAcquired = false;
+            try
             {
-                // 再次检查缓存（可能其他线程已写入）
-                if (_sequenceCache.TryGetValue(dynamicKey, out var cachedValue))
+                lockAcquired = await keyLock.WaitAsync(TimeSpan.FromSeconds(LOCK_TIMEOUT_SECONDS));
+                if (!lockAcquired)
                 {
-                    nextValue = cachedValue + 1;
+                    throw new TimeoutException(
+                        $"获取序列键锁超时 ({LOCK_TIMEOUT_SECONDS}秒): {dynamicKey}。 " +
+                        $"可能原因: 1) 极高并发竞争 2) 持有锁的线程异常卡死 3) 数据库死锁。 " +
+                        $"建议: 检查系统负载、数据库状态及是否有长时间运行的事务。");
+                }
+
+                // 尝试从缓存中分配
+                if (_batchCaches.TryGetValue(dynamicKey, out var cache))
+                {
+                    if (cache.TryAllocate(out long nextValue))
+                    {
+                        // 缓存命中,直接返回
+                        System.Diagnostics.Debug.WriteLine($"[缓存命中] 键: {dynamicKey}, 值: {nextValue}");
+                        return nextValue;
+                    }
+                }
+
+                // 缓存未命中或已耗尽,从数据库获取新批次
+                return await AllocateNewBatchAsync(dynamicKey, resetType, formatMask, description, businessType);
+            }
+            finally
+            {
+                // ✅ 只有成功获取锁时才释放
+                if (lockAcquired)
+                {
+                    keyLock.Release();
                 }
                 else
                 {
-                    // 缓存未命中，从数据库加载
-                    nextValue = GetNextValueWithRowLock(dynamicKey, resetType, formatMask, description, businessType);
-                    _sequenceCache[dynamicKey] = nextValue;
+                    System.Diagnostics.Debug.WriteLine($"[警告] 锁获取超时,无需释放: {dynamicKey}");
                 }
-
-                // 异步更新到数据库
-                _updateQueue.Enqueue(new SequenceUpdateInfo
-                {
-                    SequenceKey = dynamicKey,
-                    Value = nextValue,
-                    ResetType = resetType,
-                    FormatMask = formatMask,
-                    Description = description,
-                    BusinessType = businessType
-                });
             }
-
-            // 检查是否需要立即刷新缓存到数据库
-            if (_updateQueue.Count >= _batchUpdateThreshold)
-            {
-                Task.Run(async () =>
-                {
-                    try
-                    {
-                        FlushCacheToDatabase();
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"后台刷新缓存时发生异常: {ex.Message}");
-                        LogError("后台刷新缓存异常", ex);
-                        await Task.Delay(1000);
-                        try
-                        {
-                            FlushCacheToDatabase();
-                        }
-                        catch (Exception retryEx)
-                        {
-                            LogError("后台刷新缓存重试也失败", retryEx);
-                        }
-                    }
-                });
-            }
-
-            return nextValue;
         }
 
         /// <summary>
-        /// 使用行级锁获取下一个值
-        /// 核心优化：使用WITH(UPDLOCK, HOLDLOCK)确保行级锁，避免脏读和并发冲突
+        /// 同步版本(兼容旧代码)
         /// </summary>
-        /// <param name="sequenceKey">序列键</param>
-        /// <param name="resetType">重置类型</param>
-        /// <param name="formatMask">格式掩码</param>
-        /// <param name="description">描述</param>
-        /// <param name="businessType">业务类型</param>
-        /// <returns>下一个序列值</returns>
-        private long GetNextValueWithRowLock(string sequenceKey, string resetType,
+        public long GetNextSequenceValue(string sequenceKey, string resetType = "None", string formatMask = null, string description = null, string businessType = null)
+        {
+            return GetNextSequenceValueAsync(sequenceKey, resetType, formatMask, description, businessType).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// 从数据库分配新的序号批次
+        /// ✅ 核心逻辑:一次性获取BATCH_SIZE个序号,缓存在内存中
+        /// </summary>
+        private async Task<long> AllocateNewBatchAsync(string sequenceKey, string resetType,
             string formatMask, string description, string businessType)
         {
-
             if (description == null)
             {
                 description = string.Empty;
             }
 
-            // 获取键级别锁，减少锁竞争粒度
-            // 相比全局锁，按键锁可以让不同序列键的请求并行执行
-            var keyLock = _keyLocks.GetOrAdd(sequenceKey, k => new object());
+            int retryCount = 0;
+            const int maxRetries = 5;
 
-            lock (keyLock)
+            while (retryCount < maxRetries)
             {
-                // 使用乐观锁机制，先查后更新
-                int retryCount = 0;
-                const int maxRetries = 5;
-
-                while (retryCount < maxRetries)
+                try
                 {
-                    try
+                    // 使用事务确保原子性
+                    using (var tran = _sqlSugarClient.Ado.UseTran())
                     {
-                        // 使用WITH(UPDLOCK, HOLDLOCK)确保行级锁
-                        // UPDLOCK: 读取时加锁，直到事务结束
-                        // HOLDLOCK: 等同于SERIALIZABLE隔离级别，防止幻读
+                        // 1. 查询或创建序列记录
                         var sequence = _sqlSugarClient.Ado.SqlQuery<SequenceNumbers>(
-                            "SELECT * FROM SequenceNumbers WITH(UPDLOCK, HOLDLOCK) " +
+                            "SELECT * FROM SequenceNumbers WITH(UPDLOCK, ROWLOCK, HOLDLOCK) " +
                             "WHERE SequenceKey = @SequenceKey",
                             new { SequenceKey = sequenceKey })
                             .FirstOrDefault();
 
-                        long nextValue;
+                        long batchStartValue;
+                        long batchEndValue;
 
                         if (sequence != null)
                         {
-                            // 记录当前版本号，用于乐观锁
-                            long currentVersion = sequence.CurrentValue;
-                            nextValue = currentVersion + 1;
+                            // 记录存在,计算新批次范围
+                            batchStartValue = sequence.CurrentValue;
+                            batchEndValue = batchStartValue + BATCH_SIZE;
 
-                            // 使用乐观锁更新，只有当CurrentValue未变化时才更新
-                            // 这种方式避免了长时间的行锁持有，提高并发性能
+                            // 更新数据库中的当前值到批次上限
                             int affectedRows = _sqlSugarClient.Updateable<SequenceNumbers>()
                                 .SetColumns(s => new SequenceNumbers
                                 {
-                                    CurrentValue = nextValue,
+                                    CurrentValue = batchEndValue,
                                     LastUpdated = DateTime.Now
                                 })
-                                .Where(s => s.SequenceKey == sequenceKey
-                                    && s.CurrentValue == currentVersion) // 乐观锁条件
+                                .Where(s => s.SequenceKey == sequenceKey)
                                 .ExecuteCommand();
 
                             if (affectedRows == 0)
                             {
-                                // 乐观锁失败，已被其他事务修改，重试
-                                retryCount++;
-                                System.Diagnostics.Debug.WriteLine(
-                                    $"乐观锁失败，重试中 ({retryCount}/{maxRetries})，键: {sequenceKey}");
-                                Thread.Sleep(10 * retryCount); // 指数退避
-                                continue;
+                                throw new Exception($"更新序列失败: {sequenceKey}");
                             }
                         }
                         else
                         {
-                            // 插入新记录
-                            nextValue = 1;
+                            // 记录不存在,创建新记录
+                            batchStartValue = 0;
+                            batchEndValue = BATCH_SIZE;
+
                             try
                             {
                                 _sqlSugarClient.Insertable(new SequenceNumbers
                                 {
                                     SequenceKey = sequenceKey,
-                                    CurrentValue = nextValue,
+                                    CurrentValue = batchEndValue,
                                     LastUpdated = DateTime.Now,
                                     CreatedAt = DateTime.Now,
                                     ResetType = resetType,
@@ -648,50 +406,61 @@ namespace RUINORERP.Business.BNR
                                     BusinessType = businessType
                                 }).ExecuteCommand();
                             }
-                            catch (Exception ex) when (ex.Message.Contains("PRIMARY KEY") ||
-                                ex.Message.Contains("UNIQUE constraint") ||
-                                ex.Message.Contains("违反了 PRIMARY KEY"))
+                            catch (Exception ex) when (IsUniqueConstraintViolation(ex))
                             {
-                                // 插入失败，已被其他事务插入，重试查询
+                                // 并发插入,回滚后重试
+                                tran.RollbackTran();
                                 retryCount++;
                                 System.Diagnostics.Debug.WriteLine(
-                                    $"插入失败（并发插入），重试中 ({retryCount}/{maxRetries})，键: {sequenceKey}");
+                                    $"并发插入检测到重复键,重试中 ({retryCount}/{maxRetries}),键: {sequenceKey}");
+                                await Task.Delay(CalculateBackoffDelay(retryCount));
                                 continue;
                             }
                         }
 
-                        // 成功获取值后，立即更新缓存
-                        _sequenceCache.AddOrUpdate(sequenceKey, nextValue, (k, v) => nextValue);
+                        // 2. 提交事务
+                        tran.CommitTran();
 
+                        // 3. 原子性更新或创建缓存(✅ 修复竞态条件)
+                        var newCache = new SequenceBatchCache(batchStartValue, batchEndValue);
+                        var cache = _batchCaches.AddOrUpdate(
+                            sequenceKey,
+                            newCache,  // 键不存在时插入
+                            (key, oldCache) => newCache  // 键存在时替换为新批次
+                        );
+
+                        // 4. 返回批次中的第一个序号
+                        long nextValue = batchStartValue + 1;
                         System.Diagnostics.Debug.WriteLine(
-                            $"成功获取序列值，键: {sequenceKey}，值: {nextValue}");
+                            $"[新批次] 键: {sequenceKey}, 范围: {batchStartValue + 1}-{batchEndValue}, 返回: {nextValue}");
 
                         return nextValue;
                     }
-                    catch (System.Data.SqlClient.SqlException ex) when (ex.Number == 1205) // 死锁错误码
-                    {
-                        retryCount++;
-                        System.Diagnostics.Debug.WriteLine(
-                            $"检测到死锁，重试中 ({retryCount}/{maxRetries})，键: {sequenceKey}");
-                        Thread.Sleep(50 * retryCount);
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine(
-                            $"获取序列值时发生异常: {ex.Message}，键: {sequenceKey}");
-
-                        if (retryCount >= maxRetries - 1)
-                        {
-                            throw;
-                        }
-
-                        retryCount++;
-                        Thread.Sleep(20 * retryCount);
-                    }
                 }
+                catch (System.Data.SqlClient.SqlException ex) when (ex.Number == 1205) // 死锁
+                {
+                    retryCount++;
+                    System.Diagnostics.Debug.WriteLine(
+                        $"检测到死锁,重试中 ({retryCount}/{maxRetries}),键: {sequenceKey}");
+                    await Task.Delay(CalculateBackoffDelay(retryCount));
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"分配批次时发生异常: {ex.Message},键: {sequenceKey}");
+                    LogError($"分配批次失败: {sequenceKey}", ex);
 
-                throw new Exception($"获取序列值失败，已达到最大重试次数 {maxRetries}，键: {sequenceKey}");
+                    if (retryCount >= maxRetries - 1)
+                    {
+                        throw;
+                    }
+
+                    retryCount++;
+                    await Task.Delay(CalculateBackoffDelay(retryCount));
+                }
             }
+
+            throw new Exception($"分配批次失败,已达到最大重试次数 {maxRetries},键: {sequenceKey}");
         }
 
         /// <summary>
@@ -1063,29 +832,26 @@ namespace RUINORERP.Business.BNR
         }
 
         /// <summary>
-        /// 设置批量更新阈值
+        /// ✅ 已废弃: 批次缓存模式下不再需要批量更新阈值
         /// </summary>
-        /// <param name="threshold">新的阈值</param>
+        [Obsolete("批次缓存模式下不再使用此方法", false)]
         public static void SetBatchUpdateThreshold(int threshold)
         {
-            if (threshold > 0)
-            {
-                _batchUpdateThreshold = threshold;
-                System.Diagnostics.Debug.WriteLine($"批量更新阈值已设置为: {threshold}");
-            }
+            // 不再使用,保留方法签名以兼容旧代码
+            System.Diagnostics.Debug.WriteLine($"警告: SetBatchUpdateThreshold 已废弃");
         }
 
         /// <summary>
-        /// 获取当前批量更新阈值
+        /// ✅ 已废弃: 批次缓存模式下不再需要批量更新阈值
         /// </summary>
-        /// <returns>当前阈值</returns>
+        [Obsolete("批次缓存模式下不再使用此方法", false)]
         public static int GetBatchUpdateThreshold()
         {
-            return _batchUpdateThreshold;
+            return 50; // 返回固定的BATCH_SIZE
         }
 
         /// <summary>
-        /// 获取服务健康状态
+        /// 获取服务健康状态(✅ 适配批次缓存模式)
         /// </summary>
         /// <returns>健康检查结果</returns>
         public SequenceServiceHealthInfo GetHealthInfo()
@@ -1093,38 +859,26 @@ namespace RUINORERP.Business.BNR
             return new SequenceServiceHealthInfo
             {
                 IsHealthy = true,
-                CacheSize = _sequenceCache.Count,
-                QueueSize = _updateQueue.Count,
-                IsFlushing = _isFlushing,
-                LastFlushTime = _lastFlushTime,
-                BatchThreshold = _batchUpdateThreshold
+                CacheSize = _batchCaches.Count, // ✅ 改为批次缓存数量
+                QueueSize = 0, // ✅ 不再有更新队列
+                IsFlushing = false, // ✅ 不再有刷写状态
+                LastFlushTime = DateTime.Now,
+                BatchThreshold = BATCH_SIZE // ✅ 返回固定的批次大小
             };
         }
 
         /// <summary>
-        /// 强制将指定键的缓存值刷写到数据库
+        /// ✅ 已废弃: 批次缓存模式下不需要手动刷写
         /// </summary>
-        /// <param name="key">序列键</param>
-        /// <param name="value">要刷写的值</param>
-        /// <param name="reason">刷写原因</param>
+        [Obsolete("批次缓存模式下数据实时写入数据库,无需手动刷写", false)]
         public void ForceFlushCacheValue(string key, long value, string reason = "ManualFlush")
         {
-            var updateInfo = new SequenceUpdateInfo
-            {
-                SequenceKey = key,
-                Value = value,
-                ResetType = reason,
-                FormatMask = null,
-                Description = $"手动强制刷写: {reason}",
-                BusinessType = null
-            };
-            
-            _updateQueue.Enqueue(updateInfo);
-            FlushCacheToDatabase();
+            // 不再使用,所有数据已实时写入数据库
+            System.Diagnostics.Debug.WriteLine($"警告: ForceFlushCacheValue 已废弃");
         }
 
         /// <summary>
-        /// 诊断序列键冲突问题
+        /// 诊断序列键冲突问题(✅ 适配批次缓存模式)
         /// </summary>
         /// <param name="sequenceKey">要诊断的序列键</param>
         /// <returns>诊断结果</returns>
@@ -1150,15 +904,15 @@ namespace RUINORERP.Business.BNR
                     diagnosis.LastUpdated = dbRecord.LastUpdated;
                 }
 
-                // 检查缓存中是否存在
-                diagnosis.ExistsInCache = _sequenceCache.ContainsKey(sequenceKey);
-                if (diagnosis.ExistsInCache)
+                // ✅ 检查批次缓存中是否存在
+                diagnosis.ExistsInCache = _batchCaches.ContainsKey(sequenceKey);
+                if (diagnosis.ExistsInCache && _batchCaches.TryGetValue(sequenceKey, out var cache))
                 {
-                    diagnosis.CacheValue = _sequenceCache[sequenceKey];
+                    diagnosis.CacheValue = cache.CurrentValue;
                 }
 
-                // 检查更新队列
-                diagnosis.PendingUpdates = _updateQueue.Count(update => update.SequenceKey == sequenceKey);
+                // ✅ 批次缓存模式下没有待处理更新
+                diagnosis.PendingUpdates = 0;
 
                 // 分析冲突原因
                 if (diagnosis.ExistsInDatabase && diagnosis.ExistsInCache)

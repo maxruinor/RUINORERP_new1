@@ -103,6 +103,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 设置缓存过期时间（从配置读取）
                 entry.AbsoluteExpirationRelativeToNow = ProductMainImageExpiration;
+                entry.SetSize(1); // 修复：指定缓存项大小（必需，因为可能使用了带SizeLimit的IMemoryCache）
                 entry.RegisterPostEvictionCallback((key, value, reason, state) =>
                 {
                     _logger?.LogDebug("产品主图缓存失效: Key={Key}, Reason={Reason}", key, reason);
@@ -245,6 +246,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 设置缓存过期时间（从配置读取）
                 entry.AbsoluteExpirationRelativeToNow = SaleOrderVoucherExpiration;
+                entry.SetSize(1); // 修复：指定缓存项大小（必需，因为可能使用了带SizeLimit的IMemoryCache）
 
                 return voucherPath;
             });

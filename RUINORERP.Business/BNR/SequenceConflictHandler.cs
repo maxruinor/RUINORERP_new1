@@ -60,74 +60,29 @@ namespace RUINORERP.Business.BNR
         {
             Console.WriteLine("开始处理诊断发现的问题...");
 
-            // 情况1: 仅存在于缓存中，需要强制刷写
+            // 情况1: 仅存在于缓存中(✅ 适配批次缓存模式)
             if (diagnosis.ExistsInCache && !diagnosis.ExistsInDatabase)
             {
-                Console.WriteLine("🔧 情况1: 数据仅存在于缓存中");
-                Console.WriteLine("   执行强制刷写操作...");
-                    
-                try
-                {
-                    // 直接调用DatabaseSequenceService的公共方法
-                    var cacheValue = _sequenceService.GetType()
-                        .GetField("_sequenceCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                        ?.GetValue(_sequenceService) as System.Collections.Concurrent.ConcurrentDictionary<string, long>;
-
-                    if (cacheValue?.ContainsKey(diagnosis.SequenceKey) == true)
-                    {
-                        _sequenceService.ForceFlushCacheValue(
-                            diagnosis.SequenceKey, 
-                            cacheValue[diagnosis.SequenceKey], 
-                            "ConflictResolution");
-                            
-                        Console.WriteLine("   ✅ 已将缓存数据强制刷写到数据库");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"   ⚠️ 强制刷写时出现异常: {ex.Message}");
-                }
+                Console.WriteLine("🔧 情况1: 数据仅存在于批次缓存中");
+                Console.WriteLine("   ⚠️ 批次缓存模式下,数据已实时写入数据库,此情况不应发生");
+                Console.WriteLine("   建议检查是否存在手动修改数据库的行为");
+                return;
             }
 
-            // 情况2: 数据库值大于缓存值，需要同步缓存
+            // 情况2: 数据库值大于缓存值，需要同步缓存(✅ 适配批次缓存模式)
             else if (diagnosis.ExistsInDatabase && diagnosis.ExistsInCache && 
                      diagnosis.DatabaseValue > diagnosis.CacheValue)
             {
                 Console.WriteLine("🔧 情况2: 数据库值大于缓存值");
-                Console.WriteLine("   同步缓存数据...");
-                
-                try
-                {
-                    // 更新缓存中的值
-                    var sequenceCache = _sequenceService.GetType()
-                        .GetField("_sequenceCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                        ?.GetValue(_sequenceService) as System.Collections.Concurrent.ConcurrentDictionary<string, long>;
-
-                    sequenceCache?.AddOrUpdate(diagnosis.SequenceKey, diagnosis.DatabaseValue.Value, (key, oldValue) => diagnosis.DatabaseValue.Value);
-                    
-                    Console.WriteLine($"   ✅ 缓存已更新为: {diagnosis.DatabaseValue}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"   ⚠️ 缓存同步时出现异常: {ex.Message}");
-                }
+                Console.WriteLine("   ℹ️ 批次缓存模式下,这是正常现象(新批次尚未分配完)");
+                Console.WriteLine("   无需干预,系统会自动处理");
             }
 
-            // 情况3: 存在待处理的更新
+            // 情况3: 存在待处理的更新(✅ 批次缓存模式下不存在此情况)
             else if (diagnosis.PendingUpdates > 0)
             {
                 Console.WriteLine($"🔧 情况3: 存在 {diagnosis.PendingUpdates} 个待处理更新");
-                Console.WriteLine("   触发立即刷写...");
-                
-                try
-                {
-                    _sequenceService.FlushAllToDatabase();
-                    Console.WriteLine("   ✅ 立即刷写完成");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"   ⚠️ 刷写时出现异常: {ex.Message}");
-                }
+                Console.WriteLine("   ⚠️ 批次缓存模式下不应有 pending updates,请检查诊断逻辑");
             }
 
             // 情况4: 正常状态

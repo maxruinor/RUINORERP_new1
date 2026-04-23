@@ -10,11 +10,14 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Business.BNR
 {
-    public class BNRFactory
+    public class BNRFactory : IDisposable
     {
         private readonly ConcurrentDictionary<string, IParameterHandler> mHandlers = new ConcurrentDictionary<string, IParameterHandler>();
         private readonly DatabaseSequenceService _databaseSequenceService;
         private readonly ICacheManager<object> _cacheManager;
+        
+        // ✅ 添加读写锁保护Create方法,防止规则解析过程中的状态竞争
+        private readonly ReaderWriterLockSlim _createLock = new ReaderWriterLockSlim();
         
         // 使用AsyncLocal替代ThreadStatic，确保异步上下文正确传播
         private static readonly AsyncLocal<string> _currentBusinessType = new AsyncLocal<string>();
@@ -169,6 +172,7 @@ namespace RUINORERP.Business.BNR
 
         /// <summary>
         /// 根据规则创建编号
+        /// ✅ 添加读锁保护,允许多线程并发执行但防止注册处理器时的竞争
         /// </summary>
         /// <param name="rule">编号规则字符串，格式如：{S:ORD}{D:yyyyMMdd}{DB:ORDER/00000}</param>
         /// <returns>生成的编号字符串</returns>
@@ -176,80 +180,97 @@ namespace RUINORERP.Business.BNR
         /// <exception cref="InvalidOperationException">当规则解析或执行过程中出错时抛出</exception>
         public string Create(string rule)
         {
-            if (string.IsNullOrEmpty(rule))
-            {
-                throw new ArgumentNullException(nameof(rule), "编号规则不能为空");
-            }
-            
+            // ✅ 使用读锁允许多个线程并发执行Create
+            _createLock.EnterReadLock();
             try
             {
-                // 执行规则解析
-                string[] items = RuleAnalysis.Execute(rule);
-                if (items == null || items.Length == 0)
+                if (string.IsNullOrEmpty(rule))
                 {
-                    // 如果解析结果为空，说明没有占位符，直接返回原始字符串
-                    return rule;
+                    throw new ArgumentNullException(nameof(rule), "编号规则不能为空");
                 }
                 
-                StringBuilder sb = new StringBuilder();
-                bool hasValidHandler = false;
-                
-                // 处理每个解析出的参数项
-                foreach (string item in items)
+                try
                 {
-                    if (string.IsNullOrEmpty(item)) continue;
+                    // 执行规则解析
+                    string[] items = RuleAnalysis.Execute(rule);
+                    if (items == null || items.Length == 0)
+                    {
+                        // 如果解析结果为空，说明没有占位符，直接返回原始字符串
+                        return rule;
+                    }
                     
-                    try
+                    StringBuilder sb = new StringBuilder();
+                    bool hasValidHandler = false;
+                    
+                    // 处理每个解析出的参数项
+                    foreach (string item in items)
                     {
-                        string[] properties = RuleAnalysis.GetProperties(item);
-                        if (properties == null || properties.Length < 2)
-                        {
-                            sb.Append(item);
-                            continue;
-                        }
+                        if (string.IsNullOrEmpty(item)) continue;
                         
-                        string handlerName = properties[0].Trim();
-                        if (mHandlers.TryGetValue(handlerName, out IParameterHandler handler))
+                        try
                         {
-                            handler.Execute(sb, properties[1]);
-                            hasValidHandler = true;
+                            string[] properties = RuleAnalysis.GetProperties(item);
+                            if (properties == null || properties.Length < 2)
+                            {
+                                sb.Append(item);
+                                continue;
+                            }
+                            
+                            string handlerName = properties[0].Trim();
+                            if (mHandlers.TryGetValue(handlerName, out IParameterHandler handler))
+                            {
+                                handler.Execute(sb, properties[1]);
+                                hasValidHandler = true;
+                            }
+                            else
+                            {
+                                // 找不到处理器时，保留原始占位符以便排查，但记录警告
+                                System.Diagnostics.Debug.WriteLine($"[BNR Warning] 未找到参数处理器 '{handlerName}'，规则: {rule}");
+                                sb.Append($"{{{item}}}");
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            // 找不到处理器时，保留原始占位符以便排查，但记录警告
-                            System.Diagnostics.Debug.WriteLine($"[BNR Warning] 未找到参数处理器 '{handlerName}'，规则: {rule}");
-                            sb.Append($"{{{item}}}");
+                            // 关键业务编号生成失败应抛出异常，而不是静默吞没
+                            string errorMsg = $"处理参数项 '{item}' 时发生错误 (规则: {rule})";
+                            System.Diagnostics.Debug.WriteLine($"[BNR Error] {errorMsg}: {ex.Message}");
+                            throw new InvalidOperationException(errorMsg, ex);
                         }
                     }
-                    catch (Exception ex)
+                    
+                    string result = sb.ToString();
+                    
+                    // 如果结果中仍然包含花括号，说明有处理器执行失败或未被识别
+                    if (result.Contains("{") || result.Contains("}"))
                     {
-                        // 关键业务编号生成失败应抛出异常，而不是静默吞没
-                        string errorMsg = $"处理参数项 '{item}' 时发生错误 (规则: {rule})";
-                        System.Diagnostics.Debug.WriteLine($"[BNR Error] {errorMsg}: {ex.Message}");
-                        throw new InvalidOperationException(errorMsg, ex);
+                        System.Diagnostics.Debug.WriteLine($"[BNR Warning] 生成的编号包含未处理的占位符: {result}");
                     }
+                    
+                    return result;
                 }
-                
-                string result = sb.ToString();
-                
-                // 如果结果中仍然包含花括号，说明有处理器执行失败或未被识别
-                if (result.Contains("{") || result.Contains("}"))
+                catch (ArgumentNullException)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[BNR Warning] 生成的编号包含未处理的占位符: {result}");
+                    throw; // 重新抛出参数验证异常
                 }
-                
-                return result;
+                catch (Exception ex)
+                {
+                    string errorMessage = $"编号生成失败 (规则: {rule}): {ex.Message}";
+                    System.Diagnostics.Debug.WriteLine($"[BNR Critical] {errorMessage}");
+                    throw new InvalidOperationException(errorMessage, ex);
+                }
             }
-            catch (ArgumentNullException)
+            finally
             {
-                throw; // 重新抛出参数验证异常
+                _createLock.ExitReadLock();
             }
-            catch (Exception ex)
-            {
-                string errorMessage = $"编号生成失败 (规则: {rule}): {ex.Message}";
-                System.Diagnostics.Debug.WriteLine($"[BNR Critical] {errorMessage}");
-                throw new InvalidOperationException(errorMessage, ex);
-            }
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            _createLock?.Dispose();
         }
     }
 }

@@ -956,10 +956,11 @@ namespace RUINORERP.Business
         /// ✅ 通用辅助方法:基于实体导航属性自动删除深层级关联数据
         /// 用途:在 BaseDeleteByNavAsync 中调用,避免外键约束冲突
         /// 原理:扫描实体的 OneToMany 导航属性,检查目标表是否有自己的子表,如有则先删除
+        ///       同时扫描所有其他实体,找到引用目标表的反向关系(ManyToOne)
         /// </summary>
         /// <param name="mainEntity">主实体实例</param>
-        /// <param name="maxDepth">最大递归深度(默认3层,可处理如 PurOrder→PurEntry→PurEntryDetail 的3层关系)</param>
-        protected async Task DeleteDeepLevelRelationsByNavigationAsync<TMain>(TMain mainEntity, int maxDepth = 3) where TMain : class
+        /// <param name="maxDepth">最大递归深度(默认5层,足够处理绝大多数业务场景)</param>
+        protected async Task DeleteDeepLevelRelationsByNavigationAsync<TMain>(TMain mainEntity, int maxDepth = 5) where TMain : class
         {
             var db = _unitOfWorkManage.GetDbClient();
             var entityType = typeof(TMain);
@@ -1055,6 +1056,19 @@ namespace RUINORERP.Business
             
             _logger?.LogInformation($"{targetType.Name} 有 {targetNavProps.Count} 个子表导航: {string.Join(", ", targetNavProps.Select(p => p.Name))}");
 
+            // ✅ 额外检查:扫描所有其他实体,找到引用目标表的反向关系(ManyToOne)
+            var referencingEntities = FindReferencingEntities(targetType);
+            if (referencingEntities.Any())
+            {
+                _logger?.LogInformation($"发现 {referencingEntities.Count} 个实体引用 {targetType.Name}: {string.Join(", ", referencingEntities.Select(r => $"{r.EntityType.Name}.{r.PropertyName}"))}");
+                
+                // 对每个引用实体,删除关联数据
+                foreach (var refInfo in referencingEntities)
+                {
+                    await DeleteReferencingDataAsync(db, mainPkValue, refInfo, currentDepth + 1, maxDepth);
+                }
+            }
+
             // 目标表有子表,需要先查询出所有主表ID,然后删除子表数据
             // 1. 查询所有关联的主表记录ID(使用原生SQL,最简单可靠)
             var pkName = GetPrimaryKeyName(targetType);
@@ -1148,6 +1162,133 @@ namespace RUINORERP.Business
             }
 
             return "Id";
+        }
+
+        /// <summary>
+        /// 引用关系信息
+        /// </summary>
+        private class ReferencingEntityInfo
+        {
+            public Type EntityType { get; set; }
+            public string PropertyName { get; set; }
+            public string ForeignKeyField { get; set; }
+        }
+
+        /// <summary>
+        /// 查找所有引用目标表的实体(反向扫描)
+        /// </summary>
+        private List<ReferencingEntityInfo> FindReferencingEntities(Type targetType)
+        {
+            var result = new List<ReferencingEntityInfo>();
+            
+            try
+            {
+                // 获取 RUINORERP.Model 程序集中的所有实体类
+                var modelAssembly = targetType.Assembly;
+                var allEntityTypes = modelAssembly.GetTypes()
+                    .Where(t => t.IsClass && !t.IsAbstract && t.Namespace == "RUINORERP.Model")
+                    .ToList();
+                
+                foreach (var entityType in allEntityTypes)
+                {
+                    // 跳过自己
+                    if (entityType == targetType)
+                        continue;
+                    
+                    // 检查该实体的所有属性
+                    foreach (var prop in entityType.GetProperties())
+                    {
+                        var navigateAttr = prop.GetCustomAttribute<Navigate>();
+                        if (navigateAttr == null)
+                            continue;
+                        
+                        // 检查是否是 ManyToOne 或 OneToOne,且指向目标表
+                        var navType = navigateAttr.GetNavigateType();
+                        if (navType != NavigateType.ManyToOne && navType != NavigateType.OneToOne)
+                            continue;
+                        
+                        // 检查外键字段是否指向目标表的主键
+                        var fkField = navigateAttr.GetName();
+                        if (string.IsNullOrEmpty(fkField))
+                            continue;
+                        
+                        // 简单判断:如果属性名包含目标表名,很可能是引用关系
+                        // 更精确的做法是检查 SugarColumn 的 ColumnName
+                        var sugarColumn = prop.GetCustomAttribute<SugarColumn>();
+                        if (sugarColumn != null && sugarColumn.ColumnName != null)
+                        {
+                            // 检查列名格式: "CustomerVendor_ID" 表示引用 tb_CustomerVendor
+                            if (sugarColumn.ColumnName.Contains(targetType.Name.Replace("tb_", "")))
+                            {
+                                result.Add(new ReferencingEntityInfo
+                                {
+                                    EntityType = entityType,
+                                    PropertyName = prop.Name,
+                                    ForeignKeyField = sugarColumn.ColumnName
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, $"扫描引用 {targetType.Name} 的实体时出错");
+            }
+            
+            return result;
+        }
+
+        /// <summary>
+        /// 删除引用目标表的数据
+        /// </summary>
+        private async Task DeleteReferencingDataAsync(ISqlSugarClient db, object targetPkValue, ReferencingEntityInfo refInfo, int currentDepth, int maxDepth)
+        {
+            if (currentDepth > maxDepth)
+                return;
+            
+            try
+            {
+                // 查询引用目标表的所有记录ID
+                var pkName = GetPrimaryKeyName(refInfo.EntityType);
+                var referencingIds = await db.Ado.SqlQueryAsync<long>(
+                    $"SELECT [{pkName}] FROM [{refInfo.EntityType.Name}] WHERE [{refInfo.ForeignKeyField}] = @val",
+                    new { val = targetPkValue });
+                
+                if (!referencingIds.Any())
+                    return;
+                
+                _logger?.LogInformation($"发现 {refInfo.EntityType.Name} 有 {referencingIds.Count} 条记录引用目标表");
+                
+                // 递归处理该实体的子表
+                var childNavProps = refInfo.EntityType.GetProperties()
+                    .Where(p =>
+                    {
+                        var attr = p.GetCustomAttribute<Navigate>();
+                        return attr != null && attr.GetNavigateType() == NavigateType.OneToMany;
+                    })
+                    .ToList();
+                
+                foreach (var childNavProp in childNavProps)
+                {
+                    await DeleteChildTableDataAsync(db, refInfo.EntityType, referencingIds.ToList(), childNavProp, currentDepth + 1, maxDepth);
+                }
+                
+                // 最后删除该实体本身的数据
+                var deletedCount = await db.Deleteable<object>()
+                    .AS(refInfo.EntityType.Name)
+                    .Where($"{pkName} IN (@ids)", new { ids = referencingIds })
+                    .ExecuteCommandAsync();
+                
+                if (deletedCount > 0)
+                {
+                    _logger?.LogInformation($"已删除 {refInfo.EntityType.Name} 的 {deletedCount} 条记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, $"删除 {refInfo.EntityType.Name} 的引用数据时出错");
+            }
         }
 
 

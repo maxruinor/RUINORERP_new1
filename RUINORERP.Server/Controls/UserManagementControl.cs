@@ -809,8 +809,8 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
-        /// 更新可见会话的心跳和空闲时间 - 性能优化版
-        /// 修复：使用客户端上报的静止时间，而不是服务器端计算的心跳间隔
+        /// 更新可见会话的心跳和空闲时间 - 简化版
+        /// 原则：客户端上报什么，服务器就显示什么，不做回退
         /// </summary>
         private void UpdateVisibleSessionsHeartbeatAndIdleTime()
         {
@@ -819,65 +819,52 @@ namespace RUINORERP.Server.Controls
                 if (listView1.Items.Count == 0 || listView1.IsDisposed)
                     return;
 
-                // 使用BeginUpdate/EndUpdate减少UI闪烁
                 listView1.BeginUpdate();
 
-                // 只更新变化的会话项
                 foreach (ListViewItem item in listView1.Items)
                 {
                     if (item.Tag is SessionInfo sessionInfo)
                     {
                         var userInfo = sessionInfo.UserInfo;
                         
-                        // 修复：优先使用客户端上报的静止时间，如果无效则回退到服务器端计算
-                        TimeSpan idleTimeSpan;
-                        if (userInfo != null && userInfo.IdleTime > 0)
-                        {
-                            // 使用客户端上报的静止时间（秒）
-                            idleTimeSpan = TimeSpan.FromSeconds(userInfo.IdleTime);
-                        }
-                        else
-                        {
-                            // 回退方案：使用服务器端最后心跳时间计算
-                            idleTimeSpan = DateTime.Now - sessionInfo.LastHeartbeat;
-                        }
-                        
+                        // 直接使用客户端上报的IdleTime（单位：秒），不做任何回退
+                        long idleSeconds = userInfo?.IdleTime ?? 0;
+                        TimeSpan idleTimeSpan = TimeSpan.FromSeconds(idleSeconds);
                         string formattedIdleTime = FormatIdleTime(idleTimeSpan);
 
-                        // 更新空闲时间显示（只有当值变化时才更新）
+                        // 更新空闲时间显示
                         if (item.SubItems.Count > 10 && item.SubItems[10].Text != formattedIdleTime)
                         {
                             item.SubItems[10].Text = formattedIdleTime;
                         }
 
-                        // 更新心跳数（只有当值变化时才更新）
+                        // 更新心跳数
                         string heartbeatCount = sessionInfo.HeartbeatCount.ToString();
                         if (item.SubItems.Count > 6 && item.SubItems[6].Text != heartbeatCount)
                         {
                             item.SubItems[6].Text = heartbeatCount;
                         }
 
-                        // 更新最后心跳时间（只有当值变化时才更新）
+                        // 更新最后心跳时间
                         string lastHeartbeat = sessionInfo.LastHeartbeat.ToString("yy-MM-dd HH:mm:ss");
                         if (item.SubItems.Count > 7 && item.SubItems[7].Text != lastHeartbeat)
                         {
                             item.SubItems[7].Text = lastHeartbeat;
                         }
 
-                        // 检查心跳异常并更新样式（只有当状态变化时才更新）
-                        // 注意：这里仍然使用LastHeartbeat来判断连接健康状态，因为这是服务器端的客观指标
-                        if (idleTimeSpan.TotalMinutes > 5 && sessionInfo.IsConnected)
+                        // 检查异常状态（使用LastHeartbeat判断连接健康）
+                        var timeSinceHeartbeat = DateTime.Now - sessionInfo.LastHeartbeat;
+                        if (timeSinceHeartbeat.TotalMinutes > 5 && sessionInfo.IsConnected)
                         {
                             if (item.ForeColor != Color.Red)
                             {
                                 item.ForeColor = Color.Red;
                                 item.BackColor = Color.MistyRose;
-                                item.ToolTipText = $"用户静止时间过长 - 超过{idleTimeSpan.TotalMinutes:F0}分钟无操作\n{item.ToolTipText}";
+                                item.ToolTipText = $"心跳异常 - 超过{timeSinceHeartbeat.TotalMinutes:F0}分钟无响应\n{item.ToolTipText}";
                             }
                         }
                         else if (item.ForeColor == Color.Red)
                         {
-                            // 恢复正常样式
                             SetSessionItemStyle(item, sessionInfo, userInfo ?? new CurrentUserInfo());
                         }
                     }
@@ -908,6 +895,10 @@ namespace RUINORERP.Server.Controls
         /// <returns>格式化的时间字符串</returns>
         private string FormatIdleTime(TimeSpan idleTime)
         {
+            // 处理零值或负值
+            if (idleTime <= TimeSpan.Zero)
+                return "0秒";
+            
             if (idleTime.TotalDays >= 1)
                 return $"{idleTime.TotalDays:F1}天";
             else if (idleTime.TotalHours >= 1)

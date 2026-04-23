@@ -123,6 +123,9 @@ namespace RUINORERP.UI.Network
         private ClientResourceUsage _cachedResourceUsage;
         private DateTime _lastResourceCollectionTime = DateTime.MinValue;
         private const int RESOURCE_COLLECTION_INTERVAL_MS = 60000; // 1分钟收集一次
+        
+        // ✅ IdleTime诊断日志跟踪
+        private long? _lastLoggedIdleTime = null;
 
         /// <summary>
         /// 是否正在重连
@@ -927,10 +930,19 @@ namespace RUINORERP.UI.Network
                     // 获取最新的静止时间（实时调用Windows API）
                     var latestIdleTime = MainForm.GetLastInputTime();
                     
-                    // 记录静止时间用于调试（仅在首次或变化较大时记录）
-                    if (latestIdleTime > 0 && latestIdleTime % 60 == 0) // 每分钟记录一次
+                    // ✅ 增强日志：记录静止时间用于调试（每分钟或首次发送时记录）
+                    if (latestIdleTime >= 0)
                     {
-                        _logger?.LogDebug("当前用户静止时间: {IdleTime} 秒", latestIdleTime);
+                        // 每60秒记录一次，或者当静止时间发生显著变化时（变化超过30秒）
+                        bool shouldLog = latestIdleTime % 60 == 0 || 
+                                        Math.Abs(latestIdleTime - (_lastLoggedIdleTime ?? -999)) > 30;
+                        
+                        if (shouldLog)
+                        {
+                            _logger?.LogDebug("[心跳-IdleTime] 当前用户静止时间: {IdleTime} 秒, HeartbeatCount: {Count}", 
+                                latestIdleTime, curUserInfo.HeartbeatCount);
+                            _lastLoggedIdleTime = latestIdleTime;
+                        }
                     }
 
                     heartbeatRequest.UserOperationInfo = new RUINORERP.Model.UserOperationInfo
@@ -943,7 +955,7 @@ namespace RUINORERP.UI.Network
                         HeartbeatCount = curUserInfo.HeartbeatCount + 1,
                         ClientVersion = curUserInfo.ClientVersion,
                         ClientIp = curUserInfo.ClientIp,
-                        IdleTime = latestIdleTime,
+                        IdleTime = latestIdleTime, // ✅ 单位：秒
                         IsSuperUser = curUserInfo.IsSuperUser,
                         IsAuthorized = curUserInfo.IsAuthorized,
                         OperatingSystem = curUserInfo.OperatingSystem,

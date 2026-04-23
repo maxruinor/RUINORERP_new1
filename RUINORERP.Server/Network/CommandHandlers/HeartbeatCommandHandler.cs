@@ -335,7 +335,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
             sessionInfo.UserInfo.HeartbeatCount = userInfo.HeartbeatCount;
             sessionInfo.UserInfo.ClientVersion = userInfo.ClientVersion;
             sessionInfo.UserInfo.ClientIp = userInfo.ClientIp;
-            sessionInfo.UserInfo.IdleTime = userInfo.IdleTime;
+            
+            // ✅ 关键修复：确保IdleTime正确更新（单位：秒）
+            if (userInfo.IdleTime >= 0) // IdleTime可以为0，表示刚有操作
+            {
+                sessionInfo.UserInfo.IdleTime = userInfo.IdleTime;
+            }
+            
             sessionInfo.UserInfo.IsSuperUser = userInfo.IsSuperUser;
             sessionInfo.UserInfo.IsAuthorized = userInfo.IsAuthorized;
             sessionInfo.UserInfo.OperatingSystem = userInfo.OperatingSystem;

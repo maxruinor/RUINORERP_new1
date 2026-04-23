@@ -425,6 +425,8 @@ namespace RUINORERP.UI
 
         private async void btnok_Click(object sender, EventArgs e)
         {
+            MainForm.Instance?.logger?.LogInformation("========== 用户点击登录按钮 ==========");
+                    
             // 取消正在进行的防抖重连任务，避免与登录流程冲突
             CancellationTokenSource ctsToCancel = null;
             lock (this)
@@ -435,7 +437,7 @@ namespace RUINORERP.UI
                     _debounceCancellationTokenSource = null;
                 }
             }
-
+        
             if (ctsToCancel != null)
             {
                 try
@@ -451,7 +453,7 @@ namespace RUINORERP.UI
                 }
                 catch (Exception ex)
                 {
-                    MainForm.Instance?.logger?.LogWarning(ex, "取消防抖任务时发生异常");
+                    MainForm.Instance?.logger?.LogDebug(ex, "取消防抖任务时发生异常");
                 }
                 finally
                 {
@@ -464,20 +466,21 @@ namespace RUINORERP.UI
                         // 已释放,忽略
                     }
                 }
-                
+                        
                 MainForm.Instance?.logger?.LogDebug("已取消防抖重连任务，开始登录流程");
             }
-
+        
             // 初始化取消令牌源
             _loginCancellationTokenSource = new CancellationTokenSource();
-
-            // ✅ 优化：使用防抖而非完全禁用，允许用户点击"取消"
+        
+            // ✅ 优化：使用防抖而非完全禁用，允许用户点击“取消”
             btnok.Enabled = false;  // 防止重复点击
             btncancel.Text = "取消中...";  // 提示用户可以取消
             btncancel.Enabled = true;  // ✅ 保持取消按钮可用
-
+        
             if (txtServerIP.Text.Trim().Length == 0 || txtPort.Text.Trim().Length == 0)
             {
+                MainForm.Instance?.logger?.LogDebug("[登录] 服务器IP或端口为空");
                 InvokeIfRequired(() => 
                 {
                     MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -487,10 +490,11 @@ namespace RUINORERP.UI
                 });
                 return;
             }
-
+        
             // 验证基本输入
             if (txtUserName.Text.Trim() == "")
             {
+                MainForm.Instance?.logger?.LogDebug("[登录] 用户名为空");
                 InvokeIfRequired(() => 
                 {
                     errorProvider1.SetError(txtUserName, "用户名不能为空");
@@ -501,7 +505,10 @@ namespace RUINORERP.UI
                 });
                 return;
             }
-
+        
+            MainForm.Instance?.logger?.LogInformation("[登录] 输入验证通过 - 用户名: {Username}, 服务器: {ServerIP}:{ServerPort}", 
+                txtUserName.Text, txtServerIP.Text, txtPort.Text);
+        
             // 判断是否需要重连：检查IP/端口是否变化
             bool needsReconnect = true;
             if (connectionManager.IsConnected)
@@ -510,7 +517,7 @@ namespace RUINORERP.UI
                 string newServerIP = txtServerIP.Text.Trim();
                 int currentPort = connectionManager.CurrentServerPort;
                 int.TryParse(txtPort.Text.Trim(), out int newServerPort);
-
+        
                 // 如果IP和端口都没变，不需要重连
                 if (string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) &&
                     currentPort == newServerPort)
@@ -523,7 +530,7 @@ namespace RUINORERP.UI
                     MainForm.Instance.PrintInfoLog($"服务器地址已变更: {currentServerIP}:{currentPort} -> {newServerIP}:{newServerPort}，准备重新连接");
                 }
             }
-
+        
             // 如果需要重连，先断开现有连接
             if (needsReconnect && connectionManager.IsConnected)
             {
@@ -532,6 +539,7 @@ namespace RUINORERP.UI
                     MainForm.Instance.PrintInfoLog("正在断开现有连接...");
                     await connectionManager.DisconnectAsync();
                     await Task.Delay(200); // 等待断开完成
+                    MainForm.Instance?.logger?.LogDebug("现有连接已断开");
                 }
                 catch (Exception ex)
                 {
@@ -539,7 +547,7 @@ namespace RUINORERP.UI
                     // 继续尝试新连接
                 }
             }
-
+        
             // 常规登录流程开始
             try
             {
@@ -548,6 +556,7 @@ namespace RUINORERP.UI
                     // 验证服务器端口
                     if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
                     {
+                        MainForm.Instance?.logger?.LogError("[登录] 端口号格式不正确: {Port}", txtPort.Text);
                         InvokeIfRequired(() => 
                         {
                             MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -557,12 +566,14 @@ namespace RUINORERP.UI
                         });
                         return;
                     }
-
+        
                     // 执行本地权限验证
+                    MainForm.Instance?.logger?.LogDebug("[登录] 正在执行本地权限验证...");
                     var (loginSucceed, isInitPwd) = await PTPrincipal.Login(txtUserName.Text, txtPassWord.Text, Program.AppContextData);
-
+        
                     if (!loginSucceed)
                     {
+                        MainForm.Instance?.logger?.LogDebug("[登录] 本地权限验证失败 - 用户名: {Username}", txtUserName.Text);
                         InvokeIfRequired(() => 
                         {
                             errorProvider1.SetError(txtUserName, "账号密码有误");
@@ -574,26 +585,31 @@ namespace RUINORERP.UI
                         });
                         return;
                     }
-
+        
+                    MainForm.Instance?.logger?.LogInformation("[登录] 本地权限验证成功");
+        
                     // 如果是超级管理员且为admin用户，直接完成登录
                     if (Program.AppContextData.IsSuperUser && txtUserName.Text == "admin")
                     {
+                        MainForm.Instance?.logger?.LogInformation("[登录] 检测到admin超级管理员，使用简化登录流程");
                         await CompleteAdminLogin(isInitPwd);
                         return;
                     }
-
+        
                     // 保存用户配置（在登录前保存服务器地址）
                     UserGlobalConfig.Instance.UseName = txtUserName.Text;
                     UserGlobalConfig.Instance.PassWord = txtPassWord.Text;
                     UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
                     UserGlobalConfig.Instance.ServerPort = txtPort.Text;
-
-                    // 执行新的登录流程1
+        
+                    // 执行新的登录流程
+                    MainForm.Instance?.logger?.LogInformation("[登录] 开始执行网络登录流程...");
                     await ExecuteNewLoginFlow(isInitPwd, serverPort, needsReconnect);
                 }
             }
             catch (OperationCanceledException)
             {
+                MainForm.Instance?.logger?.LogDebug("[登录取消] 登录操作被用户取消或超时");
                 MainForm.Instance.PrintInfoLog("登录操作已取消");
                 InvokeIfRequired(() => 
                 {
@@ -604,19 +620,21 @@ namespace RUINORERP.UI
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger?.LogError(ex, "登录过程中发生异常");
-
+                MainForm.Instance.logger?.LogError(ex, "[登录异常] 登录过程中发生异常 - ExceptionType: {Type}, Message: {Message}", 
+                    ex.GetType().Name, ex.Message);
+        
                 // 异常情况下，断开连接
                 if (MainForm.Instance?.communicationService?.ConnectionManager.IsConnected == true)
                 {
                     await MainForm.Instance.communicationService.Disconnect();
                     MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
                 }
-
+        
                 var errorMessage = ex is TimeoutException || ex.Message.Contains("超时") || ex.Message.Contains("Timeout")
                     ? "网络连接超时，请检查服务器地址是否正确或网络连接是否正常。"
                     : $"登录失败: {ex.Message}";
-
+        
+                MainForm.Instance?.logger?.LogError("[登录错误] {ErrorMessage}", errorMessage);
                 InvokeIfRequired(() => 
                 {
                     MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -633,6 +651,7 @@ namespace RUINORERP.UI
                     _loginCancellationTokenSource.Dispose();
                     _loginCancellationTokenSource = null;
                 }
+                MainForm.Instance?.logger?.LogDebug("[登录] 清理完成");
             }
         }
 
@@ -1199,6 +1218,9 @@ namespace RUINORERP.UI
         /// <param name="needsReconnect">是否需要重新连接</param>
         private async Task ExecuteNewLoginFlow(bool isInitPwd, int serverPort, bool needsReconnect)
         {
+            MainForm.Instance?.logger?.LogInformation("[登录流程] 开始执行 - IsInitPwd: {IsInitPwd}, ServerPort: {ServerPort}, NeedsReconnect: {NeedsReconnect}", 
+                isInitPwd, serverPort, needsReconnect);
+            
             try
             {
                 // 设置登录状态
@@ -1218,6 +1240,7 @@ namespace RUINORERP.UI
                 {
                     string serverIP = txtServerIP.Text.Trim();
                     MainForm.Instance.PrintInfoLog($"正在连接到服务器 {serverIP}:{serverPort}...");
+                    MainForm.Instance?.logger?.LogDebug("[登录流程] 正在连接服务器: {ServerIP}:{ServerPort}", serverIP, serverPort);
 
                     // 连接到服务器（✅ 缩短为8秒超时）
                     var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
@@ -1225,39 +1248,62 @@ namespace RUINORERP.UI
 
                     if (completedTask != connectTask)
                     {
+                        MainForm.Instance?.logger?.LogDebug("[登录流程] 连接服务器超时: {ServerIP}:{ServerPort}", serverIP, serverPort);
                         throw new TimeoutException($"连接服务器 {serverIP}:{serverPort} 超时");
                     }
 
                     var connected = await connectTask;
                     if (!connected)
                     {
+                        MainForm.Instance?.logger?.LogDebug("[登录流程] 无法连接到服务器: {ServerIP}:{ServerPort}", serverIP, serverPort);
                         throw new Exception($"无法连接到服务器 {serverIP}:{serverPort}");
                     }
                     MainForm.Instance.PrintInfoLog("服务器连接成功");
+                    MainForm.Instance?.logger?.LogInformation("[登录流程] 服务器连接成功");
+                }
+                else
+                {
+                    MainForm.Instance?.logger?.LogDebug("[登录流程] 使用现有连接");
                 }
 
                 // 2. 执行登录验证
+                MainForm.Instance?.logger?.LogInformation("[登录流程] 正在发送登录请求到服务器...");
                 var loginResponse = await _userLoginService.LoginAsync(
                     txtUserName.Text,
                     txtPassWord.Text,
                     linkedCts.Token);
 
+                MainForm.Instance?.logger?.LogDebug("[登录流程] 收到登录响应 - IsNull: {IsNull}, IsSuccess: {IsSuccess}", 
+                    loginResponse == null, loginResponse?.IsSuccess);
+
                 // 网络请求阶段完成后，处理登录结果和用户交互（无超时限制）
                 if (loginResponse != null && loginResponse.IsSuccess)
                 {
+                    MainForm.Instance?.logger?.LogInformation("[登录流程] 登录验证成功，准备进入登录后初始化...");
+                    
+                    // ✅ 关键修复：登录验证成功后，不再受8秒超时限制
+                    // 先关闭超时令牌，避免后续非关键操作触发超时
+                    timeoutCts.Cancel();
+                    MainForm.Instance?.logger?.LogDebug("[登录流程] 已取消超时令牌，后续操作不受8秒限制");
+                    
                     await HandleLoginSuccess(loginResponse, isInitPwd);
                 }
                 else
                 {
                     var errorMsg = loginResponse?.ErrorMessage ?? "登录失败，请检查用户名和密码";
+                    MainForm.Instance?.logger?.LogDebug("[登录流程] 登录失败 - ErrorMessage: {ErrorMessage}", errorMsg);
+                    
                     MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
                     btncancel.Text = "取消";
                     btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
+                MainForm.Instance?.logger?.LogDebug(ex, "[登录流程取消] 登录操作被取消 - IsUserCanceled: {IsUserCanceled}", 
+                    _loginCancellationTokenSource?.IsCancellationRequested ?? false);
+                
                 MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
                 btncancel.Text = "取消";
@@ -1266,13 +1312,21 @@ namespace RUINORERP.UI
                 // 取消时清理服务器会话，避免积累无效会话
                 try
                 {
+                    MainForm.Instance?.logger?.LogDebug("[登录流程取消] 正在清理服务器会话...");
                     await _userLoginService.CancelLoginAsync(MainForm.Instance?.AppContext?.SessionId);
                     await connectionManager.DisconnectAsync();
+                    MainForm.Instance?.logger?.LogDebug("[登录流程取消] 会话清理完成");
                 }
-                catch (Exception ex)
+                catch (Exception cancelEx)
                 {
-                    MainForm.Instance?.logger?.LogWarning(ex, "取消登录时清理资源失败");
+                    MainForm.Instance?.logger?.LogWarning(cancelEx, "[登录流程取消] 清理资源失败");
                 }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "[登录流程异常] 登录流程发生异常 - ExceptionType: {Type}, Message: {Message}", 
+                    ex.GetType().Name, ex.Message);
+                throw; // 重新抛出，让外层处理
             }
             finally
             {
@@ -1280,6 +1334,7 @@ namespace RUINORERP.UI
                 if (MainForm.Instance != null)
                 {
                     MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                    MainForm.Instance?.logger?.LogDebug("[登录流程] 登录状态已重置");
                 }
             }
         }
@@ -1349,56 +1404,100 @@ namespace RUINORERP.UI
                     MainForm.Instance.AppContext.CurUserInfo.IsOnline = true;
                 }
 
-                // 请求元数据同步
-                await _cacheClientService.RequestAllCacheSyncMetadataAsync();
-
-                //登录成功后要去服务器请求最新配置
-                try
+                // ✅ 关键优化：将非关键路径的请求改为异步后台执行，不阻塞登录流程
+                // 这些操作失败不影响登录成功，可以稍后重试
+                
+                // 1. 缓存元数据同步（后台执行）
+                _ = Task.Run(async () =>
                 {
-                    if (_configSyncService != null)
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                    try
                     {
-                        MainForm.Instance.PrintInfoLog("正在请求最新配置文件...");
-                        bool configSyncSuccess = await _configSyncService.RequestCommonConfigsAsync();
-                        if (configSyncSuccess)
-                        {
-                            MainForm.Instance.PrintInfoLog("配置文件请求发送成功，等待服务器响应");
-                        }
+                        MainForm.Instance?.logger?.LogDebug("开始缓存元数据同步...");
+                        await _cacheClientService.RequestAllCacheSyncMetadataAsync(cts.Token);
+                        MainForm.Instance?.logger?.LogInformation("缓存元数据同步完成");
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        MainForm.Instance?.logger?.LogWarning("缓存元数据同步超时或已取消");
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance?.logger?.LogWarning(ex, "缓存元数据同步失败，将在后台重试");
+                    }
+                });
 
-                        // 初始化性能监控模块
+                // 2. 配置同步（后台执行）
+                _ = Task.Run(async () =>
+                {
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                    try
+                    {
+                        if (_configSyncService != null)
+                        {
+                            MainForm.Instance?.logger?.LogDebug("开始配置同步...");
+                            bool configSyncSuccess = await _configSyncService.RequestCommonConfigsAsync(
+                                forceRefresh: false, 
+                                ct: cts.Token);
+                            
+                            if (configSyncSuccess)
+                            {
+                                MainForm.Instance?.logger?.LogInformation("配置文件同步成功");
+                            }
+                            else
+                            {
+                                MainForm.Instance?.logger?.LogWarning("配置文件同步失败，将使用本地缓存");
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        MainForm.Instance?.logger?.LogWarning("配置同步超时或已取消");
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance?.logger?.LogError(ex, "配置同步失败");
+                    }
+                    finally
+                    {
+                        // ✅ 无论配置同步是否成功，都初始化性能监控
                         InitializePerformanceMonitoring();
                     }
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.logger?.LogError(ex, "请求最新配置文件时发生异常");
-                }
+                });
 
-
-                // 获取锁状态列表
-                try
+                // 3. 锁状态获取（后台执行）
+                _ = Task.Run(async () =>
                 {
-                    var lockManagementService = Startup.GetFromFac<ClientLockManagementService>();
-                    if (lockManagementService != null)
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                    try
                     {
-                        MainForm.Instance.logger?.LogDebug("正在获取锁状态列表...");
-                        var lockResponse = await lockManagementService.GetLockStatusListAsync();
-                        if (lockResponse != null && lockResponse.IsSuccess)
+                        var lockManagementService = Startup.GetFromFac<ClientLockManagementService>();
+                        if (lockManagementService != null)
                         {
-                            //MainForm.Instance.PrintInfoLog("成功获取锁状态列表，锁数量: {LockCount}", 
-                            //    lockResponse.LockInfoList?.Count ?? 0);
-                        }
-                        else
-                        {
-                            MainForm.Instance.logger?.LogWarning("获取锁状态列表失败: {ErrorMessage}",
-                                lockResponse?.Message ?? "未知错误");
+                            MainForm.Instance?.logger?.LogDebug("开始获取锁状态列表...");
+                            var lockResponse = await lockManagementService.GetLockStatusListAsync();
+                            
+                            if (lockResponse != null && lockResponse.IsSuccess)
+                            {
+                                int lockCount = lockResponse.LockInfoList?.Count ?? 0;
+                                MainForm.Instance?.logger?.LogDebug("成功获取锁状态列表，锁数量: {LockCount}", lockCount);
+                            }
+                            else
+                            {
+                                MainForm.Instance?.logger?.LogWarning("获取锁状态列表失败: {ErrorMessage}",
+                                    lockResponse?.Message ?? "未知错误");
+                            }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.logger?.LogError(ex, "获取锁状态列表时发生异常");
-                    // 不抛出异常，因为这不影响登录成功
-                }
+                    catch (OperationCanceledException)
+                    {
+                        MainForm.Instance?.logger?.LogWarning("获取锁状态列表超时");
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance?.logger?.LogError(ex, "获取锁状态列表时发生异常");
+                    }
+                });
 
                 // 保存用户配置
                 await SaveUserConfig(isInitPwd);
@@ -1420,10 +1519,20 @@ namespace RUINORERP.UI
                     }
                 }
 
-                // 记录登录时间
-                if (Program.AppContextData.CurUserInfo.LoginTime < DateTime.Now.AddYears(-30))
+                // ✅ 修复：简化登录时间记录逻辑
+                // 原逻辑：如果登录时间是30年前的默认值，则更新为当前时间
+                // 新逻辑：直接更新为当前时间，确保准确性
+                try
                 {
-                    Program.AppContextData.CurUserInfo.LoginTime = DateTime.Now;
+                    if (Program.AppContextData.CurUserInfo != null)
+                    {
+                        Program.AppContextData.CurUserInfo.LoginTime = DateTime.Now;
+                        MainForm.Instance.logger?.LogDebug("已记录登录时间: {LoginTime}", DateTime.Now);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger?.LogWarning(ex, "记录登录时间失败");
                 }
 
                 // 完成登录
@@ -1431,6 +1540,10 @@ namespace RUINORERP.UI
 
                 // 启动心跳
                 MainForm.Instance.communicationService.StartHeartbeat();
+                MainForm.Instance.logger?.LogInformation("心跳服务已启动");
+
+                // ✅ 记录登录成功完成
+                MainForm.Instance.logger?.LogInformation("登录流程全部完成，准备关闭登录窗口");
 
                 // ✅ 使用UI线程安全辅助方法完成登录
                 InvokeIfRequired(() =>

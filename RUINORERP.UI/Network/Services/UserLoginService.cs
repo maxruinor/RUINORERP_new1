@@ -67,36 +67,46 @@ namespace RUINORERP.UI.Network.Services
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("密码不能为空", nameof(password));
 
-
+            _logger?.LogInformation("========== 开始登录流程 ==========");
+            _logger?.LogInformation("[登录] 用户名: {Username}, 自动登录: {IsAutoLogin}, 时间: {Time}", 
+                username, isAutoLogin, DateTime.Now);
 
             try
             {
                 // 立即检查取消令牌状态
-                ct.ThrowIfCancellationRequested();
+                if (ct.IsCancellationRequested)
+                {
+                    _logger?.LogDebug("[登录] 登录前已被取消 - Username: {Username}", username);
+                    ct.ThrowIfCancellationRequested();
+                }
 
                 // 使用信号量确保同一时间只有一个登录请求
-                // ✅ 延长超时到30秒，避免网络慢时快速失败
-                var lockAcquired = await _loginLock.WaitAsync(TimeSpan.FromSeconds(30), ct);
+                _logger?.LogDebug("[登录] 尝试获取登录锁...");
+                var lockAcquired = await _loginLock.WaitAsync(TimeSpan.FromSeconds(10), ct); // ✅ 缩短到10秒
 
                 if (!lockAcquired)
                 {
-                    _logger?.LogWarning("登录请求被拒绝: 获取锁超时，可能已有登录在进行");
+                    _logger?.LogInformation("[登录] 获取锁超时，可能已有登录在进行 - Username: {Username}", username);
                     return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("正在登录中，请稍候...");
                 }
+
+                _logger?.LogDebug("[登录] 成功获取登录锁");
 
                 // 锁获取成功后，再次检查取消令牌状态
                 if (ct.IsCancellationRequested)
                 {
+                    _logger?.LogDebug("[登录] 获取锁后被取消 - Username: {Username}", username);
                     ct.ThrowIfCancellationRequested();
                 }
 
-                // 检查连接状态 - 直接依赖ConnectionManager的连接状态
+                // 检查连接状态
                 if (!_communicationService.ConnectionManager.IsConnected)
                 {
-
+                    _logger?.LogDebug("[登录] 未连接到服务器 - Username: {Username}", username);
                     return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("未连接到服务器，请检查网络连接后重试");
                 }
 
+                _logger?.LogDebug("[登录] 连接状态正常，准备发送登录请求");
 
                 var loginRequest = LoginRequest.Create(username, password);
                 // 附加session ID到登录请求
@@ -104,40 +114,51 @@ namespace RUINORERP.UI.Network.Services
                 {
                     loginRequest.SessionId = MainForm.Instance.AppContext.SessionId;
                 }
-                _logger?.LogInformation($"[登录请求] 用户名: {username}, SessionId: {loginRequest.SessionId}");
+                _logger?.LogDebug("[登录请求] 用户名: {Username}, SessionId: {SessionId}, RequestId: {RequestId}", 
+                    username, loginRequest.SessionId, loginRequest.RequestId);
 
-                // 发送登录命令并获取响应 - 移除复杂重试逻辑，依赖ClientCommunicationService的可靠性
-                // ✅ 使用0让SendCommandWithResponseAsync自动根据命令类型设置超时(登录为8秒,快速失败便于重试)
+                // 发送登录命令并获取响应
+                _logger?.LogDebug("[登录] 正在发送登录命令到服务器，超时时间: 8秒...");
                 var response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
                     AuthenticationCommands.Login, loginRequest, ct, 8000);
 
-
+                _logger?.LogDebug("[登录] 收到服务器响应 - IsNull: {IsNull}", response == null);
 
                 // 检查响应数据
                 if (response == null)
                 {
-
+                    _logger?.LogDebug("[登录] 服务器返回了空的响应数据 - Username: {Username}, RequestId: {RequestId}", 
+                        username, loginRequest.RequestId);
                     return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("服务器返回了空的响应数据，请联系系统管理员");
                 }
+
+                _logger?.LogDebug("[登录] 响应数据 - IsSuccess: {IsSuccess}, ErrorMessage: {ErrorMessage}", 
+                    response.IsSuccess, response.ErrorMessage);
 
                 // 检查响应是否成功
                 if (!response.IsSuccess)
                 {
-
+                    _logger?.LogDebug("[登录失败] 服务器返回失败 - Username: {Username}, Error: {ErrorMessage}", 
+                        username, response.ErrorMessage ?? "未知错误");
                     return response;
                 }
+
+                _logger?.LogInformation("[登录成功] 服务器验证通过 - Username: {Username}, SessionId: {SessionId}", 
+                    username, response.SessionId);
 
                 // 登录成功后处理Token
                 if (response.Token != null && !string.IsNullOrEmpty(response.Token.AccessToken))
                 {
+                    _logger?.LogDebug("[登录] 正在保存Token...");
                     //接收来自服务器的Token并保存
                     await _tokenManager.TokenStorage.SetTokenAsync(response.Token);
+                    _logger?.LogDebug("[登录] Token保存成功");
 
                     // 使用服务器返回的SessionId更新客户端上下文
                     if (MainForm.Instance?.AppContext != null && !string.IsNullOrEmpty(response.SessionId))
                     {
                         MainForm.Instance.AppContext.SessionId = response.SessionId;
-                        _logger?.LogInformation($"[登录成功] 更新SessionId: {response.SessionId}");
+                        _logger?.LogInformation("[登录成功] 更新SessionId: {SessionId}", response.SessionId);
                     }
 
                     // ✅ 如果不是自动登录，保存凭据供下次自动登录使用
@@ -148,11 +169,11 @@ namespace RUINORERP.UI.Network.Services
                             // 获取通信服务实例并保存凭据
                             var commService = RUINORERP.UI.Startup.GetFromFac<ClientCommunicationService>();
                             commService?.SetAutoReloginCredentials(username, password);
-                            _logger?.LogDebug("已保存自动登录凭据");
+                            _logger?.LogDebug("[登录] 已保存自动登录凭据");
                         }
                         catch (Exception ex)
                         {
-                            _logger?.LogWarning(ex, "保存自动登录凭据失败");
+                            _logger?.LogWarning(ex, "[登录] 保存自动登录凭据失败");
                         }
                     }
                 }
@@ -162,19 +183,33 @@ namespace RUINORERP.UI.Network.Services
                 }
 
                 // 处理注册状态和到期提醒
+                _logger?.LogDebug("[登录] 正在处理注册状态...");
                 await HandleRegistrationStatusAsync(response, isAutoLogin);
 
+                _logger?.LogInformation("========== 登录流程完成 ==========");
                 return response;
             }
             catch (OperationCanceledException ex)
             {
-
-                throw;
+                _logger?.LogDebug(ex, "[登录取消] 登录操作被取消 - Username: {Username}, IsUserCanceled: {IsUserCanceled}", 
+                    username, ct.IsCancellationRequested);
+                throw; // 重新抛出，让调用方知道是被取消的
             }
             catch (Exception ex)
             {
-
-                return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("登录过程中发生错误，请稍后重试");
+                _logger?.LogError(ex, "[登录异常] 登录过程中发生异常 - Username: {Username}, ExceptionType: {ExceptionType}, Message: {Message}", 
+                    username, ex.GetType().Name, ex.Message);
+                
+                // 根据异常类型提供更具体的错误信息
+                string errorMessage = ex switch
+                {
+                    TimeoutException => "登录超时，请检查网络连接",
+                    OperationCanceledException => "登录已取消",
+                    System.Net.Sockets.SocketException => "网络连接失败，请检查网络",
+                    _ => $"登录失败: {ex.Message}"
+                };
+                
+                return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>(errorMessage);
             }
             finally
             {
@@ -182,11 +217,11 @@ namespace RUINORERP.UI.Network.Services
                 try
                 {
                     _loginLock.Release();
-
+                    _logger?.LogDebug("[登录] 登录锁已释放 - Username: {Username}", username);
                 }
                 catch (Exception ex)
                 {
-
+                    _logger?.LogError(ex, "[登录] 释放登录锁时发生异常");
                 }
             }
         }

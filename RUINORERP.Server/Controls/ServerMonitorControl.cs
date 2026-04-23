@@ -1254,8 +1254,8 @@ namespace RUINORERP.Server.Controls
                 var snapshot = _memoryDistributionService.GetCurrentSnapshot();
                 
                 // 更新内存分布显示
-                var lblMemoryDist = Controls.Find("lblMemoryDistribution", true).FirstOrDefault() as Label;
-                if (lblMemoryDist != null)
+                var rtbMemoryDist = Controls.Find("rtbMemoryDistribution", true).FirstOrDefault() as RichTextBox;
+                if (rtbMemoryDist != null)
                 {
                     var distributionText = $"总托管: {snapshot.TotalManagedMemoryMB} MB\n";
                     distributionText += $"工作集: {snapshot.TotalWorkingSetMB} MB\n\n";
@@ -1293,7 +1293,9 @@ namespace RUINORERP.Server.Controls
                         }
                     }
                     
-                    lblMemoryDist.Text = distributionText;
+                    rtbMemoryDist.Text = distributionText;
+                    rtbMemoryDist.SelectionStart = rtbMemoryDist.Text.Length;
+                    rtbMemoryDist.ScrollToCaret();
                 }
             }
             catch (Exception ex)

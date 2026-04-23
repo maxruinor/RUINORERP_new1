@@ -94,13 +94,13 @@ namespace RUINORERP.Business.Cache
         private readonly object _statisticsLock = new object();
 
         /// <summary>
-        /// 最大缓存大小（已调整为 200MB 以降低频繁清理）
-        /// 根据实际业务场景，适当提升缓存容量，减少清理频率
+        /// 最大缓存大小（保守优化：从 200MB 降至 150MB）
+        /// 降低上限以预留更多空间给会话队列和临时对象
         /// </summary>
-        private readonly long _maxCacheSize = 200 * 1024 * 1024;
+        private readonly long _maxCacheSize = 150 * 1024 * 1024;
 
         /// <summary>
-        /// 缓存大小检查阈值（达到最大大小的 70% 时触发清理，降低内存压力）
+        /// 缓存大小检查阈值（达到最大大小的 60% 时触发清理，更积极地释放内存）
         /// </summary>
         private readonly long _cacheSizeThreshold;
         #endregion
@@ -388,7 +388,7 @@ namespace RUINORERP.Business.Cache
             {
                 // 这里可以从配置文件、数据库或其他配置源获取过期时间
                 // 目前返回默认值，后续可以扩展为从配置中心获取
-                return TimeSpan.FromMinutes(60); // 默认60分钟过期，加快缓存周转
+                return TimeSpan.FromMinutes(30); // 保守优化：从60分钟降至30分钟，加快内存释放
             }
             catch (Exception ex)
             {
@@ -465,8 +465,8 @@ namespace RUINORERP.Business.Cache
             _tableSchemaManager = tableSchemaManager ?? throw new ArgumentNullException(nameof(tableSchemaManager));
             _cacheDataProvider = cacheDataProvider;
             _cacheSyncMetadata = cacheSyncMetadata; // 可选依赖
-            // 设置缓存大小阈值（最大大小的 70%，降低清理频率）
-            _cacheSizeThreshold = (long)(_maxCacheSize * 0.7);
+            // 设置缓存大小阈值（最大大小的 60%，更积极地触发清理）
+            _cacheSizeThreshold = (long)(_maxCacheSize * 0.6);
 
             // 初始化统一缓存管理器 - 优化：使用单一缓存管理器，统一存储结构
             _cacheManager = CacheFactory.Build<object>(settings =>
@@ -2021,9 +2021,9 @@ namespace RUINORERP.Business.Cache
         {
             lock (_statisticsLock)
             {
-                // 优化：根据缓存大小动态调整清理比例
-                // 超过阈值 1.5 倍时，移除 33%；否则移除 25%
-                int removePercentage = EstimatedCacheSize >= _cacheSizeThreshold * 1.5
+                // 优化：更积极的清理策略
+                // 超过阈值 1.2 倍时，移除 33%；否则移除 25%
+                int removePercentage = EstimatedCacheSize >= _cacheSizeThreshold * 1.2
                     ? _cacheItemStatistics.Count / 3
                     : _cacheItemStatistics.Count / 4;
 

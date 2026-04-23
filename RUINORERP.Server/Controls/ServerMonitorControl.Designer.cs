@@ -148,7 +148,7 @@ namespace RUINORERP.Server.Controls
             lblTotalSessions = new System.Windows.Forms.Label();
             lblActiveSessionsValue = new System.Windows.Forms.Label();
             lblActiveSessions = new System.Windows.Forms.Label();
-            lblMemoryDistribution = new System.Windows.Forms.Label();
+            rtbMemoryDistribution = new System.Windows.Forms.RichTextBox();
             panelBottom = new System.Windows.Forms.Panel();
             splitContainer1 = new System.Windows.Forms.SplitContainer();
             btnDiagnosticsReport = new System.Windows.Forms.Button();
@@ -234,7 +234,7 @@ namespace RUINORERP.Server.Controls
             panelTop.Controls.Add(groupBox1);
             panelTop.Controls.Add(groupBox7);
             panelTop.Controls.Add(groupBox2);
-            panelTop.Controls.Add(lblMemoryDistribution);
+            panelTop.Controls.Add(rtbMemoryDistribution);
             panelTop.Dock = System.Windows.Forms.DockStyle.Top;
             panelTop.Location = new System.Drawing.Point(4, 4);
             panelTop.Name = "panelTop";
@@ -1077,16 +1077,18 @@ namespace RUINORERP.Server.Controls
             lblActiveSessions.TabIndex = 0;
             lblActiveSessions.Text = "活动会话数量：";
             // 
-            // lblMemoryDistribution
+            // rtbMemoryDistribution
             // 
-            lblMemoryDistribution.BackColor = System.Drawing.Color.WhiteSmoke;
-            lblMemoryDistribution.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            lblMemoryDistribution.Location = new System.Drawing.Point(902, 20);
-            lblMemoryDistribution.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            lblMemoryDistribution.Name = "lblMemoryDistribution";
-            lblMemoryDistribution.Size = new System.Drawing.Size(534, 545);
-            lblMemoryDistribution.TabIndex = 16;
-            lblMemoryDistribution.Text = "内存分布统计";
+            rtbMemoryDistribution.BackColor = System.Drawing.Color.WhiteSmoke;
+            rtbMemoryDistribution.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            rtbMemoryDistribution.Location = new System.Drawing.Point(902, 20);
+            rtbMemoryDistribution.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            rtbMemoryDistribution.Name = "rtbMemoryDistribution";
+            rtbMemoryDistribution.ReadOnly = true;
+            rtbMemoryDistribution.Size = new System.Drawing.Size(534, 545);
+            rtbMemoryDistribution.TabIndex = 16;
+            rtbMemoryDistribution.Text = "内存分布统计";
+            rtbMemoryDistribution.Font = new System.Drawing.Font("Consolas", 9F);
             // 
             // panelBottom
             // 
@@ -1530,7 +1532,7 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.Label lblUptime;
         private System.Windows.Forms.Label lblMemoryUsageValue;
         private System.Windows.Forms.Label lblMemoryUsage;
-        private System.Windows.Forms.Label lblMemoryDistribution;
+        private System.Windows.Forms.RichTextBox rtbMemoryDistribution;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Label lblDispatcherInitializedValue;
         private System.Windows.Forms.Label lblDispatcherInitialized;

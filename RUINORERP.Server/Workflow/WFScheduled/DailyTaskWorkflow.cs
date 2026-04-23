@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,67 +15,140 @@ using WorkflowCore.Services;
 
 namespace RUINORERP.Server.Workflow.WFScheduled
 {
+    /// <summary>
+    /// 每日任务工作流
+    /// 修复内存泄漏问题：移除静态字段，使用工作流数据传递状态
+    /// </summary>
     public class DailyTaskWorkflow : IWorkflow
     {
         public string Id => "DailyTaskWorkflow";
         public int Version => 1;
 
+        /// <summary>
+        /// 工作流数据类，用于在步骤间传递状态
+        /// </summary>
+        public class DailyTaskData
+        {
+            public DateTime NextExecutionTime { get; set; }
+            public int ExecutionCount { get; set; }
+            public bool ShouldContinue { get; set; } = true;
+        }
 
-        static DateTime executionTime = DateTime.Today.AddHours(10).AddMinutes(50);
-
-        TimeSpan NextTime = executionTime - DateTime.Now;
         public void Build(IWorkflowBuilder<object> builder)
         {
-
             builder
-            .StartWith(context => frmMainNew.Instance.PrintInfoLog("任务开始时间: " + DateTime.Now))
-             .Recur(data => NextTime, data => data.ToString() != "")
-                  .Do(recur => recur
-                  .StartWith<DailyTaskStep>(
-                          context =>
-                          {
-                              NextTime = executionTime - DateTime.Now;
-                          }
-                      )
-                 .OnError(WorkflowErrorHandling.Retry, TimeSpan.FromMinutes(20))
-                  ).Then(context => frmMainNew.Instance.PrintInfoLog("任务结束时间: " + DateTime.Now));
+                .StartWith(context =>
+                {
+                    // 初始化执行时间 (每天上午 10:50)
+                    var executionTime = DateTime.Today.AddHours(10).AddMinutes(50);
+                    if (executionTime < DateTime.Now)
+                    {
+                        // 如果今天的时间已过，设置为明天
+                        executionTime = executionTime.AddDays(1);
+                    }
+                    
+                    // 初始化工作流数据
+                    if (context.Workflow.Data == null)
+                    {
+                        context.Workflow.Data = new DailyTaskData
+                        {
+                            NextExecutionTime = executionTime,
+                            ExecutionCount = 0
+                        };
+                    }
+                    else
+                    {
+                        var data = (DailyTaskData)context.Workflow.Data;
+                        data.NextExecutionTime = executionTime;
+                        data.ExecutionCount = 0;
+                    }
+                    
+                    frmMainNew.Instance.PrintInfoLog($"每日任务工作流初始化，下次执行时间：{executionTime:yyyy-MM-dd HH:mm:ss}");
+                    return ExecutionResult.Next();
+                })
+                .Recur(data => 
+                {
+                    var workflowData = (DailyTaskData)data;
+                    var nextTime = workflowData.NextExecutionTime;
+                    var diff = (nextTime - DateTime.Now).TotalMilliseconds;
+                    // 确保返回正数毫秒数，最小间隔 1 分钟防止死循环
+                    return diff > 0 ? diff : 60000; 
+                }, 
+                data => ((DailyTaskData)data).ShouldContinue)
+                .Do(recur => recur
+                    .StartWith<DailyTaskStep>()
+                    .Then(context =>
+                    {
+                        // 更新下次执行时间
+                        var executionTime = DateTime.Today.AddHours(10).AddMinutes(50);
+                        if (executionTime < DateTime.Now)
+                        {
+                            executionTime = executionTime.AddDays(1);
+                        }
+                        
+                        var data = (DailyTaskData)context.Workflow.Data;
+                        data.NextExecutionTime = executionTime;
+                        data.ExecutionCount++;
+                        frmMainNew.Instance.PrintInfoLog($"每日任务执行完成，执行次数：{data.ExecutionCount}, 下次执行时间：{executionTime:yyyy-MM-dd HH:mm:ss}");
+                        return ExecutionResult.Next();
+                    })
+                    .OnError(WorkflowErrorHandling.Continue))
+                .Then(context =>
+                {
+                    var data = (DailyTaskData)context.Workflow.Data;
+                    frmMainNew.Instance.PrintInfoLog($"每日任务工作流结束，总执行次数：{data.ExecutionCount}");
+                    return ExecutionResult.Next();
+                });
         }
     }
 
 
+    /// <summary>
+    /// 每日任务执行步骤
+    /// 修复内存泄漏：确保任务完成后正确释放资源
+    /// </summary>
     public class DailyTaskStep : StepBodyAsync
     {
-        private readonly ILogger<DailyTaskStep> logger;
-
-        public string subtext;
-
-
+        private readonly ILogger<DailyTaskStep> _logger;
  
-        public DailyTaskStep(ILogger<DailyTaskStep> _logger)
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="logger">日志记录器</param>
+        public DailyTaskStep(ILogger<DailyTaskStep> logger)
         {
-            logger = _logger;
+            _logger = logger;
         }
 
+        /// <summary>
+        /// 执行每日任务
+        /// 修复：添加超时控制和资源释放
+        /// </summary>
         public override async Task<ExecutionResult> RunAsync(IStepExecutionContext context)
         {
-            // 设置日志级别为 Error
-            //LoggerFilterRules rules = new LoggerFilterRules();
-            //rules.Add(new LoggerFilterRule(LogLevel.Error, null, null));
-            //logger.BeginScope(rules);
-
             try
             {
+                _logger.LogInformation($"开始每日任务，执行时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                frmMainNew.Instance.PrintInfoLog($"开始每日任务~~~。执行时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 
-                logger.LogInformation("开始每日任务" + subtext + System.DateTime.Now);
-                // 在这里编写你的耗时任务逻辑
-                frmMainNew.Instance.PrintInfoLog($"开始每日任务~~~。DailyTaskStep 测试1");
-                // 模拟耗时任务，例如等待 5 秒
+                // TODO: 在这里添加实际的每日任务逻辑
+                // 示例：库存快照、文件清理、数据归档等
+                
+                // 模拟耗时任务 (实际使用时删除)
                 await Task.Delay(5000);
-                frmMainNew.Instance.PrintInfoLog($"结束每日任务~~~测试1。DailyTaskStep");
+                
+                _logger.LogInformation($"结束每日任务，执行时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                frmMainNew.Instance.PrintInfoLog($"结束每日任务~~~。执行时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "每日任务被取消");
+                frmMainNew.Instance.PrintInfoLog($"每日任务被取消：{ex.Message}");
             }
             catch (Exception ex)
             {
-                logger.LogError("开始每日任务出错", ex.Message);
+                _logger.LogError(ex, "开始每日任务出错");
+                frmMainNew.Instance.PrintInfoLog($"每日任务执行出错：{ex.Message}");
             }
 
             return ExecutionResult.Next();

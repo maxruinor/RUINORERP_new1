@@ -26,6 +26,11 @@ namespace RUINORERP.Server.Services
         private const int GC_COOLDOWN_SECONDS = 300; // GC冷却时间：5分钟
         private const int MAX_GC_ATTEMPTS_PER_HOUR = 12; // 每小时最多GC 12次
         
+        // 自动 Dump 配置
+        private long _dumpThreshold = 4096; // 4GB 时自动触发 Dump
+        private string _dumpPath = "D:\\Dumps";
+        private bool _isDumping = false;
+        
         // 内存监控事件
         public event EventHandler<MemoryUsageEventArgs> MemoryUsageWarning;
         public event EventHandler<MemoryUsageEventArgs> MemoryUsageCritical;
@@ -84,6 +89,12 @@ namespace RUINORERP.Server.Services
                 {
                     _logger.LogWarning($"内存使用达到临界阈值: {memoryInfo.WorkingSetMB} MB");
                     MemoryUsageCritical?.Invoke(this, new MemoryUsageEventArgs(memoryInfo));
+                    
+                    // 检查是否达到自动 Dump 阈值
+                    if (memoryInfo.WorkingSetMB >= _dumpThreshold && !_isDumping)
+                    {
+                        Task.Run(() => TriggerAutoDump(memoryInfo.WorkingSetMB));
+                    }
                 }
                 else if (memoryInfo.WorkingSetMB >= WarningThreshold)
                 {
@@ -98,6 +109,70 @@ namespace RUINORERP.Server.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "监控内存使用情况时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 触发自动 Dump
+        /// </summary>
+        private async Task TriggerAutoDump(long currentMemoryMB)
+        {
+            lock (_lockObject)
+            {
+                if (_isDumping) return;
+                _isDumping = true;
+            }
+
+            try
+            {
+                _logger.LogWarning($"内存达到 {currentMemoryMB} MB，正在后台触发自动 Dump...");
+                
+                if (!System.IO.Directory.Exists(_dumpPath))
+                {
+                    System.IO.Directory.CreateDirectory(_dumpPath);
+                }
+
+                var pid = Process.GetCurrentProcess().Id;
+                var fileName = $"server_dump_{DateTime.Now:yyyyMMdd_HHmmss}_{currentMemoryMB}MB.dmp";
+                var fullPath = System.IO.Path.Combine(_dumpPath, fileName);
+
+                // 调用 dotnet-dump 工具
+                var processStartInfo = new ProcessStartInfo
+                {
+                    FileName = "dotnet",
+                    Arguments = $"dump collect -p {pid} -t full -o \"{fullPath}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using (var process = Process.Start(processStartInfo))
+                {
+                    await process.WaitForExitAsync();
+                    var output = await process.StandardOutput.ReadToEndAsync();
+                    var error = await process.StandardError.ReadToEndAsync();
+                    
+                    if (process.ExitCode == 0)
+                    {
+                        _logger.LogInformation($"自动 Dump 成功: {fullPath}");
+                    }
+                    else
+                    {
+                        _logger.LogError($"自动 Dump 失败: {error}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "执行自动 Dump 时发生异常");
+            }
+            finally
+            {
+                lock (_lockObject)
+                {
+                    _isDumping = false;
+                }
             }
         }
 

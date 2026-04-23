@@ -355,7 +355,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     continue;
 
                 // 直接用实体和条件判断：仅需entity和conditions
-                if (TodoListManager.Instance.CheckBillMatchesConditions(update.entity, parameter.conditionals))
+                // 注意：Entity已强制为null以防止内存泄漏，应通过BillId重新加载或使用ConditionValues
+                if (TodoListManager.Instance.CheckBillMatchesConditions(null, parameter.conditionals))
                 {
                     if (parameter.BillIds == null)
                         parameter.BillIds = new List<long>();
@@ -441,7 +442,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     continue;
 
                 // 直接用实体和条件判断
-                if (TodoListManager.Instance.CheckBillMatchesConditions(update.entity, parameter.conditionals))
+                // 注意：Entity已强制为null以防止内存泄漏，应通过BillId重新加载或使用ConditionValues
+                if (TodoListManager.Instance.CheckBillMatchesConditions(null, parameter.conditionals))
                 {
                     if (parameter.BillIds == null)
                         parameter.BillIds = new List<long>();
@@ -590,8 +592,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     return;
 
                 // 查找匹配新状态的条件组
+                // 注意：Entity已强制为null以防止内存泄漏，应通过BillId重新加载或使用ConditionValues
                 var matchedGroup = conditionGroups.FirstOrDefault(group =>
-                    TodoListManager.Instance.CheckBillMatchesConditions(update.entity, group.Conditions));
+                    TodoListManager.Instance.CheckBillMatchesConditions(null, group.Conditions));
 
                 if (matchedGroup != null)
                 {
@@ -606,7 +609,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         {
                             bizType = update.BusinessType,
                             conditionals = matchedGroup.Conditions,
-                            tableType = update.entity?.GetType(),
+                            tableType = null, // Entity已强制为null，无法获取类型
                             UIPropertyIdentifier = matchedGroup.Identifier,
                             BillIds = new List<long> { update.BillId },
                             IncludeBillIds = true
@@ -615,7 +618,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         var newNode = new TreeNode($"{matchedGroup.StatusName}【1】")
                         {
                             Tag = parameter,
-                            Name = $"{update.entity?.GetType()?.Name}_{update.BusinessType}_{matchedGroup.StatusName}"
+                            Name = $"Unknown_{update.BusinessType}_{matchedGroup.StatusName}" // 无法从Entity获取类型
                         };
 
                         bizTypeNode.Nodes.Add(newNode);

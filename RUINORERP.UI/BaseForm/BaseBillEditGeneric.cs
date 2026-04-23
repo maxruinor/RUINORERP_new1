@@ -244,14 +244,20 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 使用提醒对象链路引擎处理单据状态变化
+        /// 注意：当前功能已禁用，如需启用请移除下面的return语句并完善实现
         /// </summary>
         /// <param name="update">任务更新数据</param>
         /// <param name="operationType">操作类型</param>
         private async Task ProcessBillStatusChangeWithLinkEngine(TodoUpdate update, string operationType)
         {
-            //先不处理吧
+            // ⚠️ 功能已禁用：当前系统通过BillOperationService和TodoSyncManager处理状态同步
+            // 如需启用此功能，需要：
+            // 1. 移除下面的return语句
+            // 2. 确保ReminderObjectLinkEngine已正确初始化
+            // 3. 配置相应的消息通知规则
             return;
 
+            /* 原始实现代码（已禁用）
             try
             {
                 // 创建消息数据
@@ -289,6 +295,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 MainForm.Instance.logger?.LogError(ex, "使用提醒对象链路引擎处理单据状态变化失败");
             }
+            */
         }
 
         /// <summary>
@@ -784,12 +791,13 @@ namespace RUINORERP.UI.BaseForm
 
                 var bizStatusType = StateManager.GetStatusType(entity);
                 // 创建TodoUpdate对象
+                // 注意：不传实体对象，避免序列化大对象导致OOM
                 TodoUpdate update = TodoUpdate.Create(
                     updateType,
                     EntityInfo.BizType,
                     billId,
                     billNo,
-                    entity,
+                    null,  // 不传实体对象，避免序列化OOM
                     entity.StateManager.GetStatusType(entity),
                     StateManager.GetBusinessStatus(entity, bizStatusType)
                 );

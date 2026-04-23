@@ -7,6 +7,7 @@ using RUINORERP.Server.Network.Models;
 using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Server.Network.Services
@@ -43,25 +44,64 @@ namespace RUINORERP.Server.Network.Services
                     return;
                 }
 
-                // 构造推送消息
-                messageData.SendTime = System.DateTime.Now;
+                // 1. 严格校验：检查是否有意外的大对象残留
+                if (update.Entity != null)
+                {
+                    _logger?.LogWarning("检测到 TodoUpdate 中包含未清理的实体对象 [Type: {EntityType}]，已强制清空以防止 OOM", 
+                        update.Entity.GetType().FullName);
+                    update.Entity = null; // 强制清空，确保网络传输安全
+                }
 
+                // 2. 构造推送消息
+                messageData.SendTime = System.DateTime.Now;
                 var request = new MessageRequest(MessageType.Business, messageData);
 
-                // 获取所有在线用户会话（实际应用中应该只推送给相关的用户）
-                var sessions = _sessionService.GetAllUserSessions();
-
-                foreach (var session in sessions)
+                // 3. 序列化前的大小监控与熔断保护
+                byte[] payload;
+                try
                 {
-                    if (session is SessionInfo sessionInfo)
-                    {
-                        if (sessionInfo.UserId == messageData.SenderId && messageData.SendToSelf == false)
-                        {
-                            continue; // 不向发送者自己推送通知
-                        }
+                    payload = RUINORERP.PacketSpec.Serialization.JsonCompressionSerializationService.Serialize(request);
+                }
+                catch (System.OutOfMemoryException ex)
+                {
+                    _logger?.LogError(ex, "待办通知序列化发生内存溢出 - 业务类型: {BizType}, 单据ID: {BillId}", 
+                        update.BusinessType, update.BillId);
+                    return; // 直接返回，不再尝试广播
+                }
 
-                        await _sessionService.SendPacketCoreAsync(sessionInfo, MessageCommands.SendTodoNotification, request, 5000);
-                        
+                if (payload.Length > 1024 * 50) // 超过 50KB 视为严重异常
+                {
+                    _logger?.LogError("待办通知数据包严重超标: {Size} bytes, 业务类型: {BizType}, 单据ID: {BillId}。已取消广播。", 
+                        payload.Length, update.BusinessType, update.BillId);
+                    return;
+                }
+                else if (payload.Length > 1024 * 10) // 超过 10KB 警告
+                {
+                    _logger?.LogWarning("待办通知数据包偏大: {Size} bytes, 业务类型: {BizType}, 单据ID: {BillId}", 
+                        payload.Length, update.BusinessType, update.BillId);
+                }
+
+                // 4. 获取所有在线用户会话并广播（并行发送优化）
+                var sessions = _sessionService.GetAllUserSessions();
+                var targetSessions = sessions
+                    .OfType<SessionInfo>()
+                    .Where(s => 
+                        s.IsConnected && // ✅ 只发送给已连接的会话
+                        (s.UserId != messageData.SenderId || messageData.SendToSelf))
+                    .ToList();
+
+                if (targetSessions.Count > 0)
+                {
+                    var sendTasks = targetSessions.Select(session => 
+                        _sessionService.SendPacketCoreAsync(session, MessageCommands.SendTodoNotification, request, 5000));
+                    
+                    try
+                    {
+                        await Task.WhenAll(sendTasks);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "部分会话通知发送失败");
                     }
                 }
 

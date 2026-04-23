@@ -1,8 +1,10 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.PacketSpec.Serialization;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace RUINORERP.PacketSpec.Models.Cache
@@ -13,6 +15,19 @@ namespace RUINORERP.PacketSpec.Models.Cache
     /// </summary>
     public class CacheData
     {
+        /// <summary>
+        /// 默认缓存过期时间（4小时，基础数据缓存使用较长的过期时间）
+        /// 与 EntityCacheManager.GetCacheExpirationTime() 保持一致
+        /// </summary>
+        public static readonly TimeSpan DefaultExpiration = TimeSpan.FromHours(4);
+
+        /// <summary>
+        /// 泛型反序列化方法委托缓存 - 避免重复反射调用提升性能
+        /// Key: EntityTypeName, Value: Func<byte[], bool, object>
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, Func<byte[], bool, object>> _deserializeDelegateCache = 
+            new ConcurrentDictionary<string, Func<byte[], bool, object>>();
+
         /// <summary>
         /// 表名
         /// </summary>
@@ -42,7 +57,7 @@ namespace RUINORERP.PacketSpec.Models.Cache
         /// <summary>
         /// 过期时间
         /// </summary>
-        public DateTime ExpirationTime { get; set; } = DateTime.Now.AddDays(1);
+        public DateTime ExpirationTime { get; set; } = DateTime.Now.Add(DefaultExpiration);
 
  
 
@@ -79,7 +94,7 @@ namespace RUINORERP.PacketSpec.Models.Cache
                 EntityByte = JsonCompressionSerializationService.Serialize(data, true),
                 EntityTypeName = typeof(T).AssemblyQualifiedName, // 使用程序集限定名称
                 CacheTime = DateTime.Now,
-                ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1)),
+                ExpirationTime = DateTime.Now.Add(expiration ?? DefaultExpiration),
                 VersionStamp = versionStamp > 0 ? versionStamp : DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
             };
         }
@@ -98,7 +113,7 @@ namespace RUINORERP.PacketSpec.Models.Cache
                 EntityByte = JsonCompressionSerializationService.Serialize(data, true),
                 EntityTypeName = data.GetType().AssemblyQualifiedName,
                 CacheTime = DateTime.Now,
-                ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1)),
+                ExpirationTime = DateTime.Now.Add(expiration ?? DefaultExpiration),
                 Version = "1.0.0",
                 VersionStamp = versionStamp > 0 ? versionStamp : DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
             };
@@ -124,29 +139,54 @@ namespace RUINORERP.PacketSpec.Models.Cache
             {
                 return CacheDataConverter.ConvertToType<T>(EntityByte);
             }
-            catch
+            catch (OutOfMemoryException)
             {
+                throw; // 重新抛出严重异常
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"反序列化失败: {typeof(T).Name}, 错误: {ex.Message}");
                 return default;
             }
         }
 
         /// <summary>
-        /// 动态获取数据（高性能版本）
+        /// 动态获取数据（高性能版本 - 使用委托缓存避免反射）
         /// </summary>
         public object GetData()
         {
             if (EntityByte == null || string.IsNullOrEmpty(EntityTypeName))
                 return null;
 
-            var type = TypeResolver.GetType(EntityTypeName);
-            if (type == null) return null;
-
             try
             {
-                // 使用反射调用泛型反序列化方法
-                var method = typeof(JsonCompressionSerializationService).GetMethod("Deserialize");
-                var genericMethod = method.MakeGenericMethod(type);
-                return genericMethod.Invoke(null, new object[] { EntityByte, true });
+                // 使用委托缓存获取或创建反序列化方法
+                var deserializeFunc = _deserializeDelegateCache.GetOrAdd(EntityTypeName, typeName =>
+                {
+                    var type = TypeResolver.GetType(typeName);
+                    if (type == null) return null;
+
+                    // 获取泛型方法 Deserialize<T>
+                    var method = typeof(JsonCompressionSerializationService).GetMethod("Deserialize");
+                    if (method == null) return null;
+
+                    // 构造泛型方法
+                    var genericMethod = method.MakeGenericMethod(type);
+
+                    // 创建委托：Func<byte[], bool, object>
+                    return (Func<byte[], bool, object>)Delegate.CreateDelegate(
+                        typeof(Func<byte[], bool, object>), 
+                        genericMethod);
+                });
+
+                if (deserializeFunc == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"无法为类型 {EntityTypeName} 创建反序列化委托");
+                    return null;
+                }
+
+                // 直接调用委托，避免每次反射
+                return deserializeFunc(EntityByte, true);
             }
             catch (Exception ex)
             {

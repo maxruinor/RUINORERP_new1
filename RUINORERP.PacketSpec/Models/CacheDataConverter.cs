@@ -14,6 +14,10 @@ namespace RUINORERP.PacketSpec.Models
     /// </summary>
     public static class CacheDataConverter
     {
+        // JSON序列化器线程局部存储 - 避免并发问题
+        private static readonly System.Threading.ThreadLocal<Newtonsoft.Json.JsonSerializer> _threadLocalSerializer = 
+            new System.Threading.ThreadLocal<Newtonsoft.Json.JsonSerializer>(() => 
+                Newtonsoft.Json.JsonSerializer.CreateDefault());
         /// <summary>
         /// 将对象转换为指定类型
         /// </summary>
@@ -24,22 +28,40 @@ namespace RUINORERP.PacketSpec.Models
         {
             if (source == null) return default;
 
-            // 如果源对象已经是目标类型，直接返回
+            // 如果源对象已经是目标类型，直接返回（避免不必要的序列化）
             if (source is T typedSource)
                 return typedSource;
 
-            try
+            // 优化：对于简单值类型转换，使用Convert.ChangeType避免JSON序列化开销
+            if (typeof(T).IsValueType || typeof(T) == typeof(string))
             {
-                    // 使用JSON进行转换（兼容性更好）
-                    var json = JsonConvert.SerializeObject(source);
-                    return JsonConvert.DeserializeObject<T>(json);
-                }
-                catch (Exception jsonEx)
+                try
                 {
-                    throw new InvalidOperationException($"无法将对象转换为类型 {typeof(T).Name}", jsonEx);
+                    return (T)Convert.ChangeType(source, typeof(T));
+                }
+                catch
+                {
+                    // 如果简单转换失败，继续使用JSON方式
                 }
             }
-        
+
+            try
+            {
+                // 使用JSON进行转换（兼容性更好，处理复杂对象）
+                var serializer = _threadLocalSerializer.Value;
+                using (var stringWriter = new System.IO.StringWriter())
+                using (var jsonWriter = new Newtonsoft.Json.JsonTextWriter(stringWriter))
+                {
+                    serializer.Serialize(jsonWriter, source);
+                    var json = stringWriter.ToString();
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
+                }
+            }
+            catch (Exception jsonEx)
+            {
+                throw new InvalidOperationException($"无法将对象转换为类型 {typeof(T).Name}", jsonEx);
+            }
+        }
 
         /// <summary>
         /// 将对象转换为指定类型的列表
@@ -77,8 +99,14 @@ namespace RUINORERP.PacketSpec.Models
                 }
 
                 // 最后尝试JSON序列化方式
-                var json = JsonConvert.SerializeObject(source);
-                return JsonConvert.DeserializeObject<List<T>>(json);
+                var serializer = _threadLocalSerializer.Value;
+                using (var stringWriter = new System.IO.StringWriter())
+                using (var jsonWriter = new Newtonsoft.Json.JsonTextWriter(stringWriter))
+                {
+                    serializer.Serialize(jsonWriter, source);
+                    var json = stringWriter.ToString();
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(json);
+                }
             }
             catch (Exception ex)
             {
@@ -102,8 +130,14 @@ namespace RUINORERP.PacketSpec.Models
             try
             {
                 // 使用JSON序列化转换
-                var json = JsonConvert.SerializeObject(source);
-                return JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                var serializer = _threadLocalSerializer.Value;
+                using (var stringWriter = new System.IO.StringWriter())
+                using (var jsonWriter = new Newtonsoft.Json.JsonTextWriter(stringWriter))
+                {
+                    serializer.Serialize(jsonWriter, source);
+                    var json = stringWriter.ToString();
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                }
             }
             catch (Exception ex)
             {
@@ -122,8 +156,14 @@ namespace RUINORERP.PacketSpec.Models
 
             try
             {
-                var json = JsonConvert.SerializeObject(source);
-                return Encoding.UTF8.GetBytes(json);
+                var serializer = _threadLocalSerializer.Value;
+                using (var stringWriter = new System.IO.StringWriter())
+                using (var jsonWriter = new Newtonsoft.Json.JsonTextWriter(stringWriter))
+                {
+                    serializer.Serialize(jsonWriter, source);
+                    var json = stringWriter.ToString();
+                    return Encoding.UTF8.GetBytes(json);
+                }
             }
             catch (Exception ex)
             {
@@ -165,8 +205,14 @@ namespace RUINORERP.PacketSpec.Models
             try
             {
                 // 使用JSON进行深拷贝
-                var json = JsonConvert.SerializeObject(source);
-                return JsonConvert.DeserializeObject<T>(json);
+                var serializer = _threadLocalSerializer.Value;
+                using (var stringWriter = new System.IO.StringWriter())
+                using (var jsonWriter = new Newtonsoft.Json.JsonTextWriter(stringWriter))
+                {
+                    serializer.Serialize(jsonWriter, source);
+                    var json = stringWriter.ToString();
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
+                }
             }
             catch (Exception ex)
             {

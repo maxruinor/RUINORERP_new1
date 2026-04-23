@@ -17,6 +17,7 @@ using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
 using SqlSugar;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -40,6 +41,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
         // 添加新的缓存管理器字段
         private readonly IEntityCacheManager _cacheManager;
         private readonly ICacheSyncMetadata _syncMetadata;
+
+        /// <summary>
+        /// 广播限流信号量 - 限制并发广播数量，防止网络拥塞
+        /// 允许最多10个并发广播操作（根据服务器性能调整）
+        /// </summary>
+        private static readonly SemaphoreSlim _broadcastSemaphore = new SemaphoreSlim(10, 10);
+
+        /// <summary>
+        /// 广播间隔控制 - 同一表的连续广播最小间隔（毫秒）
+        /// 避免短时间内对同一表频繁广播
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, DateTime> _lastBroadcastTimes = new ConcurrentDictionary<string, DateTime>();
+        private const int MIN_BROADCAST_INTERVAL_MS = 100; // 最小间隔100ms
 
         // 添加构造函数注入CacheSubscriptionManager
         /// <summary>
@@ -125,6 +139,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的缓存命令格式", UnifiedErrorCodes.Command_ValidationFailed);
                 }
 
+                // 验证表名是否有效
+                if (!ValidateTableName(cacheCommand.TableName, cmd.Packet))
+                {
+                    return ResponseFactory.CreateSpecificErrorResponse(
+                        cmd.Packet, 
+                        $"无效的表名: {cacheCommand.TableName}", 
+                        UnifiedErrorCodes.Command_ValidationFailed
+                    );
+                }
+
                 // 仅处理 Get 操作，其他操作应走 CacheSync 流程
                 if (cacheCommand.Operation != CacheOperation.Get)
                 {
@@ -151,6 +175,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (!(cmd.Packet.Request is CacheRequest cacheRequest))
                 {
                     return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的缓存同步命令格式", UnifiedErrorCodes.Command_ValidationFailed);
+                }
+
+                // 验证表名是否有效
+                if (!ValidateTableName(cacheRequest.TableName, cmd.Packet))
+                {
+                    return ResponseFactory.CreateSpecificErrorResponse(
+                        cmd.Packet, 
+                        $"无效的表名: {cacheRequest.TableName}", 
+                        UnifiedErrorCodes.Command_ValidationFailed
+                    );
                 }
 
                 // 1. 在服务器端执行实际的缓存更新/删除
@@ -282,12 +316,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "订阅时表名不能为空", UnifiedErrorCodes.Command_ValidationFailed);
                         }
 
-                        // 验证表是否存在
-                        var entityType = _cacheManager?.GetEntityType(tableName);
-                        if (entityType == null)
+                        // 验证表名是否有效
+                        if (!ValidateTableName(tableName, cmd.Packet))
                         {
-                            LogWarning($"客户端尝试订阅不存在的表: 会话={sessionId}, 表名={tableName}");
-                            return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, $"订阅的表不存在: {tableName}", UnifiedErrorCodes.Biz_DataNotFound);
+                            return ResponseFactory.CreateSpecificErrorResponse(
+                                cmd.Packet, 
+                                $"无效的表名: {tableName}", 
+                                UnifiedErrorCodes.Command_ValidationFailed
+                            );
                         }
 
                         // 使用异步方法添加订阅
@@ -341,6 +377,44 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
+        /// 验证表名是否有效（防止SQL注入和非法访问）
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="packet">数据包（用于日志记录）</param>
+        /// <returns>表名是否有效</returns>
+        private bool ValidateTableName(string tableName, PacketModel packet)
+        {
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                LogWarning($"收到空表名请求，会话={packet.ExecutionContext?.SessionId}");
+                return false;
+            }
+
+            // 检查表名是否包含危险字符（防止SQL注入）
+            if (tableName.Contains("--") || 
+                tableName.Contains(";") || 
+                tableName.Contains("/*") || 
+                tableName.Contains("*/") ||
+                tableName.Contains("'") ||
+                tableName.Contains("\"") ||
+                tableName.Contains("\\"))
+            {
+                LogWarning($"检测到潜在SQL注入攻击，表名={tableName}，会话={packet.ExecutionContext?.SessionId}");
+                return false;
+            }
+
+            // 通过CacheManager验证表是否存在
+            var entityType = _cacheManager?.GetEntityType(tableName);
+            if (entityType == null)
+            {
+                LogWarning($"客户端尝试访问不存在的表: 会话={packet.ExecutionContext?.SessionId}, 表名={tableName}");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// 广播缓存变更到订阅该表的客户端(增强版 - 包含完整数据)
         /// 
         /// 【设计思路】：使用 CacheSync 命令进行实时数据推送
@@ -359,6 +433,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
+                // 【限流1】：检查同一表的广播间隔，避免频繁广播
+                var now = DateTime.UtcNow;
+                if (_lastBroadcastTimes.TryGetValue(request.TableName, out var lastTime))
+                {
+                    var elapsedMs = (now - lastTime).TotalMilliseconds;
+                    if (elapsedMs < MIN_BROADCAST_INTERVAL_MS)
+                    {
+                        LogDebug($"表 {request.TableName} 广播间隔过短({elapsedMs:F0}ms < {MIN_BROADCAST_INTERVAL_MS}ms)，跳过本次广播");
+                        return;
+                    }
+                }
+                _lastBroadcastTimes[request.TableName] = now;
+
                 // 获取订阅该表的会话列表
                 var subscribedSessions = _subscriptionManager.GetSubscribers(request.TableName);
                 if (subscribedSessions == null || !subscribedSessions.Any())
@@ -375,99 +462,120 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return;
                 }
 
-                // 确保请求包含完整的数据
-                if (request.CacheData == null && request.Operation == CacheOperation.Set)
+                // 【限流2】：使用信号量限制并发广播数量，防止网络拥塞
+                // 如果无法在5秒内获取信号量，则放弃本次广播
+                bool acquired = false;
+                try
                 {
-                    LogWarning($"缓存同步请求缺少数据,表名={request.TableName},操作={request.Operation}");
-                    return;
-                }
-
-                // 【关键修正】：服务器主动推送变更时，应使用 CacheRequest（因为服务器是发起方）
-                // 符合“谁先发送谁请求”的原则
-                var pushRequest = new CacheRequest
-                {
-                    RequestId = Guid.NewGuid().ToString(), // 生成新的请求ID
-                    TableName = request.TableName,
-                    Operation = request.Operation,
-                    CacheData = request.CacheData, // 包含完整的数据
-                    Timestamp = DateTime.UtcNow,
-                    LastRequestTime = DateTime.UtcNow
-                };
-
-                // 【优化】：从元数据管理器获取最新的版本戳并同步到请求中
-                var syncInfo = _cacheSyncMetadataManager.GetTableSyncInfo(request.TableName);
-                if (syncInfo != null && pushRequest.CacheData != null)
-                {
-                    pushRequest.CacheData.VersionStamp = syncInfo.VersionStamp;
-                }
-
-                // 添加同步元数据,用于客户端验证
-                pushRequest.Parameters = new Dictionary<string, object>
-                {
-                    { "SyncType", "ServerPush" },
-                    { "ServerTimestamp", DateTime.UtcNow.ToString("O") },
-                    { "SourceSessionId", excludeSessionId ?? "Server" }
-                };
-
-                // 获取目标会话并推送
-                var allSessions = _sessionService.GetAllUserSessions();
-                var targetSessions = allSessions.Where(s => targetSessionIds.Contains(s.SessionID)).ToList();
-
-                if (targetSessions.Count == 0)
-                {
-                    LogWarning($"没有找到目标会话,表名={request.TableName},订阅者={string.Join(",", targetSessionIds)}");
-                    return;
-                }
-
-                int successCount = 0;
-                int failCount = 0;
-                var failedSessions = new List<string>();
-
-                foreach (var sessionInfo in targetSessions)
-                {
-                    try
+                    acquired = await _broadcastSemaphore.WaitAsync(5000, cancellationToken);
+                    if (!acquired)
                     {
-                        // 再次检查会话状态，防止在遍历过程中会话断开
-                        if (sessionInfo.Status != RUINORERP.PacketSpec.Enums.Core.SessionStatus.Connected) continue;
+                        LogWarning($"广播限流：表 {request.TableName} 等待信号量超时，当前并发广播数已达上限，跳过本次广播");
+                        return;
+                    }
 
-                        // 服务器主动推送，使用 CacheRequest 作为载体
-                        // 优化：创建独立的取消令牌，避免外部取消令牌影响推送
-                        using var pushCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                        pushCts.CancelAfter(15000); // 保守优化：将超时从30s降低至15s，加快失败反馈
-                        
-                        await _sessionService.SendPacketCoreAsync<CacheRequest>(
-                            sessionInfo, 
-                            CacheCommands.CacheSync, 
-                            pushRequest, 
-                            15000, 
-                            pushCts.Token, 
-                            PacketDirection.ServerRequest); // 明确标记为服务器发起的请求
-                        successCount++;
-                    }
-                    catch (OperationCanceledException ex)
+                    // 确保请求包含完整的数据
+                    if (request.CacheData == null && request.Operation == CacheOperation.Set)
                     {
-                        failCount++;
-                        failedSessions.Add(sessionInfo.SessionID);
-                        LogWarning($"推送缓存更新到会话超时或被取消：{sessionInfo.SessionID}, 表：{request.TableName}");
+                        LogWarning($"缓存同步请求缺少数据,表名={request.TableName},操作={request.Operation}");
+                        return;
                     }
-                    catch (Exception ex)
+
+                    // 【关键修正】：服务器主动推送变更时，应使用 CacheRequest（因为服务器是发起方）
+                    // 符合“谁先发送谁请求”的原则
+                    var pushRequest = new CacheRequest
                     {
-                        failCount++;
-                        failedSessions.Add(sessionInfo.SessionID);
-                        LogError($"推送缓存更新到会话失败: {sessionInfo.SessionID}, 表: {request.TableName}, 错误: {ex.Message}");
+                        RequestId = Guid.NewGuid().ToString(), // 生成新的请求ID
+                        TableName = request.TableName,
+                        Operation = request.Operation,
+                        CacheData = request.CacheData, // 包含完整的数据
+                        Timestamp = DateTime.UtcNow,
+                        LastRequestTime = DateTime.UtcNow
+                    };
+
+                    // 【优化】：从元数据管理器获取最新的版本戳并同步到请求中
+                    var syncInfo = _cacheSyncMetadataManager.GetTableSyncInfo(request.TableName);
+                    if (syncInfo != null && pushRequest.CacheData != null)
+                    {
+                        pushRequest.CacheData.VersionStamp = syncInfo.VersionStamp;
+                    }
+
+                    // 添加同步元数据,用于客户端验证
+                    pushRequest.Parameters = new Dictionary<string, object>
+                    {
+                        { "SyncType", "ServerPush" },
+                        { "ServerTimestamp", DateTime.UtcNow.ToString("O") },
+                        { "SourceSessionId", excludeSessionId ?? "Server" }
+                    };
+
+                    // 获取目标会话并推送
+                    var allSessions = _sessionService.GetAllUserSessions();
+                    var targetSessions = allSessions.Where(s => targetSessionIds.Contains(s.SessionID)).ToList();
+
+                    if (targetSessions.Count == 0)
+                    {
+                        LogWarning($"没有找到目标会话,表名={request.TableName},订阅者={string.Join(",", targetSessionIds)}");
+                        return;
+                    }
+
+                    int successCount = 0;
+                    int failCount = 0;
+                    var failedSessions = new List<string>();
+
+                    foreach (var sessionInfo in targetSessions)
+                    {
+                        try
+                        {
+                            // 再次检查会话状态，防止在遍历过程中会话断开
+                            if (sessionInfo.Status != SessionStatus.Connected) continue;
+
+                            // 服务器主动推送，使用 CacheRequest 作为载体
+                            // 优化：创建独立的取消令牌，避免外部取消令牌影响推送
+                            using var pushCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                            pushCts.CancelAfter(15000); // 保守优化：将超时从30s降低至15s，加快失败反馈
+                            
+                            await _sessionService.SendPacketCoreAsync<CacheRequest>(
+                                sessionInfo, 
+                                CacheCommands.CacheSync, 
+                                pushRequest, 
+                                15000, 
+                                pushCts.Token, 
+                                PacketDirection.ServerRequest); // 明确标记为服务器发起的请求
+                            successCount++;
+                        }
+                        catch (OperationCanceledException ex)
+                        {
+                            failCount++;
+                            failedSessions.Add(sessionInfo.SessionID);
+                            LogWarning($"推送缓存更新到会话超时或被取消：{sessionInfo.SessionID}, 表：{request.TableName}");
+                        }
+                        catch (Exception ex)
+                        {
+                            failCount++;
+                            failedSessions.Add(sessionInfo.SessionID);
+                            LogError($"推送缓存更新到会话失败: {sessionInfo.SessionID}, 表: {request.TableName}, 错误: {ex.Message}");
+                        }
+                    }
+
+                    // 记录推送结果
+                    if (failCount > 0)
+                    {
+                        LogWarning($"广播缓存变更部分失败: 表={request.TableName}, " +
+                                   $"目标客户端数量={targetSessions.Count}, 成功={successCount}, 失败={failCount}, " +
+                                   $"失败会话ID: {string.Join(", ", failedSessions)}");
+                    }
+                    else
+                    {
+                        LogInfo($"广播缓存变更成功: 表={request.TableName}, 目标客户端数量={targetSessions.Count}");
                     }
                 }
-
-                // 记录推送结果
-                if (failCount > 0)
+                finally
                 {
-                    LogWarning($"广播缓存变更部分失败: 表={request.TableName}, " +
-                               $"目标客户端数量={targetSessions.Count}, 成功={successCount}, 失败={failCount}, " +
-                               $"失败会话ID: {string.Join(", ", failedSessions)}");
-                }
-                else
-                {
-                    LogInfo($"广播缓存变更成功: 表={request.TableName}, 目标客户端数量={targetSessions.Count}");
+                    // 释放信号量
+                    if (acquired)
+                    {
+                        _broadcastSemaphore.Release();
+                    }
                 }
             }
             catch (Exception ex)

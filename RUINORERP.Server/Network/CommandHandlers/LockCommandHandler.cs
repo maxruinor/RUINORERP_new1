@@ -189,6 +189,18 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     validation.LockRequest = request;
                 }
+                
+                // ✅ 权限验证：检查是否是锁持有者或管理员
+                var requesterUserId = validation.LockRequest.RequesterUserId;
+                var lockOwnerUserId = validation.LockRequest.LockInfo.LockedUserId;
+                
+                if (requesterUserId != lockOwnerUserId)
+                {
+                    _logger.LogWarning("用户 {RequesterId} 尝试解锁他人锁定的单据，锁持有者: {OwnerId}, 单据ID: {BillId}",
+                        requesterUserId, lockOwnerUserId, validation.LockRequest.LockInfo.BillID);
+                    return CreateErrorResponse("无权限解锁他人锁定的单据（仅锁持有者可操作）");
+                }
+                
                 //优先处理
                 if (validation.LockRequest.UnlockType == UnlockType.ByBizName)
                 {
@@ -206,6 +218,28 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 _logger.LogError(ex, $"处理锁定释放异常: {ex.Message}");
                 return CreateErrorResponse($"处理锁定释放异常: {ex.Message}", cmd.Packet.ExecutionContext, ex);
+            }
+        }
+        
+        /// <summary>
+        /// 检查用户是否为管理员
+        /// TODO: 根据实际权限系统实现
+        /// </summary>
+        private bool IsUserAdmin(string userId)
+        {
+            // 这里应该查询用户角色表
+            // 示例实现：可以查询数据库或调用权限服务
+            try
+            {
+                // 临时实现：可以根据需要扩展
+                // var userRole = _userService.GetUserRole(userId);
+                // return userRole == UserRole.Admin;
+                return false; // 默认返回false，需要实际实现
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查用户管理员权限失败: UserId={UserId}", userId);
+                return false;
             }
         }
 
@@ -331,24 +365,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return CreateErrorResponse(validation.ErrorMessage);
                 }
 
-                // 查询锁状态
-                var lockInfo = _lockManagerService.GetLockInfo(validation.LockRequest.LockInfo.BillID);
-                if (lockInfo == null)
+                // ✅ 修复: 调用服务端的异步方法,确保过期锁被清理
+                var lockRequest = new LockRequest
                 {
-                    lockInfo = new LockInfo();
-                    lockInfo.BillID = validation.LockRequest.LockInfo.BillID;
-                    lockInfo.IsLocked = false;
-                }
-                var response = new LockResponse
-                {
-                    IsSuccess = true,
-                    Message = "锁状态查询成功",
-                    LockInfo = lockInfo,
+                    LockInfo = validation.LockRequest.LockInfo
                 };
-                // 模拟异步操作 要Task方法签名一致
-                await Task.CompletedTask;
+                
+                var response = await _lockManagerService.CheckLockStatusAsync(lockRequest);
                 return response;
-
             }
             catch (Exception ex)
             {

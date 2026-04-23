@@ -22,7 +22,7 @@ namespace RUINORERP.Server.SmartReminder
         }
 
         // 简化的规则评估方法
-        public async Task<bool> EvaluateAsync(IReminderRule rule, object context)
+        public virtual async Task<bool> EvaluateAsync(IReminderRule rule, object context)
         {
             _logger.LogInformation("开始评估规则: ID={RuleId}, 名称={RuleName}", rule.RuleId, rule.ReminderBizType);
             try

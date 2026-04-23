@@ -138,8 +138,8 @@ namespace RUINORERP.UI.IM
         {
             if (message.BizData is TodoUpdate todoUpdate)
             {
-                // 清除单据数据以节省存储空间
-                todoUpdate.entity = null;
+                // Entity已强制为null以防止内存泄漏，无需再设置
+                // todoUpdate.Entity = null; // 已由属性setter强制处理
             }
             // 添加消息到列表
             _messages.Add(message);

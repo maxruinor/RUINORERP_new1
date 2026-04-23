@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace RUINORERP.Business.Cache
 {
@@ -49,6 +50,7 @@ namespace RUINORERP.Business.Cache
         private readonly ConcurrentDictionary<string, CacheSyncInfo> _syncMetadata;
         private readonly ILogger<CacheSyncMetadataManager> _logger;
         private readonly object _lock = new object();
+        private static long _globalVersionStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         /// <summary>
         /// 批量同步完成事件
@@ -102,13 +104,11 @@ namespace RUINORERP.Business.Cache
                 newSyncInfo.EstimatedSize = estimatedSize;
                 newSyncInfo.LastUpdateTime = DateTime.Now;
                 
-                // 【优化】：自动递增版本戳，用于冲突检测
-                // 注意：使用毫秒时间戳在极高并发下可能有冲突，当前架构下单服务器足以满足需求
-                // 如需更高可靠性，可考虑使用 Snowflake 算法或 Interlocked.Increment
+                // 【优化】：使用线程安全的全局版本戳递增，确保高并发下不会产生重复
                 if (_syncMetadata.TryGetValue(tableName, out var existingInfo))
                 {
-                    // 基于现有版本戳递增，确保单调递增
-                    newSyncInfo.VersionStamp = existingInfo.VersionStamp + 1;
+                    // 使用 Interlocked.Increment 确保线程安全的版本戳递增
+                    newSyncInfo.VersionStamp = Interlocked.Increment(ref _globalVersionStamp);
                     newSyncInfo.ExpirationTime = existingInfo.ExpirationTime;
                     newSyncInfo.SourceInfo = existingInfo.SourceInfo;
                 }

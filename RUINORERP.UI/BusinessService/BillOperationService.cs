@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using RUINOR.Core; // 添加RevertCommand的命名空间
 using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Common.Extensions; // 添加SetPropertyValue扩展方法
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
@@ -624,124 +625,99 @@ namespace RUINORERP.UI.BusinessService
         }
 
         /// <summary>
-        /// 同步任务状态（增强版）- 同时处理两种状态同步机制
+        /// 同步任务状态（统一版本）- 整合三种同步机制，避免重复调用
         /// </summary>
         private async Task SyncTodoStatusAsync<T>(T entity, string action, MenuItemEnums operationType, object previousStatus, object currentStatus) where T : BaseEntity
         {
             try
             {
-                // 1. 同步到工作台待办事项（传统机制）
-                await SyncToTodoListTraditional(entity, action);
-                
-                // 2. 同步到工作台待办事项（增强机制）- 基于状态变更
-                await SyncToTodoListEnhanced(entity, operationType, previousStatus, currentStatus);
-                
-                // 3. 同步到TodoSyncManager（事件驱动机制）
-                await SyncToTodoSyncManager(entity, operationType, currentStatus);
+                // 创建统一的 TodoUpdate 对象
+                var todoUpdate = CreateTodoUpdate(entity, operationType, previousStatus, currentStatus);
+                todoUpdate.OperationDescription = action;
+                var todoUpdateList = new List<TodoUpdate> { todoUpdate };
+
+                // 1. 同步到工作台待办事项 - 使用 TodoListManager
+                await SyncToTodoListManagerAsync(todoUpdateList);
+
+                // 2. 同步到 TodoSyncManager（事件驱动机制）- 内部已优化
+                await SyncToTodoSyncManagerAsync(todoUpdate);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, $"同步任务状态失败：{action}");
-                // 不阻断主流程
             }
         }
 
         /// <summary>
-        /// 同步到工作台待办事项（传统机制）
+        /// 同步到工作台待办事项管理器
         /// </summary>
-        private async Task SyncToTodoListTraditional<T>(T entity, string action) where T : BaseEntity
+        private async Task SyncToTodoListManagerAsync(List<TodoUpdate> updates)
         {
             try
             {
-                // 使用现有的TodoListManager进行状态同步
                 var todoListManager = Startup.GetFromFac<TodoListManager>();
                 if (todoListManager != null)
                 {
-                    // 创建TodoUpdate对象进行状态同步
-                    var todoUpdate = CreateTodoUpdate(entity, MenuItemEnums.提交, null, null);
-                    todoUpdate.OperationDescription = action;
-                    
-                    // 调用TodoListManager的状态更新方法
-                    todoListManager.ProcessUpdates(new List<TodoUpdate> { todoUpdate });
+                    todoListManager.ProcessUpdates(updates);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, $"传统工作台状态同步失败：{action}");
+                _logger.LogWarning(ex, "工作台待办事项同步失败");
             }
+            await Task.CompletedTask;
         }
 
         /// <summary>
-        /// 同步到工作台待办事项（增强机制）- 基于状态变更
+        /// 同步到 TodoSyncManager（事件驱动机制）
         /// </summary>
-        private async Task SyncToTodoListEnhanced<T>(T entity, MenuItemEnums operationType, object previousStatus, object currentStatus) where T : BaseEntity
+        private async Task SyncToTodoSyncManagerAsync(TodoUpdate todoUpdate)
         {
             try
             {
-                // 获取TodoListManager实例
-                var todoListManager = Startup.GetFromFac<TodoListManager>();
-                if (todoListManager != null)
-                {
-                    // 创建TodoUpdate对象，用于状态同步
-                    var todoUpdate = CreateTodoUpdate(entity, operationType, previousStatus, currentStatus);
-                    
-                    // 调用TodoListManager的状态更新方法（使用现有的ProcessUpdates方法）
-                    todoListManager.ProcessUpdates(new List<TodoUpdate> { todoUpdate });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, $"增强工作台状态同步失败：{operationType}");
-            }
-        }
-
-        /// <summary>
-        /// 同步到TodoSyncManager（事件驱动机制）
-        /// </summary>
-        private async Task SyncToTodoSyncManager<T>(T entity, MenuItemEnums operationType, object currentStatus) where T : BaseEntity
-        {
-            try
-            {
-                // 获取TodoSyncManager实例
                 var todoSyncManager = Startup.GetFromFac<TodoSyncManager>();
                 if (todoSyncManager != null)
                 {
-                    // 创建TodoUpdate对象
-                    var todoUpdate = CreateTodoUpdate(entity, operationType, null, currentStatus);
-                    
-                    // 使用现有的订阅机制进行状态同步
-                    // TodoSyncManager通过订阅机制自动处理状态变更
-                    await Task.CompletedTask;
+                    // 使用 PublishUpdate 进行事件驱动同步
+                    todoSyncManager.PublishUpdate(todoUpdate);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, $"事件驱动状态同步失败：{operationType}");
+                _logger.LogWarning(ex, "事件驱动状态同步失败");
             }
         }
 
         /// <summary>
         /// 创建TodoUpdate对象
+        /// 注意：不传递实体对象以避免序列化大对象导致 OOM
         /// </summary>
         private TodoUpdate CreateTodoUpdate<T>(T entity, MenuItemEnums operationType, object previousStatus, object currentStatus) where T : BaseEntity
         {
-            // 使用TodoUpdate的静态Create方法创建实例
-            var todoUpdate = TodoUpdate.Create(
+            // ✅ 修复：使用CreateSafe方法，确保Entity为null，避免OOM
+            var todoUpdate = TodoUpdate.CreateSafe(
                 GetTodoUpdateType(operationType),
                 GetBusinessTypeFromEntity(entity),
                 entity.PrimaryKeyID,
                 entity.GetPropertyValue("BillNo")?.ToString(),
-                entity,
-                typeof(DataStatus), // 默认状态类型
+                typeof(DataStatus),
                 currentStatus
             );
-
-            // 设置操作描述
+        
             todoUpdate.OperationDescription = GetOperationDescription(operationType);
-            
-            // 设置操作者信息
             todoUpdate.InitiatorUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID.ToString() ?? "0";
-
+                    
+            // 添加关键条件值，避免客户端重新查询
+            if (previousStatus != null)
+            {
+                todoUpdate.ConditionValues["PreviousStatus"] = previousStatus;
+            }
+            if (currentStatus != null)
+            {
+                todoUpdate.ConditionValues["CurrentStatus"] = currentStatus;
+            }
+            todoUpdate.ConditionValues["OperationTime"] = DateTime.Now;
+        
             return todoUpdate;
         }
 
@@ -750,9 +726,21 @@ namespace RUINORERP.UI.BusinessService
         /// </summary>
         private BizType GetBusinessTypeFromEntity<T>(T entity) where T : BaseEntity
         {
-            // 这里需要根据实体类型映射到具体的BizType
-            // 暂时返回默认值，实际应根据业务规则实现
-            return BizType.采购订单; // 示例值，需要根据实际情况调整
+            try
+            {
+                var bizType = EntityMappingHelper.GetBizType(typeof(T));
+                if (bizType == default(BizType))
+                {
+                    _logger.LogWarning("无法获取实体类型对应的BizType: {EntityType}, 使用默认值", typeof(T).Name);
+                    return BizType.采购订单; // 降级为默认值
+                }
+                return bizType;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取BizType失败: {EntityType}", typeof(T).Name);
+                return BizType.采购订单; // 异常时返回默认值
+            }
         }
 
         /// <summary>

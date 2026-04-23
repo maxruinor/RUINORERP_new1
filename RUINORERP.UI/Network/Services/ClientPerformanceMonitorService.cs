@@ -221,32 +221,9 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                // ✅ 提前检查：网络连接状态
-                if (_communicationService == null || _communicationService.ConnectionManager?.IsConnected != true)
+                // ✅ 深度连接状态检查：防止在重连或锁定时无效发送
+                if (!CanUploadData())
                 {
-                    _logger?.LogDebug("网络连接不可用，跳过性能数据上报");
-                    return;
-                }
-
-                // ✅ 提前检查：登录状态（确保用户已完全登录）
-                if (!Program.AppContextData.IsOnline)
-                {
-                    _logger?.LogDebug("用户未登录，跳过性能数据上报");
-                    return;
-                }
-
-                // ✅ 提前检查：Token 有效性（避免进入发送流程后才失败）
-                var appContext = MainForm.Instance?.AppContext;
-                if (appContext == null || string.IsNullOrEmpty(appContext.SessionId))
-                {
-                    _logger?.LogDebug("会话未初始化或 Token 无效，跳过性能数据上报");
-                    return;
-                }
-
-                // ✅ 登录状态检查：如果用户未在线，不上报性能数据
-                if (!appContext.IsOnline)
-                {
-                    _logger?.LogDebug("用户未在线，跳过性能数据上报");
                     return;
                 }
 
@@ -266,16 +243,44 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 // ✅ async void方法的最后一道防线，确保任何未捕获的异常都不会导致程序崩溃
-                // 对于Token相关错误，降低日志级别为Debug
-                if (ex.Message.Contains("授权令牌") || ex.Message.Contains("Token"))
+                // 对于Token相关错误或序列化错误，降低日志级别为Debug
+                if (ex.Message.Contains("授权令牌") || ex.Message.Contains("Token") || ex.Message.Contains("序列化"))
                 {
-                    _logger?.LogDebug("Token未就绪，跳过本次性能数据上报: {Message}", ex.Message);
+                    _logger?.LogDebug("跳过本次性能数据上报: {Message}", ex.Message);
                     return;
                 }
                 
                 // ✅ 其他错误也降低为Warning级别，因为这是辅助功能
                 _logger?.LogWarning(ex, "性能数据上报异常（非关键错误，已静默处理）");
             }
+        }
+
+        /// <summary>
+        /// 判断当前是否允许上报数据
+        /// </summary>
+        private bool CanUploadData()
+        {
+            // 1. 检查通信服务是否存在
+            if (_communicationService == null) return false;
+
+            // 2. 检查基础连接状态
+            if (_communicationService.ConnectionManager?.IsConnected != true) return false;
+
+            // 3. 检查是否正在重连中（避免在重连震荡期发送）
+            if (_communicationService.ConnectionManager.IsReconnecting) return false;
+
+            // 4. 检查应用上下文和登录状态
+            var appContext = MainForm.Instance?.AppContext;
+            if (appContext == null || !appContext.IsOnline || string.IsNullOrEmpty(appContext.SessionId))
+            {
+                return false;
+            }
+
+            // 5. 检查是否处于重连或锁定状态
+            // 使用ConnectionManager的IsReconnecting状态判断
+            if (_communicationService.IsReconnecting) return false;
+
+            return true;
         }
 
         /// <summary>

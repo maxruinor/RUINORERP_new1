@@ -810,15 +810,24 @@ namespace RUINORERP.UI.BaseForm
                         var baseEntity = entity as BaseEntity;
                         var bizStatusType = StateManager.GetStatusType(baseEntity);
                         // 创建TodoUpdate对象 - 使用统一的工厂方法
+                        // 优化：不再传递完整的 entity 对象，防止序列化时内存溢出 (OOM)
                         TodoUpdate update = TodoUpdate.Create(
                             updateType,
                             bizType,
                             billId,
                             billNo,
-                            entity,
+                            null, // 网络传输时不携带完整实体，仅通过 AdditionalData 传递关键信息
                             StateManager.GetStatusType(baseEntity),
                             StateManager.GetBusinessStatus(baseEntity, bizStatusType)
                         );
+
+                        // 将关键业务数据存入 AdditionalData 以便轻量级同步
+                        update.AdditionalData["BillNo"] = billNo;
+                        update.AdditionalData["BizType"] = bizType.ToString();
+                        if (baseEntity != null)
+                        {
+                            update.AdditionalData["PrimaryKeyID"] = baseEntity.PrimaryKeyID;
+                        }
 
                         // 操作描述不再在这里设置，由MessageData.CreateTodoUpdateMessage方法智能生成
 

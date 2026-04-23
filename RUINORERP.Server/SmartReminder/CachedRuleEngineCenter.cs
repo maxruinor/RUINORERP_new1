@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model.Context;
 using RUINORERP.Model.ReminderModel;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Server.SmartReminder.InvReminder;
 using StackExchange.Redis;
@@ -13,40 +14,39 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Server.SmartReminder
 {
-    public class CachedRuleEngineCenter(IMemoryCache cache,
-        ILogger<SmartReminderMonitor> logger,
-        ApplicationContext _AppContextData,
-        IUnitOfWorkManage unitOfWorkManage) : RuleEngineCenter
+    /// <summary>
+    /// 带缓存的规则引擎中心
+    /// </summary>
+    public class CachedRuleEngineCenter : RuleEngineCenter
     {
-        private readonly IMemoryCache _cache = cache;
-        private readonly ApplicationContext _appContext = _AppContextData;
-        private readonly ILogger<SmartReminderMonitor> _logger = logger;
+        private readonly IMemoryCache _cache;
+        private readonly IDatabase _redis;
+        private readonly ILogger<CachedRuleEngineCenter> _logger;
 
+        public CachedRuleEngineCenter(
+            IMemoryCache cache,
+            IConnectionMultiplexer redis, // 注入 Redis 连接管理器
+            ILogger<CachedRuleEngineCenter> logger) 
+            : base(logger)
+        {
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _redis = redis?.GetDatabase() ?? throw new ArgumentNullException(nameof(redis));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        /// <summary>
+        /// 评估规则（带内存缓存）
+        /// </summary>
         public override async Task<bool> EvaluateAsync(IReminderRule rule, object context)
         {
-            var cacheKey = $"{rule.RuleEngineType}_{rule.RuleId}";
+            var cacheKey = $"rule_eval_{rule.RuleId}";
             return await _cache.GetOrCreateAsync(cacheKey, async entry =>
             {
                 entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-                entry.SetSize(1); // ✅ 添加SetSize，确保缓存项被计入SizeLimit
+                entry.SetSize(1);
+                _logger.LogDebug("从内存缓存获取或计算规则结果: {RuleId}", rule.RuleId);
                 return await base.EvaluateAsync(rule, context);
             });
         }
-
-        public override async Task<bool> EvaluateAsync(IReminderRule rule, object context)
-        {
-            //var redis = _redis.GetDatabase();
-            var cacheKey = $"rule:{rule.RuleId}:eval";
-
-            var cachedResult = await redis.StringGetAsync(cacheKey);
-            if (cachedResult.HasValue)
-                return (bool)cachedResult;
-
-            var result = await base.EvaluateAsync(rule, context);
-            await redis.StringSetAsync(cacheKey, result, expiry: TimeSpan.FromMinutes(5));
-            return result;
-        }
-
-
     }
 }

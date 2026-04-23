@@ -1668,7 +1668,7 @@ namespace RUINORERP.Server.Controls
         /// 推送系统配置到选中客户端
         /// 发送 SystemGlobalConfig 和 GlobalValidatorConfig 两个配置
         /// </summary>
-        private void tsbtn推送系统配置_Click(object sender, EventArgs e)
+        private async void tsbtn推送系统配置_Click(object sender, EventArgs e)
         {
             var selectedSessions = SelectSessions();
             if (selectedSessions.Count == 0)

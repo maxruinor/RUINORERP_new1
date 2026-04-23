@@ -131,85 +131,82 @@ namespace RUINORERP.Server.Network.Services
         /// 广播锁定状态变化给所有客户端
         /// </summary>
         /// <param name="lockedDocument">锁定文档信息</param>
-        public async Task BroadcastLockStatusAsync(LockInfo lockedDocument)
+        public Task BroadcastLockStatusAsync(LockInfo lockedDocument)
         {
             var lockedDocuments = new List<LockInfo> { lockedDocument };
-            await BroadcastLockStatusAsync(lockedDocuments);
+            BroadcastLockStatusAsync(lockedDocuments);
+            return Task.CompletedTask;
         }
 
         /// <summary>
         /// 广播锁定状态变化给所有客户端（与BroadcastLockStatusAsync相同功能）
         /// </summary>
         /// <param name="lockedDocuments">锁定文档信息列表</param>
-        public async Task BroadcastLockStatusToAllClientsAsync(IEnumerable<LockInfo> lockedDocuments)
+        public Task BroadcastLockStatusToAllClientsAsync(IEnumerable<LockInfo> lockedDocuments)
         {
-            await BroadcastLockStatusAsync(lockedDocuments);
+            BroadcastLockStatusAsync(lockedDocuments);
+            return Task.CompletedTask;
         }
 
         /// <summary>
-        /// 广播锁定状态变化到所有客户端
+        /// 广播锁定状态变化到所有客户端（Fire-and-Forget模式）
+        /// ⚠️ 优化：完全异步，不阻塞调用线程，适用于解锁等关键路径
         /// </summary>
         /// <param name="lockedDocuments">锁定的单据信息列表</param>
-        public async Task BroadcastLockStatusAsync(IEnumerable<LockInfo> lockedDocuments, bool NeedReponse = false)
+        /// <param name="NeedReponse">是否需要响应（已废弃，始终为false）</param>
+        public Task BroadcastLockStatusAsync(IEnumerable<LockInfo> lockedDocuments, bool NeedReponse = false)
         {
-            try
+            // Fire-and-Forget：完全异步执行，不等待结果
+            _ = Task.Run(async () =>
             {
-                // 创建广播数据
-                var broadcastData = new LockRequest
+                try
                 {
-                    LockedDocuments = lockedDocuments?.ToList() ?? new List<LockInfo>(),
-                    Timestamp = DateTime.UtcNow
-                };
+                    // 创建广播数据
+                    var broadcastData = new LockRequest
+                    {
+                        LockedDocuments = lockedDocuments?.ToList() ?? new List<LockInfo>(),
+                        Timestamp = DateTime.UtcNow
+                    };
 
-                // 获取所有用户会话
-                var sessions = _sessionService.GetAllUserSessions();
-                
-                if (sessions == null || !sessions.Any())
-                    return;
+                    // 获取所有用户会话
+                    var sessions = _sessionService.GetAllUserSessions()
+                        .OfType<SessionInfo>()
+                        .Where(s => s.IsConnected)  // 只发送给已连接的会话
+                        .ToList();
+                    
+                    if (sessions.Count == 0)
+                    {
+                        _logger.LogDebug("没有可用的会话，跳过广播");
+                        return;
+                    }
 
-                // ✅ P1-1修复：使用并行发送，限制并发度
-                int successCount = 0;
-                int totalCount = sessions.Count();
-                var maxConcurrency = Math.Min(totalCount, 20); // 最多20个并发
-                var semaphore = new SemaphoreSlim(maxConcurrency);
-                var tasks = new List<Task>();
+                    int successCount = 0;
+                    int totalCount = sessions.Count;
+                    var maxConcurrency = Math.Min(totalCount, 10); // 限制并发度至10
+                    var semaphore = new SemaphoreSlim(maxConcurrency);
+                    var tasks = new List<Task>();
 
-                foreach (var session in sessions)
-                {
-                    if (session is SessionInfo sessionInfo)
+                    foreach (var session in sessions)
                     {
                         tasks.Add(Task.Run(async () =>
                         {
                             await semaphore.WaitAsync();
                             try
                             {
-                                if (NeedReponse)
-                                {
-                                    var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                                        session.SessionID,
-                                        LockCommands.BroadcastLockStatus,
-                                        broadcastData
-                                    );
-
-                                    if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
-                                    {
-                                        Interlocked.Increment(ref successCount);
-                                    }
-                                }
-                                else
-                                {
-                                    await _sessionService.SendCommandAsync(
-                                        session.SessionID, 
-                                        LockCommands.BroadcastLockStatus, 
-                                        broadcastData
-                                    );
-                                    // 无响应模式下，假设发送成功即视为成功
-                                    Interlocked.Increment(ref successCount);
-                                }
+                                // 使用无响应模式，超时时间2秒
+                                await _sessionService.SendCommandAsync(
+                                    session.SessionID, 
+                                    LockCommands.BroadcastLockStatus, 
+                                    broadcastData
+                                ).WaitAsync(TimeSpan.FromSeconds(2));
+                                
+                                Interlocked.Increment(ref successCount);
+                                _metricsCollector.RecordBroadcast(true);
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogWarning(ex, "向会话 {SessionId} 广播锁状态失败", session.SessionID);
+                                _logger.LogDebug(ex, "向会话 {SessionId} 广播锁状态失败", session.SessionID);
+                                _metricsCollector.RecordBroadcast(false);
                             }
                             finally
                             {
@@ -217,23 +214,33 @@ namespace RUINORERP.Server.Network.Services
                             }
                         }));
                     }
-                }
 
-                // 等待所有任务完成（带超时）
-                if (tasks.Count > 0)
-                {
-                    await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(10));
+                    // 不等待完成，让它们在后台执行
+                    // 添加延续任务记录最终结果
+                    _ = Task.WhenAll(tasks).ContinueWith(t =>
+                    {
+                        if (t.IsFaulted)
+                        {
+                            _logger.LogDebug("部分广播任务失败: {Exception}", t.Exception?.GetBaseException().Message);
+                        }
+                        
+                        // 记录最终统计
+                        _metricsCollector.RecordBroadcast(successCount == totalCount);
+                        
+                        if (successCount < totalCount)
+                        {
+                            _logger.LogDebug("广播锁状态完成: 成功{Success}/{Total}", successCount, totalCount);
+                        }
+                    }, TaskContinuationOptions.ExecuteSynchronously);
                 }
-                
-                // ✅ 记录广播统计
-                _metricsCollector.RecordBroadcast(successCount == totalCount);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"广播锁定状态变化到所有客户端时发生异常: {ex.Message}");
-                // ✅ 记录广播失败
-                _metricsCollector.RecordBroadcast(false);
-            }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "广播锁定状态变化到所有客户端时发生异常");
+                    _metricsCollector.RecordBroadcast(false);
+                }
+            });
+            
+            return Task.CompletedTask;
         }
 
 
@@ -462,17 +469,7 @@ namespace RUINORERP.Server.Network.Services
 
                     // 🔧 关键修复：异步广播，不阻塞命令处理线程
                     // 广播失败不影响解锁操作的结果，避免级联超时
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await BroadcastLockStatusAsync(existingLock);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "广播锁状态更新失败（不影响解锁结果）: BillID={BillId}", lockInfo.BillID);
-                        }
-                    });
+                    BroadcastLockStatusAsync(existingLock);
 
                     return new LockResponse
                     {
@@ -651,20 +648,9 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 // 🔧 关键修复：合并广播，只发一次而不是逐个广播
-                // 之前每个锁都await BroadcastLockStatusAsync，N个锁会阻塞N次
                 if (broadcastList.Count > 0)
                 {
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await BroadcastLockStatusAsync(broadcastList);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "批量广播锁状态更新失败: SessionId={SessionId}", sessionId);
-                        }
-                    });
+                    BroadcastLockStatusAsync(broadcastList);
                 }
 
                 return releasedCount;
@@ -804,17 +790,7 @@ namespace RUINORERP.Server.Network.Services
             // 🔧 关键修复：合并广播，避免逐个await阻塞清理线程
             if (broadcastList.Count > 0)
             {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await BroadcastLockStatusAsync(broadcastList);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "清理过期锁后广播状态更新失败");
-                    }
-                });
+                BroadcastLockStatusAsync(broadcastList);
             }
 
             if (expiredLocks.Count > 0)
@@ -1366,10 +1342,22 @@ namespace RUINORERP.Server.Network.Services
                 var validation = ValidateUnlockRequest(billId, userId, forceUnlock);
                 if (!validation.IsValid)
                 {
+                    // 幂等性支持：单据未被锁定也视为成功
+                    if (validation.ErrorMessage?.Contains("未被锁定") == true || 
+                        validation.ErrorMessage?.Contains("不存在") == true)
+                    {
+                        _logger.LogDebug("{OperationType} - 单据 {BillId} 不存在或未被锁定，视为成功（幂等）", 
+                            operationType, billId);
+                        return new LockResponse
+                        {
+                            IsSuccess = true,
+                            Message = $"{operationType}成功（单据未被锁定）",
+                            LockInfo = new LockInfo { BillID = billId, IsLocked = false }
+                        };
+                    }
                     return CreateErrorResponse(new LockInfo { BillID = billId }, validation.ErrorMessage);
                 }
 
-                // 记录原锁定用户信息（用于强制解锁的审计）
                 long originalUserId = validation.LockInfo.LockedUserId;
 
                 if (forceUnlock)
@@ -1378,30 +1366,14 @@ namespace RUINORERP.Server.Network.Services
                         billId, originalUserId, userId);
                 }
 
-                // 执行解锁操作
                 if (_documentLocks.TryRemove(billId, out _))
                 {
                     var message = forceUnlock ? "强制解锁成功" : "解锁成功";
 
-                    if (forceUnlock)
-                    {
-                     //   _logger.LogInformation("{OperationType}完成: 单据ID={BillId}", operationType, billId);
-                    }
                     validation.LockInfo.IsLocked = false;
 
-                    // 🔧 关键修复：异步广播，不阻塞命令处理线程
-                    // 解锁操作必须立即返回响应给客户端，广播延迟或失败不应阻塞解锁流程
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await BroadcastLockStatusAsync(validation.LockInfo);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "广播锁状态更新失败（不影响解锁结果）: BillID={BillId}", billId);
-                        }
-                    });
+                    // 异步广播，不阻塞解锁流程
+                    BroadcastLockStatusAsync(validation.LockInfo);
 
                     return new LockResponse
                     {
@@ -1411,7 +1383,15 @@ namespace RUINORERP.Server.Network.Services
                     };
                 }
 
-                return CreateErrorResponse(validation.LockInfo, $"{operationType}失败，无法移除锁");
+                // 幂等性支持：并发情况下锁已被其他线程移除，也视为成功
+                _logger.LogDebug("{OperationType} - 单据 {BillId} 锁已被移除（并发），视为成功（幂等）", 
+                    operationType, billId);
+                return new LockResponse
+                {
+                    IsSuccess = true,
+                    Message = $"{operationType}成功（锁已被移除）",
+                    LockInfo = new LockInfo { BillID = billId, IsLocked = false }
+                };
             }
             catch (Exception ex)
             {
@@ -1442,7 +1422,6 @@ namespace RUINORERP.Server.Network.Services
         /// <returns>锁定结果，包含成功状态和详细信息</returns>
         public async Task<LockResponse> TryLockDocumentAsync(LockInfo lockInfo)
         {
-            // 边界条件检查：验证基本参数
             if (lockInfo == null)
             {
                 return CreateErrorResponse(new LockInfo { BillID = 0 }, "锁定信息为空");
@@ -1463,150 +1442,155 @@ namespace RUINORERP.Server.Network.Services
                 return CreateErrorResponse(lockInfo, "会话ID为空");
             }
 
-            try
-            {
-                // 检查是否已被锁定
-                if (_documentLocks.TryGetValue(lockInfo.BillID, out var existingLock))
-                {
-                    // 边界条件：检查锁是否已过期
-                    if (!existingLock.IsExpired)
-                    {
-                        // 锁仍然有效
-                        _logger.LogDebug("单据 {BillId} 已被用户 {UserId} 在时间 {LockTime} 锁定",
-                            lockInfo.BillID, existingLock.LockedUserId, existingLock.LockTime);
+            const int maxRetryAttempts = 3;
+            const int retryDelayMs = 50;
 
-                        // 边界条件：检查是否是同一用户同一会话的重复锁定请求
-                        if (existingLock.LockedUserId == lockInfo.LockedUserId &&
-                            existingLock.SessionId == lockInfo.SessionId)
+            for (int attempt = 0; attempt < maxRetryAttempts; attempt++)
+            {
+                try
+                {
+                    if (_documentLocks.TryGetValue(lockInfo.BillID, out var existingLock))
+                    {
+                        if (!existingLock.IsExpired)
                         {
-                            // 同一用户的重复锁定请求，返回成功（幂等性）
-                            _logger.LogDebug("单据 {BillId} 已被当前用户锁定，返回成功（幂等）", lockInfo.BillID);
-                        
-                            // ✅ 刷新锁的过期时间（基于当前时间重新计算30分钟）
-                            existingLock.RefreshExpireTime((int)TimeSpan.FromMinutes(30).TotalMilliseconds);
-                        
+                            _logger.LogDebug("单据 {BillId} 已被用户 {UserId} 在时间 {LockTime} 锁定",
+                                lockInfo.BillID, existingLock.LockedUserId, existingLock.LockTime);
+
+                            if (existingLock.LockedUserId == lockInfo.LockedUserId &&
+                                existingLock.SessionId == lockInfo.SessionId)
+                            {
+                                _logger.LogDebug("单据 {BillId} 已被当前用户锁定，返回成功（幂等）", lockInfo.BillID);
+                                existingLock.RefreshExpireTime((int)TimeSpan.FromMinutes(30).TotalMilliseconds);
+                                return new LockResponse
+                                {
+                                    IsSuccess = true,
+                                    Message = "锁定成功（已持有锁）",
+                                    LockInfo = existingLock
+                                };
+                            }
+
                             return new LockResponse
                             {
-                                IsSuccess = true,
-                                Message = "锁定成功（已持有锁）",
+                                IsSuccess = false,
+                                Message = $"单据已被用户 {existingLock.LockedUserName} (ID: {existingLock.LockedUserId}) 锁定",
                                 LockInfo = existingLock
                             };
                         }
+                        else
+                        {
+                            _documentLocks.TryRemove(lockInfo.BillID, out _);
+                            _logger.LogDebug("清理过期的锁 {BillId}", lockInfo.BillID);
+                        }
+                    }
 
-                        // 其他用户的锁，返回失败
+                    var expireTime = lockInfo.ExpireTime;
+                    if (expireTime.HasValue && expireTime.Value <= DateTime.Now)
+                    {
+                        _logger.LogWarning("锁定过期时间无效: 单据ID={BillId}, 过期时间={ExpireTime}",
+                            lockInfo.BillID, expireTime.Value);
+                        expireTime = DateTime.Now.AddMinutes(30);
+                    }
+
+                    var now = DateTime.Now;
+                    var serverLockInfo = new LockInfo
+                    {
+                        LockKey = lockInfo.LockKey ?? $"lock:document:{lockInfo.BillID}",
+                        BillID = lockInfo.BillID,
+                        BillNo = lockInfo.BillNo ?? string.Empty,
+                        LockedUserId = lockInfo.LockedUserId,
+                        LockedUserName = lockInfo.LockedUserName ?? string.Empty,
+                        LockTime = now,
+                        ExpireTime = expireTime ?? now.AddMinutes(30),
+                        Remark = lockInfo.Remark ?? string.Empty,
+                        MenuID = lockInfo.MenuID,
+                        BizName = lockInfo.BizName ?? string.Empty,
+                        MenuName = lockInfo.MenuName ?? string.Empty,
+                        bizType = lockInfo.bizType,
+                        SessionId = lockInfo.SessionId,
+                        IsLocked = true,
+                        LastHeartbeat = now,
+                        LastUpdateTime = now,
+                        HeartbeatCount = 1,
+                        Type = lockInfo.Type,
+                        Duration = (long)(((expireTime ?? now.AddMinutes(30)) - now).TotalMilliseconds)
+                    };
+
+                    if (string.IsNullOrEmpty(serverLockInfo.LockKey))
+                    {
+                        serverLockInfo.SetLockKey();
+                    }
+
+                    if (_documentLocks.TryAdd(lockInfo.BillID, serverLockInfo))
+                    {
+                        _metricsCollector.RecordLockAcquired();
+                        
+                        // 异步广播，不阻塞锁定流程
+                        BroadcastLockStatusAsync(serverLockInfo);
+
+                        _logger.LogDebug("单据 {BillId} 锁定成功: 用户={UserId}, 会话={SessionId}, 过期时间={ExpireTime}",
+                            lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId, serverLockInfo.ExpireTime);
+
                         return new LockResponse
                         {
-                            IsSuccess = false,
-                            Message = $"单据已被用户 {existingLock.LockedUserName} (ID: {existingLock.LockedUserId}) 锁定",
-                            LockInfo = existingLock
+                            IsSuccess = true,
+                            Message = "锁定成功",
+                            LockInfo = serverLockInfo
                         };
                     }
                     else
                     {
-                        // 锁已过期，清理
-                        _documentLocks.TryRemove(lockInfo.BillID, out _);
-                        _logger.LogDebug("清理过期的锁 {BillId}", lockInfo.BillID);
+                        if (_documentLocks.TryGetValue(lockInfo.BillID, out var newExistingLock))
+                        {
+                            _logger.LogDebug("单据 {BillId} 锁定失败（并发）: 已被用户 {UserId} 锁定",
+                                lockInfo.BillID, newExistingLock.LockedUserId);
+
+                            _metricsCollector.RecordLockConflict();
+
+                            if (newExistingLock.LockedUserId == lockInfo.LockedUserId &&
+                                newExistingLock.SessionId == lockInfo.SessionId)
+                            {
+                                _logger.LogDebug("单据 {BillId} 并发锁定请求为同一用户，刷新过期时间", lockInfo.BillID);
+                                newExistingLock.RefreshExpireTime((int)TimeSpan.FromMinutes(30).TotalMilliseconds);
+                                return new LockResponse
+                                {
+                                    IsSuccess = true,
+                                    Message = "锁定成功（已持有锁）",
+                                    LockInfo = newExistingLock
+                                };
+                            }
+
+                            return new LockResponse
+                            {
+                                IsSuccess = false,
+                                Message = $"单据已被用户 {newExistingLock.LockedUserName} 锁定（并发冲突）",
+                                LockInfo = newExistingLock
+                            };
+                        }
+
+                        if (attempt < maxRetryAttempts - 1)
+                        {
+                            await Task.Delay(retryDelayMs);
+                            continue;
+                        }
+
+                        return CreateErrorResponse(lockInfo, "锁定失败，请重试");
                     }
                 }
-
-                // 边界条件：验证过期时间设置
-                var expireTime = lockInfo.ExpireTime;
-                if (expireTime.HasValue && expireTime.Value <= DateTime.Now)
+                catch (Exception ex)
                 {
-                    _logger.LogWarning("锁定过期时间无效: 单据ID={BillId}, 过期时间={ExpireTime}",
-                        lockInfo.BillID, expireTime.Value);
-                    expireTime = DateTime.Now.AddMinutes(30); // 设置默认30分钟过期
-                }
-
-                // 创建新锁
-                var now = DateTime.Now;
-                var serverLockInfo = new LockInfo
-                {
-                    LockKey = lockInfo.LockKey ?? $"lock:document:{lockInfo.BillID}",
-                    BillID = lockInfo.BillID,
-                    BillNo = lockInfo.BillNo ?? string.Empty,
-                    LockedUserId = lockInfo.LockedUserId,
-                    LockedUserName = lockInfo.LockedUserName ?? string.Empty,
-                    LockTime = now, // 使用当前时间作为锁定时间
-                    ExpireTime = expireTime ?? now.AddMinutes(30),
-                    Remark = lockInfo.Remark ?? string.Empty,
-                    MenuID = lockInfo.MenuID,
-                    BizName = lockInfo.BizName ?? string.Empty,
-                    MenuName = lockInfo.MenuName ?? string.Empty,
-                    bizType = lockInfo.bizType,
-                    SessionId = lockInfo.SessionId,
-                    IsLocked = true,
-                    LastHeartbeat = now, // 使用当前时间作为最后心跳时间
-                    LastUpdateTime = now, // 使用当前时间作为最后更新时间
-                    HeartbeatCount = 1, // 重置心跳次数为1
-                    Type = lockInfo.Type,
-                    Duration = (long)(((expireTime ?? now.AddMinutes(30)) - now).TotalMilliseconds)
-                };
-
-                // 边界条件：确保LockKey已设置
-                if (string.IsNullOrEmpty(serverLockInfo.LockKey))
-                {
-                    serverLockInfo.SetLockKey();
-                }
-
-                // 添加到锁集合（原子操作，确保并发安全）
-                if (_documentLocks.TryAdd(lockInfo.BillID, serverLockInfo))
-                {
-                    // ✅ 记录锁获取成功
-                    _metricsCollector.RecordLockAcquired();
+                    _logger.LogError(ex, "锁定处理异常 (尝试 {Attempt}/{MaxAttempts}): BillId={BillId}", 
+                        attempt + 1, maxRetryAttempts, lockInfo.BillID);
                     
-                    // 🔧 关键修复：异步广播，不阻塞命令处理线程
-                    // 锁定操作必须立即返回响应给客户端，广播延迟或失败不应阻塞锁定流程
-                    _ = Task.Run(async () =>
+                    if (attempt >= maxRetryAttempts - 1)
                     {
-                        try
-                        {
-                            await BroadcastLockStatusAsync(serverLockInfo);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "广播锁状态更新失败（不影响锁定结果）: BillID={BillId}", lockInfo.BillID);
-                        }
-                    });
-
-                    _logger.LogDebug("单据 {BillId} 锁定成功: 用户={UserId}, 会话={SessionId}, 过期时间={ExpireTime}",
-                        lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId, serverLockInfo.ExpireTime);
-
-                    LockResponse lockResponse = new LockResponse();
-                    lockResponse.IsSuccess = true;
-                    lockResponse.Message = "锁定成功";
-                    lockResponse.LockInfo = serverLockInfo;
-
-                    return lockResponse;
-                }
-                else
-                {
-                    // 并发情况下可能被其他线程锁定，重新检查
-                    if (_documentLocks.TryGetValue(lockInfo.BillID, out var newExistingLock))
-                    {
-                        _logger.LogDebug("单据 {BillId} 锁定失败（并发）: 已被用户 {UserId} 锁定",
-                            lockInfo.BillID, newExistingLock.LockedUserId);
-
-                        // ✅ 记录锁冲突
-                        _metricsCollector.RecordLockConflict();
-
-                        return new LockResponse
-                        {
-                            IsSuccess = false,
-                            Message = $"单据已被用户 {newExistingLock.LockedUserName} 锁定（并发冲突）",
-                            LockInfo = newExistingLock
-                        };
+                        return CreateErrorResponse(lockInfo, $"锁定异常: {ex.Message}");
                     }
-
-                    // 边界条件：未知错误
-                    return CreateErrorResponse(lockInfo, "锁定失败，请重试");
+                    
+                    await Task.Delay(retryDelayMs);
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "获取锁 {BillId} 时发生异常", lockInfo.BillID);
-                return CreateErrorResponse(lockInfo, $"锁定异常: {ex.Message}");
-            }
+
+            return CreateErrorResponse(lockInfo, "锁定失败，请重试");
         }
 
         /// <summary>

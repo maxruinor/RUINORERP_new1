@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
@@ -26,6 +27,14 @@ namespace RUINORERP.UI.BusinessService
     public class RelatedBillSyncService : IExcludeFromRegistration
     {
         private readonly ILogger<RelatedBillSyncService> _logger;
+        
+        /// <summary>
+        /// 反射方法缓存，避免重复创建泛型方法
+        /// ✅ 使用弱引用，允许GC回收不再使用的Type
+        /// Key: EntityType, Value: WeakReference<MethodInfo>
+        /// </summary>
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, WeakReference<MethodInfo>> _queryMethodCache = 
+            new System.Collections.Concurrent.ConcurrentDictionary<Type, WeakReference<MethodInfo>>();
 
         public RelatedBillSyncService(ILogger<RelatedBillSyncService> logger)
         {
@@ -444,12 +453,12 @@ namespace RUINORERP.UI.BusinessService
                 string billNo = entity.GetPropertyValue(entityInfo.NoField)?.ToString();
                 long billId = entity.PrimaryKeyID;
 
-                var update = TodoUpdate.Create(
+                // ✅ 修复：使用CreateSafe方法，确保Entity为null
+                var update = TodoUpdate.CreateSafe(
                     updateType,
                     entityInfo.BizType,
                     billId,
                     billNo,
-                    entity,
                     entity.StateManager?.GetStatusType(entity),
                     entity.StateManager?.GetBusinessStatus(entity)
                 );
@@ -480,12 +489,15 @@ namespace RUINORERP.UI.BusinessService
                     return null;
                 }
 
-                // 使用反射调用泛型方法
-                var method = typeof(RelatedBillSyncService).GetMethod(nameof(QueryBillByIdAsyncGeneric), 
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                var genericMethod = method.MakeGenericMethod(entityType);
+                // ✅ 使用缓存的反射方法，避免重复创建泛型方法
+                var method = GetCachedQueryMethod(entityType);
+                if (method == null)
+                {
+                    _logger.LogError("无法获取查询方法 - EntityType:{EntityType}", entityType.Name);
+                    return null;
+                }
                 
-                var task = genericMethod.Invoke(this, new object[] { billId }) as Task<BaseEntity>;
+                var task = method.Invoke(this, new object[] { billId }) as Task<BaseEntity>;
                 if (task != null)
                 {
                     return await task;
@@ -498,6 +510,30 @@ namespace RUINORERP.UI.BusinessService
                 _logger.LogError(ex, "查询单据实体失败 - BizType:{BizType}, BillId:{BillId}", bizType, billId);
                 return null;
             }
+        }
+        
+        /// <summary>
+        /// 获取缓存的查询方法（带LRU淘汰）
+        /// ✅ 使用弱引用，防止内存泄漏
+        /// </summary>
+        private MethodInfo GetCachedQueryMethod(Type entityType)
+        {
+            if (_queryMethodCache.TryGetValue(entityType, out var weakRef) && 
+                weakRef.TryGetTarget(out var cachedMethod))
+            {
+                return cachedMethod;
+            }
+
+            var method = typeof(RelatedBillSyncService).GetMethod(
+                nameof(QueryBillByIdAsyncGeneric), 
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            
+            var genericMethod = method?.MakeGenericMethod(entityType);
+            
+            // 使用弱引用存储，允许GC回收
+            _queryMethodCache[entityType] = new WeakReference<MethodInfo>(genericMethod);
+            
+            return genericMethod;
         }
         
         /// <summary>

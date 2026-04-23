@@ -82,7 +82,6 @@
     <Compile Remove="Network\Services\UnifiedUserService.cs" />
     <Compile Remove="Services\Cache\CacheService.cs" />
     <Compile Remove="Services\Cache\ICacheService.cs" />
-    <Compile Remove="SmartReminder\CachedRuleEngineCenter.cs" />
     <Compile Remove="SmartReminder\InvReminder\InventoryAlertWorkflow.cs" />
     <Compile Remove="Startup - 复制.cs" />
     <Compile Remove="UpgradedStartupExample.cs" />

@@ -66,15 +66,15 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                     frmMainNew.Instance.PrintInfoLog($"每日任务工作流初始化，下次执行时间：{executionTime:yyyy-MM-dd HH:mm:ss}");
                     return ExecutionResult.Next();
                 })
-                .Recur(data => 
-                {
-                    var workflowData = (DailyTaskData)data;
-                    var nextTime = workflowData.NextExecutionTime;
-                    var diff = (nextTime - DateTime.Now).TotalMilliseconds;
-                    // 确保返回正数毫秒数，最小间隔 1 分钟防止死循环
-                    return diff > 0 ? diff : 60000; 
-                }, 
-                data => ((DailyTaskData)data).ShouldContinue)
+                .Recur(
+                    data => 
+                        TimeSpan.FromMilliseconds(
+                            Math.Max(
+                                (((DailyTaskData)data).NextExecutionTime - DateTime.Now).TotalMilliseconds,
+                                60000
+                            )
+                        ),
+                    data => ((DailyTaskData)data).ShouldContinue)
                 .Do(recur => recur
                     .StartWith<DailyTaskStep>()
                     .Then(context =>
@@ -92,7 +92,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                         frmMainNew.Instance.PrintInfoLog($"每日任务执行完成，执行次数：{data.ExecutionCount}, 下次执行时间：{executionTime:yyyy-MM-dd HH:mm:ss}");
                         return ExecutionResult.Next();
                     })
-                    .OnError(WorkflowErrorHandling.Continue))
+                    .OnError(WorkflowErrorHandling.Retry)) // 修复点：使用 Retry 替代 Continue
                 .Then(context =>
                 {
                     var data = (DailyTaskData)context.Workflow.Data;
@@ -155,6 +155,9 @@ namespace RUINORERP.Server.Workflow.WFScheduled
         }
     }
 }
+
+
+
 
 
 

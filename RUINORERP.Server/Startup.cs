@@ -80,6 +80,8 @@ using RUINORERP.Server.Services.BizCode;
 using RUINORERP.Business.BNR;
 using RUINORERP.Business.Config;
 using RUINORERP.Server.Comm;
+using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Model.BusinessImage;
 
 namespace RUINORERP.Server
 {
@@ -398,6 +400,9 @@ namespace RUINORERP.Server
             builder.RegisterType<PerformanceDataStorageService>()
                 .AsSelf()
                 .SingleInstance();
+
+            // 注册内存分布统计服务模块（使用Module方式统一管理）
+            builder.RegisterModule<MemoryDistributionModule>();
             #endregion
 
             // 将Microsoft.Extensions.DependencyInjection服务注入到Autofac容器中
@@ -666,9 +671,6 @@ namespace RUINORERP.Server
 
             // 注册内存监控服务
             services.AddSingleton<MemoryMonitoringService>();
-
-            // 注册内存分布统计服务
-            services.AddSingleton<MemoryDistributionService>();
 
         }
         

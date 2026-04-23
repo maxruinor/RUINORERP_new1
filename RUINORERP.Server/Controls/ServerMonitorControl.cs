@@ -47,6 +47,13 @@ namespace RUINORERP.Server.Controls
         private const int FAST_REFRESH_COUNT = 10; // 前10次快速刷新
         private const int SLOW_REFRESH_INTERVAL = 5000; // 慢速刷新间隔(5秒)
         private const int FAST_REFRESH_INTERVAL = 1000; // 快速刷新间隔(1秒)
+        
+        // PerformanceCounter实例复用 - 避免资源泄漏
+        private System.Diagnostics.PerformanceCounter _cpuCounter;
+        private System.Diagnostics.PerformanceCounter _diskReadCounter;
+        private System.Diagnostics.PerformanceCounter _diskWriteCounter;
+        private DateTime _lastCpuCheckTime = DateTime.MinValue;
+        private float _lastCpuUsage = 0;
 
         /// <summary>
         /// 创建服务器监控控件
@@ -72,6 +79,26 @@ namespace RUINORERP.Server.Controls
             // ✅ 内存分布统计服务
             _memoryDistributionService = Startup.GetFromFac<MemoryDistributionService>();
             
+            // 诊断：检查服务是否成功获取
+            if (_memoryDistributionService == null)
+            {
+                _logger.LogError("❌ MemoryDistributionService 获取失败，返回 null");
+            }
+            else
+            {
+                _logger.LogInformation("✅ MemoryDistributionService 获取成功");
+                // 输出依赖注入状态
+                try
+                {
+                    var depStatus = _memoryDistributionService.GetDependencyStatus();
+                    _logger.LogDebug("MemoryDistributionService 依赖状态:\n{Status}", depStatus);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "获取依赖状态时出错");
+                }
+            }
+            
             // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
             // 初始化定时器
@@ -87,6 +114,26 @@ namespace RUINORERP.Server.Controls
 
             // 立即启动定时器刷新数据（不依赖Load事件）
             _refreshTimer.Start();
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            if (disposing)
+            {
+                _cpuCounter?.Dispose();
+                _diskReadCounter?.Dispose();
+                _diskWriteCounter?.Dispose();
+                _refreshTimer?.Stop();
+                _refreshTimer?.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -115,6 +162,26 @@ namespace RUINORERP.Server.Controls
             
             // ✅ 内存分布统计服务
             _memoryDistributionService = Startup.GetFromFac<MemoryDistributionService>();
+            
+            // 诊断：检查服务是否成功获取
+            if (_memoryDistributionService == null)
+            {
+                _logger.LogError("❌ MemoryDistributionService 获取失败，返回 null");
+            }
+            else
+            {
+                _logger.LogInformation("✅ MemoryDistributionService 获取成功");
+                // 输出依赖注入状态
+                try
+                {
+                    var depStatus = _memoryDistributionService.GetDependencyStatus();
+                    _logger.LogDebug("MemoryDistributionService 依赖状态:\n{Status}", depStatus);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "获取依赖状态时出错");
+                }
+            }
             
             // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
@@ -247,27 +314,20 @@ namespace RUINORERP.Server.Controls
             // 获取系统CPU使用率，如果使用率超过70%，降低刷新频率
             try
             {
-                // 使用PerformanceCounter获取CPU使用率
-                using (var cpuCounter = new System.Diagnostics.PerformanceCounter("Processor", "% Processor Time", "_Total"))
-                {
-                    // 首次采样返回0，需要再次采样
-                    cpuCounter.NextValue();
-                    System.Threading.Thread.Sleep(100);
-                    float cpuUsage = cpuCounter.NextValue();
+                float cpuUsage = GetCpuUsage();
 
-                    // 根据CPU使用率动态调整刷新频率
-                    if (cpuUsage > 70 && _refreshTimer.Interval < SLOW_REFRESH_INTERVAL * 2)
-                    {
-                        // 高负载时，降低刷新频率到10秒
-                        _refreshTimer.Interval = SLOW_REFRESH_INTERVAL * 2;
-                        _logger.LogDebug($"系统负载较高 (CPU: {cpuUsage:F2}%)，降低刷新频率到 {_refreshTimer.Interval}ms");
-                    }
-                    else if (cpuUsage < 30 && _refreshCount >= FAST_REFRESH_COUNT && _refreshTimer.Interval > SLOW_REFRESH_INTERVAL)
-                    {
-                        // 低负载时，恢复正常刷新频率
-                        _refreshTimer.Interval = SLOW_REFRESH_INTERVAL;
-                        _logger.LogDebug($"系统负载较低 (CPU: {cpuUsage:F2}%)，恢复正常刷新频率 {_refreshTimer.Interval}ms");
-                    }
+                // 根据CPU使用率动态调整刷新频率
+                if (cpuUsage > 70 && _refreshTimer.Interval < SLOW_REFRESH_INTERVAL * 2)
+                {
+                    // 高负载时，降低刷新频率到10秒
+                    _refreshTimer.Interval = SLOW_REFRESH_INTERVAL * 2;
+                    _logger.LogDebug($"系统负载较高 (CPU: {cpuUsage:F2}%)，降低刷新频率到 {_refreshTimer.Interval}ms");
+                }
+                else if (cpuUsage < 30 && _refreshCount >= FAST_REFRESH_COUNT && _refreshTimer.Interval > SLOW_REFRESH_INTERVAL)
+                {
+                    // 低负载时，恢复正常刷新频率
+                    _refreshTimer.Interval = SLOW_REFRESH_INTERVAL;
+                    _logger.LogDebug($"系统负载较低 (CPU: {cpuUsage:F2}%)，恢复正常刷新频率 {_refreshTimer.Interval}ms");
                 }
             }
             catch (Exception ex)
@@ -650,35 +710,28 @@ namespace RUINORERP.Server.Controls
             // 添加CPU使用率监控
             try
             {
-                // 使用PerformanceCounter获取CPU使用率
-                using (var cpuCounter = new System.Diagnostics.PerformanceCounter("Processor", "% Processor Time", "_Total"))
+                float cpuUsage = GetCpuUsage();
+
+                // 动态添加CPU使用率标签（如果不存在）
+                Label lblCpuUsage = Controls.Find("lblCpuUsage", true).FirstOrDefault() as Label;
+                Label lblCpuUsageValue = Controls.Find("lblCpuUsageValue", true).FirstOrDefault() as Label;
+
+                if (lblCpuUsage != null && lblCpuUsageValue != null)
                 {
-                    // 首次采样返回0，需要再次采样
-                    cpuCounter.NextValue();
-                    System.Threading.Thread.Sleep(50);
-                    float cpuUsage = cpuCounter.NextValue();
-
-                    // 动态添加CPU使用率标签（如果不存在）
-                    Label lblCpuUsage = Controls.Find("lblCpuUsage", true).FirstOrDefault() as Label;
-                    Label lblCpuUsageValue = Controls.Find("lblCpuUsageValue", true).FirstOrDefault() as Label;
-
-                    if (lblCpuUsage != null && lblCpuUsageValue != null)
+                    lblCpuUsageValue.Text = $"{cpuUsage:F2}%";
+                    
+                    // 根据CPU使用率设置颜色
+                    if (cpuUsage > 80)
                     {
-                        lblCpuUsageValue.Text = $"{cpuUsage:F2}%";
-                        
-                        // 根据CPU使用率设置颜色
-                        if (cpuUsage > 80)
-                        {
-                            lblCpuUsageValue.ForeColor = Color.Red;
-                        }
-                        else if (cpuUsage > 50)
-                        {
-                            lblCpuUsageValue.ForeColor = Color.Orange;
-                        }
-                        else
-                        {
-                            lblCpuUsageValue.ForeColor = Color.Green;
-                        }
+                        lblCpuUsageValue.ForeColor = Color.Red;
+                    }
+                    else if (cpuUsage > 50)
+                    {
+                        lblCpuUsageValue.ForeColor = Color.Orange;
+                    }
+                    else
+                    {
+                        lblCpuUsageValue.ForeColor = Color.Green;
                     }
                 }
             }
@@ -690,29 +743,21 @@ namespace RUINORERP.Server.Controls
             // 添加磁盘I/O监控
             try
             {
-                // 使用PerformanceCounter获取磁盘读写速度
-                using (var diskReadCounter = new System.Diagnostics.PerformanceCounter("PhysicalDisk", "Disk Read Bytes/sec", "_Total"))
-                using (var diskWriteCounter = new System.Diagnostics.PerformanceCounter("PhysicalDisk", "Disk Write Bytes/sec", "_Total"))
+                var diskRead = GetDiskReadBytes();
+                var diskWrite = GetDiskWriteBytes();
+
+                // 动态添加磁盘I/O标签（如果不存在）
+                Label lblDiskReadValue = Controls.Find("lblDiskReadValue", true).FirstOrDefault() as Label;
+                Label lblDiskWriteValue = Controls.Find("lblDiskWriteValue", true).FirstOrDefault() as Label;
+
+                if (lblDiskReadValue != null)
                 {
-                    diskReadCounter.NextValue();
-                    diskWriteCounter.NextValue();
-                    System.Threading.Thread.Sleep(50);
-                    float diskRead = diskReadCounter.NextValue();
-                    float diskWrite = diskWriteCounter.NextValue();
+                    lblDiskReadValue.Text = $"{FormatBytes((long)diskRead)}/秒";
+                }
 
-                    // 动态添加磁盘I/O标签（如果不存在）
-                    Label lblDiskReadValue = Controls.Find("lblDiskReadValue", true).FirstOrDefault() as Label;
-                    Label lblDiskWriteValue = Controls.Find("lblDiskWriteValue", true).FirstOrDefault() as Label;
-
-                    if (lblDiskReadValue != null)
-                    {
-                        lblDiskReadValue.Text = $"{FormatBytes((long)diskRead)}/秒";
-                    }
-
-                    if (lblDiskWriteValue != null)
-                    {
-                        lblDiskWriteValue.Text = $"{FormatBytes((long)diskWrite)}/秒";
-                    }
+                if (lblDiskWriteValue != null)
+                {
+                    lblDiskWriteValue.Text = $"{FormatBytes((long)diskWrite)}/秒";
                 }
             }
             catch (Exception ex)
@@ -841,6 +886,59 @@ namespace RUINORERP.Server.Controls
                     dgvHandlerStatistics.Rows[rowIndex].DefaultCellStyle.BackColor = Color.LightYellow;
                 }
             }
+        }
+
+        /// <summary>
+        /// 获取CPU使用率（复用计数器实例）
+        /// </summary>
+        private float GetCpuUsage()
+        {
+            // 限制检查频率，避免过于频繁
+            if ((DateTime.Now - _lastCpuCheckTime).TotalMilliseconds < 500)
+            {
+                return _lastCpuUsage;
+            }
+
+            if (_cpuCounter == null)
+            {
+                _cpuCounter = new System.Diagnostics.PerformanceCounter("Processor", "% Processor Time", "_Total");
+                _cpuCounter.NextValue(); // 预热
+            }
+
+            System.Threading.Thread.Sleep(50);
+            _lastCpuUsage = _cpuCounter.NextValue();
+            _lastCpuCheckTime = DateTime.Now;
+            return _lastCpuUsage;
+        }
+
+        /// <summary>
+        /// 获取磁盘读取速度（复用计数器实例）
+        /// </summary>
+        private float GetDiskReadBytes()
+        {
+            if (_diskReadCounter == null)
+            {
+                _diskReadCounter = new System.Diagnostics.PerformanceCounter("PhysicalDisk", "Disk Read Bytes/sec", "_Total");
+                _diskReadCounter.NextValue(); // 预热
+            }
+
+            System.Threading.Thread.Sleep(50);
+            return _diskReadCounter.NextValue();
+        }
+
+        /// <summary>
+        /// 获取磁盘写入速度（复用计数器实例）
+        /// </summary>
+        private float GetDiskWriteBytes()
+        {
+            if (_diskWriteCounter == null)
+            {
+                _diskWriteCounter = new System.Diagnostics.PerformanceCounter("PhysicalDisk", "Disk Write Bytes/sec", "_Total");
+                _diskWriteCounter.NextValue(); // 预热
+            }
+
+            System.Threading.Thread.Sleep(50);
+            return _diskWriteCounter.NextValue();
         }
 
         /// <summary>
@@ -1248,32 +1346,97 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                if (_memoryDistributionService == null)
-                    return;
-
-                var snapshot = _memoryDistributionService.GetCurrentSnapshot();
+                // 诊断:检查服务是否可用
+                MemoryDistributionService serviceToUse = _memoryDistributionService;
+                        
+                if (serviceToUse == null)
+                {
+                    _logger.LogWarning("MemoryDistributionService 为 null,尝试重新获取");
+                            
+                    // 尝试重新获取服务
+                    try
+                    {
+                        serviceToUse = Startup.GetFromFac<MemoryDistributionService>();
+                        if (serviceToUse == null)
+                        {
+                            _logger.LogWarning("重新获取 MemoryDistributionService 失败");
+                            return;
+                        }
+                        _logger.LogInformation("成功重新获取 MemoryDistributionService");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "重新获取 MemoryDistributionService 时出错");
+                        return;
+                    }
+                }
+        
+                var snapshot = serviceToUse.GetCurrentSnapshot();
                 
-                // 更新内存分布显示
-                var rtbMemoryDist = Controls.Find("rtbMemoryDistribution", true).FirstOrDefault() as RichTextBox;
+                if (snapshot == null)
+                {
+                    _logger.LogWarning("获取内存快照返回 null");
+                    return;
+                }
+                
+                _logger.LogDebug("内存分布统计 - 总托管: {Total} MB, 工作集: {Working} MB", 
+                    snapshot.TotalManagedMemoryMB, snapshot.TotalWorkingSetMB);
+                
+                // 更新内存分布显示 - 使用更精确的查找方式
+                RichTextBox rtbMemoryDist = null;
+                
+                // 首先在当前控件中查找
+                foreach (Control ctrl in Controls)
+                {
+                    if (ctrl is RichTextBox rtb && rtb.Name == "rtbMemoryDistribution")
+                    {
+                        rtbMemoryDist = rtb;
+                        break;
+                    }
+                    // 检查 panelTop
+                    if (ctrl.Name == "panelTop")
+                    {
+                        foreach (Control subCtrl in ctrl.Controls)
+                        {
+                            if (subCtrl is RichTextBox subRtb && subRtb.Name == "rtbMemoryDistribution")
+                            {
+                                rtbMemoryDist = subRtb;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // 如果还没找到，使用 Find 方法作为后备
+                if (rtbMemoryDist == null)
+                {
+                    var foundControls = Controls.Find("rtbMemoryDistribution", true);
+                    rtbMemoryDist = foundControls.FirstOrDefault() as RichTextBox;
+                }
+                
                 if (rtbMemoryDist != null)
                 {
-                    var distributionText = $"总托管: {snapshot.TotalManagedMemoryMB} MB\n";
+                    var distributionText = $"=== 内存分布统计 ({DateTime.Now:HH:mm:ss}) ===\n";
+                    distributionText += $"总托管: {snapshot.TotalManagedMemoryMB} MB\n";
                     distributionText += $"工作集: {snapshot.TotalWorkingSetMB} MB\n\n";
                     
-                    if (snapshot.ModuleStatistics != null)
+                    if (snapshot.ModuleStatistics != null && snapshot.ModuleStatistics.Count > 0)
                     {
                         foreach (var mod in snapshot.ModuleStatistics)
                         {
-                            distributionText += $"{mod.ModuleName}: ~{mod.EstimatedMemoryMB} MB";
-                            if (mod.ObjectCount > 0)
-                                distributionText += $" ({mod.ObjectCount}对象)";
-                            distributionText += "\n";
+                            // 显示每个模块的名称、内存估算和对象数量
+                            string modSizeText = mod.EstimatedMemoryMB >= 1 
+                                ? $"{mod.EstimatedMemoryMB} MB" 
+                                : $"{(mod.EstimatedMemoryMB * 1024):F1} KB";
                             
-                            // 实体缓存不显示明细，缓存管理中有具体的数据显示
-                            bool isEntityCache = mod.ModuleName != null && mod.ModuleName.Contains("实体缓存");
+                            string modInfo = mod.ObjectCount > 0 
+                                ? $"{mod.ModuleName}: {modSizeText} ({mod.ObjectCount:N0}对象)" 
+                                : $"{mod.ModuleName}: {modSizeText}";
                             
-                            // 如果有子项统计，显示详细信息（实体缓存除外）
-                            if (!isEntityCache && mod.SubItems != null && mod.SubItems.Count > 0)
+                            distributionText += modInfo + "\n";
+                            
+                            // 显示子项详细统计（所有模块）
+                            if (mod.SubItems != null && mod.SubItems.Count > 0)
                             {
                                 foreach (var subItem in mod.SubItems)
                                 {
@@ -1281,29 +1444,38 @@ namespace RUINORERP.Server.Controls
                                         ? $"{(double)subItem.EstimatedMemoryKB / 1024:F2} MB" 
                                         : $"{subItem.EstimatedMemoryKB} KB";
                                     
-                                    distributionText += $"  ├─ {subItem.Name}: {sizeText}";
+                                    string subInfo = $"  ├─ {subItem.Name}: {sizeText}";
                                     if (subItem.ObjectCount > 0)
-                                        distributionText += $" ({subItem.ObjectCount:N0})";
+                                        subInfo += $" ({subItem.ObjectCount:N0})";
                                     if (subItem.HitRatio > 0)
-                                        distributionText += $" [命中率:{subItem.HitRatio:P1}]";
+                                        subInfo += $" [命中率:{subItem.HitRatio:P1}]";
                                     if (!string.IsNullOrEmpty(subItem.Description))
-                                        distributionText += $" - {subItem.Description}";
-                                    distributionText += "\n";
+                                        subInfo += $" - {subItem.Description}";
+                                    
+                                    distributionText += subInfo + "\n";
                                 }
                             }
                             
                             distributionText += "\n";
                         }
                     }
+                    else
+                    {
+                        distributionText += "暂无模块统计数据\n";
+                    }
                     
                     rtbMemoryDist.Text = distributionText;
                     rtbMemoryDist.SelectionStart = rtbMemoryDist.Text.Length;
                     rtbMemoryDist.ScrollToCaret();
                 }
+                else
+                {
+                    _logger.LogWarning("未找到 rtbMemoryDistribution 控件");
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogDebug($"更新内存分布统计时出错: {ex.Message}");
+                _logger.LogError(ex, "更新内存分布统计时出错");
             }
         }
 

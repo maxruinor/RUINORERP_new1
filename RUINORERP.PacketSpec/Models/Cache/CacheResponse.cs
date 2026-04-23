@@ -51,7 +51,7 @@ namespace RUINORERP.PacketSpec.Models.Cache
         /// <summary>
         /// 过期时间
         /// </summary>
-        public DateTime ExpirationTime { get; set; } = DateTime.Now.AddDays(1);
+        public DateTime ExpirationTime { get; set; } = DateTime.Now.Add(CacheData.DefaultExpiration);
 
         /// <summary>
         /// 是否还有更多数据（分页查询时使用）
@@ -112,8 +112,13 @@ namespace RUINORERP.PacketSpec.Models.Cache
                 {
                     return CacheDataConverter.ConvertToType<T>(value);
                 }
-                catch
+                catch (OutOfMemoryException)
                 {
+                    throw; // 重新抛出严重异常
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"转换操作结果失败: Key={key}, 错误: {ex.Message}");
                     return defaultValue;
                 }
             }

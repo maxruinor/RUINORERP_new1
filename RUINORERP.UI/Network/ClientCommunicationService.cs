@@ -93,8 +93,8 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 心跳相关字段（优化后）
-        private readonly int _heartbeatIntervalMs = 30000; // 固定心跳间隔30秒
-        private readonly int _heartbeatTimeoutMs = 12000; // ✅ 心跳超时时间12秒（从8秒增加，避免网络波动导致的误超时）
+        private readonly int _heartbeatIntervalMs = 30000;   // 固定心跳间隔30秒
+        private readonly int _heartbeatTimeoutMs = 45000;    // ✅ 心跳超时时间45秒(1.5倍间隔，避免网络波动误判)
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
@@ -179,9 +179,9 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 心跳失败阈值
         /// 连续心跳失败达到此阈值时触发客户端锁定
-        /// 调整为15次，给予更多容错机会，避免误判
+        /// 调整为5次，平衡容错性和响应速度
         /// </summary>
-        public const int HEARTBEAT_FAILURE_THRESHOLD = 15; // 增加心跳失败阈值，给予更多容错机会
+        public const int HEARTBEAT_FAILURE_THRESHOLD = 5; // 降低阈值，更快检测到真实断线
 
         /// <summary>
         /// 心跳失败事件
@@ -1670,6 +1670,12 @@ namespace RUINORERP.UI.Network
         /// <returns>是否支持重试</returns>
         private bool IsRetryableException(Exception ex)
         {
+            // ✅ 优先检查序列化异常（不可重试，避免死循环）
+            if (IsSerializationException(ex))
+            {
+                return false;
+            }
+
             // 优先使用异常类型判断，更可靠
             if (ex is TimeoutException ||
                 ex is System.Net.Sockets.SocketException socketEx && IsNetworkRelatedSocketError((System.Net.Sockets.SocketError)socketEx.ErrorCode) ||
@@ -1686,6 +1692,32 @@ namespace RUINORERP.UI.Network
                 return true;
             }
             
+            return false;
+        }
+
+        /// <summary>
+        /// 判断异常是否为序列化相关异常（不可重试）
+        /// </summary>
+        private bool IsSerializationException(Exception ex)
+        {
+            // 检查自身和内部异常
+            var current = ex;
+            while (current != null)
+            {
+                if (current is System.Runtime.Serialization.SerializationException ||
+                    current is System.OutOfMemoryException && current.Message.Contains("序列化"))
+                {
+                    return true;
+                }
+                // 检查消息中是否包含序列化相关关键词
+                if (current.Message.Contains("JSON序列化") || 
+                    current.Message.Contains("序列化失败") ||
+                    current.Message.Contains("SerializationException"))
+                {
+                    return true;
+                }
+                current = current.InnerException;
+            }
             return false;
         }
         
@@ -2646,7 +2678,31 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 }
 
                 // 序列化和加密数据包
-                var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
+                byte[] payload;
+                try
+                {
+                    payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
+                }
+                catch (System.OutOfMemoryException ex)
+                {
+                    _logger?.LogError(ex, "序列化数据包时发生内存溢出: CommandId={CommandId}, RequestId={RequestId}。已跳过发送以防止无限重连。", 
+                        commandId.ToString(), request.RequestId);
+                    throw new NetworkCommunicationException(
+                        $"JSON序列化失败(内存溢出): {ex.Message}",
+                        ex,
+                        commandId,
+                        request.RequestId);
+                }
+                catch (System.Runtime.Serialization.SerializationException ex)
+                {
+                    _logger?.LogError(ex, "序列化数据包失败: CommandId={CommandId}, RequestId={RequestId}。已跳过发送以防止无限重连。", 
+                        commandId.ToString(), request.RequestId);
+                    throw new NetworkCommunicationException(
+                        $"JSON序列化失败: {ex.Message}",
+                        ex,
+                        commandId,
+                        request.RequestId);
+                }
                 var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, payload);
                 var encrypted = UnifiedEncryptionProtocol.EncryptClientDataToServer(original);
 
@@ -3454,8 +3510,24 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     }
                     catch (Exception ex)
                     {
-                        command.CompletionSource?.TrySetException(ex);
-                        failedCount++;
+                        // 检查是否为序列化相关异常，如果是则标记失败但不重试
+                        bool isSerializationError = ex is NetworkCommunicationException && 
+                            (ex.Message.Contains("序列化") || ex.Message.Contains("JSON"));
+                        
+                        if (isSerializationError)
+                        {
+                            // 序列化失败，不重新加入队列，避免死循环
+                            _logger?.LogWarning("检测到序列化错误，跳过命令重试：{CommandId}, 原因: {Error}", 
+                                command.CommandId, ex.Message);
+                            command.CompletionSource?.TrySetException(ex);
+                            // 不增加failedCount到重试计数器，避免触发不必要的重连
+                        }
+                        else
+                        {
+                            // 其他错误，重新加入队列
+                            EnqueueCommandSafe(command);
+                            failedCount++;
+                        }
                         _logger?.LogError(ex, "处理单向命令时发生异常：{CommandId}", command.CommandId);
                     }
                 }

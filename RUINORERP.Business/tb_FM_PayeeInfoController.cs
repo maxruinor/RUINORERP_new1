@@ -380,7 +380,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_PayeeInfoServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_FM_PayeeInfo>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_FM_PayeeInfo>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

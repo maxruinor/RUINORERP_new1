@@ -190,7 +190,21 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     validation.LockRequest = request;
                 }
                 
-                // ✅ 权限验证：检查是否是锁持有者或管理员
+                // ✅ 优先处理ByBizName批量解锁（不需要单个单据的权限验证）
+                if (validation.LockRequest.UnlockType == UnlockType.ByBizName)
+                {
+                    // ByBizName只需要验证RequesterUserId的有效性
+                    if (validation.LockRequest.RequesterUserId <= 0)
+                    {
+                        return CreateErrorResponse("用户ID无效");
+                    }
+                    
+                    return await _lockManagerService.UnlockDocumentsByBizNameAsync(
+                        validation.LockRequest.RequesterUserId, 
+                        (int)validation.LockRequest.LockInfo.bizType);
+                }
+                
+                // ✅ 普通解锁才需要验证是否是锁持有者
                 var requesterUserId = validation.LockRequest.RequesterUserId;
                 var lockOwnerUserId = validation.LockRequest.LockInfo.LockedUserId;
                 
@@ -201,17 +215,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return CreateErrorResponse("无权限解锁他人锁定的单据（仅锁持有者可操作）");
                 }
                 
-                //优先处理
-                if (validation.LockRequest.UnlockType == UnlockType.ByBizName)
-                {
-                    // 释放锁定
-                    return await _lockManagerService.UnlockDocumentsByBizNameAsync(validation.LockRequest.RequesterUserId, (int)validation.LockRequest.LockInfo.bizType);
-                }
-                else
-                {
-                    // 释放锁定
-                    return await _lockManagerService.UnlockDocumentAsync(validation.LockRequest.LockInfo.BillID, validation.LockRequest.LockInfo.LockedUserId);
-                }
+                // 释放锁定
+                return await _lockManagerService.UnlockDocumentAsync(
+                    validation.LockRequest.LockInfo.BillID, 
+                    validation.LockRequest.LockInfo.LockedUserId);
 
             }
             catch (Exception ex)

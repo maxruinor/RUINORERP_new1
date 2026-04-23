@@ -8,6 +8,7 @@ using RUINORERP.Model.Base;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model;
 using RUINORERP.Repository.UnitOfWorks;
+using System.Reflection;
 
 namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 {
@@ -72,11 +73,34 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                         stepIndex++;
                         ReportProgress(stepIndex, targetIds.Count, $"正在处理 ID: {id}");
 
-                        // 构建实体对象(只需要设置主键)
+                        // 构建实体对象(需要设置真实的主键属性,而不是 PrimaryKeyID)
                         var entity = Activator.CreateInstance<T>();
+                        
+                        // ✅ 关键修复:通过反射找到并设置真实的主键属性
+                        var pkPropertyName = GetPrimaryKeyPropertyName<T>();
+                        var pkProperty = typeof(T).GetProperty(pkPropertyName);
+                        if (pkProperty != null && pkProperty.CanWrite)
+                        {
+                            pkProperty.SetValue(entity, id);
+                            Log($"设置主键 {pkPropertyName} = {id}");
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"未找到实体 {typeof(T).Name} 的主键属性: {pkPropertyName}");
+                        }
+                        
+                        // 同时设置 PrimaryKeyID 作为备用
                         entity.PrimaryKeyID = id;
 
-                        // 无论测试还是正式模式,都执行真正的删除操作
+                        // ✅ 测试模式跳过实际删除,仅统计
+                        if (isTestMode)
+                        {
+                            Log($"[测试模式] 模拟删除 ID={id}");
+                            totalDeleted++;
+                            continue;
+                        }
+
+                        // 正式模式:执行真正的级联删除操作
                         // BaseDeleteByNavAsync 内部使用 SqlSugar 的 DeleteNav().Include().ExecuteCommandAsync()
                         // 会自动根据导航属性进行级联删除
                         bool success = await controller.BaseDeleteByNavAsync(entity);
@@ -152,6 +176,38 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
             OnLog?.Invoke(this, logEntry);
             _logger?.LogInformation(message);
+        }
+
+        /// <summary>
+        /// 获取实体的主键属性名(优先使用 SqlSugar 特性标记的主键)
+        /// </summary>
+        private static string GetPrimaryKeyPropertyName<T>() where T : BaseEntity, new()
+        {
+            var entityType = typeof(T);
+            
+            // 1. 查找标记了 SugarColumn(IsPrimaryKey = true) 的属性
+            var sugarPkProps = entityType.GetProperties()
+                .Where(p => p.GetCustomAttribute<SqlSugar.SugarColumn>()?.IsPrimaryKey == true)
+                .ToList();
+            
+            if (sugarPkProps.Any())
+            {
+                return sugarPkProps.First().Name;
+            }
+            
+            // 2. 如果没有 SugarColumn 标记,尝试常见的主键命名约定
+            var commonPkNames = new[] { "Id", "ID", entityType.Name + "_ID", entityType.Name + "Id" };
+            foreach (var pkName in commonPkNames)
+            {
+                var prop = entityType.GetProperty(pkName);
+                if (prop != null)
+                {
+                    return pkName;
+                }
+            }
+            
+            // 3. 如果都找不到,返回 PrimaryKeyID(备用方案)
+            return "PrimaryKeyID";
         }
 
         /// <summary>

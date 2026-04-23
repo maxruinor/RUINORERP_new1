@@ -223,7 +223,36 @@ namespace RUINORERP.Server
         private MemoryMonitoringService _memoryMonitoringService;
         private PerformanceDataStorageService _performanceDataStorageService;
         private PerformanceMonitorControl _performanceMonitorControl;
+        private MemoryLeakDiagnosticsService _memoryLeakDiagnosticsService; // 内存泄漏诊断服务
         private bool _disposed = false;
+        
+        // 内存泄漏诊断开关（与全局服务同步）
+        public bool IsMemoryLeakDiagnosticsEnabled
+        {
+            get => _memoryLeakDiagnosticsService?.IsEnabled ?? false;
+            set
+            {
+                if (_memoryLeakDiagnosticsService != null)
+                {
+                    _memoryLeakDiagnosticsService.IsEnabled = value;
+                    PrintInfoLog($"内存泄漏诊断服务已{(value ? "启用" : "禁用")}");
+                }
+            }
+        }
+        
+        // 内存泄漏诊断详细模式开关
+        public bool IsMemoryLeakDiagnosticsVerbose
+        {
+            get => _memoryLeakDiagnosticsService?.IsVerboseMode ?? false;
+            set
+            {
+                if (_memoryLeakDiagnosticsService != null)
+                {
+                    _memoryLeakDiagnosticsService.IsVerboseMode = value;
+                    PrintInfoLog($"内存泄漏诊断详细模式已{(value ? "启用" : "禁用")}");
+                }
+            }
+        }
 
         public static frmMainNew Instance
         {
@@ -456,6 +485,104 @@ namespace RUINORERP.Server
         {
             ShowPerformanceMonitorPanel();
         }
+        
+        /// <summary>
+        /// 内存泄漏诊断按钮点击事件
+        /// </summary>
+        private void toolStripButtonMemoryDiagnostics_Click(object sender, EventArgs e)
+        {
+            // 显示下拉菜单
+            if (toolStripButtonMemoryDiagnostics.HasDropDownItems)
+            {
+                toolStripButtonMemoryDiagnostics.ShowDropDown();
+            }
+            else
+            {
+                // 初始化菜单
+                InitializeMemoryDiagnosticsMenu();
+                toolStripButtonMemoryDiagnostics.ShowDropDown();
+            }
+        }
+        
+        /// <summary>
+        /// 初始化内存泄漏诊断菜单
+        /// </summary>
+        private void InitializeMemoryDiagnosticsMenu()
+        {
+            try
+            {
+                // 清空现有菜单项
+                toolStripButtonMemoryDiagnostics.DropDownItems.Clear();
+                
+                // 创建启用/禁用诊断菜单项
+                var toggleEnabledItem = new ToolStripMenuItem("启用诊断服务");
+                toggleEnabledItem.Checked = IsMemoryLeakDiagnosticsEnabled;
+                toggleEnabledItem.Click += (s, e) =>
+                {
+                    IsMemoryLeakDiagnosticsEnabled = !IsMemoryLeakDiagnosticsEnabled;
+                    toggleEnabledItem.Checked = IsMemoryLeakDiagnosticsEnabled;
+                };
+                toolStripButtonMemoryDiagnostics.DropDownItems.Add(toggleEnabledItem);
+                
+                // 添加分隔符
+                toolStripButtonMemoryDiagnostics.DropDownItems.Add(new ToolStripSeparator());
+                
+                // 创建详细模式菜单项
+                var toggleVerboseItem = new ToolStripMenuItem("详细模式（每次诊断都输出完整日志）");
+                toggleVerboseItem.Checked = IsMemoryLeakDiagnosticsVerbose;
+                toggleVerboseItem.Click += (s, e) =>
+                {
+                    IsMemoryLeakDiagnosticsVerbose = !IsMemoryLeakDiagnosticsVerbose;
+                    toggleVerboseItem.Checked = IsMemoryLeakDiagnosticsVerbose;
+                };
+                toolStripButtonMemoryDiagnostics.DropDownItems.Add(toggleVerboseItem);
+                
+                // 添加分隔符
+                toolStripButtonMemoryDiagnostics.DropDownItems.Add(new ToolStripSeparator());
+                
+                // 创建立即运行诊断菜单项
+                var runNowItem = new ToolStripMenuItem("立即运行诊断");
+                runNowItem.Click += async (s, e) =>
+                {
+                    try
+                    {
+                        PrintInfoLog("正在运行内存泄漏诊断...");
+                        var report = _memoryLeakDiagnosticsService?.RunDiagnosticsNow();
+                        
+                        if (report != null)
+                        {
+                            PrintInfoLog($"诊断完成 - 工作集：{report.CurrentSnapshot.WorkingSetMB} MB, 增长率：{report.MemoryGrowthRatePerMinute:F2} MB/分钟");
+                            
+                            if (report.IsMemoryLeakDetected)
+                            {
+                                PrintInfoLog($"⚠️ 检测到内存泄漏！预计{report.MinutesToCriticalThreshold}分钟后达到临界值");
+                            }
+                            else
+                            {
+                                PrintInfoLog("✅ 内存使用正常");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        PrintErrorLog($"立即运行诊断失败：{ex.Message}");
+                    }
+                };
+                toolStripButtonMemoryDiagnostics.DropDownItems.Add(runNowItem);
+                
+                // 添加分隔符
+                toolStripButtonMemoryDiagnostics.DropDownItems.Add(new ToolStripSeparator());
+                
+                // 创建状态说明菜单项（只读）
+                var statusItem = new ToolStripMenuItem($"当前状态：{(IsMemoryLeakDiagnosticsEnabled ? "✅ 已启用" : "❌ 已禁用")}");
+                statusItem.Enabled = false;
+                toolStripButtonMemoryDiagnostics.DropDownItems.Add(statusItem);
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"初始化内存泄漏诊断菜单失败：{ex.Message}");
+            }
+        }
 
         /// <summary>
         /// 显示性能监控面板
@@ -687,7 +814,10 @@ namespace RUINORERP.Server
             _memoryMonitoringService = Program.ServiceProvider.GetRequiredService<MemoryMonitoringService>();
             _memoryMonitoringService.MemoryUsageWarning += OnMemoryUsageWarning;
             _memoryMonitoringService.MemoryUsageCritical += OnMemoryUsageCritical;
-
+            
+            // 初始化内存泄漏诊断服务
+            _memoryLeakDiagnosticsService = Program.ServiceProvider.GetRequiredService<MemoryLeakDiagnosticsService>();
+            
             // 初始化服务器信息更新定时器
             InitializeServerInfoTimer();
 
@@ -856,11 +986,14 @@ namespace RUINORERP.Server
         /// </summary>
         private void UpdateLogLevelMenuCheckState()
         {
+            // ✅ 使用线程安全的方法获取当前日志级别
+            var currentLevel = GetGlobalLogLevel();
+            
             foreach (var menuItem in _logLevelMenuItems)
             {
                 if (menuItem.Tag is LogLevel level)
                 {
-                    menuItem.Checked = level == _currentLogLevel;
+                    menuItem.Checked = level == currentLevel;
                 }
             }
         }
@@ -3358,9 +3491,9 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 更新Log4Net的BufferSize
+        /// 更新 Log4Net 的 BufferSize
         /// </summary>
-        /// <param name="bufferSize">新的BufferSize值</param>
+        /// <param name="bufferSize">新的 BufferSize 值</param>
         private static void UpdateLogBufferSize(int bufferSize)
         {
             try

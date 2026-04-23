@@ -364,7 +364,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdPropertyValueServices.Update(entity);
             if (rs)
             {
-                _eventDrivenCacheManager.DeleteEntity<tb_ProdPropertyValue>(entity);
+                _eventDrivenCacheManager.UpdateEntity<tb_ProdPropertyValue>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

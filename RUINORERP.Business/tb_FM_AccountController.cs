@@ -396,7 +396,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_AccountServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_FM_Account>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_FM_Account>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

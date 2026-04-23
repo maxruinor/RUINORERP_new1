@@ -81,6 +81,9 @@ namespace RUINORERP.UI.Network.Services
         private readonly TimeSpan _requestDeduplicationWindow = TimeSpan.FromSeconds(2); // 2秒内的相同请求视为重复
         private readonly int _maxConcurrentRequests = 10; // 最大并发请求数
         private readonly SemaphoreSlim _requestSemaphore = new SemaphoreSlim(10, 10);
+        
+        // ✅ 待处理请求清理定时器
+        private readonly Timer _pendingRequestsCleanupTimer;
 
         #endregion
 
@@ -140,6 +143,10 @@ namespace RUINORERP.UI.Network.Services
             _lockRefreshTimer = new Timer(RefreshLocksCallback, null, Timeout.Infinite, Timeout.Infinite);
             // 缓存清理定时器 - 将在StartAsync中设置为每5分钟执行一次
             _cacheCleanupTimer = new Timer(CleanupCacheCallback, null, Timeout.Infinite, Timeout.Infinite);
+            
+            // ✅ 每30秒清理过期请求
+            _pendingRequestsCleanupTimer = new Timer(CleanupPendingRequests, null, 
+                TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
 
 
         }
@@ -916,6 +923,10 @@ namespace RUINORERP.UI.Network.Services
 
                 // 释放全局信号量
                 _globalSemaphore?.Dispose();
+                
+                // ✅ 清理待处理请求定时器
+                _pendingRequestsCleanupTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+                _pendingRequestsCleanupTimer?.Dispose();
 
                 _isDisposed = true;
             }
@@ -1911,38 +1922,48 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="lockObj">锁对象</param>
         private void CleanupUnusedLock(long billId, SemaphoreSlim lockObj)
         {
-            // ✅ 修复: 增加锁状态检查,避免清理正在使用的锁
-            if (lockObj.CurrentCount == 1)
+            // ✅ 增加disposed检查和锁状态检查
+            if (_isDisposed || lockObj.CurrentCount != 1)
+                return;
+            
+            // ✅ 使用CancellationTokenSource支持取消
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            
+            Task.Delay(TimeSpan.FromSeconds(10), cts.Token).ContinueWith(_ =>
             {
-                // 延迟10秒后清理(从5秒增加到10秒,给更多缓冲时间)
-                Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(_ =>
+                try
                 {
-                    try
+                    // ✅ 再次检查状态
+                    if (_isDisposed || lockObj.CurrentCount != 1 || _activeLocks.ContainsKey(billId))
                     {
-                        // 再次检查是否仍可用且未被复用
-                        if (lockObj.CurrentCount == 1 && !_activeLocks.ContainsKey(billId))
+                        cts.Dispose();
+                        return;
+                    }
+                    
+                    // 使用CompareExchange确保原子性
+                    if (_billLocks.TryRemove(billId, out var removed) && removed == lockObj)
+                    {
+                        try
                         {
-                            // 使用CompareExchange确保原子性
-                            if (_billLocks.TryRemove(billId, out var removed) && removed == lockObj)
-                            {
-                                try
-                                {
-                                    lockObj.Dispose();
-                                    _logger.LogDebug("清理未使用的细粒度锁: BillID={BillId}", billId);
-                                }
-                                catch (ObjectDisposedException)
-                                {
-                                    // 已被其他线程释放,忽略
-                                }
-                            }
+                            lockObj.Dispose();
+                            _logger.LogDebug("清理未使用的细粒度锁: BillID={BillId}", billId);
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // 已被其他线程释放,忽略
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "清理细粒度锁时发生异常: BillID={BillId}", billId);
-                    }
-                }, TaskContinuationOptions.OnlyOnRanToCompletion);
-            }
+                    cts.Dispose();
+                }
+                catch (OperationCanceledException)
+                {
+                    // 任务被取消,正常情况
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "清理细粒度锁时发生异常: BillID={BillId}", billId);
+                }
+            }, TaskContinuationOptions.OnlyOnRanToCompletion);
         }
 
         /// <summary>
@@ -1991,6 +2012,34 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
+        /// <summary>
+        /// 定期清理已完成的待处理请求,防止内存泄漏
+        /// </summary>
+        private void CleanupPendingRequests(object state)
+        {
+            try
+            {
+                var expiredKeys = _pendingRequests
+                    .Where(kvp => kvp.Value.IsCompleted)
+                    .Select(kvp => kvp.Key)
+                    .ToList();
+                
+                foreach (var key in expiredKeys)
+                {
+                    _pendingRequests.TryRemove(key, out _);
+                }
+                
+                if (expiredKeys.Count > 0)
+                {
+                    _logger.LogDebug("清理{Count}个已完成的待处理请求", expiredKeys.Count);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "清理待处理请求时发生错误");
+            }
+        }
+
         #endregion
 
         #region 按业务类型批量解锁
@@ -2026,7 +2075,8 @@ namespace RUINORERP.UI.Network.Services
                     LockInfo = new LockInfo
                     {
                         BillID = 0, // ByBizName模式下BillID可为0
-                        bizType = bizType
+                        bizType = bizType,
+                        LockedUserId = userId  // 设置锁持有者为用户自己，用于服务器端权限验证
                     }
                 };
 

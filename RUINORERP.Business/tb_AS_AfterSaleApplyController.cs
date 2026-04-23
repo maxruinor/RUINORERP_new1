@@ -386,7 +386,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_AS_AfterSaleApplyServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_AS_AfterSaleApply>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_AS_AfterSaleApply>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

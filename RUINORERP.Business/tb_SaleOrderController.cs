@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_SaleOrderServices.Update(entity);
             if (rs)
             {
-                _eventDrivenCacheManager.DeleteEntity<tb_SaleOrder>(entity);
+                _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

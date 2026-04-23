@@ -392,7 +392,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_MenuInfoServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_MenuInfo>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_MenuInfo>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

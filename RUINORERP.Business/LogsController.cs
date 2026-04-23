@@ -371,7 +371,7 @@ namespace RUINORERP.Business
             bool rs = await _LogsServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<Logs>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<Logs>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

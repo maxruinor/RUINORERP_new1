@@ -367,7 +367,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FS_FileStorageInfoServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_FS_FileStorageInfo>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_FS_FileStorageInfo>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

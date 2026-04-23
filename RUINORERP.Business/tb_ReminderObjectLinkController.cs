@@ -363,7 +363,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ReminderObjectLinkServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_ReminderObjectLink>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_ReminderObjectLink>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

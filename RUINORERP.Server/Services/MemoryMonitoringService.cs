@@ -149,7 +149,23 @@ namespace RUINORERP.Server.Services
 
                 using (var process = Process.Start(processStartInfo))
                 {
-                    await process.WaitForExitAsync();
+                    // ✅ 添加超时控制(最多等待10分钟)
+                    var timeoutTask = Task.Delay(TimeSpan.FromMinutes(10));
+                    var exitTask = process.WaitForExitAsync();
+                    
+                    var completedTask = await Task.WhenAny(exitTask, timeoutTask);
+                    
+                    if (completedTask == timeoutTask)
+                    {
+                        _logger.LogError("自动Dump超时(10分钟),终止进程");
+                        try
+                        {
+                            process.Kill();
+                        }
+                        catch { }
+                        return;
+                    }
+                    
                     var output = await process.StandardOutput.ReadToEndAsync();
                     var error = await process.StandardError.ReadToEndAsync();
                     
@@ -214,9 +230,10 @@ namespace RUINORERP.Server.Services
                 var beforeMemory = GetCurrentMemoryUsage();
                 
                 // 执行垃圾回收
-                GC.Collect();
+                // 优化：使用 Compacting 模式强制压缩 LOH，减少工作集虚高
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: true, compacting: true);
                 GC.WaitForPendingFinalizers();
-                GC.Collect();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: true, compacting: true);
                 
                 var afterMemory = GetCurrentMemoryUsage();
                 _logger.LogInformation($"垃圾回收完成 - 回收前: {beforeMemory.WorkingSetMB} MB, 回收后: {afterMemory.WorkingSetMB} MB, " +

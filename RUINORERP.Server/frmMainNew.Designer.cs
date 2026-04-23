@@ -13,9 +13,11 @@ namespace RUINORERP.Server
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && !_disposed)
             {
-                // 1. 立即禁用UI日志，防止后续操作触发AccessViolationException
+                _disposed = true;
+                
+                // 1. 立即禁用 UI 日志，防止后续操作触发 AccessViolationException
                 this._uiLoggingEnabled = false;
                 
                 // 2. 释放所有组件资源
@@ -24,10 +26,59 @@ namespace RUINORERP.Server
                     components.Dispose();
                 }
                 
-                // 3. 确保所有定时器都已停止和释放
-                // 注意：更详细的清理逻辑已在ShutdownAsync中实现
-                // 这里再次检查以确保资源被完全释放
+                // 3. 停止并释放所有定时器
+                if (UpdateServerInfoTimer != null)
+                {
+                    UpdateServerInfoTimer.Stop();
+                    UpdateServerInfoTimer.Dispose();
+                }
+                
+                if (_serverInfoTimer != null)
+                {
+                    _serverInfoTimer.Stop();
+                    _serverInfoTimer.Dispose();
+                    _serverInfoTimer = null;
+                }
+                
+                if (_sessionCleanupTimer != null)
+                {
+                    _sessionCleanupTimer.Change(System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
+                    _sessionCleanupTimer.Dispose();
+                    _sessionCleanupTimer = null;
+                }
+                
+                // 4. 释放内存监控服务
+                if (_memoryMonitoringService != null)
+                {
+                    _memoryMonitoringService.MemoryUsageWarning -= OnMemoryUsageWarning;
+                    _memoryMonitoringService.MemoryUsageCritical -= OnMemoryUsageCritical;
+                    _memoryMonitoringService.Dispose();
+                    _memoryMonitoringService = null;
+                }
+                
+                // 5. 释放性能数据存储服务
+                if (_performanceDataStorageService != null)
+                {
+                    _performanceDataStorageService.Dispose();
+                    _performanceDataStorageService = null;
+                }
+                
+                // 6. 释放内存泄漏诊断服务
+                if (_memoryLeakDiagnosticsService != null)
+                {
+                    _memoryLeakDiagnosticsService.Dispose();
+                    _memoryLeakDiagnosticsService = null;
+                }
+                
+                // 7. 停止提醒工作流调度器
+                if (_reminderScheduler != null)
+                {
+                    _reminderScheduler.Stop();
+                    _reminderScheduler = null;
+                }
             }
+            
+            // 8. 调用基类 Dispose 释放组件资源
             base.Dispose(disposing);
         }
 
@@ -76,6 +127,7 @@ namespace RUINORERP.Server
             toolStripButtonDebugMode = new System.Windows.Forms.ToolStripDropDownButton();
             toolStripButtonNetworkMonitor = new System.Windows.Forms.ToolStripDropDownButton();
             toolStripButtonPerformance = new System.Windows.Forms.ToolStripButton();
+            toolStripButtonMemoryDiagnostics = new System.Windows.Forms.ToolStripDropDownButton(); // 内存泄漏诊断
             statusStripMain = new System.Windows.Forms.StatusStrip();
             toolStripStatusLabelServerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             toolStripStatusLabelConnectionCount = new System.Windows.Forms.ToolStripStatusLabel();
@@ -256,7 +308,7 @@ namespace RUINORERP.Server
             // 
             // toolStripMain
             // 
-            toolStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripButtonStartServer, toolStripButtonStopServer, toolStripSeparator1, toolStripButtonRefreshData, toolStripButtonUserManagement, toolStripButtonCacheManagement, toolStripButtonWorkflowTest, toolStripButtonSystemConfig, toolStripButtonSequenceManagement, toolStripButtonSystemCheck, toolStripSeparator2, toolStripButtonDebugMode, toolStripButtonNetworkMonitor, toolStripButtonPerformance });
+            toolStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripButtonStartServer, toolStripButtonStopServer, toolStripSeparator1, toolStripButtonRefreshData, toolStripButtonUserManagement, toolStripButtonCacheManagement, toolStripButtonWorkflowTest, toolStripButtonSystemConfig, toolStripButtonSequenceManagement, toolStripButtonSystemCheck, toolStripSeparator2, toolStripButtonDebugMode, toolStripButtonNetworkMonitor, toolStripButtonPerformance, toolStripButtonMemoryDiagnostics });
             toolStripMain.Location = new System.Drawing.Point(0, 27);
             toolStripMain.Name = "toolStripMain";
             toolStripMain.Size = new System.Drawing.Size(1167, 25);
@@ -372,6 +424,15 @@ namespace RUINORERP.Server
             toolStripButtonPerformance.Size = new System.Drawing.Size(72, 22);
             toolStripButtonPerformance.Text = "性能监控";
             toolStripButtonPerformance.Click += toolStripButtonPerformance_Click;
+            // 
+            // toolStripButtonMemoryDiagnostics
+            // 
+            toolStripButtonMemoryDiagnostics.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            toolStripButtonMemoryDiagnostics.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButtonMemoryDiagnostics.Name = "toolStripButtonMemoryDiagnostics";
+            toolStripButtonMemoryDiagnostics.Size = new System.Drawing.Size(69, 22);
+            toolStripButtonMemoryDiagnostics.Text = "内存诊断";
+            toolStripButtonMemoryDiagnostics.Click += toolStripButtonMemoryDiagnostics_Click;
             // 
             // statusStripMain
             // 
@@ -656,5 +717,6 @@ namespace RUINORERP.Server
         private System.Windows.Forms.ToolStripDropDownButton toolStripButtonNetworkMonitor;
         private System.Windows.Forms.ToolStripButton toolStripButtonPerformance;
         private System.Windows.Forms.ToolStripDropDownButton toolStripButtonDebugMode;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripButtonMemoryDiagnostics; // 内存泄漏诊断按钮
     }
 }

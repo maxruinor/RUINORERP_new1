@@ -552,7 +552,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_EmployeeServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_Employee>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_Employee>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

@@ -364,7 +364,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ApprovalServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_Approval>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_Approval>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

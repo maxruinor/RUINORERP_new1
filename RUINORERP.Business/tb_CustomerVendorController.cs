@@ -240,8 +240,8 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-                       // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                       // 开启事务，保证数据一致性（使用异步版本）
+                await _unitOfWorkManage.BeginTranAsync();
                 
             if (entity.CustomerVendor_ID > 0)
             {
@@ -249,7 +249,6 @@ namespace RUINORERP.Business
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_CustomerVendor>(entity as tb_CustomerVendor)
                         .Include(m => m.tb_FM_Invoices)
                     .Include(m => m.tb_AS_AfterSaleDeliveries)
-                    .Include(m => m.tb_ManufacturingOrders)
                     .Include(m => m.tb_ManufacturingOrders)
                     .Include(m => m.tb_FM_OtherExpenseDetails)
                     .Include(m => m.tb_AS_AfterSaleApplies)
@@ -292,7 +291,6 @@ namespace RUINORERP.Business
                 .Include(m => m.tb_FM_Invoices)
                 .Include(m => m.tb_AS_AfterSaleDeliveries)
                 .Include(m => m.tb_ManufacturingOrders)
-                .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
                 .Include(m => m.tb_AS_AfterSaleApplies)
                 .Include(m => m.tb_FM_Statements)
@@ -332,20 +330,19 @@ namespace RUINORERP.Business
                      
         }
         
-                // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                // 注意信息的完整性（使用异步提交）
+                await _unitOfWorkManage.CommitTranAsync();
                 rsms.ReturnObject = entity as T ;
                 entity.PrimaryKeyID = entity.CustomerVendor_ID;
                 rsms.Succeeded = rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
-                _logger.Error(ex);
             }
 
             return rsms;
@@ -405,6 +402,7 @@ namespace RUINORERP.Business
         }
 
 
+        //1
         public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
             tb_CustomerVendor entity = model as tb_CustomerVendor;
@@ -512,7 +510,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_CustomerVendorServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_CustomerVendor>(entity);
+                 // ✅ 修复: 更新操作应使用UpdateEntity而非DeleteEntity
+                 _eventDrivenCacheManager.UpdateEntity<tb_CustomerVendor>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

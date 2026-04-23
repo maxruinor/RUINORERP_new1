@@ -373,7 +373,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_SaleOutServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_SaleOut>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_SaleOut>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

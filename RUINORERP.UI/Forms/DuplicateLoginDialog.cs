@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RUINORERP.UI.Forms
@@ -162,6 +163,16 @@ namespace RUINORERP.UI.Forms
                 if (success)
                 {
                     _selectedAction = DuplicateLoginAction.ForceOfflineOthers;
+                    
+                    // ✅ 修复：强制下线成功后，显示提示并关闭对话框
+                    // 用户可以在登录窗体重新尝试登录
+                    lblProgressStatus.Values.Text = "强制对方下线成功！\n\n请返回登录界面重新登录。";
+                    this.Refresh();
+                    
+                    // 等待2秒让用户看到提示
+                    await Task.Delay(2000);
+                    
+                    // 关闭对话框，返回OK表示强制下线成功
                     this.DialogResult = DialogResult.OK;
                     this.Close();
                 }
@@ -171,19 +182,23 @@ namespace RUINORERP.UI.Forms
                     pnlProgress.Visible = false;
                     pnlButtons.Visible = true;
                     
-                    // 增强: 提供更详细的错误信息和重试建议
-                    MessageBox.Show(
+                    // ✅ 修复：提供更详细的错误信息和重试建议
+                    var result = MessageBox.Show(
                         "强制对方下线失败。\n\n" +
                         "可能的原因:\n" +
                         "1. 对方已主动退出登录\n" +
                         "2. 网络连接异常\n" +
                         "3. 服务器处理超时\n\n" +
-                        "建议:\n" +
-                        "- 检查网络连接后重试\n" +
-                        "- 如多次失败,请联系系统管理员",
+                        "是否重试？",
                         "操作失败", 
-                        MessageBoxButtons.OK, 
+                        MessageBoxButtons.RetryCancel, 
                         MessageBoxIcon.Warning);
+                    
+                    if (result == DialogResult.Retry)
+                    {
+                        // 用户选择重试，重新调用自己
+                        BtnForceOffline_Click(sender, e);
+                    }
                 }
             }
             catch (Exception ex)
@@ -192,14 +207,20 @@ namespace RUINORERP.UI.Forms
                 pnlProgress.Visible = false;
                 pnlButtons.Visible = true;
                 
-                // 增强: 显示具体异常信息便于排查
-                MessageBox.Show(
+                // ✅ 修复：显示具体异常信息便于排查
+                var result = MessageBox.Show(
                     $"操作失败:\n{ex.Message}\n\n" +
                     $"异常类型: {ex.GetType().Name}\n\n" +
-                    "请截图保存此信息并联系技术支持。", 
+                    "是否重试？",
                     "错误", 
-                    MessageBoxButtons.OK, 
+                    MessageBoxButtons.RetryCancel, 
                     MessageBoxIcon.Error);
+                
+                if (result == DialogResult.Retry)
+                {
+                    // 用户选择重试，重新调用自己
+                    BtnForceOffline_Click(sender, e);
+                }
             }
         }
 

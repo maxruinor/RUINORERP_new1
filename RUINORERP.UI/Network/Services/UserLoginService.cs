@@ -24,7 +24,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly TokenManager _tokenManager;
         private readonly CacheClientService _cacheClientService;
         private bool _isLoggedIn = false; // 登录状态标志
-                                          private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1);
 
         private readonly ILogger<UserLoginService> _logger;
         private bool _isDisposed = false;
@@ -77,7 +77,7 @@ namespace RUINORERP.UI.Network.Services
                 // 使用信号量确保同一时间只有一个登录请求
                 // ✅ 延长超时到30秒，避免网络慢时快速失败
                 var lockAcquired = await _loginLock.WaitAsync(TimeSpan.FromSeconds(30), ct);
-                
+
                 if (!lockAcquired)
                 {
                     _logger?.LogWarning("登录请求被拒绝: 获取锁超时，可能已有登录在进行");
@@ -132,7 +132,7 @@ namespace RUINORERP.UI.Network.Services
                 {
                     //接收来自服务器的Token并保存
                     await _tokenManager.TokenStorage.SetTokenAsync(response.Token);
-                    
+
                     // 使用服务器返回的SessionId更新客户端上下文
                     if (MainForm.Instance?.AppContext != null && !string.IsNullOrEmpty(response.SessionId))
                     {
@@ -265,7 +265,7 @@ namespace RUINORERP.UI.Network.Services
             return null;
         }
 
-       
+
 
         /// <summary>
         /// 处理连接状态变更事件
@@ -426,12 +426,12 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                if (!_communicationService.ConnectionManager.IsConnected || 
-                    _duplicateLoginResult == null || 
-                    _duplicateLoginResult.ExistingSessions == null || 
+                if (!_communicationService.ConnectionManager.IsConnected ||
+                    _duplicateLoginResult == null ||
+                    _duplicateLoginResult.ExistingSessions == null ||
                     _duplicateLoginResult.ExistingSessions.Count == 0)
                 {
-                    _logger?.LogWarning("[强制下线] 前置条件不满足: Connected={IsConnected}, HasSessions={HasSessions}", 
+                    _logger?.LogWarning("[强制下线] 前置条件不满足: Connected={IsConnected}, HasSessions={HasSessions}",
                         _communicationService.ConnectionManager.IsConnected,
                         _duplicateLoginResult?.ExistingSessions?.Count > 0);
                     return false;
@@ -448,50 +448,76 @@ namespace RUINORERP.UI.Network.Services
                     {
                         ["Action"] = "你的账号在其它地方登录。当前连接即将断开。请保存数据。",
                         // ✅ 修复：确保传递的是 SessionId 而不是 UserId，以便服务器能准确定位会话
-                        ["TargetUserId"] = targetSessionId 
+                        ["TargetUserId"] = targetSessionId
                     }
                 };
 
+                // ✅ 修复：增加重试机制，最多重试2次
+                int maxRetries = 2;
+                Exception lastException = null;
 
-                var response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
-                    AuthenticationCommands.DuplicateLogin, request, ct, 20000);
-                
-                if (response != null)
+                for (int retry = 0; retry <= maxRetries; retry++)
                 {
-                    if (response.IsSuccess)
+                    try
                     {
-                        _logger?.LogInformation($"[强制下线成功] 服务器返回成功: TargetSessionId={targetSessionId}");
-                        
-                        // 等待短暂时间，确保服务器端会话清理完成
-                        await Task.Delay(500, ct);
-                        return true;
+                        if (retry > 0)
+                        {
+                            _logger?.LogInformation($"[强制下线] 第{retry}次重试...");
+                            await Task.Delay(500, ct); // 等待500ms后重试
+                        }
+
+                        var response = await _communicationService.SendCommandWithResponseAsync<ResponseBase>(
+                            AuthenticationCommands.DuplicateLogin, request, ct, 20000);
+
+                        if (response != null)
+                        {
+                            if (response.IsSuccess)
+                            {
+                                _logger?.LogInformation($"[强制下线成功] 服务器返回成功: TargetSessionId={targetSessionId}, Retry={retry}");
+
+                                // 等待短暂时间，确保服务器端会话清理完成
+                                await Task.Delay(500, ct);
+                                return true;
+                            }
+                            else
+                            {
+                                _logger?.LogWarning($"[强制下线失败] 服务器返回失败: TargetSessionId={targetSessionId}, Message={response.ErrorMessage ?? "未知错误"}, Retry={retry}");
+                                lastException = new Exception(response.ErrorMessage ?? "未知错误");
+                                // 继续重试
+                            }
+                        }
+                        else
+                        {
+                            _logger?.LogWarning($"[强制下线失败] 服务器返回空响应: TargetSessionId={targetSessionId}, Retry={retry}");
+                            lastException = new Exception("服务器返回空响应");
+                            // 继续重试
+                        }
                     }
-                    else
+                    catch (TimeoutException ex)
                     {
-                        _logger?.LogWarning($"[强制下线失败] 服务器返回失败: TargetSessionId={targetSessionId}, Message={response.ErrorMessage ?? "未知错误"}");
+                        _logger?.LogWarning(ex, $"[强制下线超时] 第{retry}次尝试超时");
+                        lastException = ex;
+                        // 继续重试
+                    }
+                    catch (OperationCanceledException ex)
+                    {
+                        _logger?.LogWarning(ex, $"[强制下线取消] 操作被取消");
                         return false;
                     }
-                }
-                else
-                {
-                    _logger?.LogError($"[强制下线失败] 服务器返回空响应: TargetSessionId={targetSessionId}");
-                    return false;
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, $"[强制下线异常] 第{retry}次尝试发生异常: Type={ex.GetType().Name}, Message={ex.Message}");
+                        lastException = ex;
+                        // 继续重试
+                    }
                 }
 
-            }
-            catch (TimeoutException ex)
-            {
-                _logger?.LogError(ex, $"[强制下线超时] 等待服务器响应的过程中超时");
+                // 所有重试都失败了
+                _logger?.LogError(lastException, $"[强制下线最终失败] 已重试{maxRetries}次，仍然失败: TargetSessionId={targetSessionId}");
                 return false;
             }
-            catch (OperationCanceledException ex)
+            catch
             {
-                _logger?.LogWarning(ex, $"[强制下线取消] 操作被取消");
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"[强制下线异常] 处理强制下线请求时发生异常: Type={ex.GetType().Name}, Message={ex.Message}");
                 return false;
             }
         }

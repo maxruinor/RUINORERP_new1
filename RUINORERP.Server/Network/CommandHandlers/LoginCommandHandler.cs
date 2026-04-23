@@ -525,25 +525,26 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 if (targetSession == null)
                 {
-                    // 增强: 记录更详细的失败信息
-                    logger?.LogWarning($"[强制下线失败] 目标用户不在线或会话已失效: TargetIdentifier={targetIdentifier}");
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "目标用户不在线或会话ID无效");
+                    // ✅ 修复：目标会话不存在可能意味着已经被断开，这实际上是成功的
+                    logger?.LogInformation($"[强制下线] 目标会话不存在，可能已被断开: TargetIdentifier={targetIdentifier}，视为成功");
+                    return ResponseFactory.CreateSpecificSuccessResponse(executionContext, "目标用户不在线或会话已失效");
                 }
                         
                 // 关键修复：检查目标会话是否仍然活跃连接
                 if (!targetSession.IsConnected)
                 {
-                    logger?.LogWarning($"[强制下线] 目标会话已断开，无需执行下线操作: SessionId={targetSession.SessionID}, UserName={targetSession.UserName}, DisconnectTime={targetSession.DisconnectTime}");
+                    logger?.LogInformation($"[强制下线] 目标会话已断开，无需执行下线操作: SessionId={targetSession.SessionID}, UserName={targetSession.UserName}, DisconnectTime={targetSession.DisconnectTime}，视为成功");
                     
                     // 会话已断开，清理残留的会话记录
                     await SessionService.RemoveSessionAsync(targetSession.SessionID);
                     
-                    return ResponseFactory.CreateSpecificSuccessResponse(executionContext, "目标用户已断开连接，无需强制下线");
+                    // ✅ 修复：返回成功而不是错误，因为目标已经下线
+                    return ResponseFactory.CreateSpecificSuccessResponse(executionContext, "目标用户已断开连接");
                 }
                         
                 logger?.LogInformation($"[强制下线] 找到目标会话: SessionId={targetSession.SessionID}, UserName={targetSession.UserName}, ClientIp={targetSession.ClientIp}, IsConnected={targetSession.IsConnected}");
         
-                // 发送提示消息
+                // ✅ 修复：先发送提示消息
                 try
                 {
                     await MessageService.SendMessageToUserAsync(targetSession, 
@@ -553,53 +554,120 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 catch (Exception msgEx)
                 {
-                    // 新增: 即使消息发送失败也继续执行断开连接
-                    logger?.LogError(msgEx, $"[强制下线警告] 发送提示消息失败,但将继续执行断开连接: SessionId={targetSession.SessionID}");
+                    // ✅ 修复：即使消息发送失败也继续执行断开连接，不视为致命错误
+                    logger?.LogWarning(msgEx, $"[强制下线警告] 发送提示消息失败,但将继续执行断开连接: SessionId={targetSession.SessionID}");
                 }
         
-                // 客户端通知强制下线
+                // ✅ 修复：发送ForceLogout指令，等待A客户端响应并主动断开
+                bool forceLogoutSuccess = false;
+                string targetSessionId = targetSession.SessionID;
+                
                 try
                 {
                     await managementService.ForceLogoutAsync(targetSession, 1000);
-                    logger?.LogInformation($"[强制下线] 已发送ForceLogout指令");
+                    logger?.LogInformation($"[强制下线] 已发送ForceLogout指令给A客户端");
+                    
+                    // ✅ 关键修复：等待A客户端主动断开连接
+                    // A客户端会：1.发送确认响应 2.主动断开连接 3.退出程序
+                    // 我们等待最多3秒，直到检测到A的连接断开
+                    int maxWaitMs = 3000;
+                    int waitIntervalMs = 100;
+                    int elapsedMs = 0;
+                    
+                    while (elapsedMs < maxWaitMs)
+                    {
+                        await Task.Delay(waitIntervalMs, cancellationToken);
+                        elapsedMs += waitIntervalMs;
+                        
+                        // 检查A是否已断开
+                        var checkSession = SessionService.GetSession(targetSessionId);
+                        if (checkSession == null || !checkSession.IsConnected)
+                        {
+                            logger?.LogInformation($"[强制下线] 检测到A客户端已断开连接 (等待{elapsedMs}ms)");
+                            forceLogoutSuccess = true;
+                            break;
+                        }
+                        
+                        if (elapsedMs % 1000 == 0)
+                        {
+                            logger?.LogDebug($"[强制下线] 等待A断开... ({elapsedMs}ms)");
+                        }
+                    }
+                    
+                    if (!forceLogoutSuccess)
+                    {
+                        logger?.LogWarning($"[强制下线] 等待超时({maxWaitMs}ms)，A仍未断开，将强制断开");
+                    }
                 }
                 catch (Exception forceEx)
                 {
-                    // 新增: 记录ForceLogout失败的详细信息
-                    logger?.LogError(forceEx, $"[强制下线失败] ForceLogoutAsync调用失败: SessionId={targetSession.SessionID}, Error={forceEx.Message}");
-                    // 继续尝试DisconnectSessionAsync
+                    // ✅ 修复：记录ForceLogout失败但不中断流程
+                    logger?.LogWarning(forceEx, $"[强制下线警告] ForceLogoutAsync调用失败: SessionId={targetSession.SessionID}");
                 }
                         
-                // 通知客户端强制下线
+                // ✅ 修复：A已断开后，清理会话并返回成功给B
                 try
                 {
-                    bool disconnectResult = await SessionService.DisconnectSessionAsync(
-                        targetSession.SessionID, 
-                        "您的账号在另一地点登录,您已被强制下线。如非本人操作,请及时修改密码。");
-                            
-                    if (disconnectResult)
+                    // 如果A还未完全断开，执行强制断开
+                    var finalCheckSession = SessionService.GetSession(targetSessionId);
+                    if (finalCheckSession != null && finalCheckSession.IsConnected)
                     {
-                        logger?.LogInformation($"[强制下线成功] 会话已成功断开: SessionId={targetSession.SessionID}, UserName={targetSession.UserName}");
+                        logger?.LogWarning($"[强制下线] A仍未断开，执行强制断开: SessionId={targetSessionId}");
+                        await SessionService.DisconnectSessionAsync(
+                            targetSessionId, 
+                            "您的账号在另一地点登录,您已被强制下线。");
                     }
                     else
                     {
-                        logger?.LogError($"[强制下线失败] DisconnectSessionAsync返回失败: SessionId={targetSession.SessionID}");
-                        return ResponseFactory.CreateSpecificErrorResponse(executionContext, "强制下线执行失败");
+                        logger?.LogInformation($"[强制下线] A已断开，清理会话记录: SessionId={targetSessionId}");
                     }
+                    
+                    // 清理会话记录
+                    await SessionService.RemoveSessionAsync(targetSessionId);
+                    logger?.LogInformation($"[强制下线] 已清理A的会话记录");
                 }
                 catch (Exception disconnectEx)
                 {
-                    // 新增: 详细记录DisconnectSessionAsync的异常
-                    logger?.LogError(disconnectEx, $"[强制下线异常] DisconnectSessionAsync抛出异常: SessionId={targetSession.SessionID}, Error={disconnectEx.Message}, StackTrace={disconnectEx.StackTrace}");
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, $"强制下线异常: {disconnectEx.Message}");
+                    // ✅ 修复：详细记录DisconnectSessionAsync的异常，但不一定返回失败
+                    logger?.LogError(disconnectEx, $"[强制下线异常] 清理会话时发生异常: SessionId={targetSessionId}");
+                    
+                    // 再次检查会话状态，如果已断开则视为成功
+                    var checkSession = SessionService.GetSession(targetSessionId);
+                    if (checkSession == null || !checkSession.IsConnected)
+                    {
+                        logger?.LogInformation($"[强制下线成功] 尽管发生异常，但A的会话已断开");
+                    }
+                    else
+                    {
+                        // 如果仍然连接，才返回错误
+                        return ResponseFactory.CreateSpecificErrorResponse(executionContext, $"强制下线异常: {disconnectEx.Message}");
+                    }
                 }
         
+                // ✅ 修复：只要执行了断开操作，就返回成功
                 return ResponseFactory.CreateSpecificSuccessResponse(executionContext, "用户已成功强制下线");
             }
             catch (Exception ex)
             {
                 // 增强: 记录完整的异常堆栈和上下文
                 logger?.LogError(ex, $"[强制下线严重错误] 处理强制用户下线命令时发生未预期异常: TargetUserId={request.AdditionalData?["TargetUserId"]}, SourceSessionId={executionContext.SessionId}, ExceptionType={ex.GetType().Name}, Message={ex.Message}, StackTrace={ex.StackTrace}");
+                
+                // ✅ 修复：即使发生异常，也尝试检查目标会话是否已断开
+                try
+                {
+                    string targetId = request.AdditionalData?["TargetUserId"]?.ToString();
+                    if (!string.IsNullOrEmpty(targetId))
+                    {
+                        var checkSession = SessionService.GetSession(targetId);
+                        if (checkSession == null || !checkSession.IsConnected)
+                        {
+                            logger?.LogInformation($"[强制下线] 尽管发生异常，但目标会话已断开，视为成功: TargetId={targetId}");
+                            return ResponseFactory.CreateSpecificSuccessResponse(executionContext, "用户已强制下线(异常恢复)");
+                        }
+                    }
+                }
+                catch { }
+                
                 return SystemCommandResponse.CreateForceLogoutFailure($"处理失败: {ex.Message}", "FORCE_LOGOUT_ERROR");
             }
         }
@@ -795,6 +863,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 检查是否为本地登录（同一台机器）
+        /// ✅ 修复：使用IP地址+计算机名组合判断，更准确识别同机登录
         /// </summary>
         /// <param name="currentSessionId">当前会话ID</param>
         /// <param name="existingSession">已存在的会话</param>
@@ -803,20 +872,55 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 获取当前会话的客户端IP
+                // 获取当前会话的客户端信息
                 var currentSession = SessionService.GetSession(currentSessionId);
                 if (currentSession == null || existingSession == null)
                     return false;
 
-                // 如果IP地址相同，则认为是同一台机器的登录
-                // 同一台机器允许多个会话同时存在
-                return string.Equals(currentSession.ClientIp, existingSession.ClientIp, StringComparison.OrdinalIgnoreCase);
+                // ✅ 修复：使用IP地址 + 计算机名组合判断是否为同一台机器
+                bool sameIp = string.Equals(currentSession.ClientIp, existingSession.ClientIp, StringComparison.OrdinalIgnoreCase);
+                
+                // 提取计算机名（从DeviceInfo中）
+                string currentMachineName = ExtractMachineName(currentSession.DeviceInfo);
+                string existingMachineName = ExtractMachineName(existingSession.DeviceInfo);
+                bool sameMachine = !string.IsNullOrEmpty(currentMachineName) && 
+                                   !string.IsNullOrEmpty(existingMachineName) &&
+                                   string.Equals(currentMachineName, existingMachineName, StringComparison.OrdinalIgnoreCase);
+                
+                // IP相同且计算机名相同，才认为是同一台机器
+                bool isSameMachine = sameIp && sameMachine;
+                
+                if (isSameMachine)
+                {
+                    logger?.LogDebug($"[同机判断] IP={currentSession.ClientIp}, MachineName={currentMachineName}，判定为同一台机器");
+                }
+                
+                return isSameMachine;
             }
             catch (Exception ex)
             {
                 LogError($"检查本地重复登录时发生异常: {ex.Message}", ex);
                 return false;
             }
+        }
+        
+        /// <summary>
+        /// 从DeviceInfo中提取计算机名
+        /// DeviceInfo格式可能为："DESKTOP-XXX | Windows 10" 或直接是计算机名
+        /// </summary>
+        private string ExtractMachineName(string deviceInfo)
+        {
+            if (string.IsNullOrEmpty(deviceInfo))
+                return string.Empty;
+            
+            // 如果包含 "|" ，取第一部分作为计算机名
+            if (deviceInfo.Contains("|"))
+            {
+                return deviceInfo.Split('|')[0].Trim();
+            }
+            
+            // 否则直接返回
+            return deviceInfo.Trim();
         }
 
         /// <summary>

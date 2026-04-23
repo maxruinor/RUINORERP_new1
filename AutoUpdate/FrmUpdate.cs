@@ -2806,17 +2806,9 @@ namespace AutoUpdate
                 
                 AppendAllText("[用户体验优化] 即将隐藏更新界面，启动主程序...");
                 
-                // 【关键优化】使用现有的 StartEntryPointExe 方法启动主程序
-                try
-                {
-                    AppendAllText($"[主程序启动] 调用 StartEntryPointExe 启动主程序");
-                    StartEntryPointExe(); // 使用现有方法，自动从 XML 读取 EntryPoint
-                    AppendAllText("[主程序启动] 主程序已成功启动");
-                }
-                catch (Exception ex)
-                {
-                    AppendAllText($"[主程序启动] 启动失败: {ex.Message}");
-                }
+                // 【关键优化】不再在LastCopyAsync中启动主程序，统一由btnFinish_Click处理
+                // 避免重复启动导致的主程序被杀死后又启动的问题
+                AppendAllText("[主程序启动] 主程序将由完成按钮统一启动");
                 
                 // 【性能优化】隐藏更新窗口，给用户更好的体验
                 this.Hide();
@@ -4326,10 +4318,11 @@ namespace AutoUpdate
             {
                 mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
 
-             
+              
             }
 
-            IsMainAppRun();
+            // 【修复】不再调用IsMainAppRun()，避免杀死刚启动的主程序
+            // IsMainAppRun();
 
            
 

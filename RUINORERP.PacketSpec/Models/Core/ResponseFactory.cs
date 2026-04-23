@@ -129,7 +129,20 @@ namespace RUINORERP.PacketSpec.Models.Core
 
             {
                 _logger.LogError(ex, "创建特定类型成功响应失败: {ResponseType}", responseTypeName);
-                throw new InvalidOperationException($"无法创建类型 {responseTypeName} 的成功响应实例", ex);
+                // 不抛出异常，而是返回默认的ResponseBase对象
+            }
+            
+            // 确保即使创建特定类型失败，也返回基本的ResponseBase对象
+            if (lastResponse == null)
+            {
+                _logger.LogWarning("创建特定类型成功响应失败，返回默认ResponseBase对象");
+                lastResponse = new ResponseBase
+                {
+                    IsSuccess = true,
+                    ErrorMessage = null,
+                    Message = message,
+                    Metadata = additionalMetadata ?? new Dictionary<string, object> { { "SuccessSource", "ResponseFactory" }, { "SuccessTime", DateTime.Now } }
+                };
             }
             return lastResponse;
         }
@@ -263,9 +276,8 @@ namespace RUINORERP.PacketSpec.Models.Core
                         }
 
                         // 添加错误相关的元数据
-                        newResponse.Metadata["ErrorSource"] = "";
+                        newResponse.Metadata["ErrorSource"] = "Server";
                         newResponse.Metadata["ErrorTime"] = DateTime.Now;
-                        newResponse.ErrorMessage = $"";
 
                         // 添加额外的元数据
                         if (additionalMetadata != null)

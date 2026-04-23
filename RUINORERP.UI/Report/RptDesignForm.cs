@@ -460,7 +460,18 @@ namespace RUINORERP.UI.Report
             }
             TargetReport.RegisterData(PrintDataSources, "rd");
             //报表控件注册数据
+            if (currUserInfos == null)
+            {
+                currUserInfos = new List<CurrentUserInfo>();
+                currUserInfos.Add(MainForm.Instance.AppContext.CurUserInfo);
+            }
             TargetReport.RegisterData(currUserInfos, "currUserInfo");
+            
+            if (companyInfos == null)
+            {
+                companyInfos = new List<tb_Company>();
+                companyInfos.Add(MainForm.Instance.AppContext.CompanyInfo);
+            }
             TargetReport.RegisterData(companyInfos, "companyInfo");
             if (this.InvokeRequired)
             {

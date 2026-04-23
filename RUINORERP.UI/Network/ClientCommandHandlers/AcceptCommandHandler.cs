@@ -102,13 +102,71 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 {
                     if (commandRequest.CommandType == SystemManagementType.ExitERPSystem)
                     {
-                        // 在UI线程显示退出提示并执行退出
-                        await Task.Run(() =>
+                        // ✅ 修复：被强制下线时，先响应确认，再主动断开连接，最后退出
+                        await Task.Run(async () =>
                         {
                             try
                             {
                                 int delaySeconds = commandRequest.DelaySeconds;
                                 
+                                _logger.LogInformation("[强制下线] 收到强制下线指令，准备执行下线流程");
+                                
+                                // ✅ 第1步：立即向服务器发送确认响应
+                                bool confirmationSent = false;
+                                try
+                                {
+                                    var commService = RUINORERP.UI.Startup.GetFromFac<ClientCommunicationService>();
+                                    if (commService != null && commService.ConnectionManager.IsConnected)
+                                    {
+                                        var confirmationResponse = new ResponseBase
+                                        {
+                                            IsSuccess = true,
+                                            Message = "已同意强制下线，正在断开连接"
+                                        };
+                                        
+                                        // ✅ 使用SendResponseAsync发送响应，使用原始请求的RequestId
+                                        string originalRequestId = packet.ExecutionContext?.RequestId ?? string.Empty;
+                                        await commService.SendResponseAsync(
+                                            RUINORERP.PacketSpec.Commands.SystemCommands.SystemManagement, 
+                                            confirmationResponse,
+                                            originalRequestId);
+                                        
+                                        confirmationSent = true;
+                                        _logger.LogInformation("[强制下线] 已向服务器发送确认响应, RequestId={RequestId}", originalRequestId);
+                                    }
+                                    else
+                                    {
+                                        _logger.LogWarning("[强制下线] 通信服务不可用或已断开");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning(ex, "[强制下线] 发送确认响应失败");
+                                }
+                                
+                                // ✅ 第2步：短暂延迟，确保服务器收到确认
+                                await Task.Delay(300);
+                                
+                                // ✅ 第3步：主动断开与服务器的连接
+                                try
+                                {
+                                    var commService = RUINORERP.UI.Startup.GetFromFac<ClientCommunicationService>();
+                                    if (commService != null && commService.ConnectionManager.IsConnected)
+                                    {
+                                        _logger.LogInformation("[强制下线] 正在主动断开与服务器的连接...");
+                                        await commService.Disconnect();
+                                        _logger.LogInformation("[强制下线] 已成功断开与服务器的连接");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning(ex, "[强制下线] 断开连接时发生异常");
+                                }
+                                
+                                // ✅ 第4步：再短暂延迟，确保服务器处理完断开事件
+                                await Task.Delay(500);
+                                
+                                // ✅ 第5步：执行系统退出
                                 if (delaySeconds > 0)
                                 {
                                     // 显示倒计时提示
@@ -137,6 +195,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 else
                                 {
                                     // 立即执行系统退出
+                                    _logger.LogInformation("[强制下线] 立即退出系统");
                                     System.Windows.Forms.Application.Exit();
                                 }
                             }

@@ -39,6 +39,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kcmbEntityType = new Krypton.Toolkit.KryptonComboBox();
             this.ktbSearchEntity = new Krypton.Toolkit.KryptonTextBox();
             this.klblSearch = new Krypton.Toolkit.KryptonLabel();
+            this.klblDeleteMode = new Krypton.Toolkit.KryptonLabel();
+            this.kcmbDeleteMode = new Krypton.Toolkit.KryptonComboBox();
             this.klblEntityType = new Krypton.Toolkit.KryptonLabel();
             this.kryptonGroupBoxPreview = new Krypton.Toolkit.KryptonGroupBox();
             this.kryptonPanelPreview = new Krypton.Toolkit.KryptonPanel();
@@ -149,6 +151,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // 
             // kryptonPanelConfig
             // 
+            this.kryptonPanelConfig.Controls.Add(this.kcmbDeleteMode);
+            this.kryptonPanelConfig.Controls.Add(this.klblDeleteMode);
             this.kryptonPanelConfig.Controls.Add(this.kcmbEntityType);
             this.kryptonPanelConfig.Controls.Add(this.ktbSearchEntity);
             this.kryptonPanelConfig.Controls.Add(this.klblSearch);
@@ -194,6 +198,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.klblEntityType.Size = new System.Drawing.Size(65, 20);
             this.klblEntityType.TabIndex = 0;
             this.klblEntityType.Values.Text = "实体类型:";
+            // 
+            // klblDeleteMode
+            // 
+            this.klblDeleteMode.Location = new System.Drawing.Point(920, 18);
+            this.klblDeleteMode.Name = "klblDeleteMode";
+            this.klblDeleteMode.Size = new System.Drawing.Size(65, 20);
+            this.klblDeleteMode.TabIndex = 4;
+            this.klblDeleteMode.Values.Text = "删除方式:";
+            // 
+            // kcmbDeleteMode
+            // 
+            this.kcmbDeleteMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbDeleteMode.DropDownWidth = 180;
+            this.kcmbDeleteMode.IntegralHeight = false;
+            this.kcmbDeleteMode.Location = new System.Drawing.Point(990, 15);
+            this.kcmbDeleteMode.MaxDropDownItems = 10;
+            this.kcmbDeleteMode.Name = "kcmbDeleteMode";
+            this.kcmbDeleteMode.Size = new System.Drawing.Size(180, 21);
+            this.kcmbDeleteMode.TabIndex = 5;
             // 
             // kryptonGroupBoxPreview
             // 
@@ -409,6 +432,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private Krypton.Toolkit.KryptonComboBox kcmbEntityType;
         private Krypton.Toolkit.KryptonTextBox ktbSearchEntity;
         private Krypton.Toolkit.KryptonLabel klblSearch;
+        private Krypton.Toolkit.KryptonLabel klblDeleteMode;
+        private Krypton.Toolkit.KryptonComboBox kcmbDeleteMode;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxPreview;
         private Krypton.Toolkit.KryptonPanel kryptonPanelPreview;
         private System.Windows.Forms.DataGridView dgvDataPreview;

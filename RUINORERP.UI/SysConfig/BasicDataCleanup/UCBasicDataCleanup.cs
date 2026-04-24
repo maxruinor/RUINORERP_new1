@@ -7,6 +7,7 @@
 // **************************************
 
 using Krypton.Toolkit;
+using RUINORERP.Business;
 using RUINORERP.Common;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
@@ -85,6 +86,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
             // 初始化实体类型选择
             InitializeEntityTypes();
+            
+            // 初始化删除方式选择
+            InitializeDeleteMode();
 
             // 绑定事件
             BindEvents();
@@ -149,6 +153,36 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             
             kcmbEntityType.SelectedIndex = 0;
             _isInitializing = false;
+        }
+
+        /// <summary>
+        /// 初始化删除方式选择下拉框
+        /// </summary>
+        private void InitializeDeleteMode()
+        {
+            kcmbDeleteMode.Items.Clear();
+            kcmbDeleteMode.Items.Add(new ComboBoxItem("实体导航模式", DataCleanupEngine.DeleteMode.EntityNavigation));
+            kcmbDeleteMode.Items.Add(new ComboBoxItem("数据库元数据模式", DataCleanupEngine.DeleteMode.DatabaseMetadata));
+            kcmbDeleteMode.DisplayMember = "DisplayText";
+            kcmbDeleteMode.ValueMember = "Value";
+            kcmbDeleteMode.SelectedIndex = 0;
+        }
+
+        /// <summary>
+        /// 下拉框项封装类
+        /// </summary>
+        private class ComboBoxItem
+        {
+            public string DisplayText { get; }
+            public DataCleanupEngine.DeleteMode Value { get; }
+            
+            public ComboBoxItem(string displayText, DataCleanupEngine.DeleteMode value)
+            {
+                DisplayText = displayText;
+                Value = value;
+            }
+            
+            public override string ToString() => DisplayText;
         }
 
         /// <summary>
@@ -473,7 +507,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             {
                 if (row.Cells["colSelect"] is DataGridViewCheckBoxCell cell)
                 {
-                    cell.Value = !(cell.Value != null && (bool)cell.Value);
+                    // 获取当前状态
+                    bool currentValue = cell.Value != null && Convert.ToBoolean(cell.Value);
+                    // 取反
+                    cell.Value = !currentValue;
                 }
             }
             UpdateSelectedCount();
@@ -565,20 +602,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         {
             var targetIds = ids ?? _selectedIds;
             
-            AppendRealTimeLog($"========== 开始级联删除 ==========");
-            AppendRealTimeLog($"实体类型: {_selectedEntityType?.Name}, ID数量: {targetIds.Count}, 测试模式: {isTestMode}");
+            // 获取删除模式
+            var deleteMode = DataCleanupEngine.DeleteMode.EntityNavigation;
+            if (kcmbDeleteMode.SelectedItem is ComboBoxItem selectedItem)
+            {
+                deleteMode = selectedItem.Value;
+            }
             
-            // 使用反射调用泛型方法 ExecuteCascadeDeleteAsync<T>
-            var method = typeof(DataCleanupEngine).GetMethod("ExecuteCascadeDeleteAsync");
+            AppendRealTimeLog($"========== 开始级联删除 ==========");
+            AppendRealTimeLog($"实体类型: {_selectedEntityType?.Name}, ID数量: {targetIds.Count}, 删除模式: {deleteMode}, 测试模式: {isTestMode}");
+            
+            // 使用反射调用泛型方法 ExecuteCascadeDeleteAsync<T>（带 DeleteMode 参数）
+            // 注意：需要显式指定参数类型以匹配正确的重载
+            var methodTypes = new[] { typeof(List<long>), typeof(DataCleanupEngine.DeleteMode), typeof(bool) };
+            var method = typeof(DataCleanupEngine).GetMethod("ExecuteCascadeDeleteAsync", methodTypes);
+            
             if (method == null)
             {
-                throw new InvalidOperationException("未找到 ExecuteCascadeDeleteAsync 方法");
+                throw new InvalidOperationException("未找到带 DeleteMode 参数的 ExecuteCascadeDeleteAsync 方法");
             }
             
             var genericMethod = method.MakeGenericMethod(_selectedEntityType);
             
             AppendRealTimeLog("正在构建依赖图和拓扑排序...");
-            var task = (Task<CascadeDeleteResult>)genericMethod.Invoke(_cleanupEngine, new object[] { targetIds, isTestMode });
+            var task = (Task<CascadeDeleteResult>)genericMethod.Invoke(_cleanupEngine, new object[] { targetIds, deleteMode, isTestMode });
             
             AppendRealTimeLog("等待执行结果...");
             var result = await task;

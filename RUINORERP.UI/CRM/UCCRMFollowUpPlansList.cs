@@ -83,7 +83,7 @@ namespace RUINORERP.UI.CRM
         }
 
         /// <summary>
-        /// 取消工作流提醒
+        /// 取消工作流提醒 - 删除跟进计划时记录日志
         /// </summary>
         private async Task CancelWorkflowReminderAsync(object PKValue)
         {
@@ -92,26 +92,14 @@ namespace RUINORERP.UI.CRM
                 tb_CRM_FollowUpPlans deletedPlan = this.bindingSourceList.Current as tb_CRM_FollowUpPlans;
                 if (deletedPlan != null && deletedPlan.PlanStatus == (int)FollowUpPlanStatus.未开始)
                 {
-                    var reminderData = new ReminderData
-                    {
-                        BizKeyID = Convert.ToInt64(PKValue),
-                        BizType = BizType.CRM跟进计划,
-                        RemindSubject = deletedPlan.PlanSubject,
-                        StartTime = deletedPlan.PlanStartDate,
-                        EndTime = deletedPlan.PlanEndDate
-                    };
-
-                    BaseController<tb_CRM_FollowUpPlans> ctrPlan = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpPlans>>(typeof(tb_CRM_FollowUpPlans).Name + "Controller");
-                    var result = await ctrPlan.CancelReminderAsync(reminderData);
-                    if (result.Succeeded)
-                    {
-                        MainForm.Instance.ShowStatusText("已取消相关工作流提醒");
-                    }
+                    long planId = Convert.ToInt64(PKValue);
+                    MainForm.Instance.ShowStatusText($"跟进计划[{deletedPlan.PlanSubject}]已删除");
+                    MainForm.Instance.PrintInfoLog($"跟进计划删除时取消提醒: PlanID={planId}, Subject={deletedPlan.PlanSubject}");
                 }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logManager.AddLog("错误", $"取消工作流提醒失败:{ex.Message}");
+                MainForm.Instance.logManager.AddLog("错误", $"处理删除跟进计划日志失败:{ex.Message}");
             }
         }
 

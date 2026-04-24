@@ -619,7 +619,7 @@ namespace RUINORERP.UI.CRM
                 }
 
                 long currentEmployeeID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-                string employeeName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_Name;
+                string employeeName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
 
                 if (MessageBox.Show($"您确定将：{msg}领取到自己({employeeName})吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
                 {

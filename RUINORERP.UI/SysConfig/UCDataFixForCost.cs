@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.DevComponents.WinForms.Drawing;
 using FluentValidation.Results;
@@ -75,7 +75,7 @@ namespace RUINORERP.UI.SysConfig
         /// <param name="msg"></param>
         /// <param name="keyData"></param>
         /// <returns></returns>
-        protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
+        protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData)
         {
             int WM_KEYDOWN = 256;
             int WM_SYSKEYDOWN = 260;
@@ -84,40 +84,26 @@ namespace RUINORERP.UI.SysConfig
             {
                 switch (keyData)
                 {
-                    //case Keys.Escape:
-                    //    //Exit(this);//csc关闭窗体
-                    //    break;
                     case Keys.Enter:
                         QueryInv();
                         break;
                 }
-
             }
-            //return false;
+
             var key = keyData & Keys.KeyCode;
-            var modeifierKey = keyData & Keys.Modifiers;
-            if (modeifierKey == Keys.Control && key == Keys.F)
+            var modifierKey = keyData & Keys.Modifiers;
+            if (modifierKey == Keys.Control && key == Keys.F)
             {
-                // MessageBox.Show("Control+F is pressed");
-                return true;
-
-            }
-
-            var otherkey = keyData & Keys.KeyCode;
-            var othermodeifierKey = keyData & Keys.Modifiers;
-            if (othermodeifierKey == Keys.Control && otherkey == Keys.F)
-            {
-                MessageBox.Show("Control+F is pressed");
                 return true;
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
-
         }
 
         private void UCDataFix_Load(object sender, EventArgs e)
         {
-            dataGridViewInv.RowHeadersVisible = false;
+            dataGridViewInv.RowHeadersVisible = true;
+            dataGridViewInv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             ucAdvDateTimerPickerGroup1.Visible = false;
             ucAdvDateTimerPickerGroup1.dtp1.ShowCheckBox = false;
             ucAdvDateTimerPickerGroup1.dtp2.ShowCheckBox = false;
@@ -145,6 +131,64 @@ namespace RUINORERP.UI.SysConfig
         }
 
         View_Inventory InventoryDto = new View_Inventory();
+
+        #region 公共辅助方法
+
+        /// <summary>
+        /// 验证是否选择了库存数据
+        /// </summary>
+        private bool ValidateInventorySelection(DataGridView dgv, out List<tb_Inventory> inventories)
+        {
+            inventories = new List<tb_Inventory>();
+            if (dgv.SelectedRows == null || dgv.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("请先选择要更新的库存数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            foreach (DataGridViewRow dr in dgv.SelectedRows)
+            {
+                if (dr.DataBoundItem is View_Inventory inventory)
+                {
+                    inventories.Add(inventory.tb_inventory);
+                }
+            }
+
+            if (inventories.Count == 0)
+            {
+                MessageBox.Show("未获取到有效的库存数据", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 获取操作确认消息
+        /// </summary>
+        private string GetConfirmMessage(string actionDescription, int recordCount = 0)
+        {
+            if (chkTestMode.Checked)
+            {
+                return "当前处于测试模式，仅预览数据不执行更新。是否继续？";
+            }
+            return recordCount > 0
+                ? $"即将{actionDescription}，合计 {recordCount} 条记录。\n\n是否确认执行？"
+                : $"即将{actionDescription}，是否确认执行？";
+        }
+
+        /// <summary>
+        /// 获取单条记录的确认消息
+        /// </summary>
+        private string GetSingleConfirmMessage(string actionDescription)
+        {
+            if (chkTestMode.Checked)
+            {
+                return "当前处于测试模式，仅预览数据不执行更新。是否继续？";
+            }
+            return $"即将{actionDescription}，是否确认执行？";
+        }
+
+        #endregion
 
 
 
@@ -264,7 +308,6 @@ namespace RUINORERP.UI.SysConfig
                           .ToListAsync();
             bindingSourceInv.DataSource = inventories.ToBindingSortCollection();
             dataGridViewInv.DataSource = bindingSourceInv;
-            dataGridViewInv.SelectionMode = DataGridViewSelectionMode.CellSelect;
             //只显示成本 和详情ID。
             foreach (DataGridViewColumn item in dataGridViewInv.Columns)
             {
@@ -2744,7 +2787,7 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
-        private void 更新关联成本ToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void 更新关联成本ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (dataGridViewInv.CurrentRow == null)
             {
@@ -2767,7 +2810,7 @@ namespace RUINORERP.UI.SysConfig
             }
 
             richTextBoxLog.AppendText($"========== 开始更新关联成本 ==========\r\n");
-            UpdateRelatedCost(inventories);
+            await UpdateRelatedCost(inventories);
             MainForm.Instance.ShowStatusText("更新关联成本完成。");
         }
 

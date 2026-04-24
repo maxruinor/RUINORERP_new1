@@ -15,6 +15,9 @@
         {
             if (disposing && (components != null))
             {
+                // ✅ 修复P2: 释放帮助提示定时器，防止资源泄漏
+                _timeoutTimer4tips?.Dispose();
+                
                 components.Dispose();
             }
             base.Dispose(disposing);

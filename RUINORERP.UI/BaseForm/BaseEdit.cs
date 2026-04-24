@@ -681,23 +681,5 @@ namespace RUINORERP.UI.BaseForm
         #endregion
 
 
-        /// <summary>
-        /// ✅ 修复P2: 释放资源，防止定时器泄漏
-        /// </summary>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                // 释放帮助提示定时器
-                _timeoutTimer4tips?.Dispose();
-                
-                if (components != null)
-                {
-                    components.Dispose();
-                }
-            }
-            base.Dispose(disposing);
-        }
-
     }
 }

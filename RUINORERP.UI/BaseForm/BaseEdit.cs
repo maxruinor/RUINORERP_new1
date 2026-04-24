@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -545,6 +545,11 @@ namespace RUINORERP.UI.BaseForm
         public bool EnableSmartHelp { get; set; } = true;
 
         /// <summary>
+        /// 帮助系统是否已初始化（避免重复初始化）
+        /// </summary>
+        private bool _helpSystemInitialized = false;
+
+        /// <summary>
         /// 窗体帮助键(可选,覆盖默认值)
         /// </summary>
         [Category("帮助系统")]
@@ -557,7 +562,9 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected virtual void InitializeHelpSystem()
         {
-            if (!EnableSmartHelp) return;
+            if (!EnableSmartHelp || _helpSystemInitialized) return;
+
+            _helpSystemInitialized = true;
 
             try
             {
@@ -673,6 +680,24 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
+
+        /// <summary>
+        /// ✅ 修复P2: 释放资源，防止定时器泄漏
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // 释放帮助提示定时器
+                _timeoutTimer4tips?.Dispose();
+                
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+            }
+            base.Dispose(disposing);
+        }
 
     }
 }

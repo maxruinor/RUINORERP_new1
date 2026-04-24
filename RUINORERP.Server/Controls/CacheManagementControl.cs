@@ -34,22 +34,6 @@ namespace RUINORERP.Server.Controls
 {
     /// <summary>
     /// 缓存管理控制类
-    /// 
-    /// <remarks>
-    /// 缓存管理最佳实践说明：
-    /// 1. 避免直接依赖于ICacheSyncMetadata接口，应通过IEntityCacheManager间接访问缓存同步元数据功能
-    ///    这是因为两个服务实例在初始化顺序上可能存在差异，导致不一致的问题
-    /// 
-    /// 2. 依赖注入注意事项：
-    ///    - 依赖注入容器（Autofac）的初始化是按顺序进行的，某些服务可能在应用生命周期早期无法获取
-    ///    - 总是使用GetFromFac方法获取服务实例，并添加适当的null检查
-    ///    - 避免在构造函数中执行复杂的初始化逻辑，特别是依赖于其他尚未初始化的服务时
-    /// 
-    /// 3. 缓存同步机制：
-    ///    - EntityCacheManager内部包含ICacheSyncMetadata的引用，通过反射可以安全访问
-    ///    - 当需要访问缓存同步元数据时，优先使用EntityCacheManager内部的实例
-    ///    - 作为备选方案，才直接从容器中获取ICacheSyncMetadata服务
-    /// </remarks>
     /// </summary>
     public partial class CacheManagementControl : UserControl
     {
@@ -58,11 +42,11 @@ namespace RUINORERP.Server.Controls
         private readonly IEntityCacheManager _entityCacheManager;
         private readonly EntityCacheInitializationService _initializationService;
         private readonly ITableSchemaManager _tableSchemaManager;
+        private readonly ICacheSyncMetadata _cacheSyncMetadata; // ✅ 直接注入，无需反射
         private System.Windows.Forms.Timer _autoRefreshTimer;
         private DateTime _lastTableStatsRefresh = DateTime.MinValue;
         private DateTime _lastItemStatsRefresh = DateTime.MinValue;
         private DateTime _lastMetadataRefresh = DateTime.MinValue;
-        // 注意：不再直接依赖ICacheSyncMetadata接口，而是通过_entityCacheManager间接访问
 
         public CacheManagementControl()
         {
@@ -73,6 +57,7 @@ namespace RUINORERP.Server.Controls
             _entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
             _initializationService = Startup.GetFromFac<EntityCacheInitializationService>();
             _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+            _cacheSyncMetadata = Startup.GetFromFac<ICacheSyncMetadata>(); // ✅ 直接注入
 
             // 初始化定时刷新器
             InitializeAutoRefreshTimer();
@@ -743,68 +728,20 @@ namespace RUINORERP.Server.Controls
 
         /// <summary>
         /// 获取所有表的缓存同步信息
-        /// 通过_entityCacheManager间接访问ICacheSyncMetadata功能
+        /// ✅ 简化：直接调用注入的 ICacheSyncMetadata，无需反射
         /// </summary>
-        /// <remarks>
-        /// 【根本原因说明】为什么通过_entityCacheManager可以获取正确的元数据字典值：
-        /// 
-        /// 1. EntityCacheManager在构造函数中接收ICacheSyncMetadata作为可选依赖
-        ///    (private readonly ICacheSyncMetadata _cacheSyncMetadata)
-        /// 
-        /// 2. 当通过依赖注入容器解析EntityCacheManager时，容器会正确地将同一个ICacheSyncMetadata实例
-        ///    注入到EntityCacheManager中，而EntityCacheManager内部会使用这个实例进行所有缓存同步操作
-        /// 
-        /// 3. 直接注入ICacheSyncMetadata可能会因为服务注册顺序或容器初始化问题导致获取到不同的实例
-        ///    或者在某些场景下该服务尚未完全初始化
-        /// 
-        /// 4. 通过反射访问EntityCacheManager内部的_cacheSyncMetadata字段，确保我们使用的是
-        ///    与EntityCacheManager实际工作时完全相同的ICacheSyncMetadata实例
-        /// 
-        /// 5. 这解释了为什么直接使用ICacheSyncMetadata可能会导致元数据不一致，而通过_entityCacheManager
-        ///    间接访问却能获取到正确的值
-        /// </remarks>
         /// <returns>所有表的缓存同步信息字典</returns>
         private Dictionary<string, CacheSyncInfo> GetAllTableSyncInfo()
         {
             try
             {
-                // 尝试从_entityCacheManager中获取ICacheSyncMetadata实例
-                Type entityCacheManagerType = _entityCacheManager.GetType();
-                var fieldInfo = entityCacheManagerType.GetField("_cacheSyncMetadata", BindingFlags.NonPublic | BindingFlags.Instance);
-                if (fieldInfo != null)
+                if (_cacheSyncMetadata != null)
                 {
-                    var cacheSyncMetadata = fieldInfo.GetValue(_entityCacheManager) as ICacheSyncMetadata;
-                    if (cacheSyncMetadata != null)
-                    {
-                        return cacheSyncMetadata.GetAllTableSyncInfo();
-                    }
-                    else
-                    {
-                        _logger?.LogWarning("EntityCacheManager中的_cacheSyncMetadata字段存在但为空");
-                    }
+                    return _cacheSyncMetadata.GetAllTableSyncInfo();
                 }
                 else
                 {
-                    _logger?.LogWarning("无法通过反射获取EntityCacheManager中的_cacheSyncMetadata字段");
-                }
-
-                // 备选方案：尝试直接获取ICacheSyncMetadata服务
-                try
-                {
-                    var cacheSyncMetadata = Startup.GetFromFac<ICacheSyncMetadata>();
-                    if (cacheSyncMetadata != null)
-                    {
-                        return cacheSyncMetadata.GetAllTableSyncInfo();
-                    }
-                    else
-                    {
-                        _logger?.LogWarning("从依赖注入容器获取到的ICacheSyncMetadata实例为空");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // 如果获取失败，记录详细日志但不抛出异常
-                    _logger?.LogWarning(ex, "无法从依赖注入容器获取ICacheSyncMetadata实例");
+                    _logger?.LogWarning("ICacheSyncMetadata 实例为空");
                 }
             }
             catch (Exception ex)

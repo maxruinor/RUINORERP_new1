@@ -78,6 +78,11 @@ namespace RUINORERP.UI.BaseForm
         public bool EnableSmartHelp { get; set; } = true;
 
         /// <summary>
+        /// 帮助系统是否已初始化（避免重复初始化）
+        /// </summary>
+        private bool _helpSystemInitialized = false;
+
+        /// <summary>
         /// 窗体帮助键(可选,覆盖默认值)
         /// </summary>
         [Category("帮助系统")]
@@ -94,7 +99,9 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected virtual void InitializeHelpSystem()
         {
-            if (!EnableSmartHelp) return;
+            if (!EnableSmartHelp || _helpSystemInitialized) return;
+
+            _helpSystemInitialized = true;
 
             try
             {

@@ -32,6 +32,9 @@ namespace RUINORERP.UI.Network
         private int _serverPort = 0;
         private DateTime _lastReconnectAttempt = DateTime.MinValue;
         private readonly object _reconnectStateLock = new object();
+        
+        // ✅ 修复P2: 使用静态Random实例，避免频繁创建导致随机性不佳
+        private static readonly Random _random = new Random();
 
         // 网络状态变化事件句柄
         private readonly System.Net.NetworkInformation.NetworkAvailabilityChangedEventHandler _networkAvailabilityChangedHandler;
@@ -342,6 +345,15 @@ namespace RUINORERP.UI.Network
                         _reconnectTask.Wait(TimeSpan.FromSeconds(2));
                     }
                 }
+                catch (AggregateException ae)
+                {
+                    // 处理取消任务时的异常（忽略TaskCanceledException）
+                    ae.Handle(ex => ex is TaskCanceledException);
+                }
+                catch (TaskCanceledException)
+                {
+                    // 忽略任务取消异常，这是正常现象
+                }
                 catch (Exception ex)
                 {
                     _logger?.LogWarning(ex, "停止重连任务时发生异常");
@@ -535,7 +547,7 @@ namespace RUINORERP.UI.Network
             // 添加随机抖动避免雷群效应
             if (_config.EnableRandomJitter)
             {
-                var randomJitter = new Random().Next(-baseInterval / 5, baseInterval / 5);
+                var randomJitter = _random.Next(-baseInterval / 5, baseInterval / 5);
                 baseInterval = Math.Max(_config.ReconnectInterval, baseInterval + randomJitter);
             }
             
@@ -618,7 +630,7 @@ namespace RUINORERP.UI.Network
                             _isReconnecting = false;
                         }
                     }
-                }).ConfigureAwait(false);
+                });
             }
         }
 

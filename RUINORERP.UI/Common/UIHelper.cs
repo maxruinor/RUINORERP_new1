@@ -52,6 +52,20 @@ namespace RUINORERP.UI.Common
         private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
 
         /// <summary>
+        /// 字段名列表缓存 - 使用类型组合作为键
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, KeyValuePair<string, bool>>> _fieldNameColListCache = new ConcurrentDictionary<string, ConcurrentDictionary<string, KeyValuePair<string, bool>>>();
+
+        /// <summary>
+        /// 获取缓存键
+        /// </summary>
+        private static string GetCacheKey(bool includePK, params Type[] types)
+        {
+            var typeNames = string.Join(",", types.Select(t => t.FullName));
+            return $"{includePK}:{typeNames}";
+        }
+
+        /// <summary>
         /// 获取实体类的中文描述（从Description特性中提取）
         /// </summary>
         public static string GetEntityDescription(Type entityType)
@@ -1389,6 +1403,13 @@ namespace RUINORERP.UI.Common
         /// <returns>字段名称、描述和可见性字典</returns>
         public static ConcurrentDictionary<string, KeyValuePair<string, bool>> GetFieldNameColList(bool IncludePK = false, params Type[] types)
         {
+            // 检查缓存
+            var cacheKey = GetCacheKey(IncludePK, types);
+            if (_fieldNameColListCache.TryGetValue(cacheKey, out var cachedResult))
+            {
+                return cachedResult;
+            }
+
             ConcurrentDictionary<string, KeyValuePair<string, bool>> fieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
 
             foreach (var type in types)
@@ -1424,6 +1445,9 @@ namespace RUINORERP.UI.Common
                     fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(sugarColumn.ColumnDescription, isVisible));
                 }
             }
+
+            // 存入缓存
+            _fieldNameColListCache.TryAdd(cacheKey, fieldNameList);
 
             return fieldNameList;
         }

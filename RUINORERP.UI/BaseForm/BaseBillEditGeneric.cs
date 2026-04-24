@@ -900,6 +900,9 @@ namespace RUINORERP.UI.BaseForm
                     // 初始化关联单据同步服务
                     InitializeRelatedBillSync();
 
+                    // 初始化缓存的服务（延迟加载，按需初始化）
+                    // InitializeCachedServices(); // 可选：一次性初始化所有服务
+
                     // 添加扩展按钮（仅在 CurMenuInfo 不为 null 时）
                     if (CurMenuInfo == null)
                     {
@@ -922,6 +925,56 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected readonly IBillOperationService BillOperationService;
 
+        /// <summary>
+        /// 关联单据同步服务实例
+        /// </summary>
+        private RelatedBillSyncService _relatedBillSyncService;
+
+        /// <summary>
+        /// 文件业务服务（缓存）
+        /// </summary>
+        private FileBusinessService _fileBusinessService;
+
+        /// <summary>
+        /// 文件管理服务（缓存）
+        /// </summary>
+        private FileManagementService _fileManagementService;
+
+        /// <summary>
+        /// 消息服务（缓存）
+        /// </summary>
+        private MessageService _messageService;
+
+        /// <summary>
+        /// 实体加载器（缓存）
+        /// </summary>
+        private EntityLoader _entityLoader;
+
+        /// <summary>
+        /// 动作管理器（缓存）
+        /// </summary>
+        private RUINORERP.Business.Document.ActionManager _actionManager;
+
+        /// <summary>
+        /// 文档转换器工厂（缓存）
+        /// </summary>
+        private RUINORERP.Business.Document.DocumentConverterFactory _converterFactory;
+
+        /// <summary>
+        /// 锁定服务（缓存）
+        /// </summary>
+        private ClientLockManagementService _lockService;
+
+        /// <summary>
+        /// 本地锁缓存服务（缓存）
+        /// </summary>
+        private ClientLocalLockCacheService _localLockCacheService;
+
+        /// <summary>
+        /// SQL客户端（缓存）
+        /// </summary>
+        private SqlSugar.ISqlSugarClient _dbClient;
+
         private async void button录入数据预设_Click(object sender, EventArgs e)
         {
             if (EditEntity == null)
@@ -938,11 +991,6 @@ namespace RUINORERP.UI.BaseForm
         #region 关联单据同步
 
         /// <summary>
-        /// 关联单据同步服务实例
-        /// </summary>
-        private RelatedBillSyncService _relatedBillSyncService;
-
-        /// <summary>
         /// 初始化关联单据同步服务
         /// 订阅BillOperationService的事件,在下游单据操作完成后自动更新上游单据的待办
         /// </summary>
@@ -950,6 +998,10 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
+                // 已初始化则跳过
+                if (_relatedBillSyncService != null)
+                    return;
+
                 // 获取关联单据同步服务
                 _relatedBillSyncService = Startup.GetFromFac<RelatedBillSyncService>();
                 
@@ -970,6 +1022,103 @@ namespace RUINORERP.UI.BaseForm
             {
                 logger?.LogError(ex, "初始化关联单据同步服务失败");
             }
+        }
+
+        /// <summary>
+        /// 初始化所有缓存的服务 - 在窗体首次加载时调用
+        /// </summary>
+        private void InitializeCachedServices()
+        {
+            // 文件业务服务
+            _fileBusinessService ??= Startup.GetFromFac<FileBusinessService>();
+            // 文件管理服务
+            _fileManagementService ??= Startup.GetFromFac<FileManagementService>();
+            // 消息服务
+            _messageService ??= Startup.GetFromFac<MessageService>();
+            // 实体加载器
+            _entityLoader ??= Startup.GetFromFac<EntityLoader>();
+            // 动作管理器
+            _actionManager ??= Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
+            // 文档转换器工厂
+            _converterFactory ??= Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
+            // 锁定服务
+            _lockService ??= Startup.GetFromFac<ClientLockManagementService>();
+            // 本地锁缓存服务
+            _localLockCacheService ??= Startup.GetFromFac<ClientLocalLockCacheService>();
+            // SQL客户端
+            _dbClient ??= Startup.GetFromFac<SqlSugar.ISqlSugarClient>();
+        }
+
+        /// <summary>
+        /// 获取文件业务服务（带缓存）
+        /// </summary>
+        private FileBusinessService GetFileBusinessService()
+        {
+            return _fileBusinessService ??= Startup.GetFromFac<FileBusinessService>();
+        }
+
+        /// <summary>
+        /// 获取文件管理服务（带缓存）
+        /// </summary>
+        private FileManagementService GetFileManagementService()
+        {
+            return _fileManagementService ??= Startup.GetFromFac<FileManagementService>();
+        }
+
+        /// <summary>
+        /// 获取消息服务（带缓存）
+        /// </summary>
+        private MessageService GetMessageService()
+        {
+            return _messageService ??= Startup.GetFromFac<MessageService>();
+        }
+
+        /// <summary>
+        /// 获取实体加载器（带缓存）
+        /// </summary>
+        private EntityLoader GetEntityLoader()
+        {
+            return _entityLoader ??= Startup.GetFromFac<EntityLoader>();
+        }
+
+        /// <summary>
+        /// 获取动作管理器（带缓存）
+        /// </summary>
+        private RUINORERP.Business.Document.ActionManager GetActionManager()
+        {
+            return _actionManager ??= Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
+        }
+
+        /// <summary>
+        /// 获取文档转换器工厂（带缓存）
+        /// </summary>
+        private RUINORERP.Business.Document.DocumentConverterFactory GetConverterFactory()
+        {
+            return _converterFactory ??= Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
+        }
+
+        /// <summary>
+        /// 获取锁定服务（带缓存）
+        /// </summary>
+        private ClientLockManagementService GetLockService()
+        {
+            return _lockService ??= Startup.GetFromFac<ClientLockManagementService>();
+        }
+
+        /// <summary>
+        /// 获取本地锁缓存服务（带缓存）
+        /// </summary>
+        private ClientLocalLockCacheService GetLocalLockCacheService()
+        {
+            return _localLockCacheService ??= Startup.GetFromFac<ClientLocalLockCacheService>();
+        }
+
+        /// <summary>
+        /// 获取SQL客户端（带缓存）
+        /// </summary>
+        private SqlSugar.ISqlSugarClient GetDbClient()
+        {
+            return _dbClient ??= Startup.GetFromFac<SqlSugar.ISqlSugarClient>();
         }
         
         /// <summary>
@@ -1373,7 +1522,7 @@ namespace RUINORERP.UI.BaseForm
         /// <returns>是否删除成功</returns>
         public async Task<bool> DeleteImageAsync(T entity, MagicPictureBox magicPicBox, Expression<Func<T, object>> relatedFieldExpr)
         {
-            var ctrpay = Startup.GetFromFac<FileBusinessService>();
+            var ctrpay = GetFileBusinessService();
             try
             {
                 // 获取图片信息
@@ -1421,7 +1570,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 调用文件管理服务删除文件
-                var fileService = Startup.GetFromFac<FileManagementService>();
+                var fileService = GetFileManagementService();
                 var deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
 
                 if (deleteResponse.IsSuccess)
@@ -1454,7 +1603,7 @@ namespace RUINORERP.UI.BaseForm
         public async Task DownloadImageAsync(T entity, MagicPictureBox magicPicBox, Expression<Func<T, object>> TargetField)
         {
             magicPicBox.MultiImageSupport = true;
-            var ctrpay = Startup.GetFromFac<FileBusinessService>();
+            var ctrpay = GetFileBusinessService();
             try
             {
                 MemberInfo memberInfo = TargetField.GetMemberInfo();
@@ -1526,7 +1675,7 @@ namespace RUINORERP.UI.BaseForm
         /// <returns>是否全部上传成功</returns>
         public async Task<bool> UploadImageAsync(T entity, MagicPictureBox magicPicBox, string relatedField, bool onlyUpdated = true)
         {
-            var ctrpay = Startup.GetFromFac<FileBusinessService>();
+            var ctrpay = GetFileBusinessService();
             try
             {
                 // 获取图片信息
@@ -1653,7 +1802,7 @@ namespace RUINORERP.UI.BaseForm
             List<ImageInfo> deletedImages,
             Expression<Func<Target, object>> TargetField)
         {
-            var ctrpay = Startup.GetFromFac<FileBusinessService>();
+            var ctrpay = GetFileBusinessService();
             try
             {
                 bool allSuccess = true;
@@ -1689,7 +1838,7 @@ namespace RUINORERP.UI.BaseForm
                         }
 
                         // 调用文件管理服务删除文件
-                        var fileService = Startup.GetFromFac<FileManagementService>();
+                        var fileService = GetFileManagementService();
                         var deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
 
                         if (!deleteResponse.IsSuccess)
@@ -1840,7 +1989,7 @@ namespace RUINORERP.UI.BaseForm
         protected virtual async Task<List<ImageSyncResult>> SyncImagesIfNeeded()
         {
             var results = new List<ImageSyncResult>();
-            var fileBusinessService = Startup.GetFromFac<FileBusinessService>();
+            var fileBusinessService = GetFileBusinessService();
 
             try
             {
@@ -3848,7 +3997,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 获取 EntityLoader 服务
-                var entityLoader = Startup.GetFromFac<EntityLoader>();
+                var entityLoader = GetEntityLoader();
                 if (entityLoader == null)
                 {
                     System.Diagnostics.Debug.WriteLine($"无法获取 EntityLoader 服务");
@@ -5248,7 +5397,7 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 获取文件服务
-                var fileService = Startup.GetFromFac<FileBusinessService>();
+                var fileService = GetFileBusinessService();
 
                 // 批量处理待上传图片
                 foreach (var imageInfo in pendingUploadImages)
@@ -5423,7 +5572,7 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 获取文件管理服务
-                var fileService = Startup.GetFromFac<FileManagementService>();
+                var fileService = GetFileManagementService();
                 int successCount = 0;
 
                 foreach (var kvp in extendedImageInfoList)
@@ -5731,7 +5880,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 使用事务进行数据修正
-                var dbClient = Startup.GetFromFac<SqlSugar.ISqlSugarClient>();
+                var dbClient = GetDbClient();
                 bool transactionStarted = false;
 
                 try
@@ -6247,7 +6396,7 @@ namespace RUINORERP.UI.BaseForm
                 var sourceDocType = typeof(T);
 
                 // 获取所有可转换的目标单据类型(可能耗时,在后台执行)
-                var actionManager = Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
+                var actionManager = GetActionManager();
                 var availableActions = await actionManager.GetAvailableActionsAsync(EditEntity);
 
                 // 为每种可转换类型创建菜单项
@@ -6391,7 +6540,7 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 使用ActionManager执行单据联动
-                var actionManager = Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
+                var actionManager = GetActionManager();
                 if (actionManager == null)
                 {
                     throw new InvalidOperationException("无法获取ActionManager服务实例");
@@ -6635,7 +6784,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 获取转换器实例
-                var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
+                var converterFactory = GetConverterFactory();
                 var converter = converterFactory.GetConverter(typeof(T), targetType);
                 if (converter == null)
                 {
@@ -6771,7 +6920,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 【优化】：直接从工厂缓存中查找已注册的转换器实例，通过接口获取标识符
-                var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
+                var converterFactory = GetConverterFactory();
                 
                 // 获取转换器的泛型参数
                 var sourceType = converterType.GetInterfaces()
@@ -8167,7 +8316,7 @@ namespace RUINORERP.UI.BaseForm
         public async virtual Task<bool> DeleteRemoteImages()
         {
             await Task.Delay(0);
-            var ctrpay = Startup.GetFromFac<FileBusinessService>();
+            var ctrpay = GetFileBusinessService();
             try
             {
                 var fileDeleteResponse = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity, true);
@@ -9201,7 +9350,7 @@ namespace RUINORERP.UI.BaseForm
 
                     // 发送解锁请求
                     MainForm.Instance.ShowStatusText($"📤 正在向 {lockStatus.LockInfo.LockedUserName} 发送解锁请求...");
-                    var lockService = Startup.GetFromFac<ClientLockManagementService>();
+                    var lockService = GetLockService();
                     var result = await lockService.RequestUnlockAsync(billId, CurMenuInfo.MenuID);
 
                     // 记录请求日志（uclog会同时显示给用户并写入数据库）
@@ -9711,7 +9860,7 @@ namespace RUINORERP.UI.BaseForm
                 );
 
                 // 获取消息服务并发送
-                var messageService = Startup.GetFromFac<MessageService>();
+                var messageService = GetMessageService();
                 if (messageService != null)
                 {
                     // 发送消息但不发送给当前用户

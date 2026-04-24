@@ -40,6 +40,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly ClientLocalLockCacheService _clientCache;
         private readonly LockRecoveryManager _recoveryManager;
         private readonly LockStatusNotificationService _notificationService;
+        private readonly LockRequestDeduplicator _requestDeduplicator; // ✅ 新增：请求去重器
 
         /// <summary>
         /// 活跃锁集合 - 核心数据结构
@@ -75,15 +76,6 @@ namespace RUINORERP.UI.Network.Services
         private readonly TimeSpan _operationTimeout = TimeSpan.FromSeconds(15);
         // 缓存预热阈值
         private const int _cacheWarmupThreshold = 100;
-
-        // 请求去重和限流机制
-        private readonly ConcurrentDictionary<string, Task<LockResponse>> _pendingRequests = new();
-        private readonly TimeSpan _requestDeduplicationWindow = TimeSpan.FromSeconds(2); // 2秒内的相同请求视为重复
-        private readonly int _maxConcurrentRequests = 10; // 最大并发请求数
-        private readonly SemaphoreSlim _requestSemaphore = new SemaphoreSlim(10, 10);
-        
-        // ✅ 待处理请求清理定时器
-        private readonly Timer _pendingRequestsCleanupTimer;
 
         #endregion
 
@@ -146,9 +138,10 @@ namespace RUINORERP.UI.Network.Services
             // 缓存清理定时器 - 将在StartAsync中设置为每5分钟执行一次
             _cacheCleanupTimer = new Timer(CleanupCacheCallback, null, Timeout.Infinite, Timeout.Infinite);
             
-            // ✅ 每30秒清理过期请求
-            _pendingRequestsCleanupTimer = new Timer(CleanupPendingRequests, null, 
-                TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+            // ✅ 初始化请求去重器（最大10个并发请求）
+            var deduplicatorLogger = _logger as ILogger<LockRequestDeduplicator> ??
+                new Microsoft.Extensions.Logging.Logger<LockRequestDeduplicator>(new Microsoft.Extensions.Logging.LoggerFactory());
+            _requestDeduplicator = new LockRequestDeduplicator(maxConcurrentRequests: 10, logger: deduplicatorLogger);
 
 
         }
@@ -228,7 +221,7 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 检查锁状态 - 实现ILockStatusProvider接口
         /// 优化：使用细粒度锁，避免全局阻塞
-        /// 增加请求去重机制，避免网络断开时的重复请求风暴
+        /// ✅ 使用 LockRequestDeduplicator 进行请求去重和限流
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <param name="MenuID">菜单ID</param>
@@ -246,44 +239,34 @@ namespace RUINORERP.UI.Network.Services
             }
 
             var requestKey = $"CheckLock_{billId}_{MenuID}";
-            var semaphoreReleased = false;
-
-            if (!await _requestSemaphore.WaitAsync(TimeSpan.FromSeconds(1), cancellationToken))
-            {
-                _logger.LogWarning("锁检查请求限流，尝试使用缓存 - 单据ID: {BillId}", billId);
-                var cachedStatus = await _clientCache.GetLockInfoAsync(billId);
-                return cachedStatus != null 
-                    ? new LockResponse { IsSuccess = true, LockInfo = cachedStatus }
-                    : LockResponseFactory.CreateFailedResponse("服务器繁忙，请稍后重试");
-            }
-
-            var tcs = new TaskCompletionSource<LockResponse>();
             
-            if (!_pendingRequests.TryAdd(requestKey, tcs.Task))
-            {
-                _requestSemaphore.Release();
-                semaphoreReleased = true;
-                if (_pendingRequests.TryGetValue(requestKey, out var existingTask))
-                {
-                    return await existingTask;
-                }
-            }
+            // ✅ 使用新的去重器执行请求
+            return await _requestDeduplicator.ExecuteWithDeduplicationAsync(
+                requestKey,
+                async () => await ExecuteCheckLockStatusAsync(billId, MenuID, cancellationToken),
+                cancellationToken);
+        }
 
+        /// <summary>
+        /// 执行实际的锁状态检查逻辑（内部方法）
+        /// </summary>
+        private async Task<LockResponse> ExecuteCheckLockStatusAsync(long billId, long MenuID, CancellationToken cancellationToken)
+        {
             var billLockAcquired = false;
+            SemaphoreSlim billLock = null;
+            
             try
             { 
-                var billLock = _billLocks.GetOrAdd(billId, _ => new SemaphoreSlim(1, 1));
+                billLock = _billLocks.GetOrAdd(billId, _ => new SemaphoreSlim(1, 1));
 
                 var checkTimeout = TimeSpan.FromSeconds(5);
                 if (!await billLock.WaitAsync(checkTimeout, cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token))
                 {
                     _logger.LogWarning("检查锁状态获取本地锁超时 - 单据ID: {BillId}，尝试使用缓存数据", billId);
                     var cachedStatus = await _clientCache.GetLockInfoAsync(billId);
-                    var response = cachedStatus != null 
+                    return cachedStatus != null 
                         ? new LockResponse { IsSuccess = true, LockInfo = cachedStatus }
                         : new LockResponse { IsSuccess = false, Message = "操作超时，请稍后重试" };
-                    tcs.TrySetResult(response);
-                    return response;
                 }
                 billLockAcquired = true;
 
@@ -293,9 +276,7 @@ namespace RUINORERP.UI.Network.Services
                     if (cachedStatus != null && !cachedStatus.IsExpired)
                     {
                         _logger.LogDebug("从缓存获取单据 {BillId} 锁状态", billId);
-                        var cacheResponse = new LockResponse { IsSuccess = true, LockInfo = cachedStatus };
-                        tcs.TrySetResult(cacheResponse);
-                        return cacheResponse;
+                        return new LockResponse { IsSuccess = true, LockInfo = cachedStatus };
                     }
 
                     var lockInfo = new LockInfo { BillID = billId };
@@ -324,14 +305,13 @@ namespace RUINORERP.UI.Network.Services
                             ExpireTime = DateTime.Now.AddMinutes(10)
                         };
                         _clientCache.UpdateCacheItem(localLockInfo);
-                        response = new LockResponse { IsSuccess = true, LockInfo = localLockInfo };
+                        return new LockResponse { IsSuccess = true, LockInfo = localLockInfo };
                     }
                     else if (response == null)
                     {
-                        response = LockResponseFactory.CreateFailedResponse("响应为空");
+                        return LockResponseFactory.CreateFailedResponse("响应为空");
                     }
                     
-                    tcs.TrySetResult(response);
                     return response;
                 }
                 finally
@@ -347,17 +327,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "检查单据 {BillId} 锁状态时发生异常", billId);
-                var errorResponse = new LockResponse { IsSuccess = false, Message = $"检查锁状态异常: {ex.Message}" };
-                tcs.TrySetResult(errorResponse);
-                return errorResponse;
-            }
-            finally
-            {
-                _pendingRequests.TryRemove(requestKey, out _);
-                if (!semaphoreReleased)
-                {
-                    _requestSemaphore.Release();
-                }
+                return new LockResponse { IsSuccess = false, Message = $"检查锁状态异常: {ex.Message}" };
             }
         }
 
@@ -371,6 +341,7 @@ namespace RUINORERP.UI.Network.Services
         /// 4. 锁定成功后，同步更新本地缓存、活跃锁列表和通知服务
         /// 5. 使用超时机制，避免长时间阻塞
         /// 6. 增加边界条件检查，确保状态一致性
+        /// ✅ 使用 LockRequestDeduplicator 进行请求去重和限流
         /// </para>
         /// </summary>
         /// <param name="billId">单据ID</param>
@@ -400,33 +371,30 @@ namespace RUINORERP.UI.Network.Services
             }
 
             var requestKey = $"LockBill_{billId}";
-            if (_pendingRequests.TryGetValue(requestKey, out var existingTask))
-            {
-                _logger.LogDebug("单据 {BillId} 存在待处理的锁定请求，复用结果", billId);
-                return await existingTask;
-            }
-
-            var stopwatch = Stopwatch.StartNew();
-            var tcs = new TaskCompletionSource<LockResponse>();
             
-            if (!_pendingRequests.TryAdd(requestKey, tcs.Task))
-            {
-                if (_pendingRequests.TryGetValue(requestKey, out existingTask))
-                {
-                    return await existingTask;
-                }
-            }
+            // ✅ 使用新的去重器执行请求
+            return await _requestDeduplicator.ExecuteWithDeduplicationAsync(
+                requestKey,
+                async () => await ExecuteLockBillAsync(billId, BillNo, bizType, menuId, timeoutMinutes, cancellationToken),
+                cancellationToken);
+        }
+
+        /// <summary>
+        /// 执行实际的锁定逻辑（内部方法）
+        /// </summary>
+        private async Task<LockResponse> ExecuteLockBillAsync(long billId, string BillNo, BizType bizType, long menuId, int timeoutMinutes, CancellationToken cancellationToken)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            SemaphoreSlim billLock = null;
 
             try
             {
-                var billLock = _billLocks.GetOrAdd(billId, _ => new SemaphoreSlim(1, 1));
+                billLock = _billLocks.GetOrAdd(billId, _ => new SemaphoreSlim(1, 1));
 
                 if (!await billLock.WaitAsync(_operationTimeout, cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token))
                 {
                     _logger.LogWarning("锁定操作超时 - 单据ID: {BillId}", billId);
-                    var timeoutResponse = new LockResponse { IsSuccess = false, Message = "操作超时，请稍后重试" };
-                    tcs.TrySetResult(timeoutResponse);
-                    return timeoutResponse;
+                    return new LockResponse { IsSuccess = false, Message = "操作超时，请稍后重试" };
                 }
 
                 try
@@ -438,9 +406,7 @@ namespace RUINORERP.UI.Network.Services
                     if (currentUserId == 0)
                     {
                         _logger.LogWarning("用户未登录，无法执行锁定操作: 单据ID={BillId}", billId);
-                        var notLoginResponse = LockResponseFactory.CreateFailedResponse("用户未登录");
-                        tcs.TrySetResult(notLoginResponse);
-                        return notLoginResponse;
+                        return LockResponseFactory.CreateFailedResponse("用户未登录");
                     }
 
                     var islock = await _clientCache.IsLockedAsync(billId);
@@ -454,16 +420,12 @@ namespace RUINORERP.UI.Network.Services
                             _clientCache.UpdateCacheItem(lockInfoByLocal);
                             _notificationService?.NotifyLockStatusChanged(billId, lockInfoByLocal, LockStatusChangeType.StatusUpdated);
 
-                            var selfLockedResponse = new LockResponse { IsSuccess = true, Message = "单据已被锁定", LockInfo = lockInfoByLocal };
-                            tcs.TrySetResult(selfLockedResponse);
-                            return selfLockedResponse;
+                            return new LockResponse { IsSuccess = true, Message = "单据已被锁定", LockInfo = lockInfoByLocal };
                         }
                         else
                         {
                             _logger.LogDebug("单据 {BillId} 已被其他用户锁定", billId);
-                            var lockedByOtherResponse = new LockResponse { IsSuccess = false, Message = $"单据已被用户 {lockInfoByLocal?.LockedUserName} 锁定", LockInfo = lockInfoByLocal };
-                            tcs.TrySetResult(lockedByOtherResponse);
-                            return lockedByOtherResponse;
+                            return new LockResponse { IsSuccess = false, Message = $"单据已被用户 {lockInfoByLocal?.LockedUserName} 锁定", LockInfo = lockInfoByLocal };
                         }
                     }
 
@@ -483,9 +445,7 @@ namespace RUINORERP.UI.Network.Services
                     stopwatch.Stop();
                     if (response == null)
                     {
-                        response = LockResponseFactory.CreateFailedResponse("响应为空");
-                        tcs.TrySetResult(response);
-                        return response;
+                        return LockResponseFactory.CreateFailedResponse("响应为空");
                     }
 
                     if (response.IsSuccess)
@@ -493,9 +453,7 @@ namespace RUINORERP.UI.Network.Services
                         if (response.LockInfo == null)
                         {
                             _logger.LogWarning("锁定成功但锁信息为空: 单据ID={BillId}", billId);
-                            response = LockResponseFactory.CreateFailedResponse("锁信息无效");
-                            tcs.TrySetResult(response);
-                            return response;
+                            return LockResponseFactory.CreateFailedResponse("锁信息无效");
                         }
 
                         _activeLocks.TryAdd(billId, response.LockInfo);
@@ -517,26 +475,22 @@ namespace RUINORERP.UI.Network.Services
                         }
                     }
 
-                    tcs.TrySetResult(response);
                     return response;
                 }
                 finally
                 {
-                    try { billLock.Release(); }
-                    catch (SemaphoreFullException) { }
-                    CleanupUnusedLock(billId, billLock);
+                    if (billLock != null)
+                    {
+                        try { billLock.Release(); }
+                        catch (SemaphoreFullException) { }
+                        CleanupUnusedLock(billId, billLock);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "锁定单据 {BillId} 时发生异常", billId);
-                var errorResponse = new LockResponse { IsSuccess = false, Message = $"锁定异常: {ex.Message}" };
-                tcs.TrySetResult(errorResponse);
-                return errorResponse;
-            }
-            finally
-            {
-                _pendingRequests.TryRemove(requestKey, out _);
+                return new LockResponse { IsSuccess = false, Message = $"锁定异常: {ex.Message}" };
             }
         }
 
@@ -544,6 +498,7 @@ namespace RUINORERP.UI.Network.Services
         /// 解锁单据 - 实现ILockStatusProvider接口
         /// 这是主要实现版本，其他版本都调用此方法
         /// <para>优化说明：v2.1.1 - 增加状态一致性保证、边界条件检查、实时通知</para>
+        /// ✅ 使用 LockRequestDeduplicator 进行请求去重和限流
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -560,34 +515,31 @@ namespace RUINORERP.UI.Network.Services
             }
 
             var requestKey = $"UnlockBill_{billId}";
-            if (_pendingRequests.TryGetValue(requestKey, out var existingTask))
-            {
-                _logger.LogDebug("单据 {BillId} 存在待处理的解锁请求，复用结果", billId);
-                return await existingTask;
-            }
-
-            var stopwatch = Stopwatch.StartNew();
-            var tcs = new TaskCompletionSource<LockResponse>();
             
-            if (!_pendingRequests.TryAdd(requestKey, tcs.Task))
-            {
-                if (_pendingRequests.TryGetValue(requestKey, out existingTask))
-                {
-                    return await existingTask;
-                }
-            }
+            // ✅ 使用新的去重器执行请求
+            return await _requestDeduplicator.ExecuteWithDeduplicationAsync(
+                requestKey,
+                async () => await ExecuteUnlockBillAsync(billId, cancellationToken),
+                cancellationToken);
+        }
+
+        /// <summary>
+        /// 执行实际的解锁逻辑（内部方法）
+        /// </summary>
+        private async Task<LockResponse> ExecuteUnlockBillAsync(long billId, CancellationToken cancellationToken)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            SemaphoreSlim billLock = null;
 
             try
             {
-                var billLock = _billLocks.GetOrAdd(billId, _ => new SemaphoreSlim(1, 1));
+                billLock = _billLocks.GetOrAdd(billId, _ => new SemaphoreSlim(1, 1));
                 var token = cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token;
 
                 if (!await billLock.WaitAsync(_operationTimeout, token))
                 {
                     _logger.LogWarning("解锁操作超时 - 单据ID: {BillId}", billId);
-                    var timeoutResponse = new LockResponse { IsSuccess = false, Message = "操作超时，请稍后重试" };
-                    tcs.TrySetResult(timeoutResponse);
-                    return timeoutResponse;
+                    return new LockResponse { IsSuccess = false, Message = "操作超时，请稍后重试" };
                 }
 
                 try
@@ -598,9 +550,7 @@ namespace RUINORERP.UI.Network.Services
                     if (currentUserId == 0)
                     {
                         _logger.LogWarning("用户未登录，无法执行解锁操作: 单据ID={BillId}", billId);
-                        var notLoginResponse = LockResponseFactory.CreateFailedResponse("用户未登录");
-                        tcs.TrySetResult(notLoginResponse);
-                        return notLoginResponse;
+                        return LockResponseFactory.CreateFailedResponse("用户未登录");
                     }
 
                     _activeLocks.TryRemove(billId, out var removedLock);
@@ -659,9 +609,7 @@ namespace RUINORERP.UI.Network.Services
                         var unlockedInfo = removedLock ?? new LockInfo { BillID = billId, IsLocked = false };
                         _notificationService?.NotifyLockStatusChanged(billId, unlockedInfo, LockStatusChangeType.Unlocked);
                         
-                        var successResponse = new LockResponse { IsSuccess = true, Message = "解锁成功" };
-                        tcs.TrySetResult(successResponse);
-                        return successResponse;
+                        return new LockResponse { IsSuccess = true, Message = "解锁成功" };
                     }
 
                     if (response.IsSuccess)
@@ -682,26 +630,22 @@ namespace RUINORERP.UI.Network.Services
                         }
                     }
 
-                    tcs.TrySetResult(response);
                     return response;
                 }
                 finally
                 {
-                    try { billLock.Release(); }
-                    catch (SemaphoreFullException) { }
-                    CleanupUnusedLock(billId, billLock);
+                    if (billLock != null)
+                    {
+                        try { billLock.Release(); }
+                        catch (SemaphoreFullException) { }
+                        CleanupUnusedLock(billId, billLock);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "解锁单据 {BillId} 时发生异常", billId);
-                var errorResponse = new LockResponse { IsSuccess = false, Message = $"解锁异常: {ex.Message}" };
-                tcs.TrySetResult(errorResponse);
-                return errorResponse;
-            }
-            finally
-            {
-                _pendingRequests.TryRemove(requestKey, out _);
+                return new LockResponse { IsSuccess = false, Message = $"解锁异常: {ex.Message}" };
             }
         }
 
@@ -926,9 +870,8 @@ namespace RUINORERP.UI.Network.Services
                 // 释放全局信号量
                 _globalSemaphore?.Dispose();
                 
-                // ✅ 清理待处理请求定时器
-                _pendingRequestsCleanupTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-                _pendingRequestsCleanupTimer?.Dispose();
+                // ✅ 释放请求去重器
+                _requestDeduplicator?.Dispose();
 
                 _isDisposed = true;
             }
@@ -2011,34 +1954,6 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "强制清理异常锁时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 定期清理已完成的待处理请求,防止内存泄漏
-        /// </summary>
-        private void CleanupPendingRequests(object state)
-        {
-            try
-            {
-                var expiredKeys = _pendingRequests
-                    .Where(kvp => kvp.Value.IsCompleted)
-                    .Select(kvp => kvp.Key)
-                    .ToList();
-                
-                foreach (var key in expiredKeys)
-                {
-                    _pendingRequests.TryRemove(key, out _);
-                }
-                
-                if (expiredKeys.Count > 0)
-                {
-                    _logger.LogDebug("清理{Count}个已完成的待处理请求", expiredKeys.Count);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "清理待处理请求时发生错误");
             }
         }
 

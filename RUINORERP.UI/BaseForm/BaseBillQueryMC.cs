@@ -69,6 +69,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         public IEntityCacheManager _cacheManager;
+
         /// <summary>
         /// 统一状态管理器
         /// </summary>
@@ -85,6 +86,21 @@ namespace RUINORERP.UI.BaseForm
         private RepeatOperationGuardService _guardService;
 
         /// <summary>
+        /// 文件业务服务（缓存）
+        /// </summary>
+        private FileBusinessService _fileBusinessService;
+
+        /// <summary>
+        /// 消息服务（缓存）
+        /// </summary>
+        private RUINORERP.UI.Network.Services.MessageService _messageService;
+
+        /// <summary>
+        /// 行权限服务（缓存）
+        /// </summary>
+        private IRowAuthService _rowAuthService;
+
+        /// <summary>
         /// ComboBox内部控件是否已初始化（避免重复初始化）
         /// </summary>
         private bool _comboBoxInternalControlsInitialized = false;
@@ -97,6 +113,30 @@ namespace RUINORERP.UI.BaseForm
         #region 防抖机制相关字段
         // 已迁移到 RepeatOperationGuardService
         #endregion
+
+        /// <summary>
+        /// 获取文件业务服务（带缓存）
+        /// </summary>
+        private FileBusinessService GetFileBusinessService()
+        {
+            return _fileBusinessService ??= Startup.GetFromFac<FileBusinessService>();
+        }
+
+        /// <summary>
+        /// 获取消息服务（带缓存）
+        /// </summary>
+        private RUINORERP.UI.Network.Services.MessageService GetMessageService()
+        {
+            return _messageService ??= Startup.GetFromFac<RUINORERP.UI.Network.Services.MessageService>();
+        }
+
+        /// <summary>
+        /// 获取行权限服务（带缓存）
+        /// </summary>
+        private IRowAuthService GetRowAuthService()
+        {
+            return _rowAuthService ??= Startup.GetFromFac<IRowAuthService>();
+        }
 
         public virtual List<ContextMenuController> AddContextMenu()
         {
@@ -946,7 +986,7 @@ namespace RUINORERP.UI.BaseForm
         /// <returns></returns>
         public async virtual Task<bool> DeleteImages(M EditEntity)
         {
-            var ctrpay = Startup.GetFromFac<FileBusinessService>();
+            var ctrpay = GetFileBusinessService();
             try
             {
                 var fileDeleteResponse = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity, true);
@@ -1150,7 +1190,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 2. 发送到服务器
-                var messageService = Startup.GetFromFac<RUINORERP.UI.Network.Services.MessageService>();
+                var messageService = GetMessageService();
                 if (messageService != null)
                 {
                     foreach (var update in updates)
@@ -2078,7 +2118,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 获取行级权限服务
-                var rowAuthService = Startup.GetFromFac<IRowAuthService>();
+                var rowAuthService = GetRowAuthService();
                 if (rowAuthService == null)
                 {
                     MainForm.Instance.logger.LogWarning("无法获取行级权限服务，跳过行级权限过滤");
@@ -3194,7 +3234,7 @@ namespace RUINORERP.UI.BaseForm
                 string filterClause = string.Empty;
                 try
                 {
-                    var rowAuthService = Startup.GetFromFac<IRowAuthService>();
+                    var rowAuthService = GetRowAuthService();
                     if (rowAuthService != null)
                     {
                         Type entityType = typeof(M);

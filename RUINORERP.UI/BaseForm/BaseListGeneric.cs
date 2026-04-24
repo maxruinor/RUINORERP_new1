@@ -133,6 +133,11 @@ namespace RUINORERP.UI.BaseForm
         public bool EnableSmartHelp { get; set; } = true;
 
         /// <summary>
+        /// 帮助系统是否已初始化（避免重复初始化）
+        /// </summary>
+        private bool _helpSystemInitialized = false;
+
+        /// <summary>
         /// 是否有未保存的更改
         /// </summary>
         protected override bool HasUnsavedChanges
@@ -156,7 +161,9 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected virtual void InitializeHelpSystem()
         {
-            if (!EnableSmartHelp) return;
+            if (!EnableSmartHelp || _helpSystemInitialized) return;
+
+            _helpSystemInitialized = true;
 
             try
             {

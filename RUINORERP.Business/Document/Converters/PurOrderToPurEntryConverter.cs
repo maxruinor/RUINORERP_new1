@@ -109,7 +109,7 @@ namespace RUINORERP.Business.Document.Converters
                 }
 
                 // 检查是否已结案（结案后不允许再入库）
-                if (source.DataStatus != (int)DataStatus.完结)
+                if (source.DataStatus == (int)DataStatus.完结)
                 {
                     result.CanConvert = false;
                     result.ErrorMessage = "采购订单已结案，不允许再生成入库单";

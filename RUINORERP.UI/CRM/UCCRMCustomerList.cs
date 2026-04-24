@@ -338,27 +338,48 @@ namespace RUINORERP.UI.CRM
             //一个是公海一个是目标客户
             if (menuInfo.CaptionCN.Contains("公海客户"))
             {
-                ToolStripButton toolStripButton分配 = new System.Windows.Forms.ToolStripButton();
-                toolStripButton分配.Text = "分配";
-                toolStripButton分配.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
-                toolStripButton分配.ImageTransparentColor = System.Drawing.Color.Magenta;
-                toolStripButton分配.Name = "分配AssignmentToBizEmp";
                 if (MainForm.Instance.AppContext.IsSuperUser)
                 {
-                    toolStripButton分配.Visible = true;//默认
+                    ToolStripButton toolStripButton分配 = new System.Windows.Forms.ToolStripButton();
+                    toolStripButton分配.Text = "分配";
+                    toolStripButton分配.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+                    toolStripButton分配.ImageTransparentColor = System.Drawing.Color.Magenta;
+                    toolStripButton分配.Name = "分配AssignmentToBizEmp";
+                    toolStripButton分配.Visible = true;
+                    UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton分配);
+                    toolStripButton分配.ToolTipText = "分配给指定业务员。";
+                    toolStripButton分配.Click += new System.EventHandler(this.toolStripButton分配_Click);
+
+                    ToolStripButton toolStripButton领取 = new System.Windows.Forms.ToolStripButton();
+                    toolStripButton领取.Text = "领取";
+                    toolStripButton领取.Image = global::RUINORERP.UI.Properties.Resources.add;
+                    toolStripButton领取.ImageTransparentColor = System.Drawing.Color.Magenta;
+                    toolStripButton领取.Name = "领取ClaimFromHighSeas";
+                    toolStripButton领取.Visible = true;
+                    UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton领取);
+                    toolStripButton领取.ToolTipText = "从公海客户中领取到自己。";
+                    toolStripButton领取.Click += new System.EventHandler(this.toolStripButton领取_Click);
+
+                    System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton分配, toolStripButton领取 };
+                    this.BaseToolStrip.Items.AddRange(extendButtons);
+                    return extendButtons;
                 }
                 else
                 {
-                    toolStripButton分配.Visible = false;//默认隐藏
+                    ToolStripButton toolStripButton领取 = new System.Windows.Forms.ToolStripButton();
+                    toolStripButton领取.Text = "领取";
+                    toolStripButton领取.Image = global::RUINORERP.UI.Properties.Resources.add;
+                    toolStripButton领取.ImageTransparentColor = System.Drawing.Color.Magenta;
+                    toolStripButton领取.Name = "领取ClaimFromHighSeas";
+                    toolStripButton领取.Visible = true;
+                    UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton领取);
+                    toolStripButton领取.ToolTipText = "从公海客户中领取到自己。";
+                    toolStripButton领取.Click += new System.EventHandler(this.toolStripButton领取_Click);
+
+                    System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton领取 };
+                    this.BaseToolStrip.Items.AddRange(extendButtons);
+                    return extendButtons;
                 }
-
-                UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton分配);
-                toolStripButton分配.ToolTipText = "分配给指定业务员。";
-                toolStripButton分配.Click += new System.EventHandler(this.toolStripButton分配_Click);
-
-                System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton分配 };
-                this.BaseToolStrip.Items.AddRange(extendButtons);
-                return extendButtons;
             }
             else
             {
@@ -548,6 +569,85 @@ namespace RUINORERP.UI.CRM
 
 
         #endregion
+
+        /// <summary>
+        /// 从公海客户中领取
+        /// </summary>
+        private async void toolStripButton领取_Click(object sender, EventArgs e)
+        {
+            UIHelper.CheckValidation(this);
+            List<tb_CRM_Customer> updateList = new List<tb_CRM_Customer>();
+
+            if (dataGridView1.UseSelectedColumn)
+            {
+                foreach (var item in bindingSourceList)
+                {
+                    if (item is tb_CRM_Customer sourceEntity)
+                    {
+                        if (sourceEntity.Employee_ID == null && sourceEntity.Selected.HasValue && sourceEntity.Selected.Value)
+                        {
+                            updateList.Add(sourceEntity);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
+                {
+                    if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
+                    {
+                        updateList.Add(sourceEntity);
+                    }
+                }
+            }
+
+            if (updateList.Count > 0)
+            {
+                string msg = string.Empty;
+                int counter = 0;
+                msg = "\r\n";
+                foreach (var item in updateList)
+                {
+                    counter++;
+                    msg += "【" + item.CustomerName + "】" + "\r\n";
+                    if (counter > 10)
+                    {
+                        msg += $".... 等 {updateList.Count}位客户";
+                        break;
+                    }
+                }
+
+                long currentEmployeeID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                string employeeName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_Name;
+
+                if (MessageBox.Show($"您确定将：{msg}领取到自己({employeeName})吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                {
+                    try
+                    {
+                        await MainForm.Instance.AppContext.Db.Ado.BeginTranAsync();
+                        updateList.ForEach(c => c.Employee_ID = currentEmployeeID);
+                        int result = await MainForm.Instance.AppContext.Db.Updateable(updateList).UpdateColumns(it => new { it.Employee_ID }).ExecuteCommandAsync();
+
+                        if (result > 0)
+                        {
+                            long[] customerIds = updateList.Select(c => c.Customer_id).ToArray();
+                            var customerVendors = await MainForm.Instance.AppContext.Db.Queryable<tb_CustomerVendor>().Where(c => customerIds.Contains(c.Customer_id.Value)).ToListAsync();
+                            customerVendors.ForEach(c => c.Employee_ID = currentEmployeeID);
+                            await MainForm.Instance.AppContext.Db.Updateable(customerVendors).UpdateColumns(it => new { it.Employee_ID }).ExecuteCommandAsync();
+                            await MainForm.Instance.AppContext.Db.Ado.CommitTranAsync();
+                            MainForm.Instance.ShowStatusText($"领取成功{result}条数据!");
+                            QueryAsync();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        await MainForm.Instance.AppContext.Db.Ado.RollbackTranAsync();
+                        MainForm.Instance.logManager.AddLog("错误", $"领取失败:{ex.Message}!");
+                    }
+                }
+            }
+        }
 
 
     }

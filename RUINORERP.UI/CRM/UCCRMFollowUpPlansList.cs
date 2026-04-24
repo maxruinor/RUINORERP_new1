@@ -77,18 +77,42 @@ namespace RUINORERP.UI.CRM
             rs = await base.Delete();
             if (rs)
             {
-                //如果删除了。服务器上的工作流就可以删除了。
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-
-                //RequestReminderCommand request = new RequestReminderCommand();
-                //request.requestType = RequestReminderType.删除提醒;
-                //ReminderData reminderRequest = new ReminderData();
-                //reminderRequest.BizPrimaryKey = PKValue.ToLong();
-                //reminderRequest.BizType = BizType.CRM跟进计划;
-                //request.requestInfo = reminderRequest;
-                //MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
+                await CancelWorkflowReminderAsync(PKValue);
             }
             return rs;
+        }
+
+        /// <summary>
+        /// 取消工作流提醒
+        /// </summary>
+        private async Task CancelWorkflowReminderAsync(object PKValue)
+        {
+            try
+            {
+                tb_CRM_FollowUpPlans deletedPlan = this.bindingSourceList.Current as tb_CRM_FollowUpPlans;
+                if (deletedPlan != null && deletedPlan.PlanStatus == (int)FollowUpPlanStatus.未开始)
+                {
+                    var reminderData = new ReminderData
+                    {
+                        BizKeyID = Convert.ToInt64(PKValue),
+                        BizType = BizType.CRM跟进计划,
+                        RemindSubject = deletedPlan.PlanSubject,
+                        StartTime = deletedPlan.PlanStartDate,
+                        EndTime = deletedPlan.PlanEndDate
+                    };
+
+                    BaseController<tb_CRM_FollowUpPlans> ctrPlan = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpPlans>>(typeof(tb_CRM_FollowUpPlans).Name + "Controller");
+                    var result = await ctrPlan.CancelReminderAsync(reminderData);
+                    if (result.Succeeded)
+                    {
+                        MainForm.Instance.ShowStatusText("已取消相关工作流提醒");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logManager.AddLog("错误", $"取消工作流提醒失败:{ex.Message}");
+            }
         }
 
         /// <summary>

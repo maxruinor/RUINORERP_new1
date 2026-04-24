@@ -17,24 +17,37 @@ namespace RUINORERP.Server.Services
         private bool _disposed = false;
         
         // 内存使用阈值（以MB为单位）
-        public long WarningThreshold { get; set; } = 1024; // 1GB
-        public long CriticalThreshold { get; set; } = 2048; // 2GB
-
-        // Phase 3.3 优化：自动垃圾回收配置
-        private long _autoGCThreshold = 1536; // 1.5GB 时自动GC
-        private long _lastGCTime = 0; // 上次GC时间（Unix时间戳）
-        private const int GC_COOLDOWN_SECONDS = 300; // GC冷却时间：5分钟
-        private const int MAX_GC_ATTEMPTS_PER_HOUR = 12; // 每小时最多GC 12次
+        public long WarningThreshold { get; set; } = 2048; // 2GB（告警阈值）
+        public long CriticalThreshold { get; set; } = 3072; // 3GB（临界阈值）
+        
+        // ✅ 简化：移除自动GC配置，改为纯监控告警
+        // 如需手动GC，请调用 ForceGarbageCollection() 方法
         
         // 自动 Dump 配置
-        private long _dumpThreshold = 4096; // 4GB 时自动触发 Dump
+        private long _dumpThreshold = 4096; // 4GB 时自动触发 Dump（降低频率，避免频繁Dump）
         private string _dumpPath = "D:\\Dumps";
         private bool _isDumping = false;
+        private long _lastDumpTime = 0; // 上次Dump时间
+        private const int DUMP_COOLDOWN_HOURS = 4; // Dump冷却时间：4小时（降低频率）
+        
+        // 内存压力状态（解决高内存导致用户掉线问题）
+        private bool _isUnderMemoryPressure = false;
+        private DateTime _lastMemoryPressureNotification = DateTime.MinValue;
         
         // 内存监控事件
         public event EventHandler<MemoryUsageEventArgs> MemoryUsageWarning;
         public event EventHandler<MemoryUsageEventArgs> MemoryUsageCritical;
         public event EventHandler<MemoryUsageEventArgs> MemoryUsageNormal;
+        
+        /// <summary>
+        /// 内存压力事件 - 高内存时通知相关服务采取措施防止用户掉线
+        /// </summary>
+        public event EventHandler<MemoryPressureEventArgs> MemoryPressureIncreased;
+        
+        /// <summary>
+        /// 当前是否处于内存压力状态
+        /// </summary>
+        public bool IsUnderMemoryPressure => _isUnderMemoryPressure;
         
         public MemoryMonitoringService(ILogger<MemoryMonitoringService> logger)
         {
@@ -75,20 +88,17 @@ namespace RUINORERP.Server.Services
                 var memoryInfo = GetCurrentMemoryUsage();
                 _logger.LogDebug($"内存使用情况 - 工作集: {memoryInfo.WorkingSetMB} MB, 托管内存: {memoryInfo.ManagedMemoryMB} MB");
 
-                // Phase 3.3 优化：自动垃圾回收
-                long currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                if (memoryInfo.WorkingSetMB >= _autoGCThreshold &&
-                    (currentTime - _lastGCTime) > GC_COOLDOWN_SECONDS)
-                {
-                    _logger.LogInformation($"内存使用达到自动GC阈值: {memoryInfo.WorkingSetMB} MB (阈值: {_autoGCThreshold} MB)");
-                    PerformAutoGC();
-                }
+                // 注意：不再自动触发GC，高频GC会导致CPU升高和响应延迟
+                // 内存压力应该通过增加超时容忍度等机制来缓解
 
                 // 根据内存使用情况触发相应事件
                 if (memoryInfo.WorkingSetMB >= CriticalThreshold)
                 {
                     _logger.LogWarning($"内存使用达到临界阈值: {memoryInfo.WorkingSetMB} MB");
                     MemoryUsageCritical?.Invoke(this, new MemoryUsageEventArgs(memoryInfo));
+                    
+                    // 触发内存压力事件（解决高内存导致用户掉线问题）
+                    HandleMemoryPressure(memoryInfo.WorkingSetMB, CriticalThreshold, MemoryPressureLevel.Critical);
                     
                     // 检查是否达到自动 Dump 阈值
                     if (memoryInfo.WorkingSetMB >= _dumpThreshold && !_isDumping)
@@ -100,10 +110,20 @@ namespace RUINORERP.Server.Services
                 {
                     _logger.LogInformation($"内存使用达到警告阈值: {memoryInfo.WorkingSetMB} MB");
                     MemoryUsageWarning?.Invoke(this, new MemoryUsageEventArgs(memoryInfo));
+                    
+                    // 触发内存压力事件（解决高内存导致用户掉线问题）
+                    HandleMemoryPressure(memoryInfo.WorkingSetMB, WarningThreshold, MemoryPressureLevel.Warning);
                 }
                 else
                 {
                     MemoryUsageNormal?.Invoke(this, new MemoryUsageEventArgs(memoryInfo));
+                    
+                    // 恢复正常，关闭内存压力状态
+                    if (_isUnderMemoryPressure)
+                    {
+                        _isUnderMemoryPressure = false;
+                        _logger.LogInformation("内存使用恢复正常，内存压力状态已解除");
+                    }
                 }
             }
             catch (Exception ex)
@@ -111,12 +131,44 @@ namespace RUINORERP.Server.Services
                 _logger.LogError(ex, "监控内存使用情况时发生错误");
             }
         }
+        
+        /// <summary>
+        /// 处理内存压力状态 - 通知相关服务采取措施防止用户掉线
+        /// </summary>
+        /// <param name="currentMemoryMB">当前内存使用（MB）</param>
+        /// <param name="thresholdMB">触发阈值（MB）</param>
+        /// <param name="pressureLevel">压力级别</param>
+        private void HandleMemoryPressure(long currentMemoryMB, long thresholdMB, MemoryPressureLevel pressureLevel)
+        {
+            // 避免频繁触发事件（每分钟最多一次）
+            if ((DateTime.Now - _lastMemoryPressureNotification).TotalMinutes < 1)
+            {
+                return;
+            }
+            
+            _lastMemoryPressureNotification = DateTime.Now;
+            _isUnderMemoryPressure = pressureLevel == MemoryPressureLevel.Critical || 
+                                     (pressureLevel == MemoryPressureLevel.Warning && currentMemoryMB >= CriticalThreshold);
+            
+            _logger.LogWarning($"内存压力增加: {currentMemoryMB} MB, 阈值: {thresholdMB} MB, 级别: {pressureLevel}");
+            
+            // 触发内存压力事件，让订阅者可以采取相应措施
+            MemoryPressureIncreased?.Invoke(this, new MemoryPressureEventArgs(currentMemoryMB, thresholdMB, pressureLevel));
+        }
 
         /// <summary>
         /// 触发自动 Dump
         /// </summary>
         private async Task TriggerAutoDump(long currentMemoryMB)
         {
+            // 检查冷却时间
+            long currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 3600; // 转换为小时
+            if (currentTime - _lastDumpTime < DUMP_COOLDOWN_HOURS)
+            {
+                _logger.LogDebug("自动 Dump处于冷却期内，跳过本次 Dump，上次 Dump时间: {LastDumpTime}小时后", currentTime - _lastDumpTime);
+                return;
+            }
+
             lock (_lockObject)
             {
                 if (_isDumping) return;
@@ -125,7 +177,12 @@ namespace RUINORERP.Server.Services
 
             try
             {
+                _lastDumpTime = currentTime;
+                _logger.LogWarning("==================== 自动Dump启动 ====================");
                 _logger.LogWarning($"内存达到 {currentMemoryMB} MB，正在后台触发自动 Dump...");
+                _logger.LogWarning($"Dump文件将保存至: {_dumpPath}");
+                _logger.LogWarning($"冷却时间: {DUMP_COOLDOWN_HOURS}小时");
+                _logger.LogWarning("=====================================================");
                 
                 if (!System.IO.Directory.Exists(_dumpPath))
                 {
@@ -290,5 +347,32 @@ namespace RUINORERP.Server.Services
         {
             MemoryInfo = memoryInfo;
         }
+    }
+    
+    /// <summary>
+    /// 内存压力事件参数
+    /// </summary>
+    public class MemoryPressureEventArgs : EventArgs
+    {
+        public long MemoryUsageMB { get; }
+        public long ThresholdMB { get; }
+        public MemoryPressureLevel PressureLevel { get; }
+        
+        public MemoryPressureEventArgs(long memoryUsageMB, long thresholdMB, MemoryPressureLevel pressureLevel)
+        {
+            MemoryUsageMB = memoryUsageMB;
+            ThresholdMB = thresholdMB;
+            PressureLevel = pressureLevel;
+        }
+    }
+    
+    /// <summary>
+    /// 内存压力级别
+    /// </summary>
+    public enum MemoryPressureLevel
+    {
+        Normal = 0,
+        Warning = 1,
+        Critical = 2
     }
 }

@@ -62,6 +62,18 @@ namespace RUINORERP.UI.Network.TimeoutStatistics
         ClientError,
         
         /// <summary>
+        /// 数据库错误
+        /// SQL执行失败、死锁、超时等数据库相关错误
+        /// </summary>
+        DatabaseError,
+        
+        /// <summary>
+        /// 业务验证错误
+        /// 数据验证失败、业务规则违反等
+        /// </summary>
+        ValidationError,
+        
+        /// <summary>
         /// 未知错误
         /// 无法分类的其他错误
         /// </summary>

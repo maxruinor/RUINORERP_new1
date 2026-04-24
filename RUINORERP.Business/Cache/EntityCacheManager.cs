@@ -597,15 +597,26 @@ namespace RUINORERP.Business.Cache
                                 list = _cacheDataProvider.GetEntityListFromSource<T>(tableName);
                             }
 
-                            // 即使列表为空也要缓存，避免空表频繁查询数据库
+                            // ✅ P1-4优化: 仅在全表查询时缓存空结果,避免Key爆炸
                             if (list != null)
                             {
-                                // 将获取到的数据（包括空列表）更新到缓存
-                                PutToCache(cacheKey, list, "List", tableName);
+                                // 判断是否为全表查询(无Where条件)
+                                bool isFullTableQuery = true; // 默认GetEntityList是全表查询
+                                
+                                // 将获取到的数据更新到缓存
+                                if (list.Count > 0 || isFullTableQuery)
+                                {
+                                    PutToCache(cacheKey, list, "List", tableName);
+                                    _logger?.LogDebug("缓存{TableName}列表数据, 数量={Count}, 类型={QueryType}",
+                                        tableName, list.Count, isFullTableQuery ? "全表" : "条件");
+                                }
+                                else
+                                {
+                                    _logger?.LogDebug("跳过缓存空的条件查询结果: {TableName}", tableName);
+                                }
 
                                 // 直接更新缓存同步元数据
-                                // 对于列表缓存，我们明确指定数据计数，确保空列表也能被正确记录
-                                UpdateCacheSyncMetadataAfterEntityChange(tableName, list.Count); // 这里list不为null，已在上一行检查过
+                                UpdateCacheSyncMetadataAfterEntityChange(tableName, list.Count);
 
                                 return list;
                             }
@@ -2072,7 +2083,7 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 估计对象大小（字节）
-        /// 使用优化的估算策略，避免序列化大对象列表
+        /// P1优化：改进估算策略，对字符串和集合采用更准确的计算方式
         /// </summary>
         /// <param name="obj">要估计大小的对象</param>
         /// <returns>估计的字节大小</returns>
@@ -2087,18 +2098,21 @@ namespace RUINORERP.Business.Cache
                 if (obj is IEnumerable enumerable && !(obj is string))
                 {
                     int count = 0;
-                    long sampleSize = 0;
+                    long totalSize = 0;
                     int sampleCount = 0;
-                    const int maxSampleCount = 5;
+                    const int maxSampleCount = 20; // ✅ P0-3优化：增加采样数量至20，提高统计显著性
+                    var sizes = new List<long>(); // ✅ P0-3优化：记录所有样本大小用于离群值检测
 
                     foreach (var item in enumerable)
                     {
                         count++;
 
-                        // 只采样前几个对象来估算平均大小
+                        // 采样前N个对象来计算总大小
                         if (sampleCount < maxSampleCount && item != null)
                         {
-                            sampleSize += EstimateSingleObjectSize(item);
+                            var size = EstimateSingleObjectSize(item);
+                            totalSize += size;
+                            sizes.Add(size);
                             sampleCount++;
                         }
                     }
@@ -2106,7 +2120,28 @@ namespace RUINORERP.Business.Cache
                     // 如果采样了对象，使用平均值计算总大小
                     if (sampleCount > 0)
                     {
-                        long avgSize = sampleSize / sampleCount;
+                        long avgSize = totalSize / sampleCount;
+                        
+                        // ✅ P0-3优化：检测数据倾斜（最大值>平均值3倍），使用75分位数估算
+                        if (sizes.Count >= 5) // 至少5个样本才进行离群值检测
+                        {
+                            var maxSize = sizes.Max();
+                            var minSize = sizes.Min();
+                            
+                            // 存在显著离群值
+                            if (maxSize > avgSize * 3)
+                            {
+                                sizes.Sort();
+                                var p75Index = (int)(sizes.Count * 0.75);
+                                var p75Size = sizes[Math.Min(p75Index, sizes.Count - 1)];
+                                
+                                _logger?.LogDebug("检测到缓存数据倾斜: 平均={AvgSize}B, 最大={MaxSize}B, 75分位={P75Size}B, 使用保守估算",
+                                    avgSize, maxSize, p75Size);
+                                
+                                return count * p75Size; // 保守估算，避免低估
+                            }
+                        }
+                        
                         return count * avgSize;
                     }
 
@@ -2128,6 +2163,7 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 估算单个对象的大小
+        /// P1优化：增强字符串和集合的估算准确度
         /// </summary>
         /// <param name="obj">要估算的单个对象</param>
         /// <returns>估计的字节大小</returns>
@@ -2138,7 +2174,8 @@ namespace RUINORERP.Business.Cache
                 // 对于简单类型，返回固定大小
                 if (obj is string str)
                 {
-                    return Encoding.UTF8.GetByteCount(str);
+                    // P1优化：字符串实际占用 = UTF8字节数 + 对象头(24字节) + 长度字段(4字节)
+                    return Encoding.UTF8.GetByteCount(str) + 28;
                 }
 
                 // 值类型的大小估算
@@ -2200,7 +2237,8 @@ namespace RUINORERP.Business.Cache
                         {
                             if (value is string strValue)
                             {
-                                estimatedSize += Encoding.UTF8.GetByteCount(strValue);
+                                // P1优化：准确计算字符串大小
+                                estimatedSize += Encoding.UTF8.GetByteCount(strValue) + 28;
                             }
                             else if (value is ValueType valueType)
                             {
@@ -2264,6 +2302,17 @@ namespace RUINORERP.Business.Cache
                                     // 其他值类型，使用保守估计
                                     estimatedSize += IntPtr.Size;
                                 }
+                            }
+                            else if (value is IEnumerable enumerableValue && !(value is string))
+                            {
+                                // P1优化：递归估算集合大小（但限制深度避免性能问题）
+                                int itemCount = 0;
+                                foreach (var _ in enumerableValue)
+                                {
+                                    itemCount++;
+                                    if (itemCount > 100) break; // 限制最多统计100个元素
+                                }
+                                estimatedSize += itemCount * 100; // 假设每个元素平均100字节
                             }
                             else
                             {

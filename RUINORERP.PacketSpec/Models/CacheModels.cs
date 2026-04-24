@@ -104,31 +104,5 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         Manage = 4
     }
 
-    /// <summary>
-    /// 缓存操作结果状态
-    /// </summary>
-    public enum CacheOperationStatus
-    {
-        /// <summary>
-        /// 成功
-        /// </summary>
-        Success = 0,
-
-        /// <summary>
-        /// 失败
-        /// </summary>
-        Failed = 1,
-
-        /// <summary>
-        /// 缓存不存在
-        /// </summary>
-        NotFound = 2,
-
-        /// <summary>
-        /// 操作超时
-        /// </summary>
-        Timeout = 3
-    }
-
  
 }

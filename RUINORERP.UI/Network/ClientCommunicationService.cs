@@ -129,15 +129,24 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 是否正在重连
-        /// 注意：此状态应作为辅助标志，真实来源是 ConnectionManager.IsReconnecting
+        /// 统一使用 ConnectionManager.IsReconnecting 作为唯一状态源
         /// </summary>
-        private bool _isReconnecting = false;
+        public bool IsReconnecting => _connectionManager.IsReconnecting;
 
         private bool _disposed = false; // 资源释放状态标志
         private readonly object _heartbeatLock = new object();
         private DateTime _lastHeartbeatTime;
-        private readonly object _reconnectCoordinationLock = new object(); // 新增：重连协调锁
-        private DateTime _lastManualReconnectAttempt = DateTime.MinValue; // 新增：最后一次手动重连尝试时间
+        private DateTime _lastManualReconnectAttempt = DateTime.MinValue; // 最后一次手动重连尝试时间
+
+        /// <summary>
+        /// 命令队列最大容量 - 防止内存溢出
+        /// </summary>
+        private readonly int _maxQueuedCommands = 1000;
+
+        /// <summary>
+        /// 待处理请求最大数量 - 防止资源耗尽
+        /// </summary>
+        private readonly int _maxPendingRequests = 500;
 
         /// <summary>
         /// 待处理请求的内部类
@@ -220,13 +229,8 @@ namespace RUINORERP.UI.Network
         /// 获取当前待处理响应的数量
         /// </summary>
         public int PendingResponseCount => _pendingRequests.Count;
-
-        /// <summary>
-        /// 检查是否正在进行重连操作
-        /// </summary>
-        public bool IsReconnecting => _connectionManager.IsReconnecting;
-
         #endregion
+
 
         #region 构造函数
 
@@ -360,12 +364,7 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-
-
-                lock (_reconnectCoordinationLock)
-                {
-                    _isReconnecting = false;
-                }
+                // ConnectionManager会自动管理重连状态，无需手动重置
 
                 // 显示重连失败信息到UI
                 try
@@ -479,12 +478,7 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-
-
-                lock (_reconnectCoordinationLock)
-                {
-                    _isReconnecting = false;
-                }
+                // ConnectionManager会自动管理重连状态，无需手动重置
 
                 // 重置心跳失败计数（仅一次）
                 Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
@@ -749,7 +743,7 @@ namespace RUINORERP.UI.Network
                         consecutiveTimeouts = 0;
                         
                         // ✅ 如果未连接且未在重连，启动重连
-                        if (!_connectionManager.IsReconnecting && !_isReconnecting)
+                        if (!_connectionManager.IsReconnecting)
                         {
                             _logger?.LogDebug("检测到未连接状态，启动自动重连");
                             _connectionManager.StartAutoReconnect();
@@ -759,7 +753,7 @@ namespace RUINORERP.UI.Network
                     }
 
                     // 检查是否正在重连，如果是则跳过本次心跳
-                    if (_connectionManager.IsReconnecting || _isReconnecting)
+                    if (_connectionManager.IsReconnecting)
                     {
                         _logger?.LogDebug("正在重连中，跳过本次心跳");
                         consecutiveTimeouts = 0; // 重置计数
@@ -1664,7 +1658,7 @@ namespace RUINORERP.UI.Network
 
 
         /// <summary>
-        /// 判断异常是否支持重试
+        /// 判断异常是否支持重试（增强版 - 基于错误类型精准判断）
         /// </summary>
         /// <param name="ex">异常</param>
         /// <returns>是否支持重试</returns>
@@ -1676,23 +1670,28 @@ namespace RUINORERP.UI.Network
                 return false;
             }
 
-            // 优先使用异常类型判断，更可靠
-            if (ex is TimeoutException ||
-                ex is System.Net.Sockets.SocketException socketEx && IsNetworkRelatedSocketError((System.Net.Sockets.SocketError)socketEx.ErrorCode) ||
-                ex is System.IO.IOException)
-            {
-                return true;
-            }
+            // 识别错误类型
+            var errorType = IdentifyErrorType(ex);
             
-            // 仅在必要时检查消息文本（避免字符串匹配的不稳定性）
-            if (ex is InvalidOperationException && 
-                (ex.Message.IndexOf("connection", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                 ex.Message.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0))
+            // 根据错误类型决定是否重试
+            return errorType switch
             {
-                return true;
-            }
-            
-            return false;
+                // 可重试：临时性故障
+                NetworkErrorType.TimeoutError => true,
+                NetworkErrorType.ConnectionError => true,
+                NetworkErrorType.DatabaseError => true,  // 数据库超时/死锁可重试
+                
+                // 不可重试：永久性错误或业务逻辑错误
+                NetworkErrorType.AuthenticationError => false,
+                NetworkErrorType.AuthorizationError => false,
+                NetworkErrorType.ValidationError => false,
+                NetworkErrorType.SerializationError => false,
+                NetworkErrorType.DeserializationError => false,
+                NetworkErrorType.CommandError => false,
+                
+                // 未知错误：保守起见不重试
+                _ => false
+            };
         }
 
         /// <summary>
@@ -1734,33 +1733,74 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 识别错误类型
+        /// 识别错误类型（增强版 - 支持数据库和业务异常）
         /// </summary>
         /// <param name="ex">异常</param>
         /// <returns>错误类型</returns>
         private NetworkErrorType IdentifyErrorType(Exception ex)
         {
-            // 根据异常类型和消息识别错误类型
-            if (ex is TimeoutException)
-                return NetworkErrorType.TimeoutError;
-            else if (ex is System.IO.IOException || ex is System.Net.Sockets.SocketException)
-                return NetworkErrorType.ConnectionError;
-            else if (ex.Message.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                     ex.Message.IndexOf("permission", StringComparison.OrdinalIgnoreCase) >= 0)
-                return NetworkErrorType.AuthorizationError;
-            else if (ex.Message.IndexOf("authenticate", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                     ex.Message.IndexOf("login", StringComparison.OrdinalIgnoreCase) >= 0)
-                return NetworkErrorType.AuthenticationError;
-            else if (ex.Message.IndexOf("serialize", StringComparison.OrdinalIgnoreCase) >= 0)
-                return NetworkErrorType.SerializationError;
-            else if (ex.Message.IndexOf("deserialize", StringComparison.OrdinalIgnoreCase) >= 0)
-                return NetworkErrorType.DeserializationError;
-            else if (ex.Message.IndexOf("command", StringComparison.OrdinalIgnoreCase) >= 0)
-                return NetworkErrorType.CommandError;
-            else if (ex.Message.IndexOf("server", StringComparison.OrdinalIgnoreCase) >= 0)
-                return NetworkErrorType.ServerError;
-            else
-                return NetworkErrorType.UnknownError;
+            // 遍历内部异常链，查找最具体的异常类型
+            var current = ex;
+            while (current != null)
+            {
+                // 1. 超时错误
+                if (current is TimeoutException)
+                    return NetworkErrorType.TimeoutError;
+                
+                // 2. 数据库错误（SQL Server）
+                if (current.GetType().Name == "SqlException")
+                {
+                    // 通过反射获取Number属性
+                    var numberProp = current.GetType().GetProperty("Number");
+                    if (numberProp != null)
+                    {
+                        var number = (int)numberProp.GetValue(current);
+                        return number switch
+                        {
+                            -2 => NetworkErrorType.TimeoutError,      // SQL超时
+                            1205 => NetworkErrorType.DatabaseError,   // 死锁
+                            _ => NetworkErrorType.DatabaseError
+                        };
+                    }
+                    return NetworkErrorType.DatabaseError;
+                }
+                
+                // 3. 业务验证错误
+                if (current.GetType().Name.Contains("ValidationException"))
+                    return NetworkErrorType.ValidationError;
+                
+                // 4. 网络/IO错误
+                if (current is System.IO.IOException || current is System.Net.Sockets.SocketException)
+                    return NetworkErrorType.ConnectionError;
+                
+                // 5. 认证/授权错误
+                if (current.Message.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    current.Message.IndexOf("permission", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return NetworkErrorType.AuthorizationError;
+                
+                if (current.Message.IndexOf("authenticate", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    current.Message.IndexOf("login", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return NetworkErrorType.AuthenticationError;
+                
+                // 6. 序列化错误
+                if (current.Message.IndexOf("serialize", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return NetworkErrorType.SerializationError;
+                
+                if (current.Message.IndexOf("deserialize", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return NetworkErrorType.DeserializationError;
+                
+                // 7. 命令错误
+                if (current.Message.IndexOf("command", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return NetworkErrorType.CommandError;
+                
+                // 8. 服务器错误
+                if (current.Message.IndexOf("server", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return NetworkErrorType.ServerError;
+                
+                current = current.InnerException;
+            }
+            
+            return NetworkErrorType.UnknownError;
         }
 
 
@@ -1802,6 +1842,15 @@ namespace RUINORERP.UI.Network
             if (request == null)
             {
                 throw new InvalidOperationException($"请求数据不能为空，指令名称: {commandId.Name}");
+            }
+
+            // 检查待处理请求数量，防止资源耗尽
+            int currentPendingCount = _pendingRequests.Count;
+            if (currentPendingCount >= _maxPendingRequests)
+            {
+                _logger?.LogWarning("[请求保护] 待处理请求已满({Current}/{Max})，拒绝新请求: {CommandId}", 
+                    currentPendingCount, _maxPendingRequests, commandId.Name);
+                throw new InvalidOperationException($"系统繁忙，当前有 {currentPendingCount} 个请求正在处理，请稍后重试");
             }
 
             if (!_pendingRequests.TryAdd(request.RequestId, pendingRequest))
@@ -2771,7 +2820,14 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         IsResponseCommand = false,
                         TimeoutMs = 20000
                     };
-                    EnqueueCommandSafe(queuedCommand);
+                    
+                    // 检查队列保护 - 队列满则拒绝
+                    if (!EnqueueCommandSafe(queuedCommand))
+                    {
+                        _logger?.LogWarning("[队列保护] 队列已满，拒绝入队: {CommandId}", commandId);
+                        tcs.TrySetException(new InvalidOperationException("命令队列已满，请稍后重试"));
+                        return await tcs.Task;
+                    }
 
                     // 启动队列处理（如果未启动）
                     _ = Task.Run(ProcessCommandQueueAsync);
@@ -2919,7 +2975,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 // 立即设置disposed标志，防止新任务启动
                 _disposed = true;
                 _isProcessingQueue = false;
-                _isReconnecting = false;
 
                 if (disposing)
                 {
@@ -3333,29 +3388,23 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         /// <returns>重连任务</returns>
         private async Task TryReconnectIfNeededAsync()
         {
-            lock (_reconnectCoordinationLock)
+            // 检查是否需要重连并避免重复触发
+            if (_connectionManager.IsConnected || _connectionManager.IsReconnecting)
             {
-                // 检查是否需要重连并避免重复触发
-                if (_connectionManager.IsConnected || _isReconnecting)
-                {
-                    return;
-                }
-
-                // 防止频繁手动重连，至少间隔5秒
-                var timeSinceLastAttempt = DateTime.Now - _lastManualReconnectAttempt;
-                if (timeSinceLastAttempt.TotalSeconds < 5)
-                {
-                    // _logger?.LogDebug("距离上次重连尝试时间过短，跳过此次重连");
-                    return;
-                }
-
-                _isReconnecting = true;
-                _lastManualReconnectAttempt = DateTime.Now;
+                return;
             }
+
+            // 防止频繁手动重连，至少间隔5秒
+            var timeSinceLastAttempt = DateTime.Now - _lastManualReconnectAttempt;
+            if (timeSinceLastAttempt.TotalSeconds < 5)
+            {
+                return;
+            }
+
+            _lastManualReconnectAttempt = DateTime.Now;
 
             try
             {
-
                 // 获取当前服务器地址和端口
                 string serverAddress = GetCurrentServerAddress();
                 int serverPort = GetCurrentServerPort();
@@ -3367,7 +3416,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
 
                     if (!connected)
                     {
-                        //_logger?.LogWarning("连接失败，将由ConnectionManager的自动重连机制处理");
+                        _logger?.LogDebug("连接失败，将由ConnectionManager的自动重连机制处理");
                     }
                 }
                 else
@@ -3378,13 +3427,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "尝试重连时发生异常");
-            }
-            finally
-            {
-                lock (_reconnectCoordinationLock)
-                {
-                    _isReconnecting = false;
-                }
             }
         }
 
@@ -3444,8 +3486,8 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         {
                             // 连接仍然断开，重新加入队列
                             EnqueueCommandSafe(command);
-                            // 触发重连尝试（使用更智能的重连策略）
-                            if (!_isReconnecting)
+                            // 触发重连尝试（ConnectionManager内部已有防重复机制）
+                            if (!_connectionManager.IsReconnecting)
                             {
                                 _ = TryReconnectIfNeededAsync();
                             }
@@ -3495,8 +3537,8 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         {
                             // 连接仍然断开，重新加入队列
                             EnqueueCommandSafe(command);
-                            // 触发重连尝试（使用更智能的重连策略）
-                            if (!_isReconnecting)
+                            // 触发重连尝试（ConnectionManager内部已有防重复机制）
+                            if (!_connectionManager.IsReconnecting)
                             {
                                 _ = TryReconnectIfNeededAsync();
                             }
@@ -3598,8 +3640,18 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         /// <summary>
         /// 安全地将命令加入队列并更新计数器
         /// </summary>
-        private void EnqueueCommandSafe(ClientQueuedCommand command)
+        private bool EnqueueCommandSafe(ClientQueuedCommand command)
         {
+            int currentQueueCount = _queuedCommands.Count;
+            
+            // 检查队列是否已满
+            if (currentQueueCount >= _maxQueuedCommands)
+            {
+                _logger?.LogWarning("[队列保护] 命令队列已满({Current}/{Max})，拒绝新命令: {CommandId}", 
+                    currentQueueCount, _maxQueuedCommands, command.CommandId);
+                return false;
+            }
+            
             _queuedCommands.Enqueue(command);
             
             // 更新计数器
@@ -3607,6 +3659,8 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 Interlocked.Increment(ref _responseCommandCount);
             else
                 Interlocked.Increment(ref _oneWayCommandCount);
+                
+            return true;
         }
 
 

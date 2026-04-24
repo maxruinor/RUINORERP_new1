@@ -90,7 +90,7 @@ namespace RUINORERP.PacketSpec.Enums.Core
         /// 已取消
         /// </summary>
         [Description("已取消")]
-        Cancelled = 7,
-        Error = 8
+        Cancelled = 7
+    
     }
 }

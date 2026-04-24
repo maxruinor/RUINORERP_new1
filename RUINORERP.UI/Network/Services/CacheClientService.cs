@@ -85,12 +85,43 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 处理连接状态变化事件
+        /// <summary>
+        /// 连接状态变化处理 - 断线重连后验证缓存一致性
         /// </summary>
         /// <param name="isConnected">是否已连接</param>
-        private void OnConnectionStateChanged(bool isConnected)
+        private async void OnConnectionStateChanged(bool isConnected)
         {
-            // 不再需要手动管理缓存队列，现在由ClientCommunicationService自动处理
             _log.Debug("连接状态变化: {0}", isConnected ? "已连接" : "已断开");
+            
+            if (isConnected)
+            {
+                try
+                {
+                    _log.LogInformation("[缓存一致性] 检测到重连成功，验证订阅状态");
+                    
+                    // 重新订阅所有表（基于本地订阅列表）
+                    var subscribedTables = _subscriptions.Keys.ToList();
+                    if (subscribedTables.Any())
+                    {
+                        _log.LogInformation("[缓存一致性] 重新订阅 {Count} 个表", subscribedTables.Count);
+                        foreach (var tableName in subscribedTables)
+                        {
+                            try
+                            {
+                                await _cacheRequestManager.SendCacheSubscriptionAsync(tableName, SubscribeAction.Subscribe, null);
+                            }
+                            catch (Exception ex)
+                            {
+                                _log.LogWarning(ex, "[缓存一致性] 重新订阅表失败: {TableName}", tableName);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(ex, "[缓存一致性] 重连后验证缓存失败");
+                }
+            }
         }
 
 

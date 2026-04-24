@@ -132,10 +132,12 @@ namespace RUINORERP.UI.Network.Services
             }
             else
             {
-                // 内部创建时传入this和clientCache
+                // 内部创建时传入this、clientCache和communicationService.Value（等待其初始化完成）
                 var recoveryLogger = _logger as ILogger<LockRecoveryManager> ??
                     new Microsoft.Extensions.Logging.Logger<LockRecoveryManager>(new Microsoft.Extensions.Logging.LoggerFactory());
-                _recoveryManager = new LockRecoveryManager(this, _clientCache, recoveryLogger);
+                // 传递ClientCommunicationService以支持重连后锁状态恢复
+                var commService = communicationService?.Value as RUINORERP.UI.Network.ClientCommunicationService;
+                _recoveryManager = new LockRecoveryManager(this, _clientCache, recoveryLogger, commService);
             }
 
             // 初始化定时器 - 设置为无限等待，将在StartAsync方法中启动

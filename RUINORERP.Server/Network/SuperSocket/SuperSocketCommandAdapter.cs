@@ -20,6 +20,7 @@ using RUINORERP.Server; // 添加对Program类所在命名空间的引用
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
 using RUINORERP.Server.Network.Services;
+using RUINORERP.Server.Services; // 内存监控服务
 using SuperSocket.Command;
 using SuperSocket.Server.Abstractions.Session;
 using System;
@@ -57,6 +58,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         private readonly ISessionService _sessionService;
         private readonly IServiceProvider _serviceProvider; // 添加服务提供者字段
         private readonly IClientResponseHandler _clientResponseHandler; // 客户端响应处理器
+        private readonly MemoryMonitoringService _memoryMonitoringService; // 内存监控服务（用于熔断）
 
         /// <summary>
         /// Token验证缓存（TTL: 30秒）
@@ -187,6 +189,23 @@ namespace RUINORERP.Server.Network.SuperSocket
         }
 
         /// <summary>
+        /// P0优化：判断是否为核心指令（内存压力下仍需处理）
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <returns>是否为核心指令</returns>
+        private static bool IsCriticalCommand(CommandId? commandId)
+        {
+            if (!commandId.HasValue)
+                return false;
+
+            // 核心指令白名单：保活、认证、登出
+            return commandId.Value == SystemCommands.Heartbeat ||
+                   commandId.Value == AuthenticationCommands.Login ||
+                   commandId.Value == AuthenticationCommands.Logout ||
+                   commandId.Value == SystemCommands.WelcomeAck;
+        }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="commandDispatcher">命令调度器</param>
@@ -194,12 +213,14 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <param name="logger">日志记录器</param>
         /// <param name="clientResponseHandler">客户端响应处理器</param>
         /// <param name="serviceProvider">服务提供者</param>
+        /// <param name="memoryMonitoringService">内存监控服务（可选，用于熔断）</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             ISessionService sessionService,
             ILogger<SuperSocketCommandAdapter> logger = null,
             IClientResponseHandler clientResponseHandler = null,
-            IServiceProvider serviceProvider = null)
+            IServiceProvider serviceProvider = null,
+            MemoryMonitoringService memoryMonitoringService = null)
         {
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
@@ -208,6 +229,9 @@ namespace RUINORERP.Server.Network.SuperSocket
 
             // 优先使用注入的服务提供者，如果没有则使用全局服务提供者
             _serviceProvider = serviceProvider ?? Program.ServiceProvider;
+            
+            // 注入内存监控服务（用于熔断机制）
+            _memoryMonitoringService = memoryMonitoringService;
 
             // 确保命令调度器使用相同的服务提供者
             if (_commandDispatcher != null && _serviceProvider != null)
@@ -219,9 +243,9 @@ namespace RUINORERP.Server.Network.SuperSocket
 
         /// <summary>
         /// 执行命令
-        /// 将SuperSocket的命令调用转换为现有的命令处理系统
+        /// 将 SuperSocket 的命令调用转换为现有的命令处理系统
         /// </summary>
-        /// <param name="session">SuperSocket会话</param>
+        /// <param name="session">SuperSocket 会话</param>
         /// <param name="package">数据包</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>执行结果任务</returns>
@@ -235,13 +259,26 @@ namespace RUINORERP.Server.Network.SuperSocket
                     package.Packet.Request?.RequestId ?? package.Packet.Response?.RequestId,
                     package.Packet.PacketId);
             }
-
+        
             if (package == null)
             {
                 _logger?.LogWarning("接收到空的数据包");
                 _logger?.LogWarning($"[主动断开连接] 接收到空数据包，准备关闭连接: SessionId={session.SessionID}");
                 await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
                 return;
+            }
+        
+            // P0优化：内存熔断检查 - 在内存压力下拒绝非核心请求
+            if (_memoryMonitoringService != null && _memoryMonitoringService.IsUnderMemoryPressure)
+            {
+                var commandId = package.Packet?.CommandId;
+                if (!IsCriticalCommand(commandId))
+                {
+                    _logger?.LogWarning("[内存熔断] 服务器处于内存压力状态，拒绝非核心请求: SessionId={SessionId}, CommandId={CommandId}",
+                        session.SessionID, commandId?.ToString() ?? "Unknown");
+                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_ResourceBusy, CancellationToken.None);
+                    return; // 立即返回，不进入调度器，避免雪崩效应
+                }
             }
 
 
@@ -483,15 +520,14 @@ namespace RUINORERP.Server.Network.SuperSocket
 
                 var requestId = packet?.ExecutionContext?.RequestId;
 
-                // 优先匹配待处理请求（SendCommandAndWaitForResponseAsync 模式）
+                // ✅ 优先匹配待处理请求（SendCommandAndWaitForResponseAsync 模式）
                 if (!string.IsNullOrEmpty(requestId))
                 {
                     if (SessionService is SessionService sessionServiceConcrete)
                     {
-                        var matched = sessionServiceConcrete.TryRemovePendingRequest(requestId, out var tcs);
-                        if (matched && tcs != null)
+                        var matched = sessionServiceConcrete.TryCompletePendingRequest(requestId, packet);
+                        if (matched)
                         {
-                            tcs.TrySetResult(packet);
                             _logger?.LogDebug("匹配到待处理请求，请求ID: {RequestId}", requestId);
                             return;
                         }
@@ -571,11 +607,11 @@ namespace RUINORERP.Server.Network.SuperSocket
             {
                 _logger?.LogWarning("[UpdatePacketWithResponse] 响应对象为null - CommandId: {CommandId}, PacketId: {PacketId}",
                     package.CommandId, package.PacketId);
-                package.Status = PacketStatus.Error;
+                package.Status = PacketStatus.Failed;
             }
             else
             {
-                package.Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error;
+                package.Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Failed;
                 
                 // ✅ 详细日志记录响应类型
                 _logger?.LogDebug("[UpdatePacketWithResponse] 设置响应 - CommandId: {CommandId}, ResponseType: {ResponseType}, IsSuccess: {IsSuccess}",
@@ -750,25 +786,22 @@ namespace RUINORERP.Server.Network.SuperSocket
             // 获取原始请求的RequestId
             string originalRequestId = requestPackage.Packet?.Request?.RequestId;
 
-            // 创建错误响应包
-            var errorResponse = new PacketModel
+            // 创建错误响应包 - 使用对象池（优化GC）
+            var errorResponse = PacketModelPool.Rent();
+            errorResponse.PacketId = IdGenerator.GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString());
+            errorResponse.Direction = PacketDirection.ServerResponse;
+            errorResponse.SessionId = requestPackage.Packet?.SessionId;
+            errorResponse.Status = PacketStatus.Failed;
+            errorResponse.ExecutionContext = new CommandContext
             {
-                PacketId = IdGenerator.GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
-                Direction = PacketDirection.ServerResponse,
-                SessionId = requestPackage.Packet?.SessionId,
-                Status = PacketStatus.Error,
-                // 确保ExecutionContext被正确初始化
-                ExecutionContext = new CommandContext
-                {
-                    RequestId = originalRequestId ?? string.Empty
-                },
-                Extensions = new JObject
-                {
-                    ["ErrorCode"] = errorCode.Code,
-                    ["ErrorMessage"] = errorCode.Message,
-                    ["Success"] = false,
-                    ["RequestId"] = originalRequestId ?? string.Empty
-                }
+                RequestId = originalRequestId ?? string.Empty
+            };
+            errorResponse.Extensions = new JObject
+            {
+                ["ErrorCode"] = errorCode.Code,
+                ["ErrorMessage"] = errorCode.Message,
+                ["Success"] = false,
+                ["RequestId"] = originalRequestId ?? string.Empty
             };
 
             // 设置请求ID 配对响应
@@ -831,6 +864,9 @@ namespace RUINORERP.Server.Network.SuperSocket
 
             // 发送响应
             await SendResponseAsync(session, errorResponse, cancellationToken);
+            
+            // 归还对象池（优化GC）
+            PacketModelPool.Return(errorResponse);
         }
 
         /// <summary>
@@ -911,7 +947,7 @@ namespace RUINORERP.Server.Network.SuperSocket
     }
 
     /// <summary>
-    /// 非泛型版本的统一SuperSocket命令适配器，便于在不需要指定会话类型的场景中使用
+    /// 非泛型版本的统一 SuperSocket 命令适配器，便于在不需要指定会话类型的场景中使用
     /// </summary>
     [Command(Key = "SuperSocketCommandAdapter")]
     public class SuperSocketCommandAdapter : SuperSocketCommandAdapter<IAppSession>
@@ -924,13 +960,15 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <param name="logger">日志记录器</param>
         /// <param name="clientResponseHandler">客户端响应处理器</param>
         /// <param name="serviceProvider">服务提供者</param>
+        /// <param name="memoryMonitoringService">内存监控服务（可选，用于熔断）</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             ISessionService sessionService,
             ILogger<SuperSocketCommandAdapter> logger = null,
             IClientResponseHandler clientResponseHandler = null,
-            IServiceProvider serviceProvider = null)
-            : base(commandDispatcher, sessionService, logger, clientResponseHandler, serviceProvider)
+            IServiceProvider serviceProvider = null,
+            MemoryMonitoringService memoryMonitoringService = null)
+            : base(commandDispatcher, sessionService, logger, clientResponseHandler, serviceProvider, memoryMonitoringService)
         { }
     }
 }

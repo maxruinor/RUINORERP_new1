@@ -814,6 +814,7 @@ namespace RUINORERP.Server
             _memoryMonitoringService = Program.ServiceProvider.GetRequiredService<MemoryMonitoringService>();
             _memoryMonitoringService.MemoryUsageWarning += OnMemoryUsageWarning;
             _memoryMonitoringService.MemoryUsageCritical += OnMemoryUsageCritical;
+            _memoryMonitoringService.MemoryPressureIncreased += OnMemoryPressureIncreased;
             
             // 初始化内存泄漏诊断服务
             _memoryLeakDiagnosticsService = Program.ServiceProvider.GetRequiredService<MemoryLeakDiagnosticsService>();
@@ -849,9 +850,26 @@ namespace RUINORERP.Server
 
         private void OnMemoryUsageCritical(object sender, MemoryUsageEventArgs e)
         {
-            PrintErrorLog($"内存使用严重: 当前使用 {e.MemoryInfo.WorkingSetMB} MB，正在执行垃圾回收");
-            // 在后台线程执行垃圾回收，避免阻塞UI
-            Task.Run(() => _memoryMonitoringService.ForceGarbageCollection());
+            PrintErrorLog($"内存使用严重: 当前使用 {e.MemoryInfo.WorkingSetMB} MB");
+            // 注意：不再自动执行GC，高频GC会导致CPU升高和响应延迟
+            // 内存压力下应该通过增加超时容忍度来减少用户掉线
+        }
+
+        /// <summary>
+        /// 内存压力事件处理 - 增加超时容忍度减少用户掉线
+        /// </summary>
+        private void OnMemoryPressureIncreased(object sender, MemoryPressureEventArgs e)
+        {
+            try
+            {
+                // ✅ 简化：移除内存压力对心跳超时的影响
+                // SuperSocket底层已处理连接检测，无需动态调整超时倍数
+                PrintInfoLog($"内存压力事件: {e.PressureLevel}, 内存: {e.MemoryUsageMB} MB");
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"处理内存压力事件失败: {ex.Message}");
+            }
         }
 
         /// <summary>

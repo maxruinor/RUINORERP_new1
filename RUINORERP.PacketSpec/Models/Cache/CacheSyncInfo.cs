@@ -122,7 +122,9 @@ namespace RUINORERP.PacketSpec.Models.Cache
                 DataCount = DataCount,
                 EstimatedSize = EstimatedSize,
                 LastUpdateTime = LastUpdateTime,
-                ExpirationTime = ExpirationTime
+                VersionStamp = VersionStamp,
+                ExpirationTime = ExpirationTime,
+                SourceInfo = SourceInfo
             };
         }
     }

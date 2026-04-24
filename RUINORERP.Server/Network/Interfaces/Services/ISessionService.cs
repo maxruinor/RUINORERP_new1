@@ -297,9 +297,12 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         #region 请求管理
 
         /// <summary>
-        /// 尝试移除待处理请求
+        /// 尝试完成待处理请求
         /// </summary>
-        bool TryRemovePendingRequest(string requestId, out TaskCompletionSource<PacketModel> taskCompletionSource);
+        /// <param name="requestId">请求ID</param>
+        /// <param name="response">响应数据</param>
+        /// <returns>是否成功完成</returns>
+        bool TryCompletePendingRequest(string requestId, PacketModel response);
 
         #endregion
     }

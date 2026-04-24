@@ -19,6 +19,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly ClientLockManagementService _lockService;
         private readonly ClientLocalLockCacheService _lockCache;
         private readonly ILogger<LockRecoveryManager> _logger;
+        private readonly ClientCommunicationService _clientCommService;
 
         private readonly Timer _healthCheckTimer;
         private readonly object _healthCheckLock = new object();
@@ -36,22 +37,48 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="lockService">锁管理服务</param>
         /// <param name="lockCache">锁缓存</param>
         /// <param name="logger">日志记录器</param>
-        public LockRecoveryManager(ClientLockManagementService lockService, ClientLocalLockCacheService lockCache, ILogger<LockRecoveryManager> logger)
+        /// <param name="clientCommService">通信服务（用于订阅重连事件）</param>
+        public LockRecoveryManager(
+            ClientLockManagementService lockService, 
+            ClientLocalLockCacheService lockCache, 
+            ILogger<LockRecoveryManager> logger,
+            ClientCommunicationService clientCommService = null)
         {
             _lockService = lockService ?? throw new ArgumentNullException(nameof(lockService));
             _lockCache = lockCache ?? throw new ArgumentNullException(nameof(lockCache));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _clientCommService = clientCommService;
 
             _lastHealthCheck = DateTime.Now;
 
             // 启动健康检查定时器 - 每2分钟执行一次，包括心跳和孤儿锁检查
             _healthCheckTimer = new Timer(PerformHealthCheck, null, TimeSpan.FromMinutes(1), HealthCheckInterval);
 
+            // 订阅重连成功事件 - 立即触发锁状态检查
+            if (_clientCommService != null)
+            {
+                _clientCommService.ReconnectSucceeded += OnReconnectSucceeded;
+                _logger.LogDebug("已订阅重连成功事件");
+            }
+
             // 订阅应用程序退出事件
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
             _logger.LogDebug("锁恢复管理器已初始化（优化版：2分钟健康检查间隔）");
+        }
+
+        /// <summary>
+        /// 重连成功事件处理 - 立即检查锁状态
+        /// </summary>
+        private void OnReconnectSucceeded()
+        {
+            _logger.LogInformation("[锁恢复] 检测到重连成功，触发立即锁状态检查");
+            Task.Run(async () =>
+            {
+                await Task.Delay(2000); // 等待2秒确保连接稳定
+                PerformHealthCheck(null);
+            });
         }
 
         /// <summary>
@@ -319,6 +346,12 @@ namespace RUINORERP.UI.Network.Services
                 // 取消事件订阅
                 AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
                 AppDomain.CurrentDomain.UnhandledException -= OnUnhandledException;
+                
+                // 取消重连成功事件订阅
+                if (_clientCommService != null)
+                {
+                    _clientCommService.ReconnectSucceeded -= OnReconnectSucceeded;
+                }
 
                 _logger.LogDebug("锁恢复管理器已释放资源");
             }

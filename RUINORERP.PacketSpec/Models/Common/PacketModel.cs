@@ -142,7 +142,7 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// <returns>是否有效</returns>
         public bool IsValid()
         {
-            // 添加2分钟的时间容差范围，允许客户端和服务器之间有一定的时间差异
+            // 2分钟时间容差，允许客户端和服务器之间的合理时间差异
             var now = DateTime.Now;
             var toleranceMinutes = 2; // 2分钟容差
             
@@ -286,28 +286,6 @@ namespace RUINORERP.PacketSpec.Models.Common
 
 
         #endregion
-
-
-        public PacketModel Clone()
-        {
-            var clonedPacket = new PacketModel
-            {
-                PacketId = IdGenerator.GeneratePacketId(CommandId.Category.ToString()),
-                CommandId = CommandId,
-                Status = Status,
-                SessionId = SessionId,
-                CreatedTime = CreatedTime,
-                TimestampUtc = TimestampUtc
-            };
-            
-            // 复制Extensions对象
-            if (Extensions != null)
-            {
-                clonedPacket.Extensions = JObject.FromObject(Extensions);
-            }
-            
-            return clonedPacket;
-        }
 
         /// <summary>
         /// 计算数据包的哈希值

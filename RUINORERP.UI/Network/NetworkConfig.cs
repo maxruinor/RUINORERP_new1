@@ -81,6 +81,27 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public int RequestIdLength { get; set; } = 32;
 
+        /// <summary>
+        /// 命令队列最大容量
+        /// 超过此数量时拒绝新命令，防止内存溢出
+        /// 默认: 1000条
+        /// </summary>
+        public int MaxQueuedCommands { get; set; } = 1000;
+
+        /// <summary>
+        /// 命令队列溢出策略
+        /// 当队列满时：0=拒绝新命令 1=丢弃最旧命令 2=抛出异常
+        /// 默认: 0（拒绝新命令）
+        /// </summary>
+        public int QueueOverflowStrategy { get; set; } = 0;
+
+        /// <summary>
+        /// 待处理请求最大数量
+        /// 超过此数量时拒绝新请求，防止资源耗尽
+        /// 默认: 500条
+        /// </summary>
+        public int MaxPendingRequests { get; set; } = 500;
+
         #endregion
 
         #region 重试配置

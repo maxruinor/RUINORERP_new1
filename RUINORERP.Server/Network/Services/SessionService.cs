@@ -5,7 +5,8 @@
     using RUINORERP.Model;
     using RUINORERP.Model.ConfigModel;
     using RUINORERP.PacketSpec.Commands;
-    using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Enums.Core;
     using RUINORERP.PacketSpec.Models;
     using RUINORERP.PacketSpec.Models.Common;
     using RUINORERP.PacketSpec.Models.Core;
@@ -18,6 +19,7 @@
     using RUINORERP.Server.Network.Interfaces.Services;
     using RUINORERP.Server.Network.Models;
 using RUINORERP.Server.Network.Monitoring;
+using RUINORERP.Server.Services;
 using SuperSocket.Channel;
     using SuperSocket.Connection;
     using SuperSocket.Server;
@@ -55,9 +57,8 @@ namespace RUINORERP.Server.Network.Services
         private readonly ConcurrentDictionary<string, ConnectionRateTracker> _connectionRates;
         private readonly Timer _rateCleanupTimer; // 定期清理过期的连接记录
 
-        // 存储待处理的请求任务，用于匹配响应
-        private static readonly ConcurrentDictionary<string, TaskCompletionSource<PacketModel>> _pendingRequests =
-            new ConcurrentDictionary<string, TaskCompletionSource<PacketModel>>();
+        // ✅ 使用统一的待处理请求追踪器（消除重复代码）
+        private readonly PendingRequestTracker<PacketModel> _requestTracker;
 
         /// <summary>
         /// 客户端响应处理器 - 统一管理所有客户端响应数据
@@ -91,10 +92,17 @@ namespace RUINORERP.Server.Network.Services
             _connectionRates = new ConcurrentDictionary<string, ConnectionRateTracker>();
             // 每10分钟清理一次过期的连接记录，避免内存泄漏
             _rateCleanupTimer = new Timer(CleanupConnectionRates, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
-
-            // 优化：将清理定时器改为每5分钟执行一次，减少系统开销
-            // 同时避免过于频繁的清理操作影响正常业务
-            _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+            
+            // ✅ 使用统一的请求追踪器（30秒超时，1分钟清理，最多500个待处理请求）
+            _requestTracker = new PendingRequestTracker<PacketModel>(
+                defaultTimeout: TimeSpan.FromSeconds(30),
+                cleanupInterval: TimeSpan.FromMinutes(1),
+                maxPendingCount: 500
+            );
+            
+            // ✅ 简化：移除应用层心跳检查，依赖SuperSocket底层连接检测
+            // SuperSocket会在TCP连接断开时自动触发OnSessionClosedAsync
+            // 不再需要定时检查LastHeartbep0-at，减少CPU开销和复杂度
 
             _logger.LogInformation("SessionService初始化完成（含DDoS防护）");
         }
@@ -462,6 +470,9 @@ namespace RUINORERP.Server.Network.Services
                         // 取消该会话的所有缓存订阅
                         _subscriptionManager.RemoveAllSubscriptionsAsync(sessionId);
 
+                        // 清理会话数据，释放内存（解决内存泄漏问题）
+                        sessionInfo.Clear();
+
                         lock (_lockObject)
                         {
                             _statistics.TotalDisconnections++;
@@ -532,27 +543,28 @@ namespace RUINORERP.Server.Network.Services
                 
                 bool shouldCloseConnection = false; // 标记是否需要关闭连接
                 
-                // ✅ 已禁用DDoS防护 - 内网环境不需要连接频率限制
-                // if (!string.IsNullOrEmpty(clientIp) && clientIp != "0.0.0.0")
-                // {
-                //     var tracker = _connectionRates.GetOrAdd(clientIp, _ => new ConnectionRateTracker());
-                //     lock (tracker)
-                //     {
-                //         tracker.RecordConnection();
-                //         const int maxConnectionsPerMinute = 60;
-                //         if (tracker.IsExceedingLimit(maxConnectionsPerMinute, TimeSpan.FromMinutes(1)))
-                //         {
-                //             BlacklistManager.BanIp(clientIp, TimeSpan.FromMinutes(30));
-                //             _logger.LogWarning($"[自动封禁-DDoS] IP {clientIp} 因高频连接被封禁30分钟");
-                //             shouldCloseConnection = true;
-                //         }
-                //     }
-                //     if (shouldCloseConnection)
-                //     {
-                //         await session.CloseAsync(CloseReason.ServerShutdown);
-                //         return;
-                //     }
-                // }
+                // P1优化：启用基础DDoS防护 - 限制单IP连接频率，防止重连风暴
+                if (!string.IsNullOrEmpty(clientIp) && clientIp != "0.0.0.0")
+                {
+                    var tracker = _connectionRates.GetOrAdd(clientIp, _ => new ConnectionRateTracker());
+                    lock (tracker)
+                    {
+                        tracker.RecordConnection();
+                        // 宽松限制：每分钟最多30次连接（允许正常重连，但防止恶意攻击）
+                        const int maxConnectionsPerMinute = 30;
+                        if (tracker.IsExceedingLimit(maxConnectionsPerMinute, TimeSpan.FromMinutes(1)))
+                        {
+                            _logger.LogWarning("[DDoS防护] IP {ClientIp} 连接频率超限（{Max}/min），拒绝连接", 
+                                clientIp, maxConnectionsPerMinute);
+                            shouldCloseConnection = true;
+                        }
+                    }
+                    if (shouldCloseConnection)
+                    {
+                        await session.CloseAsync(CloseReason.ServerShutdown);
+                        return;
+                    }
+                }
                 
                 // ✅ 已禁用IP白名单拦截 - 内网环境允许所有IP连接
                 // if (!string.IsNullOrEmpty(clientIp) && !BlacklistManager.IsIpAllowed(clientIp))
@@ -1247,12 +1259,9 @@ namespace RUINORERP.Server.Network.Services
                     throw new InvalidOperationException($"会话不存在: {sessionID}");
                 }
 
-                // 创建任务完成源
-                var tcs = new TaskCompletionSource<PacketModel>();
+                // ✅ 使用统一的请求追踪器
                 var requestId = request.RequestId;
-
-                // 注册待处理请求
-                _pendingRequests.TryAdd(requestId, tcs);
+                var tcs = _requestTracker.Register(requestId);
 
                 try
                 {
@@ -1266,9 +1275,6 @@ namespace RUINORERP.Server.Network.Services
                     var timeoutTask = Task.Delay(timeoutMs, cts.Token);
                     var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
 
-                    // 从待处理请求中移除
-                    _pendingRequests.TryRemove(requestId, out _);
-
                     if (completedTask == timeoutTask)
                     {
                         throw new TimeoutException($"请求超时（{timeoutMs}ms），指令类型：{commandId.ToString()}，请求ID: {requestId}");
@@ -1280,8 +1286,8 @@ namespace RUINORERP.Server.Network.Services
                 }
                 catch (Exception ex)
                 {
-                    // 从待处理请求中移除
-                    _pendingRequests.TryRemove(requestId, out _);
+                    // ✅ 追踪器会自动清理，这里只需取消任务
+                    _requestTracker.TryCancel(requestId);
                     throw;
                 }
             }
@@ -1352,14 +1358,14 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 尝试移除待处理请求
+        /// 尝试完成待处理请求
         /// </summary>
         /// <param name="requestId">请求ID</param>
-        /// <param name="taskCompletionSource">任务完成源</param>
-        /// <returns>是否成功移除</returns>
-        public bool TryRemovePendingRequest(string requestId, out TaskCompletionSource<PacketModel> taskCompletionSource)
+        /// <param name="response">响应数据</param>
+        /// <returns>是否成功完成</returns>
+        public bool TryCompletePendingRequest(string requestId, PacketModel response)
         {
-            return _pendingRequests.TryRemove(requestId, out taskCompletionSource);
+            return _requestTracker.TryComplete(requestId, response);
         }
         #endregion
 
@@ -1573,94 +1579,15 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 心跳检查 - 优化版
-        /// 修复：优化心跳超时检测逻辑，避免误判正常会话
+        /// ✅ 简化：移除应用层心跳检查
+        /// SuperSocket底层已处理TCP连接断开检测，无需重复实现
+        /// Client端保留心跳用于主动检测网络状态
         /// </summary>
-        /// <returns>心跳异常的会话数量</returns>
+        [Obsolete("已移除应用层心跳检查，依赖SuperSocket底层连接检测")]
         public int HeartbeatCheck()
         {
-            try
-            {
-                var currentTime = DateTime.Now;
-                
-                // 只检查已认证且未断开的会话
-                var activeSessions = _sessions.Values
-                    .Where(s => s.IsAuthenticated && s.IsConnected)
-                    .ToList();
-                
-                var abnormalSessions = new List<SessionInfo>();
-                
-                foreach (var session in activeSessions)
-                {
-                    // 计算距离上次心跳的时间
-                    var timeSinceLastHeartbeat = currentTime - session.LastHeartbeat;
-                    
-                    // 动态超时时间：根据会话活跃度和失败次数调整
-                    // 基础超时时间：10分钟
-                    // 如果有心跳失败记录，增加超时时间
-                    int timeoutMinutes = 10;
-                    if (session.HeartbeatFailedCount > 0)
-                    {
-                        timeoutMinutes += Math.Min(session.HeartbeatFailedCount * 2, 10); // 最多增加到20分钟
-                    }
-                    
-                    // 检查是否超时
-                    if (timeSinceLastHeartbeat.TotalMinutes > timeoutMinutes)
-                    {
-                        lock (session)
-                        {
-                            session.HeartbeatFailedCount++;
-                            
-                            // 只有连续多次超时且时间很长才清理
-                            if (session.HeartbeatFailedCount >= 3 && timeSinceLastHeartbeat.TotalMinutes > 20)
-                            {
-                                _logger.LogWarning($"会话心跳超时将被清理: {session.SessionID}, 用户: {session.UserName}, " +
-                                    $"最后心跳: {session.LastHeartbeat:yyyy-MM-dd HH:mm:ss}, 超时: {timeSinceLastHeartbeat.TotalMinutes:F1}分钟");
-                                abnormalSessions.Add(session);
-                            }
-                            else if (session.HeartbeatFailedCount < 3)
-                            {
-                                // 前几次只记录日志，不清理
-                                _logger.LogDebug($"会话心跳异常(第{session.HeartbeatFailedCount}次): {session.SessionID}, 用户: {session.UserName}, " +
-                                    $"距离上次心跳: {timeSinceLastHeartbeat.TotalMinutes:F1}分钟");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // 如果心跳正常，重置失败计数
-                        if (session.HeartbeatFailedCount > 0)
-                        {
-                            lock (session)
-                            {
-                                session.HeartbeatFailedCount = 0;
-                            }
-                        }
-                    }
-                }
-        
-                // 清理严重超时的会话
-                var removedCount = 0;
-                foreach (var session in abnormalSessions)
-                {
-                    if (RemoveSession(session.SessionID))
-                    {
-                        removedCount++;
-                    }
-                }
-        
-                if (removedCount > 0)
-                {
-                    _logger.LogInformation($"心跳检查完成，清理了 {removedCount} 个超时会话");
-                }
-        
-                return removedCount;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "心跳检查失败");
-                return 0;
-            }
+            _logger.LogWarning("HeartbeatCheck() 已废弃，SuperSocket底层已处理连接检测");
+            return 0;
         }
 
         #endregion
@@ -1668,49 +1595,31 @@ namespace RUINORERP.Server.Network.Services
         #region 私有方法
 
         /// <summary>
-        /// 清理和心跳检查回调
-        /// P2-2优化: 合并清理和心跳检查为一次遍历，异步执行清理任务
+        /// ✅ 简化：移除合并清理和心跳检查
+        /// SuperSocket底层已处理连接检测，只需定期清理超时会话
         /// </summary>
+        [Obsolete("已移除应用层心跳检查")]
         private void CleanupAndHeartbeatCallback(object state)
         {
-            try
-            {
-                var currentTime = DateTime.Now;
-
-                // P2-2优化: 合并清理和心跳检查为一次遍历
-                var (removedCount, abnormalCount) = CleanupAndHeartbeatCheckCombined();
-
-                // P2-2优化: 异步清理待处理请求，不阻塞主流程
-                _ = Task.Run(() => CleanupPendingRequests()).ConfigureAwait(false);
-
-                // 收集心跳性能监控数据
-                CollectHeartbeatPerformanceData();
-
-                lock (_lockObject)
-                {
-                    _statistics.TimeoutSessions += removedCount;
-                    _statistics.HeartbeatFailures += abnormalCount;
-                    _statistics.LastCleanupTime = currentTime;
-                    _statistics.LastHeartbeatCheck = currentTime;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "清理和心跳检查回调执行失败");
-            }
+            // 只保留会话超时清理，不再检查心跳
+            CleanupTimeoutSessions();
+            
+            // 异步清理待处理请求
+            _ = Task.Run(() => CleanupPendingRequests()).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// P2-2优化: 合并清理和心跳检查，减少遍历次数
+        /// ✅ 简化：移除合并的心跳检查逻辑
+        /// 只保留会话活动超时清理（60分钟无活动）
         /// </summary>
+        [Obsolete("已移除应用层心跳检查")]
         private (int removedCount, int abnormalCount) CleanupAndHeartbeatCheckCombined()
         {
             var allSessionIds = _sessions.Keys.ToList();
             var sessionsToRemove = new List<string>();
-            int abnormalCount = 0;
             var currentTime = DateTime.Now;
 
-            // 一次遍历完成两项检查
+            // 只检查活动超时（60分钟无活动）
             foreach (var sessionId in allSessionIds)
             {
                 if (!_sessions.TryGetValue(sessionId, out var session))
@@ -1718,35 +1627,10 @@ namespace RUINORERP.Server.Network.Services
 
                 lock (session)
                 {
-                    // 检查1: 活动超时（60分钟无活动）
                     var inactiveTime = currentTime - session.LastActivityTime;
                     if (inactiveTime.TotalMinutes > 60)
                     {
                         sessionsToRemove.Add(sessionId);
-                        continue;
-                    }
-
-                    // 检查2: 心跳异常
-                    if (session.IsAuthenticated && session.IsConnected)
-                    {
-                        var timeSinceLastHeartbeat = currentTime - session.LastHeartbeat;
-                        if (timeSinceLastHeartbeat.TotalMinutes > 10)
-                        {
-                            session.HeartbeatFailedCount++;
-
-                            if (session.HeartbeatFailedCount >= 3 && timeSinceLastHeartbeat.TotalMinutes > 20)
-                            {
-                                sessionsToRemove.Add(sessionId);
-                            }
-                            else
-                            {
-                                abnormalCount++;
-                            }
-                        }
-                        else
-                        {
-                            session.HeartbeatFailedCount = 0;
-                        }
                     }
                 }
             }
@@ -1761,68 +1645,23 @@ namespace RUINORERP.Server.Network.Services
                 }
             }
 
-            return (removedCount, abnormalCount);
+            return (removedCount, 0); // abnormalCount始终为0
         }
 
         /// <summary>
         /// 清理过期的待处理请求，防止内存泄漏
+        /// ✅ 使用统一的追踪器，自动处理超时清理
         /// </summary>
         private void CleanupPendingRequests()
         {
             try
             {
-                var cleanedCount = 0;
-                var now = DateTime.UtcNow;
-                const int REQUEST_TIMEOUT_MINUTES = 5; // 请求超时时间（5 分钟）
-        
-                // 1. 查找已完成的任务（Task.IsCompleted 为 true）
-                foreach (var kvp in _pendingRequests.Where(kvp => kvp.Value.Task.IsCompleted))
+                // ✅ PendingRequestTracker 内部定时器已自动清理超时请求
+                // 这里只需记录统计信息
+                var pendingCount = _requestTracker.Count;
+                if (pendingCount > 100)
                 {
-                    if (_pendingRequests.TryRemove(kvp.Key, out var tcs))
-                    {
-                        cleanedCount++;
-                    }
-                }
-        
-                // 2. 查找超时的任务（超过 5 分钟未完成）
-                // 注意：需要 SessionInfo 中记录 CreationTime，这里使用简化的方式
-                // 通过检查 Task 的状态来判断是否应该取消
-                var timeoutKeys = new List<string>();
-                foreach (var kvp in _pendingRequests)
-                {
-                    // 如果任务长时间未完成，标记为超时
-                    // 由于没有 CreationTime 信息，我们只能通过 Task 状态判断
-                    if (!kvp.Value.Task.IsCompleted && 
-                        kvp.Value.Task.IsFaulted || 
-                        kvp.Value.Task.IsCanceled)
-                    {
-                        timeoutKeys.Add(kvp.Key);
-                    }
-                }
-        
-                // 3. 移除超时的任务
-                foreach (var key in timeoutKeys)
-                {
-                    if (_pendingRequests.TryRemove(key, out var tcs))
-                    {
-                        try
-                        {
-                            // 尝试取消任务
-                            if (!tcs.Task.IsCompleted)
-                            {
-                                tcs.SetCanceled();
-                            }
-                        }
-                        catch { /* 忽略异常 */ }
-                                
-                        cleanedCount++;
-                        _logger.LogWarning("清理了超时的待处理请求：{RequestId}", key);
-                    }
-                }
-        
-                if (cleanedCount > 0)
-                {
-                    _logger.LogDebug("清理了 {Count} 个已完成的或超时的待处理请求", cleanedCount);
+                    _logger.LogWarning("待处理请求数量较多: {Count}", pendingCount);
                 }
             }
             catch (Exception ex)

@@ -294,6 +294,11 @@ namespace RUINORERP.Server.Network.Models
         private const int MaxDataQueueSize = 100;
         
         /// <summary>
+        /// 队列清理告警阈值 - 超过此清理次数时触发告警
+        /// </summary>
+        private const int DataQueueCleanupAlertThreshold = 50;
+        
+        /// <summary>
         /// 数据队列（用于广播等场景）
         /// </summary>
         public ConcurrentQueue<byte[]> DataQueue = new ConcurrentQueue<byte[]>();
@@ -302,6 +307,16 @@ namespace RUINORERP.Server.Network.Models
         /// DataQueue被清理的次数
         /// </summary>
         public int DataQueueCleanupCount { get; private set; }
+
+        /// <summary>
+        /// 是否触发过队列清理告警
+        /// </summary>
+        public bool HasTriggeredQueueCleanupAlert { get; private set; }
+
+        /// <summary>
+        /// 队列清理告警事件 - 超过阈值时触发
+        /// </summary>
+        public event EventHandler<DataQueueCleanupEventArgs> DataQueueCleanupAlert;
 
         #endregion
 
@@ -349,7 +364,16 @@ namespace RUINORERP.Server.Network.Models
                 if (cleanupCount > 0)
                 {
                     DataQueueCleanupCount += cleanupCount;
-                    System.Diagnostics.Debug.WriteLine($"[SessionInfo] Session {SessionID}: 清理了 {cleanupCount} 个积压数据包");
+                    
+                    // 超过阈值时触发告警事件
+                    if (!HasTriggeredQueueCleanupAlert && DataQueueCleanupCount >= DataQueueCleanupAlertThreshold)
+                    {
+                        HasTriggeredQueueCleanupAlert = true;
+                        DataQueueCleanupAlert?.Invoke(this, new DataQueueCleanupEventArgs(SessionID, DataQueueCleanupCount, cleanupCount));
+                    }
+                    
+                    _logger?.LogWarning("[SessionInfo] Session {SessionId}: 清理了 {CleanupCount} 个积压数据包, 累计清理: {TotalCleanup}", 
+                        SessionID, cleanupCount, DataQueueCleanupCount);
                 }
                 
                 if (gde.Head != null && gde.Head.Length > 0)
@@ -494,6 +518,62 @@ namespace RUINORERP.Server.Network.Models
                 ClientVersion = UserInfo?.ClientVersion,
                 DeviceInfo = DeviceInfo
             };
+        }
+
+        #endregion
+
+        #region 数据清理
+
+        /// <summary>
+        /// 清理会话数据，释放内存（解决内存泄漏问题）
+        /// </summary>
+        public void Clear()
+        {
+            // 清除用户信息
+            UserInfo = null;
+            
+            // 清除客户端系统信息
+            ClientSystemInfo = null;
+            
+            // 清除数据队列
+            ClearDataQueue();
+            
+            // 清除属性字典
+            if (Properties != null)
+            {
+                Properties.Clear();
+                Properties = null;
+            }
+            
+            // 清除错误信息
+            LastError = null;
+            
+            // 重置统计计数器
+            _sentPacketsCount = 0;
+            _receivedPacketsCount = 0;
+            _totalBytesSent = 0;
+            _totalBytesReceived = 0;
+            
+            // 重置心跳相关
+            HeartbeatCount = 0;
+            HeartbeatFailedCount = 0;
+            LastHeartbeatSequence = 0;
+            
+            // 标记为已断开
+            IsConnected = false;
+            Status = SessionStatus.Disconnected;
+        }
+
+        /// <summary>
+        /// 清理数据队列
+        /// </summary>
+        public void ClearDataQueue()
+        {
+            if (DataQueue != null)
+            {
+                // 将队列中的所有元素出队以释放引用
+                while (DataQueue.TryDequeue(out _)) { }
+            }
         }
 
         #endregion
@@ -822,4 +902,40 @@ namespace RUINORERP.Server.Network.Models
     }
 
     #endregion
+
+    /// <summary>
+    /// 数据队列清理告警事件参数
+    /// </summary>
+    public class DataQueueCleanupEventArgs : EventArgs
+    {
+        /// <summary>
+        /// 会话ID
+        /// </summary>
+        public string SessionId { get; }
+
+        /// <summary>
+        /// 累计清理次数
+        /// </summary>
+        public int TotalCleanupCount { get; }
+
+        /// <summary>
+        /// 本次清理次数
+        /// </summary>
+        public int ThisCleanupCount { get; }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <param name="totalCleanupCount">累计清理次数</param>
+        /// <param name="thisCleanupCount">本次清理次数</param>
+        public DataQueueCleanupEventArgs(string sessionId, int totalCleanupCount, int thisCleanupCount)
+        {
+            SessionId = sessionId;
+            TotalCleanupCount = totalCleanupCount;
+            ThisCleanupCount = thisCleanupCount;
+        }
+    }
+
+   
 }

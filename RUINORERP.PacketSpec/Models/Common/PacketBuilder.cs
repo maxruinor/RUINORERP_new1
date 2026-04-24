@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -7,6 +7,7 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Core;
 using Newtonsoft.Json.Linq;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.PacketSpec.Models.Common
 {
@@ -19,11 +20,11 @@ namespace RUINORERP.PacketSpec.Models.Common
         private PacketModel _packet;
 
         /// <summary>
-        /// 私有构造函数
+        /// 私有构造函数 - 使用对象池创建PacketModel（优化GC）
         /// </summary>
         private PacketBuilder()
         {
-            _packet = new PacketModel();
+            _packet = PacketModelPool.Rent();
         }
 
 
@@ -156,15 +157,6 @@ namespace RUINORERP.PacketSpec.Models.Common
             }
 
             return _packet;
-        }
-
-        /// <summary>
-        /// 构建并克隆数据包（避免后续修改影响已构建的包）
-        /// </summary>
-        /// <returns>克隆的数据包实例</returns>
-        public PacketModel BuildAndClone()
-        {
-            return Build().Clone();
         }
 
         /// <summary>

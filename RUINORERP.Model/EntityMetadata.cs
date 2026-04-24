@@ -7,6 +7,7 @@
 // **************************************
 
 using System;
+using System.Collections.Generic;
 
 namespace RUINORERP.Model
 {
@@ -26,6 +27,11 @@ namespace RUINORERP.Model
         public string DisplayName { get; set; }
 
         /// <summary>
+        /// 实体名称（类名，用于反射查找）
+        /// </summary>
+        public string EntityName { get; set; }
+
+        /// <summary>
         /// 实体类型
         /// </summary>
         public Type EntityType { get; set; }
@@ -39,5 +45,30 @@ namespace RUINORERP.Model
         /// 数据库表名
         /// </summary>
         public string TableName { get; set; }
+
+        /// <summary>
+        /// 主键字段名（数据库列名）
+        /// </summary>
+        public string PrimaryKeyName { get; set; }
+
+        /// <summary>
+        /// 主键属性名（C#属性名）
+        /// </summary>
+        public string PrimaryKeyProperty { get; set; }
+
+        /// <summary>
+        /// 子表关联关系列表（用于级联删除）
+        /// </summary>
+        public List<ChildRelationInfo> ChildRelations { get; set; } = new List<ChildRelationInfo>();
+    }
+
+    /// <summary>
+    /// 子表关联信息
+    /// </summary>
+    public class ChildRelationInfo
+    {
+        public string ChildTableName { get; set; }
+        public string ForeignKeyColumn { get; set; }
+        public string NavigationProperty { get; set; }
     }
 }

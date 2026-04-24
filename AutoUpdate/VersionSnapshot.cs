@@ -171,4 +171,55 @@ namespace AutoUpdate
             }
         }
     }
+    
+    /// <summary>
+    /// 版本历史统计信息
+    /// </summary>
+    public class VersionHistoryStats
+    {
+        /// <summary>
+        /// 总版本数量
+        /// </summary>
+        public int TotalVersionCount { get; set; }
+        
+        /// <summary>
+        /// 完整快照数量
+        /// </summary>
+        public int FullSnapshotCount { get; set; }
+        
+        /// <summary>
+        /// 增量快照数量
+        /// </summary>
+        public int IncrementalSnapshotCount { get; set; }
+        
+        /// <summary>
+        /// 当前总大小（字节）
+        /// </summary>
+        public long TotalSizeBytes { get; set; }
+        
+        /// <summary>
+        /// 最大限制（字节）
+        /// </summary>
+        public long MaxSizeBytes { get; set; }
+        
+        /// <summary>
+        /// 使用百分比
+        /// </summary>
+        public double UsagePercentage { get; set; }
+        
+        /// <summary>
+        /// 显示大小
+        /// </summary>
+        public string DisplayTotalSize => $"{TotalSizeBytes / 1024 / 1024} MB";
+        
+        /// <summary>
+        /// 显示最大限制
+        /// </summary>
+        public string DisplayMaxSize => $"{MaxSizeBytes / 1024 / 1024} MB";
+        
+        /// <summary>
+        /// 显示使用百分比
+        /// </summary>
+        public string DisplayUsage => $"{UsagePercentage:F1}%";
+    }
 }

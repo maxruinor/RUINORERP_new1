@@ -1,3 +1,5 @@
+using System.Windows.Forms;
+
 namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 {
     partial class UCBasicDataCleanup
@@ -29,6 +31,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private void InitializeComponent()
         {
             this.kryptonPanelMain = new Krypton.Toolkit.KryptonPanel();
+            this.tabControlMain = new TabControl();
+            this.tabPageData = new  TabPage();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonGroupBoxConfig = new Krypton.Toolkit.KryptonGroupBox();
             this.kryptonPanelConfig = new Krypton.Toolkit.KryptonPanel();
@@ -47,9 +51,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kbtnRefresh = new Krypton.Toolkit.KryptonButton();
             this.kbtnTestExecute = new Krypton.Toolkit.KryptonButton();
             this.kbtnPreview = new Krypton.Toolkit.KryptonButton();
+            this.tabPageImages = new TabPage();
+            this.tabPageLog = new TabPage();
+            this.rtbLog = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).BeginInit();
             this.kryptonPanelMain.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
+            this.tabControlMain.SuspendLayout();
+            this.tabPageData.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
@@ -71,22 +79,45 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             ((System.ComponentModel.ISupportInitialize)(this.dgvDataPreview)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelExecuteButtons)).BeginInit();
             this.kryptonPanelExecuteButtons.SuspendLayout();
+            this.tabPageLog.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonPanelMain
             // 
-            this.kryptonPanelMain.Controls.Add(this.kryptonSplitContainer1);
+            this.kryptonPanelMain.Controls.Add(this.tabControlMain);
             this.kryptonPanelMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelMain.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelMain.Name = "kryptonPanelMain";
             this.kryptonPanelMain.Size = new System.Drawing.Size(1000, 700);
             this.kryptonPanelMain.TabIndex = 0;
             // 
+            // tabControlMain
+            // 
+            this.tabControlMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControlMain.Location = new System.Drawing.Point(0, 0);
+            this.tabControlMain.Name = "tabControlMain";
+            this.tabControlMain.SelectedIndex = 0;
+            this.tabControlMain.Size = new System.Drawing.Size(1000, 700);
+            this.tabControlMain.TabIndex = 0;
+            this.tabControlMain.TabPages.AddRange(new TabPage[] {
+            this.tabPageData,
+            this.tabPageImages,
+            this.tabPageLog});
+            // 
+            // tabPageData
+            // 
+            this.tabPageData.Controls.Add(this.kryptonSplitContainer1);
+            this.tabPageData.Location = new System.Drawing.Point(5, 24);
+            this.tabPageData.Name = "tabPageData";
+            this.tabPageData.Padding = new System.Windows.Forms.Padding(5);
+            this.tabPageData.Size = new System.Drawing.Size(990, 671);
+            this.tabPageData.Text = "数据清理";
+            // 
             // kryptonSplitContainer1
             // 
             this.kryptonSplitContainer1.Cursor = System.Windows.Forms.Cursors.Default;
             this.kryptonSplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonSplitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.kryptonSplitContainer1.Location = new System.Drawing.Point(5, 5);
             this.kryptonSplitContainer1.Name = "kryptonSplitContainer1";
             this.kryptonSplitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -97,7 +128,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonGroupBoxPreview);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1000, 700);
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(980, 661);
             this.kryptonSplitContainer1.SplitterDistance = 80;
             this.kryptonSplitContainer1.TabIndex = 0;
             // 
@@ -279,6 +310,36 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kbtnPreview.Values.Text = "数据预览";
             this.kbtnPreview.Click += new System.EventHandler(this.KbtnPreview_Click);
             // 
+            // tabPageImages
+            // 
+            this.tabPageImages.Location = new System.Drawing.Point(5, 24);
+            this.tabPageImages.Name = "tabPageImages";
+            this.tabPageImages.Padding = new System.Windows.Forms.Padding(5);
+            this.tabPageImages.Size = new System.Drawing.Size(990, 671);
+            this.tabPageImages.Text = "图片管理";
+            // 
+            // tabPageLog
+            // 
+            this.tabPageLog.Controls.Add(this.rtbLog);
+            this.tabPageLog.Location = new System.Drawing.Point(5, 24);
+            this.tabPageLog.Name = "tabPageLog";
+            this.tabPageLog.Padding = new System.Windows.Forms.Padding(5);
+            this.tabPageLog.Size = new System.Drawing.Size(990, 671);
+            this.tabPageLog.Text = "运行日志";
+            // 
+            // rtbLog
+            // 
+            this.rtbLog.BackColor = System.Drawing.Color.Black;
+            this.rtbLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtbLog.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rtbLog.ForeColor = System.Drawing.Color.Lime;
+            this.rtbLog.Location = new System.Drawing.Point(5, 5);
+            this.rtbLog.Name = "rtbLog";
+            this.rtbLog.ReadOnly = true;
+            this.rtbLog.Size = new System.Drawing.Size(980, 661);
+            this.rtbLog.TabIndex = 0;
+            this.rtbLog.Text = "";
+            // 
             // UCBasicDataCleanup
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -288,6 +349,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.Size = new System.Drawing.Size(1000, 700);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).EndInit();
             this.kryptonPanelMain.ResumeLayout(false);
+            this.tabControlMain.ResumeLayout(false);
+            this.tabPageData.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).EndInit();
             this.kryptonSplitContainer1.Panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).EndInit();
@@ -311,6 +374,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             ((System.ComponentModel.ISupportInitialize)(this.dgvDataPreview)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelExecuteButtons)).EndInit();
             this.kryptonPanelExecuteButtons.ResumeLayout(false);
+            this.tabPageLog.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -318,6 +382,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         #endregion
 
         private Krypton.Toolkit.KryptonPanel kryptonPanelMain;
+        private TabControl tabControlMain;
+        private TabPage tabPageData;
+        private TabPage tabPageImages;
+        private TabPage tabPageLog;
+        private System.Windows.Forms.RichTextBox rtbLog;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer1;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxConfig;
         private Krypton.Toolkit.KryptonPanel kryptonPanelConfig;

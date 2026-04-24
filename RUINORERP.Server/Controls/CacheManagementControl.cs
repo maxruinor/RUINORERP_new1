@@ -140,7 +140,17 @@ namespace RUINORERP.Server.Controls
             {
                 // 使用构造函数中注入的缓存管理器实例，确保与初始化服务使用的是同一个实例
                 // 显示加载状态
-                toolStripStatusLabel1.Text = "正在加载缓存统计...";
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        toolStripStatusLabel1.Text = "正在加载缓存统计...";
+                    }));
+                }
+                else
+                {
+                    toolStripStatusLabel1.Text = "正在加载缓存统计...";
+                }
 
                 // 使用异步方式加载统计信息，避免UI线程阻塞
                 await Task.Run(() =>
@@ -284,8 +294,19 @@ namespace RUINORERP.Server.Controls
                     if (!string.IsNullOrEmpty(tableName))
                     {
                         // 显示加载状态
-                        this.Cursor = Cursors.WaitCursor;
-                        toolStripStatusLabel1.Text = $"正在加载表 {tableName} 的缓存数据...";
+                        if (this.InvokeRequired)
+                        {
+                            this.Invoke(new Action(() =>
+                            {
+                                this.Cursor = Cursors.WaitCursor;
+                                toolStripStatusLabel1.Text = $"正在加载表 {tableName} 的缓存数据...";
+                            }));
+                        }
+                        else
+                        {
+                            this.Cursor = Cursors.WaitCursor;
+                            toolStripStatusLabel1.Text = $"正在加载表 {tableName} 的缓存数据...";
+                        }
 
                         // 使用异步方式加载数据，避免UI线程阻塞
                         await Task.Run(() =>

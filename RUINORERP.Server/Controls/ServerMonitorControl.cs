@@ -376,8 +376,11 @@ namespace RUINORERP.Server.Controls
                 // 记录错误但不中断程序
                 System.Diagnostics.Debug.WriteLine($"刷新监控数据时出错: {ex.Message}");
                 // 在UI上显示错误信息
-                lblStatusValue.Text = "监控数据刷新错误";
-                lblStatusValue.ForeColor = Color.Red;
+                SafeInvoke(() =>
+                {
+                    lblStatusValue.Text = "监控数据刷新错误";
+                    lblStatusValue.ForeColor = Color.Red;
+                });
             }
         }
 
@@ -466,14 +469,17 @@ namespace RUINORERP.Server.Controls
                 if (_networkServer == null)
                 {
                     // 如果_networkServer为null，显示未初始化状态
-                    lblStatusValue.Text = "未初始化";
-                    lblPortValue.Text = "N/A";
-                    lblServerIpValue.Text = "N/A";
-                    lblMaxConnectionsValue.Text = "N/A";
-                    lblCurrentConnectionsValue.Text = "N/A";
-                    lblTotalConnectionsValue.Text = "N/A";
-                    lblPeakConnectionsValue.Text = "N/A";
-                    lblLastActivityValue.Text = "N/A";
+                    SafeInvoke(() =>
+                    {
+                        lblStatusValue.Text = "未初始化";
+                        lblPortValue.Text = "N/A";
+                        lblServerIpValue.Text = "N/A";
+                        lblMaxConnectionsValue.Text = "N/A";
+                        lblCurrentConnectionsValue.Text = "N/A";
+                        lblTotalConnectionsValue.Text = "N/A";
+                        lblPeakConnectionsValue.Text = "N/A";
+                        lblLastActivityValue.Text = "N/A";
+                    });
                     return;
                 }
 
@@ -482,64 +488,70 @@ namespace RUINORERP.Server.Controls
                 if (serverInfo == null)
                 {
                     // 如果serverInfo为null，显示错误状态
-                    lblStatusValue.Text = "获取信息失败";
-                    lblPortValue.Text = "N/A";
-                    lblServerIpValue.Text = "N/A";
-                    lblMaxConnectionsValue.Text = "N/A";
-                    lblCurrentConnectionsValue.Text = "N/A";
-                    lblTotalConnectionsValue.Text = "N/A";
-                    lblPeakConnectionsValue.Text = "N/A";
-                    lblLastActivityValue.Text = "N/A";
+                    SafeInvoke(() =>
+                    {
+                        lblStatusValue.Text = "获取信息失败";
+                        lblPortValue.Text = "N/A";
+                        lblServerIpValue.Text = "N/A";
+                        lblMaxConnectionsValue.Text = "N/A";
+                        lblCurrentConnectionsValue.Text = "N/A";
+                        lblTotalConnectionsValue.Text = "N/A";
+                        lblPeakConnectionsValue.Text = "N/A";
+                        lblLastActivityValue.Text = "N/A";
+                    });
                     return;
                 }
 
                 // 更新基本服务器信息
-                lblStatusValue.Text = !string.IsNullOrEmpty(serverInfo.Status) ? serverInfo.Status : "未知";
+                SafeInvoke(() =>
+                {
+                    lblStatusValue.Text = !string.IsNullOrEmpty(serverInfo.Status) ? serverInfo.Status : "未知";
 
-                // 为端口号添加验证
-                if (serverInfo.Port > 0)
-                {
-                    lblPortValue.Text = serverInfo.Port.ToString();
-                }
-                else
-                {
-                    // 尝试从配置中获取端口号作为备用
-                    int defaultPort = 8080; // 默认端口
-                    try
+                    // 为端口号添加验证
+                    if (serverInfo.Port > 0)
                     {
-                        var config = Program.ServiceProvider.GetRequiredService<IConfiguration>();
-                        string portStr = config.GetSection("serverOptions:listeners:0:port").Value;
-                        if (!string.IsNullOrEmpty(portStr) && int.TryParse(portStr, out int port))
-                        {
-                            defaultPort = port;
-                        }
-                    }
-                    catch { }
-                    lblPortValue.Text = defaultPort.ToString();
-                }
-
-                // 为IP地址添加验证
-                lblServerIpValue.Text = !string.IsNullOrEmpty(serverInfo.ServerIp) && serverInfo.ServerIp != "0.0.0.0"
-                    ? serverInfo.ServerIp
-                    : "127.0.0.1";
-
-                // 更新连接限制信息
-                if (serverInfo.MaxConnections > 0)
-                {
-                    lblMaxConnectionsValue.Text = serverInfo.MaxConnections.ToString();
-                }
-                else
-                {
-                    // 尝试从SessionService获取最大连接数
-                    if (_sessionService != null && _sessionService is SessionService sessionService)
-                    {
-                        lblMaxConnectionsValue.Text = sessionService.MaxSessionCount.ToString();
+                        lblPortValue.Text = serverInfo.Port.ToString();
                     }
                     else
                     {
-                        lblMaxConnectionsValue.Text = "1000"; // 默认值
+                        // 尝试从配置中获取端口号作为备用
+                        int defaultPort = 8080; // 默认端口
+                        try
+                        {
+                            var config = Program.ServiceProvider.GetRequiredService<IConfiguration>();
+                            string portStr = config.GetSection("serverOptions:listeners:0:port").Value;
+                            if (!string.IsNullOrEmpty(portStr) && int.TryParse(portStr, out int port))
+                            {
+                                defaultPort = port;
+                            }
+                        }
+                        catch { }
+                        lblPortValue.Text = defaultPort.ToString();
                     }
-                }
+
+                    // 为IP地址添加验证
+                    lblServerIpValue.Text = !string.IsNullOrEmpty(serverInfo.ServerIp) && serverInfo.ServerIp != "0.0.0.0"
+                        ? serverInfo.ServerIp
+                        : "127.0.0.1";
+
+                    // 更新连接限制信息
+                    if (serverInfo.MaxConnections > 0)
+                    {
+                        lblMaxConnectionsValue.Text = serverInfo.MaxConnections.ToString();
+                    }
+                    else
+                    {
+                        // 尝试从SessionService获取最大连接数
+                        if (_sessionService != null && _sessionService is SessionService sessionService)
+                        {
+                            lblMaxConnectionsValue.Text = sessionService.MaxSessionCount.ToString();
+                        }
+                        else
+                        {
+                            lblMaxConnectionsValue.Text = "1000"; // 默认值
+                        }
+                    }
+                });
 
                 // 连接统计信息获取逻辑 - 确保数据准确性
                 int currentConnections = 0;
@@ -613,17 +625,23 @@ namespace RUINORERP.Server.Controls
                 if (peakConnections < currentConnections) peakConnections = currentConnections;
 
                 // 更新UI标签
-                lblCurrentConnectionsValue.Text = currentConnections.ToString();
-                lblTotalConnectionsValue.Text = totalConnections.ToString();
-                lblPeakConnectionsValue.Text = peakConnections.ToString();
-                lblLastActivityValue.Text = lastActivityTime.ToString("yyyy-MM-dd HH:mm:ss");
+                SafeInvoke(() =>
+                {
+                    lblCurrentConnectionsValue.Text = currentConnections.ToString();
+                    lblTotalConnectionsValue.Text = totalConnections.ToString();
+                    lblPeakConnectionsValue.Text = peakConnections.ToString();
+                    lblLastActivityValue.Text = lastActivityTime.ToString("yyyy-MM-dd HH:mm:ss");
+                });
             }
             catch (Exception ex)
             {
                 // 显示错误信息但保持UI功能
                 _logger.LogError(ex, "更新服务器状态时出错");
-                lblStatusValue.Text = "数据更新错误";
-                lblStatusValue.ForeColor = Color.Red;
+                SafeInvoke(() =>
+                {
+                    lblStatusValue.Text = "数据更新错误";
+                    lblStatusValue.ForeColor = Color.Red;
+                });
             }
         }
 
@@ -634,139 +652,145 @@ namespace RUINORERP.Server.Controls
             var stats = _sessionService.GetStatistics();
 
             // 更新会话统计信息
-            lblActiveSessionsValue.Text = stats.CurrentConnections.ToString();
-            lblTotalSessionsValue.Text = stats.TotalConnections.ToString();
-            lblPeakSessionsValue.Text = stats.PeakConnections.ToString();
-            lblTimeoutSessionsValue.Text = stats.TimeoutSessions.ToString();
-            lblHeartbeatFailuresValue.Text = stats.HeartbeatFailures.ToString();
-
-            // 更新时间信息
-            lblLastCleanupValue.Text = stats.LastCleanupTime.ToString("yyyy-MM-dd HH:mm:ss");
-            lblLastHeartbeatCheckValue.Text = stats.LastHeartbeatCheck.ToString("yyyy-MM-dd HH:mm:ss");
-
-            // 更新新增的性能指标
-            try
+            SafeInvoke(() =>
             {
-                // 更新连接利用率
-                double utilization = stats.GetConnectionUtilization();
-                lblConnectionUtilizationValue.Text = $"{utilization:F2}%";
+                lblActiveSessionsValue.Text = stats.CurrentConnections.ToString();
+                lblTotalSessionsValue.Text = stats.TotalConnections.ToString();
+                lblPeakSessionsValue.Text = stats.PeakConnections.ToString();
+                lblTimeoutSessionsValue.Text = stats.TimeoutSessions.ToString();
+                lblHeartbeatFailuresValue.Text = stats.HeartbeatFailures.ToString();
 
-                // 更新吞吐量
-                double throughput = stats.GetAverageThroughput();
-                lblThroughputValue.Text = $"{FormatBytes(throughput)}/秒";
+                // 更新时间信息
+                lblLastCleanupValue.Text = stats.LastCleanupTime.ToString("yyyy-MM-dd HH:mm:ss");
+                lblLastHeartbeatCheckValue.Text = stats.LastHeartbeatCheck.ToString("yyyy-MM-dd HH:mm:ss");
 
-                // 更新请求率
-                double requestsPerSecond = stats.GetRequestsPerSecond();
-                lblRequestsPerSecondValue.Text = $"{requestsPerSecond:F2}/秒";
+                // 更新新增的性能指标
+                try
+                {
+                    // 更新连接利用率
+                    double utilization = stats.GetConnectionUtilization();
+                    lblConnectionUtilizationValue.Text = $"{utilization:F2}%";
 
-                // 更新健康状态
-                string healthStatus = stats.GetHealthStatus();
-                lblSystemHealthValue.Text = healthStatus;
-                lblSystemHealthValue.ForeColor = healthStatus == "正常" ? Color.Green : Color.OrangeRed;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"更新性能指标时出错: {ex.Message}");
-            }
+                    // 更新吞吐量
+                    double throughput = stats.GetAverageThroughput();
+                    lblThroughputValue.Text = $"{FormatBytes(throughput)}/秒";
+
+                    // 更新请求率
+                    double requestsPerSecond = stats.GetRequestsPerSecond();
+                    lblRequestsPerSecondValue.Text = $"{requestsPerSecond:F2}/秒";
+
+                    // 更新健康状态
+                    string healthStatus = stats.GetHealthStatus();
+                    lblSystemHealthValue.Text = healthStatus;
+                    lblSystemHealthValue.ForeColor = healthStatus == "正常" ? Color.Green : Color.OrangeRed;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"更新性能指标时出错: {ex.Message}");
+                }
+            });
         }
 
         private void UpdateServerRuntimeInfo()
         {
-            // 更新系统时间
-            lblSystemTimeValue.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-            // 更新运行时间（使用NetworkServer的StartTime属性）
-            if (_networkServer != null && _networkServer.StartTime.HasValue)
+            SafeInvoke(() =>
             {
-                var uptime = DateTime.Now - _networkServer.StartTime.Value;
-                lblUptimeValue.Text = $"{uptime.Days}天 {uptime.Hours}小时 {uptime.Minutes}分钟 {uptime.Seconds}秒";
-            }
-            else
-            {
-                lblUptimeValue.Text = "未启动";
-            }
+                // 更新系统时间
+                lblSystemTimeValue.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-            // 更新内存使用情况
-            var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
-            var workingSetMemory = currentProcess.WorkingSet64 / (1024 * 1024); // 转换为MB
-            var managedMemory = GC.GetTotalMemory(false) / (1024 * 1024); // 转换为MB
-
-            lblMemoryUsageValue.Text = $"{workingSetMemory} MB (托管: {managedMemory} MB)";
-
-            // 根据内存使用情况设置颜色
-            if (workingSetMemory > 2048) // 超过2GB
-            {
-                lblMemoryUsageValue.ForeColor = Color.Red;
-            }
-            else if (workingSetMemory > 1024) // 超过1GB
-            {
-                lblMemoryUsageValue.ForeColor = Color.Orange;
-            }
-            else
-            {
-                lblMemoryUsageValue.ForeColor = Color.Green;
-            }
-
-            // 添加CPU使用率监控
-            try
-            {
-                float cpuUsage = GetCpuUsage();
-
-                // 动态添加CPU使用率标签（如果不存在）
-                Label lblCpuUsage = Controls.Find("lblCpuUsage", true).FirstOrDefault() as Label;
-                Label lblCpuUsageValue = Controls.Find("lblCpuUsageValue", true).FirstOrDefault() as Label;
-
-                if (lblCpuUsage != null && lblCpuUsageValue != null)
+                // 更新运行时间（使用NetworkServer的StartTime属性）
+                if (_networkServer != null && _networkServer.StartTime.HasValue)
                 {
-                    lblCpuUsageValue.Text = $"{cpuUsage:F2}%";
-                    
-                    // 根据CPU使用率设置颜色
-                    if (cpuUsage > 80)
-                    {
-                        lblCpuUsageValue.ForeColor = Color.Red;
-                    }
-                    else if (cpuUsage > 50)
-                    {
-                        lblCpuUsageValue.ForeColor = Color.Orange;
-                    }
-                    else
-                    {
-                        lblCpuUsageValue.ForeColor = Color.Green;
-                    }
+                    var uptime = DateTime.Now - _networkServer.StartTime.Value;
+                    lblUptimeValue.Text = $"{uptime.Days}天 {uptime.Hours}小时 {uptime.Minutes}分钟 {uptime.Seconds}秒";
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug($"获取CPU使用率失败: {ex.Message}");
-            }
-
-            // 添加磁盘I/O监控
-            try
-            {
-                var diskRead = GetDiskReadBytes();
-                var diskWrite = GetDiskWriteBytes();
-
-                // 动态添加磁盘I/O标签（如果不存在）
-                Label lblDiskReadValue = Controls.Find("lblDiskReadValue", true).FirstOrDefault() as Label;
-                Label lblDiskWriteValue = Controls.Find("lblDiskWriteValue", true).FirstOrDefault() as Label;
-
-                if (lblDiskReadValue != null)
+                else
                 {
-                    lblDiskReadValue.Text = $"{FormatBytes((long)diskRead)}/秒";
+                    lblUptimeValue.Text = "未启动";
                 }
 
-                if (lblDiskWriteValue != null)
-                {
-                    lblDiskWriteValue.Text = $"{FormatBytes((long)diskWrite)}/秒";
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug($"获取磁盘I/O信息失败: {ex.Message}");
-            }
+                // 更新内存使用情况
+                var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+                var workingSetMemory = currentProcess.WorkingSet64 / (1024 * 1024); // 转换为MB
+                var managedMemory = GC.GetTotalMemory(false) / (1024 * 1024); // 转换为MB
 
-            // 更新库存缓存统计信息 (Phase 2.4 优化)
-            UpdateStockCacheStatistics();
+                lblMemoryUsageValue.Text = $"{workingSetMemory} MB (托管: {managedMemory} MB)";
+
+                // 根据内存使用情况设置颜色
+                if (workingSetMemory > 2048) // 超过2GB
+                {
+                    lblMemoryUsageValue.ForeColor = Color.Red;
+                }
+                else if (workingSetMemory > 1024) // 超过1GB
+                {
+                    lblMemoryUsageValue.ForeColor = Color.Orange;
+                }
+                else
+                {
+                    lblMemoryUsageValue.ForeColor = Color.Green;
+                }
+
+                // 添加CPU使用率监控
+                try
+                {
+                    float cpuUsage = GetCpuUsage();
+
+                    // 动态添加CPU使用率标签（如果不存在）
+                    Label lblCpuUsage = Controls.Find("lblCpuUsage", true).FirstOrDefault() as Label;
+                    Label lblCpuUsageValue = Controls.Find("lblCpuUsageValue", true).FirstOrDefault() as Label;
+
+                    if (lblCpuUsage != null && lblCpuUsageValue != null)
+                    {
+                        lblCpuUsageValue.Text = $"{cpuUsage:F2}%";
+                        
+                        // 根据CPU使用率设置颜色
+                        if (cpuUsage > 80)
+                        {
+                            lblCpuUsageValue.ForeColor = Color.Red;
+                        }
+                        else if (cpuUsage > 50)
+                        {
+                            lblCpuUsageValue.ForeColor = Color.Orange;
+                        }
+                        else
+                        {
+                            lblCpuUsageValue.ForeColor = Color.Green;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug($"获取CPU使用率失败: {ex.Message}");
+                }
+
+                // 添加磁盘I/O监控
+                try
+                {
+                    var diskRead = GetDiskReadBytes();
+                    var diskWrite = GetDiskWriteBytes();
+
+                    // 动态添加磁盘I/O标签（如果不存在）
+                    Label lblDiskReadValue = Controls.Find("lblDiskReadValue", true).FirstOrDefault() as Label;
+                    Label lblDiskWriteValue = Controls.Find("lblDiskWriteValue", true).FirstOrDefault() as Label;
+
+                    if (lblDiskReadValue != null)
+                    {
+                        lblDiskReadValue.Text = $"{FormatBytes((long)diskRead)}/秒";
+                    }
+
+                    if (lblDiskWriteValue != null)
+                    {
+                        lblDiskWriteValue.Text = $"{FormatBytes((long)diskWrite)}/秒";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug($"获取磁盘I/O信息失败: {ex.Message}");
+                }
+
+                // 更新库存缓存统计信息 (Phase 2.4 优化)
+                UpdateStockCacheStatistics();
+            });
         }
 
         /// <summary>
@@ -794,30 +818,45 @@ namespace RUINORERP.Server.Controls
 
                 if (lblCacheHitRatio != null)
                 {
-                    double hitRatio = stats.HitRatio * 100;
-                    lblCacheHitRatio.Text = $"{hitRatio:F2}%";
-                    lblCacheHitRatio.ForeColor = hitRatio >= 90 ? Color.Green : hitRatio >= 80 ? Color.Orange : Color.Red;
+                    SafeInvoke(() =>
+                    {
+                        double hitRatio = stats.HitRatio * 100;
+                        lblCacheHitRatio.Text = $"{hitRatio:F2}%";
+                        lblCacheHitRatio.ForeColor = hitRatio >= 90 ? Color.Green : hitRatio >= 80 ? Color.Orange : Color.Red;
+                    });
                 }
 
                 if (lblCacheSize != null)
                 {
-                    lblCacheSize.Text = stats.CurrentCacheSize.ToString("N0");
+                    SafeInvoke(() =>
+                    {
+                        lblCacheSize.Text = stats.CurrentCacheSize.ToString("N0");
+                    });
                 }
 
                 if (lblCacheHitCount != null)
                 {
-                    lblCacheHitCount.Text = stats.CacheHits.ToString("N0");
+                    SafeInvoke(() =>
+                    {
+                        lblCacheHitCount.Text = stats.CacheHits.ToString("N0");
+                    });
                 }
 
                 if (lblCacheMissCount != null)
                 {
-                    lblCacheMissCount.Text = stats.CacheMisses.ToString("N0");
+                    SafeInvoke(() =>
+                    {
+                        lblCacheMissCount.Text = stats.CacheMisses.ToString("N0");
+                    });
                 }
 
                 if (lblCacheMissRatio != null)
                 {
-                    double missRatio = (1 - stats.HitRatio) * 100;
-                    lblCacheMissRatio.Text = $"{missRatio:F2}%";
+                    SafeInvoke(() =>
+                    {
+                        double missRatio = (1 - stats.HitRatio) * 100;
+                        lblCacheMissRatio.Text = $"{missRatio:F2}%";
+                    });
                 }
 
                 _logger.LogDebug("更新缓存统计: 命中率={HitRatio:P2}, 缓存大小={Size}, 命中={Hits}, 未命中={Misses}",
@@ -834,8 +873,11 @@ namespace RUINORERP.Server.Controls
             if (_commandDispatcher == null) return;
 
             // 更新命令调度器信息
-            lblDispatcherInitializedValue.Text = _commandDispatcher.IsInitialized ? "是" : "否";
-            lblHandlerCountValue.Text = _commandDispatcher.HandlerCount.ToString();
+            SafeInvoke(() =>
+            {
+                lblDispatcherInitializedValue.Text = _commandDispatcher.IsInitialized ? "是" : "否";
+                lblHandlerCountValue.Text = _commandDispatcher.HandlerCount.ToString();
+            });
         }
 
         private void UpdateHandlerStatistics()
@@ -846,46 +888,49 @@ namespace RUINORERP.Server.Controls
             var handlers = _commandDispatcher.GetAllHandlers();
             var statistics = _diagnosticsService.GetHandlerStatistics();
 
-            // 清空现有数据
-            dgvHandlerStatistics.Rows.Clear();
-
-            // 添加数据
-            foreach (var handler in handlers)
+            SafeInvoke(() =>
             {
-                // 从处理器获取状态和优先级信息
-                var status = handler.Status;
-                var priority = handler.Priority;
+                // 清空现有数据
+                dgvHandlerStatistics.Rows.Clear();
 
-                // 从统计信息字典中获取统计信息
-                HandlerStatistics handlerStats = null;
-                if (statistics.TryGetValue(handler.HandlerId, out var stats))
+                // 添加数据
+                foreach (var handler in handlers)
                 {
-                    handlerStats = stats;
-                }
+                    // 从处理器获取状态和优先级信息
+                    var status = handler.Status;
+                    var priority = handler.Priority;
 
-                var rowIndex = dgvHandlerStatistics.Rows.Add(
-                    handler.Name,  // 使用处理器名称而不是HandlerId
-                    status.ToString(),
-                    priority.ToString(),
-                    handlerStats?.TotalCommandsProcessed ?? 0,
-                    handlerStats?.SuccessfulCommands ?? 0,
-                    handlerStats?.FailedCommands ?? 0,
-                    handlerStats?.TimeoutCount ?? 0,
-                    handlerStats?.CurrentProcessingCount ?? 0,
-                    handlerStats?.AverageProcessingTimeMs ?? 0,
-                    handlerStats?.MaxProcessingTimeMs ?? 0
-                );
+                    // 从统计信息字典中获取统计信息
+                    HandlerStatistics handlerStats = null;
+                    if (statistics.TryGetValue(handler.HandlerId, out var stats))
+                    {
+                        handlerStats = stats;
+                    }
 
-                // 根据状态设置行颜色
-                if (status != HandlerStatus.Running)
-                {
-                    dgvHandlerStatistics.Rows[rowIndex].DefaultCellStyle.BackColor = Color.LightCoral;
+                    var rowIndex = dgvHandlerStatistics.Rows.Add(
+                        handler.Name,  // 使用处理器名称而不是HandlerId
+                        status.ToString(),
+                        priority.ToString(),
+                        handlerStats?.TotalCommandsProcessed ?? 0,
+                        handlerStats?.SuccessfulCommands ?? 0,
+                        handlerStats?.FailedCommands ?? 0,
+                        handlerStats?.TimeoutCount ?? 0,
+                        handlerStats?.CurrentProcessingCount ?? 0,
+                        handlerStats?.AverageProcessingTimeMs ?? 0,
+                        handlerStats?.MaxProcessingTimeMs ?? 0
+                    );
+
+                    // 根据状态设置行颜色
+                    if (status != HandlerStatus.Running)
+                    {
+                        dgvHandlerStatistics.Rows[rowIndex].DefaultCellStyle.BackColor = Color.LightCoral;
+                    }
+                    else if ((handlerStats?.FailedCommands ?? 0) > 0)
+                    {
+                        dgvHandlerStatistics.Rows[rowIndex].DefaultCellStyle.BackColor = Color.LightYellow;
+                    }
                 }
-                else if ((handlerStats?.FailedCommands ?? 0) > 0)
-                {
-                    dgvHandlerStatistics.Rows[rowIndex].DefaultCellStyle.BackColor = Color.LightYellow;
-                }
-            }
+            });
         }
 
         /// <summary>
@@ -967,22 +1012,28 @@ namespace RUINORERP.Server.Controls
             {
                 var healthStatus = _diagnosticsService.GetSystemHealth();
 
-                // 更新健康状态显示
-                lblHealthStatusValue.Text = healthStatus.IsHealthy ? "健康" : "存在问题";
-                lblHealthStatusValue.ForeColor = healthStatus.IsHealthy ? Color.Green : Color.Red;
+                SafeInvoke(() =>
+                {
+                    // 更新健康状态显示
+                    lblHealthStatusValue.Text = healthStatus.IsHealthy ? "健康" : "存在问题";
+                    lblHealthStatusValue.ForeColor = healthStatus.IsHealthy ? Color.Green : Color.Red;
 
-                // 更新成功率显示
-                cbLblSuccessRateValue.Text = $"{healthStatus.SuccessRate:F2}%";
+                    // 更新成功率显示
+                    cbLblSuccessRateValue.Text = $"{healthStatus.SuccessRate:F2}%";
 
-                // 更新命令统计显示
-                lblTotalCommandsValue.Text = healthStatus.TotalCommands.ToString();
-                lblFailedCommandsValue.Text = healthStatus.FailedCommands.ToString();
-                lblTimeoutCommandsValue.Text = healthStatus.TimeoutCommands.ToString();
+                    // 更新命令统计显示
+                    lblTotalCommandsValue.Text = healthStatus.TotalCommands.ToString();
+                    lblFailedCommandsValue.Text = healthStatus.FailedCommands.ToString();
+                    lblTimeoutCommandsValue.Text = healthStatus.TimeoutCommands.ToString();
+                });
             }
             catch (Exception ex)
             {
-                lblHealthStatusValue.Text = "获取失败";
-                lblHealthStatusValue.ForeColor = Color.Red;
+                SafeInvoke(() =>
+                {
+                    lblHealthStatusValue.Text = "获取失败";
+                    lblHealthStatusValue.ForeColor = Color.Red;
+                });
                 System.Diagnostics.Debug.WriteLine($"更新系统健康状态时出错: {ex.Message}");
             }
         }
@@ -996,12 +1047,15 @@ namespace RUINORERP.Server.Controls
             {
                 var realTimeData = _performanceMonitoringService.GetRealTimeData();
 
-                // 更新实时数据
-                lblTotalHandlersValue.Text = realTimeData.TotalHandlers.ToString();
-                lblActiveHandlersValue.Text = realTimeData.ActiveHandlers.ToString();
-                lblCurrentProcessingValue.Text = realTimeData.CurrentProcessing.ToString();
-                lblRealTimeSuccessRateValue.Text = $"{realTimeData.SuccessRate:F2}%";
-                lblAvgProcessingTimeValue.Text = $"{realTimeData.AverageProcessingTime:F2}ms";
+                SafeInvoke(() =>
+                {
+                    // 更新实时数据
+                    lblTotalHandlersValue.Text = realTimeData.TotalHandlers.ToString();
+                    lblActiveHandlersValue.Text = realTimeData.ActiveHandlers.ToString();
+                    lblCurrentProcessingValue.Text = realTimeData.CurrentProcessing.ToString();
+                    lblRealTimeSuccessRateValue.Text = $"{realTimeData.SuccessRate:F2}%";
+                    lblAvgProcessingTimeValue.Text = $"{realTimeData.AverageProcessingTime:F2}ms";
+                });
             }
             catch (Exception ex)
             {
@@ -1147,12 +1201,15 @@ namespace RUINORERP.Server.Controls
                 if (circuitBreakerMetrics == null)
                 {
                     // 如果熔断器指标对象为null，显示默认值
-                    cbLblStatusValue.Text = "未初始化";
-                    cbLblTotalRequestsValue.Text = "0";
-                    cbLblSuccessRateValue.Text = "N/A";
-                    cbLblFailedRequestsValue.Text = "0";
-                    cbLblStateChangesValue.Text = "0";
-                    cbLblAvgResponseTimeValue.Text = "N/A";
+                    SafeInvoke(() =>
+                    {
+                        cbLblStatusValue.Text = "未初始化";
+                        cbLblTotalRequestsValue.Text = "0";
+                        cbLblSuccessRateValue.Text = "N/A";
+                        cbLblFailedRequestsValue.Text = "0";
+                        cbLblStateChangesValue.Text = "0";
+                        cbLblAvgResponseTimeValue.Text = "N/A";
+                    });
                     return;
                 }
 
@@ -1161,83 +1218,90 @@ namespace RUINORERP.Server.Controls
 
                 // 直接从circuitBreakerMetrics获取状态
                 string circuitState = circuitBreakerMetrics.CurrentState.ToString();
-                cbLblStatusValue.Text = circuitState;
-
-                // 根据状态设置颜色
-                switch (circuitState)
+                
+                SafeInvoke(() =>
                 {
-                    case "Closed":
-                        cbLblStatusValue.Text = "关闭";
-                        cbLblStatusValue.ForeColor = Color.Green;
-                        break;
-                    case "Open":
-                        cbLblStatusValue.Text = "开启";
-                        cbLblStatusValue.ForeColor = Color.Red;
-                        break;
-                    case "HalfOpen":
-                        cbLblStatusValue.Text = "半开";
-                        cbLblStatusValue.ForeColor = Color.Orange;
-                        break;
-                    default:
-                        cbLblStatusValue.ForeColor = Color.Black;
-                        break;
-                }
+                    cbLblStatusValue.Text = circuitState;
 
-                // 更新总请求数
-                cbLblTotalRequestsValue.Text = globalMetrics.TotalRequests.ToString();
+                    // 根据状态设置颜色
+                    switch (circuitState)
+                    {
+                        case "Closed":
+                            cbLblStatusValue.Text = "关闭";
+                            cbLblStatusValue.ForeColor = Color.Green;
+                            break;
+                        case "Open":
+                            cbLblStatusValue.Text = "开启";
+                            cbLblStatusValue.ForeColor = Color.Red;
+                            break;
+                        case "HalfOpen":
+                            cbLblStatusValue.Text = "半开";
+                            cbLblStatusValue.ForeColor = Color.Orange;
+                            break;
+                        default:
+                            cbLblStatusValue.ForeColor = Color.Black;
+                            break;
+                    }
 
-                // 更新成功率
-                if (globalMetrics.TotalRequests > 0)
-                {
-                    double successRate = (double)globalMetrics.SuccessfulRequests / globalMetrics.TotalRequests * 100;
-                    cbLblSuccessRateValue.Text = $"{successRate:F2}%";
-                }
-                else
-                {
-                    cbLblSuccessRateValue.Text = "100%";
-                }
+                    // 更新总请求数
+                    cbLblTotalRequestsValue.Text = globalMetrics.TotalRequests.ToString();
 
-                // 更新失败请求数
-                cbLblFailedRequestsValue.Text = globalMetrics.FailedRequests.ToString();
+                    // 更新成功率
+                    if (globalMetrics.TotalRequests > 0)
+                    {
+                        double successRate = (double)globalMetrics.SuccessfulRequests / globalMetrics.TotalRequests * 100;
+                        cbLblSuccessRateValue.Text = $"{successRate:F2}%";
+                    }
+                    else
+                    {
+                        cbLblSuccessRateValue.Text = "100%";
+                    }
 
-                // 更新状态变化次数
-                cbLblStateChangesValue.Text = globalMetrics.StateChanges.ToString();
+                    // 更新失败请求数
+                    cbLblFailedRequestsValue.Text = globalMetrics.FailedRequests.ToString();
 
-                // 更新平均响应时间
-                if (globalMetrics.AverageExecutionTimeMs > 0)
-                {
-                    cbLblAvgResponseTimeValue.Text = $"{globalMetrics.AverageExecutionTimeMs:F2}ms";
-                }
-                else
-                {
-                    cbLblAvgResponseTimeValue.Text = "0ms";
-                }
+                    // 更新状态变化次数
+                    cbLblStateChangesValue.Text = globalMetrics.StateChanges.ToString();
 
-                // 显示熔断器开关次数的详情
-                if (globalMetrics.StateChanges > 0)
-                {
-                    // 可以在这里添加更多详细信息的显示，如开关历史记录等
-                }
+                    // 更新平均响应时间
+                    if (globalMetrics.AverageExecutionTimeMs > 0)
+                    {
+                        cbLblAvgResponseTimeValue.Text = $"{globalMetrics.AverageExecutionTimeMs:F2}ms";
+                    }
+                    else
+                    {
+                        cbLblAvgResponseTimeValue.Text = "0ms";
+                    }
 
-                // 更新新增的熔断器指标
-                // 熔断器打开次数
-                cbLblCircuitOpensValue.Text = globalMetrics.CircuitOpens.ToString();
+                    // 显示熔断器开关次数的详情
+                    if (globalMetrics.StateChanges > 0)
+                    {
+                        // 可以在这里添加更多详细信息的显示，如开关历史记录等
+                    }
 
-                // 熔断器关闭次数
-                cbLblCircuitClosesValue.Text = globalMetrics.CircuitCloses.ToString();
+                    // 更新新增的熔断器指标
+                    // 熔断器打开次数
+                    cbLblCircuitOpensValue.Text = globalMetrics.CircuitOpens.ToString();
 
-                // 熔断器半开次数
-                cbLblCircuitHalfOpensValue.Text = globalMetrics.CircuitHalfOpens.ToString();
+                    // 熔断器关闭次数
+                    cbLblCircuitClosesValue.Text = globalMetrics.CircuitCloses.ToString();
 
-                // 当前活跃执行数
-                cbLblActiveExecutionsValue.Text = globalMetrics.ActiveExecutions.ToString();
+                    // 熔断器半开次数
+                    cbLblCircuitHalfOpensValue.Text = globalMetrics.CircuitHalfOpens.ToString();
+
+                    // 当前活跃执行数
+                    cbLblActiveExecutionsValue.Text = globalMetrics.ActiveExecutions.ToString();
+                });
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"更新熔断器监控指标时出错: {ex.Message}");
                 // 在UI上显示错误状态
-                cbLblStatusValue.Text = "数据获取失败";
-                cbLblStatusValue.ForeColor = Color.Red;
+                SafeInvoke(() =>
+                {
+                    cbLblStatusValue.Text = "数据获取失败";
+                    cbLblStatusValue.ForeColor = Color.Red;
+                });
             }
         }
 
@@ -1257,20 +1321,23 @@ namespace RUINORERP.Server.Controls
                     var lblHeartbeatQueueLength = Controls.Find("lblHeartbeatQueueLengthValue", true).FirstOrDefault() as Label;
                     if (lblHeartbeatQueueLength != null)
                     {
-                        lblHeartbeatQueueLength.Text = queueStats.QueueLength.ToString();
-                        // 根据队列长度设置颜色警告
-                        if (queueStats.QueueLength > 20)
+                        SafeInvoke(() =>
                         {
-                            lblHeartbeatQueueLength.ForeColor = Color.Red;
-                        }
-                        else if (queueStats.QueueLength > 10)
-                        {
-                            lblHeartbeatQueueLength.ForeColor = Color.Orange;
-                        }
-                        else
-                        {
-                            lblHeartbeatQueueLength.ForeColor = Color.Green;
-                        }
+                            lblHeartbeatQueueLength.Text = queueStats.QueueLength.ToString();
+                            // 根据队列长度设置颜色警告
+                            if (queueStats.QueueLength > 20)
+                            {
+                                lblHeartbeatQueueLength.ForeColor = Color.Red;
+                            }
+                            else if (queueStats.QueueLength > 10)
+                            {
+                                lblHeartbeatQueueLength.ForeColor = Color.Orange;
+                            }
+                            else
+                            {
+                                lblHeartbeatQueueLength.ForeColor = Color.Green;
+                            }
+                        });
                     }
                 }
 
@@ -1279,58 +1346,61 @@ namespace RUINORERP.Server.Controls
                 {
                     var performanceStats = _heartbeatPerformanceMonitor.GetPerformanceStats();
                     
-                    // 更新处理统计
-                    var lblHeartbeatProcessed = Controls.Find("lblHeartbeatProcessedValue", true).FirstOrDefault() as Label;
-                    if (lblHeartbeatProcessed != null)
+                    SafeInvoke(() =>
                     {
-                        lblHeartbeatProcessed.Text = performanceStats.TotalProcessed.ToString("N0");
-                    }
-                    
-                    // 更新错误统计
-                    var lblHeartbeatErrors = Controls.Find("lblHeartbeatErrorsValue", true).FirstOrDefault() as Label;
-                    if (lblHeartbeatErrors != null)
-                    {
-                        lblHeartbeatErrors.Text = performanceStats.TotalErrors.ToString("N0");
-                        lblHeartbeatErrors.ForeColor = performanceStats.ErrorRate > 5 ? Color.Red : Color.Green;
-                    }
-                    
-                    // 更新错误率
-                    var lblHeartbeatErrorRate = Controls.Find("lblHeartbeatErrorRateValue", true).FirstOrDefault() as Label;
-                    if (lblHeartbeatErrorRate != null)
-                    {
-                        lblHeartbeatErrorRate.Text = $"{performanceStats.ErrorRate:F2}%";
-                        lblHeartbeatErrorRate.ForeColor = performanceStats.ErrorRate > 5 ? Color.Red : 
-                                                         performanceStats.ErrorRate > 1 ? Color.Orange : Color.Green;
-                    }
-                    
-                    // 更新平均处理时间
-                    var lblAvgHeartbeatTime = Controls.Find("lblAvgHeartbeatTimeValue", true).FirstOrDefault() as Label;
-                    if (lblAvgHeartbeatTime != null)
-                    {
-                        lblAvgHeartbeatTime.Text = $"{performanceStats.AverageProcessingTime:F2}ms";
-                        lblAvgHeartbeatTime.ForeColor = performanceStats.AverageProcessingTime > 100 ? Color.Red : 
-                                                       performanceStats.AverageProcessingTime > 50 ? Color.Orange : Color.Green;
-                    }
-                    
-                    // 更新优化策略状态
-                    var lblBatchProcessing = Controls.Find("lblBatchProcessingValue", true).FirstOrDefault() as Label;
-                    if (lblBatchProcessing != null)
-                    {
-                        lblBatchProcessing.Text = performanceStats.UseBatchProcessing ? "启用" : "禁用";
-                        lblBatchProcessing.ForeColor = performanceStats.UseBatchProcessing ? Color.Green : Color.Gray;
-                    }
-                    
-                    var lblMergeThreshold = Controls.Find("lblMergeThresholdValue", true).FirstOrDefault() as Label;
-                    if (lblMergeThreshold != null)
-                    {
-                        lblMergeThreshold.Text = $"{performanceStats.MergeThresholdSeconds}秒";
-                    }
-                    
-                    var lblBatchSize = Controls.Find("lblBatchSizeValue", true).FirstOrDefault() as Label;
-                    if (lblBatchSize != null)
-                    {
-                        lblBatchSize.Text = performanceStats.BatchSize.ToString();
-                    }
+                        // 更新处理统计
+                        var lblHeartbeatProcessed = Controls.Find("lblHeartbeatProcessedValue", true).FirstOrDefault() as Label;
+                        if (lblHeartbeatProcessed != null)
+                        {
+                            lblHeartbeatProcessed.Text = performanceStats.TotalProcessed.ToString("N0");
+                        }
+                        
+                        // 更新错误统计
+                        var lblHeartbeatErrors = Controls.Find("lblHeartbeatErrorsValue", true).FirstOrDefault() as Label;
+                        if (lblHeartbeatErrors != null)
+                        {
+                            lblHeartbeatErrors.Text = performanceStats.TotalErrors.ToString("N0");
+                            lblHeartbeatErrors.ForeColor = performanceStats.ErrorRate > 5 ? Color.Red : Color.Green;
+                        }
+                        
+                        // 更新错误率
+                        var lblHeartbeatErrorRate = Controls.Find("lblHeartbeatErrorRateValue", true).FirstOrDefault() as Label;
+                        if (lblHeartbeatErrorRate != null)
+                        {
+                            lblHeartbeatErrorRate.Text = $"{performanceStats.ErrorRate:F2}%";
+                            lblHeartbeatErrorRate.ForeColor = performanceStats.ErrorRate > 5 ? Color.Red : 
+                                                             performanceStats.ErrorRate > 1 ? Color.Orange : Color.Green;
+                        }
+                        
+                        // 更新平均处理时间
+                        var lblAvgHeartbeatTime = Controls.Find("lblAvgHeartbeatTimeValue", true).FirstOrDefault() as Label;
+                        if (lblAvgHeartbeatTime != null)
+                        {
+                            lblAvgHeartbeatTime.Text = $"{performanceStats.AverageProcessingTime:F2}ms";
+                            lblAvgHeartbeatTime.ForeColor = performanceStats.AverageProcessingTime > 100 ? Color.Red : 
+                                                           performanceStats.AverageProcessingTime > 50 ? Color.Orange : Color.Green;
+                        }
+                        
+                        // 更新优化策略状态
+                        var lblBatchProcessing = Controls.Find("lblBatchProcessingValue", true).FirstOrDefault() as Label;
+                        if (lblBatchProcessing != null)
+                        {
+                            lblBatchProcessing.Text = performanceStats.UseBatchProcessing ? "启用" : "禁用";
+                            lblBatchProcessing.ForeColor = performanceStats.UseBatchProcessing ? Color.Green : Color.Gray;
+                        }
+                        
+                        var lblMergeThreshold = Controls.Find("lblMergeThresholdValue", true).FirstOrDefault() as Label;
+                        if (lblMergeThreshold != null)
+                        {
+                            lblMergeThreshold.Text = $"{performanceStats.MergeThresholdSeconds}秒";
+                        }
+                        
+                        var lblBatchSize = Controls.Find("lblBatchSizeValue", true).FirstOrDefault() as Label;
+                        if (lblBatchSize != null)
+                        {
+                            lblBatchSize.Text = performanceStats.BatchSize.ToString();
+                        }
+                    });
                 }
             }
             catch (Exception ex)
@@ -1342,6 +1412,21 @@ namespace RUINORERP.Server.Controls
         /// <summary>
         /// 更新内存分布统计显示
         /// </summary>
+        /// <summary>
+        /// 安全地在 UI 线程上执行操作
+        /// </summary>
+        private void SafeInvoke(Action action)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(action);
+            }
+            else
+            {
+                action();
+            }
+        }
+
         private void UpdateMemoryDistribution()
         {
             try
@@ -1464,9 +1549,13 @@ namespace RUINORERP.Server.Controls
                         distributionText += "暂无模块统计数据\n";
                     }
                     
-                    rtbMemoryDist.Text = distributionText;
-                    rtbMemoryDist.SelectionStart = rtbMemoryDist.Text.Length;
-                    rtbMemoryDist.ScrollToCaret();
+                    // 使用 SafeInvoke 确保在 UI 线程上更新控件
+                    SafeInvoke(() =>
+                    {
+                        rtbMemoryDist.Text = distributionText;
+                        rtbMemoryDist.SelectionStart = rtbMemoryDist.Text.Length;
+                        rtbMemoryDist.ScrollToCaret();
+                    });
                 }
                 else
                 {

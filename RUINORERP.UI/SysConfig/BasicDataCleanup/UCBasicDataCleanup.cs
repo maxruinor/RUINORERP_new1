@@ -6,7 +6,6 @@
 // 描述：简洁版数据清理组件，支持级联删除
 // **************************************
 
-using Krypton.Navigator;
 using Krypton.Toolkit;
 using RUINORERP.Common;
 using RUINORERP.Model;
@@ -74,7 +73,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
             // 初始化清理引擎
             _cleanupEngine = new DataCleanupEngine();
-            _cleanupEngine.OnLog += (sender, log) => MainForm.Instance.PrintInfoLog(log);
+            // 将日志事件绑定到实时日志面板
+            _cleanupEngine.OnLog += (sender, log) => AppendRealTimeLog(log);
             _cleanupEngine.OnProgressChanged += (sender, e) => 
             {
                 MainForm.Instance.ShowStatusText($"{e.Message} ({e.Percentage}%)");
@@ -513,23 +513,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
                 if (MessageBox.Show(confirmMsg, "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
                 {
-                    MainForm.Instance.PrintInfoLog("用户取消删除操作");
+                    AppendRealTimeLog("用户取消删除操作");
                     return;
                 }
 
                 _isBusy = true;
                 kbtnDeleteSelected.Enabled = false;
                 kbtnRefresh.Enabled = false;
-                // 移除进行中的弹窗提示，只更新状态栏
-                MainForm.Instance.ShowStatusText("正在删除数据...");
-                MainForm.Instance.PrintInfoLog($"开始删除 {_selectedEntityType.Name} 表的 {_selectedIds.Count} 条记录...");
+                AppendRealTimeLog($"开始删除 {_selectedEntityType.Name} 表的 {_selectedIds.Count} 条记录...");
 
                 // 使用 DataCleanupEngine 执行级联删除
                 var result = await ExecuteCascadeDeleteAsync(_selectedIds, isTestMode: false);
 
                 if (result.IsSuccess)
                 {
-                    MainForm.Instance.PrintInfoLog($"删除成功！共删除 {result.TotalDeletedCount} 条主记录及其关联数据，耗时: {result.TotalElapsedMs}ms");
+                    AppendRealTimeLog($"删除成功！共删除 {result.TotalDeletedCount} 条主记录及其关联数据，耗时: {result.TotalElapsedMs}ms");
                     MessageBox.Show($"删除完成！\n共删除 {result.TotalDeletedCount} 条主记录及其关联数据\n耗时: {result.TotalElapsedMs}ms", 
                         "成功",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -541,16 +539,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 }
                 else
                 {
-                    MainForm.Instance.PrintInfoLog($"[错误] 删除失败：{result.ErrorMessage}");
+                    AppendRealTimeLog($"[错误] 删除失败：{result.ErrorMessage}");
                     MessageBox.Show($"删除失败：{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    MainForm.Instance.ShowStatusText("删除失败");
                 }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.PrintInfoLog($"[异常] 删除操作异常: {ex.Message}\n{ex.StackTrace}");
+                AppendRealTimeLog($"[异常] 删除操作异常: {ex.Message}");
                 MessageBox.Show($"删除失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                MainForm.Instance.ShowStatusText("删除失败");
             }
             finally
             {
@@ -642,6 +638,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
             MainForm.Instance.PrintInfoLog($"最终获取到 {selectedIds.Count} 个选中ID");
             return selectedIds;
+        }
+
+        /// <summary>
+        /// 追加实时日志到 UI
+        /// </summary>
+        private void AppendRealTimeLog(string message)
+        {
+            if (rtbLog.InvokeRequired)
+            {
+                rtbLog.Invoke(new Action<string>(AppendRealTimeLog), message);
+            }
+            else
+            {
+                string timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+                rtbLog.AppendText($"[{timestamp}] {message}\r\n");
+                rtbLog.ScrollToCaret(); // 自动滚动到底部
+            }
         }
 
         /// <summary>

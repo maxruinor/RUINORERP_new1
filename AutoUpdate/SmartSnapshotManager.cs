@@ -16,14 +16,24 @@ namespace AutoUpdate
     public class SmartSnapshotManager
     {
         /// <summary>
-        /// 每 N 个版本创建一次完整快照
+        /// 每 N 个版本创建一次完整快照（优化：减小间隔，减少增量链过长问题）
         /// </summary>
-        private const int FULL_SNAPSHOT_INTERVAL = 3;
+        private const int FULL_SNAPSHOT_INTERVAL = 2;
         
         /// <summary>
-        /// 最多保留的版本数量
+        /// 最多保留的版本数量（优化：减少保留数量，节省磁盘空间）
         /// </summary>
-        private const int MAX_VERSIONS_TO_KEEP = 10;
+        private const int MAX_VERSIONS_TO_KEEP = 5;
+        
+        /// <summary>
+        /// 版本历史最大磁盘空间限制（单位：字节，600MB）
+        /// </summary>
+        private const long MAX_VERSION_HISTORY_SIZE_BYTES = 600 * 1024 * 1024;
+        
+        /// <summary>
+        /// 完整快照目录名前缀
+        /// </summary>
+        private const string FULL_SNAPSHOT_PREFIX = "v";
         
         /// <summary>
         /// 版本根目录
@@ -52,6 +62,49 @@ namespace AutoUpdate
         {
             "AutoUpdaterList.xml", "*.lock", "*.tmp"
         };
+        
+        /// <summary>
+        /// 是否已执行过启动清理
+        /// </summary>
+        private static bool _startupCleanupDone = false;
+
+        /// <summary>
+        /// 构造函数 - 初始化时自动清理过大的版本历史
+        /// </summary>
+        public SmartSnapshotManager()
+        {
+            if (!_startupCleanupDone)
+            {
+                _startupCleanupDone = true;
+                PerformStartupCleanup();
+            }
+        }
+        
+        /// <summary>
+        /// 启动时执行清理（清理已有的过大版本历史）
+        /// </summary>
+        private void PerformStartupCleanup()
+        {
+            try
+            {
+                if (!Directory.Exists(VersionsRootDir))
+                    return;
+                
+                long currentSize = GetDirectorySize(VersionsRootDir);
+                Debug.WriteLine($"[SmartSnapshot] 启动检查 - 当前版本历史大小: {currentSize / 1024 / 1024} MB, 限制: {MAX_VERSION_HISTORY_SIZE_BYTES / 1024 / 1024} MB");
+                
+                if (currentSize > MAX_VERSION_HISTORY_SIZE_BYTES)
+                {
+                    Debug.WriteLine("[SmartSnapshot] 启动时发现版本历史过大，开始清理...");
+                    CleanupExcessVersions();
+                    CleanupOldSnapshots();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[SmartSnapshot] 启动清理失败: {ex.Message}");
+            }
+        }
 
         #region 快照创建
 
@@ -148,8 +201,9 @@ namespace AutoUpdate
             // 保存到历史记录
             SaveToHistory(snapshot);
             
-            // 清理旧版本
+            // 清理旧版本（同时检查磁盘空间限制）
             CleanupOldSnapshots();
+            CleanupExcessVersions();
             
             Debug.WriteLine($"[SmartSnapshot] 完整快照创建成功: {files.Length} 个文件, {totalSize / 1024 / 1024} MB");
             
@@ -230,6 +284,7 @@ namespace AutoUpdate
             
             SaveToHistory(snapshot);
             CleanupOldSnapshots();
+            CleanupExcessVersions();
             
             Debug.WriteLine($"[SmartSnapshot] 增量快照创建成功: {changedFiles.Count} 个变更, {incrementalSize / 1024} KB");
             
@@ -737,6 +792,35 @@ namespace AutoUpdate
         }
         
         /// <summary>
+        /// 获取版本历史统计信息
+        /// </summary>
+        public VersionHistoryStats GetVersionHistoryStats()
+        {
+            var stats = new VersionHistoryStats();
+            
+            try
+            {
+                var snapshots = GetAllSnapshots();
+                stats.TotalVersionCount = snapshots.Count;
+                stats.FullSnapshotCount = snapshots.Count(s => s.IsFullSnapshot);
+                stats.IncrementalSnapshotCount = snapshots.Count(s => !s.IsFullSnapshot);
+                
+                if (Directory.Exists(VersionsRootDir))
+                {
+                    stats.TotalSizeBytes = GetDirectorySize(VersionsRootDir);
+                    stats.MaxSizeBytes = MAX_VERSION_HISTORY_SIZE_BYTES;
+                    stats.UsagePercentage = (double)stats.TotalSizeBytes / stats.MaxSizeBytes * 100;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[SmartSnapshot] 获取版本历史统计失败: {ex.Message}");
+            }
+            
+            return stats;
+        }
+        
+        /// <summary>
         /// 保存快照到历史记录
         /// </summary>
         private void SaveToHistory(VersionSnapshot snapshot)
@@ -751,17 +835,19 @@ namespace AutoUpdate
         }
         
         /// <summary>
-        /// 清理旧快照，保留最新的 N 个
+        /// 清理旧快照，保留最新的 N 个（同时检查磁盘空间限制）
         /// </summary>
         public void CleanupOldSnapshots(int keepCount = MAX_VERSIONS_TO_KEEP)
         {
             var snapshots = GetAllSnapshots();
             
-            if (snapshots.Count <= keepCount)
+            if (snapshots.Count <= keepCount && !IsDiskSpaceExceeded())
                 return;
             
+            int actualKeepCount = Math.Min(keepCount, snapshots.Count);
+            
             // 删除旧的快照
-            var snapshotsToDelete = snapshots.Skip(keepCount).ToList();
+            var snapshotsToDelete = snapshots.Skip(actualKeepCount).ToList();
             
             foreach (var snapshot in snapshotsToDelete)
             {
@@ -782,11 +868,120 @@ namespace AutoUpdate
             }
             
             // 更新历史记录
-            var keptSnapshots = snapshots.Take(keepCount).ToList();
+            var keptSnapshots = GetAllSnapshots().Take(actualKeepCount).ToList();
             string json = JsonConvert.SerializeObject(keptSnapshots, Formatting.Indented);
             File.WriteAllText(HistoryFilePath, json);
             
-            Debug.WriteLine($"[SmartSnapshot] 清理完成，保留 {keepCount} 个版本");
+            Debug.WriteLine($"[SmartSnapshot] 清理完成，保留 {actualKeepCount} 个版本");
+        }
+        
+        /// <summary>
+        /// 检查版本历史磁盘空间是否超过限制
+        /// </summary>
+        private bool IsDiskSpaceExceeded()
+        {
+            if (!Directory.Exists(VersionsRootDir))
+                return false;
+            
+            try
+            {
+                long totalSize = GetDirectorySize(VersionsRootDir);
+                Debug.WriteLine($"[SmartSnapshot] 当前版本历史大小: {totalSize / 1024 / 1024} MB, 限制: {MAX_VERSION_HISTORY_SIZE_BYTES / 1024 / 1024} MB");
+                return totalSize > MAX_VERSION_HISTORY_SIZE_BYTES;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[SmartSnapshot] 检查磁盘空间失败: {ex.Message}");
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 计算目录大小
+        /// </summary>
+        private long GetDirectorySize(string directoryPath)
+        {
+            long size = 0;
+            try
+            {
+                foreach (string file in Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories))
+                {
+                    try
+                    {
+                        FileInfo fileInfo = new FileInfo(file);
+                        size += fileInfo.Length;
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+            return size;
+        }
+        
+        /// <summary>
+        /// 清理过大的版本历史（当磁盘空间超过限制时调用）
+        /// 策略：优先删除增量快照，保留完整快照
+        /// </summary>
+        public void CleanupExcessVersions()
+        {
+            if (!IsDiskSpaceExceeded())
+                return;
+            
+            var snapshots = GetAllSnapshots();
+            if (snapshots.Count <= 2)
+                return;
+            
+            // 优先删除旧的增量快照（它们占用空间小且容易重建）
+            var incrementalSnapshots = snapshots.Where(s => !s.IsFullSnapshot).OrderByDescending(s => s.InstallTime).ToList();
+            var fullSnapshots = snapshots.Where(s => s.IsFullSnapshot).OrderByDescending(s => s.InstallTime).ToList();
+            
+            // 删除最旧的增量快照
+            foreach (var snapshot in incrementalSnapshots)
+            {
+                if (!IsDiskSpaceExceeded())
+                    break;
+                
+                try
+                {
+                    if (Directory.Exists(snapshot.SnapshotFolderPath))
+                    {
+                        Directory.Delete(snapshot.SnapshotFolderPath, true);
+                        Debug.WriteLine($"[SmartSnapshot] 磁盘空间清理 - 删除增量快照: {snapshot.SnapshotFolderName}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[SmartSnapshot] 删除快照失败: {ex.Message}");
+                }
+            }
+            
+            // 如果仍然超过限制，删除旧的完整快照（保留最新的完整快照）
+            foreach (var snapshot in fullSnapshots.Skip(1))
+            {
+                if (!IsDiskSpaceExceeded())
+                    break;
+                
+                try
+                {
+                    if (Directory.Exists(snapshot.SnapshotFolderPath))
+                    {
+                        Directory.Delete(snapshot.SnapshotFolderPath, true);
+                        Debug.WriteLine($"[SmartSnapshot] 磁盘空间清理 - 删除完整快照: {snapshot.SnapshotFolderName}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[SmartSnapshot] 删除快照失败: {ex.Message}");
+                }
+            }
+            
+            // 更新历史记录
+            var keptSnapshots = GetAllSnapshots().Take(MAX_VERSIONS_TO_KEEP).ToList();
+            string json = JsonConvert.SerializeObject(keptSnapshots, Formatting.Indented);
+            File.WriteAllText(HistoryFilePath, json);
+            
+            long currentSize = GetDirectorySize(VersionsRootDir);
+            Debug.WriteLine($"[SmartSnapshot] 磁盘空间清理完成，当前大小: {currentSize / 1024 / 1024} MB");
         }
 
         #endregion

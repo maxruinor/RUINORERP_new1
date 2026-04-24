@@ -48,718 +48,152 @@ namespace RUINORERP.Model
             // ==================== 基础主数据 ====================
             
             // 客户与供应商
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "客户/供应商",
-                EntityType = typeof(tb_CustomerVendor),
-                Description = "客户厂商表",
-                TableName = "tb_CustomerVendor"
-            });
+            Entities.Add(CreateMetadata("基础主数据", "客户/供应商", typeof(tb_CustomerVendor), "客户厂商表"));
 
             // 产品相关
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "产品类目",
-                EntityType = typeof(tb_ProdCategories),
-                Description = "产品类目表",
-                TableName = "tb_ProdCategories"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "产品基本信息",
-                EntityType = typeof(tb_Prod),
-                Description = "货品基本信息表",
-                TableName = "tb_Prod"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "产品详情",
-                EntityType = typeof(tb_ProdDetail),
-                Description = "产品详情信息表",
-                TableName = "tb_ProdDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "产品属性",
-                EntityType = typeof(tb_ProdProperty),
-                Description = "产品属性表",
-                TableName = "tb_ProdProperty"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "产品属性值",
-                EntityType = typeof(tb_ProdPropertyValue),
-                Description = "产品属性值表",
-                TableName = "tb_ProdPropertyValue"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "产品类型",
-                EntityType = typeof(tb_ProductType),
-                Description = "产品类型表",
-                TableName = "tb_ProductType"
-            });
+            Entities.Add(CreateMetadata("基础主数据", "产品类目", typeof(tb_ProdCategories), "产品类目表"));
+            Entities.Add(CreateMetadata("基础主数据", "产品基本信息", typeof(tb_Prod), "货品基本信息表"));
+            Entities.Add(CreateMetadata("基础主数据", "产品详情", typeof(tb_ProdDetail), "产品详情信息表"));
+            Entities.Add(CreateMetadata("基础主数据", "产品属性", typeof(tb_ProdProperty), "产品属性表"));
+            Entities.Add(CreateMetadata("基础主数据", "产品属性值", typeof(tb_ProdPropertyValue), "产品属性值表"));
+            Entities.Add(CreateMetadata("基础主数据", "产品类型", typeof(tb_ProductType), "产品类型表"));
 
             // 库存位置
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "库位",
-                EntityType = typeof(tb_Location),
-                Description = "库位表",
-                TableName = "tb_Location"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "货架",
-                EntityType = typeof(tb_StorageRack),
-                Description = "货架表",
-                TableName = "tb_StorageRack"
-            });
+            Entities.Add(CreateMetadata("基础主数据", "库位", typeof(tb_Location), "库位表"));
+            Entities.Add(CreateMetadata("基础主数据", "货架", typeof(tb_StorageRack), "货架表"));
 
             // 单位
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "单位",
-                EntityType = typeof(tb_Unit),
-                Description = "单位表",
-                TableName = "tb_Unit"
-            });
+            Entities.Add(CreateMetadata("基础主数据", "单位", typeof(tb_Unit), "单位表"));
 
             // 组织架构
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "部门",
-                EntityType = typeof(tb_Department),
-                Description = "部门表",
-                TableName = "tb_Department"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "员工",
-                EntityType = typeof(tb_Employee),
-                Description = "员工表",
-                TableName = "tb_Employee"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "公司",
-                EntityType = typeof(tb_Company),
-                Description = "公司表",
-                TableName = "tb_Company"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "职位",
-                EntityType = typeof(tb_Position),
-                Description = "职位表",
-                TableName = "tb_Position"
-            });
+            Entities.Add(CreateMetadata("基础主数据", "部门", typeof(tb_Department), "部门表"));
+            Entities.Add(CreateMetadata("基础主数据", "员工", typeof(tb_Employee), "员工表"));
+            Entities.Add(CreateMetadata("基础主数据", "公司", typeof(tb_Company), "公司表"));
+            Entities.Add(CreateMetadata("基础主数据", "职位", typeof(tb_Position), "职位表"));
 
             // CRM相关
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "CRM客户",
-                EntityType = typeof(tb_CRM_Customer),
-                Description = "CRM客户表",
-                TableName = "tb_CRM_Customer"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "CRM联系人",
-                EntityType = typeof(tb_CRM_Contact),
-                Description = "CRM联系人表",
-                TableName = "tb_CRM_Contact"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "基础主数据",
-                DisplayName = "CRM线索",
-                EntityType = typeof(tb_CRM_Leads),
-                Description = "CRM线索表",
-                TableName = "tb_CRM_Leads"
-            });
+            Entities.Add(CreateMetadata("基础主数据", "CRM客户", typeof(tb_CRM_Customer), "CRM客户表"));
+            Entities.Add(CreateMetadata("基础主数据", "CRM联系人", typeof(tb_CRM_Contact), "CRM联系人表"));
+            Entities.Add(CreateMetadata("基础主数据", "CRM线索", typeof(tb_CRM_Leads), "CRM线索表"));
 
             // ==================== 业务单据 - 销售模块 ====================
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "销售订单",
-                EntityType = typeof(tb_SaleOrder),
-                Description = "销售订单",
-                TableName = "tb_SaleOrder"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "销售订单明细",
-                EntityType = typeof(tb_SaleOrderDetail),
-                Description = "销售订单明细",
-                TableName = "tb_SaleOrderDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "销售出库",
-                EntityType = typeof(tb_SaleOut),
-                Description = "销售出库单",
-                TableName = "tb_SaleOut"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "销售出库明细",
-                EntityType = typeof(tb_SaleOutDetail),
-                Description = "销售出库明细",
-                TableName = "tb_SaleOutDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "销售退货",
-                EntityType = typeof(tb_SaleOutRe),
-                Description = "销售退货单",
-                TableName = "tb_SaleOutRe"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "销售退货明细",
-                EntityType = typeof(tb_SaleOutReDetail),
-                Description = "销售退货明细",
-                TableName = "tb_SaleOutReDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "销售合同",
-                EntityType = typeof(tb_SO_Contract),
-                Description = "销售合同",
-                TableName = "tb_SO_Contract"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "销售合同明细",
-                EntityType = typeof(tb_SO_ContractDetail),
-                Description = "销售合同明细",
-                TableName = "tb_SO_ContractDetail"
-            });
+            Entities.Add(CreateMetadata("业务单据", "销售订单", typeof(tb_SaleOrder), "销售订单"));
+            Entities.Add(CreateMetadata("业务单据", "销售订单明细", typeof(tb_SaleOrderDetail), "销售订单明细"));
+            Entities.Add(CreateMetadata("业务单据", "销售出库", typeof(tb_SaleOut), "销售出库单"));
+            Entities.Add(CreateMetadata("业务单据", "销售出库明细", typeof(tb_SaleOutDetail), "销售出库明细"));
+            Entities.Add(CreateMetadata("业务单据", "销售退货", typeof(tb_SaleOutRe), "销售退货单"));
+            Entities.Add(CreateMetadata("业务单据", "销售退货明细", typeof(tb_SaleOutReDetail), "销售退货明细"));
+            Entities.Add(CreateMetadata("业务单据", "销售合同", typeof(tb_SO_Contract), "销售合同"));
+            Entities.Add(CreateMetadata("业务单据", "销售合同明细", typeof(tb_SO_ContractDetail), "销售合同明细"));
 
             // ==================== 业务单据 - 采购模块 ====================
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "采购订单",
-                EntityType = typeof(tb_PurOrder),
-                Description = "采购订单",
-                TableName = "tb_PurOrder"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "采购订单明细",
-                EntityType = typeof(tb_PurOrderDetail),
-                Description = "采购订单明细",
-                TableName = "tb_PurOrderDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "采购入库",
-                EntityType = typeof(tb_PurEntry),
-                Description = "采购入库单",
-                TableName = "tb_PurEntry"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "采购入库明细",
-                EntityType = typeof(tb_PurEntryDetail),
-                Description = "采购入库明细",
-                TableName = "tb_PurEntryDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "采购退货",
-                EntityType = typeof(tb_PurReturnEntry),
-                Description = "采购退货单",
-                TableName = "tb_PurReturnEntry"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "采购退货明细",
-                EntityType = typeof(tb_PurReturnEntryDetail),
-                Description = "采购退货明细",
-                TableName = "tb_PurReturnEntryDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "采购申请",
-                EntityType = typeof(tb_BuyingRequisition),
-                Description = "采购申请表",
-                TableName = "tb_BuyingRequisition"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "采购申请明细",
-                EntityType = typeof(tb_BuyingRequisitionDetail),
-                Description = "采购申请明细",
-                TableName = "tb_BuyingRequisitionDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "采购合同",
-                EntityType = typeof(tb_PO_Contract),
-                Description = "采购合同",
-                TableName = "tb_PO_Contract"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "采购合同明细",
-                EntityType = typeof(tb_PO_ContractDetail),
-                Description = "采购合同明细",
-                TableName = "tb_PO_ContractDetail"
-            });
+            Entities.Add(CreateMetadata("业务单据", "采购订单", typeof(tb_PurOrder), "采购订单"));
+            Entities.Add(CreateMetadata("业务单据", "采购订单明细", typeof(tb_PurOrderDetail), "采购订单明细"));
+            Entities.Add(CreateMetadata("业务单据", "采购入库", typeof(tb_PurEntry), "采购入库单"));
+            Entities.Add(CreateMetadata("业务单据", "采购入库明细", typeof(tb_PurEntryDetail), "采购入库明细"));
+            Entities.Add(CreateMetadata("业务单据", "采购退货", typeof(tb_PurReturnEntry), "采购退货单"));
+            Entities.Add(CreateMetadata("业务单据", "采购退货明细", typeof(tb_PurReturnEntryDetail), "采购退货明细"));
+            Entities.Add(CreateMetadata("业务单据", "采购申请", typeof(tb_BuyingRequisition), "采购申请表"));
+            Entities.Add(CreateMetadata("业务单据", "采购申请明细", typeof(tb_BuyingRequisitionDetail), "采购申请明细"));
+            Entities.Add(CreateMetadata("业务单据", "采购合同", typeof(tb_PO_Contract), "采购合同"));
+            Entities.Add(CreateMetadata("业务单据", "采购合同明细", typeof(tb_PO_ContractDetail), "采购合同明细"));
 
             // ==================== 业务单据 - 库存模块 ====================
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "入库单",
-                EntityType = typeof(tb_StockIn),
-                Description = "入库单",
-                TableName = "tb_StockIn"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "入库单明细",
-                EntityType = typeof(tb_StockInDetail),
-                Description = "入库单明细",
-                TableName = "tb_StockInDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "出库单",
-                EntityType = typeof(tb_StockOut),
-                Description = "出库单",
-                TableName = "tb_StockOut"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "出库单明细",
-                EntityType = typeof(tb_StockOutDetail),
-                Description = "出库单明细",
-                TableName = "tb_StockOutDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "库存调拨",
-                EntityType = typeof(tb_StockTransfer),
-                Description = "库存调拨单",
-                TableName = "tb_StockTransfer"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "库存调拨明细",
-                EntityType = typeof(tb_StockTransferDetail),
-                Description = "库存调拨明细",
-                TableName = "tb_StockTransferDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "盘点单",
-                EntityType = typeof(tb_Stocktake),
-                Description = "盘点单",
-                TableName = "tb_Stocktake"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "盘点单明细",
-                EntityType = typeof(tb_StocktakeDetail),
-                Description = "盘点单明细",
-                TableName = "tb_StocktakeDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "库存",
-                EntityType = typeof(tb_Inventory),
-                Description = "库存表",
-                TableName = "tb_Inventory"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "库存交易记录",
-                EntityType = typeof(tb_InventoryTransaction),
-                Description = "库存交易记录",
-                TableName = "tb_InventoryTransaction"
-            });
+            Entities.Add(CreateMetadata("业务单据", "入库单", typeof(tb_StockIn), "入库单"));
+            Entities.Add(CreateMetadata("业务单据", "入库单明细", typeof(tb_StockInDetail), "入库单明细"));
+            Entities.Add(CreateMetadata("业务单据", "出库单", typeof(tb_StockOut), "出库单"));
+            Entities.Add(CreateMetadata("业务单据", "出库单明细", typeof(tb_StockOutDetail), "出库单明细"));
+            Entities.Add(CreateMetadata("业务单据", "库存调拨", typeof(tb_StockTransfer), "库存调拨单"));
+            Entities.Add(CreateMetadata("业务单据", "库存调拨明细", typeof(tb_StockTransferDetail), "库存调拨明细"));
+            Entities.Add(CreateMetadata("业务单据", "盘点单", typeof(tb_Stocktake), "盘点单"));
+            Entities.Add(CreateMetadata("业务单据", "盘点单明细", typeof(tb_StocktakeDetail), "盘点单明细"));
+            Entities.Add(CreateMetadata("业务单据", "库存", typeof(tb_Inventory), "库存表"));
+            Entities.Add(CreateMetadata("业务单据", "库存交易记录", typeof(tb_InventoryTransaction), "库存交易记录"));
 
             // ==================== 业务单据 - 生产模块 ====================
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "生产订单",
-                EntityType = typeof(tb_ManufacturingOrder),
-                Description = "生产订单",
-                TableName = "tb_ManufacturingOrder"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "生产订单明细",
-                EntityType = typeof(tb_ManufacturingOrderDetail),
-                Description = "生产订单明细",
-                TableName = "tb_ManufacturingOrderDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "BOM",
-                EntityType = typeof(tb_BOM_S),
-                Description = "BOM表",
-                TableName = "tb_BOM_S"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "BOM明细",
-                EntityType = typeof(tb_BOM_SDetail),
-                Description = "BOM明细",
-                TableName = "tb_BOM_SDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "生产计划",
-                EntityType = typeof(tb_ProductionPlan),
-                Description = "生产计划",
-                TableName = "tb_ProductionPlan"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "生产计划明细",
-                EntityType = typeof(tb_ProductionPlanDetail),
-                Description = "生产计划明细",
-                TableName = "tb_ProductionPlanDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "领料单",
-                EntityType = typeof(tb_MaterialRequisition),
-                Description = "领料单",
-                TableName = "tb_MaterialRequisition"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "领料单明细",
-                EntityType = typeof(tb_MaterialRequisitionDetail),
-                Description = "领料单明细",
-                TableName = "tb_MaterialRequisitionDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "退料单",
-                EntityType = typeof(tb_MaterialReturn),
-                Description = "退料单",
-                TableName = "tb_MaterialReturn"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "退料单明细",
-                EntityType = typeof(tb_MaterialReturnDetail),
-                Description = "退料单明细",
-                TableName = "tb_MaterialReturnDetail"
-            });
-
-            // MRP返工
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "MRP返工入库",
-                EntityType = typeof(tb_MRP_ReworkEntry),
-                Description = "MRP返工入库单",
-                TableName = "tb_MRP_ReworkEntry"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "MRP返工退货",
-                EntityType = typeof(tb_MRP_ReworkReturn),
-                Description = "MRP返工退货单",
-                TableName = "tb_MRP_ReworkReturn"
-            });
+            Entities.Add(CreateMetadata("业务单据", "生产订单", typeof(tb_ManufacturingOrder), "生产订单"));
+            Entities.Add(CreateMetadata("业务单据", "生产订单明细", typeof(tb_ManufacturingOrderDetail), "生产订单明细"));
+            Entities.Add(CreateMetadata("业务单据", "BOM", typeof(tb_BOM_S), "BOM表"));
+            Entities.Add(CreateMetadata("业务单据", "BOM明细", typeof(tb_BOM_SDetail), "BOM明细"));
+            Entities.Add(CreateMetadata("业务单据", "生产计划", typeof(tb_ProductionPlan), "生产计划"));
+            Entities.Add(CreateMetadata("业务单据", "生产计划明细", typeof(tb_ProductionPlanDetail), "生产计划明细"));
+            Entities.Add(CreateMetadata("业务单据", "领料单", typeof(tb_MaterialRequisition), "领料单"));
+            Entities.Add(CreateMetadata("业务单据", "领料单明细", typeof(tb_MaterialRequisitionDetail), "领料单明细"));
+            Entities.Add(CreateMetadata("业务单据", "退料单", typeof(tb_MaterialReturn), "退料单"));
+            Entities.Add(CreateMetadata("业务单据", "退料单明细", typeof(tb_MaterialReturnDetail), "退料单明细"));
+            Entities.Add(CreateMetadata("业务单据", "MRP返工入库", typeof(tb_MRP_ReworkEntry), "MRP返工入库单"));
+            Entities.Add(CreateMetadata("业务单据", "MRP返工退货", typeof(tb_MRP_ReworkReturn), "MRP返工退货单"));
 
             // ==================== 业务单据 - 售后模块 ====================
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "售后申请",
-                EntityType = typeof(tb_AS_AfterSaleApply),
-                Description = "售后申请表",
-                TableName = "tb_AS_AfterSaleApply"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "业务单据",
-                DisplayName = "维修单",
-                EntityType = typeof(tb_AS_RepairOrder),
-                Description = "维修单",
-                TableName = "tb_AS_RepairOrder"
-            });
+            Entities.Add(CreateMetadata("业务单据", "售后申请", typeof(tb_AS_AfterSaleApply), "售后申请表"));
+            Entities.Add(CreateMetadata("业务单据", "维修单", typeof(tb_AS_RepairOrder), "维修单"));
 
             // ==================== 财务相关 ====================
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "收付款记录",
-                EntityType = typeof(tb_FM_PaymentRecord),
-                Description = "收付款记录表",
-                TableName = "tb_FM_PaymentRecord"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "收付款记录明细",
-                EntityType = typeof(tb_FM_PaymentRecordDetail),
-                Description = "收付款记录明细",
-                TableName = "tb_FM_PaymentRecordDetail"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "应收应付",
-                EntityType = typeof(tb_FM_ReceivablePayable),
-                Description = "应收应付表",
-                TableName = "tb_FM_ReceivablePayable"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "费用报销",
-                EntityType = typeof(tb_FM_ExpenseClaim),
-                Description = "费用报销单",
-                TableName = "tb_FM_ExpenseClaim"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "其他费用",
-                EntityType = typeof(tb_FM_OtherExpense),
-                Description = "其他费用单",
-                TableName = "tb_FM_OtherExpense"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "发票",
-                EntityType = typeof(tb_FM_Invoice),
-                Description = "发票表",
-                TableName = "tb_FM_Invoice"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "对账单",
-                EntityType = typeof(tb_FM_Statement),
-                Description = "对账单",
-                TableName = "tb_FM_Statement"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "总账",
-                EntityType = typeof(tb_FM_GeneralLedger),
-                Description = "总账表",
-                TableName = "tb_FM_GeneralLedger"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "科目",
-                EntityType = typeof(tb_FM_Subject),
-                Description = "科目表",
-                TableName = "tb_FM_Subject"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "账户",
-                EntityType = typeof(tb_FM_Account),
-                Description = "账户表",
-                TableName = "tb_FM_Account"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "财务相关",
-                DisplayName = "预收款",
-                EntityType = typeof(tb_FM_PreReceivedPayment),
-                Description = "预收款表",
-                TableName = "tb_FM_PreReceivedPayment"
-            });
+            Entities.Add(CreateMetadata("财务相关", "收付款记录", typeof(tb_FM_PaymentRecord), "收付款记录表"));
+            Entities.Add(CreateMetadata("财务相关", "收付款记录明细", typeof(tb_FM_PaymentRecordDetail), "收付款记录明细"));
+            Entities.Add(CreateMetadata("财务相关", "应收应付", typeof(tb_FM_ReceivablePayable), "应收应付表"));
+            Entities.Add(CreateMetadata("财务相关", "费用报销", typeof(tb_FM_ExpenseClaim), "费用报销单"));
+            Entities.Add(CreateMetadata("财务相关", "其他费用", typeof(tb_FM_OtherExpense), "其他费用单"));
+            Entities.Add(CreateMetadata("财务相关", "发票", typeof(tb_FM_Invoice), "发票表"));
+            Entities.Add(CreateMetadata("财务相关", "对账单", typeof(tb_FM_Statement), "对账单"));
+            Entities.Add(CreateMetadata("财务相关", "总账", typeof(tb_FM_GeneralLedger), "总账表"));
+            Entities.Add(CreateMetadata("财务相关", "科目", typeof(tb_FM_Subject), "科目表"));
+            Entities.Add(CreateMetadata("财务相关", "账户", typeof(tb_FM_Account), "账户表"));
+            Entities.Add(CreateMetadata("财务相关", "预收款", typeof(tb_FM_PreReceivedPayment), "预收款表"));
 
             // ==================== 系统配置 ====================
+            Entities.Add(CreateMetadata("系统配置", "菜单", typeof(tb_MenuInfo), "菜单信息表"));
+            Entities.Add(CreateMetadata("系统配置", "按钮", typeof(tb_ButtonInfo), "按钮信息表"));
+            Entities.Add(CreateMetadata("系统配置", "角色", typeof(tb_RoleInfo), "角色信息表"));
+            Entities.Add(CreateMetadata("系统配置", "用户", typeof(tb_UserInfo), "用户信息表"));
+            Entities.Add(CreateMetadata("系统配置", "系统配置", typeof(tb_SystemConfig), "系统配置表"));
+            Entities.Add(CreateMetadata("系统配置", "权限", typeof(tb_Permission), "权限表"));
+            Entities.Add(CreateMetadata("系统配置", "审批流程", typeof(tb_Approval), "审批流程表"));
+        }
 
-            Entities.Add(new EntityMetadata
-            {
-                Category = "系统配置",
-                DisplayName = "菜单",
-                EntityType = typeof(tb_MenuInfo),
-                Description = "菜单信息表",
-                TableName = "tb_MenuInfo"
-            });
+        /// <summary>
+        /// 创建并自动提取元数据
+        /// </summary>
+        private static EntityMetadata CreateMetadata(string category, string displayName, Type entityType, string description)
+        {
+            var tableAttr = entityType.GetCustomAttribute<SugarTable>();
+            var tableName = tableAttr?.TableName ?? entityType.Name;
 
-            Entities.Add(new EntityMetadata
-            {
-                Category = "系统配置",
-                DisplayName = "按钮",
-                EntityType = typeof(tb_ButtonInfo),
-                Description = "按钮信息表",
-                TableName = "tb_ButtonInfo"
-            });
+            // 找主键
+            var pkProp = entityType.GetProperties().FirstOrDefault(p => p.GetCustomAttribute<SugarColumn>()?.IsPrimaryKey == true);
+            if (pkProp == null) pkProp = entityType.GetProperty("PrimaryKeyID");
+            
+            var pkName = pkProp?.GetCustomAttribute<SugarColumn>()?.ColumnName ?? pkProp?.Name;
 
-            Entities.Add(new EntityMetadata
+            // 找子表关系
+            var childRelations = new List<ChildRelationInfo>();
+            foreach (var prop in entityType.GetProperties())
             {
-                Category = "系统配置",
-                DisplayName = "角色",
-                EntityType = typeof(tb_RoleInfo),
-                Description = "角色信息表",
-                TableName = "tb_RoleInfo"
-            });
+                var navAttr = prop.GetCustomAttribute<Navigate>();
+                if (navAttr != null && navAttr.GetNavigateType() == NavigateType.OneToMany)
+                {
+                    var childType = prop.PropertyType.IsGenericType ? prop.PropertyType.GetGenericArguments()[0] : prop.PropertyType;
+                    childRelations.Add(new ChildRelationInfo
+                    {
+                        ChildTableName = childType.Name,
+                        ForeignKeyColumn = navAttr.GetName(),
+                        NavigationProperty = prop.Name
+                    });
+                }
+            }
 
-            Entities.Add(new EntityMetadata
+            return new EntityMetadata
             {
-                Category = "系统配置",
-                DisplayName = "用户",
-                EntityType = typeof(tb_UserInfo),
-                Description = "用户信息表",
-                TableName = "tb_UserInfo"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "系统配置",
-                DisplayName = "系统配置",
-                EntityType = typeof(tb_SystemConfig),
-                Description = "系统配置表",
-                TableName = "tb_SystemConfig"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "系统配置",
-                DisplayName = "权限",
-                EntityType = typeof(tb_Permission),
-                Description = "权限表",
-                TableName = "tb_Permission"
-            });
-
-            Entities.Add(new EntityMetadata
-            {
-                Category = "系统配置",
-                DisplayName = "审批流程",
-                EntityType = typeof(tb_Approval),
-                Description = "审批流程表",
-                TableName = "tb_Approval"
-            });
+                Category = category,
+                DisplayName = displayName,
+                EntityName = entityType.Name,
+                EntityType = entityType,
+                Description = description,
+                TableName = tableName,
+                PrimaryKeyName = pkName,
+                PrimaryKeyProperty = pkProp?.Name,
+                ChildRelations = childRelations
+            };
         }
 
         /// <summary>

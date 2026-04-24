@@ -88,8 +88,8 @@ namespace RUINORERP.Server.Services
                 var memoryInfo = GetCurrentMemoryUsage();
                 _logger.LogDebug($"内存使用情况 - 工作集: {memoryInfo.WorkingSetMB} MB, 托管内存: {memoryInfo.ManagedMemoryMB} MB");
 
-                // 注意：不再自动触发GC，高频GC会导致CPU升高和响应延迟
-                // 内存压力应该通过增加超时容忍度等机制来缓解
+                // ✅ 简化：纯监控告警模式，不再自动触发GC
+                // 高频GC会导致CPU升高和响应延迟，应由上层根据业务情况手动调用 ForceGarbageCollection()
 
                 // 根据内存使用情况触发相应事件
                 if (memoryInfo.WorkingSetMB >= CriticalThreshold)
@@ -250,34 +250,8 @@ namespace RUINORERP.Server.Services
         }
 
         /// <summary>
-        /// Phase 3.3 优化：执行自动垃圾回收
-        /// </summary>
-        private void PerformAutoGC()
-        {
-            try
-            {
-                _logger.LogInformation("开始自动垃圾回收");
-                var beforeMemory = GetCurrentMemoryUsage();
-
-                // 执行垃圾回收
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: true, compacting: true);
-                GC.WaitForPendingFinalizers();
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: true, compacting: true);
-
-                var afterMemory = GetCurrentMemoryUsage();
-                _lastGCTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-                _logger.LogInformation($"自动垃圾回收完成 - 回收前: {beforeMemory.WorkingSetMB} MB, 回收后: {afterMemory.WorkingSetMB} MB, " +
-                                      $"回收了 {(beforeMemory.WorkingSet - afterMemory.WorkingSet) / (1024 * 1024)} MB");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "执行自动垃圾回收时发生错误");
-            }
-        }
-        
-        /// <summary>
         /// 强制执行垃圾回收
+        /// ✅ 保留此方法供手动调用，但不再自动触发
         /// </summary>
         public void ForceGarbageCollection()
         {

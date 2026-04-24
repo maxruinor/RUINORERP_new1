@@ -299,6 +299,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
     {
         /// <summary>
         /// 执行拓扑排序，返回自底向上的删除顺序
+        /// 删除顺序：先删子表（叶子节点），后删父表（根节点）
         /// </summary>
         /// <returns>排序后的表列表（叶子节点在前，根节点在后）</returns>
         public List<DeleteStage> Sort(DependencyGraphBuilder graphBuilder)
@@ -307,10 +308,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             var reverseGraph = graphBuilder.GetReverseGraph();
             var allNodes = graphBuilder.GetAllNodes();
 
-            var inDegree = new Dictionary<string, int>();
+            // outDegree: 该表有多少个子表（被它引用的表）
+            var outDegree = new Dictionary<string, int>();
             foreach (var node in allNodes)
             {
-                inDegree[node] = reverseGraph.ContainsKey(node) ? reverseGraph[node].Count : 0;
+                outDegree[node] = graph.ContainsKey(node) ? graph[node].Count : 0;
             }
 
             var result = new List<DeleteStage>();
@@ -318,7 +320,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
             while (processed.Count < allNodes.Count)
             {
-                var currentLevel = inDegree
+                // 找没有子表的节点（叶子节点），先删除
+                var currentLevel = outDegree
                     .Where(kv => !processed.Contains(kv.Key) && kv.Value == 0)
                     .Select(kv => kv.Key)
                     .ToList();
@@ -344,14 +347,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                     processed.Add(node);
                 }
 
+                // 更新父节点的outDegree（删除了子节点后，父节点就少了一个子依赖）
                 foreach (var node in currentLevel)
                 {
-                    if (graph.ContainsKey(node))
+                    if (reverseGraph.ContainsKey(node))
                     {
-                        foreach (var child in graph[node])
+                        foreach (var parent in reverseGraph[node])
                         {
-                            if (inDegree.ContainsKey(child))
-                                inDegree[child]--;
+                            if (outDegree.ContainsKey(parent))
+                                outDegree[parent]--;
                         }
                     }
                 }
@@ -514,9 +518,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             }
             catch (Exception ex)
             {
+                var errorMsg = $"[错误] {ex.Message}";
+                Log(errorMsg);
+                Log($"[堆栈] {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Log($"[内部错误] {ex.InnerException.Message}");
+                    Log($"[内部堆栈] {ex.InnerException.StackTrace}");
+                }
+                
                 result.MarkAsFailed(ex.Message);
                 _logger?.LogError(ex, "级联删除异常");
-                Log($"[错误] {ex.Message}");
             }
 
             return result;
@@ -561,6 +574,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             List<long> parentIds)
         {
             var db = _unitOfWork.GetDbClient();
+            string fkColumn = string.Empty;
 
             try
             {
@@ -569,7 +583,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 var childRelation = parentMetadata.ChildRelations
                     .FirstOrDefault(c => c.ChildTableName == childTableName);
 
-                string fkColumn;
                 if (childRelation != null)
                 {
                     fkColumn = childRelation.ForeignKeyColumn;
@@ -587,6 +600,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             catch (Exception ex)
             {
                 Log($"[查找子表] ⚠️ 查询 {childTableName} 失败: {ex.Message}");
+                Log($"[查找子表] SQL: SELECT DISTINCT [{childPkColumn}] FROM [{childTableName}] WHERE [{fkColumn}] IN (...)");
+                Log($"[查找子表] 父表: {parentTableName}, 父ID数量: {parentIds.Count}");
+                Log($"[查找子表] 堆栈: {ex.StackTrace}");
                 return new List<long>();
             }
         }
@@ -601,6 +617,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             bool isTestMode)
         {
             var db = _unitOfWork.GetDbClient();
+            
+            Log($"[删除] 表: {tableName}, 主键: {pkColumn}, ID数: {ids.Count}, 测试模式: {isTestMode}");
 
             if (isTestMode)
             {

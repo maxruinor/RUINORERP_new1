@@ -54,6 +54,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.tabPageImages = new TabPage();
             this.tabPageLog = new TabPage();
             this.rtbLog = new System.Windows.Forms.RichTextBox();
+            this.ctxMenuLog = new System.Windows.Forms.ContextMenuStrip();
+            this.tsmiClearLog = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).BeginInit();
             this.kryptonPanelMain.SuspendLayout();
             this.tabControlMain.SuspendLayout();
@@ -330,6 +332,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // rtbLog
             // 
             this.rtbLog.BackColor = System.Drawing.Color.Black;
+            this.rtbLog.ContextMenuStrip = this.ctxMenuLog;
             this.rtbLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rtbLog.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.rtbLog.ForeColor = System.Drawing.Color.Lime;
@@ -340,7 +343,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.rtbLog.TabIndex = 0;
             this.rtbLog.Text = "";
             // 
-            // UCBasicDataCleanup
+            // ctxMenuLog
+            // 
+            this.ctxMenuLog.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsmiClearLog});
+            this.ctxMenuLog.Name = "ctxMenuLog";
+            this.ctxMenuLog.Size = new System.Drawing.Size(101, 26);
+            // 
+            // tsmiClearLog
+            // 
+            this.tsmiClearLog.Name = "tsmiClearLog";
+            this.tsmiClearLog.Size = new System.Drawing.Size(100, 22);
+            this.tsmiClearLog.Text = "清除日志";
+            this.tsmiClearLog.Click += new System.EventHandler(this.TsmiClearLog_Click);
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -405,5 +420,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private Krypton.Toolkit.KryptonButton kbtnRefresh;
         private Krypton.Toolkit.KryptonButton kbtnTestExecute;
         private Krypton.Toolkit.KryptonButton kbtnPreview;
+        private System.Windows.Forms.ContextMenuStrip ctxMenuLog;
+        private System.Windows.Forms.ToolStripMenuItem tsmiClearLog;
     }
 }

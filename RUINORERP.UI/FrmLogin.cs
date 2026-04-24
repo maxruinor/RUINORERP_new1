@@ -473,9 +473,9 @@ namespace RUINORERP.UI
             // 初始化取消令牌源
             _loginCancellationTokenSource = new CancellationTokenSource();
         
-            // ✅ 优化：使用防抖而非完全禁用，允许用户点击“取消”
+            // ✅ 优化：使用防抖而非完全禁用，允许用户点击"取消"
+            btnok.Text = "登录中...";  // ✅ 登录按钮显示"登录中"
             btnok.Enabled = false;  // 防止重复点击
-            btncancel.Text = "取消中...";  // 提示用户可以取消
             btncancel.Enabled = true;  // ✅ 保持取消按钮可用
         
             if (txtServerIP.Text.Trim().Length == 0 || txtPort.Text.Trim().Length == 0)
@@ -484,9 +484,8 @@ namespace RUINORERP.UI
                 InvokeIfRequired(() => 
                 {
                     MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                     btnok.Enabled = true;
-                    btncancel.Text = "取消";
-                    btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                 });
                 return;
             }
@@ -499,9 +498,8 @@ namespace RUINORERP.UI
                 {
                     errorProvider1.SetError(txtUserName, "用户名不能为空");
                     txtUserName.Focus();
+                    btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                     btnok.Enabled = true;
-                    btncancel.Text = "取消";
-                    btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                 });
                 return;
             }
@@ -560,9 +558,8 @@ namespace RUINORERP.UI
                         InvokeIfRequired(() => 
                         {
                             MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                             btnok.Enabled = true;
-                            btncancel.Text = "取消";
-                            btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                         });
                         return;
                     }
@@ -579,9 +576,8 @@ namespace RUINORERP.UI
                             errorProvider1.SetError(txtUserName, "账号密码有误");
                             txtUserName.Focus();
                             txtUserName.SelectAll();
+                            btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                             btnok.Enabled = true;
-                            btncancel.Text = "取消";
-                            btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                         });
                         return;
                     }
@@ -613,9 +609,8 @@ namespace RUINORERP.UI
                 MainForm.Instance.PrintInfoLog("登录操作已取消");
                 InvokeIfRequired(() => 
                 {
+                    btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                     btnok.Enabled = true;
-                    btncancel.Text = "取消";
-                    btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                 });
             }
             catch (Exception ex)
@@ -638,9 +633,8 @@ namespace RUINORERP.UI
                 InvokeIfRequired(() => 
                 {
                     MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                     btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
-                    btncancel.Text = "取消";
-                    btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                 });
             }
             finally
@@ -692,9 +686,8 @@ namespace RUINORERP.UI
                 {
                     _loginCancellationTokenSource.Cancel();
                     
-                    // ✅ 立即恢复按钮状态，给用户即时反馈
-                    btnok.Enabled = true;
-                    btncancel.Text = "取消中...";
+                    // ✅ 立即更新按钮状态，给用户即时反馈
+                    btncancel.Text = "取消中...";  // ✅ 取消按钮显示"取消中"
                     btncancel.Enabled = false;  // 防止重复点击取消
                     
                     MainForm.Instance?.PrintInfoLog("正在取消登录操作...");
@@ -728,6 +721,7 @@ namespace RUINORERP.UI
                 MainForm.Instance?.logger?.LogError(ex, "取消登录时发生错误");
                 
                 // ✅ 异常时也恢复按钮状态
+                btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                 btnok.Enabled = true;
                 btncancel.Text = "取消";
                 btncancel.Enabled = true;
@@ -1294,9 +1288,8 @@ namespace RUINORERP.UI
                     MainForm.Instance?.logger?.LogDebug("[登录流程] 登录失败 - ErrorMessage: {ErrorMessage}", errorMsg);
                     
                     MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                     btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
-                    btncancel.Text = "取消";
-                    btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                 }
             }
             catch (OperationCanceledException ex)
@@ -1305,9 +1298,8 @@ namespace RUINORERP.UI
                     _loginCancellationTokenSource?.IsCancellationRequested ?? false);
                 
                 MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                 btnok.Enabled = true; // ✅ 确保按钮可用，便于快速重试
-                btncancel.Text = "取消";
-                btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                 
                 // 取消时清理服务器会话，避免积累无效会话
                 try
@@ -1367,9 +1359,8 @@ namespace RUINORERP.UI
                             await connectionManager.DisconnectAsync();
                             
                             // ✅ 修复：重置按钮状态，让用户可以重新输入
+                            btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                             btnok.Enabled = true;
-                            btncancel.Text = "取消";
-                            btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                             return;
                         }
                         // ✅ 修复：如果用户选择了强制下线，等待服务器处理完成后，提示用户重新登录
@@ -1391,9 +1382,8 @@ namespace RUINORERP.UI
                                 MessageBoxIcon.Information);
                             
                             // 重置按钮状态
+                            btnok.Text = "登录";  // ✅ 恢复登录按钮文本
                             btnok.Enabled = true;
-                            btncancel.Text = "取消";
-                            btncancel.Enabled = true;  // ✅ 恢复取消按钮状态
                             
                             // 不继续执行后续登录逻辑，直接返回
                             return;

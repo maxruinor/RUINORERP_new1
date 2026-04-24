@@ -500,7 +500,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
                 // 获取选中的ID
                 _selectedIds = GetSelectedRecordIds();
-                MainForm.Instance.PrintInfoLog($"准备删除，选中记录数: {_selectedIds.Count}");
+                AppendRealTimeLog($"准备删除，选中记录数: {_selectedIds.Count}");
 
                 if (_selectedIds.Count == 0)
                 {
@@ -565,7 +565,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         {
             var targetIds = ids ?? _selectedIds;
             
-            MainForm.Instance.PrintInfoLog($"ExecuteCascadeDeleteAsync 调用: 类型={_selectedEntityType?.Name}, ID数量={targetIds.Count}, 测试模式={isTestMode}");
+            AppendRealTimeLog($"========== 开始级联删除 ==========");
+            AppendRealTimeLog($"实体类型: {_selectedEntityType?.Name}, ID数量: {targetIds.Count}, 测试模式: {isTestMode}");
             
             // 使用反射调用泛型方法 ExecuteCascadeDeleteAsync<T>
             var method = typeof(DataCleanupEngine).GetMethod("ExecuteCascadeDeleteAsync");
@@ -576,13 +577,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             
             var genericMethod = method.MakeGenericMethod(_selectedEntityType);
             
-            MainForm.Instance.PrintInfoLog($"开始调用泛型方法...");
+            AppendRealTimeLog("正在构建依赖图和拓扑排序...");
             var task = (Task<CascadeDeleteResult>)genericMethod.Invoke(_cleanupEngine, new object[] { targetIds, isTestMode });
             
-            MainForm.Instance.PrintInfoLog($"等待任务完成...");
+            AppendRealTimeLog("等待执行结果...");
             var result = await task;
             
-            MainForm.Instance.PrintInfoLog($"任务完成，结果: IsSuccess={result.IsSuccess}, TotalDeletedCount={result.TotalDeletedCount}");
+            AppendRealTimeLog($"========== 执行完成 ==========");
+            AppendRealTimeLog($"结果: IsSuccess={result.IsSuccess}, TotalDeletedCount={result.TotalDeletedCount}");
+            
+            if (!result.IsSuccess)
+            {
+                AppendRealTimeLog($"错误信息: {result.ErrorMessage}");
+            }
             
             return result;
         }
@@ -595,7 +602,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             var selectedIds = new List<long>();
             var pkName = GetPrimaryKeyName(_selectedEntityType);
             
-            MainForm.Instance.PrintInfoLog($"开始获取选中记录ID，主键字段: {pkName}，总行数: {dgvDataPreview.Rows.Count}");
+            AppendRealTimeLog($"开始获取选中记录ID，主键字段: {pkName}，总行数: {dgvDataPreview.Rows.Count}");
 
             foreach (DataGridViewRow row in dgvDataPreview.Rows)
             {
@@ -612,7 +619,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                             if (pkProp != null)
                             {
                                 var idValue = pkProp.GetValue(record);
-                                MainForm.Instance.PrintInfoLog($"  找到选中行，ID值: {idValue}");
+                                AppendRealTimeLog($"  找到选中行，ID值: {idValue}");
                                 
                                 if (long.TryParse(idValue?.ToString(), out long id))
                                 {
@@ -620,23 +627,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                                 }
                                 else
                                 {
-                                    MainForm.Instance.PrintInfoLog($"  [错误] ID转换失败: {idValue}");
+                                    AppendRealTimeLog($"  [错误] ID转换失败: {idValue}");
                                 }
                             }
                             else
                             {
-                                MainForm.Instance.PrintInfoLog($"  [错误] 未找到主键属性: {pkName}");
+                                AppendRealTimeLog($"  [错误] 未找到主键属性: {pkName}");
                             }
                         }
                         else
                         {
-                            MainForm.Instance.PrintInfoLog("  [错误] 行Tag为null");
+                            AppendRealTimeLog("  [错误] 行Tag为null");
                         }
                     }
                 }
             }
 
-            MainForm.Instance.PrintInfoLog($"最终获取到 {selectedIds.Count} 个选中ID");
+            AppendRealTimeLog($"最终获取到 {selectedIds.Count} 个选中ID");
             return selectedIds;
         }
 
@@ -694,6 +701,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             MainForm.Instance.ShowStatusText($"已选择 {count} 条记录");
         }
 
+        /// <summary>
+        /// 清除日志菜单项点击事件
+        /// </summary>
+        private void TsmiClearLog_Click(object sender, EventArgs e)
+        {
+            rtbLog.Clear();
+            AppendRealTimeLog("日志已清除");
+        }
+
         #region 移除复杂配置相关的方法（保留空实现防止编译错误）
 
         private void KcmbConfigName_SelectedIndexChanged(object sender, EventArgs e) { }
@@ -728,7 +744,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                     return;
                 }
 
-                MainForm.Instance.PrintInfoLog($"预览模式：将检查 {selectedIds.Count} 条记录及其关联数据");
+                AppendRealTimeLog($"预览模式：将检查 {selectedIds.Count} 条记录及其关联数据");
 
                 // 使用测试模式执行，不实际删除
                 var result = await ExecuteCascadeDeleteAsync(selectedIds, isTestMode: true);
@@ -742,17 +758,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                         $"\n注意：这只是预览，不会实际删除任何数据。";
                     
                     MessageBox.Show(previewMsg, "删除预览", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    MainForm.Instance.PrintInfoLog($"预览完成：预计删除 {result.TotalDeletedCount} 条记录");
+                    AppendRealTimeLog($"预览完成：预计删除 {result.TotalDeletedCount} 条记录");
                 }
                 else
                 {
-                    MainForm.Instance.PrintInfoLog($"[错误] 预览失败：{result.ErrorMessage}");
+                    AppendRealTimeLog($"[错误] 预览失败：{result.ErrorMessage}");
                     MessageBox.Show($"预览失败：{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.PrintInfoLog($"[异常] 预览异常: {ex.Message}");
+                AppendRealTimeLog($"[异常] 预览异常: {ex.Message}");
                 MessageBox.Show($"预览失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -796,7 +812,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 _isBusy = true;
                 kbtnTestExecute.Enabled = false;
                 MainForm.Instance.ShowStatusText("正在测试执行...");
-                MainForm.Instance.PrintInfoLog($"开始测试执行 {_selectedEntityType.Name} 表的 {selectedIds.Count} 条记录...");
+                AppendRealTimeLog($"开始测试执行 {_selectedEntityType.Name} 表的 {selectedIds.Count} 条记录...");
 
                 // 使用测试模式执行
                 var result = await ExecuteCascadeDeleteAsync(selectedIds, isTestMode: true);
@@ -812,12 +828,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                         $"如需正式删除，请使用“正式执行”按钮。";
                     
                     MessageBox.Show(testResultMsg, "测试执行结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    MainForm.Instance.PrintInfoLog($"测试执行成功：预计删除 {result.TotalDeletedCount} 条记录");
+                    AppendRealTimeLog($"测试执行成功：预计删除 {result.TotalDeletedCount} 条记录");
                 }
                 else
                 {
                     MessageBox.Show($"测试执行失败：{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    MainForm.Instance.PrintInfoLog($"[错误] 测试执行失败：{result.ErrorMessage}");
+                    AppendRealTimeLog($"[错误] 测试执行失败：{result.ErrorMessage}");
                 }
             }
             catch (Exception ex)
@@ -835,7 +851,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                     errorMsg += $"\n  • 内部异常：{ex.InnerException.Message}";
                 }
                 
-                MainForm.Instance.PrintInfoLog(errorMsg);
+                AppendRealTimeLog(errorMsg);
                 
                 // 显示用户友好的错误提示
                 string userMsg = $"❌ 测试执行失败!\n\n" +
@@ -892,21 +908,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
                 if (MessageBox.Show(confirmMsg, "⚠️ 严重警告 - 确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Error) != DialogResult.Yes)
                 {
-                    MainForm.Instance.PrintInfoLog("用户取消正式删除操作");
+                    AppendRealTimeLog("用户取消正式删除操作");
                     return;
                 }
 
                 _isBusy = true;
                 kbtnRefresh.Enabled = false;
                 MainForm.Instance.ShowStatusText("正在执行正式删除...");
-                MainForm.Instance.PrintInfoLog($"开始正式删除 {_selectedEntityType.Name} 表的 {selectedIds.Count} 条记录...");
+                AppendRealTimeLog($"开始正式删除 {_selectedEntityType.Name} 表的 {selectedIds.Count} 条记录...");
 
                 // 使用正式模式执行(会真正删除并提交事务)
                 var result = await ExecuteCascadeDeleteAsync(selectedIds, isTestMode: false);
 
                 if (result.IsSuccess)
                 {
-                    MainForm.Instance.PrintInfoLog($"删除成功！共删除 {result.TotalDeletedCount} 条主记录及其关联数据，耗时: {result.TotalElapsedMs}ms");
+                    AppendRealTimeLog($"删除成功！共删除 {result.TotalDeletedCount} 条主记录及其关联数据，耗时: {result.TotalElapsedMs}ms");
                     
                     string successMsg = $"✅ 删除完成!\n\n" +
                         $"主记录数: {selectedIds.Count}\n" +
@@ -922,14 +938,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 }
                 else
                 {
-                    MainForm.Instance.PrintInfoLog($"[错误] 删除失败：{result.ErrorMessage}");
+                    AppendRealTimeLog($"[错误] 删除失败：{result.ErrorMessage}");
                     MessageBox.Show($"删除失败：{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     MainForm.Instance.ShowStatusText("删除失败");
                 }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.PrintInfoLog($"[异常] 删除操作异常: {ex.Message}\n{ex.StackTrace}");
+                AppendRealTimeLog($"[异常] 删除操作异常: {ex.Message}\n{ex.StackTrace}");
                 MessageBox.Show($"删除失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 MainForm.Instance.ShowStatusText("删除失败");
             }

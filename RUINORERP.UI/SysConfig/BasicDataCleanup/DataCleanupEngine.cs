@@ -9,6 +9,8 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Model;
 using RUINORERP.Repository.UnitOfWorks;
 using System.Reflection;
+using System.Data.SqlClient;
+using System.Text.RegularExpressions;
 
 namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 {
@@ -101,21 +103,86 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                             continue;
                         }
 
-                        // 正式模式:执行真正的级联删除操作
-                        // BaseDeleteByNavAsync 内部使用 SqlSugar 的 DeleteNav().Include().ExecuteCommandAsync()
-                        // 会自动根据导航属性进行级联删除
-                        bool success = await controller.BaseDeleteByNavAsync(entity);
+                        // ✅ 优化方案:直接调用 BaseController 的通用方法,不依赖子控制器
+                        // 优势:
+                        // 1. 不依赖子控制器的 BaseDeleteByNavAsync 实现
+                        // 2. 利用 DeleteDeepLevelRelationsByNavigationAsync 自动扫描所有关联
+                        // 3. 支持递归处理多层级关系(默认5层)
+                        // 4. 不影响自动生成的子控制器
+                        await controller.DeleteDeepLevelRelationsByNavigationAsync(entity);
+                        Log($"已清理 {typeof(T).Name} ID={id} 的所有深层级关联数据");
                         
-                        if (success)
+                        // 执行主表删除(使用 DeleteNav,如果失败则降级为简单删除)
+                        try
                         {
-                            // 统计实际删除的记录数(包括主记录和所有关联记录)
-                            // 注意:这里需要通过查询前后对比来准确统计
+                            await controller.BaseDeleteByNavAsync(entity);
                             totalDeleted++;
                             Log($"✓ 成功删除 ID={id} 及其关联数据");
                         }
-                        else
+                        catch (InvalidOperationException ex) when (ex.Message.Contains("序列不包含任何元素"))
                         {
-                            Log($"✗ 删除 ID={id} 失败");
+                            // 降级方案:实体没有导航属性,使用简单删除
+                            _logger?.LogDebug(ex, $"{typeof(T).Name} 没有导航属性,使用简单删除");
+                            await controller.BaseDeleteAsync(entity);
+                            totalDeleted++;
+                            Log($"✓ 成功删除 ID={id} (简单删除)");
+                        }
+                        catch (SqlException ex)
+                        {
+                            // SQL异常(如外键约束冲突),解析外键信息并针对性删除
+                            _logger?.LogWarning(ex, $"DeleteNav失败: {ex.Message}");
+                            
+                            // 解析外键约束错误信息
+                            var fkInfo = ParseForeignKeyError(ex.Message);
+                            if (fkInfo != null)
+                            {
+                                Log($"检测到外键约束冲突: 表={fkInfo.Value.TableName}, 字段={fkInfo.Value.ColumnName}");
+                                
+                                // 根据外键信息删除关联数据
+                                var deleted = await DeleteReferencingTableAsync<T>(id, fkInfo.Value.TableName, fkInfo.Value.ColumnName);
+                                if (deleted)
+                                {
+                                    // 删除关联数据后,重试删除主表
+                                    try
+                                    {
+                                        await controller.BaseDeleteByNavAsync(entity);
+                                        totalDeleted++;
+                                        Log($"✓ 解决外键冲突后成功删除 ID={id}");
+                                    }
+                                    catch (Exception retryEx)
+                                    {
+                                        _logger?.LogError(retryEx, $"重试删除 ID={id} 失败");
+                                        result.FailedIds ??= new List<long>();
+                                        result.FailedIds.Add(id);
+                                        continue;
+                                    }
+                                }
+                                else
+                                {
+                                    result.FailedIds ??= new List<long>();
+                                    result.FailedIds.Add(id);
+                                    continue;
+                                }
+                            }
+                            else
+                            {
+                                // 无法解析外键信息,记录失败并继续
+                                _logger?.LogError(ex, $"无法解析外键错误信息: {ex.Message}");
+                                result.FailedIds ??= new List<long>();
+                                result.FailedIds.Add(id);
+                                continue;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // 记录错误但继续处理其他记录,避免因单条记录失败导致整个批处理中断
+                            _logger?.LogError(ex, $"删除 ID={id} 时发生错误,继续处理下一条: {ex.Message}");
+                            Log($"✗ 删除 ID={id} 失败: {ex.Message}, 继续处理下一条...");
+                            
+                            // 记录失败但继续循环
+                            result.FailedIds ??= new List<long>();
+                            result.FailedIds.Add(id);
+                            continue;
                         }
                     }
 
@@ -235,6 +302,180 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             
             // 3. 如果都找不到,返回 PrimaryKeyID(备用方案)
             return "PrimaryKeyID";
+        }
+
+        /// <summary>
+        /// 强制删除实体(绕过导航属性,直接执行SQL删除)
+        /// </summary>
+        private async Task<bool> ForceDeleteEntityAsync<T>(long id) where T : BaseEntity, new()
+        {
+            var db = _unitOfWork.GetDbClient();
+            var entityType = typeof(T);
+            var tableName = entityType.Name;
+            var pkPropertyName = GetPrimaryKeyPropertyName<T>();
+
+            _logger?.LogInformation($"开始强制删除 {tableName}, ID={id}");
+
+            try
+            {
+                // 1. 先获取所有 OneToMany 导航属性(子表)
+                var navProperties = entityType.GetProperties()
+                    .Where(p =>
+                    {
+                        var navigateAttr = p.GetCustomAttribute<SqlSugar.Navigate>();
+                        return navigateAttr != null &&
+                               navigateAttr.GetNavigateType() == SqlSugar.NavigateType.OneToMany;
+                    })
+                    .ToList();
+
+                // 2. 删除所有子表数据
+                foreach (var navProp in navProperties)
+                {
+                    var navigateAttr = navProp.GetCustomAttribute<SqlSugar.Navigate>();
+                    var fkFieldName = navigateAttr.GetName();
+                    var childTableName = navProp.PropertyType.IsGenericType
+                        ? navProp.PropertyType.GetGenericArguments()[0].Name
+                        : navProp.PropertyType.Name;
+
+                    var deletedCount = await db.Deleteable<object>()
+                        .AS(childTableName)
+                        .Where($"{fkFieldName} = @id", new { id })
+                        .ExecuteCommandAsync();
+
+                    _logger?.LogDebug($"已删除 {childTableName} {deletedCount} 条记录");
+                }
+
+                // 3. 删除主表数据
+                var mainDeleted = await db.Deleteable<object>()
+                    .AS(tableName)
+                    .Where($"{pkPropertyName} = @id", new { id })
+                    .ExecuteCommandAsync();
+
+                _logger?.LogInformation($"强制删除完成: {tableName}, ID={id}, 影响行数={mainDeleted}");
+                return mainDeleted > 0;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"强制删除失败: {tableName}, ID={id}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 解析外键约束错误信息,提取冲突的表名和字段名
+        /// </summary>
+        /// <param name="errorMessage">SQL异常消息</param>
+        /// <returns>外键信息(表名,字段名),解析失败返回null</returns>
+        private (string TableName, string ColumnName)? ParseForeignKeyError(string errorMessage)
+        {
+            if (string.IsNullOrEmpty(errorMessage))
+                return null;
+
+            try
+            {
+                // SQL Server 中文错误格式: "DELETE 语句与 REFERENCE 约束"FK_xxx".该冲突发生于数据库"xxx"，表"dbo.tb_xxx", column 'xxx_ID'."
+                // 匹配表名: 表"dbo.tb_TableName" 或 表"tb_TableName"
+                var tableMatch = Regex.Match(errorMessage, @"表\s*[""']?dbo\.(\w+)[""']?", RegexOptions.IgnoreCase);
+                if (tableMatch.Success)
+                {
+                    var tableName = tableMatch.Groups[1].Value;
+                    
+                    // 匹配字段名: column 'xxx' 或 column "xxx"
+                    var columnMatch = Regex.Match(errorMessage, @"column\s*['""](\w+)['""]", RegexOptions.IgnoreCase);
+                    var columnName = columnMatch.Success ? columnMatch.Groups[1].Value : null;
+                    
+                    _logger?.LogDebug($"解析外键错误: 表={tableName}, 字段={columnName}");
+                    return (tableName, columnName);
+                }
+
+                // 匹配英文格式: table "dbo.tb_TableName", column 'xxx'
+                var enTableMatch = Regex.Match(errorMessage, @"table\s+[""']?dbo\.(\w+)[""']?\s*,\s*column\s+['""]?(\w+)['""]?", RegexOptions.IgnoreCase);
+                if (enTableMatch.Success)
+                {
+                    return (enTableMatch.Groups[1].Value, enTableMatch.Groups[2].Value);
+                }
+
+                // 匹配中文格式: 表 'tb_xxx', 字段 'xxx'
+                var cnMatch = Regex.Match(errorMessage, @"表\s*['""]?(\w+)['""]?\s*,\s*字段\s*['""]?(\w+)['""]?", RegexOptions.IgnoreCase);
+                if (cnMatch.Success)
+                {
+                    return (cnMatch.Groups[1].Value, cnMatch.Groups[2].Value);
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, $"解析外键错误信息失败: {errorMessage}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 根据外键信息删除关联表数据
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="mainId">主表ID</param>
+        /// <param name="referencingTableName">引用表名(外键所在的表)</param>
+        /// <param name="referencingColumnName">引用字段名(外键字段)</param>
+        /// <returns>是否删除成功</returns>
+        private async Task<bool> DeleteReferencingTableAsync<T>(long mainId, string referencingTableName, string referencingColumnName) where T : BaseEntity, new()
+        {
+            var db = _unitOfWork.GetDbClient();
+            var entityType = typeof(T);
+
+            try
+            {
+                _logger?.LogInformation($"开始删除关联表: {referencingTableName}, 字段={referencingColumnName}, 主ID={mainId}");
+
+                // 1. 尝试通过导航属性查找关联
+                var navProperties = entityType.GetProperties()
+                    .Where(p =>
+                    {
+                        var navigateAttr = p.GetCustomAttribute<SqlSugar.Navigate>();
+                        return navigateAttr != null && navigateAttr.GetNavigateType() == SqlSugar.NavigateType.OneToMany;
+                    })
+                    .ToList();
+
+                // 查找匹配的导航属性
+                foreach (var navProp in navProperties)
+                {
+                    var navigateAttr = navProp.GetCustomAttribute<SqlSugar.Navigate>();
+                    var fkFieldName = navigateAttr.GetName();
+                    
+                    var childType = navProp.PropertyType.IsGenericType
+                        ? navProp.PropertyType.GetGenericArguments()[0]
+                        : navProp.PropertyType;
+                    var childTableName = childType.Name;
+
+                    // 如果匹配的表名
+                    if (string.Equals(childTableName, referencingTableName, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(fkFieldName, referencingColumnName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var deletedCount = await db.Deleteable<object>()
+                            .AS(childTableName)
+                            .Where($"{fkFieldName} = @id", new { id = mainId })
+                            .ExecuteCommandAsync();
+
+                        _logger?.LogInformation($"通过导航属性删除 {childTableName} {deletedCount} 条记录");
+                        return true;
+                    }
+                }
+
+                // 2. 如果没找到导航属性,直接根据表名和字段名删除
+                var deleted = await db.Deleteable<object>()
+                    .AS(referencingTableName)
+                    .Where($"{referencingColumnName} = @id", new { id = mainId })
+                    .ExecuteCommandAsync();
+
+                _logger?.LogInformation($"直接删除 {referencingTableName} {deleted} 条记录");
+                return deleted >= 0; // 成功执行即为true(可能0条记录)
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"删除关联表失败: {referencingTableName}, 字段={referencingColumnName}");
+                return false;
+            }
         }
 
         /// <summary>

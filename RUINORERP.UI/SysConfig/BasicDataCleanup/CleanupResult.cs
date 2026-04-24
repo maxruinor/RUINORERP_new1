@@ -128,6 +128,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         public bool IsTestMode { get; set; }
 
         /// <summary>
+        /// 删除失败的ID列表
+        /// </summary>
+        public List<long> FailedIds { get; set; }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public CascadeDeleteResult()

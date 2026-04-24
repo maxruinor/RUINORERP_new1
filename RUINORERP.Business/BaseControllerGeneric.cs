@@ -960,7 +960,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="mainEntity">主实体实例</param>
         /// <param name="maxDepth">最大递归深度(默认5层,足够处理绝大多数业务场景)</param>
-        protected async Task DeleteDeepLevelRelationsByNavigationAsync<TMain>(TMain mainEntity, int maxDepth = 5) where TMain : class
+        public async Task DeleteDeepLevelRelationsByNavigationAsync<TMain>(TMain mainEntity, int maxDepth = 5) where TMain : class
         {
             var db = _unitOfWorkManage.GetDbClient();
             var entityType = typeof(TMain);
@@ -1033,6 +1033,8 @@ namespace RUINORERP.Business
             // 目标表名从 targetType 获取
             var fkTableName = targetType.Name; // 例如: tb_FM_Invoice
 
+            _logger?.LogDebug($"处理 {mainEntity.GetType().Name} → {targetType.Name} (外键:{fkFieldName}), 当前深度:{currentDepth}/{maxDepth}");
+
             if (fkTableName== "tb_FM_ReceivablePayable")
             {
 
@@ -1046,24 +1048,55 @@ namespace RUINORERP.Business
                     return attr != null && attr.GetNavigateType() == NavigateType.OneToMany;
                 })
                 .ToList();
+            
+            _logger?.LogDebug($"{targetType.Name} 的 OneToMany 导航数量: {targetNavProps.Count}");
+            if (targetNavProps.Any())
+            {
+                _logger?.LogDebug($"{targetType.Name} 的子表: {string.Join(", ", targetNavProps.Select(p => $"{p.Name} → {GetNavigationTargetType(p)?.Name}"))}");
+            }
 
             if (!targetNavProps.Any())
             {
-                // 目标表没有子表,但可能有其他表引用它(如 tb_FM_PayeeInfo 被 tb_PurOrder 引用)
-                _logger?.LogDebug($"{targetType.Name} 没有 OneToMany 导航属性,但可能存在反向引用,由外层 DeleteNav.Include 处理");
+                // ✅ 目标表没有子表,但可能有其他表引用它
+                // 仍需要删除目标表的关联数据
+                _logger?.LogDebug($"{targetType.Name} 没有 OneToMany 导航属性,直接删除该表数据");
+                
+                // 删除目标表数据(外键关联的数据)
+                var deletedCount = await db.Deleteable<object>()
+                    .AS(fkTableName)
+                    .Where($"{fkFieldName} = @val", new { val = mainPkValue })
+                    .ExecuteCommandAsync();
+                
+                if (deletedCount > 0)
+                {
+                    _logger?.LogInformation($"已删除 {fkTableName} 的 {deletedCount} 条记录");
+                }
+                
+                // 检查是否有其他表引用该目标表,有则删除
+                var referencingEntities = FindReferencingEntities(targetType);
+                if (referencingEntities.Any())
+                {
+                    _logger?.LogInformation($"发现 {referencingEntities.Count} 个实体引用 {targetType.Name}: {string.Join(", ", referencingEntities.Select(r => $"{r.EntityType.Name}.{r.PropertyName}"))}");
+                    
+                    foreach (var refInfo in referencingEntities)
+                    {
+                        await DeleteReferencingDataAsync(db, mainPkValue, refInfo, currentDepth + 1, maxDepth);
+                    }
+                }
+                
                 return;
             }
             
             _logger?.LogInformation($"{targetType.Name} 有 {targetNavProps.Count} 个子表导航: {string.Join(", ", targetNavProps.Select(p => p.Name))}");
 
             // ✅ 额外检查:扫描所有其他实体,找到引用目标表的反向关系(ManyToOne)
-            var referencingEntities = FindReferencingEntities(targetType);
-            if (referencingEntities.Any())
+            var otherReferencingEntities = FindReferencingEntities(targetType);
+            if (otherReferencingEntities.Any())
             {
-                _logger?.LogInformation($"发现 {referencingEntities.Count} 个实体引用 {targetType.Name}: {string.Join(", ", referencingEntities.Select(r => $"{r.EntityType.Name}.{r.PropertyName}"))}");
+                _logger?.LogInformation($"发现 {otherReferencingEntities.Count} 个实体引用 {targetType.Name}: {string.Join(", ", otherReferencingEntities.Select(r => $"{r.EntityType.Name}.{r.PropertyName}"))}");
                 
                 // 对每个引用实体,删除关联数据
-                foreach (var refInfo in referencingEntities)
+                foreach (var refInfo in otherReferencingEntities)
                 {
                     await DeleteReferencingDataAsync(db, mainPkValue, refInfo, currentDepth + 1, maxDepth);
                 }
@@ -1260,18 +1293,34 @@ namespace RUINORERP.Business
                 
                 _logger?.LogInformation($"发现 {refInfo.EntityType.Name} 有 {referencingIds.Count} 条记录引用目标表");
                 
-                // 递归处理该实体的子表
-                var childNavProps = refInfo.EntityType.GetProperties()
-                    .Where(p =>
-                    {
-                        var attr = p.GetCustomAttribute<Navigate>();
-                        return attr != null && attr.GetNavigateType() == NavigateType.OneToMany;
-                    })
-                    .ToList();
-                
-                foreach (var childNavProp in childNavProps)
+                // ✅ 关键修复:对每个引用记录,递归处理其所有子表(包括孙表、曾孙表...)
+                foreach (var refId in referencingIds)
                 {
-                    await DeleteChildTableDataAsync(db, refInfo.EntityType, referencingIds.ToList(), childNavProp, currentDepth + 1, maxDepth);
+                    _logger?.LogDebug($"开始处理 {refInfo.EntityType.Name} ID={refId} 的子表关系");
+                    
+                    // 创建虚拟实体对象(只需要主键)
+                    var virtualEntity = Activator.CreateInstance(refInfo.EntityType);
+                    var pkProp = refInfo.EntityType.GetProperty(pkName);
+                    if (pkProp != null)
+                    {
+                        pkProp.SetValue(virtualEntity, refId);
+                    }
+                    
+                    // 递归处理该实体的所有一对多关系(会一直递归到最底层)
+                    var navProperties = refInfo.EntityType.GetProperties()
+                        .Where(p =>
+                        {
+                            var attr = p.GetCustomAttribute<Navigate>();
+                            return attr != null && attr.GetNavigateType() == NavigateType.OneToMany;
+                        })
+                        .ToList();
+                    
+                    _logger?.LogDebug($"{refInfo.EntityType.Name} 有 {navProperties.Count} 个 OneToMany 导航: {string.Join(", ", navProperties.Select(p => p.Name))}");
+                    
+                    foreach (var navProp in navProperties)
+                    {
+                        await ProcessOneToManyRelationAsync(db, virtualEntity, pkProp, refId, navProp, maxDepth, currentDepth + 1);
+                    }
                 }
                 
                 // 最后删除该实体本身的数据

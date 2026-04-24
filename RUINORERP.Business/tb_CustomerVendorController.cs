@@ -407,9 +407,7 @@ namespace RUINORERP.Business
         {
             tb_CustomerVendor entity = model as tb_CustomerVendor;
             
-            // ✅ 使用通用辅助方法自动删除深层级关联数据,避免外键约束冲突
-            await DeleteDeepLevelRelationsByNavigationAsync(entity);
-            
+     
             // 执行级联删除
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_CustomerVendor>(m => m.CustomerVendor_ID== entity.CustomerVendor_ID)
                                 .Include(m => m.tb_FM_Invoices)

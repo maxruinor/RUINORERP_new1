@@ -86,6 +86,12 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         private readonly ConcurrentDictionary<long, Task> _initializationTasks = new ConcurrentDictionary<long, Task>();
 
+        /// <summary>
+        /// 【新增】权限处理状态追踪，防止同一会话中重复添加权限
+        /// Key: "{RoleId}_{MenuId}_{ItemId}", Value: true表示已处理
+        /// </summary>
+        private readonly ConcurrentDictionary<string, bool> _processedPermissions = new ConcurrentDictionary<string, bool>();
+
         public GridViewDisplayTextResolver DisplayTextResolver;
         public GridViewDisplayTextResolver DisplayTextResolverForField;
         public GridViewDisplayTextResolver DisplayTextResolverForButton;
@@ -741,8 +747,7 @@ namespace RUINORERP.UI.SysConfig
 
         private async void btnSave_Click(object sender, EventArgs e)
         {
-            #region
-
+            #region 参数验证
 
             if (CurrentRole == null)
             {
@@ -751,7 +756,6 @@ namespace RUINORERP.UI.SysConfig
             }
 
             //保存勾选菜单
-
             //准备要更新的集合
             if (CurrentRole.tb_P4Menus == null)
             {
@@ -764,7 +768,6 @@ namespace RUINORERP.UI.SysConfig
             UpdateP4Module(TreeView1.Nodes[0].Nodes, CurrentRole.tb_P4Menus);
 
             CurrentRole.tb_P4Menus.ForEach<tb_P4Menu>(c => c.AcceptChanges());
-
 
             toolStripButtonSave.Enabled = false;
             if (TreeView1.SelectedNode == null || !(TreeView1.SelectedNode.Tag is tb_MenuInfo))
@@ -782,32 +785,42 @@ namespace RUINORERP.UI.SysConfig
             dataGridViewButton.EndEdit();
             dataGridViewField.EndEdit();
 
-            //@@@@@@！分层级处理！@@@@@@@@
-            //==================看到的  选项 处理一次保存一次
-            //更新按钮关系
-            List<tb_P4Button> pblist = new List<tb_P4Button>();
-            foreach (var item in bindingSource1.List)
-            {
-                tb_P4Button pb = item as tb_P4Button;
-                BusinessHelper.Instance.EditEntity(pb);
-                pblist.Add(pb);
-            }
-
-            bool rs1 = await MainForm.Instance.AppContext.Db.CopyNew().Updateable(pblist).ExecuteCommandHasChangeAsync();
-
-            //更新字段关系
-            List<tb_P4Field> pflist = new List<tb_P4Field>();
-            foreach (var item in bindingSource2.List)
-            {
-                tb_P4Field pf = item as tb_P4Field;
-                BusinessHelper.Instance.EditEntity(pf);
-                pflist.Add(pf);
-            }
-            bool rs2 = await MainForm.Instance.AppContext.Db.CopyNew().Updateable(pflist).ExecuteCommandHasChangeAsync();
-
-            // 保存行级权限规则
+            // 【P0优化】使用项目标准事务管理体系，确保数据一致性
+            RUINORERP.Repository.UnitOfWorks.IUnitOfWorkManage uow = null;
+            
             try
             {
+                uow = Startup.GetFromFac<RUINORERP.Repository.UnitOfWorks.IUnitOfWorkManage>();
+                await uow.BeginTranAsync(timeoutSeconds: SysConfig.PermissionConfig.BatchOperationTimeoutSeconds);
+                
+                var db = uow.GetDbClient();
+                
+                MainForm.Instance.logger?.LogInformation($"开始保存角色[{CurrentRole.RoleID}]权限变更，事务已开启");
+
+                //@@@@@@！分层级处理！@@@@@@@@
+                //==================看到的  选项 处理一次保存一次
+                //更新按钮关系
+                List<tb_P4Button> pblist = new List<tb_P4Button>();
+                foreach (var item in bindingSource1.List)
+                {
+                    tb_P4Button pb = item as tb_P4Button;
+                    BusinessHelper.Instance.EditEntity(pb);
+                    pblist.Add(pb);
+                }
+
+                bool rs1 = await db.Updateable(pblist).ExecuteCommandHasChangeAsync();
+
+                //更新字段关系
+                List<tb_P4Field> pflist = new List<tb_P4Field>();
+                foreach (var item in bindingSource2.List)
+                {
+                    tb_P4Field pf = item as tb_P4Field;
+                    BusinessHelper.Instance.EditEntity(pf);
+                    pflist.Add(pf);
+                }
+                bool rs2 = await db.Updateable(pflist).ExecuteCommandHasChangeAsync();
+
+                // 保存行级权限规则
                 if (bindingSourceRowAuthPolicy.List != null && bindingSourceRowAuthPolicy.List.Count > 0 && CurrentRole != null)
                 {
                     var roleId = CurrentRole.RoleID;
@@ -825,15 +838,10 @@ namespace RUINORERP.UI.SysConfig
                         }
                     }
 
-                    // 删除旧的关联记录
-                    //await MainForm.Instance.AppContext.Db.Deleteable<tb_P4RowAuthPolicyByRole>()
-                    //    .Where(p => p.RoleID == roleId && p.MenuID == menuId)
-                    //    .ExecuteCommandAsync();
-
                     // 保存新的关联记录
                     if (policies.Any())
                     {
-                        await MainForm.Instance.AppContext.Db.Insertable(policies.Where(c => c.Policy_Role_RID == 0).ToList()).ExecuteReturnSnowflakeIdAsync();
+                        await db.Insertable(policies.Where(c => c.Policy_Role_RID == 0).ToList()).ExecuteReturnSnowflakeIdAsync();
                     }
 
                     // 更新内存中的CurrentRole对象，同步最新的权限规则
@@ -858,15 +866,43 @@ namespace RUINORERP.UI.SysConfig
                         }
                     }
                 }
+
+                // 【P0优化】提交事务
+                await uow.CommitTranAsync();
+                
+                MainForm.Instance.logger?.LogInformation(
+                    $"保存角色[{CurrentRole.RoleID}]权限成功：按钮{pblist.Count}个，字段{pflist.Count}个，事务已提交");
+                
+                MessageBox.Show("保存成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.Error("保存行级权限规则失败", ex);
-                MessageBox.Show($"保存行级权限规则失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 【P0优化】异常时回滚事务
+                if (uow != null && uow.TranCount > 0)
+                {
+                    try
+                    {
+                        await uow.RollbackTranAsync();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        MainForm.Instance.logger?.LogError(rollbackEx, $"回滚事务时发生异常：角色[{CurrentRole.RoleID}]");
+                    }
+                }
+                
+                MainForm.Instance.logger.Error("保存权限失败", ex);
+                MessageBox.Show($"保存失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            toolStripButtonSave.Enabled = false;
-
+            finally
+            {
+                // 释放UnitOfWork资源
+                if (uow != null)
+                {
+                    await uow.DisposeAsync();
+                }
+                
+                toolStripButtonSave.Enabled = false;
+            }
         }
 
 
@@ -1102,7 +1138,7 @@ namespace RUINORERP.UI.SysConfig
 
         /// <summary>
         /// 重新加载角色的所有权限数据
-        /// 【修复1】新增方法：确保角色切换时，所有权限数据一次性正确加载
+        /// 【原实现】直接从数据库并行加载，保证数据完整性
         /// </summary>
         /// <param name="role">角色信息</param>
         private async Task ReloadRolePermissionsAsync(tb_RoleInfo role)
@@ -1431,6 +1467,7 @@ namespace RUINORERP.UI.SysConfig
             SelectedMenuInfo.tb_ButtonInfos ??= new List<tb_ButtonInfo>();
 
             var menuId = SelectedMenuInfo.MenuID;
+            var currentRoleId = CurrentRole.RoleID;  // 【修复】定义角色ID变量
 
             // 检查是否已有正在执行的初始化任务（避免重复初始化）
             if (_initializationTasks.TryGetValue(menuId, out var existingTask))
@@ -1449,10 +1486,12 @@ namespace RUINORERP.UI.SysConfig
                     .Where(c => c.RoleID == CurrentRole.RoleID && c.MenuID == menuId)
                     .ToList();
             }
-
+            
             // 创建新的初始化任务
             var initTask = InitializeMenuButtonsAsync(SelectedMenuInfo, selected);
             _initializationTasks.TryAdd(menuId, initTask);
+                            
+            MainForm.Instance.logger?.LogInformation($"开始初始化菜单按钮: {SelectedMenuInfo.CaptionCN} (ID:{menuId})");
 
             try
             {
@@ -1464,10 +1503,9 @@ namespace RUINORERP.UI.SysConfig
                 _initializationTasks.TryRemove(menuId, out _);
             }
 
-            // 【修复5】使用统一的防重复检查器
-            var currentRoleId = CurrentRole.RoleID;
-            await PermissionDuplicateChecker.CheckAndCleanDuplicateButtonsAsync(
-                CurrentRole.tb_P4Buttons, currentRoleId, menuId);
+            // 【简化】移除冗余的数据库防重检查，_processedPermissions已提供会话级防重
+            // await PermissionDuplicateChecker.CheckAndCleanDuplicateButtonsAsync(
+            //     CurrentRole.tb_P4Buttons, currentRoleId, menuId);
 
             // 使用字典优化查找性能
             var existingButtons = CurrentRole.tb_P4Buttons
@@ -1484,10 +1522,16 @@ namespace RUINORERP.UI.SysConfig
                 {
                     try
                     {
-                        // 【修复6】添加前再次检查是否已存在（双重保险）
-                        if (!existingButtons.TryGetValue(buttonInfo.ButtonInfo_ID, out tb_P4Button button)
-                            && !PermissionDuplicateChecker.IsButtonPermissionExists(
-                                CurrentRole.tb_P4Buttons, currentRoleId, buttonInfo.ButtonInfo_ID, menuId))
+                        // 【P0修复】会话级防重检查 - 防止同一会话中重复处理
+                        var permissionKey = $"{currentRoleId}_{menuId}_{buttonInfo.ButtonInfo_ID}";
+                        if (_processedPermissions.ContainsKey(permissionKey))
+                        {
+                            MainForm.Instance.logger?.LogDebug($"跳过已处理的按钮权限: {permissionKey}");
+                            continue;
+                        }
+
+                        // 【简化】直接使用existingButtons字典检查，无需额外调用PermissionDuplicateChecker
+                        if (!existingButtons.TryGetValue(buttonInfo.ButtonInfo_ID, out tb_P4Button button))
                         {
                             // 创建新按钮权限
                             button = new tb_P4Button
@@ -1502,6 +1546,9 @@ namespace RUINORERP.UI.SysConfig
                             BusinessHelper.Instance.InitEntity(button);
                             SetButtonSelection(button, selected);
                             newButtons.Add(button);
+                            
+                            // 标记为已处理
+                            _processedPermissions.TryAdd(permissionKey, true);
                         }
                         else
                         {
@@ -1513,6 +1560,8 @@ namespace RUINORERP.UI.SysConfig
                                     updatedButtons.Add(button);
                                 }
                             }
+                            // 即使更新也标记为已处理，避免下次重复检查
+                            _processedPermissions.TryAdd(permissionKey, true);
                         }
                     }
                     catch (Exception ex)
@@ -1715,12 +1764,12 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
 
-            // 【修复5】使用统一的防重复检查器
+            // 【简化】移除冗余的数据库防重检查，_processedPermissions已提供会话级防重
+            // await PermissionDuplicateChecker.CheckAndCleanDuplicateFieldsAsync(
+            //     CurrentRole.tb_P4Fields, currentRoleId, menuId);
+
             var currentRoleId = CurrentRole.RoleID;
             var menuId = SelectedMenuInfo.MenuID;
-
-            await PermissionDuplicateChecker.CheckAndCleanDuplicateFieldsAsync(
-                CurrentRole.tb_P4Fields, currentRoleId, menuId);
 
             // 使用字典优化查找性能
             var existingFields = CurrentRole.tb_P4Fields
@@ -1733,6 +1782,14 @@ namespace RUINORERP.UI.SysConfig
             // 处理字段信息 - 优化循环
             foreach (var fieldInfo in SelectedMenuInfo.tb_FieldInfos)
             {
+                // 【P0修复】会话级防重检查 - 防止同一会话中重复处理
+                var permissionKey = $"{currentRoleId}_{menuId}_{fieldInfo.FieldInfo_ID}";
+                if (_processedPermissions.ContainsKey(permissionKey))
+                {
+                    MainForm.Instance.logger?.LogDebug($"跳过已处理的字段权限: {permissionKey}");
+                    continue;
+                }
+
                 if (!existingFields.TryGetValue(fieldInfo.FieldInfo_ID, out tb_P4Field field))
                 {
                     // 创建新字段权限
@@ -1748,6 +1805,9 @@ namespace RUINORERP.UI.SysConfig
 
                     BusinessHelper.Instance.InitEntity(field);
                     newFields.Add(field);
+                    
+                    // 标记为已处理
+                    _processedPermissions.TryAdd(permissionKey, true);
                 }
                 else
                 {
@@ -1757,6 +1817,8 @@ namespace RUINORERP.UI.SysConfig
                         field.IsVisble = selected;
                         updatedFields.Add(field);
                     }
+                    // 即使更新也标记为已处理，避免下次重复检查
+                    _processedPermissions.TryAdd(permissionKey, true);
                 }
             }
 
@@ -1821,7 +1883,11 @@ namespace RUINORERP.UI.SysConfig
             }
 
             // 取消之前的加载操作
-            _loadingCancellationTokenSource?.Cancel();
+            if (_loadingCancellationTokenSource != null && !_loadingCancellationTokenSource.IsCancellationRequested)
+            {
+                _loadingCancellationTokenSource.Cancel();
+                MainForm.Instance.logger?.LogDebug($"取消前一个菜单加载操作，切换到菜单: {selectMenu.CaptionCN} (ID:{selectMenu.MenuID})");
+            }
             _loadingCancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = _loadingCancellationTokenSource.Token;
 
@@ -1846,13 +1912,14 @@ namespace RUINORERP.UI.SysConfig
                 kryptonNavigator1.SelectedPage = kryptonPageBtn;
                 CurrentMenuInfo = selectMenu;
 
-                // 串行执行按钮和字段权限加载，避免并发导致的数据重复问题
-                // 先加载按钮权限
-                await InitLoadP4Button(selectMenu, true, cancellationToken);
+                // 【P1优化】并行执行按钮和字段权限加载，提升响应速度
+                // 按钮和字段无依赖关系，可以安全并行加载
+                var buttonTask = InitLoadP4Button(selectMenu, true, cancellationToken);
+                var fieldTask = InitLoadP4Field(selectMenu, true, cancellationToken);
+
+                await Task.WhenAll(buttonTask, fieldTask);
+                
                 // 验证是否已被取消或切换了菜单
-                cancellationToken.ThrowIfCancellationRequested();
-                // 再加载字段权限
-                await InitLoadP4Field(selectMenu, true, cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
 
                 //加载行级权限规则，优先默认的在前面

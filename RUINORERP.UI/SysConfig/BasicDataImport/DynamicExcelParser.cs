@@ -12,6 +12,109 @@ using NPOI.XSSF.UserModel;
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     /// <summary>
+    /// Excel图片解析信息
+    /// 用于存储从Excel中提取的图片数据
+    /// </summary>
+    public class ExcelImageInfo
+    {
+        /// <summary>
+        /// 行索引（Excel中的行号，从0开始）
+        /// </summary>
+        public int RowIndex { get; set; }
+
+        /// <summary>
+        /// 列索引
+        /// </summary>
+        public int ColumnIndex { get; set; }
+
+        /// <summary>
+        /// 图片数据
+        /// </summary>
+        public byte[] ImageData { get; set; }
+
+        /// <summary>
+        /// 图片类型扩展名（如.jpg, .png）
+        /// </summary>
+        public string ImageType { get; set; }
+
+        /// <summary>
+        /// 图片宽度
+        /// </summary>
+        public double Width { get; set; }
+
+        /// <summary>
+        /// 图片高度
+        /// </summary>
+        public double Height { get; set; }
+
+        /// <summary>
+        /// 图片索引
+        /// </summary>
+        public int PictureIndex { get; set; }
+
+        /// <summary>
+        /// 获取图片大小（KB）
+        /// </summary>
+        public double SizeKB => ImageData?.Length / 1024.0 ?? 0;
+    }
+
+    /// <summary>
+    /// Excel解析结果
+    /// 用于存储解析后的数据和图片信息
+    /// </summary>
+    public class ExcelParseResult
+    {
+        /// <summary>
+        /// 文件路径
+        /// </summary>
+        public string FilePath { get; set; }
+
+        /// <summary>
+        /// 工作表索引
+        /// </summary>
+        public int SheetIndex { get; set; }
+
+        /// <summary>
+        /// 标题行索引
+        /// </summary>
+        public int HeaderRowIndex { get; set; }
+
+        /// <summary>
+        /// 解析的数据表
+        /// </summary>
+        public DataTable DataTable { get; set; }
+
+        /// <summary>
+        /// 图片映射（行索引 -> 图片列表）
+        /// </summary>
+        public Dictionary<int, List<ExcelImageInfo>> Images { get; set; }
+
+        /// <summary>
+        /// 是否包含图片
+        /// </summary>
+        public bool HasImages => Images != null && Images.Count > 0;
+
+        /// <summary>
+        /// 获取指定行的图片
+        /// </summary>
+        public List<ExcelImageInfo> GetImagesForRow(int rowIndex)
+        {
+            if (Images?.ContainsKey(rowIndex) == true)
+                return Images[rowIndex];
+            return null;
+        }
+
+        /// <summary>
+        /// 获取数据行的图片（考虑标题行偏移）
+        /// </summary>
+        public List<ExcelImageInfo> GetImagesForDataRow(int dataRowIndex)
+        {
+            int excelRowIndex = HeaderRowIndex + 1 + dataRowIndex;
+            return GetImagesForRow(excelRowIndex);
+        }
+    }
+
+    /// <summary>
     /// 动态Excel文件解析器
     /// 用于读取不同格式的Excel文件并转换为DataTable
     /// 支持提取Excel中的内嵌图片
@@ -756,6 +859,87 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             return sheetNames;
+        }
+
+        /// <summary>
+        /// 解析Excel文件（支持图片提取）
+        /// </summary>
+        /// <param name="filePath">Excel文件路径</param>
+        /// <param name="sheetIndex">工作表索引（默认0）</param>
+        /// <param name="headerRowIndex">标题行索引（默认0）</param>
+        /// <returns>解析结果</returns>
+        public ExcelParseResult Parse(string filePath, int sheetIndex = 0, int headerRowIndex = 0)
+        {
+            var result = new ExcelParseResult
+            {
+                FilePath = filePath,
+                SheetIndex = sheetIndex,
+                HeaderRowIndex = headerRowIndex
+            };
+
+            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                IWorkbook workbook;
+                if (filePath.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+                {
+                    workbook = new XSSFWorkbook(fs);
+                }
+                else if (filePath.EndsWith(".xls", StringComparison.OrdinalIgnoreCase))
+                {
+                    workbook = new HSSFWorkbook(fs);
+                }
+                else
+                {
+                    throw new NotSupportedException("不支持的文件格式");
+                }
+
+                var sheet = workbook.GetSheetAt(sheetIndex);
+                if (sheet == null)
+                    return result;
+
+                var images = ExtractAllImages(workbook, sheet);
+                result.DataTable = SheetToDataTable(sheet, -1, images);
+                result.Images = new Dictionary<int, List<ExcelImageInfo>>();
+
+                foreach (var image in images)
+                {
+                    if (!result.Images.ContainsKey(image.RowIndex))
+                    {
+                        result.Images[image.RowIndex] = new List<ExcelImageInfo>();
+                    }
+                    result.Images[image.RowIndex].Add(image);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 保存图片到文件
+        /// </summary>
+        /// <param name="imageInfo">图片信息</param>
+        /// <param name="outputDirectory">输出目录</param>
+        /// <param name="fileName">文件名（不含扩展名）</param>
+        /// <returns>保存的文件路径</returns>
+        public string SaveImageToFile(ExcelImageInfo imageInfo, string outputDirectory, string fileName)
+        {
+            if (imageInfo?.ImageData == null)
+                return null;
+
+            if (!Directory.Exists(outputDirectory))
+            {
+                Directory.CreateDirectory(outputDirectory);
+            }
+
+            string fullFileName = $"{fileName}{imageInfo.ImageType}";
+            string filePath = Path.Combine(outputDirectory, fullFileName);
+
+            if (!File.Exists(filePath))
+            {
+                File.WriteAllBytes(filePath, imageInfo.ImageData);
+            }
+
+            return filePath;
         }
     }
 }

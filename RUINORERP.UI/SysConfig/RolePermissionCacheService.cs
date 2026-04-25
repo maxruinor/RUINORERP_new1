@@ -213,7 +213,7 @@ namespace RUINORERP.UI.SysConfig
 
         /// <summary>
         /// 获取角色权限（优先从缓存）
-        /// 【优化】实现缓存优先策略，减少数据库查询
+        /// 【P1优化】延长缓存时间至60分钟，实现智能刷新策略
         /// </summary>
         /// <param name="roleId">角色ID</param>
         /// <param name="forceRefresh">是否强制刷新</param>
@@ -223,10 +223,11 @@ namespace RUINORERP.UI.SysConfig
             // 检查缓存是否存在且有效
             if (!forceRefresh && _cache.TryGetValue(roleId, out var cachedItem))
             {
-                // 检查缓存是否过期（默认30分钟）
-                if (DateTime.Now - cachedItem.LastSyncTime < TimeSpan.FromMinutes(30))
+                // 【P1优化】使用配置常量，缓存过期时间从30分钟延长到60分钟
+                var timeSinceSync = DateTime.Now - cachedItem.LastSyncTime;
+                if (timeSinceSync < TimeSpan.FromMinutes(PermissionConfig.RolePermissionCacheExpirationMinutes))
                 {
-                    MainForm.Instance.logger?.LogDebug($"角色[{roleId}]权限数据从缓存获取");
+                    MainForm.Instance.logger?.LogDebug($"角色[{roleId}]权限数据从缓存获取 (已缓存{timeSinceSync.TotalMinutes:F1}分钟)");
                     return cachedItem;
                 }
             }

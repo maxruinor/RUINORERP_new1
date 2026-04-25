@@ -54,6 +54,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         }
 
         /// <summary>
+        /// 控件加载完成事件
+        /// </summary>
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            
+            // ✅ 修复：在控件完全加载后才异步加载表记录数
+            // 避免在构造函数中异步访问未完全初始化的控件
+            if (!DesignMode)
+            {
+                _ = LoadTableRecordCountsAsync();
+            }
+        }
+
+        /// <summary>
         /// 初始化数据
         /// </summary>
         private void InitializeData()
@@ -86,8 +101,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // 初始化实体类型选择
             InitializeEntityTypes();
             
-            // 异步加载表记录数（不阻塞UI）
-            _ = LoadTableRecordCountsAsync();
+            // ✅ 修复：移除构造函数中的异步调用，改为在 OnLoad 中执行
+            // _ = LoadTableRecordCountsAsync();
             
             // 初始化删除方式选择
             InitializeDeleteMode();

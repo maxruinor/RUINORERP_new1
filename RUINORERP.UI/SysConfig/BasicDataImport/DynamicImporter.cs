@@ -21,7 +21,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     {
         private readonly ISqlSugarClient _db;
         private readonly IForeignKeyService _foreignKeyService;
-        private readonly EnhancedExcelParser _excelParser;
+        private readonly DynamicExcelParser _excelParser;
         private string _imageOutputDirectory;
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _entityInfoService = entityInfoService;
             _foreignKeyService = foreignKeyService ?? new ForeignKeyService(db);
-            _excelParser = new EnhancedExcelParser();
+            _excelParser = new DynamicExcelParser();
         }
 
         /// <summary>
@@ -975,17 +975,39 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     await EntityImportHelper.PreProcessEntityAsync(typeof(T), entity, _db, importType);
                 }
 
+                // 获取主键属性
+                var primaryKeyProperty = typeof(T).GetProperty(primaryKeyName);
+                if (primaryKeyProperty == null)
+                {
+                    throw new Exception($"实体类型 {typeof(T).Name} 中找不到主键属性 {primaryKeyName}");
+                }
+
                 // 开启事务
                 _db.Ado.BeginTran();
 
                 try
                 {
-                    // 使用 Storageable 实现插入或更新（Upsert）
-                    var storageResult = await _db.Storageable(typedList)
-                        .ExecuteCommandAsync();
-                    
-                    result.InsertedCount = storageResult;
-                    result.UpdatedCount = storageResult;
+                    // 分离新增和更新的记录
+                    var newRecords = typedList.Where(t => Convert.ToInt64(primaryKeyProperty.GetValue(t)) <= 0).ToList();
+                    var updateRecords = typedList.Where(t => Convert.ToInt64(primaryKeyProperty.GetValue(t)) > 0).ToList();
+
+                    int insertCount = 0;
+                    int updateCount = 0;
+
+                    // 先插入新记录
+                    if (newRecords.Count > 0)
+                    {
+                        insertCount = await _db.Insertable(newRecords).ExecuteCommandAsync();
+                    }
+
+                    // 再更新已有记录
+                    if (updateRecords.Count > 0)
+                    {
+                        updateCount = await _db.Updateable(updateRecords).ExecuteCommandAsync();
+                    }
+
+                    result.InsertedCount = insertCount;
+                    result.UpdatedCount = updateCount;
                     
                     // 提交事务
                     _db.Ado.CommitTran();

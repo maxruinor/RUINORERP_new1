@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using RUINORERP.Model;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Common.CustomAttribute;
+using RUINORERP.Repository.UnitOfWorks;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -629,11 +630,14 @@ namespace RUINORERP.UI.SysConfig
 
         /// <summary>
         /// 批量保存权限变更到数据库
+        /// 【P0修复】使用项目标准事务体系，确保数据一致性
         /// </summary>
         /// <param name="roleId">角色ID</param>
         /// <returns>操作结果</returns>
         public async Task<BatchOperationResult> BatchSaveToDatabaseAsync(long roleId)
         {
+            IUnitOfWorkManage uow = null;
+            
             try
             {
                 var cacheService = RolePermissionCacheService.Instance;
@@ -645,73 +649,127 @@ namespace RUINORERP.UI.SysConfig
                 if (!cacheItem.IsDirty)
                     return new BatchOperationResult { Success = true, Message = "没有需要保存的变更" };
 
-                var db = MainForm.Instance.AppContext.Db.CopyNew();
-
-                int menuCount = 0;
-                int buttonCount = 0;
-                int fieldCount = 0;
-
-                // 保存菜单权限变更
-                var menuChanges = cacheItem.MenuPermissions
-                    .Where(m => m.Status != RolePermissionCacheService.PermissionStatus.Unchanged)
-                    .ToList();
-
-                foreach (var menu in menuChanges)
+                // 【P0修复】使用项目标准事务管理体系
+                uow = Startup.GetFromFac<IUnitOfWorkManage>();
+                
+                // 开始事务（使用配置默认超时30秒）
+                await uow.BeginTranAsync(timeoutSeconds: PermissionConfig.BatchOperationTimeoutSeconds);
+                
+                try
                 {
-                    await SaveMenuPermissionChangeAsync(db, roleId, menu);
-                    menu.Status = RolePermissionCacheService.PermissionStatus.Unchanged;
-                    menuCount++;
+                    // 【优化】直接使用UnitOfWork中的db，保证在同一事务上下文中
+                    var db = uow.GetDbClient();
+                    
+                    int menuCount = 0;
+                    int buttonCount = 0;
+                    int fieldCount = 0;
+
+                    MainForm.Instance.logger?.LogInformation($"开始保存角色[{roleId}]权限变更，事务已开启");
+
+                    // 保存菜单权限变更
+                    var menuChanges = cacheItem.MenuPermissions
+                        .Where(m => m.Status != RolePermissionCacheService.PermissionStatus.Unchanged)
+                        .ToList();
+
+                    foreach (var menu in menuChanges)
+                    {
+                        await SaveMenuPermissionChangeAsync((ISqlSugarClient)db, roleId, menu);
+                        menu.Status = RolePermissionCacheService.PermissionStatus.Unchanged;
+                        menuCount++;
+                    }
+
+                    // 保存按钮权限变更
+                    var buttonChanges = cacheItem.ButtonPermissions
+                        .Where(b => b.Status != RolePermissionCacheService.PermissionStatus.Unchanged)
+                        .ToList();
+
+                    foreach (var button in buttonChanges)
+                    {
+                        await SaveButtonPermissionChangeAsync((ISqlSugarClient)db, roleId, button);
+                        button.Status = RolePermissionCacheService.PermissionStatus.Unchanged;
+                        buttonCount++;
+                    }
+
+                    // 保存字段权限变更
+                    var fieldChanges = cacheItem.FieldPermissions
+                        .Where(f => f.Status != RolePermissionCacheService.PermissionStatus.Unchanged)
+                        .ToList();
+
+                    foreach (var field in fieldChanges)
+                    {
+                        await SaveFieldPermissionChangeAsync((ISqlSugarClient)db, roleId, field);
+                        field.Status = RolePermissionCacheService.PermissionStatus.Unchanged;
+                        fieldCount++;
+                    }
+
+                    // 更新缓存状态
+                    cacheItem.IsDirty = false;
+                    cacheItem.LastSyncTime = DateTime.Now;
+                    cacheItem.Version++;
+
+                    // 【P0修复】提交事务
+                    await uow.CommitTranAsync();
+
+                    MainForm.Instance.logger?.LogInformation(
+                        $"批量保存权限变更成功：角色[{roleId}]，菜单{menuCount}个，按钮{buttonCount}个，字段{fieldCount}个，事务已提交");
+
+                    return new BatchOperationResult
+                    {
+                        Success = true,
+                        Message = $"成功保存{menuCount + buttonCount + fieldCount}条权限变更",
+                        SuccessCount = menuCount + buttonCount + fieldCount
+                    };
                 }
-
-                // 保存按钮权限变更
-                var buttonChanges = cacheItem.ButtonPermissions
-                    .Where(b => b.Status != RolePermissionCacheService.PermissionStatus.Unchanged)
-                    .ToList();
-
-                foreach (var button in buttonChanges)
+                catch (Exception ex)
                 {
-                    await SaveButtonPermissionChangeAsync(db, roleId, button);
-                    button.Status = RolePermissionCacheService.PermissionStatus.Unchanged;
-                    buttonCount++;
+                    // 【P0修复】异常时回滚事务
+                    if (uow.TranCount > 0)
+                    {
+                        await uow.RollbackTranAsync();
+                    }
+                    MainForm.Instance.logger?.LogError(ex, $"批量保存权限变更失败，事务已回滚：角色[{roleId}]");
+                    return new BatchOperationResult { Success = false, Message = $"保存失败：{ex.Message}" };
                 }
-
-                // 保存字段权限变更
-                var fieldChanges = cacheItem.FieldPermissions
-                    .Where(f => f.Status != RolePermissionCacheService.PermissionStatus.Unchanged)
-                    .ToList();
-
-                foreach (var field in fieldChanges)
-                {
-                    await SaveFieldPermissionChangeAsync(db, roleId, field);
-                    field.Status = RolePermissionCacheService.PermissionStatus.Unchanged;
-                    fieldCount++;
-                }
-
-                cacheItem.IsDirty = false;
-                cacheItem.LastSyncTime = DateTime.Now;
-                cacheItem.Version++;
-
-                MainForm.Instance.logger?.LogInformation(
-                    $"批量保存权限变更完成：角色[{roleId}]，菜单{menuCount}个，按钮{buttonCount}个，字段{fieldCount}个");
-
-                return new BatchOperationResult
-                {
-                    Success = true,
-                    Message = $"成功保存{menuCount + buttonCount + fieldCount}条权限变更",
-                    SuccessCount = menuCount + buttonCount + fieldCount
-                };
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger?.LogError(ex, $"批量保存权限变更失败：角色[{roleId}]");
-                return new BatchOperationResult { Success = false, Message = $"保存失败：{ex.Message}" };
+                // 确保异常时回滚
+                if (uow != null && uow.TranCount > 0)
+                {
+                    try
+                    {
+                        await uow.RollbackTranAsync();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        MainForm.Instance.logger?.LogError(rollbackEx, $"回滚事务时发生异常：角色[{roleId}]");
+                    }
+                }
+                
+                MainForm.Instance.logger?.LogError(ex, $"批量保存权限变更异常：角色[{roleId}]");
+                return new BatchOperationResult { Success = false, Message = $"保存异常：{ex.Message}" };
+            }
+            finally
+            {
+                // 释放UnitOfWork资源
+                if (uow != null)
+                {
+                    try
+                    {
+                        await uow.DisposeAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger?.LogWarning(ex, "释放UnitOfWork时发生异常");
+                    }
+                }
             }
         }
 
         /// <summary>
         /// 保存菜单权限变更到数据库
         /// </summary>
-        private async Task SaveMenuPermissionChangeAsync(SqlSugarClient db, long roleId, RolePermissionCacheService.MenuPermissionCache menu)
+        private async Task SaveMenuPermissionChangeAsync(ISqlSugarClient db, long roleId, RolePermissionCacheService.MenuPermissionCache menu)
         {
             if (menu.Status == RolePermissionCacheService.PermissionStatus.Added)
             {
@@ -744,7 +802,7 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 保存按钮权限变更到数据库
         /// </summary>
-        private async Task SaveButtonPermissionChangeAsync(SqlSugarClient db, long roleId, RolePermissionCacheService.ButtonPermissionCache button)
+        private async Task SaveButtonPermissionChangeAsync(ISqlSugarClient db, long roleId, RolePermissionCacheService.ButtonPermissionCache button)
         {
             if (button.Status == RolePermissionCacheService.PermissionStatus.Added)
             {
@@ -780,7 +838,7 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 保存字段权限变更到数据库
         /// </summary>
-        private async Task SaveFieldPermissionChangeAsync(SqlSugarClient db, long roleId, RolePermissionCacheService.FieldPermissionCache field)
+        private async Task SaveFieldPermissionChangeAsync(ISqlSugarClient db, long roleId, RolePermissionCacheService.FieldPermissionCache field)
         {
             if (field.Status == RolePermissionCacheService.PermissionStatus.Added)
             {

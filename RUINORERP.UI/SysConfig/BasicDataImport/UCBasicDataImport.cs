@@ -30,7 +30,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public partial class UCBasicDataImport : UserControl
     {
         private ISqlSugarClient _db;
-        private ExcelDataParser _excelParser;
         private ImageProcessor _imageProcessor;
         private IEntityMappingService _entityInfoService;
 
@@ -159,9 +158,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 设置图片保存路径
             string imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ProductImages");
             _imageProcessor = new ImageProcessor(imageSavePath);
-
-            // 初始化其他组件
-            _excelParser = new ExcelDataParser();
         }
 
         /// <summary>

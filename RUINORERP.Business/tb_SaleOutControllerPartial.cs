@@ -847,7 +847,7 @@ namespace RUINORERP.Business
                                 //如果是平台单，则自动审核
                                 if (payable.IsFromPlatform)
                                 {
-                                    payable.ApprovalOpinions = "平台订单，自动审核";
+                                    payable.ApprovalOpinions = "自动审核";
                                     ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
                                     if (!autoApproval.Succeeded)
                                     {

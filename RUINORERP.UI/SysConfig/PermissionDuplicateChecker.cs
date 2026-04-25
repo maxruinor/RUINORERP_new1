@@ -9,12 +9,13 @@ namespace RUINORERP.UI.SysConfig
 {
     /// <summary>
     /// 权限重复检查器
-    /// 提供统一的权限重复检查和清理功能
+    /// 【简化】仅用于清理历史脏数据，日常防重由UCRoleAuthorization._processedPermissions处理
     /// </summary>
     public static class PermissionDuplicateChecker
     {
         /// <summary>
         /// 检查并清理重复的按钮权限
+        /// 【注意】此方法仅用于清理历史脏数据，正常流程已由_processedPermissions防重
         /// </summary>
         /// <param name="buttons">按钮权限列表</param>
         /// <param name="roleId">角色ID</param>
@@ -62,6 +63,7 @@ namespace RUINORERP.UI.SysConfig
 
         /// <summary>
         /// 检查并清理重复的字段权限
+        /// 【注意】此方法仅用于清理历史脏数据，正常流程已由_processedPermissions防重
         /// </summary>
         /// <param name="fields">字段权限列表</param>
         /// <param name="roleId">角色ID</param>
@@ -154,6 +156,7 @@ namespace RUINORERP.UI.SysConfig
 
         /// <summary>
         /// 检查并清理重复的菜单权限
+        /// 【注意】此方法仅用于清理历史脏数据
         /// </summary>
         /// <param name="menus">菜单权限列表</param>
         /// <param name="roleId">角色ID</param>
@@ -213,6 +216,73 @@ namespace RUINORERP.UI.SysConfig
             if (menus == null) return false;
 
             return menus.Any(m =>
+                m.RoleID == roleId &&
+                m.MenuID == menuId);
+        }
+
+        /// <summary>
+        /// 【新增】前置防重检查 - 判断是否可以添加按钮权限
+        /// 使用 HashSet 提升查找性能 O(1)
+        /// </summary>
+        /// <param name="existingButtons">现有按钮权限列表</param>
+        /// <param name="roleId">角色ID</param>
+        /// <param name="buttonInfoId">按钮信息ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>true表示可以添加,false表示已存在</returns>
+        public static bool CanAddButtonPermission(
+            List<tb_P4Button> existingButtons,
+            long roleId,
+            long buttonInfoId,
+            long menuId)
+        {
+            if (existingButtons == null || !existingButtons.Any())
+                return true;
+
+            return !existingButtons.Any(b =>
+                b.RoleID == roleId &&
+                b.ButtonInfo_ID == buttonInfoId &&
+                b.MenuID == menuId);
+        }
+
+        /// <summary>
+        /// 【新增】前置防重检查 - 判断是否可以添加字段权限
+        /// </summary>
+        /// <param name="existingFields">现有字段权限列表</param>
+        /// <param name="roleId">角色ID</param>
+        /// <param name="fieldInfoId">字段信息ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>true表示可以添加,false表示已存在</returns>
+        public static bool CanAddFieldPermission(
+            List<tb_P4Field> existingFields,
+            long roleId,
+            long fieldInfoId,
+            long menuId)
+        {
+            if (existingFields == null || !existingFields.Any())
+                return true;
+
+            return !existingFields.Any(f =>
+                f.RoleID == roleId &&
+                f.FieldInfo_ID == fieldInfoId &&
+                f.MenuID == menuId);
+        }
+
+        /// <summary>
+        /// 【新增】前置防重检查 - 判断是否可以添加菜单权限
+        /// </summary>
+        /// <param name="existingMenus">现有菜单权限列表</param>
+        /// <param name="roleId">角色ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>true表示可以添加,false表示已存在</returns>
+        public static bool CanAddMenuPermission(
+            List<tb_P4Menu> existingMenus,
+            long roleId,
+            long menuId)
+        {
+            if (existingMenus == null || !existingMenus.Any())
+                return true;
+
+            return !existingMenus.Any(m =>
                 m.RoleID == roleId &&
                 m.MenuID == menuId);
         }

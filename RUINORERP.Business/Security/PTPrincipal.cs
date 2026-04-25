@@ -45,6 +45,7 @@ namespace RUINORERP.Business.Security
             bool isInitPwd = false;
             appcontext.CurUserInfo = null;
             //超级密码，为了第一次进系统
+            
             if (!appcontext.RegistrationInfo.SystemInitialized && (username == "admin" && password == "amwtjhwxf"))
             {
                 appcontext.IsSuperUser = true;

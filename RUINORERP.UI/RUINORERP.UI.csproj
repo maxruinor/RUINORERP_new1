@@ -2487,9 +2487,7 @@
     <Compile Include="SysConfig\BasicDataImport\DynamicDataValidator.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicExcelParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicImporter.cs" />
-    <Compile Include="SysConfig\BasicDataImport\EnhancedExcelParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\EntityImportHelper.cs" />
-    <Compile Include="SysConfig\BasicDataImport\ExcelDataParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\ForeignKeyService.cs" />
     <Compile Include="SysConfig\BasicDataImport\ForeignRelatedConfig.cs" />
     <Compile Include="SysConfig\BasicDataImport\FrmAttributeRuleEdit.cs">
@@ -2551,7 +2549,7 @@
       <DependentUpon>UCBasicDataImport.cs</DependentUpon>
     </Compile>
     <Compile Include="SysConfig\BatchPermissionOperator.cs" />
-    <Compile Include="SysConfig\PermissionDiffComparer.cs" />
+    <Compile Include="SysConfig\PermissionConfig.cs" />
     <Compile Include="SysConfig\PermissionDuplicateChecker.cs" />
     <Compile Include="SysConfig\RolePermissionCacheService.cs" />
     <!-- StatusTransitionContext.cs 已移至实体层，UI层不再包含此文件 -->

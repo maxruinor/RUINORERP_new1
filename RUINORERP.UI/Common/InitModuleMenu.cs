@@ -15,6 +15,7 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.SS;
+using RUINORERP.UI.SysConfig;
 using SqlSugar;
 using System;
 using System.Collections.Concurrent;
@@ -33,7 +34,7 @@ namespace RUINORERP.UI.Common
 {
 
     /// <summary>
-    /// 初始化模块菜单和权限的服务类
+    /// 初始化模块菜单和权限的服务类1
     /// 优化版本：添加窗体实例缓存、增强错误处理和异步初始化
     /// </summary>
     public class InitModuleMenu
@@ -51,9 +52,14 @@ namespace RUINORERP.UI.Common
         private readonly ConcurrentDictionary<string, (Control instance, DateTime createdTime)> _formInstanceCache = new ConcurrentDictionary<string, (Control, DateTime)>();
 
         /// <summary>
-        /// 缓存过期时间（分钟），默认10分钟
+        /// 【P2优化】缓存过期时间（分钟），从10分钟延长到30分钟
         /// </summary>
-        private const int CACHE_EXPIRATION_MINUTES = 10;
+        private const int CACHE_EXPIRATION_MINUTES = PermissionConfig.FormInstanceCacheExpirationMinutes;
+
+        /// <summary>
+        /// 【P2新增】缓存大小限制，防止内存泄漏
+        /// </summary>
+        private const int MAX_CACHE_SIZE = PermissionConfig.MaxFormInstanceCacheSize;
 
         /// <summary>
         /// 缓存清理定时器（每小时清理一次）
@@ -83,8 +89,12 @@ namespace RUINORERP.UI.Common
                 }
             }
 
-            // 启动缓存清理定时器（每小时清理一次过期缓存）
-            _cacheCleanupTimer = new System.Threading.Timer(CleanupExpiredCache, null, (long)TimeSpan.FromMinutes(60).TotalMilliseconds, (long)TimeSpan.FromMinutes(60).TotalMilliseconds);
+            // 启动缓存清理定时器（使用配置常量）
+            _cacheCleanupTimer = new System.Threading.Timer(
+                CleanupExpiredCache, 
+                null, 
+                (long)TimeSpan.FromMinutes(PermissionConfig.CacheCleanupIntervalMinutes).TotalMilliseconds, 
+                (long)TimeSpan.FromMinutes(PermissionConfig.CacheCleanupIntervalMinutes).TotalMilliseconds);
         }
 
         #region 系统级初始化菜单
@@ -1075,8 +1085,14 @@ namespace RUINORERP.UI.Common
                 var instance = CreateFormInstance(classPath, classType);
                 if (instance != null)
                 {
+                    // 【P2优化】检查缓存大小，超过限制时先清理最旧的缓存
+                    if (_formInstanceCache.Count >= MAX_CACHE_SIZE)
+                    {
+                        EvictOldestCache();
+                    }
+                    
                     _formInstanceCache.TryAdd(classPath, (instance, DateTime.Now));
-                    _logger.LogDebug($"创建并缓存窗体实例: {classPath}, 当前缓存数: {_formInstanceCache.Count}");
+                    _logger.LogDebug($"创建并缓存窗体实例: {classPath}, 当前缓存数: {_formInstanceCache.Count}/{MAX_CACHE_SIZE}");
                 }
 
                 return instance;
@@ -1151,6 +1167,37 @@ namespace RUINORERP.UI.Common
             catch (Exception ex)
             {
                 _logger.LogError(ex, "清理窗体实例缓存失败");
+            }
+        }
+
+        /// <summary>
+        /// 【P2新增】淘汰最旧的缓存项，防止内存泄漏
+        /// </summary>
+        private void EvictOldestCache()
+        {
+            try
+            {
+                // 找到创建时间最早的缓存项
+                var oldestKey = _formInstanceCache
+                    .OrderBy(kvp => kvp.Value.createdTime)
+                    .FirstOrDefault().Key;
+
+                if (!string.IsNullOrEmpty(oldestKey) && _formInstanceCache.TryRemove(oldestKey, out var cached))
+                {
+                    try
+                    {
+                        cached.instance?.Dispose();
+                        _logger.LogDebug($"淘汰最旧缓存: {oldestKey}, 缓存大小: {_formInstanceCache.Count}/{MAX_CACHE_SIZE}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, $"释放被淘汰的窗体资源失败: {oldestKey}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "淘汰最旧缓存失败");
             }
         }
 

@@ -91,12 +91,12 @@ namespace RUINORERP.Server.Controls
             _sessionService.SessionUpdated += OnSessionUpdated;
 
             // 初始化时加载所有现有会话
-            LoadAllSessions();
+            // 移到 Load 事件中，确保控件句柄已创建
 
             // 设置定时器用于UI刷新
             _updateTimer = new System.Windows.Forms.Timer { Interval = 1000 };
             _updateTimer.Tick += UpdateTimer_Tick;
-            _updateTimer.Start();
+            // 定时器将在 Load 事件中启动
 
             contextMenuStrip1.ItemClicked += contextMenuStrip1_ItemClicked;
 
@@ -105,6 +105,18 @@ namespace RUINORERP.Server.Controls
 
             // 添加断开连接菜单项
             AddDisconnectMenuItem();
+        }
+
+        /// <summary>
+        /// Load 事件处理
+        /// </summary>
+        private void UserManagementControl_Load(object sender, EventArgs e)
+        {
+            // 加载所有现有会话（此时控件句柄已创建）
+            LoadAllSessions();
+
+            // 启动定时器（此时控件句柄已创建）
+            _updateTimer?.Start();
         }
 
         /// <summary>

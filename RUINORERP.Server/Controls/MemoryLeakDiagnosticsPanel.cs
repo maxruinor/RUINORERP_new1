@@ -45,12 +45,23 @@ namespace RUINORERP.Server.Controls
             _refreshTimer = new System.Windows.Forms.Timer();
             _refreshTimer.Interval = 5000; // 5 秒刷新一次
             _refreshTimer.Tick += RefreshTimer_Tick;
-            _refreshTimer.Start();
-            
-            // 初始加载
-            LoadInitialData();
+            // 定时器将在 Load 事件中启动
+
+            // 初始加载将在 Load 事件中进行
         }
-        
+
+        /// <summary>
+        /// Load 事件处理
+        /// </summary>
+        private void MemoryLeakDiagnosticsPanel_Load(object sender, EventArgs e)
+        {
+            // 加载初始数据（此时控件句柄已创建）
+            LoadInitialData();
+
+            // 启动定时器（此时控件句柄已创建）
+            _refreshTimer?.Start();
+        }
+
         private void InitializeComponent()
         {
             this.SuspendLayout();
@@ -211,8 +222,11 @@ namespace RUINORERP.Server.Controls
             };
             btnExportReport.Click += BtnExportReport_Click;
             this.Controls.Add(btnExportReport);
-            
+
             this.ResumeLayout(false);
+
+            // 连接 Load 事件
+            this.Load += MemoryLeakDiagnosticsPanel_Load;
         }
         
         private void LoadInitialData()

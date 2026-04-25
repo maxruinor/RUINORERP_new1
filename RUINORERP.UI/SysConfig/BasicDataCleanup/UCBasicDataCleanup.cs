@@ -19,6 +19,7 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -38,6 +39,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private List<EntityMetadata> _allEntities; // 所有实体元数据
         private bool _isInitializing = false; // 防止搜索时触发递归
         private bool _isBusy = false; // 防止重复操作
+        private CancellationTokenSource _currentCancellationTokenSource; // 当前操作的取消令牌
+        private Dictionary<string, long> _tableRecordCounts; // 表名 -> 记录数的缓存
 
 
 
@@ -74,6 +77,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             _cleanupEngine.OnProgressChanged += (sender, e) => 
             {
                 MainForm.Instance.ShowStatusText($"{e.Message} ({e.Percentage}%)");
+                UpdateProgressBar(e.Percentage);
             };
 
             // 加载所有实体元数据
@@ -81,6 +85,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
             // 初始化实体类型选择
             InitializeEntityTypes();
+            
+            // 异步加载表记录数（不阻塞UI）
+            _ = LoadTableRecordCountsAsync();
             
             // 初始化删除方式选择
             InitializeDeleteMode();
@@ -90,6 +97,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
             // 添加数据选择列到预览表格
             AddCheckBoxColumnToPreview();
+        }
+
+        /// <summary>
+        /// 取消按钮点击事件
+        /// </summary>
+        private void KbtnCancel_Click(object sender, EventArgs e)
+        {
+            if (_currentCancellationTokenSource != null && !_currentCancellationTokenSource.IsCancellationRequested)
+            {
+                var result = MessageBox.Show("确定要取消当前操作吗？\n\n已执行的操作可能无法撤销。", "确认取消", 
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                
+                if (result == DialogResult.Yes)
+                {
+                    AppendRealTimeLog("用户请求取消操作...");
+                    _cleanupEngine.CancelOperation();
+                    _currentCancellationTokenSource?.Cancel();
+                    kbtnCancel.Enabled = false;
+                }
+            }
         }
 
         /// <summary>
@@ -144,7 +171,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 foreach (var entity in group.Value)
                 {
                     TreeNode entityNode = new TreeNode(entity.DisplayName);
-                    entityNode.Tag = entity.EntityType; // 存储实体类型
+                    // 初始时使用 Type，后续会更新为 TreeNodeData
+                    entityNode.Tag = entity.EntityType;
                     entityNode.ToolTipText = $"表名: {entity.TableName}\n描述: {entity.Description}";
                     categoryNode.Nodes.Add(entityNode);
                 }
@@ -202,7 +230,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             if (selectedNodes.Count == 1)
             {
                 // 单选：加载预览数据
-                _selectedEntityType = selectedNodes[0].Tag as Type;
+                var node = selectedNodes[0];
+                
+                // ✅ 修复：支持 Type 和 TreeNodeData 两种Tag类型
+                if (node.Tag is Type type)
+                {
+                    _selectedEntityType = type;
+                }
+                else if (node.Tag is TreeNodeData nodeData)
+                {
+                    _selectedEntityType = nodeData.EntityType;
+                }
+                
                 if (_selectedEntityType != null)
                 {
                     _ = LoadDataAsync();
@@ -255,7 +294,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             {
                 foreach (TreeNode entityNode in categoryNode.Nodes)
                 {
-                    if (entityNode.Checked && entityNode.Tag != null)
+                    // 支持两种Tag类型：Type 或 TreeNodeData
+                    if (entityNode.Checked && (entityNode.Tag is Type || entityNode.Tag is TreeNodeData))
                     {
                         result.Add(entityNode);
                     }
@@ -272,9 +312,123 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         {
             var selectedNodes = GetSelectedEntityNodes();
             return selectedNodes
-                .Where(n => n.Tag is Type)
-                .Select(n => n.Tag as Type)
+                .Where(n => n.Tag is Type || n.Tag is TreeNodeData)
+                .Select(n => 
+                {
+                    if (n.Tag is Type type)
+                        return type;
+                    else if (n.Tag is TreeNodeData nodeData)
+                        return nodeData.EntityType;
+                    return null;
+                })
+                .Where(t => t != null)
                 .ToList();
+        }
+
+        /// <summary>
+        /// 异步加载所有表的记录数并缓存
+        /// </summary>
+        private async Task LoadTableRecordCountsAsync()
+        {
+            try
+            {
+                MainForm.Instance.ShowStatusText("正在加载表记录数...");
+                AppendRealTimeLog("开始预加载表记录数...");
+                
+                _tableRecordCounts = new Dictionary<string, long>();
+                var db = MainForm.Instance.AppContext.Db;
+                
+                int loadedCount = 0;
+                int totalCount = _allEntities.Count;
+                
+                foreach (var entity in _allEntities)
+                {
+                    try
+                    {
+                        // 使用 COUNT(*) 查询记录数
+                        var count = await db.Queryable<object>()
+                            .AS(entity.TableName)
+                            .CountAsync();
+                        
+                        _tableRecordCounts[entity.TableName] = count;
+                        loadedCount++;
+                        
+                        // 每加载50个表更新一次状态
+                        if (loadedCount % 50 == 0)
+                        {
+                            MainForm.Instance.ShowStatusText($"已加载 {loadedCount}/{totalCount} 个表的记录数");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 查询失败时记录为0，不影响其他表
+                        _tableRecordCounts[entity.TableName] = 0;
+                        AppendRealTimeLog($"[警告] 查询表 {entity.TableName} 记录数失败: {ex.Message}");
+                    }
+                }
+                
+                AppendRealTimeLog($"表记录数加载完成，共 {loadedCount} 个表");
+                MainForm.Instance.ShowStatusText($"表记录数加载完成 ({loadedCount} 个表)");
+                
+                // 更新TreeView显示，添加记录数信息
+                UpdateTreeViewWithRecordCounts();
+            }
+            catch (Exception ex)
+            {
+                AppendRealTimeLog($"[错误] 加载表记录数失败: {ex.Message}");
+                MainForm.Instance.ShowStatusText("加载表记录数失败");
+            }
+        }
+
+        /// <summary>
+        /// 更新TreeView节点，显示记录数
+        /// </summary>
+        private void UpdateTreeViewWithRecordCounts()
+        {
+            if (treeViewTableList.InvokeRequired)
+            {
+                treeViewTableList.Invoke(new Action(UpdateTreeViewWithRecordCounts));
+                return;
+            }
+            
+            foreach (TreeNode categoryNode in treeViewTableList.Nodes)
+            {
+                foreach (TreeNode entityNode in categoryNode.Nodes)
+                {
+                    if (entityNode.Tag is Type entityType)
+                    {
+                        var metadata = EntityRegistry.Entities.FirstOrDefault(e => e.EntityType == entityType);
+                        if (metadata != null && _tableRecordCounts != null)
+                        {
+                            long recordCount = _tableRecordCounts.ContainsKey(metadata.TableName) 
+                                ? _tableRecordCounts[metadata.TableName] 
+                                : 0;
+                            
+                            // 更新节点文本，添加记录数
+                            string displayText = $"{metadata.DisplayName} ({recordCount:N0})";
+                            entityNode.Text = displayText;
+                            
+                            // 将记录数保存到Tag中（使用封装类）
+                            entityNode.Tag = new TreeNodeData
+                            {
+                                EntityType = entityType,
+                                RecordCount = recordCount,
+                                TableName = metadata.TableName
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// TreeView节点数据封装类
+        /// </summary>
+        private class TreeNodeData
+        {
+            public Type EntityType { get; set; }
+            public long RecordCount { get; set; }
+            public string TableName { get; set; }
         }
 
         /// <summary>
@@ -323,8 +477,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private void InitializeDeleteMode()
         {
             kcmbDeleteMode.Items.Clear();
-            // 按选中行删除（级联）
-            kcmbDeleteMode.Items.Add(new ComboBoxItem("按选中行删除（级联）", DeleteOperation.CascadeDelete));
+            // 按选中行删除（级联）- 未选中时默认删除全部
+            kcmbDeleteMode.Items.Add(new ComboBoxItem("按选中行删除（未选中则全删）", DeleteOperation.CascadeDelete));
             // 整表清空模式
             kcmbDeleteMode.Items.Add(new ComboBoxItem("整表清空（TRUNCATE）", DeleteOperation.TruncateTable));
             kcmbDeleteMode.DisplayMember = "DisplayText";
@@ -491,6 +645,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 kbtnDeleteSelected.Enabled = false;
                 MainForm.Instance.ShowStatusText("正在查询数据...");
 
+                // ✅ 优化：刷新数据时同步更新当前表的记录数缓存
+                await RefreshTableRecordCountAsync(_selectedEntityType);
+
                 await LoadDataAsync();
 
                 MainForm.Instance.ShowStatusText($"查询完成，共 {dgvDataPreview.Rows.Count} 条记录");
@@ -573,6 +730,87 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             }
 
             UpdateSelectedCount();
+        }
+
+        /// <summary>
+        /// 刷新单个表的记录数缓存并更新TreeView显示
+        /// </summary>
+        private async Task RefreshTableRecordCountAsync(Type entityType)
+        {
+            try
+            {
+                var metadata = EntityRegistry.Entities.FirstOrDefault(e => e.EntityType == entityType);
+                if (metadata == null)
+                    return;
+                
+                var tableName = metadata.TableName;
+                var db = MainForm.Instance.AppContext.Db;
+                
+                // 查询最新的记录数
+                var count = await db.Queryable<object>()
+                    .AS(tableName)
+                    .CountAsync();
+                
+                // 更新缓存
+                if (_tableRecordCounts == null)
+                    _tableRecordCounts = new Dictionary<string, long>();
+                
+                _tableRecordCounts[tableName] = count;
+                
+                AppendRealTimeLog($"[缓存更新] 表 {tableName} 记录数: {count:N0}");
+                
+                // 更新TreeView中对应节点的显示
+                UpdateTreeNodeRecordCount(entityType, count);
+            }
+            catch (Exception ex)
+            {
+                AppendRealTimeLog($"[警告] 更新表记录数缓存失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 更新TreeView中指定实体类型的节点记录数显示
+        /// </summary>
+        private void UpdateTreeNodeRecordCount(Type entityType, long recordCount)
+        {
+            if (treeViewTableList.InvokeRequired)
+            {
+                treeViewTableList.Invoke(new Action<Type, long>(UpdateTreeNodeRecordCount), entityType, recordCount);
+                return;
+            }
+            
+            foreach (TreeNode categoryNode in treeViewTableList.Nodes)
+            {
+                foreach (TreeNode entityNode in categoryNode.Nodes)
+                {
+                    // 查找匹配的节点
+                    bool isMatch = false;
+                    if (entityNode.Tag is Type type && type == entityType)
+                        isMatch = true;
+                    else if (entityNode.Tag is TreeNodeData nodeData && nodeData.EntityType == entityType)
+                        isMatch = true;
+                    
+                    if (isMatch)
+                    {
+                        var metadata = EntityRegistry.Entities.FirstOrDefault(e => e.EntityType == entityType);
+                        if (metadata != null)
+                        {
+                            // 更新节点文本
+                            entityNode.Text = $"{metadata.DisplayName} ({recordCount:N0})";
+                            
+                            // 更新Tag中的数据
+                            entityNode.Tag = new TreeNodeData
+                            {
+                                EntityType = entityType,
+                                RecordCount = recordCount,
+                                TableName = metadata.TableName
+                            };
+                            
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -680,6 +918,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                     await ExecuteBatchDeleteTablesAsync(selectedTypes, deleteOp);
                 }
             }
+            catch (OperationCanceledException)
+            {
+                AppendRealTimeLog("[取消] 操作已被用户取消");
+                MainForm.Instance.ShowStatusText("操作已取消");
+                MessageBox.Show("操作已取消", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
             catch (Exception ex)
             {
                 AppendRealTimeLog($"[异常] 删除操作异常: {ex.Message}");
@@ -690,6 +934,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 _isBusy = false;
                 kbtnDeleteSelected.Enabled = true;
                 kbtnRefresh.Enabled = true;
+                kbtnCancel.Enabled = false;
+                progressBar.Visible = false; // 隐藏进度条
+                progressBar.Value = 0;
+                _currentCancellationTokenSource?.Dispose();
+                _currentCancellationTokenSource = null;
             }
         }
 
@@ -715,6 +964,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             _isBusy = true;
             kbtnDeleteSelected.Enabled = false;
             kbtnRefresh.Enabled = false;
+            kbtnCancel.Enabled = true; // 启用取消按钮
+            progressBar.Visible = true; // 显示进度条
+            progressBar.Value = 0;
+            
+            // 创建取消令牌
+            _currentCancellationTokenSource = _cleanupEngine.CreateCancellationTokenSource();
             
             AppendRealTimeLog($"========== 开始批量删除 {entityTypes.Count} 个表 ==========");
 
@@ -749,6 +1004,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 
                 AppendRealTimeLog($"========== 批量删除完成 ==========");
                 MessageBox.Show($"批量删除完成，共删除 {entityTypes.Count} 个表", "完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                // ✅ 优化：批量删除后刷新所有涉及的表的记录数缓存
+                foreach (var entityType in entityTypes)
+                {
+                    await RefreshTableRecordCountAsync(entityType);
+                }
                 
                 // 清空选择状态
                 ClearTreeViewSelection();
@@ -795,7 +1056,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             var tableName = metadata.TableName;
             
             // 确认对话框
-            var confirmMsg = $"确定要清空表 [{tableName}] 的所有数据吗？\n\n⚠️ 此操作不可恢复！\n• TRUNCATE会重置自增ID\n• 不会触发DELETE触发器\n\n建议先备份重要数据。";
+            var confirmMsg = $"确定要清空表 [{tableName}] 的所有数据吗？\n\n⚠️ 此操作不可恢复！\n• TRUNCATE会重置自增ID\n• 不会触发DELETE触发器\n• 如果存在外键引用，将自动级联TRUNCATE相关表\n\n建议先备份重要数据。";
             
             if (MessageBox.Show(confirmMsg, "确认清空整表", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
             {
@@ -806,18 +1067,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             _isBusy = true;
             kbtnDeleteSelected.Enabled = false;
             kbtnRefresh.Enabled = false;
+            kbtnCancel.Enabled = true; // 启用取消按钮
+            progressBar.Visible = true; // 显示进度条
+            progressBar.Value = 0;
+            
+            // 创建取消令牌
+            _currentCancellationTokenSource = _cleanupEngine.CreateCancellationTokenSource();
             
             AppendRealTimeLog($"========== 开始清空表: {tableName} ==========");
 
             try
             {
-                // 检查是否有外键约束
+                var db = _cleanupEngine.GetDbClient();
+                
+                // ⚠️ 关键修复：检查是否有外键约束引用该表
                 var hasForeignKey = await CheckHasForeignKeys(tableName);
                 
                 if (hasForeignKey)
                 {
-                    AppendRealTimeLog($"[警告] 表 {tableName} 存在外键约束，改用 DELETE FROM");
-                    await ExecuteDeleteAll(tableName);
+                    AppendRealTimeLog($"[警告] 表 {tableName} 存在外键约束，将采用级联TRUNCATE策略:");
+                    AppendRealTimeLog($"  1. 查询所有引用该表的子表");
+                    AppendRealTimeLog($"  2. 按依赖顺序TRUNCATE子表（从叶子节点到父节点）");
+                    AppendRealTimeLog($"  3. 最后TRUNCATE目标表");
+                    
+                    await ExecuteCascadeTruncate(db, tableName);
                 }
                 else
                 {
@@ -827,6 +1100,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 
                 AppendRealTimeLog($"[成功] 表 {tableName} 已清空");
                 MessageBox.Show($"表 [{tableName}] 已清空！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                // ✅ 优化：TRUNCATE后刷新当前表的记录数缓存
+                await RefreshTableRecordCountAsync(_selectedEntityType);
                 
                 // 重新加载数据
                 await LoadDataAsync();
@@ -863,6 +1139,179 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         }
 
         /// <summary>
+        /// 执行级联 TRUNCATE（智能处理外键依赖）
+        /// 策略：先TRUNCATE所有子表（被引用的表），最后TRUNCATE目标表
+        /// </summary>
+        private async Task ExecuteCascadeTruncate(ISqlSugarClient db, string targetTableName)
+        {
+            AppendRealTimeLog($"\n========== [级联TRUNCATE] 开始分析 ==========");
+            
+            try
+            {
+                // 步骤1：查询所有引用目标表的外键关系
+                AppendRealTimeLog($"[步骤1] 查询引用表 [{targetTableName}] 的所有外键...");
+                
+                var foreignKeys = await db.Ado.SqlQueryAsync<DbForeignKeyInfo>(@"
+                    SELECT 
+                        fk.name AS ForeignKeyName,
+                        tp.name AS ReferencingTableName,
+                        cp.name AS ReferencingColumnName,
+                        tr.name AS ReferencedTableName,
+                        cr.name AS ReferencedColumnName
+                    FROM sys.foreign_keys AS fk
+                    INNER JOIN sys.foreign_key_columns AS fkc ON fk.object_id = fkc.constraint_object_id
+                    INNER JOIN sys.tables AS tp ON fkc.parent_object_id = tp.object_id
+                    INNER JOIN sys.columns AS cp ON fkc.parent_object_id = cp.object_id AND fkc.parent_column_id = cp.column_id
+                    INNER JOIN sys.tables AS tr ON fkc.referenced_object_id = tr.object_id
+                    INNER JOIN sys.columns AS cr ON fkc.referenced_object_id = cr.object_id AND fkc.referenced_column_id = cr.column_id
+                    WHERE tr.name = @tableName", 
+                    new { tableName = targetTableName });
+                
+                AppendRealTimeLog($"[步骤1] 找到 {foreignKeys.Count} 个外键引用");
+                
+                if (foreignKeys.Count == 0)
+                {
+                    AppendRealTimeLog($"[步骤1] 无外键引用，直接TRUNCATE目标表");
+                    await ExecuteTruncate(targetTableName);
+                    return;
+                }
+                
+                foreach (var fk in foreignKeys)
+                {
+                    AppendRealTimeLog($"  → {fk.ReferencingTableName}.{fk.ReferencingColumnName} 引用 {targetTableName}");
+                }
+                
+                // 步骤2：递归收集所有需要TRUNCATE的表（包括多层级子表）
+                AppendRealTimeLog($"\n[步骤2] 递归收集所有依赖表...");
+                var tablesToTruncate = new List<string>();
+                var visitedTables = new HashSet<string>();
+                
+                await CollectDependentTablesRecursiveAsync(db, targetTableName, tablesToTruncate, visitedTables, 0);
+                
+                AppendRealTimeLog($"[步骤2] 共需TRUNCATE {tablesToTruncate.Count} 个表");
+                for (int i = 0; i < tablesToTruncate.Count; i++)
+                {
+                    AppendRealTimeLog($"  顺序 {i + 1}: {tablesToTruncate[i]}");
+                }
+                
+                // 步骤3：按依赖顺序执行TRUNCATE（从叶子节点到根节点）
+                AppendRealTimeLog($"\n[步骤3] 开始执行TRUNCATE...");
+                int successCount = 0;
+                
+                for (int i = 0; i < tablesToTruncate.Count; i++)
+                {
+                    string tableName = tablesToTruncate[i];
+                    AppendRealTimeLog($"\n  [{i + 1}/{tablesToTruncate.Count}] TRUNCATE [{tableName}]...");
+                    
+                    try
+                    {
+                        await ExecuteTruncate(tableName);
+                        successCount++;
+                        AppendRealTimeLog($"  ✓ [{tableName}] 已清空");
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendRealTimeLog($"  ✗ [{tableName}] TRUNCATE失败: {ex.Message}");
+                        AppendRealTimeLog($"  → 尝试使用 DELETE FROM 降级处理...");
+                        
+                        // 降级方案：使用 DELETE FROM
+                        await ExecuteDeleteAll(tableName);
+                        successCount++;
+                        AppendRealTimeLog($"  ✓ [{tableName}] 已通过DELETE清空");
+                    }
+                }
+                
+                AppendRealTimeLog($"\n========== [级联TRUNCATE] 完成 ==========");
+                AppendRealTimeLog($"成功清空 {successCount}/{tablesToTruncate.Count} 个表");
+            }
+            catch (Exception ex)
+            {
+                AppendRealTimeLog($"[错误] 级联TRUNCATE失败: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 递归收集所有依赖表（子表及其子表）
+        /// 返回顺序：先子表后父表（拓扑排序）
+        /// </summary>
+        private async Task CollectDependentTablesRecursiveAsync(
+            ISqlSugarClient db,
+            string tableName,
+            List<string> result,
+            HashSet<string> visited,
+            int depth)
+        {
+            // 防止循环引用和过深递归
+            if (visited.Contains(tableName) || depth > 10)
+            {
+                return;
+            }
+            
+            visited.Add(tableName);
+            
+            // 查询引用当前表的所有外键（子表）
+            var foreignKeys = await db.Ado.SqlQueryAsync<DbForeignKeyInfo>(@"
+                SELECT 
+                    fk.name AS ForeignKeyName,
+                    tp.name AS ReferencingTableName,
+                    cp.name AS ReferencingColumnName,
+                    tr.name AS ReferencedTableName,
+                    cr.name AS ReferencedColumnName
+                FROM sys.foreign_keys AS fk
+                INNER JOIN sys.foreign_key_columns AS fkc ON fk.object_id = fkc.constraint_object_id
+                INNER JOIN sys.tables AS tp ON fkc.parent_object_id = tp.object_id
+                INNER JOIN sys.columns AS cp ON fkc.parent_object_id = cp.object_id AND fkc.parent_column_id = cp.column_id
+                INNER JOIN sys.tables AS tr ON fkc.referenced_object_id = tr.object_id
+                INNER JOIN sys.columns AS cr ON fkc.referenced_object_id = cr.object_id AND fkc.referenced_column_id = cr.column_id
+                WHERE tr.name = @tableName", 
+                new { tableName });
+            
+            // 先递归处理所有子表
+            foreach (var fk in foreignKeys)
+            {
+                string childTable = fk.ReferencingTableName;
+                if (!visited.Contains(childTable))
+                {
+                    await CollectDependentTablesRecursiveAsync(db, childTable, result, visited, depth + 1);
+                }
+            }
+            
+            // 最后添加当前表（保证子表在前，父表在后）
+            result.Add(tableName);
+        }
+
+        /// <summary>
+        /// 执行TRUNCATE TABLE（带外键约束处理）
+        /// </summary>
+        private async Task ExecuteTruncateWithDisabledConstraints(ISqlSugarClient db, string tableName)
+        {
+            try
+            {
+                // 步骤1：禁用所有外键约束
+                AppendRealTimeLog($"[步骤1] 禁用所有外键约束...");
+                await db.Ado.ExecuteCommandAsync("EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'");
+                AppendRealTimeLog($"[步骤1] ✓ 外键约束已禁用");
+                
+                // 步骤2：执行 TRUNCATE
+                AppendRealTimeLog($"[步骤2] 执行 TRUNCATE TABLE [{tableName}]...");
+                var sql = $"TRUNCATE TABLE [{tableName}]";
+                await db.Ado.ExecuteCommandAsync(sql);
+                AppendRealTimeLog($"[步骤2] ✓ TRUNCATE 执行成功");
+                
+                // 步骤3：重新启用所有外键约束
+                AppendRealTimeLog($"[步骤3] 重新启用所有外键约束...");
+                await db.Ado.ExecuteCommandAsync("EXEC sp_MSforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL'");
+                AppendRealTimeLog($"[步骤3] ✓ 外键约束已重新启用");
+            }
+            catch (Exception ex)
+            {
+                AppendRealTimeLog($"[错误] TRUNCATE 过程中出错: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// 执行TRUNCATE TABLE
         /// </summary>
         private async Task ExecuteTruncate(string tableName)
@@ -895,16 +1344,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         {
             // 获取选中的ID
             _selectedIds = GetSelectedRecordIds();
-            AppendRealTimeLog($"准备删除，选中记录数: {_selectedIds.Count}");
-
+            
+            // ⚠️ 关键修复：如果没有选中任何行，默认获取所有记录的ID
             if (_selectedIds.Count == 0)
             {
-                MessageBox.Show("请先选择要删除的记录", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                AppendRealTimeLog("未选中任何行，将获取表中所有记录ID进行删除...");
+                _selectedIds = await GetAllRecordIdsAsync();
+                
+                if (_selectedIds.Count == 0)
+                {
+                    MessageBox.Show("表中没有数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                
+                AppendRealTimeLog($"获取到表中所有 {_selectedIds.Count} 条记录ID");
+            }
+            else
+            {
+                AppendRealTimeLog($"准备删除，选中记录数: {_selectedIds.Count}");
             }
 
             // 显示确认对话框
-            var confirmMsg = $"确定要删除选中的 {_selectedIds.Count} 条记录吗？\n\n此操作将同时删除所有关联数据(通过数据库元数据自动级联)！\n\n建议先备份重要数据。";
+            var confirmMsg = $"确定要删除 {_selectedIds.Count} 条记录吗？\n\n此操作将同时删除所有关联数据(通过数据库元数据自动级联)！\n\n建议先备份重要数据。";
 
             if (MessageBox.Show(confirmMsg, "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
             {
@@ -915,10 +1376,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             _isBusy = true;
             kbtnDeleteSelected.Enabled = false;
             kbtnRefresh.Enabled = false;
+            kbtnCancel.Enabled = true; // 启用取消按钮
+            progressBar.Visible = true; // 显示进度条
+            progressBar.Value = 0;
+            
+            // 创建取消令牌
+            _currentCancellationTokenSource = _cleanupEngine.CreateCancellationTokenSource();
+            
             AppendRealTimeLog($"开始删除 {_selectedEntityType.Name} 表的 {_selectedIds.Count} 条记录...");
 
             // 使用 DataCleanupEngine 执行级联删除
-            var result = await ExecuteCascadeDeleteAsync(_selectedIds, isTestMode: false);
+            var result = await ExecuteCascadeDeleteAsync(_selectedIds, isTestMode: false, _currentCancellationTokenSource.Token);
 
             if (result.IsSuccess)
             {
@@ -929,6 +1397,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
                 MainForm.Instance.ShowStatusText("删除完成");
 
+                // ✅ 优化：删除后刷新当前表的记录数缓存
+                await RefreshTableRecordCountAsync(_selectedEntityType);
+                
                 // 重新加载数据
                 await LoadDataAsync();
             }
@@ -944,7 +1415,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         /// </summary>
         /// <param name="ids">要删除的ID列表，如果为null则使用 _selectedIds</param>
         /// <param name="isTestMode">是否测试模式</param>
-        private async Task<CascadeDeleteResult> ExecuteCascadeDeleteAsync(List<long> ids = null, bool isTestMode = false)
+        /// <param name="cancellationToken">取消令牌</param>
+        private async Task<CascadeDeleteResult> ExecuteCascadeDeleteAsync(List<long> ids = null, bool isTestMode = false, CancellationToken cancellationToken = default)
         {
             var targetIds = ids ?? _selectedIds;
             
@@ -952,7 +1424,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             AppendRealTimeLog($"实体类型: {_selectedEntityType?.Name}, ID数量: {targetIds.Count}, 测试模式: {isTestMode}");
             
             // 使用反射调用泛型方法 ExecuteCascadeDeleteAsync<T>（无 DeleteMode 参数）
-            var methodTypes = new[] { typeof(List<long>), typeof(bool) };
+            var methodTypes = new[] { typeof(List<long>), typeof(bool), typeof(CancellationToken) };
             var method = typeof(DataCleanupEngine).GetMethod("ExecuteCascadeDeleteAsync", methodTypes);
             
             if (method == null)
@@ -963,7 +1435,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             var genericMethod = method.MakeGenericMethod(_selectedEntityType);
             
             AppendRealTimeLog("正在构建依赖图和拓扑排序...");
-            var task = (Task<CascadeDeleteResult>)genericMethod.Invoke(_cleanupEngine, new object[] { targetIds, isTestMode });
+            var task = (Task<CascadeDeleteResult>)genericMethod.Invoke(_cleanupEngine, new object[] { targetIds, isTestMode, cancellationToken });
             
             AppendRealTimeLog("等待执行结果...");
             var result = await task;
@@ -1033,6 +1505,39 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         }
 
         /// <summary>
+        /// 获取表中所有记录的主键ID
+        /// </summary>
+        private async Task<List<long>> GetAllRecordIdsAsync()
+        {
+            var allIds = new List<long>();
+            var pkName = GetPrimaryKeyName(_selectedEntityType);
+            var metadata = ModelMetadataHelper.GetMetadata(_selectedEntityType);
+            var tableName = metadata.TableName;
+            
+            AppendRealTimeLog($"开始查询表 [{tableName}] 的所有记录ID，主键字段: {pkName}");
+
+            try
+            {
+                var db = MainForm.Instance.AppContext.Db;
+                
+                // 直接查询所有主键ID
+                var sql = $"SELECT [{pkName}] FROM [{tableName}]";
+                var ids = await db.Ado.SqlQueryAsync<long>(sql);
+                
+                allIds = ids.ToList();
+                
+                AppendRealTimeLog($"查询完成，共 {allIds.Count} 条记录");
+            }
+            catch (Exception ex)
+            {
+                AppendRealTimeLog($"[错误] 查询所有记录ID失败: {ex.Message}");
+                throw;
+            }
+
+            return allIds;
+        }
+
+        /// <summary>
         /// 追加实时日志到 UI
         /// </summary>
         private void AppendRealTimeLog(string message)
@@ -1046,6 +1551,29 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 string timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
                 rtbLog.AppendText($"[{timestamp}] {message}\r\n");
                 rtbLog.ScrollToCaret(); // 自动滚动到底部
+            }
+        }
+
+        /// <summary>
+        /// 更新进度条
+        /// </summary>
+        private void UpdateProgressBar(int percentage)
+        {
+            if (progressBar.InvokeRequired)
+            {
+                progressBar.Invoke(new Action<int>(UpdateProgressBar), percentage);
+            }
+            else
+            {
+                if (percentage > 0 && percentage <= 100)
+                {
+                    progressBar.Visible = true;
+                    progressBar.Value = percentage;
+                }
+                else
+                {
+                    progressBar.Visible = false;
+                }
             }
         }
 
@@ -1131,8 +1659,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
                 AppendRealTimeLog($"预览模式：将检查 {selectedIds.Count} 条记录及其关联数据");
 
+                // 创建取消令牌
+                _currentCancellationTokenSource = _cleanupEngine.CreateCancellationTokenSource();
+                kbtnCancel.Enabled = true;
+                progressBar.Visible = true; // 显示进度条
+                progressBar.Value = 0;
+                
                 // 使用测试模式执行，不实际删除
-                var result = await ExecuteCascadeDeleteAsync(selectedIds, isTestMode: true);
+                var result = await ExecuteCascadeDeleteAsync(selectedIds, isTestMode: true, _currentCancellationTokenSource.Token);
 
                 if (result.IsSuccess)
                 {
@@ -1151,10 +1685,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                     MessageBox.Show($"预览失败：{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+            catch (OperationCanceledException)
+            {
+                AppendRealTimeLog("[取消] 预览已被用户取消");
+                MainForm.Instance.ShowStatusText("预览已取消");
+            }
             catch (Exception ex)
             {
                 AppendRealTimeLog($"[异常] 预览异常: {ex.Message}");
                 MessageBox.Show($"预览失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                kbtnCancel.Enabled = false;
+                progressBar.Visible = false; // 隐藏进度条
+                progressBar.Value = 0;
+                _currentCancellationTokenSource?.Dispose();
+                _currentCancellationTokenSource = null;
             }
         }
 
@@ -1196,11 +1743,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
                 _isBusy = true;
                 kbtnTestExecute.Enabled = false;
+                kbtnCancel.Enabled = true; // 启用取消按钮
+                progressBar.Visible = true; // 显示进度条
+                progressBar.Value = 0;
                 MainForm.Instance.ShowStatusText("正在测试执行...");
                 AppendRealTimeLog($"开始测试执行 {_selectedEntityType.Name} 表的 {selectedIds.Count} 条记录...");
 
+                // 创建取消令牌
+                _currentCancellationTokenSource = _cleanupEngine.CreateCancellationTokenSource();
+                
                 // 使用测试模式执行
-                var result = await ExecuteCascadeDeleteAsync(selectedIds, isTestMode: true);
+                var result = await ExecuteCascadeDeleteAsync(selectedIds, isTestMode: true, _currentCancellationTokenSource.Token);
 
                 if (result.IsSuccess)
                 {
@@ -1253,6 +1806,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             {
                 _isBusy = false;
                 kbtnTestExecute.Enabled = true;
+                kbtnCancel.Enabled = false;
+                progressBar.Visible = false; // 隐藏进度条
+                progressBar.Value = 0;
+                _currentCancellationTokenSource?.Dispose();
+                _currentCancellationTokenSource = null;
             }
         }
 

@@ -106,14 +106,11 @@ namespace RUINORERP.Server.Controls
             _refreshTimer.Interval = FAST_REFRESH_INTERVAL; // 初始快速刷新
             _refreshTimer.Tick += RefreshTimer_Tick;
 
-            // 初始化UI
-            InitializeUI();
-            
             // ✅ 新增：初始化性能监控Tab页
             InitializePerformanceMonitorTab();
 
-            // 立即启动定时器刷新数据（不依赖Load事件）
-            _refreshTimer.Start();
+            // 移除 InitializeUI() 和 _refreshTimer.Start() 的调用，移动到 Load 事件中
+            // 确保控件句柄已创建后再进行 UI 操作
         }
 
         /// <summary>
@@ -190,14 +187,11 @@ namespace RUINORERP.Server.Controls
             _refreshTimer.Interval = FAST_REFRESH_INTERVAL; // 初始快速刷新
             _refreshTimer.Tick += RefreshTimer_Tick;
 
-            // 初始化UI
-            InitializeUI();
-
             // ✅ 新增：初始化性能监控Tab页
             InitializePerformanceMonitorTab();
 
-            // 立即启动定时器刷新数据（不依赖Load事件）
-            _refreshTimer.Start();
+            // 移除 InitializeUI() 和 _refreshTimer.Start() 的调用，移动到 Load 事件中
+            // 确保控件句柄已创建后再进行 UI 操作
         }
 
         /// <summary>
@@ -295,6 +289,9 @@ namespace RUINORERP.Server.Controls
 
         private void ServerMonitorControl_Load(object sender, EventArgs e)
         {
+            // 初始化UI并刷新数据（此时句柄已创建）
+            InitializeUI();
+
             // 启动定时器
             _refreshTimer.Start();
         }
@@ -1552,10 +1549,9 @@ namespace RUINORERP.Server.Controls
                     // 使用 SafeInvoke 确保在 UI 线程上更新控件
                     SafeInvoke(() =>
                     {
-                        rtbMemoryDist?.Invoke((MethodInvoker)(() =>
+                        // 检查控件是否可用
+                        if (rtbMemoryDist != null && !rtbMemoryDist.IsDisposed && !rtbMemoryDist.Disposing && rtbMemoryDist.IsHandleCreated)
                         {
-                            if (rtbMemoryDist.IsDisposed || rtbMemoryDist.Disposing || !rtbMemoryDist.IsHandleCreated)
-                                return;
                             rtbMemoryDist.SuspendLayout();
                             try
                             {
@@ -1567,7 +1563,7 @@ namespace RUINORERP.Server.Controls
                             {
                                 rtbMemoryDist.ResumeLayout();
                             }
-                        }));
+                        }
                     });
                 }
                 else

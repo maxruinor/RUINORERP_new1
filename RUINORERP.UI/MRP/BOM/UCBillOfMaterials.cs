@@ -1254,9 +1254,9 @@ namespace RUINORERP.UI.MRP.BOM
                         EditEntity.view_ProdInfo = detail;
                     }
                     txtProdDetailID.Text = EditEntity.SKU.ToString();
-                    txtSpec.Text = EditEntity.view_ProdInfo.Specifications;
-                    txtProp.Text = EditEntity.view_ProdInfo.prop;
-                    cmbType.SelectedValue = EditEntity.view_ProdInfo.Type_ID;
+                    txtSpec.Text = EditEntity.view_ProdInfo?.Specifications;
+                    txtProp.Text = EditEntity.view_ProdInfo?.prop;
+                    cmbType.SelectedValue = EditEntity.view_ProdInfo?.Type_ID;
                     BindToTree(EditEntity);
                 }
                 if (EditEntity.tb_BOM_SDetails != null && EditEntity.tb_BOM_SDetails.Count > 0)
@@ -1563,8 +1563,8 @@ namespace RUINORERP.UI.MRP.BOM
                                                 ////一定会有值
                                                 //tb_BOM_S bOM_S = listboms.Where(c => c.ProdDetailID == row.ProdDetailID).FirstOrDefault();
                                                 //itemRow.SubItems[0].Tag = bOM_S;
-            itemRow.SubItems.Add(bom.view_ProdInfo.Specifications);
-            string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", bom.view_ProdInfo.Type_ID);
+            itemRow.SubItems.Add(bom.view_ProdInfo?.Specifications);
+            string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", bom.view_ProdInfo?.Type_ID);
 
             itemRow.SubItems.Add(prodType);
             itemRow.SubItems.Add("产出量:" + bom.OutputQty.ToString());

@@ -61,10 +61,17 @@ namespace RUINORERP.Server.Controls
 
             // 初始化定时刷新器
             InitializeAutoRefreshTimer();
+            // 定时器将在 Load 事件中启动，确保控件句柄已创建
         }
 
         private void CacheManagementControl_Load(object sender, EventArgs e)
         {
+            // 启动自动刷新定时器（此时控件句柄已创建）
+            if (_autoRefreshTimer != null && !_autoRefreshTimer.Enabled)
+            {
+                _autoRefreshTimer.Start();
+            }
+
             LoadCacheToUI();
             // 初始化统计表格
             InitStatisticsGrids();
@@ -859,7 +866,7 @@ namespace RUINORERP.Server.Controls
             _autoRefreshTimer = new System.Windows.Forms.Timer();
             _autoRefreshTimer.Interval = 10000; // 10秒检查一次是否需要刷新
             _autoRefreshTimer.Tick += AutoRefreshTimer_Tick;
-            _autoRefreshTimer.Start(); // 启动定时器
+            // 不在此处启动定时器，将在 Load 事件中启动
         }
 
         /// <summary>

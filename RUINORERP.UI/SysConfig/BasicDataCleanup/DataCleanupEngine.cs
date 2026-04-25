@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Data.SqlClient;
 using System.Text.RegularExpressions;
 using SqlSugar;
+using System.Threading;
 
 namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 {
@@ -292,6 +293,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
     {
         private readonly ILogger<DataCleanupEngine> _logger;
         private readonly IUnitOfWorkManage _unitOfWork;
+        private CancellationTokenSource _cancellationTokenSource; // 用于支持取消操作
         
         public DataCleanupEngine()
         {
@@ -310,9 +312,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         /// <summary>
         /// 执行级联删除 - 数据库元数据模式（直接从数据库获取外键关系）
         /// </summary>
-        public async Task<CascadeDeleteResult> ExecuteCascadeDeleteAsync<T>(List<long> targetIds, bool isTestMode = false) where T : BaseEntity, new()
+        public async Task<CascadeDeleteResult> ExecuteCascadeDeleteAsync<T>(List<long> targetIds, bool isTestMode = false, CancellationToken cancellationToken = default) where T : BaseEntity, new()
         {
-            return await ExecuteCascadeDeleteByDbAsync<T>(targetIds, isTestMode);
+            return await ExecuteCascadeDeleteByDbAsync<T>(targetIds, isTestMode, cancellationToken);
         }
 
         /// <summary>
@@ -369,7 +371,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         /// <summary>
         /// 执行级联删除 - 数据库元数据模式（直接从数据库获取外键关系）
         /// </summary>
-        private async Task<CascadeDeleteResult> ExecuteCascadeDeleteByDbAsync<T>(List<long> targetIds, bool isTestMode) where T : BaseEntity, new()
+        private async Task<CascadeDeleteResult> ExecuteCascadeDeleteByDbAsync<T>(List<long> targetIds, bool isTestMode, CancellationToken cancellationToken = default) where T : BaseEntity, new()
         {
             var result = new CascadeDeleteResult { IsTestMode = isTestMode, StartTime = DateTime.Now };
             if (!targetIds.Any()) return result;
@@ -387,9 +389,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
 
                 try
                 {
+                    // 检查取消请求
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     // 1. 递归查找所有依赖表（从数据库查询外键关系）
                     var allDependencies = new Dictionary<string, List<DbForeignKeyInfo>>();
-                    await CollectAllForeignKeysRecursiveAsync(rootTableName, allDependencies, new HashSet<string>());
+                    await CollectAllForeignKeysRecursiveAsync(rootTableName, allDependencies, new HashSet<string>(), cancellationToken);
 
                     Log($"[依赖分析] 发现 {allDependencies.Count} 个关联表");
                     foreach (var kvp in allDependencies)
@@ -397,6 +402,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                         Log($"  → {kvp.Key}: {kvp.Value.Count} 个外键引用");
                     }
 
+                    // 检查取消请求
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     // 2. 生成删除顺序（自底向上：先删子表，后删父表）
                     var deleteOrder = GenerateDeleteOrder(allDependencies, rootTableName);
                     Log($"[删除顺序] 共 {deleteOrder.Count} 个阶段");
@@ -405,21 +413,51 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                         Log($"  阶段 {i + 1}: {deleteOrder[i].TableName}.{deleteOrder[i].ForeignKeyColumn}");
                     }
 
+                    // 检查取消请求
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     // 3. ⚠️ 关键修复：预查询所有表的主键ID
                     Log($"\n========== [步骤3] 预查询所有表的主键ID ==========");
                     var idMap = new Dictionary<string, List<long>>();
                     idMap[rootTableName] = new List<long>(targetIds);
                     
                     // 递归查询所有子表的主键ID
+                    // ✅ 修复：添加 visitedTables 防止循环引用导致的栈溢出
+                    var visitedTables = new HashSet<string>();
+                    
                     async Task QueryChildIds(string parentTable, List<long> parentIds, string parentFkColumn)
                     {
+                        // 检查取消请求
+                        cancellationToken.ThrowIfCancellationRequested();
+                        
                         if (!allDependencies.ContainsKey(parentTable))
                             return;
+                        
+                        // ✅ 防止循环引用：如果已访问过该表，跳过
+                        if (visitedTables.Contains(parentTable))
+                        {
+                            Log($"[预查询] ⚠️ {parentTable} 已访问过，跳过（防止循环引用）");
+                            return;
+                        }
+                        
+                        visitedTables.Add(parentTable);
                         
                         foreach (var fk in allDependencies[parentTable])
                         {
                             string childTable = fk.ReferencingTableName;
                             string childFkColumn = fk.ReferencingColumnName;
+                            
+                            // ✅ 优化：先检查子表是否有数据
+                            var childRecordCount = await db.Queryable<object>()
+                                .AS(childTable)
+                                .CountAsync();
+                            
+                            if (childRecordCount == 0)
+                            {
+                                Log($"[预查询] {parentTable}.{parentFkColumn} → {childTable}.{childFkColumn} (无数据，跳过)");
+                                idMap[childTable] = new List<long>(); // 添加空列表
+                                continue;
+                            }
                             
                             // ✅ 修复：从数据库查询主键列（支持没有实体类的表）
                             var childMetadata = await ModelMetadataHelper.GetMetadataAsync(db, childTable);
@@ -438,10 +476,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                             
                             Log($"[预查询]   结果: {childIdList.Count} 条记录");
                             
-                            // 递归查询下一层
-                            await QueryChildIds(childTable, childIdList, childFkColumn);
+                            // ✅ 修复：只有当有记录时才递归查询下一层，避免空表递归
+                            if (childIdList.Count > 0)
+                            {
+                                await QueryChildIds(childTable, childIdList, childFkColumn);
+                            }
+                            else
+                            {
+                                Log($"[预查询]   ℹ️ {childTable} 无匹配记录，停止递归");
+                            }
                         }
                     }
+                    
+                    // 检查取消请求
+                    cancellationToken.ThrowIfCancellationRequested();
                     
                     // 开始递归查询
                     await QueryChildIds(rootTableName, targetIds, rootPkColumn);
@@ -452,12 +500,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                         Log($"  → {kvp.Key}: {kvp.Value.Count} 条记录");
                     }
 
+                    // 检查取消请求
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     // 4. 按删除顺序执行删除
                     Log($"\n========== [步骤4] 执行删除 ==========");
                     var deletedCount = 0;
 
                     for (int stage = 0; stage < deleteOrder.Count; stage++)
                     {
+                        // 检查取消请求
+                        cancellationToken.ThrowIfCancellationRequested();
+                        
                         var tableInfo = deleteOrder[stage];
                         
                         // 根表跳过，最后单独处理
@@ -516,6 +570,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                         ReportProgress(stage + 1, deleteOrder.Count, $"正在删除 {tableInfo.TableName}");
                     }
 
+                    // 检查取消请求
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     // 5. 最后删除根表
                     Log($"\n========== [步骤5] 删除根表 ==========");
                     Log($"[根表] 表名: {rootTableName}");
@@ -614,8 +671,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private async Task CollectAllForeignKeysRecursiveAsync(
             string tableName,
             Dictionary<string, List<DbForeignKeyInfo>> dependencies,
-            HashSet<string> visited)
+            HashSet<string> visited,
+            CancellationToken cancellationToken = default)
         {
+            // 检查取消请求
+            cancellationToken.ThrowIfCancellationRequested();
+            
             if (visited.Contains(tableName))
             {
                 Log($"[依赖收集] ⚠️ {tableName} 已访问过，跳过（防止循环引用）");
@@ -626,6 +687,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             visited.Add(tableName);
         
             var db = _unitOfWork.GetDbClient();
+            
+            // ✅ 优化：先检查表是否有数据，如果为空则跳过
+            var recordCount = await db.Queryable<object>()
+                .AS(tableName)
+                .CountAsync();
+            
+            if (recordCount == 0)
+            {
+                Log($"[依赖收集]   ℹ️ 表 {tableName} 无数据，跳过依赖分析");
+                dependencies[tableName] = new List<DbForeignKeyInfo>(); // 添加空列表
+                return;
+            }
+            
+            Log($"[依赖收集]   📊 表 {tableName} 有 {recordCount:N0} 条记录，继续分析");
         
             // 查询引用该表的所有外键（其他表引用当前表）
             // 使用“谁引用了我”查询：fk.referenced_object_id = 当前表
@@ -667,8 +742,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                     
             foreach (var fk in foreignKeys)
             {
-                // fk.ReferencingTableName 是引用当前表（被引用方）的表，即子表
-                await CollectAllForeignKeysRecursiveAsync(fk.ReferencingTableName, dependencies, visited);
+                try
+                {
+                    // 检查取消请求
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
+                    // fk.ReferencingTableName 是引用当前表（被引用方）的表，即子表
+                    await CollectAllForeignKeysRecursiveAsync(fk.ReferencingTableName, dependencies, visited, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    Log($"[依赖收集] ❌ 递归分析 {fk.ReferencingTableName} 时出错: {ex.Message}");
+                    throw; // 重新抛出，让上层处理
+                }
             }
                     
             if (foreignKeys.Count > 0)
@@ -909,6 +995,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 Message = message,
                 Percentage = total > 0 ? (int)((double)current / total * 100) : 0
             });
+        }
+
+        /// <summary>
+        /// 创建取消令牌源（供外部调用）
+        /// </summary>
+        public CancellationTokenSource CreateCancellationTokenSource()
+        {
+            _cancellationTokenSource = new CancellationTokenSource();
+            return _cancellationTokenSource;
+        }
+
+        /// <summary>
+        /// 取消当前操作
+        /// </summary>
+        public void CancelOperation()
+        {
+            _cancellationTokenSource?.Cancel();
+            Log("[取消] 用户取消了操作");
         }
 
         /// <summary>

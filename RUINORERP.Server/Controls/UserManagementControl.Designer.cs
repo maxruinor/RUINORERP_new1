@@ -454,6 +454,8 @@ namespace RUINORERP.Server.Controls
             ResumeLayout(false);
             PerformLayout();
 
+            Load += UserManagementControl_Load;
+
         }
 
         #endregion

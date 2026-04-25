@@ -45,12 +45,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.dgvDataPreview = new System.Windows.Forms.DataGridView();
             this.kryptonPanelExecuteButtons = new Krypton.Toolkit.KryptonPanel();
             this.kbtnDeleteSelected = new Krypton.Toolkit.KryptonButton();
+            this.kbtnCancel = new Krypton.Toolkit.KryptonButton();
             this.kbtnTestExecute = new Krypton.Toolkit.KryptonButton();
             this.kbtnSelectNone = new Krypton.Toolkit.KryptonButton();
             this.kbtnSelectInvert = new Krypton.Toolkit.KryptonButton();
             this.kbtnSelectAll = new Krypton.Toolkit.KryptonButton();
             this.kbtnRefresh = new Krypton.Toolkit.KryptonButton();
             this.kbtnPreview = new Krypton.Toolkit.KryptonButton();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
             this.tabPageImages = new System.Windows.Forms.TabPage();
             this.tabPageLog = new System.Windows.Forms.TabPage();
             this.rtbLog = new System.Windows.Forms.RichTextBox();
@@ -240,12 +242,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // kryptonPanelExecuteButtons
             // 
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnDeleteSelected);
+            this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnCancel);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnTestExecute);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnSelectNone);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnSelectInvert);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnSelectAll);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnRefresh);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnPreview);
+            this.kryptonPanelExecuteButtons.Controls.Add(this.progressBar);
             this.kryptonPanelExecuteButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.kryptonPanelExecuteButtons.Location = new System.Drawing.Point(0, 517);
             this.kryptonPanelExecuteButtons.Name = "kryptonPanelExecuteButtons";
@@ -261,6 +265,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kbtnDeleteSelected.TabIndex = 7;
             this.kbtnDeleteSelected.Values.Text = "删除选中";
             this.kbtnDeleteSelected.Click += new System.EventHandler(this.KbtnDeleteSelected_Click);
+            // 
+            // kbtnCancel
+            // 
+            this.kbtnCancel.Enabled = false;
+            this.kbtnCancel.Location = new System.Drawing.Point(540, 6);
+            this.kbtnCancel.Name = "kbtnCancel";
+            this.kbtnCancel.Size = new System.Drawing.Size(90, 28);
+            this.kbtnCancel.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(128)))));
+            this.kbtnCancel.TabIndex = 8;
+            this.kbtnCancel.Values.Text = "取消";
+            this.kbtnCancel.Click += new System.EventHandler(this.KbtnCancel_Click);
             // 
             // kbtnTestExecute
             // 
@@ -317,6 +332,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kbtnPreview.TabIndex = 0;
             this.kbtnPreview.Values.Text = "预览";
             this.kbtnPreview.Click += new System.EventHandler(this.KbtnPreview_Click);
+            // 
+            // progressBar
+            // 
+            this.progressBar.Location = new System.Drawing.Point(770, 10);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(150, 20);
+            this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.progressBar.TabIndex = 9;
+            this.progressBar.Visible = false;
             // 
             // tabPageImages
             // 
@@ -443,12 +467,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private System.Windows.Forms.DataGridView dgvDataPreview;
         private Krypton.Toolkit.KryptonPanel kryptonPanelExecuteButtons;
         private Krypton.Toolkit.KryptonButton kbtnDeleteSelected;
+        private Krypton.Toolkit.KryptonButton kbtnCancel;
         private Krypton.Toolkit.KryptonButton kbtnSelectNone;
         private Krypton.Toolkit.KryptonButton kbtnSelectInvert;
         private Krypton.Toolkit.KryptonButton kbtnSelectAll;
         private Krypton.Toolkit.KryptonButton kbtnRefresh;
         private Krypton.Toolkit.KryptonButton kbtnTestExecute;
         private Krypton.Toolkit.KryptonButton kbtnPreview;
+        private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.ContextMenuStrip ctxMenuLog;
         private System.Windows.Forms.ToolStripMenuItem tsmiClearLog;
         private SplitContainer splitContainerOutSite;

@@ -1003,24 +1003,7 @@ namespace RUINORERP.UI
                 {
                     if (ShowMessageBox)
                     {
-
-
-                        // 检查是否有可回滚的版本
-                        bool hasRollbackVersions =false;
-
-                        if (hasRollbackVersions)
-                        {
-                            // 设置为回滚模式，强制显示回滚界面
-                            Update.SetRollbackMode();
-
-                            // 如果有可回滚的版本，显示更新窗体（会自动进入回滚模式）
-                            Update.ShowDialog();
-                        }
-                        else
-                        {
-                            // 如果没有可回滚的版本，才显示提示信息
-                            MessageBox.Show("已经是最新版本，不需要更新。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
+                        MessageBox.Show("已经是最新版本，不需要更新。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     rs = false;
                 }

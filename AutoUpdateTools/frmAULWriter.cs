@@ -494,8 +494,213 @@ namespace AULWriter
         // 在窗体类中定义以下成员变量
 
         private UpdateXmlParameters workerParams;
+        
+        /// <summary>
+        /// 读取目标目录中已存在的配置文件的版本号
+        /// </summary>
+        private string GetExistingVersionInTargetDirectory()
+        {
+            try
+            {
+                // 获取目标清单保存路径
+                string targetXmlPath = txtAutoUpdateXmlSavePath.Text;
+                
+                if (string.IsNullOrEmpty(targetXmlPath) || !File.Exists(targetXmlPath))
+                {
+                    return null;
+                }
+                
+                XDocument doc = XDocument.Load(targetXmlPath);
+                var versionElement = doc.Descendants("Version").FirstOrDefault();
+                
+                if (versionElement != null && !string.IsNullOrEmpty(versionElement.Value))
+                {
+                    return versionElement.Value;
+                }
+                
+                // 也尝试从Application/Version获取
+                var appVersionElement = doc.Descendants("Application").FirstOrDefault()?.Element("Version");
+                if (appVersionElement != null && !string.IsNullOrEmpty(appVersionElement.Value))
+                {
+                    return appVersionElement.Value;
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"读取目标目录版本号失败: {ex.Message}");
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// 读取目标目录中已存在的配置的更新网址
+        /// </summary>
+        private string GetExistingUrlInTargetDirectory()
+        {
+            try
+            {
+                string targetXmlPath = txtAutoUpdateXmlSavePath.Text;
+                
+                if (string.IsNullOrEmpty(targetXmlPath) || !File.Exists(targetXmlPath))
+                {
+                    return null;
+                }
+                
+                XDocument doc = XDocument.Load(targetXmlPath);
+                
+                // 尝试从 Updater/Url 获取
+                var urlElement = doc.Descendants("Updater").Elements("Url").FirstOrDefault();
+                if (urlElement != null && !string.IsNullOrEmpty(urlElement.Value))
+                {
+                    return urlElement.Value.Trim();
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"读取目标目录URL失败: {ex.Message}");
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// 检查并提示URL不一致
+        /// </summary>
+        private bool CheckAndWarnUrlMismatch(string newUrl, string existingUrl)
+        {
+            if (string.IsNullOrEmpty(existingUrl) || string.IsNullOrEmpty(newUrl))
+            {
+                return true; // 没有旧配置，不阻止
+            }
+            
+            // 标准化URL进行比较（移除尾部斜杠）
+            string normalizedNewUrl = newUrl.TrimEnd('/');
+            string normalizedExistingUrl = existingUrl.TrimEnd('/');
+            
+            if (!string.Equals(normalizedNewUrl, normalizedExistingUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                string message = $"检测到更新网址与目标目录配置不一致！\n\n" +
+                    $"目标目录已有网址：{existingUrl}\n" +
+                    $"您设置的新网址：{newUrl}\n\n" +
+                    $"⚠️ 网址不一致可能导致客户端无法正确更新！\n\n" +
+                    $"[是] - 继续生成（使用新网址）\n" +
+                    $"[否] - 取消生成";
+                
+                DialogResult result = MessageBox.Show(message, "网址警告", 
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                
+                return result == DialogResult.Yes;
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// 比较版本号，如果新版本号小于旧版本号，返回修正后的版本号
+        /// </summary>
+        private string EnsureVersionNotLower(string newVersion, string oldVersion)
+        {
+            try
+            {
+                var newVer = new Version(NormalizeVersion(newVersion));
+                var oldVer = new Version(NormalizeVersion(oldVersion));
+                
+                if (newVer < oldVer)
+                {
+                    // 新版本号比旧版本号小，需要修正
+                    // 旧版本号 + 1
+                    int build = oldVer.Build + 1;
+                    return $"{oldVer.Major}.{oldVer.Minor}.{oldVer.Build}.{build}";
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"版本号比较失败: {ex.Message}");
+            }
+            
+            return newVersion;
+        }
+        
+        /// <summary>
+        /// 规范化版本号（移除非数字和非点字符）
+        /// </summary>
+        private string NormalizeVersion(string version)
+        {
+            if (string.IsNullOrEmpty(version))
+                return "0.0.0.0";
+            
+            var sb = new System.Text.StringBuilder();
+            foreach (char c in version)
+            {
+                if (char.IsDigit(c) || c == '.')
+                {
+                    sb.Append(c);
+                }
+            }
+            
+            string result = sb.ToString();
+            return string.IsNullOrEmpty(result) ? "0.0.0.0" : result;
+        }
+        
         private void btnProduce_Click(object sender, EventArgs e)
         {
+            // 检查版本号是否低于目标目录已有版本
+            string existingVersion = GetExistingVersionInTargetDirectory();
+            string newVersion = txtBaseExeVersion.Text;
+            
+            if (!string.IsNullOrEmpty(existingVersion) && !string.IsNullOrEmpty(newVersion))
+            {
+                try
+                {
+                    var newVer = new Version(NormalizeVersion(newVersion));
+                    var oldVer = new Version(NormalizeVersion(existingVersion));
+                    
+                    if (newVer < oldVer)
+                    {
+                        // 版本号过低，提示用户
+                        string correctedVersion = EnsureVersionNotLower(newVersion, existingVersion);
+                        
+                        string message = $"检测到版本号问题！\n\n" +
+                            $"目标目录已有版本号：{existingVersion}\n" +
+                            $"您设置的新版本号：{newVersion}\n\n" +
+                            $"⚠️ 新版本号低于旧版本号！\n\n" +
+                            $"是否自动修正为：{correctedVersion}？\n\n" +
+                            $"[是] - 自动修正版本号\n" +
+                            $"[否] - 继续使用原版本号（可能导致更新失败）\n" +
+                            $"[取消] - 取消生成";
+                        
+                        DialogResult result = MessageBox.Show(message, "版本号警告", 
+                            MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                        
+                        if (result == DialogResult.Yes)
+                        {
+                            txtBaseExeVersion.Text = correctedVersion;
+                            AppendLog($"版本号已自动修正: {newVersion} -> {correctedVersion}");
+                        }
+                        else if (result == DialogResult.Cancel)
+                        {
+                            btnGenerateNewlist.Enabled = true;
+                            return;
+                        }
+                        // 选择"否"则继续使用原版本号
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppendLog($"版本号检查异常: {ex.Message}");
+                }
+            }
+            
+            // 检查URL是否与目标目录已有配置一致
+            string existingUrl = GetExistingUrlInTargetDirectory();
+            string newUrl = txtUrl.Text.Trim();
+            if (!string.IsNullOrEmpty(existingUrl) && !CheckAndWarnUrlMismatch(newUrl, existingUrl))
+            {
+                btnGenerateNewlist.Enabled = true;
+                return;
+            }
+            
             // 禁用按钮防止重复点击
             btnGenerateNewlist.Enabled = false;
             btnrelease.Enabled = false; // 在生成差异文件列表成功前禁用发布按钮

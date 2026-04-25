@@ -44,27 +44,75 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         }
 
         /// <summary>
-        /// 根据实体名称获取元数据
+        /// 根据实体名称获取元数据（优先从缓存，其次从数据库查询）
         /// </summary>
-        public static EntityMetadata GetMetadata(string entityName)
+        public static async Task<EntityMetadata> GetMetadataAsync(ISqlSugarClient db, string tableName)
         {
-            var cacheKey = $"RUINORERP.Model.{entityName}";
+            // 1. 先尝试从实体程序集加载
+            var cacheKey = $"RUINORERP.Model.{tableName}";
             if (_cache.TryGetValue(cacheKey, out var cached)) return cached;
 
             try
             {
                 var assembly = Assembly.Load("RUINORERP.Model");
                 var entityType = assembly.GetTypes().FirstOrDefault(t => 
-                    t.Name == entityName && typeof(BaseEntity).IsAssignableFrom(t));
+                    t.Name == tableName && typeof(BaseEntity).IsAssignableFrom(t));
 
-                if (entityType == null)
-                    throw new Exception($"无法找到实体类型: {entityName}");
+                if (entityType != null)
+                {
+                    return GetMetadata(entityType);
+                }
+            }
+            catch
+            {
+                // 实体不存在，忽略
+            }
 
-                return GetMetadata(entityType);
+            // 2. 实体不存在，从数据库查询表结构
+            return await GetMetadataFromDatabaseAsync(db, tableName);
+        }
+
+        /// <summary>
+        /// 从数据库查询表的元数据（主键列名）
+        /// </summary>
+        private static async Task<EntityMetadata> GetMetadataFromDatabaseAsync(ISqlSugarClient db, string tableName)
+        {
+            var cacheKey = $"DB.{tableName}";
+            if (_cache.TryGetValue(cacheKey, out var cached)) return cached;
+
+            try
+            {
+                // 查询主键列名
+                var sql = @"
+                    SELECT c.COLUMN_NAME
+                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                    INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE c 
+                        ON tc.CONSTRAINT_NAME = c.CONSTRAINT_NAME
+                    WHERE tc.TABLE_NAME = @tableName 
+                      AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY'";
+
+                var primaryKeyColumn = await db.Ado.GetStringAsync(sql, new { tableName = tableName });
+
+                var metadata = new EntityMetadata
+                {
+                    TableName = tableName,
+                    PrimaryKeyName = primaryKeyColumn ?? "PrimaryKeyID"
+                };
+
+                _cache[cacheKey] = metadata;
+                return metadata;
             }
             catch (Exception ex)
             {
-                throw new Exception($"加载实体 {entityName} 失败: {ex.Message}");
+                // 查询失败，默认使用 PrimaryKeyID
+                var metadata = new EntityMetadata
+                {
+                    TableName = tableName,
+                    PrimaryKeyName = "PrimaryKeyID"
+                };
+
+                _cache[cacheKey] = metadata;
+                return metadata;
             }
         }
 
@@ -198,195 +246,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
     }
 
     /// <summary>
-    /// 依赖图构建器 - 从实体元数据构建依赖关系图
-    /// </summary>
-    public class DependencyGraphBuilder
-    {
-        private readonly Dictionary<string, List<string>> _graph = new();
-        private readonly Dictionary<string, HashSet<string>> _reverseGraph = new();
-        private readonly Dictionary<string, EntityMetadata> _metadataCache = new();
-
-        /// <summary>
-        /// 从根实体构建依赖图
-        /// </summary>
-        public DependencyGraphBuilder BuildFromRoot<T>() where T : BaseEntity, new()
-        {
-            var rootType = typeof(T);
-            BuildGraphRecursive(rootType.Name, new Dictionary<string, bool>());
-            return this;
-        }
-
-        /// <summary>
-        /// 递归构建依赖图
-        /// </summary>
-        private void BuildGraphRecursive(string entityName, Dictionary<string, bool> visited)
-        {
-            if (visited.ContainsKey(entityName))
-                return;
-
-            visited[entityName] = true;
-
-            var metadata = ModelMetadataHelper.GetMetadata(entityName);
-            _metadataCache[entityName] = metadata;
-
-            if (!_graph.ContainsKey(entityName))
-                _graph[entityName] = new List<string>();
-
-            foreach (var childRelation in metadata.ChildRelations)
-            {
-                var childTableName = childRelation.ChildTableName;
-
-                if (!_graph.ContainsKey(entityName))
-                    _graph[entityName] = new List<string>();
-
-                if (!_graph[entityName].Contains(childTableName))
-                    _graph[entityName].Add(childTableName);
-
-                if (!_reverseGraph.ContainsKey(childTableName))
-                    _reverseGraph[childTableName] = new HashSet<string>();
-
-                _reverseGraph[childTableName].Add(entityName);
-
-                BuildGraphRecursive(childTableName, visited);
-            }
-        }
-
-        /// <summary>
-        /// 获取依赖图
-        /// </summary>
-        public Dictionary<string, List<string>> GetGraph()
-        {
-            return _graph;
-        }
-
-        /// <summary>
-        /// 获取反向依赖图（子表 -> 父表）
-        /// </summary>
-        public Dictionary<string, HashSet<string>> GetReverseGraph()
-        {
-            return _reverseGraph;
-        }
-
-        /// <summary>
-        /// 获取所有节点
-        /// </summary>
-        public HashSet<string> GetAllNodes()
-        {
-            var nodes = new HashSet<string>(_graph.Keys);
-            foreach (var keys in _reverseGraph.Keys)
-            {
-                nodes.Add(keys);
-            }
-            return nodes;
-        }
-
-        /// <summary>
-        /// 获取实体的元数据
-        /// </summary>
-        public EntityMetadata GetMetadata(string entityName)
-        {
-            if (_metadataCache.TryGetValue(entityName, out var metadata))
-                return metadata;
-
-            return ModelMetadataHelper.GetMetadata(entityName);
-        }
-    }
-
-    /// <summary>
-    /// 拓扑排序器 - 计算正确的删除顺序（自底向上）
-    /// </summary>
-    public class TopologicalSorter
-    {
-        /// <summary>
-        /// 执行拓扑排序，返回自底向上的删除顺序
-        /// 删除顺序：先删子表（叶子节点），后删父表（根节点）
-        /// </summary>
-        /// <returns>排序后的表列表（叶子节点在前，根节点在后）</returns>
-        public List<DeleteStage> Sort(DependencyGraphBuilder graphBuilder)
-        {
-            var graph = graphBuilder.GetGraph();
-            var reverseGraph = graphBuilder.GetReverseGraph();
-            var allNodes = graphBuilder.GetAllNodes();
-
-            // outDegree: 该表有多少个子表（被它引用的表）
-            var outDegree = new Dictionary<string, int>();
-            foreach (var node in allNodes)
-            {
-                outDegree[node] = graph.ContainsKey(node) ? graph[node].Count : 0;
-            }
-
-            var result = new List<DeleteStage>();
-            var processed = new HashSet<string>();
-
-            while (processed.Count < allNodes.Count)
-            {
-                // 找没有子表的节点（叶子节点），先删除
-                var currentLevel = outDegree
-                    .Where(kv => !processed.Contains(kv.Key) && kv.Value == 0)
-                    .Select(kv => kv.Key)
-                    .ToList();
-
-                if (currentLevel.Count == 0 && processed.Count < allNodes.Count)
-                {
-                    throw new InvalidOperationException("依赖图存在循环引用，无法完成拓扑排序");
-                }
-
-                var stage = new DeleteStage
-                {
-                    StageNumber = result.Count + 1
-                };
-
-                foreach (var node in currentLevel)
-                {
-                    var metadata = graphBuilder.GetMetadata(node);
-                    stage.Tables.Add(new DeleteTableInfo
-                    {
-                        TableName = node,
-                        PrimaryKeyColumn = metadata?.PrimaryKeyName ?? "PrimaryKeyID"
-                    });
-                    processed.Add(node);
-                }
-
-                // 更新父节点的outDegree（删除了子节点后，父节点就少了一个子依赖）
-                foreach (var node in currentLevel)
-                {
-                    if (reverseGraph.ContainsKey(node))
-                    {
-                        foreach (var parent in reverseGraph[node])
-                        {
-                            if (outDegree.ContainsKey(parent))
-                                outDegree[parent]--;
-                        }
-                    }
-                }
-
-                if (stage.Tables.Count > 0)
-                    result.Add(stage);
-            }
-
-            return result;
-        }
-    }
-
-    /// <summary>
-    /// 删除阶段
-    /// </summary>
-    public class DeleteStage
-    {
-        public int StageNumber { get; set; }
-        public List<DeleteTableInfo> Tables { get; set; } = new();
-    }
-
-    /// <summary>
-    /// 待删除表信息
-    /// </summary>
-    public class DeleteTableInfo
-    {
-        public string TableName { get; set; }
-        public string PrimaryKeyColumn { get; set; }
-    }
-
-    /// <summary>
     /// 数据库外键信息（从 sys.foreign_keys 查询）
     /// </summary>
     public class DbForeignKeyInfo
@@ -433,24 +292,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
     {
         private readonly ILogger<DataCleanupEngine> _logger;
         private readonly IUnitOfWorkManage _unitOfWork;
-        private readonly Dictionary<string, List<long>> _deletedIdsMap = new();
         
-        /// <summary>
-        /// 删除模式
-        /// </summary>
-        public enum DeleteMode
-        {
-            /// <summary>
-            /// 实体导航模式 - 基于实体类的 Navigate 属性
-            /// </summary>
-            EntityNavigation,
-            
-            /// <summary>
-            /// 数据库元数据模式 - 直接查询数据库外键关系
-            /// </summary>
-            DatabaseMetadata
-        }
-
         public DataCleanupEngine()
         {
             _logger = Startup.GetFromFac<ILogger<DataCleanupEngine>>();
@@ -458,246 +300,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         }
 
         /// <summary>
-        /// 执行级联删除 - 采用"元数据驱动"策略（实体导航模式）
+        /// 获取数据库客户端（供外部使用）
+        /// </summary>
+        public ISqlSugarClient GetDbClient()
+        {
+            return _unitOfWork?.GetDbClient();
+        }
+        
+        /// <summary>
+        /// 执行级联删除 - 数据库元数据模式（直接从数据库获取外键关系）
         /// </summary>
         public async Task<CascadeDeleteResult> ExecuteCascadeDeleteAsync<T>(List<long> targetIds, bool isTestMode = false) where T : BaseEntity, new()
         {
-            return await ExecuteCascadeDeleteAsync<T>(targetIds, DeleteMode.EntityNavigation, isTestMode);
-        }
-
-        /// <summary>
-        /// 执行级联删除 - 可选择删除模式
-        /// </summary>
-        /// <typeparam name="T">实体类型</typeparam>
-        /// <param name="targetIds">目标ID列表</param>
-        /// <param name="deleteMode">删除模式：EntityNavigation=实体导航模式，DatabaseMetadata=数据库元数据模式</param>
-        /// <param name="isTestMode">是否为测试模式</param>
-        /// <returns>删除结果</returns>
-        public async Task<CascadeDeleteResult> ExecuteCascadeDeleteAsync<T>(List<long> targetIds, DeleteMode deleteMode, bool isTestMode = false) where T : BaseEntity, new()
-        {
-            return deleteMode switch
-            {
-                DeleteMode.DatabaseMetadata => await ExecuteCascadeDeleteByDbAsync<T>(targetIds, isTestMode),
-                _ => await ExecuteCascadeDeleteByEntityAsync<T>(targetIds, isTestMode)
-            };
-        }
-
-        /// <summary>
-        /// 执行级联删除 - 实体导航模式（基于实体类的 Navigate 属性）
-        /// </summary>
-        private async Task<CascadeDeleteResult> ExecuteCascadeDeleteByEntityAsync<T>(List<long> targetIds, bool isTestMode) where T : BaseEntity, new()
-        {
-            var result = new CascadeDeleteResult { IsTestMode = isTestMode, StartTime = DateTime.Now };
-            if (!targetIds.Any()) return result;
-
-            _deletedIdsMap.Clear();
-
-            try
-            {
-                Log($"[启动] 实体导航模式级联删除：{typeof(T).Name}, ID数：{targetIds.Count}, 模式：{(isTestMode ? "测试" : "正式")}");
-
-                var rootMetadata = ModelMetadataHelper.GetMetadata<T>();
-                Log($"[元数据] 根实体: {rootMetadata.TableName}, 主键: {rootMetadata.PrimaryKeyName}");
-
-                _deletedIdsMap[rootMetadata.EntityName] = targetIds;
-
-                var graphBuilder = new DependencyGraphBuilder();
-                graphBuilder.BuildFromRoot<T>();
-                var allNodes = graphBuilder.GetAllNodes();
-                Log($"[依赖图] 发现 {allNodes.Count} 个关联表");
-
-                var sorter = new TopologicalSorter();
-                var deleteStages = sorter.Sort(graphBuilder);
-                Log($"[拓扑排序] 生成 {deleteStages.Count} 个删除阶段");
-
-                for (int i = 0; i < deleteStages.Count; i++)
-                {
-                    var stage = deleteStages[i];
-                    var tableNames = string.Join(", ", stage.Tables.Select(t => t.TableName));
-                    Log($"[阶段 {i + 1}] {tableNames}");
-                }
-
-                await _unitOfWork.BeginTranAsync();
-                try
-                {
-                    int totalDeleted = 0;
-                    int currentStage = 1;
-                    int totalStages = deleteStages.Count;
-
-                    foreach (var stage in deleteStages)
-                    {
-                        foreach (var tableInfo in stage.Tables)
-                        {
-                            List<long> idsToDelete;
-
-                            if (tableInfo.TableName == rootMetadata.EntityName)
-                            {
-                                idsToDelete = targetIds;
-                            }
-                            else
-                            {
-                                var parentInfo = FindParentInfo(tableInfo.TableName, deleteStages, currentStage, graphBuilder);
-                                if (parentInfo == null)
-                                {
-                                    Log($"[阶段 {currentStage}] ⚠️ 无法确定 {tableInfo.TableName} 的父表关系，跳过");
-                                    continue;
-                                }
-
-                                idsToDelete = await FindChildIdsAsync(
-                                    tableInfo.TableName,
-                                    tableInfo.PrimaryKeyColumn,
-                                    parentInfo.Value.parentTable,
-                                    parentInfo.Value.fkColumn,
-                                    parentInfo.Value.parentIds
-                                );
-                            }
-
-                            if (!idsToDelete.Any())
-                            {
-                                Log($"[阶段 {currentStage}] ℹ️ {tableInfo.TableName} 无相关记录");
-                                continue;
-                            }
-
-                            var deletedCount = await ExecuteDeleteAsync(
-                                tableInfo.TableName,
-                                tableInfo.PrimaryKeyColumn,
-                                idsToDelete,
-                                isTestMode
-                            );
-
-                            _deletedIdsMap[tableInfo.TableName] = idsToDelete;
-
-                            totalDeleted += deletedCount;
-                            Log($"[阶段 {currentStage}] ✓ 删除 {tableInfo.TableName} ({deletedCount}条)");
-
-                            ReportProgress(currentStage, totalStages, $"正在删除 {tableInfo.TableName}");
-                        }
-
-                        currentStage++;
-                    }
-
-                    result.IsSuccess = true;
-                    result.TotalDeletedCount = totalDeleted;
-                    result.Complete();
-
-                    if (isTestMode)
-                    {
-                        await _unitOfWork.RollbackTranAsync();
-                        Log($"[测试完成] 事务已回滚。预计影响 {totalDeleted} 条记录。");
-                    }
-                    else
-                    {
-                        await _unitOfWork.CommitTranAsync();
-                        Log($"[正式完成] 事务已提交。总计删除 {totalDeleted} 条记录。");
-                    }
-                }
-                catch (Exception)
-                {
-                    await _unitOfWork.RollbackTranAsync();
-                    throw;
-                }
-            }
-            catch (Exception ex)
-            {
-                var errorMsg = $"[错误] {ex.Message}";
-                Log(errorMsg);
-                Log($"[堆栈] {ex.StackTrace}");
-                
-                if (ex.InnerException != null)
-                {
-                    Log($"[内部错误] {ex.InnerException.Message}");
-                    Log($"[内部堆栈] {ex.InnerException.StackTrace}");
-                }
-                
-                result.MarkAsFailed(ex.Message);
-                _logger?.LogError(ex, "级联删除异常");
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 查找父表信息
-        /// </summary>
-        private (string parentTable, string fkColumn, List<long> parentIds)? FindParentInfo(
-            string childTableName,
-            List<DeleteStage> stages,
-            int currentStage,
-            DependencyGraphBuilder graphBuilder)
-        {
-            Log($"[查找父表] 正在为子表 {childTableName} 寻找父表...");
-
-            for (int i = currentStage - 1; i >= 0; i--)
-            {
-                foreach (var tableInfo in stages[i].Tables)
-                {
-                    // 尝试通过表名获取元数据
-                    var metadata = graphBuilder.GetMetadata(tableInfo.TableName);
-
-                    if (metadata != null)
-                    {
-                        Log($"[查找父表] 检查父表候选: {metadata.EntityName}, 子表关联数: {metadata.ChildRelations.Count}");
-                        
-                        var childRelation = metadata.ChildRelations.FirstOrDefault(c => 
-                            c.ChildTableName.Equals(childTableName, StringComparison.OrdinalIgnoreCase));
-
-                        if (childRelation != null)
-                        {
-                            Log($"[查找父表] ✅ 找到匹配！父表: {metadata.EntityName}, 外键: {childRelation.ForeignKeyColumn}");
-                            
-                            if (_deletedIdsMap.TryGetValue(metadata.TableName, out var parentIds) && parentIds.Any())
-                            {
-                                return (metadata.TableName, childRelation.ForeignKeyColumn, parentIds);
-                            }
-                            else
-                            {
-                                Log($"[查找父表] ⚠️ 父表 {metadata.TableName} 没有已删除的ID记录");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Log($"[查找父表] ⚠️ 无法获取表 {tableInfo.TableName} 的元数据");
-                    }
-                }
-            }
-            
-            Log($"[查找父表] ❌ 未找到 {childTableName} 的父表关系");
-            return null;
-        }
-
-        /// <summary>
-        /// 查找子表中引用父表记录的ID
-        /// </summary>
-        private async Task<List<long>> FindChildIdsAsync(
-            string childTableName,
-            string childPkColumn,
-            string parentTableName,
-            string fkColumn,
-            List<long> parentIds)
-        {
-            var db = _unitOfWork.GetDbClient();
-
-            try
-            {
-                Log($"[查找子表] 查询 {childTableName} WHERE [{fkColumn}] IN (...) ({parentIds.Count}个父ID)");
-                
-                // 使用原生SQL查询子表ID
-                var sql = $"SELECT DISTINCT [{childPkColumn}] FROM [{childTableName}] WHERE [{fkColumn}] IN (@parentIds)";
-                var ids = await db.Ado.SqlQueryAsync<long>(sql, new { parentIds = parentIds });
-                
-                var result = ids.ToList();
-                Log($"[查找子表] ✓ 找到 {result.Count} 条相关记录");
-                return result;
-            }
-            catch (Exception ex)
-            {
-                Log($"[查找子表] ✗ 查询失败: {ex.Message}");
-                Log($"[查找子表] SQL: SELECT DISTINCT [{childPkColumn}] FROM [{childTableName}] WHERE [{fkColumn}] IN (...)");
-                Log($"[查找子表] 父表: {parentTableName}, 外键列: {fkColumn}, 父ID数量: {parentIds.Count}");
-                Log($"[查找子表] 堆栈: {ex.StackTrace}");
-                return new List<long>();
-            }
+            return await ExecuteCascadeDeleteByDbAsync<T>(targetIds, isTestMode);
         }
 
         /// <summary>
@@ -806,8 +421,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                             string childTable = fk.ReferencingTableName;
                             string childFkColumn = fk.ReferencingColumnName;
                             
-                            // 获取子表的主键列
-                            var childMetadata = ModelMetadataHelper.GetMetadata(childTable);
+                            // ✅ 修复：从数据库查询主键列（支持没有实体类的表）
+                            var childMetadata = await ModelMetadataHelper.GetMetadataAsync(db, childTable);
                             string childPkColumn = childMetadata?.PrimaryKeyName ?? "PrimaryKeyID";
                             
                             Log($"[预查询] {parentTable}.{parentFkColumn} → {childTable}.{childFkColumn} (主键: {childPkColumn})");
@@ -858,7 +473,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                             : new List<long>();
                         
                         // ⚠️ 关键修复：获取该表的主键列名（不是外键列！）
-                        var tableMetadata = ModelMetadataHelper.GetMetadata(tableInfo.TableName);
+                        // ✅ 修复：从数据库查询主键列（支持没有实体类的表）
+                        var tableMetadata = await ModelMetadataHelper.GetMetadataAsync(db, tableInfo.TableName);
                         string primaryKeyColumn = tableMetadata?.PrimaryKeyName ?? "PrimaryKeyID";
                         
                         Log($"\n---------- [阶段 {stage + 1}/{deleteOrder.Count}] ----------");
@@ -1201,8 +817,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
                 Log($"[外键冲突] 步骤1: 查询父表主键ID...");
                 Log($"[外键冲突]   SQL: SELECT * FROM [{parentTable}] WHERE [{parentFkColumn}] IN ({parentIds.Count}个ID)");
                 
-                // 获取父表的主键列名
-                var parentMetadata = ModelMetadataHelper.GetMetadata(parentTable);
+                // ✅ 修复：从数据库查询主键列（支持没有实体类的表）
+                var parentMetadata = await ModelMetadataHelper.GetMetadataAsync(db, parentTable);
                 string parentPkColumn = parentMetadata?.PrimaryKeyName ?? "PrimaryKeyID";
                 Log($"[外键冲突]   父表主键列: {parentPkColumn}");
                 

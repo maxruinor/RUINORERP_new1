@@ -542,7 +542,9 @@ namespace AutoUpdate
             updateUrl = updaterXmlFiles.GetNodeValue("//Url");
 
             appUpdater = new AppUpdater();
-            appUpdater.UpdaterUrl = updateUrl + "/AutoUpdaterList.xml";
+            // 修复URL拼接双斜杠问题
+            string baseUrl = updateUrl.TrimEnd('/');
+            appUpdater.UpdaterUrl = baseUrl + "/AutoUpdaterList.xml";
 
             // 检查是否有可回滚的版本，如果有则直接显示回滚界面
             // 注意：这是从MainForm直接调用时的处理逻辑
@@ -567,7 +569,23 @@ namespace AutoUpdate
                 }
 
                 tempUpdatePath = Path.Combine(updateDataPath, "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
-                appUpdater.DownAutoUpdateFile(tempUpdatePath);
+                
+                AppendAllText($"开始下载服务器配置文件...");
+                AppendAllText($"  - 目标URL: {appUpdater.UpdaterUrl}");
+                AppendAllText($"  - 保存路径: {tempUpdatePath}");
+                
+                bool downloadResult = appUpdater.DownAutoUpdateFile(tempUpdatePath);
+                
+                string downloadedFile = System.IO.Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
+                if (System.IO.File.Exists(downloadedFile))
+                {
+                    var fileInfo = new System.IO.FileInfo(downloadedFile);
+                    AppendAllText($"服务器配置文件下载成功，大小: {fileInfo.Length} 字节");
+                }
+                else
+                {
+                    AppendAllText("警告: 下载完成但文件不存在!");
+                }
 
                 // 下载完成后检查是否有更新
                 CheckForUpdatesAndShowUI();
@@ -615,6 +633,7 @@ namespace AutoUpdate
             if (!File.Exists(serverXmlFile))
             {
                 AppendAllText("服务器配置文件不存在，无法检查更新");
+                AppendAllText($"  - 目标URL: {appUpdater.UpdaterUrl}");
                 ShowRollbackMode();
                 return;
             }
@@ -3794,7 +3813,8 @@ namespace AutoUpdate
             }
 
             AppUpdater appUpdater = new AppUpdater();
-            appUpdater.UpdaterUrl = updateUrl + "/AutoUpdaterList.xml";
+            string baseUrl = updateUrl.TrimEnd('/');
+            appUpdater.UpdaterUrl = baseUrl + "/AutoUpdaterList.xml";
 
             try
             {
@@ -3902,7 +3922,8 @@ namespace AutoUpdate
             updateUrl = updaterXmlFiles.GetNodeValue("//Url");
 
             AppUpdater appUpdater = new AppUpdater();
-            appUpdater.UpdaterUrl = updateUrl + "/AutoUpdaterList.xml";
+            string baseUrl = updateUrl.TrimEnd('/');
+            appUpdater.UpdaterUrl = baseUrl + "/AutoUpdaterList.xml";
 
             try
             {

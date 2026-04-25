@@ -30,38 +30,43 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.kryptonPanelMain = new Krypton.Toolkit.KryptonPanel();
-            this.tabControlMain = new TabControl();
-            this.tabPageData = new  TabPage();
+            this.tabControlMain = new System.Windows.Forms.TabControl();
+            this.tabPageData = new System.Windows.Forms.TabPage();
+            this.splitContainerOutSite = new System.Windows.Forms.SplitContainer();
+            this.treeViewTableList = new System.Windows.Forms.TreeView();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonGroupBoxConfig = new Krypton.Toolkit.KryptonGroupBox();
-            this.kryptonPanelConfig = new Krypton.Toolkit.KryptonPanel();
-            this.kcmbEntityType = new Krypton.Toolkit.KryptonComboBox();
-            this.ktbSearchEntity = new Krypton.Toolkit.KryptonTextBox();
-            this.klblSearch = new Krypton.Toolkit.KryptonLabel();
             this.klblDeleteMode = new Krypton.Toolkit.KryptonLabel();
             this.kcmbDeleteMode = new Krypton.Toolkit.KryptonComboBox();
-            this.klblEntityType = new Krypton.Toolkit.KryptonLabel();
             this.kryptonGroupBoxPreview = new Krypton.Toolkit.KryptonGroupBox();
             this.kryptonPanelPreview = new Krypton.Toolkit.KryptonPanel();
             this.dgvDataPreview = new System.Windows.Forms.DataGridView();
             this.kryptonPanelExecuteButtons = new Krypton.Toolkit.KryptonPanel();
             this.kbtnDeleteSelected = new Krypton.Toolkit.KryptonButton();
+            this.kbtnTestExecute = new Krypton.Toolkit.KryptonButton();
             this.kbtnSelectNone = new Krypton.Toolkit.KryptonButton();
             this.kbtnSelectInvert = new Krypton.Toolkit.KryptonButton();
             this.kbtnSelectAll = new Krypton.Toolkit.KryptonButton();
             this.kbtnRefresh = new Krypton.Toolkit.KryptonButton();
-            this.kbtnTestExecute = new Krypton.Toolkit.KryptonButton();
             this.kbtnPreview = new Krypton.Toolkit.KryptonButton();
-            this.tabPageImages = new TabPage();
-            this.tabPageLog = new TabPage();
+            this.tabPageImages = new System.Windows.Forms.TabPage();
+            this.tabPageLog = new System.Windows.Forms.TabPage();
             this.rtbLog = new System.Windows.Forms.RichTextBox();
-            this.ctxMenuLog = new System.Windows.Forms.ContextMenuStrip();
+            this.ctxMenuLog = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tsmiClearLog = new System.Windows.Forms.ToolStripMenuItem();
+            this.kcmbEntityType = new Krypton.Toolkit.KryptonComboBox();
+            this.klblEntityType = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).BeginInit();
             this.kryptonPanelMain.SuspendLayout();
             this.tabControlMain.SuspendLayout();
             this.tabPageData.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerOutSite)).BeginInit();
+            this.splitContainerOutSite.Panel1.SuspendLayout();
+            this.splitContainerOutSite.Panel2.SuspendLayout();
+            this.splitContainerOutSite.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
@@ -71,9 +76,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxConfig.Panel)).BeginInit();
             this.kryptonGroupBoxConfig.Panel.SuspendLayout();
             this.kryptonGroupBoxConfig.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelConfig)).BeginInit();
-            this.kryptonPanelConfig.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kcmbEntityType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbDeleteMode)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxPreview)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxPreview.Panel)).BeginInit();
             this.kryptonGroupBoxPreview.Panel.SuspendLayout();
@@ -84,6 +87,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelExecuteButtons)).BeginInit();
             this.kryptonPanelExecuteButtons.SuspendLayout();
             this.tabPageLog.SuspendLayout();
+            this.ctxMenuLog.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbEntityType)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanelMain
@@ -97,31 +102,58 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // 
             // tabControlMain
             // 
+            this.tabControlMain.Controls.Add(this.tabPageData);
+            this.tabControlMain.Controls.Add(this.tabPageImages);
+            this.tabControlMain.Controls.Add(this.tabPageLog);
             this.tabControlMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlMain.Location = new System.Drawing.Point(0, 0);
             this.tabControlMain.Name = "tabControlMain";
             this.tabControlMain.SelectedIndex = 0;
             this.tabControlMain.Size = new System.Drawing.Size(1000, 700);
             this.tabControlMain.TabIndex = 0;
-            this.tabControlMain.TabPages.AddRange(new TabPage[] {
-            this.tabPageData,
-            this.tabPageImages,
-            this.tabPageLog});
             // 
             // tabPageData
             // 
-            this.tabPageData.Controls.Add(this.kryptonSplitContainer1);
-            this.tabPageData.Location = new System.Drawing.Point(5, 24);
+            this.tabPageData.Controls.Add(this.splitContainerOutSite);
+            this.tabPageData.Location = new System.Drawing.Point(4, 22);
             this.tabPageData.Name = "tabPageData";
             this.tabPageData.Padding = new System.Windows.Forms.Padding(5);
-            this.tabPageData.Size = new System.Drawing.Size(990, 671);
+            this.tabPageData.Size = new System.Drawing.Size(992, 674);
+            this.tabPageData.TabIndex = 0;
             this.tabPageData.Text = "数据清理";
+            // 
+            // splitContainerOutSite
+            // 
+            this.splitContainerOutSite.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainerOutSite.Location = new System.Drawing.Point(5, 5);
+            this.splitContainerOutSite.Name = "splitContainerOutSite";
+            // 
+            // splitContainerOutSite.Panel1
+            // 
+            this.splitContainerOutSite.Panel1.Controls.Add(this.treeViewTableList);
+            // 
+            // splitContainerOutSite.Panel2
+            // 
+            this.splitContainerOutSite.Panel2.Controls.Add(this.kryptonSplitContainer1);
+            this.splitContainerOutSite.Size = new System.Drawing.Size(982, 664);
+            this.splitContainerOutSite.SplitterDistance = 185;
+            this.splitContainerOutSite.TabIndex = 1;
+            // 
+            // treeViewTableList
+            // 
+            this.treeViewTableList.CheckBoxes = true;
+            this.treeViewTableList.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.treeViewTableList.Location = new System.Drawing.Point(0, 0);
+            this.treeViewTableList.Name = "treeViewTableList";
+            this.treeViewTableList.Size = new System.Drawing.Size(185, 664);
+            this.treeViewTableList.TabIndex = 0;
+            this.treeViewTableList.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.treeViewTableList_AfterCheck);
             // 
             // kryptonSplitContainer1
             // 
             this.kryptonSplitContainer1.Cursor = System.Windows.Forms.Cursors.Default;
             this.kryptonSplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonSplitContainer1.Location = new System.Drawing.Point(5, 5);
+            this.kryptonSplitContainer1.Location = new System.Drawing.Point(0, 0);
             this.kryptonSplitContainer1.Name = "kryptonSplitContainer1";
             this.kryptonSplitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -132,8 +164,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonGroupBoxPreview);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(980, 661);
-            this.kryptonSplitContainer1.SplitterDistance = 80;
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(793, 664);
+            this.kryptonSplitContainer1.SplitterDistance = 79;
             this.kryptonSplitContainer1.TabIndex = 0;
             // 
             // kryptonGroupBoxConfig
@@ -144,79 +176,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // 
             // kryptonGroupBoxConfig.Panel
             // 
-            this.kryptonGroupBoxConfig.Panel.Controls.Add(this.kryptonPanelConfig);
-            this.kryptonGroupBoxConfig.Size = new System.Drawing.Size(1000, 80);
+            this.kryptonGroupBoxConfig.Panel.Controls.Add(this.klblDeleteMode);
+            this.kryptonGroupBoxConfig.Panel.Controls.Add(this.kcmbDeleteMode);
+            this.kryptonGroupBoxConfig.Size = new System.Drawing.Size(793, 79);
             this.kryptonGroupBoxConfig.TabIndex = 0;
             this.kryptonGroupBoxConfig.Values.Heading = "清理配置";
             // 
-            // kryptonPanelConfig
-            // 
-            this.kryptonPanelConfig.Controls.Add(this.kcmbDeleteMode);
-            this.kryptonPanelConfig.Controls.Add(this.klblDeleteMode);
-            this.kryptonPanelConfig.Controls.Add(this.kcmbEntityType);
-            this.kryptonPanelConfig.Controls.Add(this.ktbSearchEntity);
-            this.kryptonPanelConfig.Controls.Add(this.klblSearch);
-            this.kryptonPanelConfig.Controls.Add(this.klblEntityType);
-            this.kryptonPanelConfig.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanelConfig.Location = new System.Drawing.Point(0, 0);
-            this.kryptonPanelConfig.Name = "kryptonPanelConfig";
-            this.kryptonPanelConfig.Size = new System.Drawing.Size(996, 56);
-            this.kryptonPanelConfig.TabIndex = 0;
-            // 
-            // kcmbEntityType
-            // 
-            this.kcmbEntityType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.kcmbEntityType.DropDownWidth = 400;
-            this.kcmbEntityType.IntegralHeight = false;
-            this.kcmbEntityType.Location = new System.Drawing.Point(90, 15);
-            this.kcmbEntityType.MaxDropDownItems = 20;
-            this.kcmbEntityType.Name = "kcmbEntityType";
-            this.kcmbEntityType.Size = new System.Drawing.Size(405, 21);
-            this.kcmbEntityType.TabIndex = 1;
-            this.kcmbEntityType.SelectedIndexChanged += new System.EventHandler(this.KcmbEntityType_SelectedIndexChanged);
-            // 
-            // ktbSearchEntity
-            // 
-            this.ktbSearchEntity.Location = new System.Drawing.Point(590, 15);
-            this.ktbSearchEntity.Name = "ktbSearchEntity";
-            this.ktbSearchEntity.Size = new System.Drawing.Size(300, 23);
-            this.ktbSearchEntity.TabIndex = 3;
-            this.ktbSearchEntity.TextChanged += new System.EventHandler(this.KtbSearchEntity_TextChanged);
-            // 
-            // klblSearch
-            // 
-            this.klblSearch.Location = new System.Drawing.Point(520, 18);
-            this.klblSearch.Name = "klblSearch";
-            this.klblSearch.Size = new System.Drawing.Size(65, 20);
-            this.klblSearch.TabIndex = 2;
-            this.klblSearch.Values.Text = "快速搜索:";
-            // 
-            // klblEntityType
-            // 
-            this.klblEntityType.Location = new System.Drawing.Point(20, 18);
-            this.klblEntityType.Name = "klblEntityType";
-            this.klblEntityType.Size = new System.Drawing.Size(65, 20);
-            this.klblEntityType.TabIndex = 0;
-            this.klblEntityType.Values.Text = "实体类型:";
-            // 
             // klblDeleteMode
             // 
-            this.klblDeleteMode.Location = new System.Drawing.Point(920, 18);
+            this.klblDeleteMode.Location = new System.Drawing.Point(10, 8);
             this.klblDeleteMode.Name = "klblDeleteMode";
-            this.klblDeleteMode.Size = new System.Drawing.Size(65, 20);
-            this.klblDeleteMode.TabIndex = 4;
-            this.klblDeleteMode.Values.Text = "删除方式:";
+            this.klblDeleteMode.Size = new System.Drawing.Size(75, 20);
+            this.klblDeleteMode.TabIndex = 0;
+            this.klblDeleteMode.Values.Text = "删除方式：";
             // 
             // kcmbDeleteMode
             // 
             this.kcmbDeleteMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbDeleteMode.DropDownWidth = 180;
             this.kcmbDeleteMode.IntegralHeight = false;
-            this.kcmbDeleteMode.Location = new System.Drawing.Point(990, 15);
+            this.kcmbDeleteMode.Location = new System.Drawing.Point(90, 8);
             this.kcmbDeleteMode.MaxDropDownItems = 10;
             this.kcmbDeleteMode.Name = "kcmbDeleteMode";
-            this.kcmbDeleteMode.Size = new System.Drawing.Size(180, 21);
-            this.kcmbDeleteMode.TabIndex = 5;
+            this.kcmbDeleteMode.Size = new System.Drawing.Size(160, 21);
+            this.kcmbDeleteMode.TabIndex = 1;
             // 
             // kryptonGroupBoxPreview
             // 
@@ -227,7 +210,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             // kryptonGroupBoxPreview.Panel
             // 
             this.kryptonGroupBoxPreview.Panel.Controls.Add(this.kryptonPanelPreview);
-            this.kryptonGroupBoxPreview.Size = new System.Drawing.Size(1000, 615);
+            this.kryptonGroupBoxPreview.Size = new System.Drawing.Size(793, 580);
             this.kryptonGroupBoxPreview.TabIndex = 2;
             this.kryptonGroupBoxPreview.Values.Heading = "数据预览";
             // 
@@ -238,7 +221,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kryptonPanelPreview.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelPreview.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelPreview.Name = "kryptonPanelPreview";
-            this.kryptonPanelPreview.Size = new System.Drawing.Size(996, 591);
+            this.kryptonPanelPreview.Size = new System.Drawing.Size(789, 556);
             this.kryptonPanelPreview.TabIndex = 0;
             // 
             // dgvDataPreview
@@ -251,27 +234,27 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.dgvDataPreview.Location = new System.Drawing.Point(0, 0);
             this.dgvDataPreview.Name = "dgvDataPreview";
             this.dgvDataPreview.RowTemplate.Height = 23;
-            this.dgvDataPreview.Size = new System.Drawing.Size(996, 552);
+            this.dgvDataPreview.Size = new System.Drawing.Size(789, 517);
             this.dgvDataPreview.TabIndex = 1;
             // 
             // kryptonPanelExecuteButtons
             // 
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnDeleteSelected);
+            this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnTestExecute);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnSelectNone);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnSelectInvert);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnSelectAll);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnRefresh);
-            this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnTestExecute);
             this.kryptonPanelExecuteButtons.Controls.Add(this.kbtnPreview);
             this.kryptonPanelExecuteButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.kryptonPanelExecuteButtons.Location = new System.Drawing.Point(0, 552);
+            this.kryptonPanelExecuteButtons.Location = new System.Drawing.Point(0, 517);
             this.kryptonPanelExecuteButtons.Name = "kryptonPanelExecuteButtons";
-            this.kryptonPanelExecuteButtons.Size = new System.Drawing.Size(996, 39);
+            this.kryptonPanelExecuteButtons.Size = new System.Drawing.Size(789, 39);
             this.kryptonPanelExecuteButtons.TabIndex = 0;
             // 
             // kbtnDeleteSelected
             // 
-            this.kbtnDeleteSelected.Location = new System.Drawing.Point(839, 6);
+            this.kbtnDeleteSelected.Location = new System.Drawing.Point(440, 6);
             this.kbtnDeleteSelected.Name = "kbtnDeleteSelected";
             this.kbtnDeleteSelected.Size = new System.Drawing.Size(90, 28);
             this.kbtnDeleteSelected.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
@@ -279,77 +262,79 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kbtnDeleteSelected.Values.Text = "删除选中";
             this.kbtnDeleteSelected.Click += new System.EventHandler(this.KbtnDeleteSelected_Click);
             // 
+            // kbtnTestExecute
+            // 
+            this.kbtnTestExecute.Location = new System.Drawing.Point(333, 6);
+            this.kbtnTestExecute.Name = "kbtnTestExecute";
+            this.kbtnTestExecute.Size = new System.Drawing.Size(80, 28);
+            this.kbtnTestExecute.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.kbtnTestExecute.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.kbtnTestExecute.TabIndex = 1;
+            this.kbtnTestExecute.Values.Text = "测试";
+            this.kbtnTestExecute.Click += new System.EventHandler(this.KbtnTestExecute_Click);
+            // 
             // kbtnSelectNone
             // 
-            this.kbtnSelectNone.Location = new System.Drawing.Point(513, 6);
+            this.kbtnSelectNone.Location = new System.Drawing.Point(220, 6);
             this.kbtnSelectNone.Name = "kbtnSelectNone";
-            this.kbtnSelectNone.Size = new System.Drawing.Size(90, 28);
+            this.kbtnSelectNone.Size = new System.Drawing.Size(80, 28);
             this.kbtnSelectNone.TabIndex = 6;
             this.kbtnSelectNone.Values.Text = "取消选择";
             this.kbtnSelectNone.Click += new System.EventHandler(this.KbtnSelectNone_Click);
             // 
             // kbtnSelectInvert
             // 
-            this.kbtnSelectInvert.Location = new System.Drawing.Point(395, 6);
+            this.kbtnSelectInvert.Location = new System.Drawing.Point(140, 6);
             this.kbtnSelectInvert.Name = "kbtnSelectInvert";
-            this.kbtnSelectInvert.Size = new System.Drawing.Size(90, 28);
+            this.kbtnSelectInvert.Size = new System.Drawing.Size(80, 28);
             this.kbtnSelectInvert.TabIndex = 5;
             this.kbtnSelectInvert.Values.Text = "反选";
             this.kbtnSelectInvert.Click += new System.EventHandler(this.KbtnSelectInvert_Click);
             // 
             // kbtnSelectAll
             // 
-            this.kbtnSelectAll.Location = new System.Drawing.Point(285, 6);
+            this.kbtnSelectAll.Location = new System.Drawing.Point(60, 6);
             this.kbtnSelectAll.Name = "kbtnSelectAll";
-            this.kbtnSelectAll.Size = new System.Drawing.Size(90, 28);
+            this.kbtnSelectAll.Size = new System.Drawing.Size(80, 28);
             this.kbtnSelectAll.TabIndex = 4;
             this.kbtnSelectAll.Values.Text = "全选";
             this.kbtnSelectAll.Click += new System.EventHandler(this.KbtnSelectAll_Click);
             // 
             // kbtnRefresh
             // 
-            this.kbtnRefresh.Location = new System.Drawing.Point(30, 6);
+            this.kbtnRefresh.Location = new System.Drawing.Point(10, 6);
             this.kbtnRefresh.Name = "kbtnRefresh";
-            this.kbtnRefresh.Size = new System.Drawing.Size(90, 28);
+            this.kbtnRefresh.Size = new System.Drawing.Size(40, 28);
             this.kbtnRefresh.TabIndex = 3;
             this.kbtnRefresh.Values.Text = "刷新";
             this.kbtnRefresh.Click += new System.EventHandler(this.KbtnRefresh_Click);
             // 
-            // kbtnTestExecute
-            // 
-            this.kbtnTestExecute.Location = new System.Drawing.Point(669, 6);
-            this.kbtnTestExecute.Name = "kbtnTestExecute";
-            this.kbtnTestExecute.Size = new System.Drawing.Size(90, 28);
-            this.kbtnTestExecute.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
-            this.kbtnTestExecute.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.kbtnTestExecute.TabIndex = 1;
-            this.kbtnTestExecute.Values.Text = "测试执行";
-            this.kbtnTestExecute.Click += new System.EventHandler(this.KbtnTestExecute_Click);
-            // 
             // kbtnPreview
             // 
-            this.kbtnPreview.Location = new System.Drawing.Point(140, 6);
+            this.kbtnPreview.Location = new System.Drawing.Point(676, 6);
             this.kbtnPreview.Name = "kbtnPreview";
-            this.kbtnPreview.Size = new System.Drawing.Size(90, 28);
+            this.kbtnPreview.Size = new System.Drawing.Size(80, 28);
             this.kbtnPreview.TabIndex = 0;
-            this.kbtnPreview.Values.Text = "数据预览";
+            this.kbtnPreview.Values.Text = "预览";
             this.kbtnPreview.Click += new System.EventHandler(this.KbtnPreview_Click);
             // 
             // tabPageImages
             // 
-            this.tabPageImages.Location = new System.Drawing.Point(5, 24);
+            this.tabPageImages.Location = new System.Drawing.Point(4, 22);
             this.tabPageImages.Name = "tabPageImages";
             this.tabPageImages.Padding = new System.Windows.Forms.Padding(5);
-            this.tabPageImages.Size = new System.Drawing.Size(990, 671);
+            this.tabPageImages.Size = new System.Drawing.Size(992, 674);
+            this.tabPageImages.TabIndex = 1;
             this.tabPageImages.Text = "图片管理";
             // 
             // tabPageLog
             // 
             this.tabPageLog.Controls.Add(this.rtbLog);
-            this.tabPageLog.Location = new System.Drawing.Point(5, 24);
+            this.tabPageLog.Location = new System.Drawing.Point(4, 22);
             this.tabPageLog.Name = "tabPageLog";
             this.tabPageLog.Padding = new System.Windows.Forms.Padding(5);
-            this.tabPageLog.Size = new System.Drawing.Size(990, 671);
+            this.tabPageLog.Size = new System.Drawing.Size(992, 674);
+            this.tabPageLog.TabIndex = 2;
             this.tabPageLog.Text = "运行日志";
             // 
             // rtbLog
@@ -362,7 +347,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.rtbLog.Location = new System.Drawing.Point(5, 5);
             this.rtbLog.Name = "rtbLog";
             this.rtbLog.ReadOnly = true;
-            this.rtbLog.Size = new System.Drawing.Size(980, 661);
+            this.rtbLog.Size = new System.Drawing.Size(982, 664);
             this.rtbLog.TabIndex = 0;
             this.rtbLog.Text = "";
             // 
@@ -371,14 +356,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.ctxMenuLog.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsmiClearLog});
             this.ctxMenuLog.Name = "ctxMenuLog";
-            this.ctxMenuLog.Size = new System.Drawing.Size(101, 26);
+            this.ctxMenuLog.Size = new System.Drawing.Size(125, 26);
             // 
             // tsmiClearLog
             // 
             this.tsmiClearLog.Name = "tsmiClearLog";
-            this.tsmiClearLog.Size = new System.Drawing.Size(100, 22);
+            this.tsmiClearLog.Size = new System.Drawing.Size(124, 22);
             this.tsmiClearLog.Text = "清除日志";
             this.tsmiClearLog.Click += new System.EventHandler(this.TsmiClearLog_Click);
+            // 
+            // kcmbEntityType
+            // 
+            this.kcmbEntityType.DropDownWidth = 121;
+            this.kcmbEntityType.IntegralHeight = false;
+            this.kcmbEntityType.Location = new System.Drawing.Point(0, 0);
+            this.kcmbEntityType.Name = "kcmbEntityType";
+            this.kcmbEntityType.Size = new System.Drawing.Size(121, 21);
+            this.kcmbEntityType.TabIndex = 0;
+            // 
+            // klblEntityType
+            // 
+            this.klblEntityType.Location = new System.Drawing.Point(0, 0);
+            this.klblEntityType.Name = "klblEntityType";
+            this.klblEntityType.Size = new System.Drawing.Size(90, 25);
+            this.klblEntityType.TabIndex = 0;
+            // 
+            // UCBasicDataCleanup
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -389,6 +392,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kryptonPanelMain.ResumeLayout(false);
             this.tabControlMain.ResumeLayout(false);
             this.tabPageData.ResumeLayout(false);
+            this.splitContainerOutSite.Panel1.ResumeLayout(false);
+            this.splitContainerOutSite.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerOutSite)).EndInit();
+            this.splitContainerOutSite.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).EndInit();
             this.kryptonSplitContainer1.Panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).EndInit();
@@ -397,12 +404,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             this.kryptonSplitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxConfig.Panel)).EndInit();
             this.kryptonGroupBoxConfig.Panel.ResumeLayout(false);
+            this.kryptonGroupBoxConfig.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxConfig)).EndInit();
             this.kryptonGroupBoxConfig.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelConfig)).EndInit();
-            this.kryptonPanelConfig.ResumeLayout(false);
-            this.kryptonPanelConfig.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kcmbEntityType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbDeleteMode)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxPreview.Panel)).EndInit();
             this.kryptonGroupBoxPreview.Panel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxPreview)).EndInit();
@@ -413,6 +418,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelExecuteButtons)).EndInit();
             this.kryptonPanelExecuteButtons.ResumeLayout(false);
             this.tabPageLog.ResumeLayout(false);
+            this.ctxMenuLog.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbEntityType)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -427,11 +434,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private System.Windows.Forms.RichTextBox rtbLog;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer1;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxConfig;
-        private Krypton.Toolkit.KryptonPanel kryptonPanelConfig;
         private Krypton.Toolkit.KryptonLabel klblEntityType;
         private Krypton.Toolkit.KryptonComboBox kcmbEntityType;
-        private Krypton.Toolkit.KryptonTextBox ktbSearchEntity;
-        private Krypton.Toolkit.KryptonLabel klblSearch;
         private Krypton.Toolkit.KryptonLabel klblDeleteMode;
         private Krypton.Toolkit.KryptonComboBox kcmbDeleteMode;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxPreview;
@@ -447,5 +451,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataCleanup
         private Krypton.Toolkit.KryptonButton kbtnPreview;
         private System.Windows.Forms.ContextMenuStrip ctxMenuLog;
         private System.Windows.Forms.ToolStripMenuItem tsmiClearLog;
+        private SplitContainer splitContainerOutSite;
+        private TreeView treeViewTableList;
     }
 }

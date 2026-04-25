@@ -2472,7 +2472,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Startup.cs" />
-    <Compile Include="SysConfig\BasicDataCleanup\CleanupDisplayNames.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\CleanupResult.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\DataCleanupEngine.cs" />
     <Compile Include="SysConfig\BasicDataCleanup\UCBasicDataCleanup.cs">
@@ -3835,6 +3834,7 @@
     <Content Include="SqlScript\mssql连接池情况.sql" />
     <Content Include="SqlScript\地区省市.sql" />
     <Content Include="SqlScript\内置函数支持.sql" />
+    <Content Include="SqlScript\所有外键关系.sql" />
     <Content Include="SqlScript\清空业务表数据.sql" />
     <Content Include="SqlScript\采购汇总.sql" />
     <Content Include="SqlScript\销售汇总.sql" />

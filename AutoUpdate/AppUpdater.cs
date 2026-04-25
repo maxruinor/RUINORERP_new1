@@ -334,7 +334,8 @@ namespace AutoUpdate
         /// <summary>
         /// 下载自动更新文件到临时目录
         /// </summary>
-        public void DownAutoUpdateFile(string downpath)
+        /// <returns>下载是否成功</returns>
+        public bool DownAutoUpdateFile(string downpath)
         {
             if (!System.IO.Directory.Exists(downpath))
                 System.IO.Directory.CreateDirectory(downpath);
@@ -364,14 +365,28 @@ namespace AutoUpdate
                         outStream.Write(buffer, 0, bytesRead);
                     }
                 }
+                
+                return true;
             }
             catch (WebException e)
             {
-                System.Diagnostics.Debug.WriteLine("下载失败，请联系系统管理员获取更多信息：" + e);
+                string errorDetail = e.Status.ToString();
+                if (e.Response != null)
+                {
+                    try
+                    {
+                        var httpResponse = (HttpWebResponse)e.Response;
+                        errorDetail += $", HTTP {httpResponse.StatusCode}: {httpResponse.StatusDescription}";
+                    }
+                    catch { }
+                }
+                System.Diagnostics.Debug.WriteLine("下载失败: " + errorDetail + " - " + e.Message);
+                throw new Exception($"从服务器下载更新配置文件失败。\n\n详细信息: {errorDetail}\nURL: {UpdaterUrl}", e);
             }
             catch (IOException e)
             {
-                System.Diagnostics.Debug.WriteLine("下载失败，请联系系统管理员获取更多信息：" + e);
+                System.Diagnostics.Debug.WriteLine("下载失败: " + e.Message);
+                throw new Exception($"保存更新配置文件失败: {e.Message}", e);
             }
         }
 

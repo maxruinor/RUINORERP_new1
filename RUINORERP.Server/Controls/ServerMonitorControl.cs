@@ -1552,9 +1552,22 @@ namespace RUINORERP.Server.Controls
                     // 使用 SafeInvoke 确保在 UI 线程上更新控件
                     SafeInvoke(() =>
                     {
-                        rtbMemoryDist.Text = distributionText;
-                        rtbMemoryDist.SelectionStart = rtbMemoryDist.Text.Length;
-                        rtbMemoryDist.ScrollToCaret();
+                        rtbMemoryDist?.Invoke((MethodInvoker)(() =>
+                        {
+                            if (rtbMemoryDist.IsDisposed || rtbMemoryDist.Disposing || !rtbMemoryDist.IsHandleCreated)
+                                return;
+                            rtbMemoryDist.SuspendLayout();
+                            try
+                            {
+                                rtbMemoryDist.Text = distributionText;
+                                rtbMemoryDist.SelectionStart = rtbMemoryDist.Text.Length;
+                                rtbMemoryDist.ScrollToCaret();
+                            }
+                            finally
+                            {
+                                rtbMemoryDist.ResumeLayout();
+                            }
+                        }));
                     });
                 }
                 else

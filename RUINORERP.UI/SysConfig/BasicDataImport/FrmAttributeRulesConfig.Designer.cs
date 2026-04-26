@@ -28,16 +28,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void InitializeComponent()
         {
-            this.kryptonPanel1 = new ComponentFactory.Krypton.Toolkit.KryptonPanel();
+            this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.dgvRules = new System.Windows.Forms.DataGridView();
-            this.kryptonGroupBox1 = new ComponentFactory.Krypton.Toolkit.KryptonGroupBox();
-            this.kbtnAdd = new ComponentFactory.Krypton.Toolkit.KryptonButton();
-            this.kbtnEdit = new ComponentFactory.Krypton.Toolkit.KryptonButton();
-            this.kbtnDelete = new ComponentFactory.Krypton.Toolkit.KryptonButton();
-            this.kryptonGroupBox2 = new ComponentFactory.Krypton.Toolkit.KryptonGroupBox();
-            this.kbtnAddDefaultRules = new ComponentFactory.Krypton.Toolkit.KryptonButton();
-            this.kbtnOK = new ComponentFactory.Krypton.Toolkit.KryptonButton();
-            this.kbtnCancel = new ComponentFactory.Krypton.Toolkit.KryptonButton();
+            this.kryptonGroupBox1 = new Krypton.Toolkit.KryptonGroupBox();
+            this.kbtnAdd = new Krypton.Toolkit.KryptonButton();
+            this.kbtnEdit = new Krypton.Toolkit.KryptonButton();
+            this.kbtnDelete = new Krypton.Toolkit.KryptonButton();
+            this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
+            this.kbtnAddDefaultRules = new Krypton.Toolkit.KryptonButton();
+            this.kbtnOK = new Krypton.Toolkit.KryptonButton();
+            this.kbtnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonGroupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvRules)).BeginInit();
             this.kryptonGroupBox2.SuspendLayout();
@@ -173,15 +173,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         #endregion
 
-        private ComponentFactory.Krypton.Toolkit.KryptonPanel kryptonPanel1;
+        private Krypton.Toolkit.KryptonPanel kryptonPanel1;
         private System.Windows.Forms.DataGridView dgvRules;
-        private ComponentFactory.Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
-        private ComponentFactory.Krypton.Toolkit.KryptonButton kbtnAdd;
-        private ComponentFactory.Krypton.Toolkit.KryptonButton kbtnEdit;
-        private ComponentFactory.Krypton.Toolkit.KryptonButton kbtnDelete;
-        private ComponentFactory.Krypton.Toolkit.KryptonGroupBox kryptonGroupBox2;
-        private ComponentFactory.Krypton.Toolkit.KryptonButton kbtnAddDefaultRules;
-        private ComponentFactory.Krypton.Toolkit.KryptonButton kbtnOK;
-        private ComponentFactory.Krypton.Toolkit.KryptonButton kbtnCancel;
+        private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
+        private Krypton.Toolkit.KryptonButton kbtnAdd;
+        private Krypton.Toolkit.KryptonButton kbtnEdit;
+        private Krypton.Toolkit.KryptonButton kbtnDelete;
+        private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox2;
+        private Krypton.Toolkit.KryptonButton kbtnAddDefaultRules;
+        private Krypton.Toolkit.KryptonButton kbtnOK;
+        private Krypton.Toolkit.KryptonButton kbtnCancel;
     }
 }

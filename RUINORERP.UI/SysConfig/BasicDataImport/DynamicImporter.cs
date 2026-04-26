@@ -444,14 +444,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // 验证表名和字段名是否合法（防止SQL注入）
+                // 【P0修复】使用更严格的SQL注入防护 - 白名单验证
                 string tableName = entityType.Name;
+                
+                // 1. 首先检查是否为合法的SQL标识符
                 if (!IsValidSqlIdentifier(tableName) || !IsValidSqlIdentifier(imageField) || !IsValidSqlIdentifier(uniqueField))
                 {
-                    throw new ArgumentException("无效的表名或字段名");
+                    throw new ArgumentException("无效的表名或字段名，可能包含非法字符");
                 }
                 
-                // 构建更新SQL
+                // 2. 【P0修复】额外验证：确保表名和字段名来自已知的实体元数据（白名单机制）
+                if (!IsKnownEntityField(entityType, imageField) || !IsKnownEntityField(entityType, uniqueField))
+                {
+                    throw new ArgumentException("字段名不在实体的已知字段列表中，拒绝执行");
+                }
+                
+                // 3. 使用参数化查询（已经实现，保持不变）
                 string sql = $"UPDATE {tableName} SET {imageField} = @value WHERE {uniqueField} = @uniqueValue";
                 
                 await _db.Ado.ExecuteCommandAsync(sql, new { value, uniqueValue });
@@ -459,19 +467,56 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"更新图片字段失败: {ex.Message}");
+                throw; // 【P0修复】重新抛出异常，让调用方处理
             }
         }
 
         /// <summary>
         /// 验证SQL标识符是否合法（仅允许字母、数字、下划线）
+        /// 【P0修复】加强验证规则
         /// </summary>
         private bool IsValidSqlIdentifier(string identifier)
         {
             if (string.IsNullOrEmpty(identifier))
                 return false;
             
-            // SQL标识符只能包含字母、数字、下划线，且不能以数字开头
-            return System.Text.RegularExpressions.Regex.IsMatch(identifier, @"^[a-zA-Z_][a-zA-Z0-9_]*$");
+            // 【P0修复】更严格的正则表达式：
+            // 1. 只能包含字母、数字、下划线
+            // 2. 不能以数字开头
+            // 3. 长度限制在1-128字符之间
+            // 4. 不能包含连续的下划线
+            if (identifier.Length < 1 || identifier.Length > 128)
+                return false;
+                
+            if (!System.Text.RegularExpressions.Regex.IsMatch(identifier, @"^[a-zA-Z_][a-zA-Z0-9_]*$"))
+                return false;
+                
+            // 检查是否包含连续下划线
+            if (identifier.Contains("__"))
+                return false;
+                
+            return true;
+        }
+        
+        /// <summary>
+        /// 【P0修复】验证字段是否属于实体的已知字段（白名单机制）
+        /// </summary>
+        private bool IsKnownEntityField(Type entityType, string fieldName)
+        {
+            if (entityType == null || string.IsNullOrEmpty(fieldName))
+                return false;
+            
+            try
+            {
+                // 通过反射检查实体是否有该属性
+                var property = entityType.GetProperty(fieldName, 
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                return property != null;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>

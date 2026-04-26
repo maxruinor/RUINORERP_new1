@@ -273,13 +273,28 @@ namespace RUINORERP.Server
                 });
             });
 
-            // 注册Redis缓存服务
+            // 注册Redis缓存服务（支持开关控制）
             services.AddSingleton<IRedisCacheService>(sp =>
             {
                 try
                 {
                     // 直接从appsettings.json读取Redis配置
                     var configuration = sp.GetRequiredService<IConfiguration>();
+                    
+                    // ✅ 检查 Redis 启用开关（默认为 false）
+                    var redisEnabled = configuration.GetValue<bool>("RedisEnabled", false);
+                    
+                    if (!redisEnabled)
+                    {
+                        // Redis 未启用，直接使用内存缓存适配器
+                        var memoryCache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                        var memLogger = sp.GetRequiredService<ILogger<RUINORERP.Server.Comm.MemoryCacheAdapterForRedis>>();
+                        #if DEBUG
+                        System.Diagnostics.Debug.WriteLine("[Redis] Redis 已禁用，使用内存缓存适配器");
+                        #endif
+                        return new RUINORERP.Server.Comm.MemoryCacheAdapterForRedis(memoryCache, memLogger) as IRedisCacheService;
+                    }
+                    
                     var redisServer = configuration.GetValue<string>("RedisServer");
                     var redisPassword = configuration.GetValue<string>("RedisServerPWD");
 
@@ -291,13 +306,20 @@ namespace RUINORERP.Server
 
                     if (string.IsNullOrEmpty(redisConnectionString))
                     {
-                        // 如果未配置Redis，返回内存缓存适配器作为降级
+                        // 如果未配置Redis服务器地址，返回内存缓存适配器作为降级
                         var memoryCache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                         var memLogger = sp.GetRequiredService<ILogger<RUINORERP.Server.Comm.MemoryCacheAdapterForRedis>>();
+                        #if DEBUG
+                        System.Diagnostics.Debug.WriteLine("[Redis] Redis 服务器地址为空，使用内存缓存适配器");
+                        #endif
                         return new RUINORERP.Server.Comm.MemoryCacheAdapterForRedis(memoryCache, memLogger) as IRedisCacheService;
                     }
 
                     var redisLogger = sp.GetRequiredService<ILogger<RUINORERP.Server.Comm.RedisCacheService>>();
+                    
+                    #if DEBUG
+                    System.Diagnostics.Debug.WriteLine($"[Redis] 正在连接到 Redis 服务器: {redisServer}");
+                    #endif
                     
                     // 优化Redis连接配置参数，提高高并发下的稳定性
                     var options = ConfigurationOptions.Parse(redisConnectionString);
@@ -308,11 +330,20 @@ namespace RUINORERP.Server
                     options.ReconnectRetryPolicy = new LinearRetry(1000); // 线性重试策略，每1秒重试一次
                     
                     var multiplexer = StackExchange.Redis.ConnectionMultiplexer.Connect(options);
+                    
+                    #if DEBUG
+                    System.Diagnostics.Debug.WriteLine($"[Redis] 成功连接到 Redis 服务器");
+                    #endif
+                    
                     return new RUINORERP.Server.Comm.RedisCacheService(multiplexer, redisLogger);
                 }
-                catch
+                catch (Exception ex)
                 {
                     // Redis连接失败时降级到内存缓存
+                    #if DEBUG
+                    System.Diagnostics.Debug.WriteLine($"[Redis] 连接失败: {ex.Message}，降级到内存缓存");
+                    #endif
+                    
                     var memoryCache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                     var memLogger = sp.GetRequiredService<ILogger<RUINORERP.Server.Comm.MemoryCacheAdapterForRedis>>();
                     return new RUINORERP.Server.Comm.MemoryCacheAdapterForRedis(memoryCache, memLogger) as IRedisCacheService;

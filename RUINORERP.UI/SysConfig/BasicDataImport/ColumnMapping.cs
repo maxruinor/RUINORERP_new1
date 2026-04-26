@@ -70,30 +70,35 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// 用于存储枚举类型默认值的详细信息
     /// </summary>
     [Serializable]
+    [XmlRoot("EnumDefaultConfig")]
     public class EnumDefaultConfig
     {
         /// <summary>
         /// 枚举类型完整名称
         /// 格式："命名空间.枚举名" 如："RUINORERP.Model.EnumProductType"
         /// </summary>
+        [XmlElement("EnumTypeName")]
         public string EnumTypeName { get; set; }
 
         /// <summary>
         /// 枚举值（数值）
         /// 例如：0, 1, 2 等
         /// </summary>
+        [XmlElement("EnumValue")]
         public int EnumValue { get; set; }
 
         /// <summary>
         /// 枚举名称（字符串表示）
         /// 例如："RawMaterial", "SemiProduct" 等
         /// </summary>
+        [XmlElement("EnumName")]
         public string EnumName { get; set; }
 
         /// <summary>
         /// 枚举显示文本（Description特性或枚举名称）
         /// 例如："原材料", "半成品" 等
         /// </summary>
+        [XmlElement("EnumDisplayName")]
         public string EnumDisplayName { get; set; }
     }
 
@@ -102,28 +107,34 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// 用于配置多个Excel列的拼接规则
     /// </summary>
     [Serializable]
+    [XmlRoot("ColumnConcatConfig")]
     public class ColumnConcatConfig
     {
         /// <summary>
         /// 要拼接的Excel列名列表（按顺序拼接）
         /// </summary>
+        [XmlArray("SourceColumns")]
+        [XmlArrayItem("Column")]
         public List<string> SourceColumns { get; set; }
 
         /// <summary>
         /// 列之间的分隔符
         /// 例如："-"、"_"、空格、空字符串等
         /// </summary>
+        [XmlElement("Separator")]
         public string Separator { get; set; }
 
         /// <summary>
         /// 是否去除每个列的前后空格
         /// </summary>
+        [XmlElement("TrimWhitespace")]
         public bool TrimWhitespace { get; set; }
 
         /// <summary>
         /// 是否忽略空值列
         /// 为true时，空值列不会参与拼接
         /// </summary>
+        [XmlElement("IgnoreEmptyColumns")]
         public bool IgnoreEmptyColumns { get; set; }
 
         /// <summary>
@@ -183,56 +194,67 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// 用于配置从Excel提取图片的规则
     /// </summary>
     [Serializable]
+    [XmlRoot("ExcelImageConfig")]
     public class ExcelImageConfig
     {
         /// <summary>
         /// 图片存储方式
         /// </summary>
+        [XmlElement("StorageType")]
         public ImageStorageType StorageType { get; set; } = ImageStorageType.FilePath;
 
         /// <summary>
         /// 图片输出目录（相对路径或绝对路径）
         /// </summary>
+        [XmlElement("OutputDirectory")]
         public string OutputDirectory { get; set; }
 
         /// <summary>
         /// 图片命名规则
         /// </summary>
+        [XmlElement("NamingRule")]
         public ImageNamingRule NamingRule { get; set; } = ImageNamingRule.AutoIncrement;
 
         /// <summary>
         /// 命名参考列（当使用指定列值命名时使用）
         /// </summary>
+        [XmlElement("NamingReferenceColumn")]
         public string NamingReferenceColumn { get; set; }
 
         /// <summary>
         /// 图片格式转换
         /// </summary>
+        [XmlElement("FormatConversion")]
         public ImageFormatConversion FormatConversion { get; set; } = ImageFormatConversion.KeepOriginal;
 
         /// <summary>
         /// 最大图片宽度（像素，0表示不限制）
         /// </summary>
+        [XmlElement("MaxWidth")]
         public int MaxWidth { get; set; }
 
         /// <summary>
         /// 最大图片高度（像素，0表示不限制）
         /// </summary>
+        [XmlElement("MaxHeight")]
         public int MaxHeight { get; set; }
 
         /// <summary>
         /// 图片质量（1-100，仅对JPEG有效）
         /// </summary>
+        [XmlElement("Quality")]
         public int Quality { get; set; } = 90;
 
         /// <summary>
         /// 是否压缩图片
         /// </summary>
+        [XmlElement("CompressImage")]
         public bool CompressImage { get; set; }
 
         /// <summary>
         /// 压缩阈值（KB，超过此大小才压缩）
         /// </summary>
+        [XmlElement("CompressThresholdKB")]
         public int CompressThresholdKB { get; set; } = 500;
     }
 
@@ -318,53 +340,68 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// 列映射配置模型
     /// 用于存储Excel列与系统字段的映射关系
     /// </summary>
+    [Serializable]
+    [XmlRoot("ColumnMapping")]
+    [XmlInclude(typeof(ForeignRelatedConfig))]
+    [XmlInclude(typeof(ColumnConcatConfig))]
+    [XmlInclude(typeof(EnumDefaultConfig))]
+    [XmlInclude(typeof(ExcelImageConfig))]
     public class ColumnMapping
     {
         /// <summary>
         /// Excel列名（数据来源标识）
         /// </summary>
+        [XmlElement("ExcelColumn")]
         public string ExcelColumn { get; set; }
 
         /// <summary>
         /// 系统字段引用（键值对：Key=英文字段名, Value=中文显示名）
         /// </summary>
+        [XmlElement("SystemField")]
         public SerializableKeyValuePair<string> SystemField { get; set; }
 
         /// <summary>
         /// 是否值唯一
         /// </summary>
+        [XmlElement("IsUniqueValue")]
         public bool IsUniqueValue { get; set; }
 
         /// <summary>
         /// 是否忽略空值（为空时不导入）
         /// </summary>
+        [XmlElement("IgnoreEmptyValue")]
         public bool IgnoreEmptyValue { get; set; }
 
         /// <summary>
         /// 数据类型
         /// </summary>
+        [XmlElement("DataType")]
         public string DataType { get; set; }
 
         /// <summary>
         /// 默认值
         /// </summary>
+        [XmlElement("DefaultValue")]
         public string DefaultValue { get; set; }
 
         /// <summary>
         /// 是否系统生成
         /// </summary>
+        [XmlElement("IsSystemGenerated")]
         public bool IsSystemGenerated { get; set; }
 
         /// <summary>
         /// 数据来源类型
         /// 用于标识字段数据的来源方式
         /// </summary>
+        [XmlElement("DataSourceType")]
         public DataSourceType DataSourceType { get; set; } = DataSourceType.Excel;
 
         /// <summary>
         /// 外键关联配置（当DataSourceType为ForeignKey时使用）
         /// 存储外部关联类型的列配置信息
         /// </summary>
+        [XmlElement("ForeignConfig")]
         public ForeignRelatedConfig ForeignConfig { get; set; }
 
         /// <summary>
@@ -372,6 +409,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 键值对：Key=英文字段名, Value=中文显示名
         /// 存储当前表自身的字段引用（如树结构中的父类ID对应ID字段）
         /// </summary>
+        [XmlElement("SelfReferenceField")]
         public SerializableKeyValuePair<string> SelfReferenceField { get; set; }
 
         /// <summary>
@@ -380,18 +418,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 存储当前表中要复制值的另一个字段名
         /// 例如：ProductName字段复制ProductCode字段的值
         /// </summary>
+        [XmlElement("CopyFromField")]
         public SerializableKeyValuePair<string> CopyFromField { get; set; }
 
         /// <summary>
         /// 列拼接配置（当DataSourceType为ColumnConcat时使用）
         /// 存储多个Excel列的拼接规则
         /// </summary>
+        [XmlElement("ConcatConfig")]
         public ColumnConcatConfig ConcatConfig { get; set; }
 
         /// <summary>
         /// 枚举默认值配置（当DataSourceType为DefaultValue且值为枚举类型时使用）
         /// 存储枚举类型的完整信息，用于后续的类型转换和验证
         /// </summary>
+        [XmlElement("EnumDefaultConfig")]
         public EnumDefaultConfig EnumDefaultConfig { get; set; }
 
         /// <summary>
@@ -399,6 +440,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 当数据库字段类型为int但实际使用枚举时，可手动指定枚举类型
         /// 格式："命名空间.枚举名" 如："RUINORERP.Model.EnumProductType"
         /// </summary>
+        [XmlElement("EnumTypeName")]
         [Obsolete("请使用EnumDefaultConfig替代此属性")]
         public string EnumTypeName { get; set; }
 
@@ -406,6 +448,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 是否为图片列
         /// 当字段在Excel中包含图片数据或图片路径时，需要手工指定为图片类型
         /// </summary>
+        [XmlElement("IsImageColumn")]
         public bool IsImageColumn { get; set; }
 
         /// <summary>
@@ -413,12 +456,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// Binary: 二进制图片（真正的图片数据）
         /// Path: 图片路径（保存为字符串路径，但按图片逻辑处理）
         /// </summary>
+        [XmlElement("ImageColumnType")]
         public ImageColumnType ImageColumnType { get; set; } = ImageColumnType.Path;
 
         /// <summary>
         /// Excel图片配置（当DataSourceType为ExcelImage时使用）
         /// 配置图片提取和存储规则
         /// </summary>
+        [XmlElement("ImageConfig")]
         public ExcelImageConfig ImageConfig { get; set; }
 
         /// <summary>

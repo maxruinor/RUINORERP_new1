@@ -50,6 +50,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private readonly Dictionary<string, Image> _imageCache = new Dictionary<string, Image>();
         private readonly object _imageCacheLock = new object();
         private const int MaxImageCacheSize = 100; // 最多缓存100张图片
+        
+        // 【P0修复】跟踪当前显示的Bitmap对象，用于及时释放
+        private readonly Dictionary<string, Image> _currentDisplayImages = new Dictionary<string, Image>();
+        private readonly object _displayImagesLock = new object();
 
         /// <summary>
         /// 注册图片到缓存（线程安全）
@@ -80,6 +84,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     _imageCache[key] = image;
                 }
             }
+            
+            // 【P0修复】同时注册到当前显示图片追踪字典
+            RegisterDisplayImage(image, key);
+        }
+        
+        /// <summary>
+        /// 【P0修复】注册当前显示的图片，用于及时释放旧图片
+        /// </summary>
+        private void RegisterDisplayImage(Image image, string key)
+        {
+            if (image == null || string.IsNullOrEmpty(key)) return;
+            
+            lock (_displayImagesLock)
+            {
+                // 如果该key已有显示的图片，先释放旧图片
+                if (_currentDisplayImages.TryGetValue(key, out var oldImage))
+                {
+                    // 只有当旧图片不在缓存中时才释放（缓存中的图片可能被复用）
+                    if (!_imageCache.ContainsKey(key))
+                    {
+                        oldImage?.Dispose();
+                    }
+                }
+                
+                _currentDisplayImages[key] = image;
+            }
         }
 
         /// <summary>
@@ -94,6 +124,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     img?.Dispose();
                 }
                 _imageCache.Clear();
+            }
+            
+            // 【P0修复】同时清理当前显示的图片追踪
+            lock (_displayImagesLock)
+            {
+                foreach (var img in _currentDisplayImages.Values)
+                {
+                    // 只释放不在缓存中的图片（缓存中的已在上面释放）
+                    if (!_imageCache.ContainsValue(img))
+                    {
+                        img?.Dispose();
+                    }
+                }
+                _currentDisplayImages.Clear();
             }
         }
         #endregion
@@ -489,11 +533,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 _currentConfig = _columnMappingManager.LoadConfiguration(selectedConfig, _selectedEntityType);
 
                 // 显示映射配置对话框
-                using (var frmMapping = new frmColumnMappingConfig())
+                using (var frmMapping = new frmColumnMappingConfig(_selectedEntityType, _rawExcelData))
                 {
-                    frmMapping.ExcelData = _rawExcelData;
-                    frmMapping.TargetEntityType = _selectedEntityType;
                     frmMapping.ImportConfig = _currentConfig;
+                    frmMapping.IsEditMode = true;
+                    frmMapping.OriginalMappingName = selectedConfig;
 
                     // 订阅映射配置保存成功事件
                     frmMapping.MappingSaved += (s, e) =>
@@ -501,10 +545,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         // 刷新映射配置下拉列表
                         LoadMappingConfigsForEntityType();
 
-                        // 自动选中刚修改的配置
+                        // 【修复】自动选中刚修改的配置 - 需要匹配带前缀的格式
                         if (!string.IsNullOrEmpty(frmMapping.SavedMappingName))
                         {
-                            int index = kcmbDynamicMappingName.FindStringExact(frmMapping.SavedMappingName);
+                            string configText = $"[配置] {frmMapping.SavedMappingName}";
+                            int index = kcmbDynamicMappingName.FindStringExact(configText);
                             if (index > 0)
                             {
                                 kcmbDynamicMappingName.SelectedIndex = index;
@@ -1227,11 +1272,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 使用原始Excel数据进行映射配置
-                using (var frmMapping = new frmColumnMappingConfig())
+                using (var frmMapping = new frmColumnMappingConfig(_selectedEntityType, _rawExcelData))
                 {
                     // 设置参数
-                    frmMapping.ExcelData = _rawExcelData;
-                    frmMapping.TargetEntityType = _selectedEntityType;
                     frmMapping.ImportConfig = _currentConfig;
                     frmMapping.IsEditMode = isEditMode;
                     frmMapping.OriginalMappingName = mappingName;
@@ -1242,10 +1285,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         // 刷新映射配置下拉列表
                         LoadMappingConfigsForEntityType();
 
-                        // 自动选中刚保存的配置
+                        // 【修复】自动选中刚保存的配置 - 需要匹配带前缀的格式
                         if (!string.IsNullOrEmpty(frmMapping.SavedMappingName))
                         {
-                            int index = kcmbDynamicMappingName.FindStringExact(frmMapping.SavedMappingName);
+                            string configText = $"[配置] {frmMapping.SavedMappingName}";
+                            int index = kcmbDynamicMappingName.FindStringExact(configText);
                             if (index > 0)
                             {
                                 kcmbDynamicMappingName.SelectedIndex = index;
@@ -1526,6 +1570,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 检查唯一性字段值是否已存在于数据库中
+        /// 【P0修复】优化为批量查询，减少数据库访问次数
         /// </summary>
         /// <param name="dataTable">要检查的数据表</param>
         /// <returns>重复记录错误列表</returns>
@@ -1542,7 +1587,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // 对每个唯一性字段进行检查
+                // 【P0修复】批量收集所有需要检查的唯一性字段值
+                var fieldsToCheck = new Dictionary<string, HashSet<string>>();
+                
                 foreach (var uniqueMapping in uniqueMappings)
                 {
                     string fieldName = uniqueMapping.SystemField?.Key;
@@ -1550,15 +1597,38 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     {
                         continue;
                     }
-
-                    // 从数据库查询已存在的唯一性字段值
-                    var existingValues = QueryExistingUniqueValues(fieldName);
-
-                    if (existingValues == null || existingValues.Count == 0)
+                    
+                    // 收集该字段的所有非空值
+                    var fieldValues = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+                        object value = row[fieldName];
+                        if (value != null && value != DBNull.Value && !string.IsNullOrEmpty(value.ToString()))
+                        {
+                            fieldValues.Add(value.ToString().Trim());
+                        }
+                    }
+                    
+                    if (fieldValues.Count > 0)
+                    {
+                        fieldsToCheck[fieldName] = fieldValues;
+                    }
+                }
+                
+                // 【P0修复】一次性批量查询所有字段的已存在值
+                var existingValuesMap = BatchQueryExistingUniqueValues(fieldsToCheck);
+                
+                // 在内存中比对，找出重复的记录
+                foreach (var uniqueMapping in uniqueMappings)
+                {
+                    string fieldName = uniqueMapping.SystemField?.Key;
+                    if (!fieldsToCheck.ContainsKey(fieldName) || !existingValuesMap.ContainsKey(fieldName))
                     {
                         continue;
                     }
-
+                    
+                    var existingValues = existingValuesMap[fieldName];
+                    
                     // 检查导入数据中是否包含已存在的值
                     for (int i = 0; i < dataTable.Rows.Count; i++)
                     {
@@ -1594,7 +1664,96 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 从数据库查询已存在的唯一性字段值
+        /// 【P0修复】批量查询多个字段的已存在值
+        /// 一次性查询所有需要的字段，减少数据库访问次数
+        /// </summary>
+        /// <param name="fieldsToCheck">需要检查的字段及其值集合</param>
+        /// <returns>每个字段的已存在值集合</returns>
+        private Dictionary<string, HashSet<string>> BatchQueryExistingUniqueValues(Dictionary<string, HashSet<string>> fieldsToCheck)
+        {
+            var result = new Dictionary<string, HashSet<string>>();
+            
+            if (fieldsToCheck == null || fieldsToCheck.Count == 0)
+            {
+                return result;
+            }
+            
+            try
+            {
+                string tableName = _selectedEntityType.Name;
+                
+                // 【P0修复】构建一个SQL查询，一次性获取所有字段的已存在值
+                // 使用 UNION ALL 合并多个字段的查询结果
+                var sqlParts = new List<string>();
+                var parameters = new Dictionary<string, object>();
+                
+                int paramIndex = 0;
+                foreach (var kvp in fieldsToCheck)
+                {
+                    string fieldName = kvp.Key;
+                    var values = kvp.Value;
+                    
+                    if (values.Count == 0)
+                        continue;
+                    
+                    // 为每个字段构建 IN 查询
+                    var paramNames = new List<string>();
+                    int valueIndex = 0;
+                    foreach (var value in values)
+                    {
+                        string paramName = $"@val_{fieldName}_{valueIndex}";
+                        paramNames.Add(paramName);
+                        parameters[paramName] = value;
+                        valueIndex++;
+                    }
+                    
+                    string inClause = string.Join(",", paramNames);
+                    sqlParts.Add($"SELECT '{fieldName}' AS FieldName, [{fieldName}] AS Value FROM [{tableName}] WHERE [{fieldName}] IN ({inClause})");
+                }
+                
+                if (sqlParts.Count == 0)
+                {
+                    return result;
+                }
+                
+                // 合并所有查询
+                string sql = string.Join(" UNION ALL ", sqlParts);
+                
+                // 执行查询
+                var queryResult = _db.Ado.GetDataTable(sql, parameters);
+                
+                // 解析结果，按字段分组
+                foreach (System.Data.DataRow row in queryResult.Rows)
+                {
+                    string fieldName = row["FieldName"]?.ToString();
+                    string value = row["Value"]?.ToString();
+                    
+                    if (string.IsNullOrEmpty(fieldName) || string.IsNullOrEmpty(value))
+                        continue;
+                    
+                    if (!result.ContainsKey(fieldName))
+                    {
+                        result[fieldName] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    }
+                    
+                    result[fieldName].Add(value.Trim());
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.ShowStatusText($"批量查询唯一性字段值失败: {ex.Message}");
+                // 如果批量查询失败，回退到逐个查询
+                foreach (var kvp in fieldsToCheck)
+                {
+                    result[kvp.Key] = QueryExistingUniqueValues(kvp.Key);
+                }
+            }
+            
+            return result;
+        }
+        
+        /// <summary>
+        /// 从数据库查询已存在的唯一性字段值（保留作为备用方法）
         /// </summary>
         /// <param name="fieldName">字段名</param>
         /// <returns>已存在的值集合</returns>

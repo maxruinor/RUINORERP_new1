@@ -93,25 +93,30 @@ namespace RUINORERP.Server.SmartReminder
         {
             try
             {
+                // ✅ 检查 Redis 启用开关（与主配置保持一致）
+                var redisEnabled = _configuration?.GetValue<bool>("RedisEnabled", false) ?? false;
+                
+                if (!redisEnabled)
+                {
+                    _logger?.LogInformation("[SmartReminder] Redis 已禁用，跳过 Redis 连接");
+                    return;
+                }
+                
                 // 设置日志记录器到RedisConnectionHelper
                 if (_logger != null)
                 {
                     RedisConnectionHelper.Logger = _logger;
                 }
 
-                // 从配置中读取Redis连接信息，优先使用标准配置键名
-                string redisServer = "192.168.0.254:6379"; // 用户提供的当前运行服务器IP和端口
+                // 从统一配置中读取Redis连接信息
+                string redisServer = "192.168.0.254:6379";
                 string redisPassword = string.Empty;
 
                 if (_configuration != null)
                 {
-                    // 尝试从标准配置位置读取
+                    // ✅ 使用统一的 Redis 配置
                     redisServer = _configuration.GetValue<string>("RedisServer", redisServer);
                     redisPassword = _configuration.GetValue<string>("RedisServerPWD", string.Empty);
-
-                    // 同时支持从SmartReminder特定配置读取
-                    redisServer = _configuration.GetValue<string>("SmartReminder:RedisServer", redisServer);
-                    redisPassword = _configuration.GetValue<string>("SmartReminder:RedisServerPWD", redisPassword);
                 }
 
                 // 构建连接字符串
@@ -124,6 +129,7 @@ namespace RUINORERP.Server.SmartReminder
                 // 添加其他必要的连接参数
                 redisConnectionString = $"{redisConnectionString},allowAdmin=true,abortConnect=false,connectTimeout=5000,syncTimeout=5000,asyncTimeout=5000,connectRetry=3";
 
+                _logger?.LogInformation($"[SmartReminder] 正在连接到 Redis 服务器: {redisServer}");
 
                 // 使用RedisConnectionHelper创建连接
                 _redisMultiplexer = RedisConnectionHelper.GetConnectionMultiplexer(redisConnectionString);
@@ -133,11 +139,12 @@ namespace RUINORERP.Server.SmartReminder
                     // 验证连接是否成功
                     if (_redisMultiplexer.IsConnected)
                     {
-                        _logger?.Debug("Redis连接成功: {EndPoints}", string.Join(", ", _redisMultiplexer.GetEndPoints().Select(e => e.ToString())));
+                        _logger?.LogInformation("[SmartReminder] Redis连接成功: {EndPoints}", 
+                            string.Join(", ", _redisMultiplexer.GetEndPoints().Select(e => e.ToString())));
                     }
                     else
                     {
-                        _logger?.LogWarning("Redis连接已创建，但当前未连接到任何服务器");
+                        _logger?.LogWarning("[SmartReminder] Redis连接已创建，但当前未连接到任何服务器");
                     }
 
                     // 注册Redis连接实例到依赖注入容器
@@ -149,11 +156,11 @@ namespace RUINORERP.Server.SmartReminder
                             try
                             {
                                 multiplexer.Close();
-                                _logger?.Debug("Redis连接已关闭");
+                                _logger?.LogInformation("[SmartReminder] Redis连接已关闭");
                             }
                             catch (Exception ex)
                             {
-                                _logger?.LogError(ex, "关闭Redis连接时发生错误");
+                                _logger?.LogError(ex, "[SmartReminder] 关闭Redis连接时发生错误");
                             }
                         });
 
@@ -166,27 +173,29 @@ namespace RUINORERP.Server.SmartReminder
                     builder.RegisterType<RedisCacheManager>()
                         .As<IRedisCacheManager>()
                         .SingleInstance();
+                        
+                    _logger?.LogInformation("[SmartReminder] Redis 服务已成功注册");
                 }
                 else
                 {
-                    _logger?.LogError("无法创建Redis连接，将使用降级方案");
+                    _logger?.LogError("[SmartReminder] 无法创建Redis连接，将使用降级方案");
                     // 可以在这里注册降级方案，比如内存缓存
                 }
             }
             catch (Exception ex)
             {
                 // 如果Redis连接失败，记录错误但不阻止应用启动
-                _logger?.LogError(ex, "配置Redis时发生异常");
+                _logger?.LogError(ex, "[SmartReminder] 配置Redis时发生异常");
 
                 // 记录异常详情
                 if (ex is SocketException socketEx)
                 {
-                    _logger?.LogError("Socket错误: 代码={ErrorCode}, 消息={Message}",
+                    _logger?.LogError("[SmartReminder] Socket错误: 代码={ErrorCode}, 消息={Message}",
                         socketEx.ErrorCode, socketEx.Message);
                 }
                 else if (ex is RedisConnectionException redisEx)
                 {
-                    _logger?.LogError("Redis连接错误: 类型={Type}, 消息={Message}",
+                    _logger?.LogError("[SmartReminder] Redis连接错误: 类型={Type}, 消息={Message}",
                         redisEx.FailureType, redisEx.Message);
                 }
             }

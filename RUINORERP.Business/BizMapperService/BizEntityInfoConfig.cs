@@ -164,6 +164,13 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_ProdDetail>(BizType.产品详情, e => e.ProdDetailID, e => e.SKU);
                 SafeRegister<tb_EOP_WaterStorage>(BizType.蓄水订单, e => e.WSR_ID, e => e.WSRNo);
 
+                // 文件管理相关
+                SafeRegister<tb_FS_BusinessRelation>(BizType.文件业务关联, e => e.RelationId, e => e.BusinessNo);
+                SafeRegister<tb_FS_FileStorageVersion>(BizType.文件版本, e => e.VersionId, e => e.UpdateReason);
+
+                // 系统配置相关
+                SafeRegister<tb_sys_BillNoRule>(BizType.单据编号规则, e => e.BillNoRuleID, e => e.RuleName);
+
                 _logger.Debug("普通实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);
             }
             catch (Exception ex)

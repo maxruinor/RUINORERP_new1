@@ -233,6 +233,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "FrmMultiAttributeImportConfig";
             this.Text = "多属性产品导入配置";
+            this.Load += new System.EventHandler(this.FrmMultiAttributeImportConfig_Load);
             this.kryptonGroupBox1.ResumeLayout(false);
             this.kryptonGroupBox1.PerformLayout();
             this.kryptonGroupBox2.ResumeLayout(false);

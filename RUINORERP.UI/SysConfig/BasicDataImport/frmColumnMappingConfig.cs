@@ -995,8 +995,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 刷新已保存映射列表
                 LoadSavedMappings();
 
-                // 选中新保存的映射
-                comboBoxSavedMappings.SelectedIndex = comboBoxSavedMappings.Items.IndexOf(mappingName);
+                // 【修复】选中新保存的映射 - 需要匹配带前缀的格式
+                string newItemText = $"[配置] {mappingName}";
+                int newIndex = comboBoxSavedMappings.Items.IndexOf(newItemText);
+                if (newIndex >= 0)
+                {
+                    comboBoxSavedMappings.SelectedIndex = newIndex;
+                }
 
                 // 关闭窗体
                 this.DialogResult = DialogResult.OK;
@@ -1053,10 +1058,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                string mappingName = comboBoxSavedMappings.SelectedItem.ToString();
+                // 【修复】提取真实的配置名称(去除前缀)
+                string mappingName = selectedItem;
+                if (selectedItem.StartsWith("[配置] "))
+                {
+                    mappingName = selectedItem.Substring(5); // 移除 "[配置] " 前缀
+                }
 
                 _columnMappingManager ??= new ColumnMappingManager();
                 var config = _columnMappingManager.LoadConfiguration(mappingName, TargetEntityType);
+
+                if (config == null)
+                {
+                    MessageBox.Show($"加载配置失败: 配置数据为空", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
                 ImportConfig = config;
                 ColumnMappings = new ColumnMappingCollection(config?.ColumnMappings ?? new List<ColumnMapping>());
@@ -1066,18 +1082,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 chkRemoveDuplicates.Checked = config?.EnableDeduplication ?? false;
                 kcmbDeduplicateStrategy.SelectedIndex = (int)(config?.DeduplicateStrategy ?? DeduplicateStrategy.FirstOccurrence);
 
-                // 重新加载Excel列和系统字段列表
+                // 【修复】重新加载Excel列和系统字段列表
                 LoadSystemFields();
                 if (ExcelData != null && ExcelData.Rows.Count > 0)
                 {
                     LoadExcelColumns();
                 }
 
-                // 从列表中移除已映射的项
+                // 【修复】从列表中移除已映射的项
                 foreach (var mapping in ColumnMappings)
                 {
-                    RemoveFromExcelColumns(mapping.ExcelColumn);
-                    RemoveFromSystemFields(mapping.SystemField?.Key);
+                    // 只有真正的Excel列才需要从可用列表中移除
+                    if (!string.IsNullOrEmpty(mapping.ExcelColumn) && 
+                        !mapping.ExcelColumn.StartsWith("[") && 
+                        !mapping.ExcelColumn.Contains("]"))
+                    {
+                        RemoveFromExcelColumns(mapping.ExcelColumn);
+                    }
+                    
+                    if (mapping.SystemField != null && !string.IsNullOrEmpty(mapping.SystemField.Key))
+                    {
+                        RemoveFromSystemFields(mapping.SystemField.Key);
+                    }
                 }
 
                 UpdateMappingsList();

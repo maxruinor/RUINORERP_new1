@@ -530,13 +530,17 @@ namespace RUINORERP.Business
                                                .FirstAsync();
                         if (Payable == null)
                         {
-
-
                             Payable = await ctrpayable.BuildReceivablePayable(entity);
                             ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
                             if (rmr.Succeeded)
                             {
                                 rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                                
+                                // 自动审核应收单（如果配置启用）
+                                if (_appContext.FMConfig.AutoAuditReceiveable && rmr.ReturnObject != null)
+                                {
+                                    await AutoAuditReceivableForSaleOutReAsync(rmr.ReturnObject, entity);
+                                }
                             }
                         }
                         else
@@ -551,6 +555,12 @@ namespace RUINORERP.Business
                         if (rmr.Succeeded)
                         {
                             rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                            
+                            // 自动审核应收单（如果配置启用）
+                            if (_appContext.FMConfig.AutoAuditReceiveable && rmr.ReturnObject != null)
+                            {
+                                await AutoAuditReceivableForSaleOutReAsync(rmr.ReturnObject, entity);
+                            }
                         }
                     }
 
@@ -1137,6 +1147,83 @@ namespace RUINORERP.Business
             return list as List<T>;
         }
 
+        /// <summary>
+        /// 销售退回单审核后的应收单自动审核处理
+        /// 包含平台订单的特殊退款逻辑
+        /// </summary>
+        /// <param name="receivablePayable">生成的应收单</param>
+        /// <param name="saleOutRe">销售退回单</param>
+        private async Task AutoAuditReceivableForSaleOutReAsync(tb_FM_ReceivablePayable receivablePayable, tb_SaleOutRe saleOutRe)
+        {
+            try
+            {
+                var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                
+                // 只有有应收记录，挂账都可以手工进行后面的步骤
+                // 所以这里应收审核过了，说明平台退款了，认为销售退回单中的平台退款已经处理了
+                if ((receivablePayable.ApprovalStatus.GetValueOrDefault() == (int)ApprovalStatus.未审核) || !receivablePayable.ApprovalResults.GetValueOrDefault())
+                {
+                    receivablePayable.ApprovalOpinions = "【销售退回单】审核时，系统自动审核";
+                    ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(receivablePayable, true);
+                    
+                    if (!autoApproval.Succeeded)
+                    {
+                        _logger.LogWarning($"销售退回单{saleOutRe.ReturnNo}：应收款单自动审核失败 - {autoApproval.ErrorMsg}");
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"销售退回单{saleOutRe.ReturnNo}：应收款单自动审核成功");
+                        
+                        // 自动退款？
+                        // 平台订单经过运费在平台退款操作后，退回单状态中已经是退款状态了
+                        if (_appContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform && saleOutRe.IsFromPlatform)
+                        {
+                            #region 生成应收款红字单，退款
+                            // 自动生成销售退回单的对应的应该收款单（红字的）对应的收款记录
+                            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            List<tb_FM_ReceivablePayable> receivablePayables = new List<tb_FM_ReceivablePayable>();
+                            receivablePayables.Add(receivablePayable);
+                            
+                            tb_FM_PaymentRecord newPaymentRecord = await paymentController.BuildPaymentRecord(receivablePayables);
+                            newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红字";
+                            newPaymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
+                            
+                            if (!newPaymentRecord.Paytype_ID.HasValue && saleOutRe.Paytype_ID.HasValue)
+                            {
+                                newPaymentRecord.Paytype_ID = saleOutRe.Paytype_ID;
+                            }
+                            
+                            var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(newPaymentRecord, false);
+                            if (rrs.Succeeded)
+                            {
+                                if (saleOutRe.RefundStatus == (int)RefundStatus.已退款已退货)
+                                {
+                                    // 自动审核收款单
+                                    newPaymentRecord.ApprovalOpinions = "【平台单】已退款，销售退回单审核时，自动审核";
+                                    newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                                    newPaymentRecord.ApprovalResults = true;
+                                    
+                                    ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
+                                    if (!rrRecord.Succeeded)
+                                    {
+                                        _logger.LogWarning($"销售退回单{saleOutRe.ReturnNo}：平台单销售退回时，自动审核收款单失败 - {rrRecord.ErrorMsg}");
+                                    }
+                                    else
+                                    {
+                                        _logger.LogInformation($"销售退回单{saleOutRe.ReturnNo}：平台单销售退回时，自动审核收款单成功");
+                                    }
+                                }
+                            }
+                            #endregion
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"销售退回单{saleOutRe.ReturnNo}：应收单自动审核处理异常");
+            }
+        }
 
     }
 }

@@ -147,7 +147,7 @@ namespace RUINORERP.Model
             Entities.Add(CreateMetadata("系统配置", "角色", typeof(tb_RoleInfo), "角色信息表"));
             Entities.Add(CreateMetadata("系统配置", "用户", typeof(tb_UserInfo), "用户信息表"));
             Entities.Add(CreateMetadata("系统配置", "系统配置", typeof(tb_SystemConfig), "系统配置表"));
-            Entities.Add(CreateMetadata("系统配置", "权限", typeof(tb_Permission), "权限表"));
+            Entities.Add(CreateMetadata("系统配置", "用户角色表", typeof(tb_User_Role), "用户角色表"));
             Entities.Add(CreateMetadata("系统配置", "审批流程", typeof(tb_Approval), "审批流程表"));
         }
 

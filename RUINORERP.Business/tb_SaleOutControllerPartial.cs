@@ -844,24 +844,45 @@ namespace RUINORERP.Business
                                 savedPayables.Add((savedARAP.ARAPId, savedARAP.ARAPNo, false));
                                 fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"销售出库单{entity.SaleOutNo}审核：生成应收款单，单号：{savedARAP.ARAPNo}", savedARAP);
 
-                                //如果是平台单，则自动审核
+                                // 根据配置决定是否自动审核（平台订单优先）
+                                bool shouldAutoAudit = false;
+                                
+                                // 平台订单：无条件自动审核
                                 if (payable.IsFromPlatform)
+                                {
+                                    shouldAutoAudit = true;
+                                    _logger.LogInformation($"销售出库单{entity.SaleOutNo}：平台订单，启用自动审核");
+                                }
+                                // 非平台订单：根据配置决定
+                                else if (_appContext.FMConfig?.AutoAuditReceiveable == true)
+                                {
+                                    shouldAutoAudit = true;
+                                    _logger.LogInformation($"销售出库单{entity.SaleOutNo}：根据配置AutoAuditReceiveable=true，启用自动审核");
+                                }
+                                
+                                // 执行自动审核
+                                if (shouldAutoAudit)
                                 {
                                     payable.ApprovalOpinions = "自动审核";
                                     ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
                                     if (!autoApproval.Succeeded)
                                     {
-                                        // 平台单自动审核失败，触发补偿
+                                        // 自动审核失败，触发补偿
                                         await CompensateReceivablePayableAsync(savedARAP.ARAPId, entity.SaleOutNo, false);
                                         autoApproval.Succeeded = false;
                                         autoApproval.ErrorMsg = $"自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                         hasError = true;
-                                        _logger.LogWarning($"销售出库单{entity.SaleOutNo}：平台单自动审核失败，已触发补偿机制");
+                                        _logger.LogWarning($"销售出库单{entity.SaleOutNo}：应收款单自动审核失败，已触发补偿机制 - {autoApproval.ErrorMsg}");
                                     }
                                     else
                                     {
                                         fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>("自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                        _logger.LogInformation($"销售出库单{entity.SaleOutNo}：应收款单自动审核成功");
                                     }
+                                }
+                                else
+                                {
+                                    _logger.LogInformation($"销售出库单{entity.SaleOutNo}：应收款单已生成但未自动审核（等待财务手工审核）");
                                 }
                             }
                             else
@@ -1338,7 +1359,7 @@ namespace RUINORERP.Business
                         .Select(x => x.Key)
                         .ToHashSet();
 
-                    //分两种情况处理。
+                    //分两种情况处理
                     for (int i = 0; i < entity.tb_saleorder.tb_SaleOrderDetails.Count; i++)
                     {
                         //如果当前订单明细行，不存在于出库明细行。直接跳过。这种就是多行多品被删除时。不需要比较

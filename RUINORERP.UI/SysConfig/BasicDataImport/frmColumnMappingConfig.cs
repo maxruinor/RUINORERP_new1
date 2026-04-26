@@ -955,7 +955,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 保存映射配置
+        /// 保存映射配置0
         /// </summary>
         private void kbtnSaveMapping_Click(object sender, EventArgs e)
         {

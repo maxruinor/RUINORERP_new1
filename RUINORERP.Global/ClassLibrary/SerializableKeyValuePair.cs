@@ -100,6 +100,7 @@ namespace RUINORERP.Global
     /// </summary>
     /// <typeparam name="TValue">值的类型</typeparam>
     [XmlRoot("KeyValue")]
+    [XmlInclude(typeof(SerializableKeyValuePair<string>))]
     public class SerializableKeyValuePair<TValue> : SerializableKeyValuePair<string, TValue>
     {
         /// <summary>
@@ -162,6 +163,7 @@ namespace RUINORERP.Global
     /// 适用于最常用的键值都是字符串的场景（如字段名-字段名、表名-表名等）
     /// </summary>
     [XmlRoot("KeyValue")]
+    [XmlType("KeyValueString")]
     public class SerializableKeyValuePair : SerializableKeyValuePair<string>
     {
         /// <summary>

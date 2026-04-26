@@ -301,6 +301,30 @@ namespace RUINORERP.Business
                     ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
                     if (rmr.Succeeded)
                     {
+                        var savedPayable = rmr.ReturnObject;
+                        _logger.LogInformation($"采购退货单{entity.PurEntryReNo}：红字应付单 {savedPayable?.ARAPNo} 生成成功");
+
+                        try
+                        {
+                            // 自动审核（如果配置启用）
+                            if (_appContext.FMConfig?.AutoAuditPaymentable == true)
+                            {
+                                savedPayable.ApprovalOpinions = "自动审核";
+                                var autoApproval = await ctrpayable.ApprovalAsync(savedPayable, true);
+                                if (!autoApproval.Succeeded)
+                                {
+                                    _logger.LogWarning($"采购退货单{entity.PurEntryReNo}：红字应付单自动审核失败 - {autoApproval.ErrorMsg}");
+                                }
+                                else
+                                {
+                                    _logger.LogInformation($"采购退货单{entity.PurEntryReNo}：红字应付单自动审核成功");
+                                }
+                            }
+                        }
+                        catch (Exception financeEx)
+                        {
+                            _logger.LogError(financeEx, $"采购退货单{entity.PurEntryReNo}：财务处理异常");
+                        }
                         //下面冲销逻辑应该放到付款的审核时处理
                         /*
                         tb_FM_ReceivablePayable returnpayable = results.ReturnObject;
@@ -813,7 +837,6 @@ public async override Task<List<T>> GetPrintDataSource(long MainID)
                          .ToListAsync();
     return list as List<T>;
 }
-
 
     }
 }

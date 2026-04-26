@@ -850,6 +850,7 @@ namespace RUINORERP.UI
             /// 注意：ConfigSyncService排除自动注册，单独注册为单例(避免配置同步状态不一致)
             /// 注意：FileManagementService排除自动注册，单独注册为单例(避免文件锁和Timer不共享)
             /// 注意：LockRecoveryManager排除自动注册，单独注册为单例(避免健康检查Timer不共享)
+            /// 注意：RelatedBillSyncService排除自动注册，单独注册为单例(避免反射方法缓存不共享)
             /// </summary>
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
                 .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type) &&
@@ -901,6 +902,12 @@ namespace RUINORERP.UI
             builder.RegisterType<RUINORERP.UI.Network.Services.LockRecoveryManager>()
                 .AsSelf()
                 .SingleInstance()  // ⚠️ 关键: 必须是单例,否则健康检查Timer重复执行!
+                .PropertiesAutowired();
+
+            // 【新增】关联单据同步服务必须注册为单例,确保反射方法缓存全局共享
+            builder.RegisterType<RUINORERP.UI.BusinessService.RelatedBillSyncService>()
+                .AsSelf()
+                .SingleInstance()  // ⚠️ 关键: 必须是单例,否则_queryMethodCache不共享!
                 .PropertiesAutowired();
 
             //覆盖上面自动注册的？说是最后的才是

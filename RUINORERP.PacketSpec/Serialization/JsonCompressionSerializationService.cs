@@ -146,32 +146,39 @@ namespace RUINORERP.PacketSpec.Serialization
 
         private static readonly ExcludingPropertiesContractResolver _contractResolver = new ExcludingPropertiesContractResolver();
 
-        private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
+        /// <summary>
+        /// 创建线程安全的JSON序列化设置
+        /// 每次调用都创建新实例以避免多线程并发问题
+        /// </summary>
+        private static JsonSerializerSettings CreateThreadSafeJsonSettings()
         {
-            // 空值处理：序列化时忽略对象中值为null的属性，减少数据传输量
-            NullValueHandling = NullValueHandling.Ignore,
-            
-            // 格式化设置：设置为None表示不进行美化，生成紧凑的JSON字符串，节省空间
-            Formatting = Formatting.None,
-            
-            // 类型名称处理：自动处理多态类型，在需要区分继承类时自动添加类型信息
-            TypeNameHandling = TypeNameHandling.Auto, 
-            
-            // 启用自定义序列化绑定器，解决跨平台程序集名称差异问题
-            SerializationBinder = new CrossPlatformSerializationBinder(),
-            
-            // 使用自定义契约解析器，排除服务端特有属性
-            ContractResolver = _contractResolver,
-            
-            // 日期格式处理：使用ISO标准格式处理日期时间字符串，确保跨平台兼容性
-            DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            
-            // 日期时间时区处理：设置为RoundtripKind以确保保持时间的原始状态
-            DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
-            
-            // 引用循环处理：忽略对象之间的循环引用，避免序列化时出现StackOverflow异常
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-        };
+            return new JsonSerializerSettings
+            {
+                // 空值处理：序列化时忽略对象中值为null的属性，减少数据传输量
+                NullValueHandling = NullValueHandling.Ignore,
+                
+                // 格式化设置：设置为None表示不进行美化，生成紧凑的JSON字符串，节省空间
+                Formatting = Formatting.None,
+                
+                // 类型名称处理：自动处理多态类型，在需要区分继承类时自动添加类型信息
+                TypeNameHandling = TypeNameHandling.Auto, 
+                
+                // 启用自定义序列化绑定器，解决跨平台程序集名称差异问题
+                SerializationBinder = new CrossPlatformSerializationBinder(),
+                
+                // 使用自定义契约解析器，排除服务端特有属性
+                ContractResolver = _contractResolver,
+                
+                // 日期格式处理：使用ISO标准格式处理日期时间字符串，确保跨平台兼容性
+                DateFormatHandling = DateFormatHandling.IsoDateFormat,
+                
+                // 日期时间时区处理：设置为RoundtripKind以确保保持时间的原始状态
+                DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
+                
+                // 引用循环处理：忽略对象之间的循环引用，避免序列化时出现StackOverflow异常
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
+        }
 
         /// <summary>
         /// 序列化并压缩（智能压缩策略）
@@ -184,7 +191,9 @@ namespace RUINORERP.PacketSpec.Serialization
 
             try
             {
-                string json = JsonConvert.SerializeObject(obj, _jsonSettings);
+                // 使用线程安全的JSON设置实例
+                var jsonSettings = CreateThreadSafeJsonSettings();
+                string json = JsonConvert.SerializeObject(obj, jsonSettings);
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
 
                 // P1-2优化: 只有超过1KB且启用压缩时才执行GZip
@@ -217,7 +226,9 @@ namespace RUINORERP.PacketSpec.Serialization
                 byte[] jsonBytes = ShouldDecompress(data, decompress) ? GZipDecompress(data) : data;
                 string json = Encoding.UTF8.GetString(jsonBytes);
 
-                return JsonConvert.DeserializeObject<T>(json, _jsonSettings);
+                // 使用线程安全的JSON设置实例
+                var jsonSettings = CreateThreadSafeJsonSettings();
+                return JsonConvert.DeserializeObject<T>(json, jsonSettings);
             }
             catch (Exception ex)
             {
@@ -240,7 +251,9 @@ namespace RUINORERP.PacketSpec.Serialization
                 byte[] jsonBytes = ShouldDecompress(data, decompress) ? GZipDecompress(data) : data;
                 string json = Encoding.UTF8.GetString(jsonBytes);
 
-                return JsonConvert.DeserializeObject(json, _jsonSettings);
+                // 使用线程安全的JSON设置实例
+                var jsonSettings = CreateThreadSafeJsonSettings();
+                return JsonConvert.DeserializeObject(json, jsonSettings);
             }
             catch (Exception ex)
             {

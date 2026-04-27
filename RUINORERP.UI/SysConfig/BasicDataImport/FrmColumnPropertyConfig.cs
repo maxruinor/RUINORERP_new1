@@ -517,7 +517,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             try
             {
                 Type tableType = null;
-
+        
                 // 优先使用UCBasicDataImport中的EntityTypeMappings
                 if (UCBasicDataImport.EntityTypeMappings != null)
                 {
@@ -531,33 +531,42 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         }
                     }
                 }
-
-                // 如果在EntityTypeMappings中找不到，使用原来的GetTableType方法
+        
+                // 如果在EntityTypeMappings中找不到,使用原来的GetTableType方法
                 if (tableType == null)
                 {
                     tableType = GetTableType(tableName);
                 }
-
+        
                 if (tableType == null)
                 {
                     MessageBox.Show($"无法找到表类型: {tableName}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-
+        
                 // 获取字段信息
                 var fieldNameList = UIHelper.GetFieldNameList(true, tableType);
                 _fieldInfoDict = fieldNameList;
-
-                // 清空并添加字段到下拉框
+        
+                // ✅ 先清空下拉框,避免重复添加
                 ktxtRelatedField.Items.Clear();
                 kcmbForeignDbSourceColumn.Items.Clear();
+                        
+                // ✅ 使用HashSet去重,防止字段名重复
+                var addedFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        
                 foreach (var field in fieldNameList)
                 {
-                    ktxtRelatedField.Items.Add(field.Value); // 添加中文名
-                    kcmbForeignDbSourceColumn.Items.Add(field.Value); // 添加中文名
+                    // 只有未添加过的字段才添加
+                    if (!addedFields.Contains(field.Value))
+                    {
+                        ktxtRelatedField.Items.Add(field.Value); // 添加中文名
+                        kcmbForeignDbSourceColumn.Items.Add(field.Value); // 添加中文名
+                        addedFields.Add(field.Value);
+                    }
                 }
-
-                // 如果有已选中的字段，保持选中状态
+        
+                // 如果有已选中的字段,保持选中状态
                 if (!string.IsNullOrEmpty(ForeignKeyField?.Value))
                 {
                     int index = ktxtRelatedField.Items.IndexOf(ForeignKeyField?.Value);
@@ -566,8 +575,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         ktxtRelatedField.SelectedIndex = index;
                     }
                 }
-
-                // 如果有已选中的字段，保持选中状态
+        
+                // 如果有已选中的字段,保持选中状态
                 string selectedDisplayName = ForeignKeySourceColumn?.Value;
                 if (!string.IsNullOrEmpty(selectedDisplayName))
                 {
@@ -577,7 +586,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         kcmbForeignDbSourceColumn.SelectedIndex = index;
                     }
                 }
-
+        
             }
             catch (Exception ex)
             {
@@ -1018,19 +1027,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     MessageBox.Show("未设置目标实体类型", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-
+        
                 // 获取字段信息
                 var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
                 _fieldInfoDict = fieldNameList;
-
-                // 清空并添加字段到下拉框
+        
+                // ✅ 先清空下拉框,避免重复添加
                 kcmbSelfReferenceField.Items.Clear();
+                        
+                // ✅ 使用HashSet去重,防止字段名重复
+                var addedFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        
                 foreach (var field in fieldNameList)
                 {
-                    kcmbSelfReferenceField.Items.Add(field.Value); // 添加中文名
+                    // 只有未添加过的字段才添加
+                    if (!addedFields.Contains(field.Value))
+                    {
+                        kcmbSelfReferenceField.Items.Add(field.Value); // 添加中文名
+                        addedFields.Add(field.Value);
+                    }
                 }
-
-                // 如果有已选中的字段，保持选中状态
+        
+                // 如果有已选中的字段,保持选中状态
                 if (!string.IsNullOrEmpty(SelfReferenceField?.Value))
                 {
                     int index = kcmbSelfReferenceField.Items.IndexOf(SelfReferenceField?.Value);
@@ -1089,23 +1107,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     MessageBox.Show("未设置目标实体类型", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-
+        
                 // 获取字段信息
                 var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
                 _fieldInfoDict = fieldNameList;
-
-                // 清空并添加字段到下拉框
+        
+                // ✅ 先清空下拉框,避免重复添加
                 kcmbCopyFromField.Items.Clear();
+                        
+                // ✅ 使用HashSet去重,防止字段名重复
+                var addedFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        
                 foreach (var field in fieldNameList)
                 {
                     // 排除当前字段本身
                     if (field.Key != CurrentMapping?.SystemField?.Key)
                     {
-                        kcmbCopyFromField.Items.Add(field.Value); // 添加中文名
+                        // 只有未添加过的字段才添加
+                        if (!addedFields.Contains(field.Value))
+                        {
+                            kcmbCopyFromField.Items.Add(field.Value); // 添加中文名
+                            addedFields.Add(field.Value);
+                        }
                     }
                 }
-
-                // 如果有已选中的字段，保持选中状态
+        
+                // 如果有已选中的字段,保持选中状态
                 if (!string.IsNullOrEmpty(CopyFromField?.Value))
                 {
                     int index = kcmbCopyFromField.Items.IndexOf(CopyFromField?.Value);

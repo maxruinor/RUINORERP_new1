@@ -234,10 +234,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             
             try
             {
+                // 使用 SQL Server 系统视图查询列信息（参考：所有外键关系.sql）
                 var dt = _db.Ado.GetDataTable(
-                    @"SELECT COLUMN_NAME, DATA_TYPE, COLUMN_COMMENT 
-                      FROM information_schema.columns 
-                      WHERE table_name = @table_name AND table_schema = DATABASE()",
+                    @"SELECT 
+                        c.name AS COLUMN_NAME,
+                        t.name AS DATA_TYPE,
+                        ep.value AS COLUMN_COMMENT
+                      FROM sys.columns c
+                      INNER JOIN sys.tables tb ON c.object_id = tb.object_id
+                      INNER JOIN sys.types t ON c.user_type_id = t.user_type_id
+                      LEFT JOIN sys.extended_properties ep 
+                        ON ep.major_id = c.object_id 
+                        AND ep.minor_id = c.column_id 
+                        AND ep.name = 'MS_Description'
+                      WHERE tb.name = @table_name",
                     new { table_name = tableName });
                 
                 var columns = new List<DbColumnInfo>();

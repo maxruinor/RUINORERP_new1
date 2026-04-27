@@ -93,8 +93,20 @@ namespace RUINORERP.Business
                     t.GetCustomAttribute<SugarTable>()?.TableName == tableName || 
                     t.Name == tableName);
 
+                // 使用 SQL Server 系统视图查询列信息（参考：所有外键关系.sql）
                 var dbCols = _db.Ado.GetDataTable(
-                    "select COLUMN_NAME, DATA_TYPE from information_schema.columns where table_name = @tn", 
+                    @"SELECT 
+                        c.name AS COLUMN_NAME,
+                        t.name AS DATA_TYPE,
+                        ep.value AS COLUMN_COMMENT
+                      FROM sys.columns c
+                      INNER JOIN sys.tables tb ON c.object_id = tb.object_id
+                      INNER JOIN sys.types t ON c.user_type_id = t.user_type_id
+                      LEFT JOIN sys.extended_properties ep 
+                        ON ep.major_id = c.object_id 
+                        AND ep.minor_id = c.column_id 
+                        AND ep.name = 'MS_Description'
+                      WHERE tb.name = @tn", 
                     new { tn = tableName });
 
                 foreach (DataRow dr in dbCols.Rows)
@@ -102,8 +114,14 @@ namespace RUINORERP.Business
                     string colName = dr["COLUMN_NAME"].ToString();
                     string description = colName;
 
-                    if (entityType != null)
+                    // 优先使用数据库中的列注释
+                    if (dr["COLUMN_COMMENT"] != DBNull.Value && !string.IsNullOrEmpty(dr["COLUMN_COMMENT"].ToString()))
                     {
+                        description = dr["COLUMN_COMMENT"].ToString();
+                    }
+                    else if (entityType != null)
+                    {
+                        // 如果数据库没有注释，尝试从实体元数据获取
                         var prop = entityType.GetProperties().FirstOrDefault(p => 
                             p.GetCustomAttribute<SugarColumn>()?.ColumnName == colName || 
                             p.Name == colName);

@@ -693,12 +693,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
 
         /// <summary>
-        /// 获取外键ID
+        /// 【已废弃】获取外键ID - 请使用 ForeignKeyService.GetForeignKeyId() 代替
+        /// 此方法保留仅为兼容旧代码，将在未来版本中移除
         /// </summary>
-        /// <param name="foreignKeyValue">外键代码值（如类目编码、供应商名称）</param>
-        /// <param name="relatedTableName">关联表名（如 tb_ProdCategories、tb_CustomerVendor）</param>
-        /// <param name="relatedTableField">关联表字段名（如 CategoryCode、VendorName）</param>
-        /// <returns>外键主键ID</returns>
+        [Obsolete("请使用 ForeignKeyService.GetForeignKeyId() 代替，该方法支持缓存优化")]
         private object GetForeignKeyId(string foreignKeyValue, string relatedTableName, string relatedTableField)
         {
             try
@@ -770,7 +768,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 获取自身引用字段的值
-        /// 从已导入的数据中查找引用值
+        /// 【待完善】当前仅实现基础查询逻辑，自身引用关系的完整处理需在导入流程中实现
         /// </summary>
         /// <param name="displayValue">显示值</param>
         /// <param name="tableName">表名</param>
@@ -1132,10 +1130,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 检查值是否为默认值
+        /// 【未使用】检查值是否为默认值
+        /// 当前无调用点，如不需要可删除
         /// </summary>
-        /// <param name="value">值</param>
-        /// <returns>是否为默认值</returns>
+        [Obsolete("此方法当前无调用点，如不需要可删除")]
         private bool IsDefaultValue(object value)
         {
             if (value == null)
@@ -1181,10 +1179,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 将实体对象转换为字典
+        /// 【调试用】将实体对象转换为字典
+        /// 仅用于调试目的，无业务调用
         /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>字典</returns>
+        [Obsolete("仅用于调试，无业务调用")]
         private Dictionary<string, object> EntityToDictionary(object entity)
         {
             var dict = new Dictionary<string, object>();

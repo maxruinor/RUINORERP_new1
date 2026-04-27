@@ -127,7 +127,9 @@ namespace RUINORERP.Business.ImportEngine
 
         /// <summary>
         /// 执行导入任务（兼容重载，保留接口）
+        /// 【已废弃】此重载忽略remapper参数，仅为兼容旧代码
         /// </summary>
+        [Obsolete("请使用 ExecuteWithDataTableAsync(DataTable data, ImportProfile profile)，remapper参数已废弃")]
         public async Task<ImportReport> ExecuteWithDataTableAsync(DataTable data, ImportProfile profile, object remapper)
         {
             // 忽略remapper参数，使用简化实现

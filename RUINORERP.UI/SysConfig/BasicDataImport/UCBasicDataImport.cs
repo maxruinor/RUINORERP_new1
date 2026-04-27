@@ -990,7 +990,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 动态导入-解析文件按钮点击事件
-        /// 根据映射配置解析Excel数据，仅做数据转换不查询外键
+        /// 【功能说明】根据映射配置解析Excel数据，完成以下操作：
+        /// 1. 读取Excel文件数据
+        /// 2. 根据列映射配置转换数据（列名映射、类型转换、外键查询、默认值填充）
+        /// 3. 执行数据去重（如果启用）
+        /// 4. 在界面预览解析后的数据，供用户勾选需要导入的行
+        /// 【注意】此步骤不写入数据库，仅做数据转换和预览
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
@@ -1400,6 +1405,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 动态导入-映射配置按钮点击事件
+        /// 【功能说明】打开列映射配置界面，用户可以：
+        /// 1. 新增模式：创建新的Excel列与系统字段的映射关系
+        /// 2. 编辑模式：修改已保存的映射配置
+        /// 【映射类型支持】
+        /// - Excel直接映射：Excel列 → 系统字段
+        /// - 外键关联：通过编码/名称查找关联表的主键ID
+        /// - 默认值：固定值或枚举值
+        /// - 系统生成：自动生成（如创建时间、创建人）
+        /// - 字段复制/拼接：从其他字段复制或组合
+        /// 【操作流程】选择数据类型 → 点击此按钮 → 配置映射 → 保存配置
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
@@ -1524,6 +1539,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 执行动态导入
+        /// 【功能说明】将解析后的数据写入数据库，完整流程：
+        /// 1. 验证前置条件（已选择数据类型、已配置映射、已解析数据）
+        /// 2. 初始化 DynamicImporter（含外键服务、事务管理器）
+        /// 3. 执行单表导入（BatchImportEntitiesAsync）
+        ///    - 业务验证（调用 Validator）
+        ///    - 数据库去重检查（按业务键跳过/更新/报错）
+        ///    - 批量插入/更新（使用 SqlSugar Storageable + 雪花ID）
+        ///    - 图片导入（如果配置了图片字段）
+        /// 4. 显示导入结果统计（成功/失败/新增/更新/图片数量）
+        /// 【事务管理】使用 IUnitOfWorkManage 确保数据一致性
         /// </summary>
         private async Task ExecuteDynamicImport()
         {

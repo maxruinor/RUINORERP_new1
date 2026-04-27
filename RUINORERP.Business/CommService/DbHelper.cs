@@ -339,7 +339,7 @@ namespace RUINORERP.Business.CommService
         }
 
         /// <summary>
-        /// 执行批量增删改内部实现（返回计数）
+        /// 执行批量增删改内部实现1（返回计数）
         /// </summary>
         private async Task<long> ExecuteBatchAddOrUpdateWithCountInternalAsync(List<T> entities, string operationId)
         {

@@ -1,6 +1,7 @@
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Common.Helper;
 using RUINORERP.Model;
+using RUINORERP.Repository.UnitOfWorks;  // ✅ 新增：IUnitOfWorkManage
 using RUINORERP.UI.SysConfig.BasicDataImport;
 using SqlSugar;
 using System;
@@ -20,6 +21,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class DynamicImporter
     {
         private readonly ISqlSugarClient _db;
+        private readonly IUnitOfWorkManage _unitOfWorkManage;  // ✅ 新增：统一事务管理
         private readonly IForeignKeyService _foreignKeyService;
         private readonly DynamicExcelParser _excelParser;
         private string _imageOutputDirectory;
@@ -96,18 +98,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             public Dictionary<string, object> Data { get; set; }
         }
 
-        private readonly IEntityMappingService _entityInfoService;
-
+     
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="db">SqlSugar数据库客户端</param>
-        /// <param name="entityInfoService">实体映射服务</param>
+        /// <param name="unitOfWorkManage">统一事务管理器（推荐）</param>
         /// <param name="foreignKeyService">外键服务（可选，默认创建新实例）</param>
-        public DynamicImporter(ISqlSugarClient db, IEntityMappingService entityInfoService, IForeignKeyService foreignKeyService = null)
+        public DynamicImporter(ISqlSugarClient db, IUnitOfWorkManage unitOfWorkManage = null, IForeignKeyService foreignKeyService = null)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
-            _entityInfoService = entityInfoService;
+            _unitOfWorkManage = unitOfWorkManage;  // ✅ 支持传入事务管理器
             _foreignKeyService = foreignKeyService ?? new ForeignKeyService(db);
             _excelParser = new DynamicExcelParser();
         }
@@ -992,16 +993,74 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="entityType">实体类型</param>
         /// <returns>主键字段名</returns>
+        /// <summary>
+        /// 获取实体类型的主键字段名
+        /// 【修复】使用 EntityRegistry 或 BaseEntity 动态获取主键，禁止硬编码
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>主键字段名（数据库列名）</returns>
         private string GetPrimaryKeyFieldName(Type entityType)
         {
-            // 从entityInfo获取主键字段
-            var entityInfo = _entityInfoService.GetEntityInfoByTableName(entityType.Name);
-            return entityInfo?.IdField ?? "ID";
+            if (entityType == null)
+            {
+                return "ID"; // 默认值
+            }
+
+            // 优先从 EntityRegistry 获取（结构化元数据）
+            var metadata = RUINORERP.Model.EntityRegistry.Entities
+                .FirstOrDefault(e => e.EntityType == entityType);
+
+            if (metadata != null && !string.IsNullOrEmpty(metadata.PrimaryKeyName))
+            {
+                return metadata.PrimaryKeyName;
+            }
+
+            // 降级方案：使用 BaseEntity 的动态方法获取主键
+            // 创建临时实例调用 GetPrimaryKeyColName()
+            try
+            {
+                if (typeof(RUINORERP.Model.BaseEntity).IsAssignableFrom(entityType))
+                {
+                    var instance = Activator.CreateInstance(entityType) as RUINORERP.Model.BaseEntity;
+                    if (instance != null)
+                    {
+                        string pkColName = instance.GetPrimaryKeyColName();
+                        if (!string.IsNullOrEmpty(pkColName))
+                        {
+                            return pkColName;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"通过 BaseEntity 获取主键失败: {ex.Message}");
+            }
+
+            // 最后的降级方案：尝试从 SugarColumn 特性获取
+            try
+            {
+                var pkProperty = entityType.GetProperties()
+                    .FirstOrDefault(p => p.GetCustomAttribute<SqlSugar.SugarColumn>()?.IsPrimaryKey == true);
+
+                if (pkProperty != null)
+                {
+                    var sugarColumn = pkProperty.GetCustomAttribute<SqlSugar.SugarColumn>();
+                    return sugarColumn?.ColumnName ?? pkProperty.Name;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"通过反射获取主键失败: {ex.Message}");
+            }
+
+            // 最终降级：返回默认值
+            return "ID";
         }
 
         /// <summary>
         /// 批量导入实体内部实现（泛型方法）
-        /// 使用Storageable进行批量插入和更新，主键>0时更新，主键<=0时插入
+        /// ✅ 修复：使用统一事务管理器 + Storageable + 雪花ID
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="entityList">实体列表</param>
@@ -1020,50 +1079,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     await EntityImportHelper.PreProcessEntityAsync(typeof(T), entity, _db, importType);
                 }
 
-                // 获取主键属性
-                var primaryKeyProperty = typeof(T).GetProperty(primaryKeyName);
-                if (primaryKeyProperty == null)
-                {
-                    throw new Exception($"实体类型 {typeof(T).Name} 中找不到主键属性 {primaryKeyName}");
-                }
+                // ✅ 使用 DbClient（从事务管理器获取）
+                var dbClient = _unitOfWorkManage?.GetDbClient() ?? _db;
 
-                // 开启事务
-                _db.Ado.BeginTran();
+                // ✅ 使用 Storageable 进行批量插入和更新（参考 DbHelper.cs）
+                var storage = await dbClient.Storageable<T>(typedList).ToStorageAsync();
+                
+                // ✅ 新增记录自动生成雪花ID
+                var insertIds = await storage.AsInsertable.ExecuteReturnSnowflakeIdListAsync();
+                
+                // ✅ 更新已有记录
+                var updateCount = await storage.AsUpdateable.ExecuteCommandAsync();
 
-                try
-                {
-                    // 分离新增和更新的记录
-                    var newRecords = typedList.Where(t => Convert.ToInt64(primaryKeyProperty.GetValue(t)) <= 0).ToList();
-                    var updateRecords = typedList.Where(t => Convert.ToInt64(primaryKeyProperty.GetValue(t)) > 0).ToList();
-
-                    int insertCount = 0;
-                    int updateCount = 0;
-
-                    // 先插入新记录
-                    if (newRecords.Count > 0)
-                    {
-                        insertCount = await _db.Insertable(newRecords).ExecuteCommandAsync();
-                    }
-
-                    // 再更新已有记录
-                    if (updateRecords.Count > 0)
-                    {
-                        updateCount = await _db.Updateable(updateRecords).ExecuteCommandAsync();
-                    }
-
-                    result.InsertedCount = insertCount;
-                    result.UpdatedCount = updateCount;
-                    
-                    // 提交事务
-                    _db.Ado.CommitTran();
-                }
-                catch (Exception ex)
-                {
-                    // 回滚事务
-                    _db.Ado.RollbackTran();
-                    System.Diagnostics.Debug.WriteLine($"批量导入失败，已回滚事务: {ex.Message}");
-                    throw; // 直接抛出原异常，保持堆栈完整
-                }
+                result.InsertedCount = insertIds.Count;
+                result.UpdatedCount = updateCount;
+                
+                System.Diagnostics.Debug.WriteLine($"批量导入完成：新增 {insertIds.Count} 条，更新 {updateCount} 条");
             }
             catch (Exception ex)
             {

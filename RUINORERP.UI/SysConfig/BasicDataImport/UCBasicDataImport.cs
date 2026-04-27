@@ -4,6 +4,7 @@ using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using RUINORERP.Common;
 using RUINORERP.UI.SysConfig.BasicDataImport;
+using RUINORERP.Repository.UnitOfWorks;  // ✅ 新增：IUnitOfWorkManage
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -30,8 +31,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public partial class UCBasicDataImport : UserControl
     {
         private ISqlSugarClient _db;
+        private IUnitOfWorkManage _unitOfWorkManage;  // ✅ 新增：统一事务管理器
         private ImageProcessor _imageProcessor;
-        private IEntityMappingService _entityInfoService;
 
         // 动态导入相关字段
         private DynamicExcelParser _dynamicExcelParser;
@@ -181,7 +182,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public UCBasicDataImport()
         {
             InitializeComponent();
-            _entityInfoService = Startup.GetFromFac<IEntityMappingService>();
             InitializeData();
             InitializeDynamicImport();
         }
@@ -922,6 +922,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (_db == null)
             {
                 _db = MainForm.Instance.AppContext.Db;
+                
+                // ✅ 获取统一事务管理器
+                try
+                {
+                    _unitOfWorkManage = MainForm.Instance.AppContext.GetRequiredService<IUnitOfWorkManage>();
+                    System.Diagnostics.Debug.WriteLine("成功获取 IUnitOfWorkManage 实例");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"获取 IUnitOfWorkManage 失败: {ex.Message}");
+                    _unitOfWorkManage = null;  // 降级方案：不使用事务管理器
+                }
             }
         }
 
@@ -1539,7 +1551,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 初始化DynamicImporter
-                _dynamicImporter = new DynamicImporter(_db, _foreignKeyService);
+                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
 
                 // 直接执行导入
                 await ExecuteSingleImport();
@@ -1666,7 +1678,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 移除不必要的Application.DoEvents()，后续的await会让UI线程有机会处理消息
 
                 // 初始化导入器，传入共享的ForeignKeyService实例
-                _dynamicImporter = new DynamicImporter(_db,  _foreignKeyService);
+                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
 
                 // 获取导入类型标识（用于区分客户和供应商等使用相同表的情况）
                 string importType = GetImportType();

@@ -149,12 +149,15 @@ namespace RUINORERP.Server.Network.Models
 
         /// <summary>
         /// 是否已验证（连接握手验证）
+        /// ⚠️ 注意：这不是安全验证，只是TCP握手确认
         /// 客户端收到欢迎消息并回复确认后才为true
+        /// 作用：收集客户端环境信息、确认双向通信正常
         /// </summary>
-        public bool IsVerified { get; set; } = false;
+        public bool IsHandshakeCompleted { get; set; } = false;
 
         /// <summary>
         /// 是否已认证（登录验证）
+        /// 真正的安全验证，需要用户名密码或Token
         /// </summary>
         public bool IsAuthenticated { get; set; }
 

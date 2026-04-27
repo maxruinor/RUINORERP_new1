@@ -145,9 +145,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         // 宽表导入相关字段
         private RUINORERP.Business.ImportEngine.SmartImportEngine _wideTableEngine;
         private bool _isWideTableMode = false;  // 是否启用宽表模式
-        
-        // 生成结果预览按钮
-        private Krypton.Toolkit.KryptonButton kbtnGeneratePreview;
 
         /// <summary>
         /// 实体类型映射字典
@@ -254,58 +251,149 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 初始状态：未选择实体类型时禁用映射配置相关按钮
             UpdateMappingControlStates();
+        }
+
+        /// <summary>
+        /// 添加导入模式选择面板
+        /// </summary>
+        /// <summary>
+        /// 单表导入单选按钮改变事件
+        /// </summary>
+        private void KradioSingleTable_CheckedChanged(object sender, EventArgs e)
+        {
+            if (kradioSingleTable.Checked)
+            {
+                SwitchToSingleTableMode();
+            }
+        }
+        
+        /// <summary>
+        /// 宽表导入单选按钮改变事件
+        /// </summary>
+        private void KradioWideTable_CheckedChanged(object sender, EventArgs e)
+        {
+            if (kradioWideTable.Checked)
+            {
+                SwitchToWideTableMode();
+            }
+        }
+        
+        /// <summary>
+        /// 切换到单表导入模式
+        /// </summary>
+        private void SwitchToSingleTableMode()
+        {
+            _isWideTableMode = false;
+            klblModeDescription.Values.Text = "单表导入：适合单个Excel表导入一个数据库表，需要配置列映射关系";
+            MainForm.Instance.ShowStatusText("✓ 已切换到单表导入模式");
             
-            // 添加宽表Profile管理按钮(如果不存在)
-            AddWideTableProfileManagementButton();
+            // 启用实体类型选择
+            kcmbDynamicEntityType.Enabled = true;
+            
+            // 重置下拉框提示文本
+            if (kcmbDynamicMappingName.Items.Count > 0 && kcmbDynamicMappingName.SelectedIndex == 0)
+            {
+                kcmbDynamicMappingName.Items[0] = "-- 请选择导入配置 --";
+            }
+            
+            // 重新加载单表配置
+            if (_selectedEntityType != null)
+            {
+                LoadMappingConfigsForEntityType();
+            }
+            else
+            {
+                kcmbDynamicMappingName.Items.Clear();
+                kcmbDynamicMappingName.Items.Add("-- 请先选择实体类型 --");
+                kcmbDynamicMappingName.SelectedIndex = 0;
+            }
+            
+            UpdateMappingControlStates();
+        }
+        
+        /// <summary>
+        /// 切换到宽表导入模式
+        /// </summary>
+        private void SwitchToWideTableMode()
+        {
+            _isWideTableMode = true;
+            klblModeDescription.Values.Text = "宽表导入：适合一个Excel表包含主表和多个依赖表的数据，使用预定义的Profile配置";
+            MainForm.Instance.ShowStatusText("✓ 已切换到宽表导入模式");
+            
+            // 禁用实体类型选择（宽表不需要）
+            kcmbDynamicEntityType.Enabled = false;
+            
+            // 清空并重新加载宽表配置
+            LoadWideTableProfilesOnly();
+            
+            // 宽表模式按钮状态
+            kbtnDynamicParse.Enabled = false;
+            kbtnDynamicMap.Enabled = false;
+            kbtnGeneratePreview.Enabled = false;
+            kbtnDynamicImport.Enabled = true;
+        }
+        
+        /// <summary>
+        /// 仅加载宽表Profile配置
+        /// </summary>
+        private void LoadWideTableProfilesOnly()
+        {
+            try
+            {
+                kcmbDynamicMappingName.Items.Clear();
+                kcmbDynamicMappingName.Items.Add("-- 请选择宽表Profile --");
+                
+                var profileDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SysConfig", "DataMigration", "Profiles");
+                if (!Directory.Exists(profileDirectory))
+                {
+                    MainForm.Instance.ShowStatusText("未找到宽表Profile配置目录");
+                    return;
+                }
+
+                // 查找所有宽表Profile文件
+                var wideTableProfiles = new List<string>();
+                foreach (var jsonFile in Directory.GetFiles(profileDirectory, "*.json"))
+                {
+                    try
+                    {
+                        var content = File.ReadAllText(jsonFile);
+                        if (content.Contains("\"MasterTable\"") || content.Contains("\"DependencyTables\""))
+                        {
+                            var profileName = Path.GetFileNameWithoutExtension(jsonFile);
+                            wideTableProfiles.Add(profileName);
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略无法读取的文件
+                    }
+                }
+
+                // 添加宽表Profile
+                foreach (var profile in wideTableProfiles.OrderBy(p => p))
+                {
+                    kcmbDynamicMappingName.Items.Add($"[宽表] {profile}");
+                }
+                
+                MainForm.Instance.ShowStatusText($"已加载 {wideTableProfiles.Count} 个宽表Profile配置");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.ShowStatusText($"加载宽表Profile失败: {ex.Message}");
+            }
         }
 
         /// <summary>
         /// 添加宽表Profile管理按钮和生成结果预览按钮
         /// </summary>
-        private void AddWideTableProfileManagementButton()
+        /// <summary>
+        /// 管理宽表Profile按钮点击事件
+        /// </summary>
+        private async void kbtnManageProfiles_Click(object sender, EventArgs e)
         {
-            try
-            {
-                // 在kbtnDynamicMap后面添加一个新按钮
-                var btnManageProfiles = new Krypton.Toolkit.KryptonButton();
-                btnManageProfiles.Text = "管理宽表Profile";
-                btnManageProfiles.Location = new System.Drawing.Point(
-                    kbtnDynamicMap.Location.X + kbtnDynamicMap.Width + 10,
-                    kbtnDynamicMap.Location.Y
-                );
-                btnManageProfiles.Size = new System.Drawing.Size(120, 25);
-                btnManageProfiles.Click += async (s, e) =>
-                {
-                    await OpenWideTableProfileEditor();
-                };
-
-                // 添加"生成结果预览"按钮（在解析按钮后面）
-                kbtnGeneratePreview = new Krypton.Toolkit.KryptonButton();
-                kbtnGeneratePreview.Text = "生成结果预览";
-                kbtnGeneratePreview.Location = new System.Drawing.Point(
-                    kbtnDynamicParse.Location.X + kbtnDynamicParse.Width + 10,
-                    kbtnDynamicParse.Location.Y
-                );
-                kbtnGeneratePreview.Size = new System.Drawing.Size(120, 25);
-                kbtnGeneratePreview.Enabled = false;  // 初始禁用，需要先解析数据
-                kbtnGeneratePreview.Click += kbtnGeneratePreview_Click;
-
-                // 添加到父容器
-                if (kbtnDynamicMap.Parent != null)
-                {
-                    kbtnDynamicMap.Parent.Controls.Add(btnManageProfiles);
-                    btnManageProfiles.BringToFront();
-                    
-                    kbtnDynamicParse.Parent.Controls.Add(kbtnGeneratePreview);
-                    kbtnGeneratePreview.BringToFront();
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.ShowStatusText($"添加按钮失败: {ex.Message}");
-            }
+            await OpenWideTableProfileEditor();
         }
-
+        
         /// <summary>
         /// 打开宽表Profile编辑器
         /// </summary>
@@ -417,16 +505,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (selectedText.StartsWith("[宽表] "))
                 {
                     _isWideTableMode = true;
-                    MainForm.Instance.ShowStatusText($"已选择宽表导入模式: {selectedText}");
+                    MainForm.Instance.ShowStatusText($"✓ 已切换到宽表导入模式: {selectedText}");
                     
                     // 宽表模式不需要选择实体类型和映射配置
                     kbtnDynamicParse.Enabled = false;  // 禁用解析按钮(宽表不需要预览解析)
                     kbtnDynamicMap.Enabled = false;    // 禁用映射配置按钮
+                    kbtnGeneratePreview.Enabled = false; // 禁用预览按钮
+                    kbtnDynamicImport.Enabled = true;  // 宽表可以直接导入
                     
                     return;
                 }
+                else if (selectedText.StartsWith("[配置] "))
+                {
+                    // 单表配置模式
+                    _isWideTableMode = false;
+                    MainForm.Instance.ShowStatusText($"✓ 已切换到单表导入模式: {selectedText}");
+                }
                 else
                 {
+                    // 旧格式配置（兼容）
                     _isWideTableMode = false;
                 }
 
@@ -642,34 +739,74 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             bool hasEntityType = _selectedEntityType != null;
             bool hasRawData = _rawExcelData != null && _rawExcelData.Rows.Count > 0;
             bool hasMappingSelected = kcmbDynamicMappingName.SelectedIndex > 0;
+            bool isWideTable = _isWideTableMode;
 
-            // 映射配置按钮启用条件：
-            // 1. 已选择实体类型，且（已加载原始数据 OR 已选择映射配置）
-            kbtnDynamicMap.Enabled = hasEntityType && (hasRawData || hasMappingSelected);
-
-            // 解析按钮需要：有原始数据、选择了实体类型、有映射配置
-            bool hasMappingConfig = _currentConfig != null && _currentConfig.ColumnMappings != null && _currentConfig.ColumnMappings.Count > 0;
-            kbtnDynamicParse.Enabled = hasRawData && hasEntityType && hasMappingConfig;
-            
-            // 生成结果预览按钮：需要有解析后的数据
-            if (kbtnGeneratePreview != null)
+            // 根据当前模式更新控件状态
+            if (isWideTable)
             {
-                kbtnGeneratePreview.Enabled = _parsedImportData != null && _parsedImportData.Rows.Count > 0;
+                // 宽表模式：禁用解析和映射配置按钮
+                kbtnDynamicParse.Enabled = false;  // 宽表不需要解析
+                kbtnDynamicMap.Enabled = false;    // 宽表不需要映射配置
+                kbtnGeneratePreview.Enabled = false; // 宽表不需要预览
+                kbtnDynamicImport.Enabled = true;   // 宽表可以直接导入
+                
+                // 禁用实体类型选择（宽表不需要）
+                if (kcmbDynamicEntityType != null)
+                {
+                    kcmbDynamicEntityType.Enabled = false;
+                }
             }
-            
-            // 导入按钮：需要先生成结果预览
-            kbtnDynamicImport.Enabled = false;  // 默认禁用，只有生成预览后才启用
+            else
+            {
+                // 普通模式：根据条件启用按钮
+                
+                // 映射配置按钮：已选择实体类型，且（已加载原始数据 OR 已选择映射配置）
+                kbtnDynamicMap.Enabled = hasEntityType && (hasRawData || hasMappingSelected);
+
+                // 解析按钮：需要原始数据、实体类型、映射配置都具备
+                bool hasMappingConfig = _currentConfig != null && _currentConfig.ColumnMappings != null && _currentConfig.ColumnMappings.Count > 0;
+                kbtnDynamicParse.Enabled = hasRawData && hasEntityType && hasMappingConfig;
+                
+                // 生成结果预览按钮：需要有解析后的数据
+                if (kbtnGeneratePreview != null)
+                {
+                    kbtnGeneratePreview.Enabled = _parsedImportData != null && _parsedImportData.Rows.Count > 0;
+                }
+                
+                // 导入按钮：需要在解析后或生成预览后才能启用
+                if (_parsedImportData != null && _parsedImportData.Rows.Count > 0)
+                {
+                    // 有解析数据就可以导入，不需要强制点“生成结果预览”
+                    kbtnDynamicImport.Enabled = true;
+                }
+                else
+                {
+                    kbtnDynamicImport.Enabled = false;
+                }
+                
+                // 启用实体类型选择
+                if (kcmbDynamicEntityType != null)
+                {
+                    kcmbDynamicEntityType.Enabled = true;
+                }
+            }
         }
 
         /// <summary>
-        /// 加载映射配置列表
+        /// 加载映射配置列表（根据当前模式）
         /// </summary>
         private void LoadMappingConfigs()
         {
-            LoadMappingConfigsForEntityType();
-            
-            // 同时加载宽表Profile配置
-            LoadWideTableProfiles();
+            if (_isWideTableMode)
+            {
+                // 宽表模式：只加载宽表Profile
+                LoadWideTableProfilesOnly();
+            }
+            else
+            {
+                // 单表模式：只加载单表配置
+                LoadMappingConfigsForEntityType();
+            }
         }
 
         /// <summary>
@@ -713,6 +850,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         kcmbDynamicMappingName.Items.Add($"[宽表] {profile}");
                     }
                 }
+                
+                MainForm.Instance.ShowStatusText($"已加载 {wideTableProfiles.Count} 个宽表Profile配置");
             }
             catch (Exception ex)
             {
@@ -734,7 +873,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 var mappingNames = _columnMappingManager.GetAllMappingNames();
                 kcmbDynamicMappingName.Items.Clear();
-                kcmbDynamicMappingName.Items.Add("请选择");
+                kcmbDynamicMappingName.Items.Add("-- 请选择导入配置 --");
 
                 string entityTypeName = _selectedEntityType?.Name ?? "";
                 int selectedIndex = 0; // 默认选中"请选择"
@@ -748,10 +887,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         var config = _columnMappingManager.LoadConfiguration(name);
                         if (config?.EntityType == entityTypeName || string.IsNullOrEmpty(entityTypeName))
                         {
-                            kcmbDynamicMappingName.Items.Add(name);
+                            // 使用"[配置]"前缀标识单表配置
+                            kcmbDynamicMappingName.Items.Add($"[配置] {name}");
 
                             // 如果这个名称与之前选择的名称相同，记录索引
-                            if (currentMappingName != null && name == currentMappingName)
+                            if (currentMappingName != null && ($"[配置] {name}" == currentMappingName || name == currentMappingName))
                             {
                                 selectedIndex = index;
                             }
@@ -905,9 +1045,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 切换到解析数据预览页面
                 kryptonNavigatorDynamic.SelectedPage = kryptonPageParsedData;
 
-                // 启用生成结果预览按钮和导入按钮
-                kbtnGeneratePreview.Enabled = true;
-                kbtnDynamicImport.Enabled = false;  // 需要先生成结果预览才能导入
+                // 解析完成后，启用导入按钮和生成预览按钮
+                UpdateMappingControlStates();
+
+                MainForm.Instance.ShowStatusText($"数据解析完成，共 {_parsedImportData.Rows.Count} 行数据，可以点击\"导入\"按钮直接导入");
             }
             catch (Exception ex)
             {
@@ -1263,7 +1404,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 判断是编辑模式还是新增模式
                 bool isEditMode = kcmbDynamicMappingName.SelectedIndex > 0;
-                string mappingName = isEditMode ? kcmbDynamicMappingName.SelectedItem.ToString() : string.Empty;
+                string mappingName = string.Empty;
+                
+                if (isEditMode)
+                {
+                    // 【修复】从下拉框获取配置名时需要去除"[配置] "前缀
+                    string selectedText = kcmbDynamicMappingName.SelectedItem.ToString();
+                    if (selectedText.StartsWith("[配置] "))
+                    {
+                        mappingName = selectedText.Substring(5); // 移除 "[配置] " 前缀
+                    }
+                    else
+                    {
+                        mappingName = selectedText;
+                    }
+                }
 
                 // 如果是编辑模式，先加载选中的配置
                 if (isEditMode)
@@ -1334,7 +1489,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                string mappingName = kcmbDynamicMappingName.SelectedItem.ToString();
+                // 【修复】从下拉框获取配置名时需要去除"[配置] "前缀
+                string selectedText = kcmbDynamicMappingName.SelectedItem.ToString();
+                string mappingName = selectedText;
+                
+                if (selectedText.StartsWith("[配置] "))
+                {
+                    mappingName = selectedText.Substring(5); // 移除 "[配置] " 前缀
+                }
+                else if (selectedText.StartsWith("[Profile] "))
+                {
+                    mappingName = selectedText.Substring(10); // 移除 "[Profile] " 前缀
+                }
+                
                 _currentConfig = _columnMappingManager.LoadConfiguration(mappingName, _selectedEntityType);
             }
             catch (Exception ex)
@@ -1930,8 +2097,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 5. 启用导入按钮
                 kbtnDynamicImport.Enabled = true;
-
-                MainForm.Instance.ShowStatusText($"结果预览生成完成，共 {previewData.Rows.Count} 行数据，可以点击\"导入\"按钮保存到数据库");
+                
+                MainForm.Instance.ShowStatusText($"结果预览生成完成，共 {previewData.Rows.Count} 行数据，可以点击\"导入\"按钮保存到数据库（可选，已经可以直接导入）");
             }
             catch (Exception ex)
             {

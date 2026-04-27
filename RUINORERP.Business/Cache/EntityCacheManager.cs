@@ -690,7 +690,19 @@ namespace RUINORERP.Business.Cache
                                 // 快照当前列表，避免并发修改导致序列化异常
                                 var snapshot = new object[il.Count];
                                 for (int i = 0; i < il.Count; i++) snapshot[i] = il[i];
-                                json = Newtonsoft.Json.JsonConvert.SerializeObject(snapshot);
+                                
+                                // 使用增强型配置进行序列化
+                                var settings = new Newtonsoft.Json.JsonSerializerSettings
+                                {
+                                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                                    Error = (s, e) =>
+                                    {
+                                        _logger?.LogWarning("JSON序列化非致命错误: 路径={Path}, 异常={Error}", e.ErrorContext.Path, e.ErrorContext.Error.Message);
+                                        e.ErrorContext.Handled = true;
+                                    }
+                                };
+                                json = Newtonsoft.Json.JsonConvert.SerializeObject(snapshot, settings);
                             }
                             else
                             {
@@ -699,24 +711,43 @@ namespace RUINORERP.Business.Cache
                         }
                         catch (Exception ex)
                         {
-                            _logger?.LogWarning(ex, "直接序列化缓存列表失败，尝试逐项序列化以定位问题元素");
-                            var jArray = new Newtonsoft.Json.Linq.JArray();
+                            _logger?.LogWarning(ex, "直接序列化缓存列表失败，启动逐项诊断模式");
+                            var badIndices = new List<int>();
+                            var cleanList = new List<object>();
+                            
                             if (cachedList is System.Collections.IList il2)
                             {
                                 for (int i = 0; i < il2.Count; i++)
                                 {
                                     try
                                     {
-                                        jArray.Add(Newtonsoft.Json.Linq.JToken.FromObject(il2[i]));
+                                        var item = il2[i];
+                                        // 仅对当前项进行序列化测试，不产生大字符串
+                                        Newtonsoft.Json.JsonConvert.SerializeObject(item, new Newtonsoft.Json.JsonSerializerSettings
+                                        {
+                                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                            Error = (s, e) => { e.ErrorContext.Handled = true; }
+                                        });
+                                        cleanList.Add(item);
                                     }
                                     catch (Exception ie)
                                     {
-                                        _logger?.LogWarning(ie, $"序列化缓存中索引={i} 的元素失败，类型={il2[i]?.GetType().FullName}");
-                                        jArray.Add(null); // 保持结构性，记录占位
+                                        _logger?.LogError(ie, "发现坏数据: 索引={Index}, 类型={Type}, 表={Table}", i, il2[i]?.GetType().FullName, tableName);
+                                        badIndices.Add(i);
                                     }
                                 }
                             }
-                            json = jArray.ToString();
+
+                            if (badIndices.Any())
+                            {
+                                _logger?.LogWarning("已过滤 {Count} 条异常数据，重新序列化", badIndices.Count);
+                                json = Newtonsoft.Json.JsonConvert.SerializeObject(cleanList);
+                            }
+                            else
+                            {
+                                // 如果逐项也没成功，记录原始异常并返回空
+                                throw;
+                            }
                         }
 
                         var convertedList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(json);
@@ -907,7 +938,19 @@ namespace RUINORERP.Business.Cache
                                 // 快照当前列表，避免并发修改导致序列化异常
                                 var snapshot = new object[il.Count];
                                 for (int i = 0; i < il.Count; i++) snapshot[i] = il[i];
-                                json = Newtonsoft.Json.JsonConvert.SerializeObject(snapshot);
+                                
+                                // 使用增强型配置进行序列化
+                                var settings = new Newtonsoft.Json.JsonSerializerSettings
+                                {
+                                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                                    Error = (s, e) =>
+                                    {
+                                        _logger?.LogWarning("JSON序列化非致命错误: 路径={Path}, 异常={Error}", e.ErrorContext.Path, e.ErrorContext.Error.Message);
+                                        e.ErrorContext.Handled = true;
+                                    }
+                                };
+                                json = Newtonsoft.Json.JsonConvert.SerializeObject(snapshot, settings);
                             }
                             else
                             {
@@ -916,24 +959,43 @@ namespace RUINORERP.Business.Cache
                         }
                         catch (Exception ex)
                         {
-                            _logger?.LogWarning(ex, "直接序列化缓存列表失败，尝试逐项序列化以定位问题元素");
-                            var jArray = new Newtonsoft.Json.Linq.JArray();
+                            _logger?.LogWarning(ex, "直接序列化缓存列表失败，启动逐项诊断模式");
+                            var badIndices = new List<int>();
+                            var cleanList = new List<object>();
+                            
                             if (cachedList is System.Collections.IList il2)
                             {
                                 for (int i = 0; i < il2.Count; i++)
                                 {
                                     try
                                     {
-                                        jArray.Add(Newtonsoft.Json.Linq.JToken.FromObject(il2[i]));
+                                        var item = il2[i];
+                                        // 仅对当前项进行序列化测试，不产生大字符串
+                                        Newtonsoft.Json.JsonConvert.SerializeObject(item, new Newtonsoft.Json.JsonSerializerSettings
+                                        {
+                                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                            Error = (s, e) => { e.ErrorContext.Handled = true; }
+                                        });
+                                        cleanList.Add(item);
                                     }
                                     catch (Exception ie)
                                     {
-                                        _logger?.LogWarning(ie, $"序列化缓存中索引={i} 的元素失败，类型={il2[i]?.GetType().FullName}");
-                                        jArray.Add(null); // 保持结构性，记录占位
+                                        _logger?.LogError(ie, "发现坏数据: 索引={Index}, 类型={Type}, 表={Table}", i, il2[i]?.GetType().FullName, tableName);
+                                        badIndices.Add(i);
                                     }
                                 }
                             }
-                            json = jArray.ToString();
+
+                            if (badIndices.Any())
+                            {
+                                _logger?.LogWarning("已过滤 {Count} 条异常数据，重新序列化", badIndices.Count);
+                                json = Newtonsoft.Json.JsonConvert.SerializeObject(cleanList);
+                            }
+                            else
+                            {
+                                // 如果逐项也没成功，记录原始异常并返回空
+                                throw;
+                            }
                         }
 
                         var convertedList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(json);

@@ -125,7 +125,6 @@ namespace RUINORERP.Business.BizMapperService
                 // 费用
                 SafeRegister<tb_FM_ExpenseClaim>(BizType.费用报销单, e => e.ClaimMainID, e => e.ClaimNo, e => e.tb_FM_ExpenseClaimDetails);
 
-
                 // 请购
                 SafeRegister<tb_BuyingRequisition>(BizType.请购单, e => e.PuRequisition_ID, e => e.PuRequisitionNo, e => e.tb_BuyingRequisitionDetails);
 

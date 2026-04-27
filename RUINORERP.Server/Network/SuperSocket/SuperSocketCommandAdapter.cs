@@ -373,19 +373,18 @@ namespace RUINORERP.Server.Network.SuperSocket
                     return;
                 }
 
-                // 检查会话是否已验证（适用于非WelcomeAck和非Login命令）
-                if (!sessionInfo.IsVerified &&
-                    package.Packet.CommandId != SystemCommands.WelcomeAck &&
-                    package.Packet.CommandId != AuthenticationCommands.Login)
+                // ✅ 会话状态检查：仅用于统计和日志，不阻止命令执行
+                // 说明：Welcome机制只是握手协议，用于收集客户端信息和确认连接，不是安全验证
+                // 真正的安全验证依靠Token和UserId，在后续业务命令中进行检查
+                if (!sessionInfo.WelcomeAckReceived)
                 {
-                    // 会话存在但未验证，返回相应错误
-                    _logger?.LogWarning("[认证验证失败] SessionId={SessionId}, CommandId={CommandId}, IsVerified={IsVerified}, WelcomeAckReceived={WelcomeAckReceived}",
-                        sessionId, package.Packet.CommandId.ToString(), sessionInfo.IsVerified, sessionInfo.WelcomeAckReceived);
-                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_ValidationFailed, CancellationToken.None);
-                    return;
+                    _logger?.LogDebug("[会话握手] SessionId={SessionId}, CommandId={CommandId}, WelcomeAckReceived=false",
+                        sessionId, package.Packet.CommandId.ToString());
+                    // 不再阻止命令执行，允许客户端在握手完成前发送Login等命令
                 }
 
                 // ✅ Token验证：除WelcomeAck和Login外，所有命令都需要有效的Token
+                // WelcomeAck和Login是认证流程的一部分，不需要预先有Token
                 if (package.Packet.CommandId != SystemCommands.WelcomeAck &&
                     package.Packet.CommandId != AuthenticationCommands.Login)
                 {

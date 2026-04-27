@@ -201,7 +201,7 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 // 验证会话状态
-                if (sessionInfo.IsVerified)
+                if (sessionInfo.IsHandshakeCompleted)
                 {
                     _logger.LogWarning("会话已验证，收到重复的欢迎确认: {SessionId}", sessionInfo.SessionID);
                     return ResponseProcessingResult.Success("会话已验证（重复确认）");
@@ -238,7 +238,7 @@ namespace RUINORERP.Server.Network.Services
                     : "未知";
 
                 // 标记会话为已验证
-                sessionInfo.IsVerified = true;
+                sessionInfo.IsHandshakeCompleted = true;
                 sessionInfo.WelcomeAckReceived = true;
 
                 // 更新会话状态

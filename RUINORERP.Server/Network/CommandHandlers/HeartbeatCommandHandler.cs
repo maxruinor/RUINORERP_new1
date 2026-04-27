@@ -48,6 +48,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
             // 使用安全方法设置支持的命令
             SetSupportedCommands(SystemCommands.Heartbeat);
 
+            // 提高清理频率到1分钟
+            _cleanupTimer = new Timer(
+                CleanupExpiredHeartbeatResponses, 
+                null, 
+                TimeSpan.FromMinutes(1),  // 首次延迟1分钟
+                TimeSpan.FromMinutes(1)   // 每1分钟清理一次
+            );
+
             // ✅ 方案C：订阅会话断开事件，会话断开时立即清理心跳记录
             _sessionService.SessionDisconnected += OnSessionDisconnected;
         }
@@ -139,13 +147,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 上次心跳响应时间缓存，用于响应合并
         /// </summary>
-        private static readonly ConcurrentDictionary<string, DateTime> _lastHeartbeatResponses =
+        private readonly ConcurrentDictionary<string, DateTime> _lastHeartbeatResponses =
             new ConcurrentDictionary<string, DateTime>();
 
         /// <summary>
         /// 清理定时器，用于定期清理过期的心跳记录
         /// </summary>
-        private static readonly Timer _cleanupTimer = new Timer(CleanupExpiredHeartbeatResponses, null, (int)TimeSpan.FromMinutes(10).TotalMilliseconds, (int)TimeSpan.FromMinutes(10).TotalMilliseconds);
+        private readonly Timer _cleanupTimer;
 
         /// <summary>
         /// 处理心跳命令（优化版 - 快速响应）
@@ -225,47 +233,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         }
                     };
 
-                    // 异步更新用户操作信息（不阻塞响应）
-                    if (heartbeatRequest.UserOperationInfo != null)
-                    {
-                        _ = Task.Run(() =>
-                        {
-                            try
-                            {
-                                UpdateUserInfoBatch(sessionInfo, heartbeatRequest.UserOperationInfo);
-
-                                // 如果心跳请求中包含计算机名，也更新到会话信息
-                                if (!string.IsNullOrEmpty(heartbeatRequest.ComputerName))
-                                {
-                                    sessionInfo.UserInfo.MachineName = heartbeatRequest.ComputerName;
-                                }
-
-                                SessionService.UpdateSessionLight(sessionInfo);
-                            }
-                            catch { /* 忽略异步更新错误 */ }
-                        });
-                    }
-                    else
-                    {
-                        // 即使没有UserOperationInfo，如果有ComputerName也要更新
-                        if (!string.IsNullOrEmpty(heartbeatRequest.ComputerName))
-                        {
-                            _ = Task.Run(() =>
-                            {
-                                try
-                                {
-                                    sessionInfo.UserInfo.MachineName = heartbeatRequest.ComputerName;
-                                    SessionService.UpdateSessionLight(sessionInfo);
-                                }
-                                catch { /* 忽略异步更新错误 */ }
-                            });
-                        }
-                        else
-                        {
-                            // 轻量级更新
-                            _ = Task.Run(() => SessionService.UpdateSessionLight(sessionInfo));
-                        }
-                    }
+                    // 使用批量处理器处理更新，减少Task.Run创建
+                    _batchProcessor.EnqueueHeartbeat(heartbeatRequest, sessionInfo.SessionID);
 
                     return response;
                 }
@@ -523,7 +492,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 清理过期的心跳记录
         /// 防止_lastHeartbeatResponses字典无限增长
         /// </summary>
-        private static void CleanupExpiredHeartbeatResponses(object state)
+        private void CleanupExpiredHeartbeatResponses(object state)
         {
             try
             {
@@ -548,12 +517,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 if (expiredSessions.Count > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"清理了 {expiredSessions.Count} 个过期的心跳记录");
+                    Logger.LogDebug($"清理了 {expiredSessions.Count} 个过期的心跳记录");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"清理过期心跳记录时发生异常: {ex.Message}");
+                Logger.LogWarning(ex, "清理过期心跳记录时发生异常");
             }
         }
 

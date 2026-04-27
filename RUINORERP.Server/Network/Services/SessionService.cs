@@ -100,11 +100,20 @@ namespace RUINORERP.Server.Network.Services
                 maxPendingCount: 500
             );
             
+            // ✅ 初始化清理定时器(每10分钟清理一次超时会话)
+            _cleanupTimer = new Timer(
+                state => CleanupTimeoutSessions(), 
+                null, 
+                TimeSpan.FromMinutes(10),  // 首次延迟10分钟
+                TimeSpan.FromMinutes(10)   // 每10分钟执行一次
+            );
+            
             // ✅ 简化：移除应用层心跳检查，依赖SuperSocket底层连接检测
             // SuperSocket会在TCP连接断开时自动触发OnSessionClosedAsync
             // 不再需要定时检查LastHeartbep0-at，减少CPU开销和复杂度
 
-            _logger.LogInformation("SessionService初始化完成（含DDoS防护）");
+            _logger.LogInformation("SessionService初始化完成（含DDoS防护和定时清理）");
+
         }
 
         #endregion
@@ -620,8 +629,6 @@ namespace RUINORERP.Server.Network.Services
 
                     // 触发会话连接事件
                     SessionConnected?.Invoke(sessionInfo);
-                    // 调用IServerSessionEventHandler接口的会话连接方法
-                    await OnSessionConnectedAsync(sessionInfo);
                 }
                 else
                 {
@@ -663,7 +670,7 @@ namespace RUINORERP.Server.Network.Services
                     return;
                 }
 
-                sessionInfo.IsVerified = false;
+                sessionInfo.IsHandshakeCompleted = false;
                 sessionInfo.WelcomeSentTime = DateTime.Now;
                 sessionInfo.WelcomeAckReceived = false;
 
@@ -1495,7 +1502,7 @@ namespace RUINORERP.Server.Network.Services
                             }
 
                             // 检查2: 未验证会话（欢迎回复超时15分钟后强制断开），延长超时时间适应网络延迟
-                            if (!session.IsVerified &&
+                            if (!session.IsHandshakeCompleted &&
                                 !session.WelcomeAckReceived &&
                                 session.WelcomeSentTime.HasValue &&
                                 session.WelcomeSentTime.Value.AddMinutes(15) < currentTime)
@@ -1506,7 +1513,7 @@ namespace RUINORERP.Server.Network.Services
                             }
 
                             // 检查3: 已验证但未授权的会话（30分钟内未登录强制断开），增加超时时间
-                            if (session.IsVerified &&
+                            if (session.IsHandshakeCompleted &&
                                 !session.IsAuthenticated &&
                                 session.ConnectedTime.AddMinutes(30) < currentTime)
                             {
@@ -1685,34 +1692,35 @@ namespace RUINORERP.Server.Network.Services
                 _rateCleanupTimer?.Dispose(); // ✅ DDoS防护：清理连接频率定时器
                 _connectionRates.Clear(); // ✅ DDoS防护：清空连接记录
 
-                var sessionIds = _sessions.Keys.ToList();
-                int totalSessions = sessionIds.Count;
-                int closedSessions = 0;
-
-                // 并行异步关闭会话，避免同步阻塞
-                var tasks = sessionIds.Select(async sessionId =>
+                // Fire-and-forget: 启动异步关闭，不等待完成
+                _ = Task.Run(async () =>
                 {
-                    if (_sessions.TryGetValue(sessionId, out var session))
+                    var sessionIds = _sessions.Keys.ToList();
+                    int totalSessions = sessionIds.Count;
+                    int closedSessions = 0;
+                    
+                    foreach (var sessionId in sessionIds)
                     {
                         try
                         {
-                            await session.CloseAsync(CloseReason.ServerShutdown).ConfigureAwait(false);
-                            Interlocked.Increment(ref closedSessions);
+                            if (_sessions.TryGetValue(sessionId, out var session))
+                            {
+                                await session.CloseAsync(CloseReason.ServerShutdown);
+                                Interlocked.Increment(ref closedSessions);
+                            }
                         }
                         catch (Exception ex)
                         {
                             _logger.LogWarning(ex, $"关闭会话时出错: {sessionId}");
                         }
                     }
+                    
+                    _sessions?.Clear();
+                    _logger.LogInformation($"统一会话管理器资源已释放，共处理{totalSessions}个会话，成功关闭{closedSessions}个");
                 });
 
-                // 等待所有关闭任务完成，设置合理的超时时间
-                Task.WhenAll(tasks).Wait(TimeSpan.FromSeconds(5));
-
-                _sessions?.Clear();
-
                 _disposed = true;
-                _logger.LogInformation($"统一会话管理器资源已释放，共处理{totalSessions}个会话，成功关闭{closedSessions}个");
+                _logger.LogInformation("统一会话管理器资源释放中(异步关闭会话)");
             }
 
             GC.SuppressFinalize(this);

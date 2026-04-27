@@ -31,12 +31,29 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         public List<SKUDetailFieldMapping> SKUMappings { get; private set; }
 
+        /// <summary>
+        /// 是否在设计器模式下运行
+        /// </summary>
+        private bool IsInDesignMode
+        {
+            get
+            {
+                return System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime ||
+                       this.Site != null && this.Site.DesignMode;
+            }
+        }
+
         public FrmMultiAttributeImportConfig()
         {
             InitializeComponent();
-            Config = new MultiAttributeImportConfig();
-            AttributeRules = new List<AttributeExtractionRule>();
-            SKUMappings = new List<SKUDetailFieldMapping>();
+            
+            // 仅在运行时初始化配置对象
+            if (!IsInDesignMode)
+            {
+                Config = new MultiAttributeImportConfig();
+                AttributeRules = new List<AttributeExtractionRule>();
+                SKUMappings = new List<SKUDetailFieldMapping>();
+            }
         }
 
         /// <summary>
@@ -47,6 +64,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public FrmMultiAttributeImportConfig(List<string> excelColumns, MultiAttributeImportConfig existingConfig = null)
             : this()
         {
+            // 仅在运行时执行初始化逻辑
+            if (IsInDesignMode)
+            {
+                return;
+            }
+
             ExcelColumns = excelColumns ?? new List<string>();
 
             if (existingConfig != null)
@@ -64,6 +87,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void FrmMultiAttributeImportConfig_Load(object sender, EventArgs e)
         {
+            // 仅在运行时执行UI初始化逻辑
+            if (IsInDesignMode)
+            {
+                return;
+            }
+
             // 可以在这里添加更多UI初始化逻辑
         }
 

@@ -1403,8 +1403,8 @@ namespace RUINORERP.Server.Controls
         {
             if (!sessionInfo.IsConnected)
                 return "已断开";
-            else if (!sessionInfo.IsVerified)
-                return "未验证连接";
+            else if (!sessionInfo.IsHandshakeCompleted)
+                return "握手未完成";  // TCP已连接，但未完成Welcome握手
             else if (sessionInfo.IsAuthenticated)
                 return "已连接且已授权";
             else

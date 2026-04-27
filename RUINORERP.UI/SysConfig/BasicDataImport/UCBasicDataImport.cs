@@ -1552,6 +1552,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 初始化DynamicImporter
                 _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+                
+                // ✅ 设置当前配置，以便DynamicImporter读取业务键等信息
+                _dynamicImporter.SetCurrentConfiguration(_currentConfig);
 
                 // 直接执行导入
                 await ExecuteSingleImport();
@@ -1679,6 +1682,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 初始化导入器，传入共享的ForeignKeyService实例
                 _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+                
+                // ✅ 设置当前配置，以便DynamicImporter读取业务键等信息
+                _dynamicImporter.SetCurrentConfiguration(_currentConfig);
 
                 // 获取导入类型标识（用于区分客户和供应商等使用相同表的情况）
                 string importType = GetImportType();

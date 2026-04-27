@@ -120,6 +120,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public ExcelImageConfig ImageConfig { get; set; }
 
         /// <summary>
+        /// 是否为业务键字段
+        /// </summary>
+        public bool IsBusinessKey { get; set; }
+
+        /// <summary>
+        /// 数据库存在性处理策略
+        /// </summary>
+        public ExistenceStrategy ExistenceStrategy { get; set; } = ExistenceStrategy.Update;
+
+        /// <summary>
         /// Excel列名列表
         /// </summary>
         public List<string> ExcelColumns { get; set; }
@@ -281,6 +291,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 EnumDefaultConfig = CurrentMapping.EnumDefaultConfig;
                 IsImageColumn = CurrentMapping.IsImageColumn;
                 ImageColumnType = CurrentMapping.ImageColumnType;
+                
+                // ✅ 初始化业务键配置
+                kchkIsBusinessKey.Checked = CurrentMapping.IsBusinessKey;
+                IsBusinessKey = CurrentMapping.IsBusinessKey;
+                ExistenceStrategy = CurrentMapping.ExistenceStrategy;
+                kcmbExistenceStrategy.SelectedIndex = (int)CurrentMapping.ExistenceStrategy;
 
                 // 初始化数据来源类型
                 kcmbDataSourceType.SelectedIndex = (int)CurrentMapping.DataSourceType;
@@ -856,6 +872,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             IgnoreEmptyValue = kchkIgnoreEmptyValue.Checked;
             IsImageColumn = kchkIsImageColumn.Checked;
             ImageColumnType = (ImageColumnType)kcmbImageColumnType.SelectedIndex;
+            
+            // ✅ 保存业务键配置
+            IsBusinessKey = kchkIsBusinessKey.Checked;
+            ExistenceStrategy = (ExistenceStrategy)(kcmbExistenceStrategy?.SelectedIndex ?? 1);
 
             // 验证：如果既不是系统生成，又没有设置默认值，也不是外键或自身引用，需要提示
             if (dataSourceType == DataSourceType.Excel && string.IsNullOrWhiteSpace(DefaultValue))
@@ -907,6 +927,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void kchkIsSystemGenerated_CheckedChanged(object sender, EventArgs e)
         {
             UpdateControlStates();
+        }
+
+        /// <summary>
+        /// 业务键字段复选框点击事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void kchkIsBusinessKey_CheckedChanged(object sender, EventArgs e)
+        {
+            // 当勾选业务键时，自动设置存在性策略为“跳过”
+            if (kchkIsBusinessKey.Checked)
+            {
+                kcmbExistenceStrategy.SelectedIndex = 0; // Skip
+            }
         }
 
         /// <summary>

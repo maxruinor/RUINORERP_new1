@@ -25,6 +25,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private readonly IForeignKeyService _foreignKeyService;
         private readonly DynamicExcelParser _excelParser;
         private string _imageOutputDirectory;
+        private ImportConfiguration _currentConfig;  // ✅ 当前导入配置，用于读取业务键等信息
 
         /// <summary>
         /// 导入结果统计
@@ -111,6 +112,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _unitOfWorkManage = unitOfWorkManage;  // ✅ 支持传入事务管理器
             _foreignKeyService = foreignKeyService ?? new ForeignKeyService(db);
             _excelParser = new DynamicExcelParser();
+        }
+
+        /// <summary>
+        /// 设置当前导入配置
+        /// ✅ 用于传递 ImportConfiguration，以便读取业务键等配置信息
+        /// </summary>
+        /// <param name="config">导入配置对象</param>
+        public void SetCurrentConfiguration(ImportConfiguration config)
+        {
+            _currentConfig = config;
         }
 
         /// <summary>
@@ -1061,6 +1072,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 批量导入实体内部实现（泛型方法）
         /// ✅ 修复：使用统一事务管理器 + Storageable + 雪花ID
+        /// ✅ 增强：支持按业务字段去重（跳过数据库中已存在的记录）
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="entityList">实体列表</param>
@@ -1081,6 +1093,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // ✅ 使用 DbClient（从事务管理器获取）
                 var dbClient = _unitOfWorkManage?.GetDbClient() ?? _db;
+
+                // ✅ 检查是否启用数据库级别去重（按业务字段跳过已存在记录）
+                var businessKeys = GetBusinessKeysForTable(typeof(T));
+                
+                if (businessKeys != null && businessKeys.Count > 0)
+                {
+                    // 根据存在性策略处理记录
+                    typedList = await ProcessExistenceCheckAsync<T>(dbClient, typedList, businessKeys);
+                }
+
+                if (typedList.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("所有记录均已存在，跳过导入");
+                    result.InsertedCount = 0;
+                    result.UpdatedCount = 0;
+                    return;
+                }
 
                 // ✅ 使用 Storageable 进行批量插入和更新（参考 DbHelper.cs）
                 var storage = await dbClient.Storageable<T>(typedList).ToStorageAsync();
@@ -1161,20 +1190,287 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             var dict = new Dictionary<string, object>();
             Type entityType = entity.GetType();
 
-            foreach (var property in entityType.GetProperties())
+            foreach (var prop in entityType.GetProperties())
             {
-                try
+                var value = prop.GetValue(entity);
+                if (value != null)
                 {
-                    object value = property.GetValue(entity);
-                    dict[property.Name] = value;
+                    dict[prop.Name] = value;
                 }
-                catch
+            }
+            return dict;
+        }
+
+        /// <summary>
+        /// 获取表的业务键字段列表
+        /// ✅ 从 ImportConfiguration.ColumnMappings 中读取标记为 IsBusinessKey 的字段
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>业务键字段名列表</returns>
+        private List<string> GetBusinessKeysForTable(Type entityType)
+        {
+            if (_currentConfig?.ColumnMappings == null || _currentConfig.ColumnMappings.Count == 0)
+            {
+                return null;
+            }
+
+            // 从配置中筛选出标记为 IsBusinessKey 的字段
+            var businessKeys = _currentConfig.ColumnMappings
+                .Where(m => m.IsBusinessKey && !string.IsNullOrEmpty(m.SystemField?.Key))
+                .Select(m => m.SystemField.Key)
+                .ToList();
+
+            return businessKeys.Count > 0 ? businessKeys : null;
+        }
+
+        /// <summary>
+        /// 根据存在性策略处理记录
+        /// ✅ 支持 Skip（跳过）、Update（更新）、Error（报错）三种策略
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="dbClient">数据库客户端</param>
+        /// <param name="entities">待导入的实体列表</param>
+        /// <param name="businessKeys">业务键字段列表</param>
+        /// <returns>处理后的实体列表</returns>
+        private async System.Threading.Tasks.Task<List<T>> ProcessExistenceCheckAsync<T>(
+            ISqlSugarClient dbClient,
+            List<T> entities,
+            List<string> businessKeys) where T : BaseEntity, new()
+        {
+            if (entities == null || entities.Count == 0 || businessKeys == null || businessKeys.Count == 0)
+            {
+                return entities;
+            }
+
+            // 获取第一个业务键的配置，以确定存在性策略
+            var firstBusinessKeyMapping = _currentConfig?.ColumnMappings
+                .FirstOrDefault(m => m.IsBusinessKey && !string.IsNullOrEmpty(m.SystemField?.Key));
+
+            var strategy = firstBusinessKeyMapping?.ExistenceStrategy ?? ExistenceStrategy.Skip;
+
+            switch (strategy)
+            {
+                case ExistenceStrategy.Skip:
+                    return await FilterExistingRecordsAsync(dbClient, entities, businessKeys);
+                
+                case ExistenceStrategy.Update:
+                    // TODO: 实现更新策略 - 标记需要更新的记录
+                    System.Diagnostics.Debug.WriteLine("更新策略暂未实现，使用跳过策略");
+                    return await FilterExistingRecordsAsync(dbClient, entities, businessKeys);
+                
+                case ExistenceStrategy.Error:
+                    // TODO: 实现报错策略 - 检测冲突并抛出异常
+                    await CheckForConflictsAsync(dbClient, entities, businessKeys);
+                    return entities; // 如果没有冲突，返回全部
+                
+                default:
+                    return await FilterExistingRecordsAsync(dbClient, entities, businessKeys);
+            }
+        }
+
+        /// <summary>
+        /// 过滤掉数据库中已存在的记录（Skip策略）
+        /// ✅ 按业务字段查询数据库，跳过已存在的记录
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="dbClient">数据库客户端</param>
+        /// <param name="entities">待导入的实体列表</param>
+        /// <param name="businessKeys">业务键字段列表</param>
+        /// <returns>过滤后的实体列表（只包含不存在于数据库中的记录）</returns>
+        private async System.Threading.Tasks.Task<List<T>> FilterExistingRecordsAsync<T>(
+            ISqlSugarClient dbClient,
+            List<T> entities,
+            List<string> businessKeys) where T : BaseEntity, new()
+        {
+            if (entities == null || entities.Count == 0 || businessKeys == null || businessKeys.Count == 0)
+            {
+                return entities;
+            }
+
+            var filteredList = new List<T>();
+            var tableName = typeof(T).Name;
+
+            // 构建查询条件：按业务键批量查询
+            // 例如：WHERE VendorName IN ('供应商1', '供应商2', ...)
+            var conditions = new List<string>();
+            var parameters = new List<SugarParameter>();
+
+            for (int i = 0; i < entities.Count; i++)
+            {
+                var entity = entities[i];
+                var conditionParts = new List<string>();
+
+                foreach (var keyField in businessKeys)
                 {
-                    // 忽略无法读取的属性
+                    var prop = typeof(T).GetProperty(keyField);
+                    if (prop != null)
+                    {
+                        var value = prop.GetValue(entity);
+                        if (value != null)
+                        {
+                            string paramName = $"@key_{i}_{keyField}";
+                            conditionParts.Add($"{keyField} = {paramName}");
+                            parameters.Add(new SugarParameter(paramName, value));
+                        }
+                    }
+                }
+
+                if (conditionParts.Count > 0)
+                {
+                    conditions.Add($"({string.Join(" AND ", conditionParts)})");
                 }
             }
 
-            return dict;
+            if (conditions.Count == 0)
+            {
+                return entities; // 没有有效的业务键，返回全部
+            }
+
+            // 执行查询：查找数据库中已存在的记录
+            string whereClause = string.Join(" OR ", conditions);
+            string sql = $"SELECT {string.Join(",", businessKeys)} FROM {tableName} WHERE {whereClause}";
+
+            try
+            {
+                var existingRecords = await dbClient.Ado.GetDataTableAsync(sql, parameters.ToArray());
+
+                // 构建已存在记录的 HashSet（用于快速查找）
+                var existingKeys = new HashSet<string>();
+                foreach (System.Data.DataRow row in existingRecords.Rows)
+                {
+                    var keyValues = new List<string>();
+                    foreach (var keyField in businessKeys)
+                    {
+                        keyValues.Add(row[keyField]?.ToString() ?? "");
+                    }
+                    existingKeys.Add(string.Join("|", keyValues));
+                }
+
+                // 过滤掉已存在的记录
+                foreach (var entity in entities)
+                {
+                    var keyValues = new List<string>();
+                    foreach (var keyField in businessKeys)
+                    {
+                        var prop = typeof(T).GetProperty(keyField);
+                        var value = prop?.GetValue(entity)?.ToString() ?? "";
+                        keyValues.Add(value);
+                    }
+
+                    string entityKey = string.Join("|", keyValues);
+
+                    if (!existingKeys.Contains(entityKey))
+                    {
+                        filteredList.Add(entity); // 数据库中不存在，保留
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"跳过已存在记录: {entityKey}");
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"数据库去重（跳过策略）：原始 {entities.Count} 条，过滤后 {filteredList.Count} 条");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"数据库去重失败: {ex.Message}，将导入所有记录");
+                return entities; // 出错时返回全部，保证导入不中断
+            }
+
+            return filteredList;
+        }
+
+        /// <summary>
+        /// 检查是否存在冲突记录（Error策略）
+        /// ✅ 如果检测到冲突，抛出异常
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="dbClient">数据库客户端</param>
+        /// <param name="entities">待导入的实体列表</param>
+        /// <param name="businessKeys">业务键字段列表</param>
+        private async System.Threading.Tasks.Task CheckForConflictsAsync<T>(
+            ISqlSugarClient dbClient,
+            List<T> entities,
+            List<string> businessKeys) where T : BaseEntity, new()
+        {
+            if (entities == null || entities.Count == 0 || businessKeys == null || businessKeys.Count == 0)
+            {
+                return;
+            }
+
+            var tableName = typeof(T).Name;
+            var conflicts = new List<string>();
+
+            // 构建查询条件：按业务键批量查询
+            var conditions = new List<string>();
+            var parameters = new List<SugarParameter>();
+
+            for (int i = 0; i < entities.Count; i++)
+            {
+                var entity = entities[i];
+                var conditionParts = new List<string>();
+
+                foreach (var keyField in businessKeys)
+                {
+                    var prop = typeof(T).GetProperty(keyField);
+                    if (prop != null)
+                    {
+                        var value = prop.GetValue(entity);
+                        if (value != null)
+                        {
+                            string paramName = $"@key_{i}_{keyField}";
+                            conditionParts.Add($"{keyField} = {paramName}");
+                            parameters.Add(new SugarParameter(paramName, value));
+                        }
+                    }
+                }
+
+                if (conditionParts.Count > 0)
+                {
+                    conditions.Add($"({string.Join(" AND ", conditionParts)})");
+                }
+            }
+
+            if (conditions.Count == 0)
+            {
+                return;
+            }
+
+            // 执行查询：查找数据库中已存在的记录
+            string whereClause = string.Join(" OR ", conditions);
+            string sql = $"SELECT {string.Join(",", businessKeys)} FROM {tableName} WHERE {whereClause}";
+
+            try
+            {
+                var existingRecords = await dbClient.Ado.GetDataTableAsync(sql, parameters.ToArray());
+
+                // 收集冲突记录
+                foreach (System.Data.DataRow row in existingRecords.Rows)
+                {
+                    var keyValues = new List<string>();
+                    foreach (var keyField in businessKeys)
+                    {
+                        keyValues.Add(row[keyField]?.ToString() ?? "");
+                    }
+                    conflicts.Add(string.Join(" | ", keyValues));
+                }
+
+                // 如果有冲突，抛出异常
+                if (conflicts.Count > 0)
+                {
+                    string conflictDetails = string.Join("\n", conflicts.Take(10)); // 最多显示10条
+                    if (conflicts.Count > 10)
+                    {
+                        conflictDetails += $"\n... 还有 {conflicts.Count - 10} 条冲突记录";
+                    }
+                    throw new Exception($"检测到 {conflicts.Count} 条重复记录，导入中止。\n冲突记录示例：\n{conflictDetails}");
+                }
+            }
+            catch (Exception ex) when (!(ex is Exception))
+            {
+                // 重新抛出非业务异常
+                throw;
+            }
         }
     }
 }

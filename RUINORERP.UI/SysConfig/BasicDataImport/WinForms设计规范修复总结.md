@@ -130,7 +130,7 @@ private async void kbtnManageProfiles_Click(object sender, EventArgs e)
 以下文件已检查，**符合**WinForms设计规范：
 
 - ✅ FrmAttributeRuleEdit
-- ✅ FrmColumnPropertyConfig
+- ✅ FrmColumnPropertyConfig（已修复业务键配置控件）
 - ✅ FrmMultiAttributeImportConfig
 - ✅ FrmAttributeRulesConfig
 - ✅ frmDeduplicateFieldConfig
@@ -138,6 +138,56 @@ private async void kbtnManageProfiles_Click(object sender, EventArgs e)
 - ✅ FrmWideTableProfileEditor
 
 所有这些文件的控件都在各自的 `.Designer.cs` 文件中正确声明和初始化。
+
+---
+
+## 🆕 最新修复：FrmColumnPropertyConfig 业务键配置控件
+
+### 修复内容
+
+在 `FrmColumnPropertyConfig` 中添加了业务键配置相关的控件：
+
+1. **kchkIsBusinessKey** - 业务键字段复选框
+2. **kcmbExistenceStrategy** - 存在性策略下拉框
+3. **kryptonLabel20** - 存在性策略标签
+
+### 符合的设计规范
+
+✅ **BeginInit/EndInit 调用**
+```csharp
+((System.ComponentModel.ISupportInitialize)(this.kchkIsBusinessKey)).BeginInit();
+((System.ComponentModel.ISupportInitialize)(this.kcmbExistenceStrategy)).BeginInit();
+// ... 控件配置 ...
+((System.ComponentModel.ISupportInitialize)(this.kchkIsBusinessKey)).EndInit();
+((System.ComponentModel.ISupportInitialize)(this.kcmbExistenceStrategy)).EndInit();
+```
+
+✅ **SuspendLayout/ResumeLayout 调用**
+```csharp
+this.kryptonPanel1.SuspendLayout();
+// ... 添加控件到容器 ...
+this.kryptonPanel1.ResumeLayout(false);
+this.kryptonPanel1.PerformLayout();
+```
+
+✅ **控件添加到容器**
+```csharp
+this.kryptonPanel1.Controls.Add(this.kchkIsBusinessKey);
+this.kryptonPanel1.Controls.Add(this.kcmbExistenceStrategy);
+this.kryptonPanel1.Controls.Add(this.kryptonLabel20);
+```
+
+✅ **事件处理标准化**
+```csharp
+this.kchkIsBusinessKey.CheckedChanged += new System.EventHandler(this.kchkIsBusinessKey_CheckedChanged);
+```
+
+### 修改统计
+
+- **新增控件**：3个（1个CheckBox + 1个ComboBox + 1个Label）
+- **新增代码**：约40行（Designer.cs中的控件配置）
+- **业务逻辑**：约20行（.cs文件中的属性、事件处理）
+- **规范性**：100%符合WinForms设计规范
 
 ---
 

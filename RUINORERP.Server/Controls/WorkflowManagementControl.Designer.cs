@@ -355,6 +355,7 @@ namespace RUINORERP.Server.Controls
             // 
             // tabPageOtherTests
             // 
+            this.tabPageOtherTests.Controls.Add(this.btnStartInventorySnapshotWorkflow);  // 【新增】库存快照
             this.tabPageOtherTests.Controls.Add(this.btnCacheTest);
             this.tabPageOtherTests.Controls.Add(this.btnPushTest);
             this.tabPageOtherTests.Controls.Add(this.btnStartReminderWorkflow);
@@ -367,9 +368,19 @@ namespace RUINORERP.Server.Controls
             this.tabPageOtherTests.Text = "其他测试";
             this.tabPageOtherTests.UseVisualStyleBackColor = true;
             // 
+            // btnStartInventorySnapshotWorkflow
+            // 
+            this.btnStartInventorySnapshotWorkflow.Location = new System.Drawing.Point(410, 20);
+            this.btnStartInventorySnapshotWorkflow.Name = "btnStartInventorySnapshotWorkflow";
+            this.btnStartInventorySnapshotWorkflow.Size = new System.Drawing.Size(100, 23);
+            this.btnStartInventorySnapshotWorkflow.TabIndex = 4;
+            this.btnStartInventorySnapshotWorkflow.Text = "库存快照";
+            this.btnStartInventorySnapshotWorkflow.UseVisualStyleBackColor = true;
+            this.btnStartInventorySnapshotWorkflow.Click += new System.EventHandler(this.btnStartInventorySnapshotWorkflow_Click);
+            // 
             // btnCacheTest
             // 
-            this.btnCacheTest.Location = new System.Drawing.Point(320, 20);
+            this.btnCacheTest.Location = new System.Drawing.Point(520, 20);
             this.btnCacheTest.Name = "btnCacheTest";
             this.btnCacheTest.Size = new System.Drawing.Size(75, 23);
             this.btnCacheTest.TabIndex = 3;
@@ -688,6 +699,7 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.Button btnStartSafetyStockWorkflow;
         private System.Windows.Forms.Button btnStartReminderWorkflow;
         private System.Windows.Forms.Button btnPushTest;
+        private System.Windows.Forms.Button btnStartInventorySnapshotWorkflow;  // 【新增】库存快照工作流
         private System.Windows.Forms.Button btnCacheTest;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.Button btnClearCompleted;

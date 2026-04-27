@@ -23,7 +23,15 @@ namespace RUINORERP.PacketSpec.Serialization
             "UserMenuList",
             "UserInfo",
             "tb_Employee",
-            "DataQueue"
+            "DataQueue",
+            // 排除计算属性，避免大数据量序列化和跨平台Type问题
+            "ImportableFields",
+            "FieldNameList",
+            "FKRelations",
+            "ChangedProperties",
+            "FileStorageInfoList",
+            "HelpInfos",
+            "StateManager"
         };
 
         private readonly HashSet<string> _excludedTypes = new HashSet<string>
@@ -212,7 +220,7 @@ namespace RUINORERP.PacketSpec.Serialization
         }
 
         /// <summary>
-        /// 解压并反序列化（主要方法）
+        /// 解压并反序列化（主要方法）1
         /// P1-2优化: 添加GZip魔数自动检测，智能判断是否需要解压
         /// </summary>
         public static T Deserialize<T>(byte[] data, bool decompress = true)

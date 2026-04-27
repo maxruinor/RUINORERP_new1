@@ -550,8 +550,8 @@ namespace RUINORERP.Server.Network.Services
                     lock (tracker)
                     {
                         tracker.RecordConnection();
-                        // 宽松限制：每分钟最多30次连接（允许正常重连，但防止恶意攻击）
-                        const int maxConnectionsPerMinute = 30;
+                        // ✅ 优化：放宽DDoS防护限制至每分钟60次连接，适应网络不稳定时的重连场景
+                        const int maxConnectionsPerMinute = 60;
                         if (tracker.IsExceedingLimit(maxConnectionsPerMinute, TimeSpan.FromMinutes(1)))
                         {
                             _logger.LogWarning("[DDoS防护] IP {ClientIp} 连接频率超限（{Max}/min），拒绝连接", 
@@ -701,14 +701,14 @@ namespace RUINORERP.Server.Network.Services
 
                     sessionInfo.WelcomeSentTime = DateTime.Now;
 
-                    // P0-2修复: 缩短超时时间至2秒，使用独立取消令牌
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                    // P0-2修复: 延长超时时间至5秒，适应网络延迟场景
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
                     await SendPacketCoreAsync(
                         sessionInfo,
                         SystemCommands.Welcome,
                         welcomeRequest,
-                        2000,
+                        5000,
                         cts.Token,
                         PacketDirection.ServerRequest
                     ).ConfigureAwait(false);
@@ -1494,11 +1494,11 @@ namespace RUINORERP.Server.Network.Services
                                 continue;
                             }
 
-                            // 检查2: 未验证会话（欢迎回复超时10分钟后强制断开），增加超时时间
+                            // 检查2: 未验证会话（欢迎回复超时15分钟后强制断开），延长超时时间适应网络延迟
                             if (!session.IsVerified &&
                                 !session.WelcomeAckReceived &&
                                 session.WelcomeSentTime.HasValue &&
-                                session.WelcomeSentTime.Value.AddMinutes(10) < currentTime)
+                                session.WelcomeSentTime.Value.AddMinutes(15) < currentTime)
                             {
                                 timeoutSessions.Add(session);
                                 _logger.LogWarning($"[欢迎超时-定时检查] SessionID={session.SessionID}, IP={session.ClientIp}");

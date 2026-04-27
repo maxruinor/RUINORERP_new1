@@ -1984,6 +1984,11 @@ namespace RUINORERP.Server
                     var fileManagementControl = new Controls.FileManagementControl();
                     fileManagementControl.Dock = DockStyle.Fill;
                     return fileManagementControl;
+                case "库存快照管理":
+                    // 创建库存快照管理控件实例
+                    var inventorySnapshotControl = new Controls.InventorySnapshotManagementControl();
+                    inventorySnapshotControl.Dock = DockStyle.Fill;
+                    return inventorySnapshotControl;
                 default:
                     return null;
             }
@@ -2048,7 +2053,7 @@ namespace RUINORERP.Server
 
                 // 调度工作流
                 await SafetyStockWorkflowConfig.ScheduleDailySafetyStockCalculation(WorkflowHost);
-                await InventorySnapshotWorkflowConfig.ScheduleInventorySnapshot(WorkflowHost);
+                await InventorySnapshotWorkflowConfig.StartWorkflow(WorkflowHost);  // 【修复】使用新的StartWorkflow方法，移除Timer调度
                 await TempImageCleanupWorkflowConfig.ScheduleTempImageCleanup(WorkflowHost);
                 await FileCleanupWorkflowConfig.ScheduleFileCleanup(WorkflowHost);
                 await RegistrationExpirationReminderWorkflowConfig.ScheduleRegistrationExpirationReminder(WorkflowHost);
@@ -3095,6 +3100,16 @@ namespace RUINORERP.Server
         private void buttonFileManagement_Click(object sender, EventArgs e)
         {
             ShowTabPage("文件管理");
+        }
+
+        /// <summary>
+        /// 库存快照管理按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void buttonInventorySnapshot_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("库存快照管理");
         }
 
         /// <summary>

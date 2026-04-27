@@ -192,6 +192,7 @@
     <PackageReference Include="System.IO.Pipelines" Version="9.0.9" />
     <PackageReference Include="System.Memory" Version="4.6.3" />
     <PackageReference Include="System.Windows.Forms.DataVisualization" Version="1.0.0-prerelease.20110.1" />
+    <PackageReference Include="WorkflowCore.Persistence.Sqlite" Version="3.9.0" />
     <PackageReference Include="WorkflowCore.Persistence.SqlServer" Version="3.9.0" />
     <PackageReference Include="WorkflowCore.Users" Version="3.9.0" />
   </ItemGroup>

@@ -143,6 +143,7 @@ namespace RUINORERP.Server
             buttonUserList = new System.Windows.Forms.Button();
             buttonServerMonitor = new System.Windows.Forms.Button();
             buttonFileManagement = new System.Windows.Forms.Button();
+            buttonInventorySnapshot = new System.Windows.Forms.Button();
             tabControlMain = new System.Windows.Forms.TabControl();
             richTextBoxLog = new System.Windows.Forms.RichTextBox();
             splitterLog = new System.Windows.Forms.Splitter();
@@ -491,6 +492,7 @@ namespace RUINORERP.Server
             panelNavigation.Controls.Add(buttonUserList);
             panelNavigation.Controls.Add(buttonServerMonitor);
             panelNavigation.Controls.Add(buttonFileManagement);
+            panelNavigation.Controls.Add(buttonInventorySnapshot);
             panelNavigation.Dock = System.Windows.Forms.DockStyle.Fill;
             panelNavigation.Location = new System.Drawing.Point(0, 0);
             panelNavigation.Margin = new System.Windows.Forms.Padding(4);
@@ -596,6 +598,17 @@ namespace RUINORERP.Server
             buttonFileManagement.Text = "文件管理";
             buttonFileManagement.UseVisualStyleBackColor = true;
             buttonFileManagement.Click += buttonFileManagement_Click;
+            // 
+            // buttonInventorySnapshot
+            // 
+            buttonInventorySnapshot.Location = new System.Drawing.Point(13, 560);
+            buttonInventorySnapshot.Margin = new System.Windows.Forms.Padding(4);
+            buttonInventorySnapshot.Name = "buttonInventorySnapshot";
+            buttonInventorySnapshot.Size = new System.Drawing.Size(140, 42);
+            buttonInventorySnapshot.TabIndex = 9;
+            buttonInventorySnapshot.Text = "库存快照管理";
+            buttonInventorySnapshot.UseVisualStyleBackColor = true;
+            buttonInventorySnapshot.Click += buttonInventorySnapshot_Click;
             // 
             // tabControlMain
             // 
@@ -708,6 +721,7 @@ namespace RUINORERP.Server
         private System.Windows.Forms.Button buttonUserList;
         private System.Windows.Forms.Button buttonServerMonitor;
         private System.Windows.Forms.Button buttonFileManagement;
+        private System.Windows.Forms.Button buttonInventorySnapshot;
         private System.Windows.Forms.TabControl tabControlMain;
         private System.Windows.Forms.RichTextBox richTextBoxLog;
         private System.Windows.Forms.Splitter splitterLog;

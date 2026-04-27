@@ -132,6 +132,51 @@ namespace RUINORERP.Server.Controls
             }
         }
 
+        /// <summary>
+        /// 【新增】手动触发库存快照工作流
+        /// </summary>
+        private async void btnStartInventorySnapshotWorkflow_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var result = MessageBox.Show(
+                    "确定要立即执行库存快照吗？\n\n这将生成当前时间的库存快照数据。",
+                    "确认",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+                
+                if (result != DialogResult.Yes) return;
+                
+                // 使用InventorySnapshotWorkflowConfig的手动触发方法
+                bool success = await RUINORERP.Server.Workflow.InventorySnapshotWorkflowConfig.TriggerManually(_workflowHost);
+                
+                if (success)
+                {
+                    MessageBox.Show(
+                        "库存快照已成功触发！\n\n请查看日志了解执行情况。",
+                        "成功",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                }
+                else
+                {
+                    MessageBox.Show(
+                        "库存快照触发失败，请查看日志了解详情。",
+                        "错误",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"触发库存快照失败: {ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private async void btnStartReminderWorkflow_Click(object sender, EventArgs e)
         {
             try

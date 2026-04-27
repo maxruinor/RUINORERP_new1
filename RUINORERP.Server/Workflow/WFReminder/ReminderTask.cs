@@ -25,7 +25,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
     /// <summary>
     /// 将数据推送到客户端
     /// </summary>
-    public class ReminderTask : StepBody
+    public class ReminderTask : StepBodyAsync
     {
         private readonly ISessionService _sessionService;
         
@@ -57,7 +57,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
 
         public MessageStatus Status { get; set; }
 
-        public override ExecutionResult Run(IStepExecutionContext context)
+        public override async Task<ExecutionResult> RunAsync(IStepExecutionContext context)
         {
             //byte[] pushdata = HLH.Lib.Helper.SerializationHelper.SerializeDataEntity(data);
             //服务器收到客户端基础信息变更分布
@@ -115,10 +115,10 @@ namespace RUINORERP.Server.Workflow.WFReminder
                    
 
                                 var request = new MessageRequest(MessageType.Business, exData);
-                                var success = _sessionService.SendCommandAsync(
+                                var success = await _sessionService.SendCommandAsync(
                                     session.SessionID, 
                                     WorkflowCommands.WorkflowReminder, 
-                                    request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                                    request);
                                 
                                 if (success)
                                 {

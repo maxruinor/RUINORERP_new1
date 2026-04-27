@@ -521,12 +521,7 @@ namespace RUINORERP.Model
         /// <returns>字段名称和描述字典</returns>
         private static ConcurrentDictionary<string, string> GenerateFieldNameList(Type type)
         {
-            if (_fieldNameListCache.TryGetValue(type, out var fieldNameList))
-            {
-                return fieldNameList;
-            }
-            
-            fieldNameList = new ConcurrentDictionary<string, string>();
+            var fieldNameList = new ConcurrentDictionary<string, string>();
             
             // 优化：先获取所有属性, 然后过滤排除导航属性
             var properties = type.GetProperties()
@@ -543,11 +538,11 @@ namespace RUINORERP.Model
                     {
                         //  PrimaryKeyColName = sugarColumnAttr.ColumnName;
                     }
+                    // TryAdd 确保不会重复添加同名属性（防御机制）
                     fieldNameList.TryAdd(property.Name, sugarColumnAttr.ColumnDescription);
                 }
             }
             
-            _fieldNameListCache[type] = fieldNameList;
             return fieldNameList;
         }
         
@@ -1074,43 +1069,15 @@ namespace RUINORERP.Model
             }
         }
 
-        /// <summary>
-        /// 获取实体的所有外键关系信息
-        /// </summary>
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        public List<FKRelationInfo> ImportFKRelations
-        {
-            get
-            {
-                var type = this.GetType();
-                return _fkRelationsCache.GetOrAdd(type, t =>
-                {
-                    var relations = new List<FKRelationInfo>();
-                    foreach (var property in t.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-                    {
-                        var fkAttr = property.GetCustomAttribute<Global.CustomAttribute.FKRelationAttribute>(false);
-                        if (fkAttr != null)
-                        {
-                            relations.Add(new FKRelationInfo
-                            {
-                                PropertyName = property.Name,
-                                FKTableName = fkAttr.FKTableName,
-                                FK_IDColName = fkAttr.FK_IDColName
-                            });
-                        }
-                    }
-                    return relations;
-                });
-            }
-        }
 
         /// <summary>
         /// 获取可用于导入映射的字段列表（包含中文描述、物理名和外键标识）
         /// 【性能优化】采用静态字典缓存，确保每个实体类型只计算一次
+        /// 【跨平台兼容】不参与JSON序列化，避免跨平台Type序列化问题和大数据量传输
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
         public List<ImportFieldInfo> ImportableFields
         {
             get
@@ -1133,7 +1100,7 @@ namespace RUINORERP.Model
                                 PropertyName = prop.Name,
                                 ColumnName = sugarCol.ColumnName ?? prop.Name,
                                 Description = sugarCol.ColumnDescription ?? prop.Name,
-                                DataType = prop.PropertyType,
+                                DataType = prop.PropertyType, // 通过setter自动设置DataTypeName
                                 IsForeignKey = prop.GetCustomAttribute<Global.CustomAttribute.FKRelationAttribute>() != null,
                                 IsPrimaryKey = sugarCol.IsPrimaryKey
                             });
@@ -1619,7 +1586,24 @@ namespace RUINORERP.Model
         public string PropertyName { get; set; }
         public string ColumnName { get; set; }
         public string Description { get; set; }
-        public Type DataType { get; set; }
+        
+        /// <summary>
+        /// 数据类型名称（跨平台兼容，避免Type序列化问题）
+        /// .NET 8和.NET 4.8的程序集名称不同，直接序列化Type会导致反序列化失败
+        /// </summary>
+        [JsonProperty("DataType")]
+        public string DataTypeName { get; set; }
+        
+        /// <summary>
+        /// 数据类型（仅用于运行时，不参与JSON序列化）
+        /// </summary>
+        [JsonIgnore]
+        public Type DataType 
+        { 
+            get => DataTypeName != null ? Type.GetType(DataTypeName, false) : null;
+            set => DataTypeName = value?.AssemblyQualifiedName;
+        }
+        
         public bool IsForeignKey { get; set; }
         public bool IsPrimaryKey { get; set; }
     }

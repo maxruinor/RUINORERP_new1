@@ -682,7 +682,43 @@ namespace RUINORERP.Business.Cache
                     {
                         // 尝试使用JSON序列化/反序列化进行类型转换
                         // 这是一个简单且可靠的方式来处理不同类型间的转换
-                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(cachedList);
+                        string json;
+                        try
+                        {
+                            if (cachedList is System.Collections.IList il)
+                            {
+                                // 快照当前列表，避免并发修改导致序列化异常
+                                var snapshot = new object[il.Count];
+                                for (int i = 0; i < il.Count; i++) snapshot[i] = il[i];
+                                json = Newtonsoft.Json.JsonConvert.SerializeObject(snapshot);
+                            }
+                            else
+                            {
+                                json = Newtonsoft.Json.JsonConvert.SerializeObject(cachedList);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, "直接序列化缓存列表失败，尝试逐项序列化以定位问题元素");
+                            var jArray = new Newtonsoft.Json.Linq.JArray();
+                            if (cachedList is System.Collections.IList il2)
+                            {
+                                for (int i = 0; i < il2.Count; i++)
+                                {
+                                    try
+                                    {
+                                        jArray.Add(Newtonsoft.Json.Linq.JToken.FromObject(il2[i]));
+                                    }
+                                    catch (Exception ie)
+                                    {
+                                        _logger?.LogWarning(ie, $"序列化缓存中索引={i} 的元素失败，类型={il2[i]?.GetType().FullName}");
+                                        jArray.Add(null); // 保持结构性，记录占位
+                                    }
+                                }
+                            }
+                            json = jArray.ToString();
+                        }
+
                         var convertedList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(json);
 
                         _logger?.LogDebug($"成功将缓存中的列表类型 {cachedList.GetType().FullName} 转换为 {typeof(List<T>).FullName}");
@@ -851,25 +887,6 @@ namespace RUINORERP.Business.Cache
                     }
                 }
 
-                if (cachedList is List<System.Dynamic.ExpandoObject> expandoList)
-                {
-                    var result = new List<T>();
-                    foreach (var item in expandoList)
-                    {
-                        try
-                        {
-                            var json = Newtonsoft.Json.JsonConvert.SerializeObject(item);
-                            var typedItem = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
-                            result.Add(typedItem);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogWarning(ex, $"转换ExpandoObject到类型 {typeof(T).Name} 时发生错误");
-                        }
-                    }
-                    return result;
-                }
-
                 if (cachedList is List<T> typedList)
                 {
                     return typedList;
@@ -880,13 +897,54 @@ namespace RUINORERP.Business.Cache
                 {
                     try
                     {
-                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(cachedList);
+                        // 尝试使用JSON序列化/反序列化进行类型转换
+                        // 这是一个简单且可靠的方式来处理不同类型间的转换
+                        string json;
+                        try
+                        {
+                            if (cachedList is System.Collections.IList il)
+                            {
+                                // 快照当前列表，避免并发修改导致序列化异常
+                                var snapshot = new object[il.Count];
+                                for (int i = 0; i < il.Count; i++) snapshot[i] = il[i];
+                                json = Newtonsoft.Json.JsonConvert.SerializeObject(snapshot);
+                            }
+                            else
+                            {
+                                json = Newtonsoft.Json.JsonConvert.SerializeObject(cachedList);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, "直接序列化缓存列表失败，尝试逐项序列化以定位问题元素");
+                            var jArray = new Newtonsoft.Json.Linq.JArray();
+                            if (cachedList is System.Collections.IList il2)
+                            {
+                                for (int i = 0; i < il2.Count; i++)
+                                {
+                                    try
+                                    {
+                                        jArray.Add(Newtonsoft.Json.Linq.JToken.FromObject(il2[i]));
+                                    }
+                                    catch (Exception ie)
+                                    {
+                                        _logger?.LogWarning(ie, $"序列化缓存中索引={i} 的元素失败，类型={il2[i]?.GetType().FullName}");
+                                        jArray.Add(null); // 保持结构性，记录占位
+                                    }
+                                }
+                            }
+                            json = jArray.ToString();
+                        }
+
                         var convertedList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(json);
+
+                        _logger?.LogDebug($"成功将缓存中的列表类型 {cachedList.GetType().FullName} 转换为 {typeof(List<T>).FullName}");
                         return convertedList ?? new List<T>();
                     }
                     catch (Exception ex)
                     {
-                        _logger?.LogWarning(ex, $"转换缓存列表类型时发生错误");
+                        _logger?.LogWarning(ex, $"尝试将缓存中的列表类型 {cachedList.GetType().FullName} 转换为 {typeof(List<T>).FullName} 时发生错误");
+                        // 转换失败时继续尝试其他处理方式
                     }
                 }
 
@@ -1172,6 +1230,11 @@ namespace RUINORERP.Business.Cache
         {
             try
             {
+                if (list==null)
+                {
+                    return;
+                }
+
                 // 使用封装的智能过滤方法
                 if (!CheckAndLogIfTableCacheable(tableName))
                 {

@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.PacketSpec.Serialization;
 using System;
@@ -154,7 +154,7 @@ namespace RUINORERP.PacketSpec.Models.Cache
         /// 动态获取数据（高性能版本 - 使用委托缓存避免反射）
         /// </summary>
         public object GetData()
-        {
+         {
             if (EntityByte == null || string.IsNullOrEmpty(EntityTypeName))
                 return null;
 

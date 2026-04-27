@@ -60,35 +60,29 @@ namespace RUINORERP.Server.Workflow
         }
 
 
-        public string StartApprovalWorkflow(IWorkflowHost host, ApprovalWFData entity, ConcurrentDictionary<string, string> workflowlist)
+        public async Task<string> StartApprovalWorkflowAsync(IWorkflowHost host, ApprovalWFData entity, ConcurrentDictionary<string, string> workflowlist)
         {
-            var workflowId = host.StartWorkflow("单据审核", entity).Result;
+            var workflowId = await host.StartWorkflow("单据审核", entity);
             workflowlist.TryAdd(entity.approvalEntity.BillID.ToString(), workflowId);
 
-            // var approval = host.GetPendingActivity("get-approval", "worker1", TimeSpan.FromMinutes(1)).Result;
-            // if (approval != null)
-            // {
-            //     System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
-            //     host.SubmitActivitySuccess(approval.Token, "John Smith");
-            // }
-            //把ID加入到队列中？
             return workflowId;
         }
 
-        public async void StartApprovalNew(IWorkflowHost host, long billid, ConcurrentDictionary<string, string> workflowlist)
+        public async Task StartApprovalNewAsync(IWorkflowHost host, long billid, ConcurrentDictionary<string, string> workflowlist)
         {
-            tb_StocktakeController<tb_Stocktake> ctr = appContext.GetRequiredService<tb_StocktakeController<tb_Stocktake>>();
-            tb_Stocktake data = await ctr.BaseQueryByIdAsync(billid);
-            var workflowId = host.StartWorkflow("BillApprovalWorkflow", data).Result;
-            workflowlist.TryAdd(billid.ToString(), workflowId);
-            // var approval = host.GetPendingActivity("get-approval", "worker1", TimeSpan.FromMinutes(1)).Result;
-            // if (approval != null)
-            // {
-            //     System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
-            //     host.SubmitActivitySuccess(approval.Token, "John Smith");
-            // }
-            //把ID加入到队列中？
-
+            try
+            {
+                tb_StocktakeController<tb_Stocktake> ctr = appContext.GetRequiredService<tb_StocktakeController<tb_Stocktake>>();
+                tb_Stocktake data = await ctr.BaseQueryByIdAsync(billid);
+                var workflowId = await host.StartWorkflow("BillApprovalWorkflow", data);
+                workflowlist.TryAdd(billid.ToString(), workflowId);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误日志，避免进程崩溃
+                System.Diagnostics.Debug.WriteLine($"StartApprovalNewAsync failed: {ex.Message}");
+                throw;
+            }
         }
 
         public void PublishEvent(IWorkflowHost host, ApprovalWFData data, ConcurrentDictionary<string, string> workflowlist)

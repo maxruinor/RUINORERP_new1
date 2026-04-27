@@ -274,11 +274,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var serverTime = DateTime.Now;
                 var clientTime = loginRequest.LoginTime;
 
-                // 计算时间差（绝对值）
+                // 计算时间差(绝对值)
                 var timeDifference = Math.Abs((serverTime - clientTime).TotalSeconds);
-
-                // 如果时间差超过阈值（例如300秒=5分钟），则拒绝登录
-                const double timeDifferenceThreshold = 300.0;
+                
+                // ✅ 优化：放宽时间差阈值至10分钟，适应网络延迟场景
+                const double timeDifferenceThreshold = 600.0;
                 if (timeDifference > timeDifferenceThreshold)
                 {
                     // ✅ 详细记录时间不同步问题

@@ -15,13 +15,15 @@ namespace RUINORERP.Server.Workflow
     /// 提醒工作流调度器
     /// 负责定期检查提醒数据并自动启动相应的工作流
     /// </summary>
-    public class ReminderWorkflowScheduler
+    public class ReminderWorkflowScheduler : IDisposable
     {
         private readonly ILogger<ReminderWorkflowScheduler> _logger;
         private readonly IWorkflowHost _workflowHost;
         private readonly DataServiceChannel _dataService;
         private Timer _checkTimer;
         private bool _isRunning = false;
+        private int _isDisposing = 0;
+        private DateTime _lastRefreshTime = DateTime.MinValue;
 
         /// <summary>
         /// 检查间隔（分钟）
@@ -61,7 +63,29 @@ namespace RUINORERP.Server.Workflow
 
                 // 启动定时器，每分钟检查一次
                 _checkTimer = new Timer(
-                    async _ => await CheckAndStartReminderWorkflowsAsync(),
+                    async state =>
+                    {
+                        try
+                        {
+                            // 检查是否正在释放
+                            if (Interlocked.CompareExchange(ref _isDisposing, 0, 0) == 1)
+                            {
+                                return;
+                            }
+                            
+                            await CheckAndStartReminderWorkflowsAsync();
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Timer已被释放，忽略
+                            _isRunning = false;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "定时器回调执行失败");
+                            // 不要重新抛出，否则Timer会停止
+                        }
+                    },
                     null,
                     TimeSpan.Zero,
                     TimeSpan.FromMinutes(CHECK_INTERVAL_MINUTES)
@@ -81,22 +105,30 @@ namespace RUINORERP.Server.Workflow
         /// </summary>
         public void Stop()
         {
-            if (!_isRunning)
+            lock (this)
             {
-                return;
-            }
+                if (!_isRunning)
+                {
+                    return;
+                }
 
-            try
-            {
-                _isRunning = false;
-                _checkTimer?.Dispose();
-                _checkTimer = null;
-                
-                _logger.LogInformation("提醒工作流调度器已停止");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "停止提醒工作流调度器时发生异常");
+                try
+                {
+                    _isRunning = false;
+                    Interlocked.Exchange(ref _isDisposing, 1);
+                    
+                    using (var timer = _checkTimer)
+                    {
+                        _checkTimer = null;
+                        timer?.Change(Timeout.Infinite, Timeout.Infinite);
+                    }
+                    
+                    _logger.LogInformation("提醒工作流调度器已停止");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "停止提醒工作流调度器时发生异常");
+                }
             }
         }
 
@@ -123,8 +155,9 @@ namespace RUINORERP.Server.Workflow
                 }
 
                 // 每10分钟刷新一次数据（避免频繁查询数据库）
-                if (DateTime.Now.Minute % 20 == 0) // 每10分钟刷新一次
+                if ((DateTime.Now - _lastRefreshTime).TotalMinutes >= 10)
                 {
+                    _lastRefreshTime = DateTime.Now;
                     await RefreshCRMFollowUpPlansDataAsync(mainForm.ReminderBizDataList);
                 }
 
@@ -288,7 +321,7 @@ namespace RUINORERP.Server.Workflow
         public void Dispose()
         {
             Stop();
-            _checkTimer?.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

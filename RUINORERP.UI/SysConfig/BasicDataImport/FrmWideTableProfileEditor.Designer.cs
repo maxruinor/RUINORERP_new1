@@ -41,6 +41,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnTest = new Krypton.Toolkit.KryptonButton();
             this.kbtnSave = new Krypton.Toolkit.KryptonButton();
             this.kbtnCancel = new Krypton.Toolkit.KryptonButton();
+            this.kbtnAutoFill = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigatorProfile)).BeginInit();

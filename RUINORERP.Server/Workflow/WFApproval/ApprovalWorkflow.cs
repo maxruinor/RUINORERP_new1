@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,16 +30,23 @@ namespace RUINORERP.Server.Workflow.WFApproval
             builder
              .StartWith(context =>
              {
+                 var workflowData = context.Workflow.Data as ApprovalWFData;
+                 
+                 // 防御性检查：验证数据有效性
+                 if (workflowData?.approvalEntity == null)
+                 {
+                     _logger.LogError("approvalEntity cannot be null - WorkflowId: {WorkflowId}", context.Workflow.Id);
+                     throw new InvalidOperationException("审批实体不能为空");
+                 }
+                 
                  System.Diagnostics.Debug.WriteLine("开始启动流程...");
-                 _logger.LogInformation("开始启动流程...");
+                 _logger.LogInformation("开始启动流程... BillID: {BillID}", workflowData.approvalEntity.BillID);
                  return ExecutionResult.Next();
              })
             .Then<NotifyApprovedBy>().Name("通知审批人")
-            .Input(step => step.BillID, data => data.approvalEntity.BillID.ToString())
+            .Input(step => step.BillID, data => data.approvalEntity.BillID.ToString() ?? "")
             .WaitFor("审核结果", (data, context) => context.Workflow.Id, data => DateTime.Now)
-              .Output(data => data.approvalEntity, step => step.EventData)//approvalEntity 是ui上的数据，通过事件推送传过来
-                                                                          //  .When(t => t.approvalEntity.ApprovalResults == true).Do(d => d.Then<ApprovedStep>().Name("同意"))
-                                                                          // .When(t => t.approvalEntity.ApprovalResults == false).Do(d => d.Then<CancelStep>().Name("驳回"))
+              .Output(data => data.approvalEntity, step => step.EventData)
               .If(t => t.approvalEntity.ApprovalResults == true).Do(d => d.Then<ApprovedStep>().Name("同意"))
               .If(t => t.approvalEntity.ApprovalResults == false).Do(d => d.Then<CancelStep>().Name("驳回"))
               //.If(data => data.审核状态 == "完成").Do(context => _logger.LogInformation("!!完成!!!"))

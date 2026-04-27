@@ -338,6 +338,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
+                // 【修复】初始化去重策略ComboBox默认值
+                kcmbDeduplicateStrategy.SelectedIndex = 0; // 默认选择“保留第一条记录”
+                
                 // 设置配置文件路径
                 _configFilePath = ColumnMappingConstants.GetConfigFilePath();
 
@@ -972,6 +975,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
+            // 【修复】验证去重配置
+            if (chkRemoveDuplicates.Checked)
+            {
+                if (kcmbDeduplicateStrategy.SelectedIndex < 0)
+                {
+                    MessageBox.Show("已启用去重功能，请选择去重策略（保留第一条记录 或 保留最后一条记录）", 
+                        "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    kcmbDeduplicateStrategy.Focus();
+                    return;
+                }
+            }
+
             try
             {
                 // 更新全局配置
@@ -1026,6 +1041,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ColumnMappings.Clear();
                 ImportConfig = new ImportConfiguration();
                 UpdateMappingsList();
+
+                // 【修复】重置去重设置到默认值
+                chkRemoveDuplicates.Checked = false;
+                kcmbDeduplicateStrategy.SelectedIndex = 0; // 默认选择“保留第一条记录”
 
                 // 重新加载Excel列和系统字段列表
                 LoadSystemFields();

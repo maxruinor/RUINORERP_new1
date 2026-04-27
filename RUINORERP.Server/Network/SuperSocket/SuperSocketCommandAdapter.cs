@@ -73,7 +73,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         {
             // 快速命令 (5-10秒): 心跳、Ping等保活命令
             { CommandCategory.System, 10 },
-            { CommandCategory.Authentication, 10 },
+            { CommandCategory.Authentication, 30 }, // 延长认证命令超时时间，适应网络延迟
             
             // 普通查询 (30秒): 缓存查询、消息查询等
             { CommandCategory.Cache, 30 },

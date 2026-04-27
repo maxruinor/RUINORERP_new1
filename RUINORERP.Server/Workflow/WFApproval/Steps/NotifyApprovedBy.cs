@@ -22,7 +22,7 @@ namespace RUINORERP.Server.Workflow.WFApproval.Steps
     /// <summary>
     /// 通知审批人
     /// </summary>
-    public class NotifyApprovedBy : StepBody
+    public class NotifyApprovedBy : StepBodyAsync
     {
         private readonly ApplicationContext _context;
         private readonly ILogger<NotifyApprovedBy> _logger;
@@ -45,7 +45,7 @@ namespace RUINORERP.Server.Workflow.WFApproval.Steps
             _logger = logger;
             _sessionService = Startup.GetFromFac<ISessionService>();
         }
-        public override ExecutionResult Run(IStepExecutionContext context)
+        public override async Task<ExecutionResult> RunAsync(IStepExecutionContext context)
         {
             WorkId = context.Workflow.Id;
             _logger.LogInformation($"通知审核人"+WorkId);
@@ -78,10 +78,10 @@ namespace RUINORERP.Server.Workflow.WFApproval.Steps
                     };
 
                     var request = new MessageRequest(MessageType.Business, messageData);
-                    var success = _sessionService.SendCommandAsync(
+                    var success = await _sessionService.SendCommandAsync(
                         session.SessionID, 
                         MessageCommands.SendMessageToUser, 
-                        request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                        request);
                     
                     if (!success)
                     {

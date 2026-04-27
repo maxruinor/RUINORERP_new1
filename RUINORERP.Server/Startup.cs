@@ -619,8 +619,8 @@ namespace RUINORERP.Server
             services.AddSingleton(typeof(frmMainNew));//MDI最大。才开一次才能单例
 
             #region 工作流服务配置
-            // 这是新增加工作流的服务
-            services.AddWorkflowCoreServicesNew();
+            // 配置工作流核心服务（支持可配置的持久化策略）
+            services.AddWorkflowCoreServices(builder);
 
             // 注册临时图片清理工作流
             TempImageCleanupWorkflowConfig.RegisterWorkflow(services);

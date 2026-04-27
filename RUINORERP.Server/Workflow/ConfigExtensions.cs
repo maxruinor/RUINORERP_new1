@@ -1,4 +1,5 @@
 using Autofac.Core;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model;
@@ -21,71 +22,134 @@ namespace RUINORERP.Server.Workflow
 {
     public static class ConfigExtensions
     {
+        #region 配置模型
 
-        /// <summary>
-        /// 配置workflow
-        /// </summary>
-        /// <returns></returns>
-        public static void AddWorkflowCoreServices(this IServiceCollection services)
+        public enum WorkflowPersistenceType
         {
-            services.AddLogging();
-            //services.AddWorkflow();
-            services.AddWorkflow(x => x.UseSqlServer(@"Server=.;Database=WorkflowCore;Trusted_Connection=True;", true, true));
-            //services.AddWorkflow(x => x.UseMongoDB(@"mongodb://localhost:27017", "workflow"));
-            //services.AddWorkflow(x => x.UseMySQL(@"Server=127.0.0.1;Database=workflow;User=root;Password=password;", true, true));
-            services.AddWorkflowDSL();
-
-            // 这些个构造函数带参数的，需要添加到transient中
-            // 可能没构造函数的 自动添加
-            /*
-            services.AddTransient<loopWork>();
-            services.AddTransient<MyNameClass>();
-            services.AddTransient<NextWorker>();
-            services.AddTransient<worker>();
-            services.AddTransient<WorkWorkflow>();
-            services.AddTransient<WorkWorkflow2>();
-            */
-            // 这些个构造函数带参数的，需要添加到transient中
-            // services.AddTransient<HelloWorld>();
-            //  services.AddTransient<GoodbyeWorld>();
-            // services.AddTransient<SleepStep>();
-
-            var serviceProvider = services.BuildServiceProvider();
-
-            //config logging
-            //var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-
-            // return serviceProvider;
+            Memory,
+            SqlServer,
+            SQLite
         }
 
-        public static void AddWorkflowCoreServicesNew(this IServiceCollection services)
+        public class WorkflowCoreOptions
         {
+            public WorkflowPersistenceType PersistenceType { get; set; } = WorkflowPersistenceType.Memory;
+            public string ConnectionString { get; set; }
+            public bool AutoCreateSchema { get; set; } = true;
+            public bool AutoMigrateSchema { get; set; } = true;
+        }
 
-            // 这些个构造函数带参数的，需要添加到transient中
+        #endregion
+
+        #region 新的配置方法（推荐使用）
+
+        public static void AddWorkflowCoreServices(this IServiceCollection services, IConfiguration configuration)
+        {
+            var options = configuration.GetSection("WorkflowCore").Get<WorkflowCoreOptions>() ?? new WorkflowCoreOptions();
+
+            ConfigureWorkflowPersistence(services, options);
+            ConfigureWorkflowDSL(services);
+            RegisterWorkflowSteps(services);
+        }
+
+        private static void ConfigureWorkflowPersistence(IServiceCollection services, WorkflowCoreOptions options)
+        {
+            try
+            {
+                switch (options.PersistenceType)
+                {
+                    case WorkflowPersistenceType.SqlServer:
+                        ConfigureSqlServerPersistence(services, options);
+                        break;
+
+                    case WorkflowPersistenceType.SQLite:
+                        ConfigureSQLitePersistence(services, options);
+                        break;
+
+                    case WorkflowPersistenceType.Memory:
+                    default:
+                        ConfigureMemoryPersistence(services);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    var logger = services.BuildServiceProvider().GetService<ILoggerFactory>()?.CreateLogger("RUINORERP.Server.Workflow.ConfigExtensions");
+                    logger?.LogError(ex, "配置工作流持久化失败，降级到内存模式。类型: {PersistenceType}", options.PersistenceType);
+                }
+                catch
+                {
+                    System.Diagnostics.Debug.WriteLine($"配置工作流持久化失败：{ex.GetType().Name} - {ex.Message}");
+                }
+                
+                ConfigureMemoryPersistence(services);
+            }
+        }
+
+        private static void ConfigureSqlServerPersistence(IServiceCollection services, WorkflowCoreOptions options)
+        {
+            var connStr = options.ConnectionString;
+            if (string.IsNullOrWhiteSpace(connStr))
+            {
+                throw new InvalidOperationException("SQL Server 持久化模式需要配置 ConnectionString");
+            }
+
+            services.AddWorkflow(x => x.UseSqlServer(
+                connStr,
+                options.AutoCreateSchema,
+                options.AutoMigrateSchema
+            ));
+        }
+
+        private static void ConfigureSQLitePersistence(IServiceCollection services, WorkflowCoreOptions options)
+        {
+            var dbPath = options.ConnectionString ?? "workflow.db";
+
+            services.AddWorkflow(x => x.UseSqlite(dbPath, options.AutoCreateSchema));
+        }
+
+        private static void ConfigureMemoryPersistence(IServiceCollection services)
+        {
+            services.AddWorkflow();
+        }
+
+        private static void ConfigureWorkflowDSL(IServiceCollection services)
+        {
+            services.AddWorkflowDSL();
+        }
+
+        private static void RegisterWorkflowSteps(IServiceCollection services)
+        {
             services.AddTransient<StepError>();
             services.AddTransient<SayGoodbye>();
             services.AddTransient<SayHello>();
             services.AddTransient<PrintMessage>();
             services.AddTransient<HelloWorld>();
-            //services.AddTransient<GetBaseInfo>();
-            services.AddWorkflow();
-            //services.AddWorkflow(x => x.UseSqlServer(@"Server=192.168.0.254;Database=Workflowdb;UID=sa;Password=SA!@#123sa;", true, true));
-
-            //Json格式
-            services.AddWorkflowDSL();
-            //https://www.qubcedu.com/postdetail/3a14f314-b844-4092-2c0e-04a755d5ef76/1
-            //services.AddWorkflowMiddleware
-
-
-            //services.AddWorkflow(x => x.UseSqlite(@"Data Source=database2.db;", true));            
-            // services.AddTransient<frmMain>();
-            //services.AddSingleton(typeof(frmMain));//MDI最大。才开一次才能单例
-            //var serviceProvider = services.BuildServiceProvider();
-            //config logging
-            //  var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            //loggerFactory.AddConsole(LogLevel.Debug);
-            // return serviceProvider;
         }
+
+        #endregion
+
+        #region 旧的配置方法（已废弃，保留用于兼容性）
+
+        [Obsolete("请使用 AddWorkflowCoreServices(services, configuration) 方法")]
+        public static void AddWorkflowCoreServicesOld(this IServiceCollection services)
+        {
+            services.AddLogging();
+            services.AddWorkflow(x => x.UseSqlServer(@"Server=.;Database=WorkflowCore;Trusted_Connection=True;", true, true));
+            services.AddWorkflowDSL();
+        }
+
+        [Obsolete("请使用 AddWorkflowCoreServices(services, configuration) 方法")]
+        public static void AddWorkflowCoreServicesNew(this IServiceCollection services)
+        {
+            RegisterWorkflowSteps(services);
+            services.AddWorkflow();
+            services.AddWorkflowDSL();
+        }
+
+        #endregion
 
         public static void AddRegisterWorkflow(this IWorkflowHost host)
         {
@@ -94,12 +158,9 @@ namespace RUINORERP.Server.Workflow
             host.RegisterWorkflow<ScheduledlWorkflow, ApprovalWFData>();
             host.RegisterWorkflow<NightlyWorkflow, GlobalScheduledData>();
             host.RegisterWorkflow<ApprovalWorkflow, ApprovalWFData>();
-            // 注册工作流
             host.RegisterWorkflow<DailyTaskWorkflow>();
             host.RegisterWorkflow<ReminderWorkflow, ReminderData>();
-
             host.RegisterWorkflow<WFPush.PushBaseInfoWorkflow, PushData>();
-
         }
     }
 }

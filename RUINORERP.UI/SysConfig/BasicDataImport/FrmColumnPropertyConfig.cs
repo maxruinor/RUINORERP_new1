@@ -5,6 +5,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
+using RUINORERP.Model.ImportEngine.Enums;
 using RUINORERP.UI.Common;
 using SqlSugar;
 using System;

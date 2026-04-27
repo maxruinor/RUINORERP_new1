@@ -1,6 +1,7 @@
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Common.Helper;
 using RUINORERP.Model;
+using RUINORERP.Model.ImportEngine.Enums;
 using RUINORERP.Repository.UnitOfWorks;  // ✅ 新增：IUnitOfWorkManage
 using RUINORERP.UI.SysConfig.BasicDataImport;
 using SqlSugar;

@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using RUINORERP.Model;
+using RUINORERP.Model.ImportEngine.Enums;
 using SqlSugar;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport

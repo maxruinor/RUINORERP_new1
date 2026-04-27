@@ -1,3 +1,4 @@
+using RUINORERP.Model.ImportEngine.Enums;
 using System;
 using System.Collections.Generic;
 using System.Data;

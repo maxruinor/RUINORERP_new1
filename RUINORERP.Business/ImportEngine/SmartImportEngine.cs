@@ -35,7 +35,7 @@ namespace RUINORERP.Business.ImportEngine
             
             // 初始化服务实例
             _excelParser = new ExcelParserService();
-            _mappingService = new ColumnMappingService();
+            _mappingService = new ColumnMappingService(_db);  // ✅ 传入数据库连接以支持外键解析
             _dbWriter = new DatabaseWriterService(_db);
         }
 
@@ -125,17 +125,7 @@ namespace RUINORERP.Business.ImportEngine
             return report;
         }
 
-        /// <summary>
-        /// 执行导入任务（兼容重载，保留接口）
-        /// 【已废弃】此重载忽略remapper参数，仅为兼容旧代码
-        /// </summary>
-        [Obsolete("请使用 ExecuteWithDataTableAsync(DataTable data, ImportProfile profile)，remapper参数已废弃")]
-        public async Task<ImportReport> ExecuteWithDataTableAsync(DataTable data, ImportProfile profile, object remapper)
-        {
-            // 忽略remapper参数，使用简化实现
-            return await ExecuteWithDataTableAsync(data, profile);
-        }
-
+         
         public async Task<ImportReport> ExecuteAsync(string filePath, string profileName, bool isDryRun = false)
         {
             var report = new ImportReport();

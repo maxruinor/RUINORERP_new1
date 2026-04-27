@@ -1,5 +1,6 @@
 using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.Model.ImportEngine.Enums;
 using RUINORERP.Model.ImportEngine.Models;
 using SqlSugar;
 using System;

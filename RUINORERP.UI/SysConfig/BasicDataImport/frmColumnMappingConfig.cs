@@ -15,6 +15,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using RUINORERP.Global;
 using RUINORERP.Model.ImportEngine.Models;
+using RUINORERP.Model.ImportEngine.Enums;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {

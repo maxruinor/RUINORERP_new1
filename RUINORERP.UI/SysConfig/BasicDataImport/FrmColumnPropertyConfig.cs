@@ -656,6 +656,29 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             DataSourceType dataSourceType = (DataSourceType)kcmbDataSourceType.SelectedIndex;
             SelectedDataSourceType = dataSourceType;
 
+            // ✅ 构建临时映射对象用于验证
+            var tempMapping = new ColumnMapping
+            {
+                SystemField = CurrentMapping?.SystemField,
+                ExcelColumn = CurrentMapping?.ExcelColumn,
+                DataSourceType = dataSourceType,
+                IsRequired = CurrentMapping?.IsRequired ?? false,  // ✅ 从当前映射中获取
+                IsUniqueValue = kchkIsUniqueValue.Checked,
+                IgnoreEmptyValue = kchkIgnoreEmptyValue.Checked,
+                DefaultValue = string.Empty,
+                IsBusinessKey = kchkIsBusinessKey.Checked,
+                ExistenceStrategy = (ExistenceStrategy)(kcmbExistenceStrategy?.SelectedIndex ?? 1)
+            };
+
+            // ✅ 使用验证适配器进行配置验证
+            var validator = new ImportValidationAdapter();
+            if (!validator.ValidateColumnMapping(tempMapping, out List<string> validationErrors))
+            {
+                string errorMsg = "列配置验证失败：\n" + string.Join("\n", validationErrors);
+                MessageBox.Show(errorMsg, "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             // 根据数据来源类型进行验证
             if (dataSourceType == DataSourceType.ForeignKey)
             {

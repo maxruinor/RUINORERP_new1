@@ -2539,6 +2539,7 @@
     <Compile Include="SysConfig\BasicDataImport\ImageProcessor.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImportConfiguration.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImportTemplateManager.cs" />
+    <Compile Include="SysConfig\BasicDataImport\ImportValidationAdapter.cs" />
     <Compile Include="SysConfig\BasicDataImport\MultiAttributeImportConfig.cs" />
     <Compile Include="SysConfig\BasicDataImport\MultiAttributeProductImporter.cs" />
     <Compile Include="SysConfig\BasicDataImport\SmartColumnMatcher.cs" />

@@ -881,6 +881,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 使用Validator进行业务验证
+        /// ✅ 增强：使用 ImportValidationAdapter 统一调用现有 FluentValidation 验证器体系
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="entityType">实体类型</param>
@@ -889,77 +890,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                Type actualEntityType = entity.GetType();
-
-                // 根据命名规则构造验证器类型名: 实体名 + Validator
-                string validatorName = actualEntityType.Name + "Validator";
-
-                // 在 RUINORERP.Business.Validator 命名空间下查找验证器
-                Type validatorType = Type.GetType($"RUINORERP.Business.Validator.{validatorName}");
-
-                if (validatorType != null)
-                {
-                    try
-                    {
-                        // 创建验证器实例
-                        // 验证器构造函数需要 ApplicationContext 参数，传 null 使用默认值
-                        var validatorInstance = Activator.CreateInstance(validatorType, new object[] { null });
-
-                        // 获取验证器的 Validate 方法
-                        MethodInfo validateMethod = validatorType.GetMethod("Validate",
-                            BindingFlags.Public | BindingFlags.Instance);
-
-                        if (validateMethod != null)
-                        {
-                            // 调用验证方法
-                            var validationResult = validateMethod.Invoke(validatorInstance, new[] { entity });
-
-                            // 处理验证结果
-                            if (validationResult != null)
-                            {
-                                Type validationResultType = validationResult.GetType();
-
-                                // 检查是否有验证错误
-                                PropertyInfo errorsProperty = validationResultType.GetProperty("Errors");
-                                if (errorsProperty != null)
-                                {
-                                    var errors = errorsProperty.GetValue(validationResult);
-                                    if (errors != null)
-                                    {
-                                        Type errorsType = errors.GetType();
-                                        PropertyInfo countProperty = errorsType.GetProperty("Count");
-                                        if (countProperty != null)
-                                        {
-                                            int errorCount = (int)countProperty.GetValue(errors);
-                                            if (errorCount > 0)
-                                            {
-                                                // 获取第一个错误信息
-                                                MethodInfo indexerMethod = errorsType.GetMethod("get_Item");
-                                                if (indexerMethod != null)
-                                                {
-                                                    var firstError = indexerMethod.Invoke(errors, new object[] { 0 });
-                                                    PropertyInfo errorMessageProperty = firstError.GetType().GetProperty("ErrorMessage");
-                                                    if (errorMessageProperty != null)
-                                                    {
-                                                        return errorMessageProperty.GetValue(firstError)?.ToString() ?? "验证失败";
-                                                    }
-                                                }
-                                                return "验证失败";
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // 验证器调用失败，记录日志但不阻止导入
-                        MainForm.Instance.ShowStatusText($"验证器调用失败: {ex.Message}");
-                    }
-                }
-
-                return string.Empty;
+                // ✅ 使用 ImportValidationAdapter 统一处理验证逻辑
+                var validationAdapter = new ImportValidationAdapter(null);
+                return validationAdapter.ValidateEntity(entity);
             }
             catch (Exception ex)
             {

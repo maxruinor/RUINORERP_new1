@@ -990,6 +990,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
+                // ✅ 使用验证适配器进行配置验证
+                var validator = new ImportValidationAdapter();
+                if (!validator.ValidateImportConfiguration(ImportConfig, out List<string> validationErrors))
+                {
+                    string errorMsg = "导入配置验证失败：\n" + string.Join("\n", validationErrors);
+                    MessageBox.Show(errorMsg, "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
                 // 更新全局配置
                 ImportConfig.MappingName = mappingName;
                 ImportConfig.EntityType = TargetEntityType?.Name;

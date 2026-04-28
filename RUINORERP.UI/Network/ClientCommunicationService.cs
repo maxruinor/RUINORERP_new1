@@ -172,6 +172,16 @@ namespace RUINORERP.UI.Network
         public ConnectionManager ConnectionManager => _connectionManager;
 
         /// <summary>
+        /// 启动后台任务
+        /// 启用自动重连等后台服务
+        /// </summary>
+        public void StartBackgroundTasks()
+        {
+            _connectionManager.StartBackgroundTasks();
+            _logger?.LogInformation("[ClientCommunicationService] 后台任务已启动");
+        }
+
+        /// <summary>
         /// 获取当前连接的服务器地址
         /// </summary>
         public string GetCurrentServerAddress() => _connectionManager.CurrentServerAddress;

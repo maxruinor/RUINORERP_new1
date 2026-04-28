@@ -343,6 +343,11 @@ namespace RUINORERP.UI.Network.Services
                 _logger?.LogDebug("[登录] 正在处理注册状态...");
                 await HandleRegistrationStatusAsync(response, isAutoLogin);
 
+                // ✅ 关键修改：登录成功后启用自动重连机制
+                _logger?.LogInformation("[登录] 登录成功，启用自动重连机制");
+                _communicationService.ConnectionManager.AutoReconnect = true;
+                _communicationService.StartBackgroundTasks();
+
                 _logger?.LogInformation("========== 登录流程完成 ==========");
                 return response;
             }

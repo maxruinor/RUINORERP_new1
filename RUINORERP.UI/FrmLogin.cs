@@ -197,7 +197,8 @@ namespace RUINORERP.UI
 
         /// <summary>
         /// 窗体加载事件
-        /// ✅ 优化：不再自动连接，等待用户点击登录按钮后才连接
+        /// ✅ 修改：登录界面显示时自动尝试连接服务器，获取欢迎信息
+        /// 初始连接失败不进行自动重连，只有登录成功后才会启用重连机制
         /// </summary>
         private async void frmLogin_Load(object sender, EventArgs e)
         {
@@ -210,10 +211,133 @@ namespace RUINORERP.UI
             _originalServerIP = txtServerIP.Text.Trim();
             _originalServerPort = txtPort.Text.Trim();
 
-            // ✅ 关键修改：显示提示，等待用户点击登录按钮
-            MainForm.Instance?.ShowStatusText("请输入用户名和密码，然后点击登录");
+            // ✅ 修改：登录界面显示时自动尝试连接服务器
+            MainForm.Instance?.ShowStatusText("正在连接服务器...");
+            
+            // 禁用登录按钮，等待连接完成
+            btnok.Enabled = false;
+            btnok.Text = "连接中...";
+            
+            // 启动初始连接（不重连）
+            _ = Task.Run(async () => await PerformInitialConnectionAsync());
+        }
 
+        /// <summary>
+        /// 执行初始连接
+        /// 登录界面显示时自动连接，失败不重连
+        /// </summary>
+        private async Task PerformInitialConnectionAsync()
+        {
+            try
+            {
+                string serverIP = txtServerIP.Text.Trim();
+                int serverPort = 0;
+                int.TryParse(txtPort.Text.Trim(), out serverPort);
 
+                if (string.IsNullOrWhiteSpace(serverIP) || serverPort <= 0)
+                {
+                    InvokeIfRequired(() =>
+                    {
+                        MainForm.Instance?.ShowStatusText("请输入有效的服务器IP和端口");
+                        btnok.Enabled = true;
+                        btnok.Text = "登录";
+                    });
+                    return;
+                }
+
+                // ✅ 关键：重置欢迎完成信号源，确保可以接收新的欢迎消息
+                _welcomeCompletionTcs = new TaskCompletionSource<(bool success, string announcement)>();
+                
+                // ✅ 关键：初始连接时禁用自动重连
+                connectionManager.AutoReconnect = false;
+                MainForm.Instance?.logger?.LogInformation("[初始连接] 已禁用自动重连，仅在登录成功后启用");
+
+                // 检测是否为外网地址
+                bool isExternalNetwork = IsExternalNetworkAddress(serverIP);
+                // ✅ 优化：双网卡问题解决后，缩短超时时间（外网20秒，内网10秒）
+                int connectTimeoutSeconds = isExternalNetwork ? 20 : 10;
+
+                InvokeIfRequired(() =>
+                {
+                    MainForm.Instance?.ShowStatusText($"正在连接到服务器 {serverIP}:{serverPort}...");
+                });
+
+                // 尝试连接服务器（不重连）
+                var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
+                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(connectTimeoutSeconds)));
+
+                bool connectResult = false;
+                if (completedTask == connectTask)
+                {
+                    connectResult = await connectTask;
+                }
+
+                if (!connectResult)
+                {
+                    InvokeIfRequired(() =>
+                    {
+                        MainForm.Instance?.ShowStatusText($"无法连接到服务器 {serverIP}:{serverPort}，请检查配置后点击登录重试");
+                        btnok.Enabled = true;
+                        btnok.Text = "登录";
+                    });
+                    return;
+                }
+
+                // 连接成功，等待欢迎消息
+                InvokeIfRequired(() =>
+                {
+                    MainForm.Instance?.ShowStatusText("服务器连接成功，等待欢迎信息...");
+                });
+
+                // 等待欢迎流程完成
+                // ✅ 优化：缩短欢迎消息等待时间至10秒
+                var welcomeTimeout = TimeSpan.FromSeconds(10);
+                var welcomeTask = await Task.WhenAny(_welcomeCompletionTcs.Task, Task.Delay(welcomeTimeout));
+
+                if (welcomeTask == _welcomeCompletionTcs.Task)
+                {
+                    var (success, announcement) = await _welcomeCompletionTcs.Task;
+                    if (success && !string.IsNullOrEmpty(announcement))
+                    {
+                        InvokeIfRequired(() =>
+                        {
+                            DisplayAnnouncement(announcement);
+                            MainForm.Instance?.ShowStatusText($"服务器连接成功 | 公告: {announcement}");
+                        });
+                    }
+                    else
+                    {
+                        InvokeIfRequired(() =>
+                        {
+                            MainForm.Instance?.ShowStatusText("服务器连接成功");
+                        });
+                    }
+                }
+                else
+                {
+                    InvokeIfRequired(() =>
+                    {
+                        MainForm.Instance?.ShowStatusText("服务器连接成功（未收到欢迎消息）");
+                    });
+                }
+
+                // 连接成功，启用登录按钮
+                InvokeIfRequired(() =>
+                {
+                    btnok.Enabled = true;
+                    btnok.Text = "登录";
+                });
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "初始连接失败");
+                InvokeIfRequired(() =>
+                {
+                    MainForm.Instance?.ShowStatusText($"连接服务器时发生错误: {ex.Message}");
+                    btnok.Enabled = true;
+                    btnok.Text = "登录";
+                });
+            }
         }
 
 
@@ -285,7 +409,9 @@ namespace RUINORERP.UI
                 MainForm.Instance?.ShowStatusText($"正在连接到服务器 {serverIP}:{serverPort}...");
 
                 var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
-                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(15)));
+                // ✅ 优化：外网20秒，内网10秒
+                int connectTimeoutSeconds = IsExternalNetworkAddress(serverIP) ? 20 : 10;
+                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(connectTimeoutSeconds)));
 
                 bool connectResult = false;
                 if (completedTask == connectTask)
@@ -314,7 +440,8 @@ namespace RUINORERP.UI
                 {
                     try
                     {
-                        var welcomeTimeout = TimeSpan.FromSeconds(20);
+                        // ✅ 优化：缩短欢迎消息等待时间至10秒
+                        var welcomeTimeout = TimeSpan.FromSeconds(10);
                         var completedTask = await Task.WhenAny(
                             _welcomeCompletionTcs.Task,
                             Task.Delay(welcomeTimeout)
@@ -358,7 +485,7 @@ namespace RUINORERP.UI
 
         private async void btnok_Click(object sender, EventArgs e)
         {
-
+            // ✅ 修复：手动点击登录时，显式启动后台任务（如自动重连）
             connectionManager.StartBackgroundTasks();
 
             // 初始化取消令牌源
@@ -401,7 +528,8 @@ namespace RUINORERP.UI
             // 检测是否为外网地址，外网需要更长的超时时间
             string serverIP = txtServerIP.Text.Trim();
             bool isExternalNetwork = IsExternalNetworkAddress(serverIP);
-            int connectTimeoutSeconds = isExternalNetwork ? 45 : 15; // 外网45秒，内网15秒
+            // ✅ 优化：双网卡问题解决后，缩短超时时间（外网20秒，内网10秒）
+            int connectTimeoutSeconds = isExternalNetwork ? 20 : 10;
 
             _ = Task.Run(async () => await InitializeConnectionAndWelcomeFlowAsync());
 
@@ -1162,7 +1290,7 @@ namespace RUINORERP.UI
                 // 完成登录
                 Program.AppContextData.IsOnline = true;
 
-                // 启动心跳
+                // 启动心跳（自动重连机制已在UserLoginService中启用）
                 MainForm.Instance.communicationService.StartHeartbeat();
                 MainForm.Instance.logger?.LogInformation("心跳服务已启动");
 

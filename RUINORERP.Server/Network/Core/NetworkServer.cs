@@ -1,6 +1,3 @@
-// 测试模式：如果定义了SKIP_REGISTRATION_VALIDATION，则跳过注册码验证
-#define SKIP_REGISTRATION_VALIDATION
-
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -116,12 +113,12 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
-                // 1. 注册验证检查（调试模式下跳过）
+                // 1. 注册验证检查（通过配置项控制）
                 await ValidateRegistrationOnStartupAsync();
 
-                // 2. 读取配置文件，确保Serverport和configuredPorts使用的是配置文件中的值
-                ERPServerOptions serverOptions = null;
+                // 2. 统一读取配置文件
                 IConfiguration config = null;
+                ERPServerOptions serverOptions = null;
 
                 try
                 {
@@ -130,14 +127,12 @@ namespace RUINORERP.Server.Network.Core
                         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                         .Build();
 
-                    // 读取serverOptions配置
                     var serverOptionsSection = config.GetSection("serverOptions");
                     if (serverOptionsSection != null && serverOptionsSection.GetChildren().Any())
                     {
                         serverOptions = serverOptionsSection.Get<ERPServerOptions>();
                         if (serverOptions != null && serverOptions.Listeners.Count > 0)
                         {
-                            // 设置Serverport为配置文件中的第一个监听器端口
                             Serverport = serverOptions.Listeners[0].Port;
                         }
                     }
@@ -199,14 +194,6 @@ namespace RUINORERP.Server.Network.Core
 
                 // 初始化命令调度器,里面会扫描并注册所有命令类型到命令调度器
                 await _commandDispatcher.InitializeAsync(CancellationToken.None, packetSpecAssembly, serverAssembly).ConfigureAwait(false);
-
-                // 添加日志记录，检查注册的处理器数量
-                var handlerCount = _commandDispatcher.HandlerCount;  // 直接使用具体类型属性
-
-                // 减少日志输出，仅在调试模式下显示已注册的处理器信息
-#if DEBUG
-                LogRegisteredHandlers();
-#endif
 
 
 
@@ -301,13 +288,17 @@ namespace RUINORERP.Server.Network.Core
                    .UseSessionHandler(async (session) =>
                    {
                        // 会话连接
-                       // 移除详细日志
-                       // LogInfo($"客户端连接: {session.SessionID} from {session.RemoteEndPoint}");
+                       var remoteEndPoint = session.RemoteEndPoint?.ToString() ?? "未知";
+                       _logger?.LogInformation("[连接] 新会话连接: {SessionId}, 来源: {RemoteEndPoint}", 
+                           session.SessionID, remoteEndPoint);
+                       
                        await _sessionManager.AddSessionAsync(session);
 
                    }, async (session, reason) =>
                    {
-                       string re = reason.ToString();
+                       var remoteEndPoint = session.RemoteEndPoint?.ToString() ?? "未知";
+                       _logger?.LogInformation("[断开] 会话断开: {SessionId}, 来源: {RemoteEndPoint}, 原因: {Reason}", 
+                           session.SessionID, remoteEndPoint, reason);
                        await _sessionManager.RemoveSessionAsync(session.SessionID);
                    });
                 })

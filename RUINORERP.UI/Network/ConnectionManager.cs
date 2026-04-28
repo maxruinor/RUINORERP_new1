@@ -100,6 +100,15 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public bool IsReconnecting => _isReconnecting;
 
+        /// <summary>
+        /// 是否启用自动重连
+        /// 用于控制连接断开后是否自动重连
+        /// </summary>
+        public bool AutoReconnect
+        {
+            get => _config.AutoReconnect;
+            set => _config.AutoReconnect = value;
+        }
 
         /// <summary>
         /// 停止后台任务（用于 LogLock 场景）

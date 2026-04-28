@@ -547,10 +547,16 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                // ✅ DDoS防护：获取客户端IP并检查连接频率
                 string clientIp = GetClientIp(session);
+                var remoteEndPoint = session.RemoteEndPoint?.ToString() ?? "未知";
                 
-                bool shouldCloseConnection = false; // 标记是否需要关闭连接
+                // ✅ 快速断开检测：如果连接后立即断开（5秒内），可能是端口扫描
+                // 记录连接时间用于后续分析
+                session["ConnectTime"] = DateTime.Now;
+                session["ClientIp"] = clientIp;
+                
+                // ✅ DDoS防护：获取客户端IP并检查连接频率
+                bool shouldCloseConnection = false;
                 
                 // P1优化：启用基础DDoS防护 - 限制单IP连接频率，防止重连风暴
                 if (!string.IsNullOrEmpty(clientIp) && clientIp != "0.0.0.0")
@@ -567,6 +573,15 @@ namespace RUINORERP.Server.Network.Services
                                 clientIp, maxConnectionsPerMinute);
                             shouldCloseConnection = true;
                         }
+                        
+                        // ✅ 新增：检测快速重连模式（可能是扫描工具）
+                        const int maxConnectionsPer5Seconds = 5;
+                        if (tracker.IsExceedingLimit(maxConnectionsPer5Seconds, TimeSpan.FromSeconds(5)))
+                        {
+                            _logger.LogWarning("[扫描检测] IP {ClientIp} 5秒内连接{Count}次，疑似端口扫描，拒绝连接", 
+                                clientIp, maxConnectionsPer5Seconds);
+                            shouldCloseConnection = true;
+                        }
                     }
                     if (shouldCloseConnection)
                     {
@@ -574,27 +589,12 @@ namespace RUINORERP.Server.Network.Services
                         return;
                     }
                 }
-                
-                // ✅ 已禁用IP白名单拦截 - 内网环境允许所有IP连接
-                // if (!string.IsNullOrEmpty(clientIp) && !BlacklistManager.IsIpAllowed(clientIp))
-                // {
-                //     _logger.LogWarning($"[IP拦截] 拒绝非内网IP连接: {clientIp}");
-                //     await session.CloseAsync(CloseReason.ServerShutdown);
-                //     return;
-                // }
-
-                // ✅ 已禁用IP黑名单检查 - 内网环境不封禁IP
-                // if (!string.IsNullOrEmpty(clientIp) && BlacklistManager.IsIpBanned(clientIp))
-                // {
-                //     _logger.LogWarning($"[黑名单拦截] IP地址已被封禁，拒绝连接: {clientIp}");
-                //     await session.CloseAsync(CloseReason.ServerShutdown);
-                //     return;
-                // }
 
                 // 检查是否已达到最大会话数
                 if (ActiveSessionCount >= MaxSessionCount)
                 {
-                    _logger.LogWarning($"达到最大会话数量限制: {MaxSessionCount}，拒绝新连接");
+                    _logger.LogWarning("达到最大会话数量限制: {MaxCount}，拒绝新连接，来源: {RemoteEndPoint}", 
+                        MaxSessionCount, remoteEndPoint);
                     await session.CloseAsync(CloseReason.ServerShutdown);
                     return;
                 }
@@ -666,7 +666,14 @@ namespace RUINORERP.Server.Network.Services
             {
                 // ✅ 优化：解耦欢迎流程与登录验证，允许未回复 WelcomeAck 的会话直接处理 Login 请求
                 // 仅发送欢迎消息，不再设置 IsHandshakeCompleted 标志位来阻塞后续逻辑
-                await SendWelcomeMessageAsync(sessionInfo);
+                
+                // ✅ 修复：增加超时保护，防止同步等待导致连接回调长时间阻塞
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+                await SendWelcomeMessageAsync(sessionInfo).WaitAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("[欢迎消息] 发送过程超时: {SessionId}", sessionInfo.SessionID);
             }
             catch (Exception ex)
             {
@@ -675,54 +682,52 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 发送欢迎消息到客户端（发后即忘模式）
-        /// P0-2修复: 改为后台任务执行，不阻塞登录流程
+        /// 发送欢迎消息到客户端
+        /// 修改为同步等待发送完成，确保客户端能收到欢迎消息
         /// </summary>
         /// <param name="sessionInfo">会话信息</param>
         /// <returns>异步任务</returns>
-        private Task SendWelcomeMessageAsync(SessionInfo sessionInfo)
+        private async Task SendWelcomeMessageAsync(SessionInfo sessionInfo)
         {
-            // P0-2修复: 启动后台任务发送欢迎消息，不阻塞登录流程
-            _ = Task.Run(async () =>
+            try
             {
-                try
-                {
-                    // 从依赖注入容器中获取服务器配置
-                    var serverConfig = Startup.GetFromFac<ServerGlobalConfig>();
+                // 延迟500毫秒再发送欢迎消息，确保客户端已准备好接收
+                await Task.Delay(500);
+                
+                // 从依赖注入容器中获取服务器配置
+                var serverConfig = Startup.GetFromFac<ServerGlobalConfig>();
 
-                    string announcement = serverConfig?.Announcement ?? "欢迎使用RUINORERP系统！";
+                string announcement = serverConfig?.Announcement ?? "欢迎使用RUINORERP系统！";
 
-                    var welcomeRequest = WelcomeRequest.CreateWithAnnouncement(
-                        sessionInfo.SessionID,
-                        GetServerVersion(),
-                        announcement);
+                var welcomeRequest = WelcomeRequest.CreateWithAnnouncement(
+                    sessionInfo.SessionID,
+                    GetServerVersion(),
+                    announcement);
 
-                    sessionInfo.WelcomeSentTime = DateTime.Now;
+                sessionInfo.WelcomeSentTime = DateTime.Now;
 
-                    // ✅ 优化：外网环境下增加超时时间至10秒，适应网络延迟场景
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                // ✅ 优化：外网环境下增加超时时间至20秒，适应高延迟场景
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
 
-                    await SendPacketCoreAsync(
-                        sessionInfo,
-                        SystemCommands.Welcome,
-                        welcomeRequest,
-                        10000,
-                        cts.Token,
-                        PacketDirection.ServerRequest
-                    ).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    _logger.LogDebug($"欢迎消息发送超时（已忽略）: {sessionInfo.SessionID}");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, $"欢迎消息发送失败（已忽略）: {sessionInfo.SessionID}");
-                }
-            }).ConfigureAwait(false);
-
-            // 立即返回，不等待发送完成
-            return Task.CompletedTask;
+                await SendPacketCoreAsync(
+                    sessionInfo,
+                    SystemCommands.Welcome,
+                    welcomeRequest,
+                    20000,
+                    cts.Token,
+                    PacketDirection.ServerRequest
+                ).ConfigureAwait(false);
+                
+                _logger.LogDebug("[欢迎消息] 已发送至客户端: {SessionId}", sessionInfo.SessionID);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("[欢迎消息] 发送超时: {SessionId}", sessionInfo.SessionID);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[欢迎消息] 发送失败: {SessionId}", sessionInfo.SessionID);
+            }
         }
 
         /// <summary>
@@ -756,6 +761,38 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 获取会话信息
                 _sessions.TryGetValue(session.SessionID, out var sessionInfo);
+                
+                // ✅ 快速断开检测：检查连接持续时间
+                var clientIp = session["ClientIp"]?.ToString() ?? GetClientIp(session);
+                var remoteEndPoint = session.RemoteEndPoint?.ToString() ?? "未知";
+                
+                if (session["ConnectTime"] is DateTime connectTime)
+                {
+                    var duration = DateTime.Now - connectTime;
+                    
+                    // 如果连接持续时间小于3秒且未认证，可能是端口扫描
+                    if (duration.TotalSeconds < 3 && (sessionInfo == null || !sessionInfo.IsAuthenticated))
+                    {
+                        _logger.LogWarning("[扫描检测] IP {ClientIp} 快速断开，连接仅持续{Duration:F1}秒，疑似端口扫描", 
+                            clientIp, duration.TotalSeconds);
+                    }
+                    // ✅ 优化：正常断开使用 Debug 级别，避免外网不稳定时日志刷屏
+                    else if (sessionInfo != null && sessionInfo.IsAuthenticated)
+                    {
+                        _logger.LogDebug("[断开] 认证会话断开: SessionID={SessionId}, 用户={UserName}, 持续时间={Duration:F1}秒, 原因={Reason}", 
+                            session.SessionID, sessionInfo.UserName, duration.TotalSeconds, closeReason.Reason);
+                    }
+                    else
+                    {
+                        _logger.LogDebug("[断开] 会话断开: SessionID={SessionId}, 来源={RemoteEndPoint}, 持续时间={Duration:F1}秒, 原因={Reason}", 
+                            session.SessionID, remoteEndPoint, duration.TotalSeconds, closeReason.Reason);
+                    }
+                }
+                else
+                {
+                    _logger.LogDebug("[断开] 会话断开: SessionID={SessionId}, 来源={RemoteEndPoint}, 原因={Reason}", 
+                        session.SessionID, remoteEndPoint, closeReason.Reason);
+                }
 
                 // 如果会话信息存在，先触发断开事件再移除会话
                 if (sessionInfo != null)
@@ -773,12 +810,10 @@ namespace RUINORERP.Server.Network.Services
 
                 // 移除会话
                 await RemoveSessionAsync(session.SessionID);
-
-                _logger.LogInformation($"SuperSocket会话已断开: SessionID={session.SessionID}, 原因={closeReason.Reason}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理会话断开事件时出错: SessionID={session?.SessionID}");
+                _logger.LogError(ex, "处理会话断开事件时出错: SessionID={SessionId}", session?.SessionID);
             }
         }
 
@@ -1695,6 +1730,8 @@ namespace RUINORERP.Server.Network.Services
                         {
                             if (_sessions.TryGetValue(sessionId, out var session))
                             {
+                                // ✅ 优化：增加超时保护，防止单个会话关闭阻塞整个流程
+                                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
                                 await session.CloseAsync(CloseReason.ServerShutdown);
                                 Interlocked.Increment(ref closedSessions);
                             }

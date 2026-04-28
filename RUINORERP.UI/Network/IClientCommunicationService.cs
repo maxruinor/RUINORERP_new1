@@ -123,6 +123,12 @@ namespace RUINORERP.UI.Network
         /// <param name="username">用户名</param>
         /// <param name="password">密码</param>
         void SetAutoReloginCredentials(string username, string password);
+
+        /// <summary>
+        /// 启动后台任务
+        /// 启用自动重连等后台服务
+        /// </summary>
+        void StartBackgroundTasks();
     }
 
 }

@@ -1019,6 +1019,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private DataTable SheetToDataTableWithColumns(ISheet sheet, List<ColumnMapping> columnMappings, int maxPreviewRows = -1, List<ExcelImageInfo> images = null)
         {
             DataTable dataTable = new DataTable();
+            dataTable.TableName = sheet.SheetName;
             IRow headerRow = sheet.GetRow(0);
             if (headerRow == null)
             {

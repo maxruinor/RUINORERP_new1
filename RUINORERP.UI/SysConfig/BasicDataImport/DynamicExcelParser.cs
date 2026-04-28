@@ -1023,12 +1023,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             IRow headerRow = sheet.GetRow(0);
             if (headerRow == null)
             {
-                throw new Exception("Excel工作表没有标题行");
+                string errorMsg = $"工作表'{sheet.SheetName}'没有标题行，请检查Excel文件格式";
+                System.Diagnostics.Debug.WriteLine($"[ExcelParser] {errorMsg}");
+                throw new Exception(errorMsg);
             }
 
             // 构建需要读取的Excel列名集合（包括直接映射、外键来源列、拼接源列等）
             var requiredExcelColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var columnIndexMap = new Dictionary<string, int>(); // Excel列名 -> 列索引
+            var columnIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase); // Excel列名 -> 列索引（修复：使用大小写不敏感比较）
 
             foreach (var mapping in columnMappings)
             {
@@ -1075,6 +1077,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 建立Excel列名到列索引的映射
             int cellCount = headerRow.LastCellNum;
+            var foundColumns = new List<string>();
             for (int i = headerRow.FirstCellNum; i < cellCount; i++)
             {
                 ICell cell = headerRow.GetCell(i);
@@ -1084,8 +1087,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (!string.IsNullOrEmpty(columnName))
                     {
                         columnIndexMap[columnName] = i;
+                        foundColumns.Add(columnName);
                     }
                 }
+            }
+            
+            // 添加调试信息：记录Excel中找到的所有列名
+            System.Diagnostics.Debug.WriteLine($"[ExcelParser] 工作表'{sheet.SheetName}'中找到的列名: {string.Join(", ", foundColumns)}");
+            
+            // 验证是否有配置的列在Excel中找不到
+            var missingColumns = requiredExcelColumns.Where(col => !columnIndexMap.ContainsKey(col)).ToList();
+            if (missingColumns.Any())
+            {
+                System.Diagnostics.Debug.WriteLine($"[ExcelParser] 警告：以下配置的列在Excel中未找到: {string.Join(", ", missingColumns)}");
             }
 
             // 创建结果表的列（使用SystemField.Value作为列名）
@@ -1172,6 +1186,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                         }
                                     }
                                 }
+                                else
+                                {
+                                    // 添加调试信息：列名未找到
+                                    if (!string.IsNullOrEmpty(mapping.ExcelColumn))
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到Excel列'{mapping.ExcelColumn}'，映射到字段'{mapping.SystemField?.Value}'");
+                                    }
+                                }
                                 break;
 
                             case DataSourceType.ForeignKey:
@@ -1184,6 +1206,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     if (cell != null)
                                     {
                                         cellValue = GetCellValue(cell);
+                                    }
+                                }
+                                else
+                                {
+                                    // 添加调试信息：外键来源列名未找到
+                                    if (mapping.ForeignConfig != null && !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key))
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到外键来源列'{mapping.ForeignConfig.ForeignKeySourceColumn.Key}'，映射到字段'{mapping.SystemField?.Value}'");
                                     }
                                 }
                                 break;

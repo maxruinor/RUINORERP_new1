@@ -1262,10 +1262,18 @@ namespace RUINORERP.UI
 
                 // 2. 执行登录验证
                 MainForm.Instance?.logger?.LogInformation("[登录流程] 正在发送登录请求到服务器...");
+                
+                // ✅ 关键优化：为网络登录验证单独设置超时，不受连接时间影响
+                // 登录验证需要更长时间（包含重试），使用独立的超时控制
+                using var loginTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(60)); // ✅ 60秒超时，给足重试时间
+                using var loginLinkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                    loginTimeoutCts.Token,
+                    _loginCancellationTokenSource?.Token ?? CancellationToken.None);
+                
                 var loginResponse = await _userLoginService.LoginAsync(
                     txtUserName.Text,
                     txtPassWord.Text,
-                    linkedCts.Token);
+                    loginLinkedCts.Token);
 
                 MainForm.Instance?.logger?.LogDebug("[登录流程] 收到登录响应 - IsNull: {IsNull}, IsSuccess: {IsSuccess}", 
                     loginResponse == null, loginResponse?.IsSuccess);
@@ -1534,6 +1542,81 @@ namespace RUINORERP.UI
                 // 启动心跳
                 MainForm.Instance.communicationService.StartHeartbeat();
                 MainForm.Instance.logger?.LogInformation("心跳服务已启动");
+
+                // ✅ 新增：后台检测更新（不阻塞登录流程）
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        // 延迟2秒，确保MainForm已完全加载
+                        await Task.Delay(2000);
+                        
+                        // 检查是否配置了自动更新
+                        if (!Program.AppContextData.SystemGlobalConfig.客户端自动更新)
+                        {
+                            MainForm.Instance?.logger?.LogDebug("[更新检测] 自动更新功能未启用，跳过检测");
+                            return;
+                        }
+                        
+                        // 如果刚刚完成更新，跳过检测
+                        if (Program.JustUpdated)
+                        {
+                            MainForm.Instance?.logger?.LogDebug("[更新检测] 程序刚刚完成更新，跳过本次检测");
+                            Program.JustUpdated = false; // 重置标记
+                            return;
+                        }
+                        
+                        MainForm.Instance?.logger?.LogInformation("[更新检测] 开始后台检测更新...");
+                        
+                        // 创建更新检查实例
+                        var updateForm = new AutoUpdate.FrmUpdate();
+                        
+                        // 检查是否有更新
+                        bool hasUpdates = updateForm.CheckHasUpdates();
+                        
+                        if (hasUpdates)
+                        {
+                            MainForm.Instance?.logger?.LogInformation("[更新检测] 检测到新版本，准备提示用户");
+                            
+                            // 在UI线程显示提示
+                            await Task.Run(() =>
+                            {
+                                if (MainForm.Instance != null && MainForm.Instance.InvokeRequired)
+                                {
+                                    MainForm.Instance.Invoke(new Action(() =>
+                                    {
+                                        var result = MessageBox.Show(
+                                            "服务器有新版本可用！\n\n建议立即更新以获得最新功能和修复。\n是否现在更新？（更新前请保存当前工作）",
+                                            "发现新版本",
+                                            MessageBoxButtons.YesNo,
+                                            MessageBoxIcon.Information);
+                                        
+                                        if (result == DialogResult.Yes)
+                                        {
+                                            // 启动更新程序
+                                            System.Diagnostics.Process.Start(updateForm.currentexeName);
+                                            
+                                            // 关闭当前应用程序
+                                            Application.Exit();
+                                        }
+                                        else
+                                        {
+                                            MainForm.Instance?.logger?.LogInformation("[更新检测] 用户选择稍后更新");
+                                        }
+                                    }));
+                                }
+                            });
+                        }
+                        else
+                        {
+                            MainForm.Instance?.logger?.LogDebug("[更新检测] 当前已是最新版本");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance?.logger?.LogWarning(ex, "[更新检测] 后台检测更新失败");
+                    }
+                });
 
                 // ✅ 记录登录成功完成
                 MainForm.Instance.logger?.LogInformation("登录流程全部完成，准备关闭登录窗口");

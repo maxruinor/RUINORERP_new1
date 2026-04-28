@@ -1228,6 +1228,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 }
                                 else
                                 {
+                                    // 添加调试信息：列名未在sourceData中找到
+                                    System.Diagnostics.Debug.WriteLine($"[ApplyColumnMapping] Excel列'{mapping.ExcelColumn}'未在源数据中找到，映射到字段'{mapping.SystemField?.Value}'");
                                     targetRow[mapping.SystemField?.Value] = "";
                                 }
                                 break;

@@ -1337,15 +1337,6 @@ namespace RUINORERP.UI
             BaseForm.BillLockHelper.Initialize();
             this.Text = "企业数字化集成ERP ver3.2" + "-" + Program.ERPVersion;
             //MessageBox.Show("登录成功后，请要系统设置中添加公司基本资料。");
-            using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
-            {
-                //更新是不是可以异步？
-                if (!UserGlobalConfig.Instance.IsSupperUser)
-                {
-                    await UpdateSys(false);
-                }
-            }
-
             //按账号恢复关之前的布局
             //kryptonDockableWorkspace1.LoadLayoutFromArray(_byteArray);
             try

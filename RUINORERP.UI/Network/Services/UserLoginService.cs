@@ -53,6 +53,7 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 异步登录方法，使用简化的连接管理
         /// 增强版：添加详细的日志记录和状态管理，确保登录流程健壮性
+        /// ✅ 修复：优化超时重试逻辑，避免立即失败
         /// </summary>
         /// <param name="username">用户名</param>
         /// <param name="password">密码</param>
@@ -80,17 +81,32 @@ namespace RUINORERP.UI.Network.Services
                     ct.ThrowIfCancellationRequested();
                 }
 
-                // 使用信号量确保同一时间只有一个登录请求
+                // ✅ 修复：增加锁等待超时前的连接状态检查
                 _logger?.LogDebug("[登录] 尝试获取登录锁...");
                 var lockAcquired = await _loginLock.WaitAsync(TimeSpan.FromSeconds(20), ct); // 从10秒增加到20秒
 
                 if (!lockAcquired)
                 {
-                    _logger?.LogInformation("[登录] 获取锁超时，可能已有登录在进行 - Username: {Username}", username);
-                    return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("正在登录中，请稍候...");
+                    _logger?.LogWarning("[登录] 获取锁超时，可能已有登录在进行 - Username: {Username}", username);
+                    
+                    // ✅ 修复：检查是否是因为前一次登录超时导致的锁占用，如果是则等待一小段时间后重试
+                    _logger?.LogInformation("[登录] 等待500ms后重新尝试获取锁...");
+                    await Task.Delay(500, ct);
+                    
+                    // 再次尝试获取锁
+                    lockAcquired = await _loginLock.WaitAsync(TimeSpan.FromSeconds(10), ct);
+                    if (!lockAcquired)
+                    {
+                        _logger?.LogError("[登录] 第二次获取锁仍然超时，返回错误 - Username: {Username}", username);
+                        return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("正在登录中，请稍候...");
+                    }
+                    
+                    _logger?.LogDebug("[登录] 第二次成功获取登录锁");
                 }
-
-                _logger?.LogDebug("[登录] 成功获取登录锁");
+                else
+                {
+                    _logger?.LogDebug("[登录] 成功获取登录锁");
+                }
 
                 // 锁获取成功后，再次检查取消令牌状态
                 if (ct.IsCancellationRequested)
@@ -99,11 +115,39 @@ namespace RUINORERP.UI.Network.Services
                     ct.ThrowIfCancellationRequested();
                 }
 
-                // 检查连接状态
+                // ✅ 修复：检查并重置连接状态，确保使用最新状态
                 if (!_communicationService.ConnectionManager.IsConnected)
                 {
-                    _logger?.LogDebug("[登录] 未连接到服务器 - Username: {Username}", username);
-                    return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("未连接到服务器，请检查网络连接后重试");
+                    _logger?.LogWarning("[登录] 未连接到服务器，尝试重新连接 - Username: {Username}", username);
+                    
+                    // ✅ 新增：尝试重新连接，给外网环境更多机会
+                    try
+                    {
+                        var reconnectResult = await _communicationService.ConnectionManager.ManualReconnectAsync();
+                        if (!reconnectResult)
+                        {
+                            _logger?.LogError("[登录] 重新连接失败 - Username: {Username}", username);
+                            return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("未连接到服务器，请检查网络连接后重试");
+                        }
+                        
+                        // ✅ 关键修复：重连成功后等待2秒，确保Socket完全建立连接
+                        _logger?.LogInformation("[登录] 重新连接成功，等待2秒确保连接稳定...");
+                        await Task.Delay(2000, ct);
+                        
+                        // 再次验证连接状态
+                        if (!_communicationService.ConnectionManager.IsConnected)
+                        {
+                            _logger?.LogError("[登录] 重连后连接仍未建立 - Username: {Username}", username);
+                            return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("连接不稳定，请稍后重试");
+                        }
+                        
+                        _logger?.LogInformation("[登录] 连接已稳定，继续登录流程");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "[登录] 重新连接异常 - Username: {Username}", username);
+                        return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("连接服务器失败，请稍后重试");
+                    }
                 }
 
                 _logger?.LogDebug("[登录] 连接状态正常，准备发送登录请求");
@@ -118,22 +162,67 @@ namespace RUINORERP.UI.Network.Services
                     username, loginRequest.SessionId, loginRequest.RequestId);
 
                 // 发送登录命令并获取响应
-                // 针对网络卡顿情况：增加超时时间从8秒到15秒，并添加重试机制
+                // ✅ 修复：针对网络卡顿情况，优化超时和重试策略
                 _logger?.LogDebug("[登录] 正在发送登录命令到服务器，超时时间: 15秒...");
                 
                 const int maxLoginRetries = 2; // 最多重试2次（总共3次尝试）
                 LoginResponse response = null;
+                Exception lastException = null;
                 
                 for (int retryCount = 0; retryCount <= maxLoginRetries; retryCount++)
                 {
                     try
                     {
+                        // ✅ 修复：每次重试前检查连接状态
+                        if (retryCount > 0 && !_communicationService.ConnectionManager.IsConnected)
+                        {
+                            _logger?.LogWarning("[登录重试] 第{RetryCount}次重试前检测到连接断开，尝试重连...", retryCount + 1);
+                            try
+                            {
+                                await _communicationService.ConnectionManager.ManualReconnectAsync();
+                                
+                                // ✅ 关键修复：重连后等待3秒（比首次多1秒），确保连接稳定
+                                _logger?.LogInformation("[登录重试] 重连成功，等待3秒确保连接稳定...");
+                                await Task.Delay(3000, ct);
+                                
+                                // 验证连接状态
+                                if (!_communicationService.ConnectionManager.IsConnected)
+                                {
+                                    _logger?.LogError("[登录重试] 重连后连接仍未建立");
+                                    lastException = new Exception("重连后连接未建立");
+                                    continue;
+                                }
+                                
+                                _logger?.LogInformation("[登录重试] 连接已稳定，继续重试");
+                            }
+                            catch (OperationCanceledException cancelEx) when (ct.IsCancellationRequested)
+                            {
+                                // ✅ 修复：如果是用户取消，直接抛出
+                                _logger?.LogWarning(cancelEx, "[登录重试] 操作被用户取消");
+                                throw;
+                            }
+                            catch (Exception reconnectEx)
+                            {
+                                _logger?.LogError(reconnectEx, "[登录重试] 重连失败");
+                                lastException = new Exception($"第{retryCount + 1}次重试时连接失败: {reconnectEx.Message}");
+                                continue;
+                            }
+                        }
+                        else if (retryCount > 0)
+                        {
+                            // ✅ 修复：即使连接正常，重试前也等待更长时间（外网环境）
+                            _logger?.LogDebug("[登录重试] 第{RetryCount}次重试，等待2秒后发送请求...", retryCount + 1);
+                            await Task.Delay(2000, ct);
+                        }
+                        
                         int timeoutMs = 15000; // 15秒超时
                         response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
                             AuthenticationCommands.Login, loginRequest, ct, timeoutMs);
                         
                         if (response != null)
                         {
+                            _logger?.LogInformation("[登录] 第{Attempt}次尝试收到响应 - IsSuccess: {IsSuccess}", 
+                                retryCount + 1, response.IsSuccess);
                             break; // 成功收到响应，退出重试循环
                         }
                         
@@ -146,20 +235,47 @@ namespace RUINORERP.UI.Network.Services
                     }
                     catch (TimeoutException ex) when (retryCount < maxLoginRetries)
                     {
+                        lastException = ex;
                         _logger?.LogWarning(ex, "[登录超时] 第 {RetryCount} 次尝试超时，{DelayMs} 毫秒后重试...", 
-                            retryCount + 1, 2000);
-                        await Task.Delay(2000, ct); // 等待2秒后重试
+                            retryCount + 1, 3000);  // ✅ 修复：增加重试间隔至3秒
+                        await Task.Delay(3000, ct); // ✅ 修复：从2秒增加到3秒
+                    }
+                    catch (OperationCanceledException ex) when (ct.IsCancellationRequested)
+                    {
+                        // ✅ 修复：用户主动取消，直接抛出
+                        _logger?.LogWarning(ex, "[登录取消] 用户取消了登录操作 - Username: {Username}", username);
+                        throw;
                     }
                     catch (Exception ex)
                     {
-                        if (retryCount == maxLoginRetries)
+                        lastException = ex;
+                        
+                        // ✅ 修复：区分TaskCanceledException（超时导致）和其他异常
+                        if (ex is System.Threading.Tasks.TaskCanceledException && retryCount < maxLoginRetries)
+                        {
+                            _logger?.LogWarning(ex, "[登录重试] 第 {RetryCount} 次尝试因超时被取消，{DelayMs} 毫秒后重试...", 
+                                retryCount + 1, 3000);
+                            await Task.Delay(3000, ct); // ✅ 修复：从2秒增加到3秒
+                        }
+                        else if (retryCount == maxLoginRetries)
                         {
                             throw; // 最后一次尝试失败，抛出异常
                         }
-                        _logger?.LogWarning(ex, "[登录重试] 第 {RetryCount} 次尝试失败，{DelayMs} 毫秒后重试...", 
-                            retryCount + 1, 2000);
-                        await Task.Delay(2000, ct); // 等待2秒后重试
+                        else
+                        {
+                            _logger?.LogWarning(ex, "[登录重试] 第 {RetryCount} 次尝试失败，{DelayMs} 毫秒后重试...", 
+                                retryCount + 1, 3000);
+                            await Task.Delay(3000, ct); // ✅ 修复：从2秒增加到3秒
+                        }
                     }
+                }
+                
+                // ✅ 修复：如果所有重试都失败但有异常记录，返回详细错误信息
+                if (response == null && lastException != null)
+                {
+                    _logger?.LogError(lastException, "[登录最终失败] 所有重试均失败 - Username: {Username}", username);
+                    return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>(
+                        $"登录失败: {lastException.Message}");
                 }
 
                 _logger?.LogDebug("[登录] 收到服务器响应 - IsNull: {IsNull}", response == null);
@@ -376,6 +492,7 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 清理登录状态
+        /// ✅ 修复：外网环境下，如果是因为超时导致的登录失败，不清理连接状态
         /// </summary>
         public async Task CleanupLoginStateAsync()
         {
@@ -393,6 +510,7 @@ namespace RUINORERP.UI.Network.Services
                 _isLoggedIn = false;
                 //_currentUserSession = null;
 
+                _logger?.LogDebug("[清理登录状态] 已清理SessionId和Token");
             }
             catch (Exception ex)
             {

@@ -557,6 +557,7 @@ namespace RUINORERP.UI.Network
         /// Socket连接关闭事件处理 - 优化版
         /// 修复：增加延迟检查，避免短时间内重复触发重连
         /// 修复：添加连接关闭时间戳，防止短时间内重复处理同一关闭事件
+        /// ✅ 修复：外网环境下增加更长的延迟，避免频繁重连导致立即失败
         /// </summary>
         private DateTime _lastSocketClosedTime = DateTime.MinValue;
         private readonly object _socketClosedLock = new object();
@@ -587,9 +588,9 @@ namespace RUINORERP.UI.Network
                 // 即使达到最大重连次数，如果AutoReconnect为true，也允许继续重连
                 if (!_isReconnecting && !_disposed && _config.AutoReconnect)
                 {
-                    // 检查上次重连尝试时间，避免过于频繁的重连
+                    // ✅ 修复：外网环境下增加最小间隔至10秒，避免过于频繁的重连
                     var timeSinceLastAttempt = DateTime.Now - _lastReconnectAttempt;
-                    if (timeSinceLastAttempt.TotalSeconds < 5)
+                    if (timeSinceLastAttempt.TotalSeconds < 10)  // 从5秒增加到10秒
                     {
                         _logger?.LogDebug("距离上次重连尝试时间过短（{Seconds:F1}秒），延迟启动重连", 
                             timeSinceLastAttempt.TotalSeconds);
@@ -611,8 +612,8 @@ namespace RUINORERP.UI.Network
             {
                 Task.Run(async () =>
                 {
-                    // 使用更长的延迟，确保连接真的断开
-                    await Task.Delay(_config.ReconnectDelayMs).ConfigureAwait(false);
+                    // ✅ 修复：外网环境下使用更长的延迟，确保连接真的断开且网络稳定
+                    await Task.Delay(_config.ReconnectDelayMs * 2).ConfigureAwait(false);  // 延迟翻倍
 
                     // 再次检查连接状态，避免重复启动
                     lock (_reconnectStateLock)

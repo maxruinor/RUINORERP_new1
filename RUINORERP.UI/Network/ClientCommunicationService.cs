@@ -93,8 +93,8 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 心跳相关字段（优化后）
-        private readonly int _heartbeatIntervalMs = 30000;   // 固定心跳间隔30秒
-        private readonly int _heartbeatTimeoutMs = 45000;    // ✅ 心跳超时时间45秒(1.5倍间隔，避免网络波动误判)
+        private readonly int _heartbeatIntervalMs = 20000;   // 心跳间隔20秒
+        private readonly int _heartbeatTimeoutMs = 60000;    // 心跳超时60秒(3倍间隔，提供足够容错空间)
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
@@ -900,8 +900,26 @@ namespace RUINORERP.UI.Network
                 // 检查Token是否过期（添加5分钟缓冲）
                 if (tokenInfo.IsExpired())
                 {
-                    _logger?.LogDebug("心跳发送跳过：Token已过期，需要重新登录");
+                    _logger?.LogDebug("心跳发送跳过：Token已过期，停止心跳和网络收发，进入登录界面");
+                    StopHeartbeat();
+                    ShowLoginForm();
                     return false;
+                }
+
+                // 检查Token是否即将过期（剩余时间<30分钟），主动刷新
+                if (tokenInfo.WillExpireSoon(TimeSpan.FromMinutes(30)))
+                {
+                    _logger?.LogDebug("检测到Token即将过期，尝试刷新Token");
+                    var refreshedToken = await _tokenManager.RefreshTokenAsync();
+                    if (refreshedToken != null)
+                    {
+                        _logger?.LogInformation("Token刷新成功");
+                        tokenInfo = refreshedToken;
+                    }
+                    else
+                    {
+                        _logger?.LogWarning("Token刷新失败");
+                    }
                 }
 
                 // 创建心跳请求，只包含必要信息
@@ -1125,13 +1143,40 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 显示登录界面（Token过期时调用）
+        /// 停止心跳、性能数据上传、业务交互，进入注销锁定状态
+        /// </summary>
+        private void ShowLoginForm()
+        {
+            try
+            {
+                if (MainForm.Instance == null || MainForm.Instance.IsDisposed)
+                    return;
+
+                MainForm.Instance?.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        MainForm.Instance.LogLock();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "显示登录界面时发生异常");
+                    }
+                }));
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "显示登录界面时发生异常");
+            }
+        }
+
+        /// <summary>
         /// 断开连接 - 简化版，委托给ConnectionManager
         /// </summary>
         /// <returns>断开连接是否成功</returns>
         public async Task<bool> Disconnect()
         {
-
-
             // 停止心跳
             try
             {
@@ -1188,8 +1233,6 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-
-
                 // 重置心跳失败计数
                 Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
 
@@ -1198,7 +1241,6 @@ namespace RUINORERP.UI.Network
 
                 if (reconnectSuccess)
                 {
-
                     // 重连成功后，心跳会在OnReconnectSucceeded中自动启动
                     // 锁定状态也会在OnReconnectSucceeded中自动解除
                 }
@@ -3206,6 +3248,13 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             bool isNonCriticalCommand = false)
             where TResponse : class, IResponse
         {
+            // 检查是否正在重连，如果是则立即返回错误或等待重连完成
+            if (_connectionManager.IsReconnecting)
+            {
+                _logger?.LogWarning("[{CommandId}] 正在重连中，暂不支持发送业务请求，请稍后重试", commandId.ToString());
+                return ResponseFactory.CreateSpecificErrorResponse<TResponse>("正在重连中，请稍后重试");
+            }
+
             // ✅ 对于非关键命令，减少重试次数
             const int maxRetriesNormal = 2;
             const int maxRetriesNonCritical = 0; // 非关键命令不重试

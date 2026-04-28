@@ -1025,14 +1025,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                // 读取全部数据（不再限制行数）
-                DataTable fullData = _dynamicExcelParser.ParseExcelToDataTable(
+                // 性能优化：使用按需读取列的方法，只读取配置中映射的Excel列
+                // 这样可以大幅减少内存占用和解析时间，特别是当Excel文件包含大量无关列时
+                DataTable fullData = _dynamicExcelParser.ParseExcelWithColumns(
                     ktxtDynamicFilePath.Text,
                     kcmbDynamicSheetName.SelectedIndex,
-                    0); // 0表示读取全部数据
+                    _currentConfig.ColumnMappings,
+                    -1); // -1表示读取全部数据行
 
                 //
                 // 根据映射配置转换数据（不包含外键查询）
+                // ApplyColumnMapping方法会将Excel列名转换为数据库字段名，并处理各种数据源类型
                 _parsedImportData = ApplyColumnMapping(fullData, _currentConfig.ColumnMappings);
 
                 // 应用去重复逻辑（如果配置了去重）
@@ -1077,11 +1080,52 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 应用列映射配置转换数据
         /// </summary>
-        /// <param name="sourceData">源数据表格</param>
+        /// <param name="sourceData">源数据表格（从Excel解析得到）</param>
         /// <param name="mappings">列映射配置集合</param>
-        /// <returns>转换后的数据表格</returns>
+        /// <returns>转换后的数据表格（数据库字段名格式）</returns>
+        /// <remarks>
+        /// 【重要】本方法负责将Excel列名转换为数据库字段名，并处理各种数据源类型：
+        /// 
+        /// 1. Excel数据源 (DataSourceType.Excel):
+        ///    - Excel列名: mapping.ExcelColumn (例如: "供应商名称", "产品编码")
+        ///    - 数据库字段: mapping.SystemField.Value (例如: "SupplierName", "ProductCode")
+        ///    - 示例: Excel中的"供应商名称"列 -> 数据库的SupplierName字段
+        /// 
+        /// 2. 外键关联 (DataSourceType.ForeignKey):
+        ///    - Excel来源列: mapping.ForeignConfig.ForeignKeySourceColumn.Key (例如: "供应商名称")
+        ///    - 外键表: mapping.ForeignConfig.ForeignKeyTable.Key (例如: "tb_Supplier")
+        ///    - 外键字段: mapping.ForeignConfig.ForeignKeyField.Key (例如: "SupplierID")
+        ///    - 目标字段: mapping.SystemField.Value (例如: "SupplierID")
+        ///    - 示例: Excel中的"供应商名称" -> 查询tb_Supplier表获取SupplierID -> 存入数据库的SupplierID字段
+        /// 
+        /// 3. 列拼接 (DataSourceType.ColumnConcat):
+        ///    - Excel源列列表: mapping.ConcatConfig.SourceColumns (例如: ["省", "市", "区"])
+        ///    - 分隔符: mapping.ConcatConfig.Separator (例如: "-")
+        ///    - 目标字段: mapping.SystemField.Value (例如: "FullAddress")
+        ///    - 示例: Excel中的"省"+"-"+"市"+"-"+"区" -> 数据库的FullAddress字段
+        /// 
+        /// 4. 字段复制 (DataSourceType.FieldCopy):
+        ///    - 源字段: mapping.CopyFromField.Key (例如: "ProductCode")
+        ///    - 目标字段: mapping.SystemField.Value (例如: "ProductName")
+        ///    - 示例: 将ProductCode字段的值复制到ProductName字段
+        /// 
+        /// 5. 系统生成 (DataSourceType.SystemGenerated):
+        ///    - 目标字段: mapping.SystemField.Value (例如: "CreateTime", "CreateUser")
+        ///    - 示例: 系统自动生成创建时间、创建人等字段
+        /// 
+        /// 6. 默认值 (DataSourceType.DefaultValue):
+        ///    - 默认值: mapping.DefaultValue (例如: "0", "Active")
+        ///    - 目标字段: mapping.SystemField.Value (例如: "Status")
+        ///    - 示例: Status字段默认为0(禁用)或Active状态
+        /// 
+        /// 注意：
+        /// - sourceData中的列名是Excel中的原始列名（中文显示名）
+        /// - result中的列名是数据库字段名（英文标识符）
+        /// - 转换过程通过ColumnMapping配置建立映射关系
+        /// </remarks>
         private DataTable ApplyColumnMapping(DataTable sourceData, List<ColumnMapping> mappings)
         {
+            // 创建结果表，使用实体类型名称作为表名
             DataTable result = new DataTable(_currentConfig?.EntityType ?? "ImportData");
 
             try
@@ -1089,7 +1133,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 用于跟踪已添加的列，避免重复添加
                 HashSet<string> addedColumns = new HashSet<string>();
 
-                // 创建结果表结构（使用SystemField.Value作为列名）显示给用户看的
+                // 【步骤1】创建结果表结构（使用SystemField.Value作为列名）
+                // SystemField.Value是数据库字段名（英文），用于显示给用户看
                 foreach (var mapping in mappings)
                 {
                     string columnName = mapping.SystemField?.Value;
@@ -1121,18 +1166,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
 
-                // 转换数据行
+                // 【步骤2】转换数据行
+                // 遍历Excel中的每一行数据，根据映射配置转换为数据库字段格式
                 foreach (DataRow sourceRow in sourceData.Rows)
                 {
                     DataRow targetRow = result.NewRow();
 
                     foreach (var mapping in mappings)
                     {
-                        // 根据数据来源类型处理1
+                        // 根据数据来源类型处理不同的转换逻辑
                         switch (mapping.DataSourceType)
                         {
                             case DataSourceType.Excel:
-                                // Excel数据源
+                                // 【Excel数据源】直接从Excel列读取数据
+                                // Excel列名: mapping.ExcelColumn
+                                // 数据库字段: mapping.SystemField.Value
                                 if (sourceData.Columns.Contains(mapping.ExcelColumn))
                                 {
                                     object cellValue = sourceRow[mapping.ExcelColumn];
@@ -1185,12 +1233,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 break;
 
                             case DataSourceType.SystemGenerated:
-                                // 系统生成的值，暂时留空或使用特殊标记
+                                // 【系统生成的值】暂时留空或使用特殊标记
+                                // 实际值在导入时由系统自动生成（如CreateTime, CreateUser等）
                                 targetRow[mapping.SystemField?.Value] = "[系统生成]";
                                 break;
 
                             case DataSourceType.DefaultValue:
-                                // 默认值映射
+                                // 【默认值映射】使用配置的默认值
                                 string defaultValue = mapping.DefaultValue ?? "";
                                 // 检查是否需要转换为枚举值
                                 Type enumType = EntityImportHelper.GetPredefinedEnumType(_currentConfig?.EntityType ?? "", mapping.SystemField?.Key ?? "");
@@ -1210,9 +1259,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 break;
 
                             case DataSourceType.ForeignKey:
-                                // 外键关联
-                                // 在导入时需要通过关联表查询获取值
-                                // 显示外键来源列的值和关联信息
+                                // 【外键关联】需要通过关联表查询获取值
+                                // Excel来源列: mapping.ForeignConfig.ForeignKeySourceColumn.Key
+                                // 外键表: mapping.ForeignConfig.ForeignKeyTable.Key
+                                // 外键字段: mapping.ForeignConfig.ForeignKeyField.Key
+                                // 目标字段: mapping.SystemField.Value
                                 string foreignKeySourceValue = "";
                                 string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
                                 // DisplayName = 显示名称
@@ -1243,15 +1294,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 break;
 
                             case DataSourceType.SelfReference:
-                                // 自身字段引用
-                                // 在导入时需要通过已导入的数据获取值
-                                // 这里暂时使用占位符，实际处理在DynamicImporter中完成
+                                // 【自身字段引用】通过已导入的数据获取值
+                                // 用于树形结构等自引用场景（如父类ID引用ID字段）
                                 targetRow[mapping.SystemField?.Value] = $"[自身引用:{mapping.SelfReferenceField?.Value}]";
                                 break;
 
                             case DataSourceType.FieldCopy:
-                                // 字段复制
-                                // 复制同一记录中另一个字段的值
+                                // 【字段复制】复制同一记录中另一个字段的值
+                                // 源字段: mapping.CopyFromField.Key
+                                // 目标字段: mapping.SystemField.Value
                                 if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
                                 {
                                     // 获取被复制字段的映射配置
@@ -1291,8 +1342,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 break;
 
                             case DataSourceType.ColumnConcat:
-                                // 列拼接
-                                // 将Excel中的多个列值拼接后赋值给目标字段
+                                // 【列拼接】将Excel中的多个列值拼接后赋值给目标字段
+                                // 源列列表: mapping.ConcatConfig.SourceColumns
+                                // 分隔符: mapping.ConcatConfig.Separator
+                                // 目标字段: mapping.SystemField.Value
                                 if (mapping.ConcatConfig != null &&
                                     mapping.ConcatConfig.SourceColumns != null &&
                                     mapping.ConcatConfig.SourceColumns.Count >= 2)

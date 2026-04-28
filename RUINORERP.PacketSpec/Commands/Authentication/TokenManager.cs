@@ -86,5 +86,36 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         {
             return await TokenStorage.IsTokenValidAsync();
         }
+
+        /// <summary>
+        /// 刷新Token（延长一个周期）
+        /// 简单实现：获取当前Token，延长过期时间
+        /// </summary>
+        public async Task<TokenInfo> RefreshTokenAsync()
+        {
+            try
+            {
+                var currentToken = await TokenStorage.GetTokenAsync();
+                if (currentToken == null || string.IsNullOrEmpty(currentToken.AccessToken))
+                {
+                    return null;
+                }
+
+                var refreshedToken = new TokenInfo
+                {
+                    AccessToken = currentToken.AccessToken,
+                    TokenType = currentToken.TokenType,
+                    ExpiresAt = DateTime.Now.AddHours(_options.DefaultExpiryHours)
+                };
+
+                await TokenStorage.SetTokenAsync(refreshedToken);
+                return refreshedToken;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Token刷新失败: {ex.Message}");
+                return null;
+            }
+        }
     }
 }

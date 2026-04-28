@@ -528,9 +528,10 @@ namespace RUINORERP.UI.Network
             // 如果网络不可用，使用更长的重连间隔
             if (!_isNetworkAvailable)
             {
-                // 网络不可用时，使用最大间隔的一半
-                int networkDownInterval = _config.MaxBackoffInterval / 2;
-                _logger?.LogDebug("网络不可用，使用更长的重连间隔 {Interval} 毫秒", networkDownInterval);
+                // 网络不可用时，基于尝试次数计算间隔，逐步增加
+                int networkDownInterval = Math.Min(_config.MaxBackoffInterval, 
+                    _config.ReconnectInterval * Math.Pow(_config.BackoffMultiplier, Math.Min(attempts, 6)));
+                _logger?.LogDebug("网络不可用，使用基于尝试次数的重连间隔 {Interval} 毫秒", networkDownInterval);
                 return networkDownInterval;
             }
 
@@ -541,7 +542,7 @@ namespace RUINORERP.UI.Network
 
             // 计算指数退避时间
             var baseInterval = (int)Math.Min(
-                currentInterval * _config.BackoffMultiplier,
+                _config.ReconnectInterval * Math.Pow(_config.BackoffMultiplier, Math.Min(attempts, 6)),
                 _config.MaxBackoffInterval);
             
             // 添加随机抖动避免雷群效应
@@ -569,7 +570,7 @@ namespace RUINORERP.UI.Network
             lock (_socketClosedLock)
             {
                 var timeSinceLastClose = DateTime.Now - _lastSocketClosedTime;
-                if (timeSinceLastClose.TotalSeconds < 3)
+                if (timeSinceLastClose.TotalSeconds < 1)
                 {
                     _logger?.LogDebug("忽略重复的连接关闭事件，距离上次处理仅 {Seconds:F1} 秒", 
                         timeSinceLastClose.TotalSeconds);

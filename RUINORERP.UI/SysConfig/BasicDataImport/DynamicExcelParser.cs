@@ -941,5 +941,300 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             return filePath;
         }
+
+        /// <summary>
+        /// 解析Excel文件的指定列（性能优化版本，只读取配置中映射的列）
+        /// </summary>
+        /// <param name="filePath">Excel文件路径</param>
+        /// <param name="sheetIndex">Sheet索引（从0开始）</param>
+        /// <param name="columnMappings">列映射配置列表</param>
+        /// <param name="maxPreviewRows">预览最大行数，-1表示全部加载</param>
+        /// <returns>解析后的DataTable（只包含映射配置的列）</returns>
+        /// <exception cref="FileNotFoundException">当文件不存在时抛出</exception>
+        /// <exception cref="ArgumentException">当文件格式不支持时抛出</exception>
+        /// <exception cref="Exception">当解析过程中发生错误时抛出</exception>
+        public DataTable ParseExcelWithColumns(string filePath, int sheetIndex, List<ColumnMapping> columnMappings, int maxPreviewRows = -1)
+        {
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("指定的Excel文件不存在", filePath);
+            }
+
+            if (columnMappings == null || columnMappings.Count == 0)
+            {
+                throw new ArgumentException("列映射配置不能为空", nameof(columnMappings));
+            }
+
+            string fileExtension = Path.GetExtension(filePath).ToLower();
+            IWorkbook workbook = null;
+            DataTable dataTable = null;
+
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                // 根据文件扩展名创建对应的Workbook对象
+                switch (fileExtension)
+                {
+                    case ".xls":
+                        workbook = new HSSFWorkbook(fs);
+                        break;
+                    case ".xlsx":
+                        workbook = new XSSFWorkbook(fs);
+                        break;
+                    default:
+                        throw new ArgumentException("不支持的文件格式，仅支持.xls和.xlsx格式的Excel文件");
+                }
+
+                // 检查Sheet索引是否有效
+                if (sheetIndex < 0 || sheetIndex >= workbook.NumberOfSheets)
+                {
+                    throw new Exception($"Sheet索引 {sheetIndex} 无效，Excel文件中共有 {workbook.NumberOfSheets} 个工作表");
+                }
+
+                // 获取指定的工作表
+                ISheet sheet = workbook.GetSheetAt(sheetIndex);
+                if (sheet == null)
+                {
+                    throw new Exception($"Excel文件中没有工作表 {sheetIndex}");
+                }
+
+                // 提取所有图片信息
+                var images = ExtractAllImages(workbook, sheet);
+
+                // 将工作表转换为DataTable（只读取配置的列）
+                dataTable = SheetToDataTableWithColumns(sheet, columnMappings, maxPreviewRows, images);
+            }
+
+            return dataTable;
+        }
+
+        /// <summary>
+        /// 将Excel工作表转换为DataTable（只读取配置中映射的列）
+        /// </summary>
+        /// <param name="sheet">Excel工作表</param>
+        /// <param name="columnMappings">列映射配置列表</param>
+        /// <param name="maxPreviewRows">预览最大行数，-1表示全部加载</param>
+        /// <param name="images">图片信息列表</param>
+        /// <returns>转换后的DataTable（只包含映射配置的列）</returns>
+        private DataTable SheetToDataTableWithColumns(ISheet sheet, List<ColumnMapping> columnMappings, int maxPreviewRows = -1, List<ExcelImageInfo> images = null)
+        {
+            DataTable dataTable = new DataTable();
+            IRow headerRow = sheet.GetRow(0);
+            if (headerRow == null)
+            {
+                throw new Exception("Excel工作表没有标题行");
+            }
+
+            // 构建需要读取的Excel列名集合（包括直接映射、外键来源列、拼接源列等）
+            var requiredExcelColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var columnIndexMap = new Dictionary<string, int>(); // Excel列名 -> 列索引
+
+            foreach (var mapping in columnMappings)
+            {
+                // 1. 添加Excel数据源的列
+                if (mapping.DataSourceType == DataSourceType.Excel && !string.IsNullOrEmpty(mapping.ExcelColumn))
+                {
+                    requiredExcelColumns.Add(mapping.ExcelColumn);
+                }
+
+                // 2. 添加外键关联的来源列
+                if (mapping.DataSourceType == DataSourceType.ForeignKey &&
+                    mapping.ForeignConfig != null &&
+                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key))
+                {
+                    requiredExcelColumns.Add(mapping.ForeignConfig.ForeignKeySourceColumn.Key);
+                }
+
+                // 3. 添加列拼接的源列
+                if (mapping.DataSourceType == DataSourceType.ColumnConcat &&
+                    mapping.ConcatConfig != null &&
+                    mapping.ConcatConfig.SourceColumns != null)
+                {
+                    foreach (var sourceCol in mapping.ConcatConfig.SourceColumns)
+                    {
+                        if (!string.IsNullOrEmpty(sourceCol))
+                        {
+                            requiredExcelColumns.Add(sourceCol);
+                        }
+                    }
+                }
+
+                // 4. 添加字段复制的源列
+                if (mapping.DataSourceType == DataSourceType.FieldCopy &&
+                    !string.IsNullOrEmpty(mapping.CopyFromField?.Key))
+                {
+                    // 需要找到被复制字段的Excel列
+                    var copyFromMapping = columnMappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField.Key);
+                    if (copyFromMapping != null && !string.IsNullOrEmpty(copyFromMapping.ExcelColumn))
+                    {
+                        requiredExcelColumns.Add(copyFromMapping.ExcelColumn);
+                    }
+                }
+            }
+
+            // 建立Excel列名到列索引的映射
+            int cellCount = headerRow.LastCellNum;
+            for (int i = headerRow.FirstCellNum; i < cellCount; i++)
+            {
+                ICell cell = headerRow.GetCell(i);
+                if (cell != null)
+                {
+                    string columnName = GetCellValue(cell).Trim();
+                    if (!string.IsNullOrEmpty(columnName))
+                    {
+                        columnIndexMap[columnName] = i;
+                    }
+                }
+            }
+
+            // 创建结果表的列（使用SystemField.Value作为列名）
+            // 数据库列名与Excel列名的对应关系通过ColumnMapping配置管理
+            var addedColumns = new HashSet<string>();
+            foreach (var mapping in columnMappings)
+            {
+                string columnName = mapping.SystemField?.Value;
+                if (!string.IsNullOrEmpty(columnName) && !addedColumns.Contains(columnName))
+                {
+                    dataTable.Columns.Add(columnName, typeof(string));
+                    addedColumns.Add(columnName);
+                }
+
+                // 对于外键关联类型，额外添加外键来源列到结果表中
+                if (mapping.DataSourceType == DataSourceType.ForeignKey &&
+                    mapping.ForeignConfig != null &&
+                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key))
+                {
+                    string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
+                    if (!addedColumns.Contains(sourceColumnName))
+                    {
+                        dataTable.Columns.Add(sourceColumnName, typeof(string));
+                        addedColumns.Add(sourceColumnName);
+                    }
+                }
+            }
+
+            // 创建图片字典，按行号和列号索引
+            var imageDictionary = new Dictionary<(int row, int col), ExcelImageInfo>();
+            if (images != null)
+            {
+                foreach (var image in images)
+                {
+                    var key = (image.RowIndex, image.ColumnIndex);
+                    if (!imageDictionary.ContainsKey(key))
+                    {
+                        imageDictionary[key] = image;
+                    }
+                }
+            }
+
+            // 确定要读取的行数
+            int lastRowToRead = maxPreviewRows > 0 ? Math.Min(maxPreviewRows + 1, sheet.LastRowNum + 1) : sheet.LastRowNum + 1;
+
+            // 填充DataTable的数据行（只读取需要的列）
+            for (int i = 1; i < lastRowToRead; i++)
+            {
+                IRow row = sheet.GetRow(i);
+                if (row != null)
+                {
+                    DataRow dataRow = dataTable.NewRow();
+                    bool hasData = false;
+
+                    // 遍历每个映射配置，按需读取对应的Excel列
+                    foreach (var mapping in columnMappings)
+                    {
+                        string targetColumnName = mapping.SystemField?.Value;
+                        if (string.IsNullOrEmpty(targetColumnName))
+                            continue;
+
+                        object cellValue = null;
+                        bool isImageColumn = false;
+
+                        // 根据不同的数据来源类型读取数据
+                        switch (mapping.DataSourceType)
+                        {
+                            case DataSourceType.Excel:
+                                if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
+                                    columnIndexMap.TryGetValue(mapping.ExcelColumn, out int excelColIndex))
+                                {
+                                    ICell cell = row.GetCell(excelColIndex);
+                                    if (cell != null)
+                                    {
+                                        // 检查是否是图片公式
+                                        if (cell.CellType == CellType.Formula)
+                                        {
+                                            cellValue = HandleFormulaCell(cell, imageDictionary, i, excelColIndex);
+                                            isImageColumn = mapping.IsImageColumn;
+                                        }
+                                        else
+                                        {
+                                            cellValue = GetCellValue(cell);
+                                        }
+                                    }
+                                }
+                                break;
+
+                            case DataSourceType.ForeignKey:
+                                // 读取外键来源列的值
+                                if (mapping.ForeignConfig != null &&
+                                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key) &&
+                                    columnIndexMap.TryGetValue(mapping.ForeignConfig.ForeignKeySourceColumn.Key, out int fkColIndex))
+                                {
+                                    ICell cell = row.GetCell(fkColIndex);
+                                    if (cell != null)
+                                    {
+                                        cellValue = GetCellValue(cell);
+                                    }
+                                }
+                                break;
+
+                            case DataSourceType.ColumnConcat:
+                                // 列拼接不需要在这里处理，在ApplyColumnMapping中统一处理
+                                cellValue = "";
+                                break;
+
+                            case DataSourceType.FieldCopy:
+                                // 字段复制不需要在这里处理，在ApplyColumnMapping中统一处理
+                                cellValue = "";
+                                break;
+
+                            default:
+                                // 其他类型（系统生成、默认值等）在ApplyColumnMapping中处理
+                                cellValue = "";
+                                break;
+                        }
+
+                        // 设置目标列的值
+                        if (cellValue != null && !string.IsNullOrEmpty(cellValue.ToString()))
+                        {
+                            dataRow[targetColumnName] = cellValue;
+                            hasData = true;
+                        }
+                        else
+                        {
+                            dataRow[targetColumnName] = DBNull.Value;
+                        }
+
+                        // 如果是外键关联，同时设置外键来源列的值
+                        if (mapping.DataSourceType == DataSourceType.ForeignKey &&
+                            mapping.ForeignConfig != null &&
+                            !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key))
+                        {
+                            string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
+                            if (dataTable.Columns.Contains(sourceColumnName) && cellValue != null)
+                            {
+                                dataRow[sourceColumnName] = cellValue;
+                            }
+                        }
+                    }
+
+                    // 只添加包含数据的行
+                    if (hasData)
+                    {
+                        dataTable.Rows.Add(dataRow);
+                    }
+                }
+            }
+
+            return dataTable;
+        }
     }
 }

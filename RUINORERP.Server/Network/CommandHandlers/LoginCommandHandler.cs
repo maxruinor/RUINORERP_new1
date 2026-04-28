@@ -569,8 +569,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     
                     // ✅ 关键修复：等待A客户端主动断开连接
                     // A客户端会：1.发送确认响应 2.主动断开连接 3.退出程序
-                    // 我们等待最多3秒，直到检测到A的连接断开
-                    int maxWaitMs = 3000;
+                    // 我们等待最多10秒，直到检测到A的连接断开
+                    int maxWaitMs = 10000;
                     int waitIntervalMs = 100;
                     int elapsedMs = 0;
                     

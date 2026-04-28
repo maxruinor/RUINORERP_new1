@@ -285,6 +285,9 @@ namespace RUINORERP.Server.Services
             return (cacheSize * bytesPerItem) / 1024; // 转换为KB
         }
 
+        /// <summary>
+        /// 获取会话服务的内存统计
+        /// </summary>
         private ModuleMemoryStatistic GetSessionServiceMemory()
         {
             // ✅ 缓存会话统计结果,避免每次分析都执行反射操作
@@ -307,10 +310,12 @@ namespace RUINORERP.Server.Services
                     var sessionCount = SessionService.ActiveSessionCount;
                     stat.ObjectCount = sessionCount;
                     
-                    // 详细统计每个会话
+                    // 详细统计每个会话（限制数量以避免过多内存占用）
+                    const int MAX_SESSION_DETAILS = 5; // ✅ 限制详细统计的会话数量
                     var sessionDetails = new List<(string SessionId, string UserName, long DataQueueSize, int MessageCount, long ConnectedMinutes)>();
                     long totalDataQueueSize = 0;
                     int totalQueuedMessages = 0;
+                    int processedSessions = 0;
                     
                     try
                     {
@@ -383,7 +388,12 @@ namespace RUINORERP.Server.Services
                                             }
                                         }
                                         
-                                        sessionDetails.Add((sessionId, userName, dataQueueSize, messageCount, (long)(DateTime.Now - connectedTime).TotalMinutes));
+                                        // ✅ 只收集前 N 个会话的详情，避免内存占用过大
+                                        if (processedSessions < MAX_SESSION_DETAILS)
+                                        {
+                                            sessionDetails.Add((sessionId, userName, dataQueueSize, messageCount, (long)(DateTime.Now - connectedTime).TotalMinutes));
+                                        }
+                                        processedSessions++;
                                     }
                                     catch (Exception ex)
                                     {
@@ -437,8 +447,8 @@ namespace RUINORERP.Server.Services
                         });
                     }
                     
-                    // 添加每个会话的详情（前 10 个）
-                    foreach (var (sessionId, userName, queueSize, msgCount, connectedMinutes) in sessionDetails.Take(10))
+                    // 添加每个会话的详情（前 N 个）
+                    foreach (var (sessionId, userName, queueSize, msgCount, connectedMinutes) in sessionDetails)
                     {
                         var sessionName = string.IsNullOrWhiteSpace(userName) || userName == "Anonymous" 
                             ? sessionId 
@@ -453,10 +463,10 @@ namespace RUINORERP.Server.Services
                         });
                     }
                     
-                    // 如果超过 10 个会话，添加汇总
-                    if (sessionDetails.Count > 10)
+                    // 如果超过 N 个会话，添加汇总
+                    if (processedSessions > MAX_SESSION_DETAILS)
                     {
-                        var remaining = sessionDetails.Count - 10;
+                        var remaining = processedSessions - MAX_SESSION_DETAILS;
                         var remainingMemory = remaining * 1500; // 估算
                         stat.SubItems.Add(new SubItemStatistic
                         {

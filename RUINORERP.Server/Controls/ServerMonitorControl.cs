@@ -48,6 +48,10 @@ namespace RUINORERP.Server.Controls
         private const int SLOW_REFRESH_INTERVAL = 5000; // 慢速刷新间隔(5秒)
         private const int FAST_REFRESH_INTERVAL = 1000; // 快速刷新间隔(1秒)
         
+        // ✅ 内存分布统计独立刷新控制
+        private int _memoryDistributionRefreshCount = 0;
+        private const int MEMORY_DISTRIBUTION_REFRESH_INTERVAL = 30; // 每30次主刷新才更新一次内存分布（约2.5-5分钟）
+        
         // PerformanceCounter实例复用 - 避免资源泄漏
         private System.Diagnostics.PerformanceCounter _cpuCounter;
         private System.Diagnostics.PerformanceCounter _diskReadCounter;
@@ -365,8 +369,8 @@ namespace RUINORERP.Server.Controls
                 // 更新心跳性能监控数据
                 UpdateHeartbeatPerformanceData();
 
-                // 更新内存分布统计
-                UpdateMemoryDistribution();
+                // 更新内存分布统计（降低刷新频率）
+                UpdateMemoryDistributionWithThrottle();
             }
             catch (Exception ex)
             {
@@ -1407,20 +1411,54 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
+        /// 带节流控制的内存分布统计更新（降低刷新频率）
+        /// </summary>
+        private void UpdateMemoryDistributionWithThrottle()
+        {
+            _memoryDistributionRefreshCount++;
+            
+            // 只有达到指定次数才真正更新内存分布统计
+            if (_memoryDistributionRefreshCount >= MEMORY_DISTRIBUTION_REFRESH_INTERVAL)
+            {
+                _memoryDistributionRefreshCount = 0; // 重置计数器
+                UpdateMemoryDistribution();
+            }
+        }
+
+        /// <summary>
         /// 更新内存分布统计显示
         /// </summary>
         /// <summary>
-        /// 安全地在 UI 线程上执行操作
+        /// 安全地在 UI 线程上执行操作（优先使用 BeginInvoke 避免阻塞）
         /// </summary>
         private void SafeInvoke(Action action)
         {
             if (InvokeRequired)
             {
-                Invoke(action);
+                // ✅ 使用 BeginInvoke 异步调用，避免阻塞后台线程
+                try
+                {
+                    BeginInvoke(action);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // 控件已释放，忽略
+                }
+                catch (InvalidOperationException)
+                {
+                    // 控件句柄未创建，忽略
+                }
             }
             else
             {
-                action();
+                try
+                {
+                    action();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // 控件已释放，忽略
+                }
             }
         }
 
@@ -1464,48 +1502,66 @@ namespace RUINORERP.Server.Controls
                 _logger.LogDebug("内存分布统计 - 总托管: {Total} MB, 工作集: {Working} MB", 
                     snapshot.TotalManagedMemoryMB, snapshot.TotalWorkingSetMB);
                 
-                // 更新内存分布显示 - 使用更精确的查找方式
+                // 更新内存分布显示 - 优化查找逻辑，避免不必要的遍历
                 RichTextBox rtbMemoryDist = null;
                 
-                // 首先在当前控件中查找
-                foreach (Control ctrl in Controls)
+                // 优先使用 Find 方法（更高效）
+                var foundControls = Controls.Find("rtbMemoryDistribution", true);
+                if (foundControls != null && foundControls.Length > 0)
                 {
-                    if (ctrl is RichTextBox rtb && rtb.Name == "rtbMemoryDistribution")
+                    rtbMemoryDist = foundControls[0] as RichTextBox;
+                }
+                
+                // 如果 Find 失败，再尝试手动查找（作为后备）
+                if (rtbMemoryDist == null)
+                {
+                    foreach (Control ctrl in Controls)
                     {
-                        rtbMemoryDist = rtb;
-                        break;
-                    }
-                    // 检查 panelTop
-                    if (ctrl.Name == "panelTop")
-                    {
-                        foreach (Control subCtrl in ctrl.Controls)
+                        if (ctrl is RichTextBox rtb && rtb.Name == "rtbMemoryDistribution")
                         {
-                            if (subCtrl is RichTextBox subRtb && subRtb.Name == "rtbMemoryDistribution")
+                            rtbMemoryDist = rtb;
+                            break; // 找到后立即退出
+                        }
+                        
+                        // 检查 panelTop
+                        if (ctrl.Name == "panelTop")
+                        {
+                            foreach (Control subCtrl in ctrl.Controls)
                             {
-                                rtbMemoryDist = subRtb;
-                                break;
+                                if (subCtrl is RichTextBox subRtb && subRtb.Name == "rtbMemoryDistribution")
+                                {
+                                    rtbMemoryDist = subRtb;
+                                    goto FoundControl; // 找到后直接跳出所有循环
+                                }
                             }
                         }
                     }
                 }
                 
-                // 如果还没找到，使用 Find 方法作为后备
-                if (rtbMemoryDist == null)
-                {
-                    var foundControls = Controls.Find("rtbMemoryDistribution", true);
-                    rtbMemoryDist = foundControls.FirstOrDefault() as RichTextBox;
-                }
+                FoundControl:
                 
                 if (rtbMemoryDist != null)
                 {
-                    var distributionText = $"=== 内存分布统计 ({DateTime.Now:HH:mm:ss}) ===\n";
-                    distributionText += $"总托管: {snapshot.TotalManagedMemoryMB} MB\n";
-                    distributionText += $"工作集: {snapshot.TotalWorkingSetMB} MB\n\n";
+                    // ✅ 使用 StringBuilder 避免大量字符串拼接产生的临时对象
+                    var sb = new System.Text.StringBuilder(2048); // 预分配容量
+                    sb.AppendLine($"=== 内存分布统计 ({DateTime.Now:HH:mm:ss}) ===");
+                    sb.AppendLine($"总托管: {snapshot.TotalManagedMemoryMB} MB");
+                    sb.AppendLine($"工作集: {snapshot.TotalWorkingSetMB} MB");
+                    sb.AppendLine();
                     
                     if (snapshot.ModuleStatistics != null && snapshot.ModuleStatistics.Count > 0)
                     {
+                        int moduleCount = 0;
+                        const int MAX_MODULES = 20; // ✅ 限制显示的模块数量，避免文本过长
+                        
                         foreach (var mod in snapshot.ModuleStatistics)
                         {
+                            if (moduleCount >= MAX_MODULES)
+                            {
+                                sb.AppendLine($"... 还有 {snapshot.ModuleStatistics.Count - MAX_MODULES} 个模块未显示");
+                                break;
+                            }
+                            
                             // 显示每个模块的名称、内存估算和对象数量
                             string modSizeText = mod.EstimatedMemoryMB >= 1 
                                 ? $"{mod.EstimatedMemoryMB} MB" 
@@ -1515,13 +1571,22 @@ namespace RUINORERP.Server.Controls
                                 ? $"{mod.ModuleName}: {modSizeText} ({mod.ObjectCount:N0}对象)" 
                                 : $"{mod.ModuleName}: {modSizeText}";
                             
-                            distributionText += modInfo + "\n";
+                            sb.AppendLine(modInfo);
                             
-                            // 显示子项详细统计（所有模块）
+                            // 显示子项详细统计（限制数量）
                             if (mod.SubItems != null && mod.SubItems.Count > 0)
                             {
+                                int subItemCount = 0;
+                                const int MAX_SUB_ITEMS = 10; // ✅ 限制每个模块的子项数量
+                                
                                 foreach (var subItem in mod.SubItems)
                                 {
+                                    if (subItemCount >= MAX_SUB_ITEMS)
+                                    {
+                                        sb.AppendLine($"  └─ ... 还有 {mod.SubItems.Count - MAX_SUB_ITEMS} 个子项");
+                                        break;
+                                    }
+                                    
                                     string sizeText = subItem.EstimatedMemoryKB >= 1024 
                                         ? $"{(double)subItem.EstimatedMemoryKB / 1024:F2} MB" 
                                         : $"{subItem.EstimatedMemoryKB} KB";
@@ -1534,17 +1599,21 @@ namespace RUINORERP.Server.Controls
                                     if (!string.IsNullOrEmpty(subItem.Description))
                                         subInfo += $" - {subItem.Description}";
                                     
-                                    distributionText += subInfo + "\n";
+                                    sb.AppendLine(subInfo);
+                                    subItemCount++;
                                 }
                             }
                             
-                            distributionText += "\n";
+                            sb.AppendLine();
+                            moduleCount++;
                         }
                     }
                     else
                     {
-                        distributionText += "暂无模块统计数据\n";
+                        sb.AppendLine("暂无模块统计数据");
                     }
+                    
+                    var distributionText = sb.ToString();
                     
                     // 使用 SafeInvoke 确保在 UI 线程上更新控件
                     SafeInvoke(() =>

@@ -2389,14 +2389,16 @@ namespace RUINORERP.UI
                 return;
             }
 
-            // ✅ 关键优化：进入锁定状态时，启用静默模式抑制重连日志
+            // ✅ 关键优化：进入锁定状态时，直接停止后台任务
             var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
-            connectionManager?.SetSilentMode(true);
-            
-            // ✅ 关键优化：设置锁定状态，禁止自动重连和后台活动
-            connectionManager?.SetLockedState(true);
-            
-            logger?.LogInformation("进入锁定状态，启用静默模式并禁止自动重连");
+            connectionManager?.StopBackgroundTasks();
+
+            // ✅ 停止心跳和性能数据上传
+            communicationService?.StopHeartbeat();
+            var performanceMonitorService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ClientPerformanceMonitorService>();
+            performanceMonitorService?.Stop();
+
+            logger?.LogInformation("已进入锁定状态，后台网络活动已暂停");
 
             // 设置状态
             IsLoggingOut = true;
@@ -2459,11 +2461,15 @@ namespace RUINORERP.UI
                                         LoadUIMenus();
                                         LoadUIForIM_LogPages();
 
-                                        // ✅ 关键优化：登录成功后，禁用静默模式并解除锁定状态，恢复正常日志和后台活动
+                                        // ✅ 关键优化：登录成功后，恢复后台任务
                                         var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
-                                        connectionManager?.SetSilentMode(false);
-                                        connectionManager?.SetLockedState(false);
-                                        logger?.LogInformation("锁定状态自动重登成功，恢复正常日志和后台活动");
+                                        connectionManager?.StartBackgroundTasks();
+                                        
+                                        // ✅ 恢复心跳和性能数据上传
+                                        communicationService?.StartHeartbeat();
+                                        performanceMonitorService?.Start();
+                                        
+                                        logger?.LogInformation("锁定状态自动重登成功，后台活动已恢复");
 
                                         // 登录成功后重置状态
                                         IsLoggingOut = false;
@@ -2480,12 +2486,14 @@ namespace RUINORERP.UI
                                     LoadUIMenus();
                                     LoadUIForIM_LogPages();
 
-                                    // ✅ 关键优化：登录成功后，禁用静默模式并解除锁定状态，恢复正常日志和后台活动
+                                    // ✅ 关键优化：登录成功后，恢复后台任务
                                     var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
-                                    connectionManager?.SetSilentMode(false);
-                                    connectionManager?.SetLockedState(false);
-                                    logger?.LogInformation("锁定状态自动重登成功，恢复正常日志和后台活动");
-
+                                    connectionManager?.StartBackgroundTasks();
+                                    
+                                    // ✅ 恢复心跳和性能数据上传
+                                    communicationService?.StartHeartbeat();
+                                    performanceMonitorService?.Start();
+                                    
                                     // 登录成功后重置状态
                                     IsLoggingOut = false;
                                     CurrentLoginStatus = LoginStatus.LoggedIn;
@@ -2550,10 +2558,9 @@ namespace RUINORERP.UI
                             bool islogin = await Login();
                             if (!islogin)
                             {
-                                // ✅ 关键优化：登录失败时，禁用静默模式并解除锁定状态，恢复正常日志
+                                // ✅ 关键优化：登录失败时，恢复后台任务
                                 var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
-                                connectionManager?.SetSilentMode(false);
-                                connectionManager?.SetLockedState(false);
+                                connectionManager?.StartBackgroundTasks();
                                 logger?.LogWarning("锁定状态自动重登失败，恢复正常日志和后台活动");
                                 
                                 // 登录失败时重置状态

@@ -277,8 +277,9 @@ namespace RUINORERP.UI.Network
             {
                 using (var ping = new Ping())
                 {
-                    // 局域网环境下，使用较短的超时时间
-                    var reply = await ping.SendPingAsync(_targetHost, 2000);
+                    // 根据网络类型动态调整超时时间
+                    int timeout = IsPrivateNetworkAddress(_targetHost) ? 2000 : 5000; // 内网2秒，外网5秒
+                    var reply = await ping.SendPingAsync(_targetHost, timeout);
                     return reply.Status == IPStatus.Success;
                 }
             }
@@ -328,6 +329,7 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 测试TCP连接 - 优化版
+        /// 根据网络类型（内网/外网）动态调整超时时间
         /// </summary>
         /// <returns>TCP连接是否成功</returns>
         private async Task<bool> TestTcpConnectionAsync()
@@ -336,12 +338,15 @@ namespace RUINORERP.UI.Network
             {
                 try
                 {
-                    // 优化：设置较短的超时时间，避免长时间等待
-                    tcpClient.SendTimeout = 2000;
-                    tcpClient.ReceiveTimeout = 2000;
+                    // 根据网络类型动态调整超时时间
+                    bool isPrivateNetwork = IsPrivateNetworkAddress(_targetHost);
+                    int timeout = isPrivateNetwork ? 3000 : 10000; // 内网3秒，外网10秒
                     
-                    // 异步连接，设置取消令牌（3秒超时）
-                    using (var cts = new CancellationTokenSource(3000))
+                    tcpClient.SendTimeout = timeout;
+                    tcpClient.ReceiveTimeout = timeout;
+                    
+                    // 异步连接，设置取消令牌
+                    using (var cts = new CancellationTokenSource(timeout))
                     {
                         await tcpClient.ConnectAsync(_targetHost, _targetPort);
                         

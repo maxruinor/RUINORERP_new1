@@ -580,10 +580,18 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 停止心跳检测（公开方法，用于 LogLock 场景）
+        /// </summary>
+        public void StopHeartbeat()
+        {
+            SafeStopHeartbeat();
+        }
+
+        /// <summary>
         /// 停止心跳检测（优化版）
         /// 使用更安全的停止机制，确保资源正确释放
         /// </summary>
-        private void StopHeartbeat()
+        private void SafeStopHeartbeat()
         {
             // 快速检查，避免不必要的锁操作
             if (!Volatile.Read(ref _isHeartbeatRunning))
@@ -735,33 +743,19 @@ namespace RUINORERP.UI.Network
 
                     // 检查是否应该发送心跳：
                     // 1. 连接必须正常
-                    // 2. 不能正在重连
-                    // 3. 连接管理器状态正常
-                    // ✅ 关键优化：4. 不能处于锁定状态（LogLock 场景）
+                    // 2. 不能正在重连（重连期间由 ConnectionManager 处理）
                     if (!_connectionManager.IsConnected)
                     {
                         Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
                         consecutiveTimeouts = 0;
                         
-                        // ✅ 如果未连接且未在重连，启动重连（但需检查锁定状态）
-                        if (!_connectionManager.IsReconnecting && !_connectionManager.IsLocked)
+                        // 如果未连接且未在重连，启动自动重连
+                        if (!_connectionManager.IsReconnecting)
                         {
                             _logger?.LogDebug("检测到未连接状态，启动自动重连");
                             _connectionManager.StartAutoReconnect();
                         }
-                        else if (_connectionManager.IsLocked)
-                        {
-                            _logger?.LogDebug("当前处于锁定状态，禁止重连和心跳");
-                        }
                         
-                        continue;
-                    }
-
-                    // ✅ 关键优化：检查锁定状态，如果已锁定则跳过本次心跳
-                    if (_connectionManager.IsLocked)
-                    {
-                        _logger?.LogDebug("当前处于锁定状态，跳过本次心跳");
-                        consecutiveTimeouts = 0; // 重置计数
                         continue;
                     }
 
@@ -3102,21 +3096,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 _logger?.LogWarning(ex, "取消事件订阅时发生异常");
             }
         }
-
-        /// <summary>
-        /// 安全停止心跳检测
-        /// </summary>
-        private void SafeStopHeartbeat()
-        {
-            try
-            {
-                StopHeartbeat();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "停止心跳时发生异常");
-            }
-        }
+ 
 
         /// <summary>
         /// 安全释放计时器

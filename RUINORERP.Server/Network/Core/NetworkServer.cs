@@ -153,6 +153,9 @@ namespace RUINORERP.Server.Network.Core
                 var configuredPorts = GetConfiguredPorts(config, serverOptions);
                 var occupiedPorts = new List<int>();
 
+                // 记录网络接口信息（用于诊断双网卡问题）
+                LogNetworkInterfaceInfo(serverOptions);
+
                 // 检查所有端口占用情况（带超时保护）
                 var portCheckTasks = configuredPorts.Select(port => IsPortInUseAsync(port)).ToList();
                 try
@@ -1147,6 +1150,94 @@ namespace RUINORERP.Server.Network.Core
             }
         }
 
+        /// <summary>
+        /// 记录网络接口信息（用于诊断双网卡问题）
+        /// </summary>
+        /// <param name="serverOptions">服务器配置选项</param>
+        private void LogNetworkInterfaceInfo(ERPServerOptions serverOptions)
+        {
+            try
+            {
+                _logger?.LogInformation("========== 网络接口诊断信息 ==========");
+                _logger?.LogInformation("服务器配置监听器:");
+                
+                if (serverOptions?.Listeners != null)
+                {
+                    foreach (var listener in serverOptions.Listeners)
+                    {
+                        var ip = listener.Ip ?? "Any";
+                        _logger?.LogInformation("  - IP: {IP}, Port: {Port}", ip, listener.Port);
+                    }
+                }
+
+                // 获取所有网络接口
+                var networkInterfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
+                    .Where(ni => ni.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up)
+                    .ToList();
+
+                _logger?.LogInformation("活动网络接口 ({Count}个):", networkInterfaces.Count);
+
+                foreach (var ni in networkInterfaces)
+                {
+                    var ipProps = ni.GetIPProperties();
+                    var ipv4Addresses = ipProps.UnicastAddresses
+                        .Where(addr => addr.Address.AddressFamily == AddressFamily.InterNetwork)
+                        .Select(addr => addr.Address.ToString())
+                        .ToList();
+
+                    if (ipv4Addresses.Any())
+                    {
+                        _logger?.LogInformation("  接口: {Name}", ni.Name);
+                        _logger?.LogInformation("    类型: {Type}", ni.NetworkInterfaceType);
+                        _logger?.LogInformation("    IPv4地址: {Addresses}", string.Join(", ", ipv4Addresses));
+                        _logger?.LogInformation("    MAC地址: {MAC}", ni.GetPhysicalAddress());
+                    }
+                }
+
+                // 检查路由表
+                _logger?.LogInformation("活动TCP连接 (用于诊断路由):");
+                var ipGlobalProps = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
+                var activeConnections = ipGlobalProps.GetActiveTcpConnections()
+                    .Where(c => c.LocalEndPoint.Port == Serverport || c.RemoteEndPoint.Port == Serverport)
+                    .Take(5)
+                    .ToList();
+
+                if (activeConnections.Any())
+                {
+                    foreach (var conn in activeConnections)
+                    {
+                        _logger?.LogInformation("  {Local} <-> {Remote} [{State}]",
+                            conn.LocalEndPoint, conn.RemoteEndPoint, conn.State);
+                    }
+                }
+                else
+                {
+                    _logger?.LogInformation("  暂无相关连接");
+                }
+
+                _logger?.LogInformation("========== 网络接口诊断结束 ==========");
+                
+                // 双网卡警告
+                var activeIpv4Interfaces = networkInterfaces
+                    .SelectMany(ni => ni.GetIPProperties().UnicastAddresses)
+                    .Where(addr => addr.Address.AddressFamily == AddressFamily.InterNetwork)
+                    .Where(addr => !IPAddress.IsLoopback(addr.Address))
+                    .ToList();
+
+                if (activeIpv4Interfaces.Count > 1)
+                {
+                    _logger?.LogWarning("检测到多网卡环境 ({Count}个IPv4接口)，如果外网连接有问题，请检查:", activeIpv4Interfaces.Count);
+                    _logger?.LogWarning("  1. 服务器是否正确监听外网网卡的IP地址");
+                    _logger?.LogWarning("  2. 防火墙是否放行端口");
+                    _logger?.LogWarning("  3. 路由器端口映射是否正确配置");
+                    _logger?.LogWarning("  4. 操作系统路由表配置是否正确");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "记录网络接口信息时发生异常");
+            }
+        }
 
     }
 }

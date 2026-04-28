@@ -247,6 +247,7 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 连接到服务器 - 集成网络健康检查
+        /// 优化：支持外网连接，动态调整超时时间
         /// </summary>
         /// <param name="serverUrl">服务器地址</param>
         /// <param name="port">端口号</param>
@@ -314,7 +315,28 @@ namespace RUINORERP.UI.Network
                     }
                 }
 
-                var connected = await _client.ConnectAsync(new IPEndPoint(ipAddress, port));
+                // 检测是否为外网地址，外网使用更长的连接超时
+                bool isExternalNetwork = !IsPrivateNetworkAddress(ipAddress);
+                int connectTimeout = isExternalNetwork ? 30000 : 10000; // 外网30秒，内网10秒
+                
+                _logger?.LogDebug("开始连接服务器 {ServerIp}:{Port}，网络类型：{NetworkType}，超时：{Timeout}ms", 
+                    serverUrl, port, isExternalNetwork ? "外网" : "内网", connectTimeout);
+
+                // 使用带超时的连接
+                var connectTask = _client.ConnectAsync(new IPEndPoint(ipAddress, port));
+                var timeoutTask = Task.Delay(connectTimeout, cancellationToken);
+                var completedTask = await Task.WhenAny(connectTask, timeoutTask);
+
+                bool connected = false;
+                if (completedTask == connectTask)
+                {
+                    connected = await connectTask;
+                }
+                else
+                {
+                    _logger?.LogWarning("连接服务器 {ServerIp}:{Port} 超时（{Timeout}ms）", serverUrl, port, connectTimeout);
+                    return false;
+                }
 
                 if (connected)
                 {
@@ -353,6 +375,41 @@ namespace RUINORERP.UI.Network
                 _isConnected = false;
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 检查IP地址是否为私有网络地址（局域网）
+        /// </summary>
+        /// <param name="ip">IP地址</param>
+        /// <returns>是否为私有网络地址</returns>
+        private bool IsPrivateNetworkAddress(IPAddress ip)
+        {
+            if (ip.AddressFamily != AddressFamily.InterNetwork)
+                return false;
+
+            var bytes = ip.GetAddressBytes();
+
+            // 10.0.0.0/8
+            if (bytes[0] == 10)
+                return true;
+
+            // 172.16.0.0/12
+            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+                return true;
+
+            // 192.168.0.0/16
+            if (bytes[0] == 192 && bytes[1] == 168)
+                return true;
+
+            // 127.0.0.0/8 (回环地址)
+            if (bytes[0] == 127)
+                return true;
+
+            // 169.254.0.0/16 (链路本地地址)
+            if (bytes[0] == 169 && bytes[1] == 254)
+                return true;
+
+            return false;
         }
 
         /// <summary>

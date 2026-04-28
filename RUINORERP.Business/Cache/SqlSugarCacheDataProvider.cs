@@ -57,8 +57,16 @@ namespace RUINORERP.Business.Cache
                 var schema = _tableSchemaManager.GetSchemaInfo(tableName);
                 if (schema != null && !schema.CacheWholeRow && schema.DisplayFields.Any())
                 {
-                    // 构造 Select 字符串，例如: "ProdBaseID, CNName, ProdCode"
-                    string selectCols = string.Join(",", schema.DisplayFields);
+                    // 构造 Select 字符串，必须包含主键字段
+                    var selectFields = new List<string> { schema.PrimaryKeyField };
+                    foreach (var field in schema.DisplayFields)
+                    {
+                        if (!string.Equals(field, schema.PrimaryKeyField, StringComparison.OrdinalIgnoreCase))
+                        {
+                            selectFields.Add(field);
+                        }
+                    }
+                    string selectCols = string.Join(",", selectFields);
                     _logger?.LogDebug($"表 {tableName} 执行投影查询，字段: {selectCols}");
                     return db.Queryable<T>()
                         .Select(selectCols)
@@ -225,7 +233,16 @@ namespace RUINORERP.Business.Cache
                 var schema = _tableSchemaManager.GetSchemaInfo(tableName);
                 if (schema != null && !schema.CacheWholeRow && schema.DisplayFields.Any())
                 {
-                    string selectCols = string.Join(",", schema.DisplayFields);
+                    // 构造 Select 字符串，必须包含主键字段
+                    var selectFields = new List<string> { schema.PrimaryKeyField };
+                    foreach (var field in schema.DisplayFields)
+                    {
+                        if (!string.Equals(field, schema.PrimaryKeyField, StringComparison.OrdinalIgnoreCase))
+                        {
+                            selectFields.Add(field);
+                        }
+                    }
+                    string selectCols = string.Join(",", selectFields);
                     _logger?.LogDebug($"表 {tableName} 异步执行投影查询，字段: {selectCols}");
                     return await db.Queryable<T>()
                         .Select(selectCols)

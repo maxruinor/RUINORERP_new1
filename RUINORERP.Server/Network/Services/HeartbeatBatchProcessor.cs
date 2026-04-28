@@ -107,8 +107,7 @@ namespace RUINORERP.Server.Network.Services
 
                 _logger.LogDebug($"开始批量处理心跳请求，批次大小: {batch.Count}");
 
-                // 并行处理批次中的心跳请求
-                Parallel.ForEach(batch, requestInfo =>
+                var tasks = batch.Select(requestInfo => Task.Run(() =>
                 {
                     try
                     {
@@ -116,9 +115,11 @@ namespace RUINORERP.Server.Network.Services
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"批量处理单个心跳请求失败: SessionId={requestInfo.SessionId}");
+                        _logger.LogError(ex, $"批量处理单个心跳请求请求失败: SessionId={requestInfo.SessionId}");
                     }
-                });
+                }));
+
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
 
                 _logger.LogDebug($"批量处理完成，处理了 {batch.Count} 个心跳请求");
             }

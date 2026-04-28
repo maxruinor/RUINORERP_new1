@@ -182,9 +182,12 @@ namespace RUINORERP.Business.Cache
                             if (!schemaInfo.CacheWholeRow && schemaInfo.DisplayFields.Any())
                             {
                                 var filteredObj = new JObject();
+                                // 必须包含主键字段
+                                if (newObj.ContainsKey(schemaInfo.PrimaryKeyField))
+                                    filteredObj[schemaInfo.PrimaryKeyField] = newObj[schemaInfo.PrimaryKeyField];
                                 foreach (var field in schemaInfo.DisplayFields)
                                 {
-                                    if (newObj.ContainsKey(field))
+                                    if (!string.Equals(field, schemaInfo.PrimaryKeyField, StringComparison.OrdinalIgnoreCase) && newObj.ContainsKey(field))
                                         filteredObj[field] = newObj[field];
                                 }
                                 jArray.Add(filteredObj);

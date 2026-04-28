@@ -42,6 +42,14 @@ namespace RUINORERP.Repository.UnitOfWorks
 
         // 简单的嵌套计数器（兼容旧代码）
         private readonly AsyncLocal<int> _tranDepth = new AsyncLocal<int>();
+
+        // ✅ P1增强: 线程本地连接缓存，减少Parallel.ForEach/Task.Run场景下的连接创建
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, System.WeakReference<ISqlSugarClient>> _threadConnectionCache =
+            new System.Collections.Concurrent.ConcurrentDictionary<int, System.WeakReference<ISqlSugarClient>>();
+
+        // ✅ P1增强: 连接缓存统计
+        private static volatile int _cacheHits = 0;
+        private static volatile int _cacheMisses = 0;
         
         /// <summary>
         /// ✅ P2新增: 初始化事务超时机制
@@ -202,42 +210,63 @@ namespace RUINORERP.Repository.UnitOfWorks
         /// </summary>
         public ISqlSugarClient GetDbClient()
         {
-            // ✅ P0修复: 每个异步上下文使用独立的连接实例
-            // 关键: AsyncLocal确保不同异步流有独立的连接,避免"挂起请求"冲突
+            var threadId = Thread.CurrentThread.ManagedThreadId;
+
             if (_asyncLocalClient.Value == null)
             {
-                // 复制原始连接配置，创建新的连接实例
-                var originalConfig = (_sqlSugarClient as SqlSugarScope)?.CurrentConnectionConfig;
-        
-                if (originalConfig != null)
+                ISqlSugarClient client = null;
+
+                if (_threadConnectionCache.TryGetValue(threadId, out var weakRef))
                 {
-                    var newConfig = new ConnectionConfig
+                    if (weakRef.TryGetTarget(out var cachedClient))
                     {
-                        ConnectionString = originalConfig.ConnectionString,
-                        DbType = (SqlSugar.DbType)originalConfig.DbType,
-                        IsAutoCloseConnection = false, // ⚠️ 关键: 事务期间不自动关闭
-                        InitKeyType = originalConfig.InitKeyType,
-                        MoreSettings = originalConfig.MoreSettings,
-                        ConfigureExternalServices = originalConfig.ConfigureExternalServices,
-                        AopEvents = originalConfig.AopEvents
-                    };
-        
-                    _asyncLocalClient.Value = new SqlSugarClient(newConfig);
-                    _logger.LogInformation($"[Connection-{Guid.NewGuid().ToString("N").Substring(0, 8)}] 为异步上下文创建了新的数据库连接实例，线程 ID: {Thread.CurrentThread.ManagedThreadId}, AsyncLocal HashCode: {_asyncLocalClient.GetHashCode()}");
+                        if (cachedClient?.Ado.Connection?.State == ConnectionState.Open)
+                        {
+                            client = cachedClient;
+                            System.Threading.Interlocked.Increment(ref _cacheHits);
+                        }
+                    }
                 }
-                else
+
+                if (client == null)
                 {
-                    _asyncLocalClient.Value = new SqlSugarClient(new ConnectionConfig
+                    var originalConfig = (_sqlSugarClient as SqlSugarScope)?.CurrentConnectionConfig;
+
+                    if (originalConfig != null)
                     {
-                        ConnectionString = _sqlSugarClient.Ado.Connection.ConnectionString,
-                        DbType = SqlSugar.DbType.SqlServer,
-                        IsAutoCloseConnection = false,
-                        InitKeyType = InitKeyType.Attribute
-                    });
-                    _logger.LogInformation($"[Connection-{Guid.NewGuid().ToString("N").Substring(0, 8)}] 使用默认配置创建新连接，线程 ID: {Thread.CurrentThread.ManagedThreadId}, AsyncLocal HashCode: {_asyncLocalClient.GetHashCode()}");
+                        var newConfig = new ConnectionConfig
+                        {
+                            ConnectionString = originalConfig.ConnectionString,
+                            DbType = (SqlSugar.DbType)originalConfig.DbType,
+                            IsAutoCloseConnection = false,
+                            InitKeyType = originalConfig.InitKeyType,
+                            MoreSettings = originalConfig.MoreSettings,
+                            ConfigureExternalServices = originalConfig.ConfigureExternalServices,
+                            AopEvents = originalConfig.AopEvents
+                        };
+
+                        client = new SqlSugarClient(newConfig);
+                    }
+                    else
+                    {
+                        client = new SqlSugarClient(new ConnectionConfig
+                        {
+                            ConnectionString = _sqlSugarClient.Ado.Connection.ConnectionString,
+                            DbType = SqlSugar.DbType.SqlServer,
+                            IsAutoCloseConnection = false,
+                            InitKeyType = InitKeyType.Attribute
+                        });
+                    }
+
+                    _threadConnectionCache[threadId] = new System.WeakReference<ISqlSugarClient>(client);
+                    System.Threading.Interlocked.Increment(ref _cacheMisses);
+                    
+                    _logger.LogInformation($"[Connection-{Guid.NewGuid().ToString("N").Substring(0, 8)}] 为异步上下文创建了新的数据库连接实例，线程 ID: {threadId}, AsyncLocal HashCode: {_asyncLocalClient.GetHashCode()}, 缓存命中: {_cacheHits}, 未命中: {_cacheMisses}");
                 }
+
+                _asyncLocalClient.Value = client;
             }
-        
+
             return _asyncLocalClient.Value;
         }
 
@@ -1060,19 +1089,31 @@ namespace RUINORERP.Repository.UnitOfWorks
                 }
                 finally
                 {
-                    // ✅ P2: 清理超时机制
+                    var threadId = Thread.CurrentThread.ManagedThreadId;
+                    if (_threadConnectionCache.TryRemove(threadId, out var weakRef))
+                    {
+                        if (weakRef.TryGetTarget(out var cachedClient))
+                        {
+                            try
+                            {
+                                cachedClient?.Dispose();
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, $"清理线程缓存连接时异常: 线程ID={threadId}");
+                            }
+                        }
+                    }
+
                     var context = _currentTransactionContext.Value;
                     CleanupTransactionTimeout(context);
                     
-                    // 清理 AsyncLocal 引用
                     _asyncLocalClient.Value = null;
                     _currentTransactionContext.Value = null;
                     _tranDepth.Value = 0;
                 }
             }
-            
-            // 释放读写锁（已移除）
-            // _rwLock?.Dispose();
+
         }
 
         /// <summary>
@@ -1126,7 +1167,22 @@ namespace RUINORERP.Repository.UnitOfWorks
                 }
                 finally
                 {
-                    // ✅ P2: 清理超时机制
+                    var threadId = Thread.CurrentThread.ManagedThreadId;
+                    if (_threadConnectionCache.TryRemove(threadId, out var weakRef))
+                    {
+                        if (weakRef.TryGetTarget(out var cachedClient))
+                        {
+                            try
+                            {
+                                cachedClient?.Dispose();
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, $"清理线程缓存连接时异常(异步): 线程ID={threadId}");
+                            }
+                        }
+                    }
+
                     var context = _currentTransactionContext.Value;
                     CleanupTransactionTimeout(context);
                     

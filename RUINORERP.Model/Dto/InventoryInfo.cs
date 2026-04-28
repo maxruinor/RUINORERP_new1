@@ -15,7 +15,6 @@ namespace RUINORERP.Model.Dto
     /// </summary>
     public class InventoryInfo
     {
-
         public InventoryInfo()
         {
 

@@ -5,6 +5,7 @@ using RUINORERP.Model;
 using RUINORERP.Repository.UnitOfWorks;
 using SqlSugar;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -69,14 +70,19 @@ namespace RUINORERP.Business.Cache
 
                 int successCount = 0;
                 int failedCount = 0;
+                var failedTables = new ConcurrentBag<string>();
+                ConcurrentBag<string> retryTables = new ConcurrentBag<string>();
 
+                // ✅ 优化：限制并行度为连接池大小的50%，避免连接池耗尽
+                var maxParallelDegree = Math.Max(1, Math.Min(4, Environment.ProcessorCount / 2));
+                
                 // 使用并行处理提高性能
                 var options = new ParallelOptions
                 {
-                    MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount / 2) // 使用一半的CPU核心，避免阻塞其他操作
+                    MaxDegreeOfParallelism = maxParallelDegree
                 };
 
-                _logger.Debug($"使用并行加载，最大并行度: {options.MaxDegreeOfParallelism}");
+                _logger.Debug($"使用并行加载，最大并行度: {options.MaxDegreeOfParallelism}，表总数: {tableNames.Count}");
 
                 // 使用并行循环处理缓存初始化
                 await Task.Run(() =>
@@ -93,10 +99,60 @@ namespace RUINORERP.Business.Cache
                         catch (Exception ex)
                         {
                             Interlocked.Increment(ref failedCount);
+                            failedTables.Add(tableName);
                             _logger.LogError(ex, $"表 {tableName} 缓存初始化失败 ({failedCount}个表失败)");
                         }
                     });
                 });
+
+                // ✅ 优化：对失败的表进行重试（单线程，最多重试2次）
+                if (failedTables.Any())
+                {
+                    _logger.LogWarning($"有 {failedTables.Count} 个表初始化失败，开始重试...");
+                    
+                    int retrySuccessCount = 0;
+                    const int maxRetryAttempts = 2;
+                    var tablesToRetry = failedTables.ToList();
+                    
+                    for (int retryAttempt = 1; retryAttempt <= maxRetryAttempts; retryAttempt++)
+                    {
+                        var stillFailedTables = new ConcurrentBag<string>();
+                        
+                        foreach (var tableName in tablesToRetry)
+                        {
+                            try
+                            {
+                                InitializeCacheForTable(tableName);
+                                retrySuccessCount++;
+                                _logger.Debug($"表 {tableName} 第 {retryAttempt} 次重试成功");
+                            }
+                            catch (Exception ex)
+                            {
+                                stillFailedTables.Add(tableName);
+                                _logger.Debug(ex, $"表 {tableName} 第 {retryAttempt} 次重试失败");
+                                
+                                if (retryAttempt == maxRetryAttempts)
+                                {
+                                    _logger.Error(ex, $"表 {tableName} 重试 {maxRetryAttempts} 次后仍然失败，跳过该表");
+                                }
+                            }
+                        }
+                        
+                        tablesToRetry = stillFailedTables.ToList();
+                        
+                        if (!tablesToRetry.Any())
+                        {
+                            break;
+                        }
+                    }
+                    
+                    if (retrySuccessCount > 0)
+                    {
+                        _logger.LogInformation($"重试成功：{retrySuccessCount} 个表");
+                        successCount += retrySuccessCount;
+                        failedCount -= retrySuccessCount;
+                    }
+                }
 
                 _logger.LogDebug($"缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
             }
@@ -129,10 +185,10 @@ namespace RUINORERP.Business.Cache
                 RegistInformation<tb_Location>(k => k.Location_ID, v => v.Name, tableType: TableType.Base);
 
                 // 供应商相关 - 开启按需缓存优化
-                RegistInformation<tb_CustomerVendor>(k => k.CustomerVendor_ID, false, true, null, TableType.Business, false, v => v.CVName, v => v.CVCode);
+                RegistInformation<tb_CustomerVendor>(k => k.CustomerVendor_ID, false, true, null, TableType.Business, false, v => v.CVName, v => v.CVCode, v => v.IsCustomer, v => v.IsVendor, v => v.IsOther, v => v.IsExclusive);
                 RegistInformation<tb_CustomerVendorType>(k => k.Type_ID, v => v.TypeName, tableType: TableType.Base);
                 RegistInformation<tb_ProdCategories>(k => k.Category_ID, v => v.Category_name, tableType: TableType.Base);
-                
+
                 // 产品相关 - 重点优化：仅缓存 ID, 名称, 品号, 规格
                 RegistInformation<tb_Prod>(k => k.ProdBaseID, false, true, null, TableType.Business, false, v => v.CNName, v => v.ProductNo, v => v.Specifications);
 
@@ -140,14 +196,15 @@ namespace RUINORERP.Business.Cache
                 RegistInformation<View_ProdDetail>(k => k.ProdDetailID, true, true, null, TableType.Other, false, v => v.CNName, v => v.ProductNo);
                 RegistInformation<View_ProdInfo>(k => k.ProdBaseID, true, true, null, TableType.Other, false, v => v.CNName, v => v.ProductNo);
 
-               
+
                 RegistInformation<tb_ProdProperty>(k => k.Property_ID, v => v.PropertyName, tableType: TableType.Base);
                 RegistInformation<tb_ProdPropertyValue>(k => k.PropertyValueID, v => v.PropertyValueName, tableType: TableType.Base);
                 RegistInformation<tb_ProdBundle>(k => k.BundleID, v => v.BundleName, tableType: TableType.Business);
                 RegistInformation<tb_Packing>(k => k.Pack_ID, v => v.PackagingName, tableType: TableType.Base);
 
                 // 员工和权限相关
-                RegistInformation<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, tableType: TableType.Business);
+                //RegistInformation<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, tableType: TableType.Business);
+                RegistInformation<tb_Employee>(k => k.Employee_ID, true, true, null, TableType.Business, false, v => v.Employee_Name, v => v.Employee_NO,  v => v.Is_enabled, v => v.DepartmentID);
                 RegistInformation<tb_UserInfo>(k => k.User_ID, v => v.UserName, tableType: TableType.Base);
                 RegistInformation<tb_RoleInfo>(k => k.RoleID, v => v.RoleName, tableType: TableType.Base);
                 RegistInformation<tb_MenuInfo>(k => k.MenuID, v => v.MenuName, tableType: TableType.Base);

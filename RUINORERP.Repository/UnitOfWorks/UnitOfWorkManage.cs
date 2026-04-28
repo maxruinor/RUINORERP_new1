@@ -257,21 +257,32 @@ namespace RUINORERP.Repository.UnitOfWorks
             context.LockSemaphore.Wait();
             try
             {
-                // 检查嵌套深度
-                if (context.Depth >= 15) // 限制最大嵌套深度为15，满足复杂ERP业务场景需求
-                {
-                    throw new InvalidOperationException(
-                        $"[Transaction-{context.TransactionId}] 事务嵌套深度超过最大限制 (15)，请检查业务逻辑是否存在循环调用或过度嵌套");
-                }
-
                 // 增加事务深度
                 context.Depth++;
                 _tranDepth.Value++;
 
-                // 超过10层时记录警告日志，便于后续优化
+                // 超过10层时记录警告，包含调用栈信息
                 if (context.Depth > 10)
                 {
-                    _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务嵌套深度已达到 {context.Depth} 层，超过建议的10层限制，建议检查业务逻辑是否可以优化");
+                    var warningMsg = $"[Transaction-{context.TransactionId}] 事务嵌套深度已达到 {context.Depth} 层，超过建议的10层限制";
+                    
+                    var stackTrace = new System.Diagnostics.StackTrace(3, true);
+                    var frames = stackTrace.GetFrames().Take(5).ToArray();
+                    var callStack = string.Join("\n  ", frames.Select(f => 
+                    {
+                        var method = f.GetMethod();
+                        var fileName = System.IO.Path.GetFileName(f.GetFileName());
+                        return $"{method.DeclaringType?.Name}.{method.Name}({fileName}:{f.GetFileLineNumber()})";
+                    }));
+                    
+                    _logger.LogWarning($"{warningMsg}\n调用栈:\n  {callStack}");
+                }
+                
+                // 超过15层时抛出异常
+                if (context.Depth >= 15)
+                {
+                    throw new InvalidOperationException(
+                        $"[Transaction-{context.TransactionId}] 事务嵌套深度超过最大限制 (15)，请检查业务逻辑是否存在循环调用或过度嵌套");
                 }
     
                 // 最外层事务：开启物理事务
@@ -283,7 +294,22 @@ namespace RUINORERP.Repository.UnitOfWorks
                     // ✅ 关键修复: 确保连接打开且无挂起的DataReader
                     if (dbClient.Ado.Connection.State != System.Data.ConnectionState.Open)
                     {
+                        // ✅ 新增：如果连接处于 Connecting 状态，先关闭再重新打开
+                        if (dbClient.Ado.Connection.State == System.Data.ConnectionState.Connecting)
+                        {
+                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到连接处于 Connecting 状态，强制关闭后重连");
+                            try
+                            {
+                                dbClient.Ado.Connection.Close();
+                            }
+                            catch (Exception closeEx)
+                            {
+                                _logger.LogWarning(closeEx, $"[Transaction-{context.TransactionId}] 关闭 Connecting 状态的连接时异常");
+                            }
+                        }
+                        
                         dbClient.Ado.Connection.Open();
+                        _logger.LogInformation($"[Transaction-{context.TransactionId}] 数据库连接已打开，当前状态：{dbClient.Ado.Connection.State}");
                     }
                     
                     // ✅ 防御性检查: 清理可能存在的挂起命令
@@ -363,19 +389,29 @@ namespace RUINORERP.Repository.UnitOfWorks
             await context.LockSemaphore.WaitAsync(cancellationToken);
             try
             {
-                // 检查嵌套深度
-                if (context.Depth >= 15)
-                {
-                    throw new InvalidOperationException(
-                        $"[Transaction-{context.TransactionId}] 事务嵌套深度超过最大限制 (15)");
-                }
-
                 context.Depth++;
                 _tranDepth.Value++;
 
                 if (context.Depth > 10)
                 {
-                    _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务嵌套深度已达到 {context.Depth} 层");
+                    var warningMsg = $"[Transaction-{context.TransactionId}] 事务嵌套深度已达到 {context.Depth} 层，超过建议的10层限制";
+                    
+                    var stackTrace = new System.Diagnostics.StackTrace(3, true);
+                    var frames = stackTrace.GetFrames().Take(5).ToArray();
+                    var callStack = string.Join("\n  ", frames.Select(f => 
+                    {
+                        var method = f.GetMethod();
+                        var fileName = System.IO.Path.GetFileName(f.GetFileName());
+                        return $"{method.DeclaringType?.Name}.{method.Name}({fileName}:{f.GetFileLineNumber()})";
+                    }));
+                    
+                    _logger.LogWarning($"{warningMsg}\n调用栈:\n  {callStack}");
+                }
+                
+                if (context.Depth >= 15)
+                {
+                    throw new InvalidOperationException(
+                        $"[Transaction-{context.TransactionId}] 事务嵌套深度超过最大限制 (15)");
                 }
     
                 if (context.Depth == 1)
@@ -509,16 +545,18 @@ namespace RUINORERP.Repository.UnitOfWorks
                     // ✅ 防御性检查：验证事务对象状态
                     if (dbClient.Ado.Transaction == null)
                     {
-                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务对象已为空，无法提交");
-                        context.Status = TransactionStatus.Committed;
+                        _logger.LogError($"[Transaction-{context.TransactionId}] ❌ 事务对象已为空，无法提交！数据未保存！");
+                        context.Status = TransactionStatus.RolledBack;  // ✅ 修复：标记为回滚而非提交
+                        throw new InvalidOperationException("事务对象不存在，提交失败，数据未保存");
                     }
                     else
                     {
                         var transactionConnection = dbClient.Ado.Transaction.Connection;
                         if (transactionConnection == null || transactionConnection.State != System.Data.ConnectionState.Open)
                         {
-                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务连接已关闭或无效，无法提交");
-                            context.Status = TransactionStatus.Committed;
+                            _logger.LogError($"[Transaction-{context.TransactionId}] ❌ 事务连接已关闭或无效（State={transactionConnection?.State}），无法提交！数据未保存！");
+                            context.Status = TransactionStatus.RolledBack;  // ✅ 修复：标记为回滚而非提交
+                            throw new InvalidOperationException($"事务连接状态异常（{transactionConnection?.State}），提交失败，数据未保存");
                         }
                         else
                         {
@@ -937,10 +975,26 @@ namespace RUINORERP.Repository.UnitOfWorks
                     try
                     {
                         var dbClient = _asyncLocalClient.Value;
+                        
+                        // ✅ 新增：先清理挂起的 DataReader
+                        ClearPendingDataReader(dbClient);
+                        
                         if (dbClient.Ado.Connection != null && dbClient.Ado.Connection.State == System.Data.ConnectionState.Open)
                         {
                             dbClient.Ado.Connection.Close();
                             _logger.LogDebug($"[Transaction-{transactionId}] 数据库连接已关闭");
+                        }
+                        else if (dbClient.Ado.Connection != null && dbClient.Ado.Connection.State == System.Data.ConnectionState.Connecting)
+                        {
+                            _logger.LogWarning($"[Transaction-{transactionId}] 检测到连接处于 Connecting 状态，强制关闭");
+                            try
+                            {
+                                dbClient.Ado.Connection.Close();
+                            }
+                            catch (Exception closeEx)
+                            {
+                                _logger.LogWarning(closeEx, $"[Transaction-{transactionId}] 关闭 Connecting 状态的连接时异常");
+                            }
                         }
                     }
                     catch (Exception ex)

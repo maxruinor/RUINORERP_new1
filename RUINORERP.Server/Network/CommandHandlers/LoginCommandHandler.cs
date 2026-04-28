@@ -105,24 +105,35 @@ namespace RUINORERP.Server.Network.CommandHandlers
             
             return DefaultMaxConcurrentUsers;
         }
-        private static readonly ConcurrentDictionary<string, int> _loginAttempts = new ConcurrentDictionary<string, int>();
         /// <summary>
-        /// 记录每个用户名的首次登录尝试时间（用于保守式清理）
+        /// 登录尝试记录（线程安全的字典）
         /// </summary>
-        private static readonly ConcurrentDictionary<string, DateTime> _loginAttemptTimes = new ConcurrentDictionary<string, DateTime>();
-        private static readonly object _lock = new object();
+        private static readonly ConcurrentDictionary<string, LoginAttemptInfo> _loginAttemptRecords = new ConcurrentDictionary<string, LoginAttemptInfo>();
+        
+        /// <summary>
+        /// 登录尝试记录信息
+        /// </summary>
+        private class LoginAttemptInfo
+        {
+            public int Attempts { get; set; }
+            public DateTime FirstAttemptTime { get; set; }
+            public DateTime LastAttemptTime { get; set; }
+            public string LastIp { get; set; }
+        }
+        
+        private static readonly object _cleanupLock = new object();
+        private static System.Threading.Timer _cleanupTimer;
+        private static bool _cleanupTimerStarted = false;
+        
         /// <summary>
         /// 登录尝试记录过期时间（30分钟）
         /// </summary>
         private static readonly TimeSpan LoginAttemptExpiryDuration = TimeSpan.FromMinutes(30);
+        
         /// <summary>
         /// 保守清理阈值：失败次数少于该值才清理（避免误清理正在暴力破解的账号）
         /// </summary>
         private const int ConservativeCleanupThreshold = 3;
-        /// <summary>
-        /// 是否已启动清理定时器
-        /// </summary>
-        private static bool _cleanupTimerStarted = false;
         /// <summary>
         /// 日志记录器
         /// </summary>
@@ -277,8 +288,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 计算时间差(绝对值)
                 var timeDifference = Math.Abs((serverTime - clientTime).TotalSeconds);
                 
-                // ✅ 优化：放宽时间差阈值至10分钟，适应网络延迟场景
-                const double timeDifferenceThreshold = 600.0;
+                // ✅ 优化：放宽时间差阈值至10分钟，适应外网网络延迟和时钟漂移场景
+                const double timeDifferenceThreshold = 600.0; 
                 if (timeDifference > timeDifferenceThreshold)
                 {
                     // ✅ 详细记录时间不同步问题
@@ -344,7 +355,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var userInfo = await ValidateUserCredentialsAsync(loginRequest, cancellationToken);
                 if (userInfo == null)
                 {
-                    IncrementLoginAttempts(loginRequest.Username);
+                    IncrementLoginAttempts(loginRequest.Username, sessionInfo.ClientIp);
                     int newAttempts = GetLoginAttempts(loginRequest.Username);
                     
                     // 计算剩余尝试次数
@@ -1085,17 +1096,29 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private int GetLoginAttempts(string username)
         {
-            return _loginAttempts.TryGetValue(username, out var attempts) ? attempts : 0;
+            return _loginAttemptRecords.TryGetValue(username, out var info) ? info.Attempts : 0;
         }
 
         /// <summary>
         /// 增加登录尝试次数
         /// </summary>
-        private void IncrementLoginAttempts(string username)
+        private void IncrementLoginAttempts(string username, string clientIp = null)
         {
-            _loginAttempts.AddOrUpdate(username, 1, (key, oldValue) => oldValue + 1);
-            // 记录首次登录尝试时间
-            _loginAttemptTimes.TryAdd(username, DateTime.Now);
+            var now = DateTime.Now;
+            _loginAttemptRecords.AddOrUpdate(
+                username,
+                new LoginAttemptInfo { Attempts = 1, FirstAttemptTime = now, LastAttemptTime = now, LastIp = clientIp },
+                (key, oldValue) =>
+                {
+                    oldValue.Attempts++;
+                    oldValue.LastAttemptTime = now;
+                    if (!string.IsNullOrEmpty(clientIp))
+                    {
+                        oldValue.LastIp = clientIp;
+                    }
+                    return oldValue;
+                });
+            
             EnsureCleanupTimerStarted();
         }
 
@@ -1104,8 +1127,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private void ResetLoginAttempts(string username)
         {
-            _loginAttempts.TryRemove(username, out _);
-            _loginAttemptTimes.TryRemove(username, out _);
+            _loginAttemptRecords.TryRemove(username, out _);
         }
 
         /// <summary>
@@ -1115,12 +1137,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             if (_cleanupTimerStarted) return;
 
-            lock (_lock)
+            lock (_cleanupLock)
             {
                 if (_cleanupTimerStarted) return;
 
-                // 启动定时清理任务，每5分钟清理一次
-                var timer = new System.Threading.Timer(
+                _cleanupTimer = new System.Threading.Timer(
                     _ => CleanupExpiredLoginAttempts(),
                     null,
                     TimeSpan.FromMinutes(5),  // 首次延迟5分钟
@@ -1142,41 +1163,35 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 var now = DateTime.Now;
                 var keysToRemove = new List<string>();
+                var suspiciousUsers = new List<(string username, int attempts, string ip)>();
 
-                foreach (var kvp in _loginAttemptTimes)
+                foreach (var kvp in _loginAttemptRecords)
                 {
                     var username = kvp.Key;
-                    var firstAttemptTime = kvp.Value;
+                    var info = kvp.Value;
 
-                    // 检查是否超过过期时间
-                    if (now - firstAttemptTime > LoginAttemptExpiryDuration)
+                    var age = now - info.FirstAttemptTime;
+
+                    if (age > LoginAttemptExpiryDuration)
                     {
-                        // 保守策略：只有失败次数较少时才清理
-                        // 如果失败次数很多（>=阈值），可能是暴力破解攻击，保留记录以便封锁
-                        if (_loginAttempts.TryGetValue(username, out var attempts) && attempts < ConservativeCleanupThreshold)
+                        if (info.Attempts < ConservativeCleanupThreshold)
                         {
                             keysToRemove.Add(username);
+                        }
+                        else
+                        {
+                            suspiciousUsers.Add((username, info.Attempts, info.LastIp));
                         }
                     }
                 }
 
-                // 执行清理
                 foreach (var key in keysToRemove)
                 {
-                    _loginAttempts.TryRemove(key, out _);
-                    _loginAttemptTimes.TryRemove(key, out _);
+                    _loginAttemptRecords.TryRemove(key, out _);
                 }
-
-                // 注意：静态方法中无法访问实例Logger，如需日志请改为实例方法
-                // if (keysToRemove.Any())
-                // {
-                //     Logger?.LogDebug("保守清理了 {Count} 个过期的登录尝试记录", keysToRemove.Count);
-                // }
             }
             catch (Exception ex)
             {
-                // 注意：静态方法中无法访问实例Logger
-                // Logger?.LogError(ex, "清理登录尝试记录时发生错误");
             }
         }
 

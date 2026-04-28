@@ -1,4 +1,4 @@
-﻿// **************************************
+// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
@@ -268,6 +268,22 @@ namespace RUINORERP.Business
                 entity.PrimaryKeyID = entity.SaleOut_MainID;
                 rsms.Succeeded = rs;
             }
+            catch (SqlSugar.SqlSugarException sqlEx) when (IsUniqueKeyViolationException(sqlEx))
+            {
+                _unitOfWorkManage.RollbackTran();
+                command.Undo();
+                rsms.ErrorMsg = $"保存失败：单据编号已存在，请刷新后重试。\n详细信息：{sqlEx.Message}";
+                rsms.Succeeded = false;
+                _logger.Warn(sqlEx, $"销售出库单保存时发生唯一键冲突：{(model as tb_SaleOut)?.SaleOutNo}");
+            }
+            catch (InvalidOperationException invEx) when (IsTransactionCommitFailureException(invEx))
+            {
+                _unitOfWorkManage.RollbackTran();
+                command.Undo();
+                rsms.ErrorMsg = $"保存失败：事务提交失败，数据未保存，请检查数据库连接后重试。\n详细信息：{invEx.Message}";
+                rsms.Succeeded = false;
+                _logger.Error(invEx, $"销售出库单保存时事务提交失败：{(model as tb_SaleOut)?.SaleOutNo}");
+            }
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
@@ -282,7 +298,52 @@ namespace RUINORERP.Business
         }
         
         #endregion
-        
+
+        #region 异常处理辅助方法
+
+        /// <summary>
+        /// 检查是否为唯一键冲突异常
+        /// </summary>
+        private bool IsUniqueKeyViolationException(SqlSugar.SqlSugarException sqlEx)
+        {
+            if (sqlEx == null) return false;
+
+            // 方法1: 检查错误号（SQL Server）
+            if (sqlEx.InnerException is System.Data.SqlClient.SqlException sqlServerEx)
+            {
+                // 2627: 违反唯一键约束
+                // 2601: 不能将重复键插入唯一索引
+                // 547: 违反约束（包含唯一键）
+                var errorCode = sqlServerEx.Number;
+                if (errorCode == 2627 || errorCode == 2601 || errorCode == 547)
+                {
+                    return true;
+                }
+            }
+
+            // 方法3: 后备方案 - 检查错误消息（保持向后兼容）
+            var message = sqlEx.Message?.ToLower() ?? "";
+            return message.Contains("duplicate") || 
+                   message.Contains("unique") || 
+                   message.Contains("已存在") || 
+                   message.Contains("唯一键");
+        }
+
+        /// <summary>
+        /// 检查是否为事务提交失败异常
+        /// </summary>
+        private bool IsTransactionCommitFailureException(Exception ex)
+        {
+            if (ex == null) return false;
+
+            var message = ex.Message?.ToLower() ?? "";
+            return message.Contains("commit failed") || 
+                   message.Contains("提交失败") || 
+                   message.Contains("connection closed") ||
+                   message.Contains("transaction") && message.Contains("aborted");
+        }
+
+        #endregion
         
         #region override mothed
 

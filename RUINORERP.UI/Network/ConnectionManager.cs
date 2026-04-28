@@ -33,8 +33,9 @@ namespace RUINORERP.UI.Network
         private DateTime _lastReconnectAttempt = DateTime.MinValue;
         private readonly object _reconnectStateLock = new object();
         
-        // ✅ 修复P2: 使用静态Random实例，避免频繁创建导致随机性不佳
-        private static readonly Random _random = new Random();
+        // ✅ 修复P2: 使用线程安全的随机数生成器
+        // 使用 ThreadLocal 确保每个线程有独立的 Random 实例
+        private static readonly ThreadLocal<Random> _threadLocalRandom = new ThreadLocal<Random>(() => new Random(Guid.NewGuid().GetHashCode()));
 
         // 网络状态变化事件句柄
         private readonly System.Net.NetworkInformation.NetworkAvailabilityChangedEventHandler _networkAvailabilityChangedHandler;
@@ -545,7 +546,7 @@ namespace RUINORERP.UI.Network
             // 添加随机抖动避免雷群效应
             if (_config.EnableRandomJitter)
             {
-                var randomJitter = _random.Next(-baseInterval / 5, baseInterval / 5);
+                var randomJitter = _threadLocalRandom.Value.Next(-baseInterval / 5, baseInterval / 5);
                 baseInterval = Math.Max(_config.ReconnectInterval, baseInterval + randomJitter);
             }
             
@@ -1093,6 +1094,26 @@ namespace RUINORERP.UI.Network
             ReconnectDelayMs = 1000,            // 1秒
             ManualReconnectMinIntervalMs = 3000, // 3秒
             ReconnectFailureCooldownMs = 180000   // 3分钟
+        };
+
+        /// <summary>
+        /// 外网高延迟配置 (HighLatency)
+        /// 针对外网环境优化，增加超时容忍度和重连间隔，避免频繁握手失败
+        /// </summary>
+        public static ConnectionManagerConfig HighLatency => new ConnectionManagerConfig
+        {
+            ReconnectInterval = 5000,           // 5秒
+            ReconnectCheckInterval = 1000,       // 1秒
+            MaxReconnectAttempts = 0,           // 无限重试
+            EnableExponentialBackoff = true,
+            MaxBackoffInterval = 120000,        // 2分钟
+            BackoffMultiplier = 2.0,
+            EnableRandomJitter = true,
+            JitterRatio = 0.4,                // 40%抖动，大幅降低雷群效应
+            NetworkCheckIntervalMs = 15000,      // 15秒
+            ReconnectDelayMs = 3000,            // 3秒，断开后等待更久再重连
+            ManualReconnectMinIntervalMs = 5000,  // 5秒
+            ReconnectFailureCooldownMs = 60000    // 1分钟
         };
 
         /// <summary>

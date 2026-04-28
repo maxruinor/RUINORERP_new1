@@ -664,17 +664,8 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                if (sessionInfo.IsAuthenticated)
-                {
-
-                    return;
-                }
-
-                sessionInfo.IsHandshakeCompleted = false;
-                sessionInfo.WelcomeSentTime = DateTime.Now;
-                sessionInfo.WelcomeAckReceived = false;
-
-
+                // ✅ 优化：解耦欢迎流程与登录验证，允许未回复 WelcomeAck 的会话直接处理 Login 请求
+                // 仅发送欢迎消息，不再设置 IsHandshakeCompleted 标志位来阻塞后续逻辑
                 await SendWelcomeMessageAsync(sessionInfo);
             }
             catch (Exception ex)
@@ -708,14 +699,14 @@ namespace RUINORERP.Server.Network.Services
 
                     sessionInfo.WelcomeSentTime = DateTime.Now;
 
-                    // P0-2修复: 延长超时时间至5秒，适应网络延迟场景
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    // ✅ 优化：外网环境下增加超时时间至10秒，适应网络延迟场景
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
                     await SendPacketCoreAsync(
                         sessionInfo,
                         SystemCommands.Welcome,
                         welcomeRequest,
-                        5000,
+                        10000,
                         cts.Token,
                         PacketDirection.ServerRequest
                     ).ConfigureAwait(false);
@@ -1502,8 +1493,7 @@ namespace RUINORERP.Server.Network.Services
                             }
 
                             // 检查2: 未验证会话（欢迎回复超时15分钟后强制断开），延长超时时间适应网络延迟
-                            if (!session.IsHandshakeCompleted &&
-                                !session.WelcomeAckReceived &&
+                            if (!session.WelcomeAckReceived &&
                                 session.WelcomeSentTime.HasValue &&
                                 session.WelcomeSentTime.Value.AddMinutes(15) < currentTime)
                             {
@@ -1513,7 +1503,7 @@ namespace RUINORERP.Server.Network.Services
                             }
 
                             // 检查3: 已验证但未授权的会话（30分钟内未登录强制断开），增加超时时间
-                            if (session.IsHandshakeCompleted &&
+                            if (session.WelcomeAckReceived &&
                                 !session.IsAuthenticated &&
                                 session.ConnectedTime.AddMinutes(30) < currentTime)
                             {

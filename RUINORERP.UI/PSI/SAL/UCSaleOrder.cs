@@ -319,7 +319,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             // 启用业务员的智能搜索功能
             cmbEmployee_ID.EnableSearch = true;
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c=>c.Is_enabled==true);
 
             if (AppContext.projectGroups != null && AppContext.projectGroups.Count > 0)
             {

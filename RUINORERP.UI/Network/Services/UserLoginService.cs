@@ -120,7 +120,7 @@ namespace RUINORERP.UI.Network.Services
                 {
                     _logger?.LogWarning("[登录] 未连接到服务器，尝试重新连接 - Username: {Username}", username);
                     
-                    // ✅ 新增：尝试重新连接，给外网环境更多机会
+                    // ✅ 优化：外网环境下增加重连等待时间，确保网络稳定
                     try
                     {
                         var reconnectResult = await _communicationService.ConnectionManager.ManualReconnectAsync();
@@ -130,9 +130,9 @@ namespace RUINORERP.UI.Network.Services
                             return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("未连接到服务器，请检查网络连接后重试");
                         }
                         
-                        // ✅ 关键修复：重连成功后等待2秒，确保Socket完全建立连接
-                        _logger?.LogInformation("[登录] 重新连接成功，等待2秒确保连接稳定...");
-                        await Task.Delay(2000, ct);
+                        // ✅ 关键修复：重连成功后等待3秒，确保Socket完全建立连接（外网环境）
+                        _logger?.LogInformation("[登录] 重新连接成功，等待3秒确保连接稳定...");
+                        await Task.Delay(3000, ct);
                         
                         // 再次验证连接状态
                         if (!_communicationService.ConnectionManager.IsConnected)
@@ -210,9 +210,10 @@ namespace RUINORERP.UI.Network.Services
                         }
                         else if (retryCount > 0)
                         {
-                            // ✅ 修复：即使连接正常，重试前也等待更长时间（外网环境）
-                            _logger?.LogDebug("[登录重试] 第{RetryCount}次重试，等待2秒后发送请求...", retryCount + 1);
-                            await Task.Delay(2000, ct);
+                            // ✅ 优化：外网环境下重试前增加随机抖动等待，避免与服务端重连风暴冲突
+                            var jitterDelay = new Random().Next(1500, 3000);
+                            _logger?.LogDebug("[登录重试] 第{RetryCount}次重试，等待 {DelayMs} 毫秒后发送请求...", retryCount + 1, jitterDelay);
+                            await Task.Delay(jitterDelay, ct);
                         }
                         
                         int timeoutMs = 15000; // 15秒超时

@@ -257,8 +257,8 @@ namespace RUINORERP.UI
             _originalServerIP = txtServerIP.Text.Trim();
             _originalServerPort = txtPort.Text.Trim();
 
-            // 在后台执行连接和欢迎验证流程
-            // 使用Task.Run避免阻塞UI线程
+            // ✅ 优化：在后台异步执行连接流程，不再阻塞 UI 线程或等待欢迎流程
+            // 用户可以在连接建立的同时直接输入用户名密码进行登录
             _ = Task.Run(async () => await InitializeConnectionAndWelcomeFlowAsync());
         }
 
@@ -359,55 +359,40 @@ namespace RUINORERP.UI
                 MainForm.Instance?.ShowStatusText($"服务器 {serverIP}:{serverPort} 连接成功");
                 MainForm.Instance.PrintInfoLog("服务器连接成功,等待欢迎消息...");
 
-                // 2. 等待欢迎流程完成(等待最多20秒)
-                // 欢迎流程由WelcomeCommandHandler自动处理,我们只需要等待确认
-                var welcomeTimeout = TimeSpan.FromSeconds(20);
-                var welcomeTask = _welcomeCompletionTcs.Task;
-                completedTask = await Task.WhenAny(welcomeTask, Task.Delay(welcomeTimeout));
-
-                if (completedTask == welcomeTask)
+                // 2. 异步等待欢迎流程完成（非阻塞）
+                // 欢迎流程由WelcomeCommandHandler自动处理，我们只需要在后台接收确认
+                // ✅ 优化：不再使用 WhenAny 阻塞，而是让其在后台运行，不干扰用户操作
+                _ = Task.Run(async () =>
                 {
-                    var (success, announcement) = await welcomeTask;
-                    _welcomeCompleted = success;
-
-                    if (success)
+                    try
                     {
-                        // 显示公告内容(如果有) - 在UI线程中执行
-                        if (!string.IsNullOrEmpty(announcement))
-                        {
-                            await Task.Run(() =>
-                            {
-                                if (this.InvokeRequired)
-                                {
-                                    this.Invoke(new Action(() => DisplayAnnouncement(announcement)));
-                                }
-                                else
-                                {
-                                    DisplayAnnouncement(announcement);
-                                }
-                            });
+                        var welcomeTimeout = TimeSpan.FromSeconds(20);
+                        var completedTask = await Task.WhenAny(
+                            _welcomeCompletionTcs.Task, 
+                            Task.Delay(welcomeTimeout)
+                        );
 
-                            MainForm.Instance.ShowStatusText($"服务器连接成功 | 公告: {announcement}");
+                        if (completedTask == _welcomeCompletionTcs.Task)
+                        {
+                            var (success, announcement) = await _welcomeCompletionTcs.Task;
+                            if (success && !string.IsNullOrEmpty(announcement))
+                            {
+                                // 在UI线程中显示公告
+                                InvokeIfRequired(() => DisplayAnnouncement(announcement));
+                                MainForm.Instance.ShowStatusText($"服务器连接成功 | 公告: {announcement}");
+                            }
+                            MainForm.Instance?.PrintInfoLog("欢迎流程验证通过,服务器连接已就绪");
                         }
                         else
                         {
-                            MainForm.Instance.ShowStatusText("服务器连接成功,欢迎消息验证通过");
+                            MainForm.Instance?.logger?.LogDebug("后台等待欢迎消息超时");
                         }
-
-                        MainForm.Instance?.PrintInfoLog("欢迎流程验证通过,服务器连接已就绪");
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        MainForm.Instance?.logger?.LogWarning("欢迎流程验证失败");
-                        MainForm.Instance.ShowStatusText("服务器连接成功,但欢迎消息验证失败");
+                        MainForm.Instance?.logger?.LogDebug(ex, "后台等待欢迎消息时发生异常");
                     }
-                }
-                else
-                {
-                    MainForm.Instance?.logger?.LogWarning("欢迎流程验证超时,但连接已建立");
-                    MainForm.Instance.ShowStatusText("服务器连接成功,欢迎验证超时");
-                    // 不阻止登录流程,服务器端有超时保护机制
-                }
+                });
             }
             catch (Exception ex)
             {
@@ -1265,7 +1250,7 @@ namespace RUINORERP.UI
                 
                 // ✅ 关键优化：为网络登录验证单独设置超时，不受连接时间影响
                 // 登录验证需要更长时间（包含重试），使用独立的超时控制
-                using var loginTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(60)); // ✅ 60秒超时，给足重试时间
+                using var loginTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(90)); // ✅ 外网环境下增加至90秒
                 using var loginLinkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                     loginTimeoutCts.Token,
                     _loginCancellationTokenSource?.Token ?? CancellationToken.None);

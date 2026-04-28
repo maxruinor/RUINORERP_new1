@@ -33,6 +33,16 @@ namespace RUINORERP.UI.Network
         private DateTime _lastReconnectAttempt = DateTime.MinValue;
         private readonly object _reconnectStateLock = new object();
         
+        /// <summary>
+        /// 静默模式标志：在静默模式下，重连失败不记录警告日志（用于登录界面初始连接、锁定状态等场景）
+        /// </summary>
+        private bool _silentMode = false;
+        
+        /// <summary>
+        /// 锁定状态标志：在锁定状态下，停止所有重连、心跳等后台操作（用于 LogLock 场景）
+        /// </summary>
+        private bool _isLocked = false;
+        
         // ✅ 修复P2: 使用线程安全的随机数生成器
         // 使用 ThreadLocal 确保每个线程有独立的 Random 实例
         private static readonly ThreadLocal<Random> _threadLocalRandom = new ThreadLocal<Random>(() => new Random(Guid.NewGuid().GetHashCode()));
@@ -98,6 +108,47 @@ namespace RUINORERP.UI.Network
         /// 是否正在重连
         /// </summary>
         public bool IsReconnecting => _isReconnecting;
+
+        /// <summary>
+        /// 设置静默模式（用于登录界面初始连接、锁定状态等场景，抑制重连日志）
+        /// </summary>
+        /// <param name="silent">是否启用静默模式</param>
+        public void SetSilentMode(bool silent)
+        {
+            _silentMode = silent;
+            if (silent)
+            {
+                _logger?.LogDebug("已启用静默模式，重连失败将不记录警告日志");
+            }
+            else
+            {
+                _logger?.LogDebug("已禁用静默模式，恢复正常日志记录");
+            }
+        }
+        
+        /// <summary>
+        /// 设置锁定状态（用于 LogLock 场景，停止所有后台操作并禁止重连）
+        /// </summary>
+        /// <param name="locked">是否进入锁定状态</param>
+        public void SetLockedState(bool locked)
+        {
+            _isLocked = locked;
+            if (locked)
+            {
+                _logger?.LogWarning("已进入锁定状态，停止所有重连、心跳等后台操作，禁止自动重连");
+                // 立即停止重连任务
+                StopReconnectTask();
+            }
+            else
+            {
+                _logger?.LogInformation("已解除锁定状态，恢复后台操作和自动重连");
+            }
+        }
+        
+        /// <summary>
+        /// 获取当前锁定状态
+        /// </summary>
+        public bool IsLocked => _isLocked;
 
         /// <summary>
         /// 构造函数
@@ -272,9 +323,17 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 启动自动重连
+        /// ✅ 关键优化：在锁定状态下禁止重连
         /// </summary>
         public void StartAutoReconnect()
         {
+            // ✅ 关键优化：检查锁定状态，如果已锁定则禁止重连
+            if (_isLocked)
+            {
+                _logger?.LogDebug("当前处于锁定状态，禁止自动重连");
+                return;
+            }
+            
             lock (_reconnectStateLock)
             {
                 // 如果已重连中且任务仍在运行，不重复启动
@@ -374,6 +433,7 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 重连循环（优化版 - 持续重连）
+        /// ✅ 关键优化：在锁定状态下立即退出
         /// </summary>
         private async Task ReconnectLoopAsync()
         {
@@ -382,6 +442,13 @@ namespace RUINORERP.UI.Network
 
             while (ShouldContinueReconnecting())
             {
+                // ✅ 关键优化：检查锁定状态，如果已锁定则立即退出重连循环
+                if (_isLocked)
+                {
+                    _logger?.LogDebug("检测到锁定状态，退出重连循环");
+                    break;
+                }
+                
                 await Task.Delay(_config.ReconnectCheckInterval, _cancellationTokenSource.Token).ConfigureAwait(false);
 
                 if (IsConnected)
@@ -464,7 +531,16 @@ namespace RUINORERP.UI.Network
                 _reconnectStopped = true;
             }
 
-            _logger?.LogWarning("已达到最大重连次数 {MaxAttempts}，停止重连。重连机制保持活跃，可手动触发或等待连接事件", _config.MaxReconnectAttempts);
+            // ✅ 关键优化：静默模式下不记录警告日志，避免登录界面刷屏
+            if (!_silentMode)
+            {
+                _logger?.LogWarning("已达到最大重连次数 {MaxAttempts}，停止重连。重连机制保持活跃，可手动触发或等待连接事件", _config.MaxReconnectAttempts);
+            }
+            else
+            {
+                _logger?.LogDebug("静默模式：达到最大重连次数 {MaxAttempts}，停止重连", _config.MaxReconnectAttempts);
+            }
+            
             OnReconnectFailed();
         }
 
@@ -496,7 +572,15 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "重连过程中发生异常 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, attempt);
+                // ✅ 关键优化：静默模式下不记录错误日志，避免登录界面刷屏
+                if (!_silentMode)
+                {
+                    _logger?.LogError(ex, "重连过程中发生异常 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, attempt);
+                }
+                else
+                {
+                    _logger?.LogDebug(ex, "静默模式：重连异常 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, attempt);
+                }
                 return false;
             }
         }

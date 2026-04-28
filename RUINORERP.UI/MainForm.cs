@@ -208,7 +208,7 @@ namespace RUINORERP.UI
                 {
                     _reconnectFailureCount++;
                     _lastReconnectFailureTime = DateTime.Now;
-                    
+
                     logger?.LogWarning("当前为已登录状态，重连失败第 {Count} 次", _reconnectFailureCount);
 
                     // ✅ 检查是否超过最大失败次数
@@ -241,7 +241,7 @@ namespace RUINORERP.UI
                         {
                             ShowStatusText($"网络连接失败，正在尝试重连...（第{_reconnectFailureCount}次/{MAX_RECONNECT_FAILURES}次）");
                         }
-                        
+
                         // ✅ 继续尝试重连
                         communicationService?.ConnectionManager?.StartAutoReconnect();
                     }
@@ -311,7 +311,7 @@ namespace RUINORERP.UI
                             {
                                 //logger?.LogWarning("检测到连接断开，启动自动重连机制");
                                 communicationService.ConnectionManager.StartAutoReconnect();
-                                
+
                                 // 在UI线程显示提示
                                 if (InvokeRequired)
                                 {
@@ -325,7 +325,7 @@ namespace RUINORERP.UI
                                     ShowStatusText("网络已断开，正在尝试重连...");
                                 }
                             }
-                            
+
                             // 断开连接时暂停上报，避免数据丢失
                             performanceMonitorService.PauseUpload();
                             logger?.LogInformation("客户端性能监控已暂停（连接断开）");
@@ -356,10 +356,10 @@ namespace RUINORERP.UI
                 {
                     // ✅ 不再检查IsConnected，直接触发重连
                     logger?.LogWarning("启动自动重连机制");
-                    
+
                     // 启动重连
                     communicationService?.ConnectionManager?.StartAutoReconnect();
-                    
+
                     // 在UI线程上显示网络状态提示
                     if (InvokeRequired)
                     {
@@ -396,29 +396,29 @@ namespace RUINORERP.UI
                 "网络断开",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
-                
+
             if (result == DialogResult.No)
             {
                 logger?.LogWarning("用户选择退出系统");
-                
+
                 // 清理资源
                 try
                 {
                     communicationService?.Disconnect().Wait(TimeSpan.FromSeconds(3));
                 }
                 catch { }
-                
+
                 // 退出系统
                 Application.Exit();
             }
             else
             {
                 logger?.LogInformation("用户选择继续重连，重置失败计数");
-                
+
                 // ✅ 重置计数，继续重连
                 _reconnectFailureCount = 0;
                 communicationService?.ConnectionManager?.StartAutoReconnect();
-                
+
                 ShowStatusText("继续尝试重连...");
             }
         }
@@ -431,11 +431,11 @@ namespace RUINORERP.UI
             try
             {
                 logger?.LogInformation("✅ 重连成功，重置失败计数");
-                
+
                 // ✅ 重置重连失败计数
                 _reconnectFailureCount = 0;
                 _lastReconnectFailureTime = DateTime.MinValue;
-                
+
                 // ✅ 重连成功后，重置性能监控状态，确保使用新的Token
                 try
                 {
@@ -451,7 +451,7 @@ namespace RUINORERP.UI
                 {
                     logger?.LogWarning(perfEx, "重置性能监控服务时发生异常");
                 }
-                
+
                 // 在UI线程上显示恢复提示
                 if (InvokeRequired)
                 {
@@ -1221,7 +1221,7 @@ namespace RUINORERP.UI
                         {
                             // 升级中或升级完成时，关闭文件监控器
                             watcher.EnableRaisingEvents = false;
-                            
+
                             // 升级完成时不需要退出，升级中则等待完成后退出
                             if (content == "升级完成")
                             {
@@ -1332,7 +1332,7 @@ namespace RUINORERP.UI
             {
                 System.Diagnostics.Debug.WriteLine($"客户端表结构初始化成功，共注册了 {tableSchemaManager.GetAllTableNames().Count} 个表");
             }
-            
+
             // 初始化BillLockHelper静态服务引用(v2.1.1)
             BaseForm.BillLockHelper.Initialize();
             this.Text = "企业数字化集成ERP ver3.2" + "-" + Program.ERPVersion;
@@ -1660,7 +1660,7 @@ namespace RUINORERP.UI
         {
             // 处理唯一键约束异常，将错误信息存储到静态属性
             HandleUniqueConstraintException(ex);
-            
+
             // ⚠️ 关键：始终返回 false，让异常继续传播
             // 这样事务才能正确回滚，不会锁表
             return false;
@@ -1745,10 +1745,10 @@ namespace RUINORERP.UI
 
                     // 存储错误信息，供业务层获取
                     LastUniqueConstraintError = message;
-                    
+
                     // 记录日志
                     System.Diagnostics.Debug.WriteLine($"[唯一键约束] {message}");
-                    
+
                     return true;
                 }
                 catch (Exception parseEx)
@@ -1759,7 +1759,7 @@ namespace RUINORERP.UI
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -2375,39 +2375,7 @@ namespace RUINORERP.UI
             }
         }
 
-
-        private async Task Logout()
-        {
-            try
-            {
-                // 设置状态为登出中
-                CurrentLoginStatus = LoginStatus.LoggingOut;
-
-                if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
-                {
-                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
-                    var result = await MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
-                    .UpdateColumns(it => new { it.Lastlogout_at }).ExecuteCommandAsync();
-                }
-                _menuTracker.SaveToDb();
-                ClearUI();
-                ClearData();
-
-                // 登出完成，断开与服务器的连接
-                if (communicationService != null && communicationService.ConnectionManager.IsConnected)
-                {
-                    var disconnectResult = await communicationService.Disconnect();
-                }
-
-                // 设置状态为未登录
-                CurrentLoginStatus = LoginStatus.None;
-
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex);
-            }
-        }
+ 
 
         /// <summary>
         /// 系统锁定，禁用所有用户操作，仅允许重新登录
@@ -2420,6 +2388,15 @@ namespace RUINORERP.UI
                 logger?.LogWarning("锁定操作已在进行中或正在登录，忽略重复调用");
                 return;
             }
+
+            // ✅ 关键优化：进入锁定状态时，启用静默模式抑制重连日志
+            var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
+            connectionManager?.SetSilentMode(true);
+            
+            // ✅ 关键优化：设置锁定状态，禁止自动重连和后台活动
+            connectionManager?.SetLockedState(true);
+            
+            logger?.LogInformation("进入锁定状态，启用静默模式并禁止自动重连");
 
             // 设置状态
             IsLoggingOut = true;
@@ -2434,7 +2411,7 @@ namespace RUINORERP.UI
                     try
                     {
                         Program.AppContextData.IsOnline = false;
-                        
+
                         // 安全检查：CurUserInfo可能为null
                         if (MainForm.Instance?.AppContext?.CurUserInfo != null)
                         {
@@ -2482,6 +2459,12 @@ namespace RUINORERP.UI
                                         LoadUIMenus();
                                         LoadUIForIM_LogPages();
 
+                                        // ✅ 关键优化：登录成功后，禁用静默模式并解除锁定状态，恢复正常日志和后台活动
+                                        var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
+                                        connectionManager?.SetSilentMode(false);
+                                        connectionManager?.SetLockedState(false);
+                                        logger?.LogInformation("锁定状态自动重登成功，恢复正常日志和后台活动");
+
                                         // 登录成功后重置状态
                                         IsLoggingOut = false;
                                         CurrentLoginStatus = LoginStatus.LoggedIn;
@@ -2496,6 +2479,12 @@ namespace RUINORERP.UI
                                 {
                                     LoadUIMenus();
                                     LoadUIForIM_LogPages();
+
+                                    // ✅ 关键优化：登录成功后，禁用静默模式并解除锁定状态，恢复正常日志和后台活动
+                                    var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
+                                    connectionManager?.SetSilentMode(false);
+                                    connectionManager?.SetLockedState(false);
+                                    logger?.LogInformation("锁定状态自动重登成功，恢复正常日志和后台活动");
 
                                     // 登录成功后重置状态
                                     IsLoggingOut = false;
@@ -2538,7 +2527,7 @@ namespace RUINORERP.UI
                 try
                 {
                     Program.AppContextData.IsOnline = false;
-                    
+
                     // 安全检查：CurUserInfo可能为null
                     if (MainForm.Instance?.AppContext?.CurUserInfo != null)
                     {
@@ -2561,6 +2550,12 @@ namespace RUINORERP.UI
                             bool islogin = await Login();
                             if (!islogin)
                             {
+                                // ✅ 关键优化：登录失败时，禁用静默模式并解除锁定状态，恢复正常日志
+                                var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
+                                connectionManager?.SetSilentMode(false);
+                                connectionManager?.SetLockedState(false);
+                                logger?.LogWarning("锁定状态自动重登失败，恢复正常日志和后台活动");
+                                
                                 // 登录失败时重置状态
                                 if (this.InvokeRequired)
                                 {
@@ -3244,9 +3239,6 @@ namespace RUINORERP.UI
             }
         }
 
-
-
-
         async private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             //按账号保存关闭前的布局
@@ -3255,15 +3247,34 @@ namespace RUINORERP.UI
             {
                 watcher.EnableRaisingEvents = false;
                 watcher.Dispose();
-
-                await _menuTracker.SaveToDb(); // 确保退出时保存
-
-
                 e.Cancel = false;
-                await Logout();
+                try
+                {
+                    // 设置状态为登出中
+                    CurrentLoginStatus = LoginStatus.LoggingOut;
 
-                var disconnectResult = await communicationService.Disconnect();
+                    if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
+                    {
+                        MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
+                        var result = await MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
+                        .UpdateColumns(it => new { it.Lastlogout_at }).ExecuteCommandAsync();
+                    }
+                    await _menuTracker.SaveToDb();
+                    ClearUI();
+                    await ClearData();
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex);
+                }
+                // 登出完成，断开与服务器的连接
+                if (communicationService != null && communicationService.ConnectionManager.IsConnected)
+                {
+                    await communicationService.Disconnect();
+                }
 
+                // 设置状态为未登录
+                CurrentLoginStatus = LoginStatus.None;
                 logManager.Dispose();
             }
             catch (Exception ex)
@@ -3608,7 +3619,7 @@ namespace RUINORERP.UI
 
                 // 计算从最后一次输入到现在的时间差（毫秒）
                 long timeInMilliseconds = Environment.TickCount - (long)vLastInputInfo.dwTime;
-                
+
                 // 转换为秒
                 long timeInSeconds = timeInMilliseconds / 1000;
 
@@ -3698,7 +3709,7 @@ namespace RUINORERP.UI
                 {
                     return;
                 }
-                
+
                 // 注释掉：静止时间应该在发送心跳包时实时获取，而不是在这里定时更新
                 // 这样可以确保服务器收到的是最新的静止时间，而不是可能过时的缓存值
                 // MainForm.Instance.AppContext.CurUserInfo.静止时间 = GetLastInputTime();
@@ -3780,7 +3791,7 @@ namespace RUINORERP.UI
                 this.Invoke(new Action<string>(ShowStatusText), text);
                 return;
             }
-            
+
             this.lblStatusGlobal.Text = text;
             this.lblStatusGlobal.Visible = true;
             statusTimer.Start();
@@ -3795,7 +3806,7 @@ namespace RUINORERP.UI
                 this.Invoke(new Action(() => statusTimer_Tick(sender, e)));
                 return;
             }
-            
+
             statusTimer.Stop();
             this.lblStatusGlobal.Visible = false;
             GetAutoUpdateConfig();

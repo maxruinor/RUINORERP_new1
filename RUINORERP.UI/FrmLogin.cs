@@ -69,6 +69,21 @@ namespace RUINORERP.UI
         private TaskCompletionSource<(bool success, string announcement)> _welcomeCompletionTcs =
             new TaskCompletionSource<(bool, string)>();
 
+        /// <summary>
+        /// 标记是否已启动连接流程（避免重复连接）
+        /// </summary>
+        private bool _connectionInitiated = false;
+        
+        /// <summary>
+        /// 标记用户是否已主动触发登录（用于控制重连行为）
+        /// </summary>
+        private bool _userTriggeredLogin = false;
+        
+        /// <summary>
+        /// 防抖重连的取消令牌源
+        /// </summary>
+        private CancellationTokenSource _debounceCancellationTokenSource;
+
 
 
 
@@ -241,13 +256,10 @@ namespace RUINORERP.UI
 
         /// <summary>
         /// 窗体加载事件
-        /// 完成连接和欢迎验证后显示登录界面
+        /// ✅ 优化：不再自动连接，等待用户点击登录按钮后才连接
         /// </summary>
         private async void frmLogin_Load(object sender, EventArgs e)
         {
-            //Opacity = 0.0;
-            //fadeTimer.Start();
-
             System.Diagnostics.Debug.WriteLine($"UI: {Thread.CurrentThread.ManagedThreadId}");
 
             // 先加载保存的用户配置
@@ -256,12 +268,35 @@ namespace RUINORERP.UI
             // 初始化原始服务器信息，用于IP地址变更检测
             _originalServerIP = txtServerIP.Text.Trim();
             _originalServerPort = txtPort.Text.Trim();
-
-            // ✅ 优化：在后台异步执行连接流程，不再阻塞 UI 线程或等待欢迎流程
-            // 用户可以在连接建立的同时直接输入用户名密码进行登录
-            _ = Task.Run(async () => await InitializeConnectionAndWelcomeFlowAsync());
+            
+            // ✅ 关键修改：显示提示，等待用户点击登录按钮
+            MainForm.Instance?.ShowStatusText("请输入用户名和密码，然后点击登录");
+            MainForm.Instance?.logger?.LogInformation("登录界面已加载，等待用户点击登录按钮...");
+            
+         
         }
 
+        /// <summary>
+        /// 用户首次输入时触发连接（防抖处理）
+        /// </summary>
+        private void OnUserFirstInput(object sender, EventArgs e)
+        {
+            // 取消之前的订阅，避免重复触发
+            txtUserName.TextChanged -= OnUserFirstInput;
+            txtPassWord.TextChanged -= OnUserFirstInput;
+            
+            // 标记用户已主动交互
+            _userTriggeredLogin = true;
+            
+            // 如果尚未启动连接，则启动
+            if (!_connectionInitiated)
+            {
+                _connectionInitiated = true;
+                MainForm.Instance?.logger?.LogInformation("检测到用户首次输入，启动连接流程...");
+                _ = Task.Run(async () => await InitializeConnectionAndWelcomeFlowAsync());
+            }
+        }
+        
         /// <summary>
         /// 加载保存的用户配置
         /// </summary>
@@ -330,6 +365,10 @@ namespace RUINORERP.UI
 
                 // 1. 连接服务器(增加15秒超时，适应网络卡顿)
                 MainForm.Instance?.ShowStatusText($"正在连接到服务器 {serverIP}:{serverPort}...");
+                
+                // ✅ 关键优化：启用静默模式，抑制重连日志刷屏
+                connectionManager.SetSilentMode(!_userTriggeredLogin);
+                
                 MainForm.Instance?.logger?.LogDebug($"尝试连接到服务器 {serverIP}:{serverPort}...");
 
                 var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
@@ -350,8 +389,17 @@ namespace RUINORERP.UI
 
                 if (!connectResult)
                 {
-                    //MainForm.Instance?.logger?.LogWarning("无法连接到服务器 {ServerIP}:{ServerPort}", serverIP, serverPort);
-                    MainForm.Instance?.ShowStatusText($"无法连接到服务器 {serverIP}:{serverPort}");
+                    // ✅ 关键优化：如果用户未主动触发登录，不记录警告日志，避免刷屏
+                    if (_userTriggeredLogin)
+                    {
+                        MainForm.Instance?.logger?.LogWarning("无法连接到服务器 {ServerIP}:{ServerPort}", serverIP, serverPort);
+                    }
+                    else
+                    {
+                        MainForm.Instance?.logger?.LogDebug("初始连接失败（用户未触发登录），静默处理");
+                    }
+                    
+                    MainForm.Instance?.ShowStatusText($"无法连接到服务器 {serverIP}:{serverPort}，请检查配置后点击登录");
                     // 连接失败,但不阻止登录界面显示,用户可以修改配置后重试
                     return;
                 }
@@ -410,8 +458,17 @@ namespace RUINORERP.UI
 
         private async void btnok_Click(object sender, EventArgs e)
         {
-            MainForm.Instance?.logger?.LogInformation("========== 用户点击登录按钮 ==========");
+           
+            // ✅ 关键优化：用户主动点击登录，禁用静默模式并解除锁定状态
+            _userTriggeredLogin = true;
+            connectionManager.SetSilentMode(false);
                     
+            // ✅ 关键优化：如果之前处于锁定状态（LogLock），现在解除锁定
+            if (connectionManager.IsLocked)
+            {
+                connectionManager.SetLockedState(false);
+            }
+                            
             // 取消正在进行的防抖重连任务，避免与登录流程冲突
             CancellationTokenSource ctsToCancel = null;
             lock (this)
@@ -422,7 +479,7 @@ namespace RUINORERP.UI
                     _debounceCancellationTokenSource = null;
                 }
             }
-        
+                
             if (ctsToCancel != null)
             {
                 try
@@ -451,18 +508,17 @@ namespace RUINORERP.UI
                         // 已释放,忽略
                     }
                 }
-                        
-                MainForm.Instance?.logger?.LogDebug("已取消防抖重连任务，开始登录流程");
+                                
             }
-        
+                
             // 初始化取消令牌源
             _loginCancellationTokenSource = new CancellationTokenSource();
-        
-            // ✅ 优化：使用防抖而非完全禁用，允许用户点击"取消"
-            btnok.Text = "登录中...";  // ✅ 登录按钮显示"登录中"
+                
+            // ✅ 优化：使用防抖而非完全禁用，允许用户点击“取消”
+            btnok.Text = "登录中...";  // ✅ 登录按钮显示“登录中”
             btnok.Enabled = false;  // 防止重复点击
             btncancel.Enabled = true;  // ✅ 保持取消按钮可用
-        
+                
             if (txtServerIP.Text.Trim().Length == 0 || txtPort.Text.Trim().Length == 0)
             {
                 MainForm.Instance?.logger?.LogDebug("[登录] 服务器IP或端口为空");
@@ -474,7 +530,7 @@ namespace RUINORERP.UI
                 });
                 return;
             }
-        
+                
             // 验证基本输入
             if (txtUserName.Text.Trim() == "")
             {
@@ -488,10 +544,40 @@ namespace RUINORERP.UI
                 });
                 return;
             }
-        
+                
             MainForm.Instance?.logger?.LogInformation("[登录] 输入验证通过 - 用户名: {Username}, 服务器: {ServerIP}:{ServerPort}", 
                 txtUserName.Text, txtServerIP.Text, txtPort.Text);
-        
+                    
+            // ✅ 关键修改：如果尚未连接，则在登录流程中建立连接
+            // 不再在用户输入时自动连接，而是由登录按钮触发
+            if (!_connectionInitiated)
+            {
+                _connectionInitiated = true;
+                MainForm.Instance?.logger?.LogInformation("用户点击登录按钮，首次启动连接流程...");
+                _ = Task.Run(async () => await InitializeConnectionAndWelcomeFlowAsync());
+                        
+                // 等待连接建立（最多等待15秒）
+                var connectTimeout = TimeSpan.FromSeconds(15);
+                var startTime = DateTime.Now;
+                        
+                while (!connectionManager.IsConnected && (DateTime.Now - startTime) < connectTimeout)
+                {
+                    await Task.Delay(500);
+                }
+                        
+                if (!connectionManager.IsConnected)
+                {
+                    InvokeIfRequired(() => 
+                    {
+                        MessageBox.Show("无法连接到服务器，请检查IP和端口配置。", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        btnok.Text = "登录";
+                        btnok.Enabled = true;
+                    });
+                    return;
+                }
+                        
+            }
+                
             // 判断是否需要重连：检查IP/端口是否变化
             bool needsReconnect = true;
             if (connectionManager.IsConnected)
@@ -500,7 +586,7 @@ namespace RUINORERP.UI
                 string newServerIP = txtServerIP.Text.Trim();
                 int currentPort = connectionManager.CurrentServerPort;
                 int.TryParse(txtPort.Text.Trim(), out int newServerPort);
-        
+                
                 // 如果IP和端口都没变，不需要重连
                 if (string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) &&
                     currentPort == newServerPort)
@@ -789,7 +875,7 @@ namespace RUINORERP.UI
 
         /// <summary>
         /// 服务器IP地址文本变更事件处理
-        /// 当用户修改服务器IP地址时，检测是否发生变更并设置标志位
+        /// ✅ 关键修改：在登录界面上，IP/端口变更不触发自动重连，仅记录日志
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -804,16 +890,13 @@ namespace RUINORERP.UI
 
             _ipAddressChanged = ipChanged;
 
-            // 如果IP或端口已发生变更，且连接状态有效，则触发重新连接和欢迎流程
+            // ✅ 关键修改：在登录界面上，IP/端口变更不触发自动重连
+            // 用户需要点击“登录”按钮才会建立连接
             if (ipChanged)
             {
-                // 显示状态提示
-                MainForm.Instance?.ShowStatusText("服务器地址已变更，准备重新连接...");
-                MainForm.Instance.PrintInfoLog($"检测到服务器地址变更，准备重新连接: {_originalServerIP}:{_originalServerPort} -> {currentIP}:{currentPort}");
-
-                // 使用防抖机制，避免频繁触发
-                // 注意：这里不等待防抖完成，让用户可以继续输入
-                _ = DebouncedReconnectAsync();
+                // 仅显示状态提示，不触发重连
+                MainForm.Instance?.ShowStatusText("服务器地址已变更，请点击登录按钮重新连接");
+                MainForm.Instance.PrintInfoLog($"检测到服务器地址变更: {_originalServerIP}:{_originalServerPort} -> {currentIP}:{currentPort}，请点击登录按钮");
             }
         }
 
@@ -834,7 +917,6 @@ namespace RUINORERP.UI
         /// 避免用户在输入过程中频繁触发重连
         /// </summary>
         private const int DebounceDelayMs = 1500; // 1.5秒防抖
-        private CancellationTokenSource _debounceCancellationTokenSource = null;
 
         /// <summary>
         /// ✅ UI线程安全辅助方法 - 确保Action在UI线程执行
@@ -1681,14 +1763,12 @@ namespace RUINORERP.UI
                 {
                     // 启动性能监控服务（包含Manager的启动）
                     performanceMonitorService.Start();
-                    logger?.LogInformation("客户端性能监控服务已启动");
                 }
                 else
                 {
                     logger?.LogWarning("未找到客户端性能监控服务实例");
                 }
 
-                logger?.LogInformation("性能监控模块初始化完成");
             }
             catch (Exception ex)
             {

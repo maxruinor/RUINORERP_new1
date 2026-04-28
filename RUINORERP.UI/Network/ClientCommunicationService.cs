@@ -737,18 +737,31 @@ namespace RUINORERP.UI.Network
                     // 1. 连接必须正常
                     // 2. 不能正在重连
                     // 3. 连接管理器状态正常
+                    // ✅ 关键优化：4. 不能处于锁定状态（LogLock 场景）
                     if (!_connectionManager.IsConnected)
                     {
                         Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
                         consecutiveTimeouts = 0;
                         
-                        // ✅ 如果未连接且未在重连，启动重连
-                        if (!_connectionManager.IsReconnecting)
+                        // ✅ 如果未连接且未在重连，启动重连（但需检查锁定状态）
+                        if (!_connectionManager.IsReconnecting && !_connectionManager.IsLocked)
                         {
                             _logger?.LogDebug("检测到未连接状态，启动自动重连");
                             _connectionManager.StartAutoReconnect();
                         }
+                        else if (_connectionManager.IsLocked)
+                        {
+                            _logger?.LogDebug("当前处于锁定状态，禁止重连和心跳");
+                        }
                         
+                        continue;
+                    }
+
+                    // ✅ 关键优化：检查锁定状态，如果已锁定则跳过本次心跳
+                    if (_connectionManager.IsLocked)
+                    {
+                        _logger?.LogDebug("当前处于锁定状态，跳过本次心跳");
+                        consecutiveTimeouts = 0; // 重置计数
                         continue;
                     }
 

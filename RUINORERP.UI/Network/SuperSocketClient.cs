@@ -101,16 +101,16 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <param name="errorCode">Socket错误码</param>
         /// <returns>是否为临时性错误</returns>
-        private bool IsTemporarySocketError(int errorCode)
+        private bool IsTemporarySocketError(System.Net.Sockets.SocketError errorCode)
         {
             return errorCode switch
             {
-                10035 => false, // WSAEWOULDBLOCK - 连接重置，致命错误
-                10054 => false, // WSAECONNRESET - 连接被重置，致命错误
-                10060 => false, // WSAETIMEDOUT - 连接超时，致命错误
-                10053 => false, // WSAECONNABORTED - 连接被中止，致命错误
-                10064 => true,  // WSAENOTCONN - 网络不可用，可能是临时性的
-                10065 => true,  // WSAEISCONN - 连接已存在，临时性错误
+                System.Net.Sockets.SocketError.WouldBlock => false, // WSAEWOULDBLOCK - 连接重置，致命错误
+                System.Net.Sockets.SocketError.ConnectionReset => false, // WSAECONNRESET - 连接被重置，致命错误
+                System.Net.Sockets.SocketError.TimedOut => false, // WSAETIMEDOUT - 连接超时，致命错误
+                System.Net.Sockets.SocketError.ConnectionAborted => false, // WSAECONNABORTED - 连接被中止，致命错误
+                System.Net.Sockets.SocketError.NotConnected => true,  // WSAENOTCONN - 网络不可用，可能是临时性的
+                System.Net.Sockets.SocketError.IsConnected => true,  // WSAEISCONN - 连接已存在，临时性错误
                 _ => true // 其他错误临时性处理，避免误断
             };
         }
@@ -214,11 +214,10 @@ namespace RUINORERP.UI.Network
             }
             catch (SocketException ex)
             {
-                // 区区分临时性错误和致命性错误
                 if (IsTemporarySocketError(ex.SocketErrorCode))
                 {
                     _logger?.LogDebug(ex, "验证连接时发生临时性Socket异常（不视为连接断开）");
-                    return true; // 临时性错误，返回连接仍然可用
+                    return true;
                 }
                 
                 _logger?.LogDebug(ex, "验证连接时发生致命性Socket异常（视为连接断开）");

@@ -52,9 +52,21 @@ namespace RUINORERP.Business.Cache
 
                 // 获取数据库客户端
                 var db = _unitOfWorkManage.GetDbClient();
-                // 使用SqlSugar自带的缓存机制，缓存30秒
-                // 注意：直接使用Queryable<T>()而不是Queryable<T>(tableName)
-                // 这样SqlSugar会使用实体类的SugarColumn配置进行字段映射
+                
+                // 检查是否开启了按需缓存（投影查询）
+                var schema = _tableSchemaManager.GetSchemaInfo(tableName);
+                if (schema != null && !schema.CacheWholeRow && schema.DisplayFields.Any())
+                {
+                    // 构造 Select 字符串，例如: "ProdBaseID, CNName, ProdCode"
+                    string selectCols = string.Join(",", schema.DisplayFields);
+                    _logger?.LogDebug($"表 {tableName} 执行投影查询，字段: {selectCols}");
+                    return db.Queryable<T>()
+                        .Select(selectCols)
+                        .WithCache(queryCacheKey + "_Projected", 30)
+                        .ToList();
+                }
+
+                // 默认全量查询
                 return db.Queryable<T>()
                     .WithCache(queryCacheKey, 30)
                     .ToList();
@@ -208,9 +220,20 @@ namespace RUINORERP.Business.Cache
 
                 // 获取数据库客户端
                 var db = _unitOfWorkManage.GetDbClient();
-                // 使用SqlSugar自带的缓存机制，缓存30秒
-                // 注意：直接使用Queryable<T>()而不是Queryable<T>(tableName)
-                // 这样SqlSugar会使用实体类的SugarColumn配置进行字段映射
+                
+                // 检查是否开启了按需缓存（投影查询）
+                var schema = _tableSchemaManager.GetSchemaInfo(tableName);
+                if (schema != null && !schema.CacheWholeRow && schema.DisplayFields.Any())
+                {
+                    string selectCols = string.Join(",", schema.DisplayFields);
+                    _logger?.LogDebug($"表 {tableName} 异步执行投影查询，字段: {selectCols}");
+                    return await db.Queryable<T>()
+                        .Select(selectCols)
+                        .WithCache(queryCacheKey + "_Projected", 30)
+                        .ToListAsync();
+                }
+
+                // 默认全量查询
                 return await db.Queryable<T>()
                     .WithCache(queryCacheKey, 30)
                     .ToListAsync();

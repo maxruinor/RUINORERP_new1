@@ -128,15 +128,17 @@ namespace RUINORERP.Business.Cache
                 RegistInformation<tb_LocationType>(k => k.LocationType_ID, v => v.TypeName, tableType: TableType.Base);
                 RegistInformation<tb_Location>(k => k.Location_ID, v => v.Name, tableType: TableType.Base);
 
-                // 供应商相关
-                RegistInformation<tb_CustomerVendor>(k => k.CustomerVendor_ID, v => v.CVName, tableType: TableType.Business);
+                // 供应商相关 - 开启按需缓存优化
+                RegistInformation<tb_CustomerVendor>(k => k.CustomerVendor_ID, false, true, null, TableType.Business, false, v => v.CVName, v => v.CVCode);
                 RegistInformation<tb_CustomerVendorType>(k => k.Type_ID, v => v.TypeName, tableType: TableType.Base);
                 RegistInformation<tb_ProdCategories>(k => k.Category_ID, v => v.Category_name, tableType: TableType.Base);
-                RegistInformation<tb_Prod>(k => k.ProdBaseID, v => v.CNName, tableType: TableType.Business);
+                
+                // 产品相关 - 重点优化：仅缓存 ID, 名称, 品号, 规格
+                RegistInformation<tb_Prod>(k => k.ProdBaseID, false, true, null, TableType.Business, false, v => v.CNName, v => v.ProductNo, v => v.Specifications);
 
                 // 视图
-                RegistInformation<View_ProdDetail>(k => k.ProdDetailID, v => v.CNName, isView: true);
-                RegistInformation<View_ProdInfo>(k => k.ProdBaseID, v => v.CNName, isView: true);
+                RegistInformation<View_ProdDetail>(k => k.ProdDetailID, true, true, null, TableType.Other, false, v => v.CNName, v => v.ProductNo);
+                RegistInformation<View_ProdInfo>(k => k.ProdBaseID, true, true, null, TableType.Other, false, v => v.CNName, v => v.ProductNo);
 
                
                 RegistInformation<tb_ProdProperty>(k => k.Property_ID, v => v.PropertyName, tableType: TableType.Base);
@@ -198,8 +200,53 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 注册表结构信息
-        /// 直接通过ITableSchemaManager进行，无需中间层包装
+        /// 注册表结构信息（增强版：支持多字段投影配置）
+        /// </summary>
+        /// <param name="primaryKeyExpression">主键字段</param>
+        /// <param name="isView">是否为视图</param>
+        /// <param name="isCacheable">是否参与缓存</param>
+        /// <param name="description">描述信息</param>
+        /// <param name="tableType">表类型</param>
+        /// <param name="cacheWholeRow">是否缓存整行（false 则仅缓存下方指定的字段）</param>
+        /// <param name="displayFieldExpressions">需要缓存的字段列表（ID, Name, Code 等）</param>
+        private void RegistInformation<T>(
+            Expression<Func<T, object>> primaryKeyExpression,
+            bool isView = false,
+            bool isCacheable = true,
+            string description = null,
+            TableType tableType = TableType.Other,
+            bool cacheWholeRow = true,
+            params Expression<Func<T, object>>[] displayFieldExpressions) where T : class
+        {
+            if (displayFieldExpressions == null || displayFieldExpressions.Length == 0)
+            {
+                throw new ArgumentException("至少需要指定一个显示字段（通常是 Name 或 Code）");
+            }
+
+            // 第一个参数作为主显示字段，其余作为辅助显示字段
+            var mainDisplay = displayFieldExpressions[0];
+            var otherDisplays = displayFieldExpressions.Skip(1).ToArray();
+
+            _tableSchemaManager.RegisterTableSchema(
+                primaryKeyExpression,
+                mainDisplay,
+                isView,
+                isCacheable,
+                description,
+                cacheWholeRow, // 关键：控制是否开启按需缓存
+                otherDisplays);
+
+            // 设置表类型
+            string tableName = typeof(T).Name;
+            var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+            if (schemaInfo != null)
+            {
+                schemaInfo.Type = tableType;
+            }
+        }
+
+        /// <summary>
+        /// 注册表结构信息（兼容旧版本：默认缓存整行）
         /// </summary>
         private void RegistInformation<T>(
             Expression<Func<T, object>> primaryKeyExpression,
@@ -210,23 +257,15 @@ namespace RUINORERP.Business.Cache
             TableType tableType = TableType.Other,
             params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class
         {
-            // 直接使用ITableSchemaManager注册表结构
-            _tableSchemaManager.RegisterTableSchema(
+            RegistInformation(
                 primaryKeyExpression,
-                displayFieldExpression,
                 isView,
                 isCacheable,
                 description,
-                true, // cacheWholeRow
-                otherDisplayFieldExpressions);
-
-            // 设置表类型
-            string tableName = typeof(T).Name;
-            var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-            if (schemaInfo != null)
-            {
-                schemaInfo.Type = tableType;
-            }
+                tableType,
+                true, // 默认全量缓存
+                new[] { displayFieldExpression }.Concat(otherDisplayFieldExpressions ?? Array.Empty<Expression<Func<T, object>>>()).ToArray()
+            );
         }
 
         /// <summary>

@@ -63,8 +63,10 @@ namespace RUINORERP.Model
         [Display(Name = "品号")]
         public string ProductNo
         {
-            get { return _ProductNo; }            set
-            {                SetProperty(ref _ProductNo, value);
+            get { return _ProductNo; }
+            set
+            {
+                SetProperty(ref _ProductNo, value);
             }
         }
 
@@ -80,8 +82,10 @@ namespace RUINORERP.Model
         [Display(Name = "品名")]
         public string CNName
         {
-            get { return _CNName; }            set
-            {                SetProperty(ref _CNName, value);
+            get { return _CNName; }
+            set
+            {
+                SetProperty(ref _CNName, value);
             }
         }
 
@@ -97,8 +101,10 @@ namespace RUINORERP.Model
         [Display(Name = "属性")]
         public string prop
         {
-            get { return _prop; }            set
-            {                SetProperty(ref _prop, value);
+            get { return _prop; }
+            set
+            {
+                SetProperty(ref _prop, value);
             }
         }
         private string _Specifications;
@@ -113,8 +119,10 @@ namespace RUINORERP.Model
         [Display(Name = "规格")]
         public string Specifications
         {
-            get { return _Specifications; }            set
-            {                SetProperty(ref _Specifications, value);
+            get { return _Specifications; }
+            set
+            {
+                SetProperty(ref _Specifications, value);
             }
         }
 
@@ -130,8 +138,10 @@ namespace RUINORERP.Model
         [Display(Name = "型号")]
         public string Model
         {
-            get { return _Model; }            set
-            {                SetProperty(ref _Model, value);
+            get { return _Model; }
+            set
+            {
+                SetProperty(ref _Model, value);
             }
         }
 
@@ -147,8 +157,10 @@ namespace RUINORERP.Model
         [Display(Name = "实际库存")]
         public int? Quantity
         {
-            get { return _Quantity; }            set
-            {                SetProperty(ref _Quantity, value);
+            get { return _Quantity; }
+            set
+            {
+                SetProperty(ref _Quantity, value);
             }
         }
 
@@ -165,8 +177,10 @@ namespace RUINORERP.Model
         [FKRelationAttribute("tb_ProductType", "Type_ID")]
         public long? Type_ID
         {
-            get { return _Type_ID; }            set
-            {                SetProperty(ref _Type_ID, value);
+            get { return _Type_ID; }
+            set
+            {
+                SetProperty(ref _Type_ID, value);
             }
         }
 
@@ -183,8 +197,10 @@ namespace RUINORERP.Model
         [FKRelationAttribute("tb_Unit", "Unit_ID")]
         public long? Unit_ID
         {
-            get { return _Unit_ID; }            set
-            {                SetProperty(ref _Unit_ID, value);
+            get { return _Unit_ID; }
+            set
+            {
+                SetProperty(ref _Unit_ID, value);
             }
         }
 
@@ -201,8 +217,10 @@ namespace RUINORERP.Model
         [FKRelationAttribute("tb_ProdCategories", "Category_ID")]
         public long? Category_ID
         {
-            get { return _Category_ID; }            set
-            {                SetProperty(ref _Category_ID, value);
+            get { return _Category_ID; }
+            set
+            {
+                SetProperty(ref _Category_ID, value);
             }
         }
 
@@ -219,8 +237,10 @@ namespace RUINORERP.Model
         [FKRelationAttribute("tb_CustomerVendor", "CustomerVendor_ID")]
         public long? CustomerVendor_ID
         {
-            get { return _CustomerVendor_ID; }            set
-            {                SetProperty(ref _CustomerVendor_ID, value);
+            get { return _CustomerVendor_ID; }
+            set
+            {
+                SetProperty(ref _CustomerVendor_ID, value);
             }
         }
 
@@ -237,8 +257,10 @@ namespace RUINORERP.Model
         [FKRelationAttribute("tb_Department", "DepartmentID")]
         public long? DepartmentID
         {
-            get { return _DepartmentID; }            set
-            {                SetProperty(ref _DepartmentID, value);
+            get { return _DepartmentID; }
+            set
+            {
+                SetProperty(ref _DepartmentID, value);
             }
         }
 
@@ -254,8 +276,10 @@ namespace RUINORERP.Model
         [Display(Name = "产品来源")]
         public int? SourceType
         {
-            get { return _SourceType; }            set
-            {                SetProperty(ref _SourceType, value);
+            get { return _SourceType; }
+            set
+            {
+                SetProperty(ref _SourceType, value);
             }
         }
 
@@ -271,8 +295,10 @@ namespace RUINORERP.Model
         [Display(Name = "品牌")]
         public string Brand
         {
-            get { return _Brand; }            set
-            {                SetProperty(ref _Brand, value);
+            get { return _Brand; }
+            set
+            {
+                SetProperty(ref _Brand, value);
             }
         }
 
@@ -288,8 +314,10 @@ namespace RUINORERP.Model
         [Display(Name = "SKU码")]
         public string SKU
         {
-            get { return _SKU; }            set
-            {                SetProperty(ref _SKU, value);
+            get { return _SKU; }
+            set
+            {
+                SetProperty(ref _SKU, value);
             }
         }
 
@@ -306,8 +334,10 @@ namespace RUINORERP.Model
         [FKRelationAttribute("tb_StorageRack", "Rack_ID")]
         public long? Rack_ID
         {
-            get { return _Rack_ID; }            set
-            {                SetProperty(ref _Rack_ID, value);
+            get { return _Rack_ID; }
+            set
+            {
+                SetProperty(ref _Rack_ID, value);
             }
         }
 
@@ -323,8 +353,10 @@ namespace RUINORERP.Model
         [Display(Name = "预警值")]
         public int? Alert_Quantity
         {
-            get { return _Alert_Quantity; }            set
-            {                SetProperty(ref _Alert_Quantity, value);
+            get { return _Alert_Quantity; }
+            set
+            {
+                SetProperty(ref _Alert_Quantity, value);
             }
         }
 
@@ -340,8 +372,10 @@ namespace RUINORERP.Model
         [Display(Name = "产品成本")]
         public decimal Inv_Cost
         {
-            get { return _Inv_Cost; }            set
-            {                SetProperty(ref _Inv_Cost, value);
+            get { return _Inv_Cost; }
+            set
+            {
+                SetProperty(ref _Inv_Cost, value);
             }
         }
 
@@ -358,8 +392,10 @@ namespace RUINORERP.Model
         [Display(Name = "成本小计")]
         public decimal Inv_SubtotalCostMoney
         {
-            get { return _Inv_SubtotalCostMoney; }            set
-            {                SetProperty(ref _Inv_SubtotalCostMoney, value);
+            get { return _Inv_SubtotalCostMoney; }
+            set
+            {
+                SetProperty(ref _Inv_SubtotalCostMoney, value);
             }
         }
 
@@ -377,8 +413,10 @@ namespace RUINORERP.Model
         [FKRelationAttribute("tb_Location", "Location_ID")]
         public long? Location_ID
         {
-            get { return _Location_ID; }            set
-            {                SetProperty(ref _Location_ID, value);
+            get { return _Location_ID; }
+            set
+            {
+                SetProperty(ref _Location_ID, value);
             }
         }
 
@@ -394,8 +432,10 @@ namespace RUINORERP.Model
         [Display(Name = "产品")]
         public long? ProdDetailID
         {
-            get { return _ProdDetailID; }            set
-            {                SetProperty(ref _ProdDetailID, value);
+            get { return _ProdDetailID; }
+            set
+            {
+                SetProperty(ref _ProdDetailID, value);
             }
         }
 
@@ -413,8 +453,10 @@ namespace RUINORERP.Model
         [Display(Name = "在途库存")]
         public int? On_the_way_Qty
         {
-            get { return _On_the_way_Qty; }            set
-            {                SetProperty(ref _On_the_way_Qty, value);
+            get { return _On_the_way_Qty; }
+            set
+            {
+                SetProperty(ref _On_the_way_Qty, value);
             }
         }
 
@@ -430,8 +472,10 @@ namespace RUINORERP.Model
         [Display(Name = "拟销售量")]
         public int? Sale_Qty
         {
-            get { return _Sale_Qty; }            set
-            {                SetProperty(ref _Sale_Qty, value);
+            get { return _Sale_Qty; }
+            set
+            {
+                SetProperty(ref _Sale_Qty, value);
             }
         }
 
@@ -447,8 +491,10 @@ namespace RUINORERP.Model
         [Display(Name = "在制数量")]
         public int? MakingQty
         {
-            get { return _MakingQty; }            set
-            {                SetProperty(ref _MakingQty, value);
+            get { return _MakingQty; }
+            set
+            {
+                SetProperty(ref _MakingQty, value);
             }
         }
 
@@ -464,8 +510,10 @@ namespace RUINORERP.Model
         [Display(Name = "未发数量")]
         public int? NotOutQty
         {
-            get { return _NotOutQty; }            set
-            {                SetProperty(ref _NotOutQty, value);
+            get { return _NotOutQty; }
+            set
+            {
+                SetProperty(ref _NotOutQty, value);
             }
         }
 
@@ -481,8 +529,10 @@ namespace RUINORERP.Model
         [Display(Name = "最新出库时间")]
         public DateTime? LatestOutboundTime
         {
-            get { return _LatestOutboundTime; }            set
-            {                SetProperty(ref _LatestOutboundTime, value);
+            get { return _LatestOutboundTime; }
+            set
+            {
+                SetProperty(ref _LatestOutboundTime, value);
             }
         }
 
@@ -498,8 +548,10 @@ namespace RUINORERP.Model
         [Display(Name = "最新入库时间")]
         public DateTime? LatestStorageTime
         {
-            get { return _LatestStorageTime; }            set
-            {                SetProperty(ref _LatestStorageTime, value);
+            get { return _LatestStorageTime; }
+            set
+            {
+                SetProperty(ref _LatestStorageTime, value);
             }
         }
         private DateTime? _LastInventoryDate;

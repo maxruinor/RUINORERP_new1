@@ -82,7 +82,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 使用信号量确保同一时间只有一个登录请求
                 _logger?.LogDebug("[登录] 尝试获取登录锁...");
-                var lockAcquired = await _loginLock.WaitAsync(TimeSpan.FromSeconds(10), ct); // ✅ 缩短到10秒
+                var lockAcquired = await _loginLock.WaitAsync(TimeSpan.FromSeconds(20), ct); // 从10秒增加到20秒
 
                 if (!lockAcquired)
                 {
@@ -118,9 +118,49 @@ namespace RUINORERP.UI.Network.Services
                     username, loginRequest.SessionId, loginRequest.RequestId);
 
                 // 发送登录命令并获取响应
-                _logger?.LogDebug("[登录] 正在发送登录命令到服务器，超时时间: 8秒...");
-                var response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
-                    AuthenticationCommands.Login, loginRequest, ct, 8000);
+                // 针对网络卡顿情况：增加超时时间从8秒到15秒，并添加重试机制
+                _logger?.LogDebug("[登录] 正在发送登录命令到服务器，超时时间: 15秒...");
+                
+                const int maxLoginRetries = 2; // 最多重试2次（总共3次尝试）
+                LoginResponse response = null;
+                
+                for (int retryCount = 0; retryCount <= maxLoginRetries; retryCount++)
+                {
+                    try
+                    {
+                        int timeoutMs = 15000; // 15秒超时
+                        response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
+                            AuthenticationCommands.Login, loginRequest, ct, timeoutMs);
+                        
+                        if (response != null)
+                        {
+                            break; // 成功收到响应，退出重试循环
+                        }
+                        
+                        if (retryCount < maxLoginRetries)
+                        {
+                            _logger?.LogWarning("[登录重试] 第 {RetryCount} 次尝试返回空响应，{DelayMs} 毫秒后重试...", 
+                                retryCount + 1, 2000);
+                            await Task.Delay(2000, ct); // 等待2秒后重试
+                        }
+                    }
+                    catch (TimeoutException ex) when (retryCount < maxLoginRetries)
+                    {
+                        _logger?.LogWarning(ex, "[登录超时] 第 {RetryCount} 次尝试超时，{DelayMs} 毫秒后重试...", 
+                            retryCount + 1, 2000);
+                        await Task.Delay(2000, ct); // 等待2秒后重试
+                    }
+                    catch (Exception ex)
+                    {
+                        if (retryCount == maxLoginRetries)
+                        {
+                            throw; // 最后一次尝试失败，抛出异常
+                        }
+                        _logger?.LogWarning(ex, "[登录重试] 第 {RetryCount} 次尝试失败，{DelayMs} 毫秒后重试...", 
+                            retryCount + 1, 2000);
+                        await Task.Delay(2000, ct); // 等待2秒后重试
+                    }
+                }
 
                 _logger?.LogDebug("[登录] 收到服务器响应 - IsNull: {IsNull}", response == null);
 

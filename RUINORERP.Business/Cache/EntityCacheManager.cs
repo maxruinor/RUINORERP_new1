@@ -19,6 +19,8 @@ using static RUINORERP.Business.Cache.IEntityCacheManager;
 using Newtonsoft.Json.Linq;
 using System.Dynamic;
 using RUINORERP.PacketSpec.Models.Cache;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace RUINORERP.Business.Cache
 {
@@ -173,7 +175,25 @@ namespace RUINORERP.Business.Cache
                         // 如果没有找到匹配的实体，则添加新实体到列表末尾
                         if (!updated)
                         {
-                            jArray.Add(JObject.FromObject(entity));
+                            // 优化：如果实体是强类型对象，转换为 JObject 以匹配投影缓存结构
+                            var newObj = JObject.FromObject(entity);
+                            
+                            // 如果是按需缓存，只保留 Schema 中定义的字段
+                            if (!schemaInfo.CacheWholeRow && schemaInfo.DisplayFields.Any())
+                            {
+                                var filteredObj = new JObject();
+                                foreach (var field in schemaInfo.DisplayFields)
+                                {
+                                    if (newObj.ContainsKey(field))
+                                        filteredObj[field] = newObj[field];
+                                }
+                                jArray.Add(filteredObj);
+                            }
+                            else
+                            {
+                                jArray.Add(newObj);
+                            }
+                            
                             updated = true;
                             _logger?.LogDebug($"已将ID为 {entityId} 的新实体添加到表 {tableName} 的列表缓存中");
                         }
@@ -655,7 +675,13 @@ namespace RUINORERP.Business.Cache
                         // 一种简单的方式是使用Json序列化/反序列化
                         try
                         {
-                            var json = Newtonsoft.Json.JsonConvert.SerializeObject(item);
+                            var settings = new Newtonsoft.Json.JsonSerializerSettings
+                            {
+                                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                ContractResolver = new CacheContractResolver()
+                            };
+                            var json = Newtonsoft.Json.JsonConvert.SerializeObject(item, settings);
                             var typedItem = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
                             result.Add(typedItem);
                         }
@@ -696,6 +722,7 @@ namespace RUINORERP.Business.Cache
                                 {
                                     ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                                     NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                                    ContractResolver = new CacheContractResolver(),
                                     Error = (s, e) =>
                                     {
                                         _logger?.LogWarning("JSON序列化非致命错误: 路径={Path}, 异常={Error}", e.ErrorContext.Path, e.ErrorContext.Error.Message);
@@ -726,6 +753,8 @@ namespace RUINORERP.Business.Cache
                                         Newtonsoft.Json.JsonConvert.SerializeObject(item, new Newtonsoft.Json.JsonSerializerSettings
                                         {
                                             ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                                            ContractResolver = new CacheContractResolver(),
                                             Error = (s, e) => { e.ErrorContext.Handled = true; }
                                         });
                                         cleanList.Add(item);
@@ -944,6 +973,7 @@ namespace RUINORERP.Business.Cache
                                 {
                                     ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                                     NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                                    ContractResolver = new CacheContractResolver(),
                                     Error = (s, e) =>
                                     {
                                         _logger?.LogWarning("JSON序列化非致命错误: 路径={Path}, 异常={Error}", e.ErrorContext.Path, e.ErrorContext.Error.Message);
@@ -974,6 +1004,8 @@ namespace RUINORERP.Business.Cache
                                         Newtonsoft.Json.JsonConvert.SerializeObject(item, new Newtonsoft.Json.JsonSerializerSettings
                                         {
                                             ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                                            ContractResolver = new CacheContractResolver(),
                                             Error = (s, e) => { e.ErrorContext.Handled = true; }
                                         });
                                         cleanList.Add(item);
@@ -1404,7 +1436,13 @@ namespace RUINORERP.Business.Cache
                             try
                             {
                                 // 将ExpandoObject转换为具体类型
-                                var json = Newtonsoft.Json.JsonConvert.SerializeObject(item);
+                                var settings = new Newtonsoft.Json.JsonSerializerSettings
+                                {
+                                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                    ContractResolver = new CacheContractResolver()
+                                };
+                                var json = Newtonsoft.Json.JsonConvert.SerializeObject(item, settings);
                                 var typedItem = Newtonsoft.Json.JsonConvert.DeserializeObject(json, entityType);
                                 addMethod?.Invoke(typedList, new[] { typedItem });
                             }
@@ -2464,5 +2502,41 @@ namespace RUINORERP.Business.Cache
             }
         }
         #endregion
+        /// <summary>
+        /// 缓存专用的 JSON 契约解析器
+        /// 用于在序列化过程中忽略 null 值、导航属性集合以及处理循环引用
+        /// </summary>
+        private class CacheContractResolver : Newtonsoft.Json.Serialization.DefaultContractResolver
+        {
+            protected override Newtonsoft.Json.Serialization.JsonProperty CreateProperty(System.Reflection.MemberInfo member, Newtonsoft.Json.MemberSerialization memberSerialization)
+            {
+                var property = base.CreateProperty(member, memberSerialization);
+
+                // 1. 如果属性标记了 [JsonIgnore]，直接忽略
+                if (property.Ignored)
+                {
+                    return property;
+                }
+
+                // 2. 显式忽略 SqlSugar 的导航属性
+                // 检查是否存在 [Navigate] 特性，或者是否是 [SugarColumn(IsIgnore = true)] 的虚拟属性
+                var navigateAttr = member.GetCustomAttribute<SqlSugar.Navigate>();
+                if (navigateAttr != null)
+                {
+                    property.Ignored = true;
+                    return property;
+                }
+
+                // 3. 兜底策略：忽略所有非字符串的 IEnumerable 集合
+                // 这能处理那些没有显式标记但仍然是导航集合的情况，并有效阻断循环引用
+                if (typeof(System.Collections.IEnumerable).IsAssignableFrom(property.PropertyType) && 
+                    property.PropertyType != typeof(string))
+                {
+                    property.Ignored = true;
+                }
+
+                return property;
+            }
+        }
     }
 }

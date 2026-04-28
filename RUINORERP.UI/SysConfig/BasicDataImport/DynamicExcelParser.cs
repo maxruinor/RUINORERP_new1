@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using RUINORERP.Model.ImportEngine.Enums;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {

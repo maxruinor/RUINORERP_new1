@@ -328,12 +328,12 @@ namespace RUINORERP.UI
                     return;
                 }
 
-                // 1. 连接服务器(添加10秒超时)
+                // 1. 连接服务器(增加15秒超时，适应网络卡顿)
                 MainForm.Instance?.ShowStatusText($"正在连接到服务器 {serverIP}:{serverPort}...");
                 MainForm.Instance?.logger?.LogDebug($"尝试连接到服务器 {serverIP}:{serverPort}...");
 
                 var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
-                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(10)));
+                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(15)));
 
                 bool connectResult = false;
                 if (completedTask == connectTask)
@@ -359,9 +359,9 @@ namespace RUINORERP.UI
                 MainForm.Instance?.ShowStatusText($"服务器 {serverIP}:{serverPort} 连接成功");
                 MainForm.Instance.PrintInfoLog("服务器连接成功,等待欢迎消息...");
 
-                // 2. 等待欢迎流程完成(等待最多15秒)
+                // 2. 等待欢迎流程完成(等待最多20秒)
                 // 欢迎流程由WelcomeCommandHandler自动处理,我们只需要等待确认
-                var welcomeTimeout = TimeSpan.FromSeconds(15);
+                var welcomeTimeout = TimeSpan.FromSeconds(20);
                 var welcomeTask = _welcomeCompletionTcs.Task;
                 completedTask = await Task.WhenAny(welcomeTask, Task.Delay(welcomeTimeout));
 

@@ -528,9 +528,8 @@ namespace RUINORERP.UI.Network
             // 如果网络不可用，使用更长的重连间隔
             if (!_isNetworkAvailable)
             {
-                // 网络不可用时，基于尝试次数计算间隔，逐步增加
                 int networkDownInterval = Math.Min(_config.MaxBackoffInterval, 
-                    _config.ReconnectInterval * Math.Pow(_config.BackoffMultiplier, Math.Min(attempts, 6)));
+                    (int)(_config.ReconnectInterval * Math.Pow(_config.BackoffMultiplier, Math.Min(attempts, 6))));
                 _logger?.LogDebug("网络不可用，使用基于尝试次数的重连间隔 {Interval} 毫秒", networkDownInterval);
                 return networkDownInterval;
             }
@@ -540,10 +539,8 @@ namespace RUINORERP.UI.Network
                 return _config.ReconnectInterval;
             }
 
-            // 计算指数退避时间
-            var baseInterval = (int)Math.Min(
-                _config.ReconnectInterval * Math.Pow(_config.BackoffMultiplier, Math.Min(attempts, 6)),
-                _config.MaxBackoffInterval);
+            int baseInterval = Math.Min(_config.MaxBackoffInterval, 
+                (int)(_config.ReconnectInterval * Math.Pow(_config.BackoffMultiplier, Math.Min(attempts, 6))));
             
             // 添加随机抖动避免雷群效应
             if (_config.EnableRandomJitter)

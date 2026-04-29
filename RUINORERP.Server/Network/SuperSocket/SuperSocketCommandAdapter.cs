@@ -1099,13 +1099,14 @@ namespace RUINORERP.Server.Network.SuperSocket
                     // 如果仍然超过限制，移除最久未访问的项（LRU）
                     while (_tokenValidationCache.Count >= MaxTokenCacheSize)
                     {
-                        var oldestKey = _tokenValidationCache
-                            .Min(kvp => kvp.Value.LastAccessTime).Key;
+                        var oldestEntry = _tokenValidationCache
+                            .OrderBy(kvp => kvp.Value.LastAccessTime)
+                            .FirstOrDefault();
 
-                        if (!string.IsNullOrEmpty(oldestKey))
+                        if (oldestEntry.Key != null)
                         {
-                            _tokenValidationCache.TryRemove(oldestKey, out _);
-                            _logger?.LogDebug($"[Token缓存LRU] 移除最久未访问的Token: {oldestKey}");
+                            _tokenValidationCache.TryRemove(oldestEntry.Key, out _);
+                            _logger?.LogDebug($"[Token缓存LRU] 移除最久未访问的Token: {oldestEntry.Key}");
                         }
                         else
                         {

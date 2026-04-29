@@ -1100,8 +1100,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                     while (_tokenValidationCache.Count >= MaxTokenCacheSize)
                     {
                         var oldestKey = _tokenValidationCache
-                            .OrderBy(kvp => kvp.Value.LastAccessTime)
-                            .FirstOrDefault().Key;
+                            .Min(kvp => kvp.Value.LastAccessTime).Key;
 
                         if (!string.IsNullOrEmpty(oldestKey))
                         {

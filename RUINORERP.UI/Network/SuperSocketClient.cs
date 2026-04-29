@@ -635,7 +635,39 @@ namespace RUINORERP.UI.Network
             {
                 _isConnected = false;
                 ConnectionStateChanged?.Invoke(false);
-                _logger?.LogError(e.Exception, "客户端发生错误，连接状态已更新为断开");
+                
+                // ✅ 详细记录错误原因，区分不同类型的断开
+                var exception = e.Exception;
+                string disconnectReason = "未知原因";
+                
+                if (exception is SocketException socketEx)
+                {
+                    switch (socketEx.SocketErrorCode)
+                    {
+                        case SocketError.ConnectionReset:
+                            disconnectReason = "连接被服务器重置（可能被服务器主动断开）";
+                            break;
+                        case SocketError.ConnectionAborted:
+                            disconnectReason = "连接被中止";
+                            break;
+                        case SocketError.TimedOut:
+                            disconnectReason = "连接超时";
+                            break;
+                        case SocketError.Shutdown:
+                            disconnectReason = "Socket已关闭";
+                            break;
+                        default:
+                            disconnectReason = $"Socket错误: {socketEx.SocketErrorCode}";
+                            break;
+                    }
+                }
+                else if (exception != null)
+                {
+                    disconnectReason = exception.Message;
+                }
+                
+                _logger?.LogError(e.Exception, "[连接断开-异常] 客户端发生错误导致连接断开，原因: {DisconnectReason}，服务器: {ServerIp}:{Port}", 
+                    disconnectReason, _serverIp, _port);
             }
         }
 
@@ -651,7 +683,11 @@ namespace RUINORERP.UI.Network
                 _isConnected = false;
                 _logger?.LogDebug("通过OnClientClosed事件更新连接状态为false");
                 ConnectionStateChanged?.Invoke(false);
-                _logger?.LogDebug("底层Socket连接已关闭");
+                
+                // ✅ 记录连接断开日志，区分主动断开和被动断开
+                // 当连接被服务器主动断开时，通常会先触发Error事件，然后触发Closed事件
+                // 这里记录信息级日志，便于追踪连接断开原因
+                _logger?.LogInformation("[连接断开-关闭] 底层Socket连接已关闭，服务器: {ServerIp}:{Port}", _serverIp, _port);
             }
             else
             {

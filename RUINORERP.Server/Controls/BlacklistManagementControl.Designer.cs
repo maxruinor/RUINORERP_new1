@@ -40,6 +40,9 @@ namespace RUINORERP.Server.Controls
             this.btnRemoveSelected = new System.Windows.Forms.Button();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.btnAddIP = new System.Windows.Forms.Button();
+            this.btnUnlockUser = new System.Windows.Forms.Button();
+            this.textBoxUsername = new System.Windows.Forms.TextBox();
+            this.labelUsername = new System.Windows.Forms.Label();
             this.textBoxReason = new System.Windows.Forms.TextBox();
             this.labelReason = new System.Windows.Forms.Label();
             this.textBoxIPAddress = new System.Windows.Forms.TextBox();
@@ -47,6 +50,8 @@ namespace RUINORERP.Server.Controls
             this.iPAddressDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.reasonDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.banTimeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.expiryTimeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.remainingTimeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
             this.splitContainerMain.Panel1.SuspendLayout();
             this.splitContainerMain.Panel2.SuspendLayout();
@@ -97,7 +102,9 @@ namespace RUINORERP.Server.Controls
             this.dataGridViewBlacklist.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.iPAddressDataGridViewTextBoxColumn,
             this.reasonDataGridViewTextBoxColumn,
-            this.banTimeDataGridViewTextBoxColumn});
+            this.banTimeDataGridViewTextBoxColumn,
+            this.expiryTimeDataGridViewTextBoxColumn,
+            this.remainingTimeDataGridViewTextBoxColumn});
             this.dataGridViewBlacklist.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewBlacklist.Location = new System.Drawing.Point(3, 19);
             this.dataGridViewBlacklist.Name = "dataGridViewBlacklist";
@@ -130,6 +137,9 @@ namespace RUINORERP.Server.Controls
             this.groupBoxOperations.Controls.Add(this.btnRemoveSelected);
             this.groupBoxOperations.Controls.Add(this.btnRefresh);
             this.groupBoxOperations.Controls.Add(this.btnAddIP);
+            this.groupBoxOperations.Controls.Add(this.btnUnlockUser);
+            this.groupBoxOperations.Controls.Add(this.textBoxUsername);
+            this.groupBoxOperations.Controls.Add(this.labelUsername);
             this.groupBoxOperations.Controls.Add(this.textBoxReason);
             this.groupBoxOperations.Controls.Add(this.labelReason);
             this.groupBoxOperations.Controls.Add(this.textBoxIPAddress);
@@ -202,6 +212,32 @@ namespace RUINORERP.Server.Controls
             this.btnAddIP.UseVisualStyleBackColor = true;
             this.btnAddIP.Click += new System.EventHandler(this.btnAddIP_Click);
             // 
+            // btnUnlockUser
+            // 
+            this.btnUnlockUser.Location = new System.Drawing.Point(600, 120);
+            this.btnUnlockUser.Name = "btnUnlockUser";
+            this.btnUnlockUser.Size = new System.Drawing.Size(80, 23);
+            this.btnUnlockUser.TabIndex = 10;
+            this.btnUnlockUser.Text = "解除用户限制";
+            this.btnUnlockUser.UseVisualStyleBackColor = true;
+            this.btnUnlockUser.Click += new System.EventHandler(this.btnUnlockUser_Click);
+            // 
+            // textBoxUsername
+            // 
+            this.textBoxUsername.Location = new System.Drawing.Point(450, 30);
+            this.textBoxUsername.Name = "textBoxUsername";
+            this.textBoxUsername.Size = new System.Drawing.Size(150, 21);
+            this.textBoxUsername.TabIndex = 11;
+            // 
+            // labelUsername
+            // 
+            this.labelUsername.AutoSize = true;
+            this.labelUsername.Location = new System.Drawing.Point(400, 33);
+            this.labelUsername.Name = "labelUsername";
+            this.labelUsername.Size = new System.Drawing.Size(41, 12);
+            this.labelUsername.TabIndex = 12;
+            this.labelUsername.Text = "用户名:";
+            // 
             // textBoxReason
             // 
             this.textBoxReason.Location = new System.Drawing.Point(75, 60);
@@ -256,6 +292,20 @@ namespace RUINORERP.Server.Controls
             this.banTimeDataGridViewTextBoxColumn.Name = "banTimeDataGridViewTextBoxColumn";
             this.banTimeDataGridViewTextBoxColumn.ReadOnly = true;
             // 
+            // expiryTimeDataGridViewTextBoxColumn
+            // 
+            this.expiryTimeDataGridViewTextBoxColumn.DataPropertyName = "解封时间";
+            this.expiryTimeDataGridViewTextBoxColumn.HeaderText = "解封时间";
+            this.expiryTimeDataGridViewTextBoxColumn.Name = "expiryTimeDataGridViewTextBoxColumn";
+            this.expiryTimeDataGridViewTextBoxColumn.ReadOnly = true;
+            // 
+            // remainingTimeDataGridViewTextBoxColumn
+            // 
+            this.remainingTimeDataGridViewTextBoxColumn.DataPropertyName = "剩余时间";
+            this.remainingTimeDataGridViewTextBoxColumn.HeaderText = "剩余时间";
+            this.remainingTimeDataGridViewTextBoxColumn.Name = "remainingTimeDataGridViewTextBoxColumn";
+            this.remainingTimeDataGridViewTextBoxColumn.ReadOnly = true;
+            // 
             // BlacklistManagementControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -300,5 +350,10 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.DataGridViewTextBoxColumn iPAddressDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn reasonDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn banTimeDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn expiryTimeDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn remainingTimeDataGridViewTextBoxColumn;
+        private System.Windows.Forms.Button btnUnlockUser;
+        private System.Windows.Forms.TextBox textBoxUsername;
+        private System.Windows.Forms.Label labelUsername;
     }
 }

@@ -16,52 +16,6 @@ using SuperSocket.Server.Abstractions;
 namespace RUINORERP.Server.Network.Core
 {
 
-    /*
-    /// <summary>
-    /// 监听器选项类，对应appsettings.json中的serverOptions.listeners配置
-    /// 定义SuperSocket服务器监听器的基本配置参数
-    /// </summary>
-    public class ListenOptions
-    {
-        /// <summary>
-        /// 监听IP地址，Any表示所有IPv4地址
-        /// </summary>
-        public string Ip { get; set; } = "Any";
-
-        /// <summary>
-        /// 监听端口号
-        /// </summary>
-        public int Port { get; set; } = 3009;
-
-        /// <summary>
-        /// 连接等待队列的最大长度
-        /// </summary>
-        public int Backlog { get; set; } = 100;
-
-        /// <summary>
-        /// IP地址属性（用于JSON序列化）
-        /// 注意：与appsettings.json中的小写"ip"命名保持一致
-        /// </summary>
-        [JsonProperty(PropertyName = "ip")]
-        public string IpAddress
-        {
-            get { return Ip; }
-            set { Ip = value; }
-        }
-
-        /// <summary>
-        /// 端口号属性（用于JSON序列化）
-        /// 注意：与appsettings.json中的小写"port"命名保持一致
-        /// </summary>
-        [JsonProperty(PropertyName = "port")]
-        public int PortNumber
-        {
-            get { return Port; }
-            set { Port = value; }
-        }
-    }
-
-    */
 
     /// <summary>
     /// ERP服务器配置选项类
@@ -145,6 +99,27 @@ namespace RUINORERP.Server.Network.Core
         /// 默认值为"Tls12"
         /// </summary>
         public string SecurityMode { get; set; } = "Tls12";
+
+        /// <summary>
+        /// 是否启用TCP KeepAlive
+        /// 用于检测空闲连接并自动清理断开的连接
+        /// 默认值为true（启用）
+        /// </summary>
+        public bool KeepAliveEnabled { get; set; } = true;
+
+        /// <summary>
+        /// TCP KeepAlive开始探测前的空闲时间（秒）
+        /// 连接空闲多久后开始发送KeepAlive探测包
+        /// 默认值为120秒（2分钟）
+        /// </summary>
+        public int KeepAliveTime { get; set; } = 120;
+
+        /// <summary>
+        /// TCP KeepAlive探测间隔（秒）
+        /// 两次KeepAlive探测之间的时间间隔
+        /// 默认值为30秒
+        /// </summary>
+        public int KeepAliveInterval { get; set; } = 30;
     
        
     }

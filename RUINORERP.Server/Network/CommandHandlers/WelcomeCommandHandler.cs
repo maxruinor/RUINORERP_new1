@@ -19,6 +19,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
     /// <summary>
     /// 欢迎响应命令处理器 - 处理客户端连接的欢迎握手流程
     /// 服务器在客户端连接时发送欢迎消息，客户端需要回复确认才能完成连接验证
+    /// 1
     /// </summary>
     [CommandHandler("WelcomeCommandHandler", priority: 200)]
     public class WelcomeCommandHandler : BaseCommandHandler

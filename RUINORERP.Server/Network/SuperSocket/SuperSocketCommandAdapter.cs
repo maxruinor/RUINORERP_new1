@@ -63,9 +63,15 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <summary>
         /// Token验证缓存（TTL: 30秒）
         /// Key: AccessToken, Value: (验证结果, 缓存时间)
+        /// ✅ 外网优化：添加最大缓存大小限制，防止内存泄漏
         /// </summary>
         private static readonly ConcurrentDictionary<string, (TokenValidationResult Result, DateTime CachedTime)> _tokenValidationCache 
             = new ConcurrentDictionary<string, (TokenValidationResult, DateTime)>();
+        
+        /// <summary>
+        /// Token缓存最大数量限制
+        /// </summary>
+        private const int MaxTokenCacheSize = 1000;
 
         // P1-6修复: 按命令类别配置不同的超时时间(秒)
         // 根据CommandCategory枚举定义,不同类别的命令设置合理的超时时间
@@ -124,12 +130,26 @@ namespace RUINORERP.Server.Network.SuperSocket
         private static readonly ConcurrentBag<ushort> _commandFilters = new ConcurrentBag<ushort>();
 
         /// <summary>
+        /// ✅ 网络监控统计数据
+        /// </summary>
+        private static long _totalPacketsReceived = 0;
+        private static long _totalPacketsSent = 0;
+        private static DateTime _monitorStartTime = DateTime.MinValue;
+        private static readonly object _statsLock = new object();
+
+        /// <summary>
         /// 设置网络监控开关状态
         /// </summary>
         /// <param name="enabled">是否启用</param>
         public static void SetNetworkMonitorEnabled(bool enabled)
         {
             IsNetworkMonitorEnabled = enabled;
+            
+            // ✅ 重置统计数据
+            if (enabled)
+            {
+                ResetMonitorStatistics();
+            }
         }
 
         /// <summary>
@@ -148,6 +168,51 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     _commandFilters.Add(code);
                 }
+            }
+        }
+
+        /// <summary>
+        /// ✅ 获取网络监控统计数据
+        /// </summary>
+        /// <returns>统计数据字典</returns>
+        public static Dictionary<string, object> GetMonitorStatistics()
+        {
+            lock (_statsLock)
+            {
+                var stats = new Dictionary<string, object>();
+                stats["TotalPacketsReceived"] = _totalPacketsReceived;
+                stats["TotalPacketsSent"] = _totalPacketsSent;
+                stats["MonitorStartTime"] = _monitorStartTime;
+                
+                if (_monitorStartTime != DateTime.MinValue)
+                {
+                    var duration = DateTime.Now - _monitorStartTime;
+                    stats["MonitorDurationSeconds"] = duration.TotalSeconds;
+                    
+                    if (duration.TotalSeconds > 0)
+                    {
+                        stats["PacketsPerSecond"] = Math.Round((_totalPacketsReceived + _totalPacketsSent) / duration.TotalSeconds, 2);
+                    }
+                    else
+                    {
+                        stats["PacketsPerSecond"] = 0;
+                    }
+                }
+                
+                return stats;
+            }
+        }
+
+        /// <summary>
+        /// ✅ 重置网络监控统计数据
+        /// </summary>
+        public static void ResetMonitorStatistics()
+        {
+            lock (_statsLock)
+            {
+                _totalPacketsReceived = 0;
+                _totalPacketsSent = 0;
+                _monitorStartTime = IsNetworkMonitorEnabled ? DateTime.Now : DateTime.MinValue;
             }
         }
 
@@ -254,10 +319,26 @@ namespace RUINORERP.Server.Network.SuperSocket
             // 网络监控：接收数据包
             if (IsNetworkMonitorEnabled && package?.Packet != null && ShouldMonitorCommand(package.Packet.CommandId))
             {
-                _logger?.LogDebug("[网络监控] 接收数据包: SessionId={SessionId}, CommandId={CommandId}, RequestId={RequestId}, PacketId={PacketId}",
-                    session.SessionID, package.Packet.CommandId.ToString(), 
-                    package.Packet.Request?.RequestId ?? package.Packet.Response?.RequestId,
-                    package.Packet.PacketId);
+                // ✅ 更新统计数据
+                lock (_statsLock)
+                {
+                    _totalPacketsReceived++;
+                }
+                
+                var monitorMsg = $"[网络监控] 📥 接收数据包: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()}, RequestId={package.Packet.Request?.RequestId ?? package.Packet.Response?.RequestId}, PacketId={package.Packet.PacketId}";
+                
+                // 同时输出到日志文件和UI界面
+                _logger?.LogDebug(monitorMsg);
+                
+                // ✅ 关键修复：直接输出到UI，不受日志级别限制
+                try
+                {
+                    RUINORERP.Server.frmMainNew.Instance?.PrintDebugLog(monitorMsg);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "[网络监控] 输出到UI失败");
+                }
             }
         
             if (package == null)
@@ -286,8 +367,19 @@ namespace RUINORERP.Server.Network.SuperSocket
             {
                 if (package.Packet.ExecutionContext.ExpectedResponseTypeName == "IResponse" && IsNetworkMonitorEnabled && ShouldMonitorCommand(package.Packet.CommandId))
                 {
-                    _logger?.LogDebug("[网络监控] 接收数据包的返回类型没有指定: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
-                        session.SessionID, package.Packet.CommandId.ToString(), package.Packet.PacketId);
+                    var monitorMsg = $"[网络监控] ⚠️ 接收数据包的返回类型没有指定: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()}, PacketId={package.Packet.PacketId}";
+                    
+                    _logger?.LogDebug(monitorMsg);
+                    
+                    // ✅ 直接输出到UI，不受日志级别限制
+                    try
+                    {
+                        RUINORERP.Server.frmMainNew.Instance?.PrintDebugLog(monitorMsg);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "[网络监控] 输出到UI失败");
+                    }
                 }
 
                 if (package.Packet.CommandId == LockCommands.Lock)
@@ -466,8 +558,19 @@ namespace RUINORERP.Server.Network.SuperSocket
                 // 网络监控：命令处理完成
                 if (IsNetworkMonitorEnabled && ShouldMonitorCommand(package.Packet.CommandId))
                 {
-                    _logger?.LogDebug("[网络监控] 命令处理完成: SessionId={SessionId}, CommandId={CommandId}, Success={Success}",
-                        session.SessionID, package.Packet.CommandId.ToString(), result.IsSuccess);
+                    var monitorMsg = $"[网络监控] ✅ 命令处理完成: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()}, Success={result.IsSuccess}";
+                    
+                    _logger?.LogDebug(monitorMsg);
+                    
+                    // ✅ 直接输出到UI，不受日志级别限制
+                    try
+                    {
+                        RUINORERP.Server.frmMainNew.Instance?.PrintDebugLog(monitorMsg);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "[网络监控] 输出到UI失败");
+                    }
                 }
 
                 // 使用新的 CancellationToken.None 来确保响应能够发送，即使命令处理超时
@@ -675,8 +778,25 @@ namespace RUINORERP.Server.Network.SuperSocket
                     // 网络监控：发送响应
                     if (IsNetworkMonitorEnabled && ShouldMonitorCommand(package.CommandId))
                     {
-                        _logger?.LogDebug("[网络监控] 发送响应: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
-                            package.SessionId, package.CommandId.ToString(), package.PacketId);
+                        // ✅ 更新统计数据
+                        lock (_statsLock)
+                        {
+                            _totalPacketsSent++;
+                        }
+                        
+                        var monitorMsg = $"[网络监控] 📤 发送响应: SessionId={package.SessionId}, CommandId={package.CommandId.ToString()}, PacketId={package.PacketId}";
+                        
+                        _logger?.LogDebug(monitorMsg);
+                        
+                        // ✅ 直接输出到UI，不受日志级别限制
+                        try
+                        {
+                            RUINORERP.Server.frmMainNew.Instance?.PrintDebugLog(monitorMsg);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, "[网络监控] 输出到UI失败");
+                        }
                     }
 
                     await (session as SessionInfo).SendAsync(encryptedData.ToArray(), cancellationToken);
@@ -870,6 +990,7 @@ namespace RUINORERP.Server.Network.SuperSocket
 
         /// <summary>
         /// 验证Token有效性（带缓存）
+        /// ✅ 外网优化：添加缓存大小限制和主动失效机制
         /// </summary>
         /// <param name="tokenInfo">Token信息</param>
         /// <returns>验证结果</returns>
@@ -902,13 +1023,57 @@ namespace RUINORERP.Server.Network.SuperSocket
             // 执行验证
             var result = ValidateToken(tokenInfo);
             
-            // 仅缓存有效Token
+            // ✅ 外网优化：仅缓存有效Token，并限制缓存大小
             if (result.IsValid)
             {
-                _tokenValidationCache.TryAdd(cacheKey, (result, DateTime.Now));
+                // 如果缓存已满，先清理过期项
+                if (_tokenValidationCache.Count >= MaxTokenCacheSize)
+                {
+                    CleanupExpiredTokenCache();
+                }
+                
+                // 再次检查，如果仍然超限则不缓存
+                if (_tokenValidationCache.Count < MaxTokenCacheSize)
+                {
+                    _tokenValidationCache.TryAdd(cacheKey, (result, DateTime.Now));
+                }
             }
 
             return result;
+        }
+        
+        /// <summary>
+        /// 清理过期的Token缓存项
+        /// </summary>
+        private void CleanupExpiredTokenCache()
+        {
+            try
+            {
+                var now = DateTime.Now;
+                var expiredKeys = new List<string>();
+                
+                foreach (var kvp in _tokenValidationCache)
+                {
+                    if ((now - kvp.Value.CachedTime).TotalSeconds >= 30)
+                    {
+                        expiredKeys.Add(kvp.Key);
+                    }
+                }
+                
+                foreach (var key in expiredKeys)
+                {
+                    _tokenValidationCache.TryRemove(key, out _);
+                }
+                
+                if (expiredKeys.Count > 0)
+                {
+                    _logger?.LogDebug($"[Token缓存清理] 清理了{expiredKeys.Count}个过期Token缓存项");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "[Token缓存清理] 清理过期Token缓存时发生异常");
+            }
         }
 
         /// <summary>

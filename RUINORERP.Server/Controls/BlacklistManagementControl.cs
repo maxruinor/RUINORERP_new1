@@ -8,7 +8,22 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.Server.Comm;
+using RUINORERP.Server.Network.CommandHandlers;
 
+/// <summary>
+/// 黑名单管理控件
+/// 功能：显示和管理系统的IP黑名单
+/// 
+/// ⚠️ NAT环境风险提示：
+/// 1. 外网环境下，多台客户端通过路由器/NAT上网时会共享同一公网IP
+/// 2. 封禁某个外网IP会导致该IP下的所有正常用户无法访问系统
+/// 3. 建议优先使用用户名级别的限制（如登录次数限制），谨慎使用IP封禁功能
+/// 4. 仅在确认是恶意攻击且已验证不会影响正常用户时，才使用IP封禁
+/// 
+/// 适用场景：
+/// - 内网环境：可以安全使用IP封禁（每个设备有独立IP）
+/// - 外网环境：需要特别谨慎，建议结合用户名+IP进行综合判断
+/// </summary>
 namespace RUINORERP.Server.Controls
 {
     public partial class BlacklistManagementControl : UserControl
@@ -196,6 +211,41 @@ namespace RUINORERP.Server.Controls
             }
         }
 
+        /// <summary>
+        /// 解除用户名登录限制（重置登录尝试次数）
+        /// 实时生效，管理员可即时解除用户的登录限制
+        /// </summary>
+        private void btnUnlockUser_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string username = textBoxUsername.Text.Trim();
+                
+                if (string.IsNullOrEmpty(username))
+                {
+                    MessageBox.Show("请输入要解除限制的用户名", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                
+                // 调用LoginCommandHandler的公开方法解除用户限制
+                bool success = LoginCommandHandler.UnlockUserLogin(username);
+                
+                if (success)
+                {
+                    MessageBox.Show($"用户名 \"{username}\" 的登录限制已解除，用户可立即尝试登录", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    textBoxUsername.Clear();
+                }
+                else
+                {
+                    MessageBox.Show($"未找到用户名 \"{username}\" 的登录限制记录，或用户名格式无效", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"解除用户限制时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void btnExport_Click(object sender, EventArgs e)
         {
             try
@@ -256,7 +306,11 @@ namespace RUINORERP.Server.Controls
         #endregion
 
         #region DataGridView事件处理
-
+        /// <summary>
+        /// 处理DataGridView双击事件，显示选中行的详细信息
+        /// </summary>
+        /// <param name="sender">事件发送对象</param>
+        /// <param name="e">事件参数</param>
         private void dataGridViewBlacklist_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0 && e.RowIndex < dataGridViewBlacklist.Rows.Count)

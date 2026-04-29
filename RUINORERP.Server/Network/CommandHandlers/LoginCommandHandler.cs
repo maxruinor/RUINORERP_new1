@@ -126,9 +126,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private static bool _cleanupTimerStarted = false;
         
         /// <summary>
-        /// 登录尝试记录过期时间（30分钟）
+        /// 登录尝试记录过期时间（10分钟）- 宽松策略：10分钟后自动解锁
         /// </summary>
-        private static readonly TimeSpan LoginAttemptExpiryDuration = TimeSpan.FromMinutes(30);
+        private static readonly TimeSpan LoginAttemptExpiryDuration = TimeSpan.FromMinutes(10);
         
         /// <summary>
         /// 保守清理阈值：失败次数少于该值才清理（避免误清理正在暴力破解的账号）
@@ -335,12 +335,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 sessionInfo.ClientIp = realIp;
                 logger?.LogInformation($"[IP获取] SessionID={sessionInfo.SessionID}, ClientIp={sessionInfo.ClientIp}, Source=RemoteEndPoint");
                 
-                // ✅ 已移除IP黑名单检查 - 内网环境不需要IP限制，避免影响正常使用
-                // if (IsUserBlacklisted(loginRequest.Username, sessionInfo.ClientIp))
-                // {
-                //     logger?.LogWarning($"[登录失败] 用户或IP在黑名单中: Username={loginRequest.Username}, ClientIp={sessionInfo.ClientIp}");
-                //     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "用户或IP在黑名单中");
-                // }
+                // ✅ 检查IP是否在黑名单中
+                // ⚠️ NAT环境警告：外网环境下多台客户端可能共享同一公网IP
+                // 如果封禁某个IP，会影响该IP下的所有正常用户
+                // 建议优先使用用户名级别的限制，谨慎使用IP封禁功能
+                if (BlacklistManager.IsIpBanned(sessionInfo.ClientIp))
+                {
+                    logger?.LogWarning($"[登录失败] IP地址在黑名单中: Username={loginRequest.Username}, ClientIp={sessionInfo.ClientIp}");
+                    logger?.LogWarning($"[NAT警告] 如果这是外网IP，封禁将影响该IP下的所有客户端用户");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "您的IP地址已被限制访问，请联系管理员解除限制");
+                }
 
                 // 检查登录尝试次数
                 int currentAttempts = GetLoginAttempts(loginRequest.Username);
@@ -361,16 +365,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 计算剩余尝试次数
                     int remainingAttempts = MaxLoginAttempts - newAttempts;
                     
-                    // ✅ 优化：失败5次后不再封禁IP - 内网环境不需要IP封禁，避免影响正常使用
+                    // ✅ 优化：移除自动IP封禁功能 - 内网和NAT环境下不应封禁IP
+                    // 原因：
+                    // 1. 内网环境：多台电脑可能共享同一IP（NAT），封禁IP会影响所有用户
+                    // 2. 外网环境：通过路由器上网的多台电脑使用相同公网IP，封禁会误伤正常用户
+                    // 3. 已有用户名级别的登录次数限制，足以防止暴力破解
                     // if (newAttempts >= MaxLoginAttempts)
                     // {
-                    //     BlacklistManager.BanIp(sessionInfo.ClientIp, TimeSpan.FromHours(1));
+                    //     BlacklistManager.BanIp(sessionInfo.ClientIp, TimeSpan.FromHours(1), $"登录失败次数过多({newAttempts}次)");
                     //     logger?.LogWarning($"[自动封禁] IP地址 {sessionInfo.ClientIp} 因登录失败次数过多被封禁1小时，Username={loginRequest.Username}, FailedAttempts={newAttempts}");
-                    //     // 封禁后返回带封禁信息的错误（不暴露具体剩余次数以防暴力破解探测）
-                    //     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "登录尝试次数过多，账户已被临时锁定，请稍后再试或联系管理员");
+                    //     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "登录尝试次数过多，您的IP已被临时限制访问，请稍后再试或联系管理员");
                     // }
                     
-                    // ✅ 优化：详细记录认证失败，并提供剩余尝试次数提示（帮助正常用户了解状态）
+                    // ✅ 详细记录认证失败，并提供剩余尝试次数提示（帮助正常用户了解状态）
                     string errorMessage = remainingAttempts > 0 
                         ? $"用户名或密码错误，剩余尝试次数：{remainingAttempts}"
                         : "用户名或密码错误";
@@ -380,6 +387,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 // 重置登录尝试次数
                 ResetLoginAttempts(loginRequest.Username);
+
+                // 检查用户是否被禁用
+                if (!IsUserEnabled(userInfo))
+                {
+                    logger?.LogWarning($"[登录失败-用户被禁用] Username={loginRequest.Username}, UserId={userInfo.User_ID}, ClientIp={sessionInfo.ClientIp}");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "该用户已被禁用，请联系管理员");
+                }
 
                 // 验证凭据成功后，再检查并发用户数限制（针对已认证用户）
                 // 注意：这里检查的是已认证的唯一用户数，而不是总会话数
@@ -826,6 +840,59 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
+        /// 检查用户是否启用
+        /// 检查用户实体中可能存在的禁用状态字段
+        /// </summary>
+        /// <param name="userInfo">用户信息</param>
+        /// <returns>用户是否启用</returns>
+        private bool IsUserEnabled(tb_UserInfo userInfo)
+        {
+            if (userInfo == null)
+                return false;
+
+            // 检查常见的用户状态字段
+            // 尝试通过反射检查可能存在的状态字段
+            try
+            {
+                // 检查 IsEnabled 字段
+                var isEnabledProperty = userInfo.GetType().GetProperty("IsEnabled");
+                if (isEnabledProperty != null && isEnabledProperty.PropertyType == typeof(bool))
+                {
+                    return (bool)isEnabledProperty.GetValue(userInfo);
+                }
+
+                // 检查 Status 字段 (0=禁用, 1=启用等)
+                var statusProperty = userInfo.GetType().GetProperty("Status");
+                if (statusProperty != null)
+                {
+                    var statusValue = statusProperty.GetValue(userInfo);
+                    if (statusValue is int intStatus)
+                    {
+                        return intStatus != 0; // 0表示禁用，非0表示启用
+                    }
+                    else if (statusValue is bool boolStatus)
+                    {
+                        return boolStatus;
+                    }
+                }
+
+                // 检查 Enabled 字段
+                var enabledProperty = userInfo.GetType().GetProperty("Enabled");
+                if (enabledProperty != null && enabledProperty.PropertyType == typeof(bool))
+                {
+                    return (bool)enabledProperty.GetValue(userInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogWarning(ex, $"检查用户状态时发生异常: UserId={userInfo.User_ID}");
+            }
+
+            // 默认认为用户是启用状态（避免误禁用）
+            return true;
+        }
+
+        /// <summary>
         /// 更新会话信息
         /// </summary>
         private void UpdateSessionInfo(SessionInfo sessionInfo, tb_UserInfo userInfo, bool IsAdmin = false)
@@ -1002,8 +1069,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 
                 foreach (var session in authorizedSessions)
                 {
-                    // 如果IP地址相同，则认为是同一台机器的登录
-                    bool isLocal = string.Equals(currentClientIp, session.ClientIp, StringComparison.OrdinalIgnoreCase);
+                    // 外网环境优化：基于IP+用户名判断是否为本地会话
+                    // 原因：多台客户端通过路由器上网时会共享同一外网IP
+                    // 单纯基于IP判断会误判，需要结合用户名进行更精确的判断
+                    bool isLocal = string.Equals(currentClientIp, session.ClientIp, StringComparison.OrdinalIgnoreCase) 
+                                  && string.Equals(username, session.UserName, StringComparison.OrdinalIgnoreCase);
                     
                     if (isLocal)
                     {
@@ -1021,7 +1091,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 记录诊断日志
                 if (duplicateResult.HasDuplicateLogin)
                 {
-                    logger?.LogDebug($"[重复登录检测] Username={username}, LocalCount={localSessions.Count}, RemoteCount={remoteSessions.Count}, Type={duplicateResult.Type}");
+                    logger?.LogDebug($"[重复登录检测] Username={username}, CurrentIP={currentClientIp}, LocalCount={localSessions.Count}, RemoteCount={remoteSessions.Count}, Type={duplicateResult.Type}");
                 }
 
                 // 返回分析结果
@@ -1092,14 +1162,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
-        /// 获取登录尝试次数
-        /// </summary>
-        private int GetLoginAttempts(string username)
-        {
-            return _loginAttemptRecords.TryGetValue(username, out var info) ? info.Attempts : 0;
-        }
-
-        /// <summary>
         /// 增加登录尝试次数
         /// </summary>
         private void IncrementLoginAttempts(string username, string clientIp = null)
@@ -1131,6 +1193,59 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
+        /// 公开方法：解除用户名的登录限制（重置登录尝试次数）
+        /// 供管理员在黑名单管理界面调用，实时生效
+        /// </summary>
+        /// <param name="username">用户名</param>
+        /// <returns>是否成功解除限制</returns>
+        public static bool UnlockUserLogin(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+                return false;
+            
+            return _loginAttemptRecords.TryRemove(username, out _);
+        }
+
+        /// <summary>
+        /// 公开方法：获取所有被锁定的用户名（登录尝试次数达到上限的用户）
+        /// </summary>
+        /// <returns>被锁定的用户名列表</returns>
+        public static List<string> GetLockedUsernames()
+        {
+            var lockedUsers = new List<string>();
+            foreach (var kvp in _loginAttemptRecords)
+            {
+                if (kvp.Value.Attempts >= MaxLoginAttempts)
+                {
+                    lockedUsers.Add(kvp.Key);
+                }
+            }
+            return lockedUsers;
+        }
+
+        /// <summary>
+        /// 公开方法：清除所有登录尝试记录（紧急恢复用）
+        /// 用于快速解除所有限制，让所有用户可以重新登录
+        /// </summary>
+        public static void ClearAllLoginAttempts()
+        {
+            _loginAttemptRecords.Clear();
+        }
+
+        /// <summary>
+        /// 公开方法：获取指定用户的登录尝试次数
+        /// </summary>
+        /// <param name="username">用户名</param>
+        /// <returns>登录尝试次数</returns>
+        public static int GetLoginAttempts(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+                return 0;
+            
+            return _loginAttemptRecords.TryGetValue(username, out var info) ? info.Attempts : 0;
+        }
+
+        /// <summary>
         /// 确保清理定时器已启动（延迟初始化，避免多线程竞争）
         /// </summary>
         private static void EnsureCleanupTimerStarted()
@@ -1153,9 +1268,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
-        /// 保守式清理过期的登录尝试记录
-        /// 注意：不能清理真正在线的用户，只能清理长时间未成功的登录尝试记录
-        /// 保守策略：只清理超过过期时间且失败次数较少的记录
+        /// 清理过期的登录尝试记录
+        /// 所有超过过期时间的记录都会被清理，确保用户不会被永久锁定
         /// </summary>
         private static void CleanupExpiredLoginAttempts()
         {
@@ -1163,7 +1277,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 var now = DateTime.Now;
                 var keysToRemove = new List<string>();
-                var suspiciousUsers = new List<(string username, int attempts, string ip)>();
 
                 foreach (var kvp in _loginAttemptRecords)
                 {
@@ -1172,16 +1285,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                     var age = now - info.FirstAttemptTime;
 
+                    // 超过过期时间（30分钟）的记录全部清理，确保用户不会被永久锁定
                     if (age > LoginAttemptExpiryDuration)
                     {
-                        if (info.Attempts < ConservativeCleanupThreshold)
-                        {
-                            keysToRemove.Add(username);
-                        }
-                        else
-                        {
-                            suspiciousUsers.Add((username, info.Attempts, info.LastIp));
-                        }
+                        keysToRemove.Add(username);
                     }
                 }
 

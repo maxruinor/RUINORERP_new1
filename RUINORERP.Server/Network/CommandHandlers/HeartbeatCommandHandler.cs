@@ -254,7 +254,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 动态计算下次心跳间隔
-        /// 根据网络状态和会话活跃度智能调整心跳间隔
+        /// ✅ 外网优化：根据网络状态和会话活跃度智能调整心跳间隔，最大不超过30秒
         /// </summary>
         /// <param name="sessionInfo">会话信息</param>
         /// <returns>下次心跳间隔（毫秒）</returns>
@@ -263,7 +263,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             // 默认15秒间隔，与客户端保持一致
             const int defaultIntervalMs = 15000;
             const int minIntervalMs = 10000;  // 最小10秒
-            const int maxIntervalMs = 60000;  // 最大60秒
+            const int maxIntervalMs = 30000;  // ✅ 外网优化：最大30秒（原60秒太长，易被防火墙断开）
 
             // 如果会话信息无效，使用默认间隔
             if (sessionInfo == null)
@@ -288,7 +288,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             else
             {
-                // 超过60分钟无活动，使用较长间隔（节省资源）
+                // ✅ 外网优化：超过60分钟无活动，使用30秒间隔（原60秒太长）
+                // 说明：大多数防火墙/NAT设备在30-60秒内清理空闲连接
                 intervalMs = maxIntervalMs;
             }
 

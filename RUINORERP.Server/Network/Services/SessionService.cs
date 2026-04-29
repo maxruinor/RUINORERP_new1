@@ -53,9 +53,9 @@ namespace RUINORERP.Server.Network.Services
         private readonly CacheSubscriptionManager _subscriptionManager; // 使用统一的订阅管理器
         private readonly HeartbeatPerformanceMonitor _heartbeatPerformanceMonitor; // 心跳性能监控器
 
-        // ✅ DDoS防护：连接频率跟踪（IP -> 连接计数器）
-        private readonly ConcurrentDictionary<string, ConnectionRateTracker> _connectionRates;
-        private readonly Timer _rateCleanupTimer; // 定期清理过期的连接记录
+        // ❌ 移除基于IP的DDoS防护 - NAT环境下多台客户端共享同一IP，会导致误判
+        // private readonly ConcurrentDictionary<string, ConnectionRateTracker> _connectionRates;
+        // private readonly Timer _rateCleanupTimer;
 
         // ✅ 使用统一的待处理请求追踪器（消除重复代码）
         private readonly PendingRequestTracker<PacketModel> _requestTracker;
@@ -88,10 +88,9 @@ namespace RUINORERP.Server.Network.Services
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
             _statistics = SessionStatistics.Create(maxSessionCount);
             
-            // ✅ DDoS防护：初始化连接频率跟踪
-            _connectionRates = new ConcurrentDictionary<string, ConnectionRateTracker>();
-            // 每10分钟清理一次过期的连接记录，避免内存泄漏
-            _rateCleanupTimer = new Timer(CleanupConnectionRates, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
+            // ❌ 移除基于IP的DDoS防护初始化 - NAT环境下会导致误判
+            // _connectionRates = new ConcurrentDictionary<string, ConnectionRateTracker>();
+            // _rateCleanupTimer = new Timer(CleanupConnectionRates, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
             
             // ✅ 使用统一的请求追踪器（30秒超时，1分钟清理，最多500个待处理请求）
             _requestTracker = new PendingRequestTracker<PacketModel>(
@@ -555,40 +554,10 @@ namespace RUINORERP.Server.Network.Services
                 session["ConnectTime"] = DateTime.Now;
                 session["ClientIp"] = clientIp;
                 
-                // ✅ DDoS防护：获取客户端IP并检查连接频率
-                bool shouldCloseConnection = false;
-                
-                // P1优化：启用基础DDoS防护 - 限制单IP连接频率，防止重连风暴
-                if (!string.IsNullOrEmpty(clientIp) && clientIp != "0.0.0.0")
-                {
-                    var tracker = _connectionRates.GetOrAdd(clientIp, _ => new ConnectionRateTracker());
-                    lock (tracker)
-                    {
-                        tracker.RecordConnection();
-                        // ✅ 优化：放宽DDoS防护限制至每分钟60次连接，适应网络不稳定时的重连场景
-                        const int maxConnectionsPerMinute = 60;
-                        if (tracker.IsExceedingLimit(maxConnectionsPerMinute, TimeSpan.FromMinutes(1)))
-                        {
-                            _logger.LogWarning("[DDoS防护] IP {ClientIp} 连接频率超限（{Max}/min），拒绝连接", 
-                                clientIp, maxConnectionsPerMinute);
-                            shouldCloseConnection = true;
-                        }
-                        
-                        // ✅ 新增：检测快速重连模式（可能是扫描工具）
-                        const int maxConnectionsPer5Seconds = 5;
-                        if (tracker.IsExceedingLimit(maxConnectionsPer5Seconds, TimeSpan.FromSeconds(5)))
-                        {
-                            _logger.LogWarning("[扫描检测] IP {ClientIp} 5秒内连接{Count}次，疑似端口扫描，拒绝连接", 
-                                clientIp, maxConnectionsPer5Seconds);
-                            shouldCloseConnection = true;
-                        }
-                    }
-                    if (shouldCloseConnection)
-                    {
-                        await session.CloseAsync(CloseReason.ServerShutdown);
-                        return;
-                    }
-                }
+                // ❌ 移除基于单一IP的DDoS防护和端口扫描检测
+                // 原因：外网环境下多台客户端通过路由器上网时会共享同一外网IP，外网是NAT环境
+                // 基于单一IP的限制（每分钟120次、5秒内10次）会严重误判，影响正常用户使用
+                // 如需防护，应基于IP+用户名组合实现，或在应用层进行更精确的控制
 
                 // 检查是否已达到最大会话数
                 if (ActiveSessionCount >= MaxSessionCount)
@@ -629,6 +598,30 @@ namespace RUINORERP.Server.Network.Services
 
                     // 触发会话连接事件
                     SessionConnected?.Invoke(sessionInfo);
+                    
+                    // ✅ 关键修复：在会话创建成功后，异步发送欢迎消息
+                    // 使用 Task.Run 避免阻塞 SuperSocket 的连接回调
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            // ✅ 优化：解耦欢迎流程与登录验证，允许未回复 WelcomeAck 的会话直接处理 Login 请求
+                            // 仅发送欢迎消息，不再设置 IsHandshakeCompleted 标志位来阻塞后续逻辑
+                            
+                            // ✅ 修复：增加超时保护，防止同步等待导致连接回调长时间阻塞
+                            // ✅ 外网优化：超时时间延长至60秒，适应高延迟网络环境
+                            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+                            await SendWelcomeMessageAsync(sessionInfo).WaitAsync(cts.Token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            _logger.LogWarning("[欢迎消息] 发送过程超时: {SessionId}", sessionInfo.SessionID);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"欢迎流程处理失败: {sessionInfo.SessionID}");
+                        }
+                    });
                 }
                 else
                 {
@@ -656,34 +649,8 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 会话连接事件处理 - 项目自定义接口实现
-        /// </summary>
-        /// <param name="sessionInfo">会话信息</param>
-        /// <returns>异步任务</returns>
-        public async Task OnSessionConnectedAsync(SessionInfo sessionInfo)
-        {
-            try
-            {
-                // ✅ 优化：解耦欢迎流程与登录验证，允许未回复 WelcomeAck 的会话直接处理 Login 请求
-                // 仅发送欢迎消息，不再设置 IsHandshakeCompleted 标志位来阻塞后续逻辑
-                
-                // ✅ 修复：增加超时保护，防止同步等待导致连接回调长时间阻塞
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
-                await SendWelcomeMessageAsync(sessionInfo).WaitAsync(cts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogWarning("[欢迎消息] 发送过程超时: {SessionId}", sessionInfo.SessionID);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"欢迎流程处理失败: {sessionInfo.SessionID}");
-            }
-        }
-
-        /// <summary>
         /// 发送欢迎消息到客户端
-        /// 修改为同步等待发送完成，确保客户端能收到欢迎消息
+        /// 修改为同步等待发送完成，确保客户端能收到欢迎消息1
         /// </summary>
         /// <param name="sessionInfo">会话信息</param>
         /// <returns>异步任务</returns>
@@ -691,6 +658,8 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
+                _logger.LogInformation("[欢迎消息] 准备发送欢迎消息: SessionId={SessionId}", sessionInfo.SessionID);
+                
                 // 延迟500毫秒再发送欢迎消息，确保客户端已准备好接收
                 await Task.Delay(500);
                 
@@ -706,8 +675,11 @@ namespace RUINORERP.Server.Network.Services
 
                 sessionInfo.WelcomeSentTime = DateTime.Now;
 
-                // ✅ 优化：外网环境下增加超时时间至20秒，适应高延迟场景
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                _logger.LogDebug("[欢迎消息] 欢迎消息内容: RequestId={RequestId}, Version={Version}, Announcement={Announcement}",
+                    welcomeRequest.RequestId, welcomeRequest.ServerVersion, announcement);
+
+                // ✅ 优化：外网环境下增加超时时间至30秒，适应高延迟场景
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
                 await SendPacketCoreAsync(
                     sessionInfo,
@@ -718,15 +690,17 @@ namespace RUINORERP.Server.Network.Services
                     PacketDirection.ServerRequest
                 ).ConfigureAwait(false);
                 
-                _logger.LogDebug("[欢迎消息] 已发送至客户端: {SessionId}", sessionInfo.SessionID);
+                _logger.LogInformation("[欢迎消息] 欢迎消息已成功发送至客户端: SessionId={SessionId}, RequestId={RequestId}", 
+                    sessionInfo.SessionID, welcomeRequest.RequestId);
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning("[欢迎消息] 发送超时: {SessionId}", sessionInfo.SessionID);
+                _logger.LogWarning("[欢迎消息] 发送超时: SessionId={SessionId}", sessionInfo.SessionID);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[欢迎消息] 发送失败: {SessionId}", sessionInfo.SessionID);
+                _logger.LogError(ex, "[欢迎消息] 发送失败: SessionId={SessionId}, Error={Error}", 
+                    sessionInfo.SessionID, ex.Message);
             }
         }
 
@@ -770,11 +744,13 @@ namespace RUINORERP.Server.Network.Services
                 {
                     var duration = DateTime.Now - connectTime;
                     
-                    // 如果连接持续时间小于3秒且未认证，可能是端口扫描
+                    // ❌ 移除基于IP的端口扫描检测
+                    // 原因：外网NAT环境下，多台客户端共享同一IP是正常现象
+                    // 仅记录日志用于诊断，不进行任何封禁或限制操作
                     if (duration.TotalSeconds < 3 && (sessionInfo == null || !sessionInfo.IsAuthenticated))
                     {
-                        _logger.LogWarning("[扫描检测] IP {ClientIp} 快速断开，连接仅持续{Duration:F1}秒，疑似端口扫描", 
-                            clientIp, duration.TotalSeconds);
+                        _logger.LogDebug("[连接诊断] SessionID={SessionId}, IP={ClientIp}, 连接持续{Duration:F1}秒后断开（未认证）",
+                            session.SessionID, clientIp, duration.TotalSeconds);
                     }
                     // ✅ 优化：正常断开使用 Debug 级别，避免外网不稳定时日志刷屏
                     else if (sessionInfo != null && sessionInfo.IsAuthenticated)
@@ -1511,9 +1487,9 @@ namespace RUINORERP.Server.Network.Services
                             var inactiveTime = currentTime - session.LastActivityTime;
                             if (inactiveTime.TotalMinutes > 60)
                             {
-                                // 对于已认证的会话，给予更长的宽限期（可配置）
-                                // TODO: 建议将120分钟改为配置项，生产环境建议60-90分钟
-                                const int authenticatedSessionTimeout = 90; // 已认证会话超时时间（分钟）
+                                // ✅ 外网优化：已认证会话超时时间延长至4小时（原90分钟）
+                                // 说明：外网用户可能长时间离开（会议、午餐等），频繁重新登录体验差
+                                const int authenticatedSessionTimeout = 240; // 4小时
                                 
                                 if (session.IsAuthenticated && inactiveTime.TotalMinutes < authenticatedSessionTimeout)
                                 {
@@ -1714,8 +1690,9 @@ namespace RUINORERP.Server.Network.Services
             if (!_disposed)
             {
                 _cleanupTimer?.Dispose();
-                _rateCleanupTimer?.Dispose(); // ✅ DDoS防护：清理连接频率定时器
-                _connectionRates.Clear(); // ✅ DDoS防护：清空连接记录
+                // ❌ 移除DDoS防护相关清理 - 已禁用基于IP的防护
+                // _rateCleanupTimer?.Dispose();
+                // _connectionRates.Clear();
 
                 // Fire-and-forget: 启动异步关闭，不等待完成
                 _ = Task.Run(async () =>
@@ -1828,89 +1805,70 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 清理过期的连接频率记录（避免内存泄漏）
+        /// ❌ 已移除：清理过期的连接频率记录
+        /// 原因：基于IP的DDoS防护在NAT环境下会导致误判，已完全禁用
         /// </summary>
-        private void CleanupConnectionRates(object state)
-        {
-            try
-            {
-                var now = DateTime.Now;
-                var expiredKeys = _connectionRates
-                    .Where(kvp => kvp.Value.LastConnection < now.AddMinutes(-5)) // 5分钟无活动则清理
-                    .Select(kvp => kvp.Key)
-                    .ToList();
-
-                foreach (var key in expiredKeys)
-                {
-                    _connectionRates.TryRemove(key, out _);
-                }
-
-                if (expiredKeys.Count > 0)
-                {
-                    _logger.LogDebug($"[DDoS防护] 清理{expiredKeys.Count}个过期的连接记录，剩余{_connectionRates.Count}个");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "[DDoS防护] 清理连接记录失败");
-            }
-        }
+        // private void CleanupConnectionRates(object state)
+        // {
+        //     try
+        //     {
+        //         var now = DateTime.Now;
+        //         var expiredKeys = _connectionRates
+        //             .Where(kvp => kvp.Value.LastConnection < now.AddMinutes(-5))
+        //             .Select(kvp => kvp.Key)
+        //             .ToList();
+        //
+        //         foreach (var key in expiredKeys)
+        //         {
+        //             _connectionRates.TryRemove(key, out _);
+        //         }
+        //
+        //         if (expiredKeys.Count > 0)
+        //         {
+        //             _logger.LogDebug($"[DDoS防护] 清理{expiredKeys.Count}个过期的连接记录，剩余{_connectionRates.Count}个");
+        //         }
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogWarning(ex, "[DDoS防护] 清理连接记录失败");
+        //     }
+        // }
 
         #endregion
     }
 
     /// <summary>
-    /// ✅ DDoS防护：连接频率跟踪器
+    /// ❌ 已移除：连接频率跟踪器
+    /// 原因：基于IP的DDoS防护在NAT环境下会导致误判，已完全禁用
     /// </summary>
-    public class ConnectionRateTracker
-    {
-        /// <summary>
-        /// 连接次数
-        /// </summary>
-        public int ConnectionCount { get; set; }
-        
-        /// <summary>
-        /// 首次连接时间
-        /// </summary>
-        public DateTime FirstConnection { get; set; }
-        
-        /// <summary>
-        /// 最后连接时间
-        /// </summary>
-        public DateTime LastConnection { get; set; }
-
-        /// <summary>
-        /// 记录一次连接
-        /// </summary>
-        public void RecordConnection()
-        {
-            ConnectionCount++;
-            LastConnection = DateTime.Now;
-            if (FirstConnection == default)
-                FirstConnection = DateTime.Now;
-        }
-
-        /// <summary>
-        /// 检查是否超过限制
-        /// </summary>
-        /// <param name="maxConnections">最大连接数</param>
-        /// <param name="timeWindow">时间窗口</param>
-        /// <returns>是否超限</returns>
-        public bool IsExceedingLimit(int maxConnections, TimeSpan timeWindow)
-        {
-            var windowStart = DateTime.Now - timeWindow;
-            
-            // 如果最后连接时间超出时间窗口，重置计数器
-            if (LastConnection < windowStart)
-            {
-                ConnectionCount = 0;
-                FirstConnection = DateTime.Now;
-                return false;
-            }
-            
-            return ConnectionCount > maxConnections;
-        }
-    }
+    // public class ConnectionRateTracker
+    // {
+    //     public int ConnectionCount { get; set; }
+    //     public DateTime FirstConnection { get; set; }
+    //     public DateTime LastConnection { get; set; }
+    //
+    //     public void RecordConnection()
+    //     {
+    //         ConnectionCount++;
+    //         LastConnection = DateTime.Now;
+    //         if (FirstConnection == default)
+    //             FirstConnection = DateTime.Now;
+    //     }
+    //
+    //     public bool IsExceedingLimit(int maxConnections, TimeSpan timeWindow)
+    //     {
+    //         var windowStart = DateTime.Now - timeWindow;
+    //         
+    //         if (LastConnection < windowStart)
+    //         {
+    //             ConnectionCount = 0;
+    //             FirstConnection = DateTime.Now;
+    //             return false;
+    //         }
+    //         
+    //         return ConnectionCount > maxConnections;
+    //     }
+    // }
 }
 
 

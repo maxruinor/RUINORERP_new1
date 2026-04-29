@@ -2102,6 +2102,17 @@ namespace RUINORERP.UI.Network
                     _logger.LogWarning("接收到空数据包");
                     return;
                 }
+
+                // ✅ 特别记录Welcome命令的接收
+                if (packet.CommandId == SystemCommands.Welcome)
+                {
+                    _logger.LogInformation("[欢迎消息] 客户端接收到Welcome数据包: Direction={Direction}, HasRequestId={HasRequestId}, RequestId={RequestId}, IsValid={IsValid}",
+                        packet.Direction,
+                        !string.IsNullOrEmpty(packet.ExecutionContext?.RequestId),
+                        packet.ExecutionContext?.RequestId,
+                        packet.IsValid());
+                }
+
                 if (_applicationContext != null)
                 {
                     _applicationContext.SessionId = packet.SessionId;
@@ -2267,6 +2278,12 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         {
             _logger.LogDebug("处理服务器主动推送命令: {CommandId}", packet.CommandId);
 
+            // ✅ 特别记录Welcome命令
+            if (packet.CommandId == SystemCommands.Welcome)
+            {
+                _logger.LogInformation("[欢迎消息] HandleServerPushCommandAsync被调用，准备处理欢迎命令");
+            }
+
             try
             {
                 // 优先使用事件机制处理命令
@@ -2278,7 +2295,18 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 // 只有在没有事件订阅者时才使用调度器处理
                 if (!_clientEventManager.HasCommandSubscribers(packet))
                 {
+                    if (packet.CommandId == SystemCommands.Welcome)
+                    {
+                        _logger.LogDebug("[欢迎消息] 无事件订阅者，将通过ProcessCommandAsync处理");
+                    }
                     await ProcessCommandAsync(packet);
+                }
+                else
+                {
+                    if (packet.CommandId == SystemCommands.Welcome)
+                    {
+                        _logger.LogWarning("[欢迎消息] 存在事件订阅者，将不会调用ProcessCommandAsync");
+                    }
                 }
             }
             catch (Exception ex)
@@ -2514,6 +2542,15 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         private async Task ProcessSystemCommandAsync(PacketModel packet)
         {
             // 处理系统命令，如心跳响应等
+
+            // ✅ 特殊处理：Welcome命令应该由命令调度器处理，而不是在这里拦截
+            // Welcome命令需要WelcomeCommandHandler来处理并发送WelcomeAck响应
+            if (packet.CommandId == SystemCommands.Welcome)
+            {
+                _logger.LogDebug("[欢迎消息] ProcessSystemCommandAsync检测到Welcome命令，交由命令调度器处理");
+                await _commandDispatcher.DispatchAsync(packet).ConfigureAwait(false);
+                return;
+            }
 
             if (packet.CommandId == SystemCommands.Heartbeat)
             {

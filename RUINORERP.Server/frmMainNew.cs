@@ -372,6 +372,11 @@ namespace RUINORERP.Server
                 // 添加分隔符
                 toolStripButtonNetworkMonitor.DropDownItems.Add(new ToolStripSeparator());
 
+                // ✅ 添加显示统计菜单项
+                var showStatsItem = new ToolStripMenuItem("显示监控统计");
+                showStatsItem.Click += ShowNetworkMonitorStatistics;
+                toolStripButtonNetworkMonitor.DropDownItems.Add(showStatsItem);
+
                 // 添加监控状态切换菜单项
                 var toggleMonitoringItem = new ToolStripMenuItem("启用/禁用监控");
                 toggleMonitoringItem.Click += ToggleNetworkMonitoring;
@@ -732,6 +737,42 @@ namespace RUINORERP.Server
             // 更新过滤器设置
             RUINORERP.Server.Network.SuperSocket.SuperSocketCommandAdapter<IAppSession>.SetCommandFilters(_selectedCommandFilters);
             PrintInfoLog("已取消所有网络命令选择。");
+        }
+
+        /// <summary>
+        /// ✅ 显示网络监控统计数据
+        /// </summary>
+        private void ShowNetworkMonitorStatistics(object sender, EventArgs e)
+        {
+            try
+            {
+                var stats = RUINORERP.Server.Network.SuperSocket.SuperSocketCommandAdapter<IAppSession>.GetMonitorStatistics();
+                
+                var sb = new StringBuilder();
+                sb.AppendLine("=== 网络监控统计 ===");
+                sb.AppendLine($"总接收数据包: {stats["TotalPacketsReceived"]}");
+                sb.AppendLine($"总发送数据包: {stats["TotalPacketsSent"]}");
+                sb.AppendLine($"总计数据包: {(long)stats["TotalPacketsReceived"] + (long)stats["TotalPacketsSent"]}");
+                
+                if (stats.ContainsKey("MonitorDurationSeconds"))
+                {
+                    var duration = (double)stats["MonitorDurationSeconds"];
+                    sb.AppendLine($"监控时长: {TimeSpan.FromSeconds(duration):hh\\:mm\\:ss}");
+                    sb.AppendLine($"平均每秒包数: {stats["PacketsPerSecond"]}");
+                }
+                
+                if (stats.ContainsKey("MonitorStartTime") && (DateTime)stats["MonitorStartTime"] != DateTime.MinValue)
+                {
+                    sb.AppendLine($"开始时间: {((DateTime)stats["MonitorStartTime"]):yyyy-MM-dd HH:mm:ss}");
+                }
+                
+                PrintInfoLog(sb.ToString());
+                MessageBox.Show(sb.ToString(), "网络监控统计", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"获取网络监控统计失败: {ex.Message}");
+            }
         }
         /// <summary>
         /// 初始化服务器信息更新定时器
@@ -2016,6 +2057,9 @@ namespace RUINORERP.Server
                 // 初始化界面
                 InitializeUI();
 
+                // 初始化黑名单管理器（传入UI同步上下文，确保UI更新线程安全）
+                BlacklistManager.Initialize(SynchronizationContext.Current);
+
                 Initialize();
 
                 // 主窗体初始化完成后，调度工作流（避免空引用异常）
@@ -2144,6 +2188,19 @@ namespace RUINORERP.Server
             if (IsIISProcess()) return;
 
             SafeLogOperation(msg, Color.Black);
+        }
+
+        /// <summary>
+        /// 打印调试日志（用于网络监控等调试信息）
+        /// ⚠️ 注意：此方法不受日志级别限制，只要调用就会显示
+        /// </summary>
+        /// <param name="msg">调试消息</param>
+        public void PrintDebugLog(string msg)
+        {
+            if (IsIISProcess()) return;
+
+            // 调试日志使用蓝色显示，便于区分
+            SafeLogOperation(msg, Color.Blue);
         }
 
         /// <summary>

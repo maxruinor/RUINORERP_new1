@@ -219,22 +219,30 @@ namespace RUINORERP.UI
             btnok.Text = "连接中...";
             
             // 启动初始连接（不重连）
-            _ = Task.Run(async () => await PerformInitialConnectionAsync());
+            _ = Task.Run(async () => await ConnectAndWaitWelcomeAsync(isInitialConnection: true));
         }
 
         /// <summary>
-        /// 执行初始连接
-        /// 登录界面显示时自动连接，失败不重连
+        /// 统一的连接并等待欢迎消息方法
+        /// ✅ 优化：合并 PerformInitialConnectionAsync 和 InitializeConnectionAndWelcomeFlowAsync 的重复逻辑
         /// </summary>
-        private async Task PerformInitialConnectionAsync()
+        /// <param name="isInitialConnection">是否为初始连接（登录界面加载时的自动连接）</param>
+        /// <param name="serverIP">服务器IP（可选，默认从UI读取）</param>
+        /// <param name="serverPort">服务器端口（可选，默认从UI读取）</param>
+        /// <returns>连接结果和公告内容</returns>
+        private async Task<(bool connected, string announcement)> ConnectAndWaitWelcomeAsync(
+            bool isInitialConnection = false,
+            string serverIP = null,
+            int? serverPort = null)
         {
-            try
-            {
-                string serverIP = txtServerIP.Text.Trim();
-                int serverPort = 0;
-                int.TryParse(txtPort.Text.Trim(), out serverPort);
+            // 从UI读取服务器配置（如果未提供）
+            string targetServerIP = serverIP ?? txtServerIP.Text.Trim();
+            int targetServerPort = serverPort ?? (int.TryParse(txtPort.Text.Trim(), out int port) ? port : 0);
 
-                if (string.IsNullOrWhiteSpace(serverIP) || serverPort <= 0)
+            // 验证服务器配置
+            if (string.IsNullOrWhiteSpace(targetServerIP) || targetServerPort <= 0)
+            {
+                if (isInitialConnection)
                 {
                     InvokeIfRequired(() =>
                     {
@@ -242,28 +250,40 @@ namespace RUINORERP.UI
                         btnok.Enabled = true;
                         btnok.Text = "登录";
                     });
-                    return;
+                }
+                MainForm.Instance?.logger?.LogWarning("[连接] 无效的服务器配置 - IP: {IP}, Port: {Port}", targetServerIP, targetServerPort);
+                return (false, string.Empty);
+            }
+
+            try
+            {
+                // ✅ 关键：重置欢迎完成信号源，确保可以接收新的欢迎消息
+                // 使用新的信号源避免与之前的连接复用导致的状态混乱
+                var localTcs = new TaskCompletionSource<(bool success, string announcement)>();
+                _welcomeCompletionTcs = localTcs;
+
+                // ✅ 关键：初始连接时禁用自动重连，只有登录成功后才启用
+                if (isInitialConnection)
+                {
+                    connectionManager.AutoReconnect = false;
+                    MainForm.Instance?.logger?.LogInformation("[初始连接] 已禁用自动重连，仅在登录成功后启用");
                 }
 
-                // ✅ 关键：重置欢迎完成信号源，确保可以接收新的欢迎消息
-                _welcomeCompletionTcs = new TaskCompletionSource<(bool success, string announcement)>();
-                
-                // ✅ 关键：初始连接时禁用自动重连
-                connectionManager.AutoReconnect = false;
-                MainForm.Instance?.logger?.LogInformation("[初始连接] 已禁用自动重连，仅在登录成功后启用");
-
-                // 检测是否为外网地址
-                bool isExternalNetwork = IsExternalNetworkAddress(serverIP);
+                // 检测是否为外网地址，动态调整超时时间
+                bool isExternalNetwork = IsExternalNetworkAddress(targetServerIP);
                 // ✅ 优化：双网卡问题解决后，缩短超时时间（外网20秒，内网10秒）
                 int connectTimeoutSeconds = isExternalNetwork ? 20 : 10;
 
+                // 更新UI状态提示
                 InvokeIfRequired(() =>
                 {
-                    MainForm.Instance?.ShowStatusText($"正在连接到服务器 {serverIP}:{serverPort}...");
+                    MainForm.Instance?.ShowStatusText($"正在连接到服务器 {targetServerIP}:{targetServerPort}...");
                 });
+                MainForm.Instance?.logger?.LogInformation("[连接] 尝试连接到服务器 {ServerIP}:{ServerPort} (外网: {IsExternal})",
+                    targetServerIP, targetServerPort, isExternalNetwork);
 
-                // 尝试连接服务器（不重连）
-                var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
+                // 执行连接
+                var connectTask = connectionManager.ConnectAsync(targetServerIP, targetServerPort);
                 var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(connectTimeoutSeconds)));
 
                 bool connectResult = false;
@@ -271,42 +291,63 @@ namespace RUINORERP.UI
                 {
                     connectResult = await connectTask;
                 }
+                else
+                {
+                    MainForm.Instance?.logger?.LogWarning("[连接] 连接超时 - {ServerIP}:{ServerPort}", targetServerIP, targetServerPort);
+                }
 
                 if (!connectResult)
                 {
-                    InvokeIfRequired(() =>
+                    string errorMsg = isInitialConnection
+                        ? $"无法连接到服务器 {targetServerIP}:{targetServerPort}，请检查配置后点击登录重试"
+                        : $"无法连接到服务器 {targetServerIP}:{targetServerPort}";
+                    
+                    if (isInitialConnection)
                     {
-                        MainForm.Instance?.ShowStatusText($"无法连接到服务器 {serverIP}:{serverPort}，请检查配置后点击登录重试");
-                        btnok.Enabled = true;
-                        btnok.Text = "登录";
-                    });
-                    return;
+                        InvokeIfRequired(() =>
+                        {
+                            MainForm.Instance?.ShowStatusText(errorMsg);
+                            btnok.Enabled = true;
+                            btnok.Text = "登录";
+                        });
+                    }
+                    MainForm.Instance?.logger?.LogWarning("[连接] 连接失败 - {ServerIP}:{ServerPort}", targetServerIP, targetServerPort);
+                    return (false, string.Empty);
                 }
 
                 // 连接成功，等待欢迎消息
+                MainForm.Instance?.logger?.LogInformation("[连接] 连接成功，等待欢迎消息");
                 InvokeIfRequired(() =>
                 {
                     MainForm.Instance?.ShowStatusText("服务器连接成功，等待欢迎信息...");
                 });
 
-                // 等待欢迎流程完成
                 // ✅ 优化：缩短欢迎消息等待时间至10秒
                 var welcomeTimeout = TimeSpan.FromSeconds(10);
-                var welcomeTask = await Task.WhenAny(_welcomeCompletionTcs.Task, Task.Delay(welcomeTimeout));
+                var welcomeTask = await Task.WhenAny(localTcs.Task, Task.Delay(welcomeTimeout));
 
-                if (welcomeTask == _welcomeCompletionTcs.Task)
+                string announcement = string.Empty;
+                if (welcomeTask == localTcs.Task)
                 {
-                    var (success, announcement) = await _welcomeCompletionTcs.Task;
-                    if (success && !string.IsNullOrEmpty(announcement))
+                    var (success, msg) = await localTcs.Task;
+                    if (success && !string.IsNullOrEmpty(msg))
                     {
-                        InvokeIfRequired(() =>
+                        announcement = msg;
+                        MainForm.Instance?.logger?.LogInformation("[欢迎消息] 收到公告: {Announcement}", announcement);
+                        
+                        // 在UI线程中显示公告（仅初始连接时显示）
+                        if (isInitialConnection)
                         {
-                            DisplayAnnouncement(announcement);
-                            MainForm.Instance?.ShowStatusText($"服务器连接成功 | 公告: {announcement}");
-                        });
+                            InvokeIfRequired(() =>
+                            {
+                                DisplayAnnouncement(announcement);
+                                MainForm.Instance?.ShowStatusText($"服务器连接成功 | 公告: {announcement}");
+                            });
+                        }
                     }
                     else
                     {
+                        MainForm.Instance?.logger?.LogDebug("[欢迎消息] 欢迎流程完成，但未收到公告内容");
                         InvokeIfRequired(() =>
                         {
                             MainForm.Instance?.ShowStatusText("服务器连接成功");
@@ -315,28 +356,39 @@ namespace RUINORERP.UI
                 }
                 else
                 {
+                    MainForm.Instance?.logger?.LogWarning("[欢迎消息] 等待超时，未收到欢迎消息");
                     InvokeIfRequired(() =>
                     {
                         MainForm.Instance?.ShowStatusText("服务器连接成功（未收到欢迎消息）");
                     });
                 }
 
-                // 连接成功，启用登录按钮
-                InvokeIfRequired(() =>
+                // 初始连接成功时启用登录按钮
+                if (isInitialConnection)
                 {
-                    btnok.Enabled = true;
-                    btnok.Text = "登录";
-                });
+                    InvokeIfRequired(() =>
+                    {
+                        btnok.Enabled = true;
+                        btnok.Text = "登录";
+                    });
+                }
+
+                return (true, announcement);
             }
             catch (Exception ex)
             {
-                MainForm.Instance?.logger?.LogError(ex, "初始连接失败");
-                InvokeIfRequired(() =>
+                MainForm.Instance?.logger?.LogError(ex, "[连接] 连接过程发生异常 - {ServerIP}:{ServerPort}", targetServerIP, targetServerPort);
+                
+                if (isInitialConnection)
                 {
-                    MainForm.Instance?.ShowStatusText($"连接服务器时发生错误: {ex.Message}");
-                    btnok.Enabled = true;
-                    btnok.Text = "登录";
-                });
+                    InvokeIfRequired(() =>
+                    {
+                        MainForm.Instance?.ShowStatusText($"连接服务器时发生错误: {ex.Message}");
+                        btnok.Enabled = true;
+                        btnok.Text = "登录";
+                    });
+                }
+                return (false, string.Empty);
             }
         }
 
@@ -374,105 +426,6 @@ namespace RUINORERP.UI
             else
             {
                 chksaveIDpwd.Checked = false;
-            }
-        }
-
-        /// <summary>
-        /// 初始化连接并等待欢迎流程完成
-        /// 在后台执行,确保登录界面正常显示
-        /// </summary>
-        private async Task InitializeConnectionAndWelcomeFlowAsync()
-        {
-            string serverIP = string.Empty;
-            int serverPort = 0;
-
-            try
-            {
-                // ✅ 在UI线程中读取服务器配置
-                await Task.Run(() =>
-                {
-                    InvokeIfRequired(() =>
-                    {
-                        serverIP = txtServerIP.Text.Trim();
-                        int.TryParse(txtPort.Text.Trim(), out serverPort);
-                    });
-                });
-
-                // 验证服务器地址和端口
-                if (string.IsNullOrWhiteSpace(serverIP) || serverPort <= 0)
-                {
-                    MainForm.Instance?.ShowStatusText("请输入有效的服务器IP和端口");
-                    return;
-                }
-
-                // 1. 连接服务器
-                MainForm.Instance?.ShowStatusText($"正在连接到服务器 {serverIP}:{serverPort}...");
-
-                var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
-                // ✅ 优化：外网20秒，内网10秒
-                int connectTimeoutSeconds = IsExternalNetworkAddress(serverIP) ? 20 : 10;
-                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(connectTimeoutSeconds)));
-
-                bool connectResult = false;
-                if (completedTask == connectTask)
-                {
-                    connectResult = await connectTask;
-                }
-                else
-                {
-                    MainForm.Instance?.ShowStatusText($"连接服务器 {serverIP}:{serverPort} 超时");
-                    // 连接超时,不阻止登录界面显示
-                    return;
-                }
-
-                if (!connectResult)
-                {
-                    MainForm.Instance?.ShowStatusText($"无法连接到服务器 {serverIP}:{serverPort}，请检查配置后点击登录");
-                    return;
-                }
-
-                MainForm.Instance?.ShowStatusText("服务器连接成功");
-
-                // 2. 异步等待欢迎流程完成（非阻塞）
-                // 欢迎流程由WelcomeCommandHandler自动处理，我们只需要在后台接收确认
-                // ✅ 优化：不再使用 WhenAny 阻塞，而是让其在后台运行，不干扰用户操作
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        // ✅ 优化：缩短欢迎消息等待时间至10秒
-                        var welcomeTimeout = TimeSpan.FromSeconds(10);
-                        var completedTask = await Task.WhenAny(
-                            _welcomeCompletionTcs.Task,
-                            Task.Delay(welcomeTimeout)
-                        );
-
-                        if (completedTask == _welcomeCompletionTcs.Task)
-                        {
-                            var (success, announcement) = await _welcomeCompletionTcs.Task;
-                            if (success && !string.IsNullOrEmpty(announcement))
-                            {
-                                // 在UI线程中显示公告
-                                InvokeIfRequired(() => DisplayAnnouncement(announcement));
-                                MainForm.Instance.ShowStatusText($"服务器连接成功 | 公告: {announcement}");
-                            }
-                            MainForm.Instance?.PrintInfoLog("欢迎流程验证通过,服务器连接已就绪");
-                        }
-                        else
-                        {
-                            MainForm.Instance?.logger?.LogDebug("后台等待欢迎消息超时");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance?.logger?.LogDebug(ex, "后台等待欢迎消息时发生异常");
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance?.logger?.LogError(ex, "初始化连接和欢迎流程时发生异常");
-                MainForm.Instance?.ShowStatusText($"连接服务器时发生错误: {ex.Message}");
             }
         }
 
@@ -525,84 +478,54 @@ namespace RUINORERP.UI
             MainForm.Instance?.logger?.LogInformation("[登录] 输入验证通过 - 用户名: {Username}, 服务器: {ServerIP}:{ServerPort}",
                 txtUserName.Text, txtServerIP.Text, txtPort.Text);
 
-            // 检测是否为外网地址，外网需要更长的超时时间
+            // ✅ 优化：使用统一的连接方法，检测是否需要重新连接
             string serverIP = txtServerIP.Text.Trim();
-            bool isExternalNetwork = IsExternalNetworkAddress(serverIP);
-            // ✅ 优化：双网卡问题解决后，缩短超时时间（外网20秒，内网10秒）
-            int connectTimeoutSeconds = isExternalNetwork ? 20 : 10;
-
-            _ = Task.Run(async () => await InitializeConnectionAndWelcomeFlowAsync());
-
-            // 等待连接建立（根据网络类型动态调整超时时间）
-            var connectTimeout = TimeSpan.FromSeconds(connectTimeoutSeconds);
-            var startTime = DateTime.Now;
-            int checkCount = 0;
-
-            while (!connectionManager.IsConnected && (DateTime.Now - startTime) < connectTimeout)
-            {
-                await Task.Delay(500);
-                checkCount++;
-
-                // 每5秒更新一次状态提示
-                if (checkCount % 10 == 0 && isExternalNetwork)
-                {
-                    int elapsedSeconds = (int)(DateTime.Now - startTime).TotalSeconds;
-                    MainForm.Instance?.ShowStatusText($"正在连接服务器... 已等待{elapsedSeconds}秒，外网连接可能需要更长时间");
-                }
-            }
-
-            if (!connectionManager.IsConnected)
-            {
-                InvokeIfRequired(() =>
-                {
-                    string errorMessage = isExternalNetwork
-                        ? "无法连接到服务器。\n\n可能原因：\n1. 服务器IP或端口配置错误\n2. 服务器防火墙未开放端口\n3. 路由器端口映射未配置\n4. 网络连接不稳定\n\n建议：\n• 检查服务器地址和端口是否正确\n• 确认服务器端防火墙已放行端口\n• 检查路由器端口映射配置\n• 尝试使用内网连接测试服务器状态"
-                        : "无法连接到服务器，请检查IP和端口配置。";
-
-                    MessageBox.Show(errorMessage, "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    btnok.Text = "登录";
-                    btnok.Enabled = true;
-                });
-                return;
-            }
-
-
+            int.TryParse(txtPort.Text.Trim(), out int serverPort);
+            
             // 判断是否需要重连：检查IP/端口是否变化
             bool needsReconnect = true;
             if (connectionManager.IsConnected)
             {
                 string currentServerIP = (connectionManager.CurrentServerAddress ?? "").Trim();
-                string newServerIP = txtServerIP.Text.Trim();
                 int currentPort = connectionManager.CurrentServerPort;
-                int.TryParse(txtPort.Text.Trim(), out int newServerPort);
 
                 // 如果IP和端口都没变，不需要重连
-                if (string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) &&
-                    currentPort == newServerPort)
+                if (string.Equals(currentServerIP, serverIP, StringComparison.OrdinalIgnoreCase) &&
+                    currentPort == serverPort)
                 {
                     needsReconnect = false;
                     MainForm.Instance.logger?.LogDebug("服务器地址未变更，使用现有连接");
                 }
                 else
                 {
-                    MainForm.Instance.PrintInfoLog($"服务器地址已变更: {currentServerIP}:{currentPort} -> {newServerIP}:{newServerPort}，准备重新连接");
+                    MainForm.Instance.PrintInfoLog($"服务器地址已变更: {currentServerIP}:{currentPort} -> {serverIP}:{serverPort}，准备重新连接");
                 }
             }
 
-            // 如果需要重连，先断开现有连接
-            if (needsReconnect && connectionManager.IsConnected)
+            // 如果需要重连或未连接，使用统一的连接方法
+            if (needsReconnect || !connectionManager.IsConnected)
             {
-                try
+                // 使用统一的连接方法，非初始连接模式（isInitialConnection=false）
+                // 登录按钮触发的连接不需要显示公告（公告已在初始连接时显示）
+                var (connected, _) = await ConnectAndWaitWelcomeAsync(
+                    isInitialConnection: false,
+                    serverIP: serverIP,
+                    serverPort: serverPort);
+
+                if (!connected)
                 {
-                    MainForm.Instance.PrintInfoLog("正在断开现有连接...");
-                    await connectionManager.DisconnectAsync();
-                    await Task.Delay(200); // 等待断开完成
-                    MainForm.Instance?.logger?.LogDebug("现有连接已断开");
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.logger?.LogError(ex, "断开连接失败");
-                    // 继续尝试新连接
+                    bool isExternalNetwork = IsExternalNetworkAddress(serverIP);
+                    InvokeIfRequired(() =>
+                    {
+                        string errorMessage = isExternalNetwork
+                            ? "无法连接到服务器。\n\n可能原因：\n1. 服务器IP或端口配置错误\n2. 服务器防火墙未开放端口\n3. 路由器端口映射未配置\n4. 网络连接不稳定\n\n建议：\n• 检查服务器地址和端口是否正确\n• 确认服务器端防火墙已放行端口\n• 检查路由器端口映射配置\n• 尝试使用内网连接测试服务器状态"
+                            : "无法连接到服务器，请检查IP和端口配置。";
+
+                        MessageBox.Show(errorMessage, "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        btnok.Text = "登录";
+                        btnok.Enabled = true;
+                    });
+                    return;
                 }
             }
 
@@ -611,19 +534,6 @@ namespace RUINORERP.UI
             {
                 using (StatusBusy busy = new StatusBusy("正在登录..."))
                 {
-                    // 验证服务器端口
-                    if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
-                    {
-                        MainForm.Instance?.logger?.LogError("[登录] 端口号格式不正确: {Port}", txtPort.Text);
-                        InvokeIfRequired(() =>
-                        {
-                            MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            btnok.Text = "登录";  // ✅ 恢复登录按钮文本
-                            btnok.Enabled = true;
-                        });
-                        return;
-                    }
-
                     // 执行本地权限验证
                     MainForm.Instance?.logger?.LogDebug("[登录] 正在执行本地权限验证...");
                     var (loginSucceed, isInitPwd) = await PTPrincipal.Login(txtUserName.Text, txtPassWord.Text, Program.AppContextData);
@@ -658,9 +568,9 @@ namespace RUINORERP.UI
                     UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
                     UserGlobalConfig.Instance.ServerPort = txtPort.Text;
 
-                    // 执行新的登录流程
+                    // 执行新的登录流程（连接逻辑已在前面统一处理）
                     MainForm.Instance?.logger?.LogInformation("[登录] 开始执行网络登录流程...");
-                    await ExecuteNewLoginFlow(isInitPwd, serverPort, needsReconnect);
+                    await ExecuteNewLoginFlow(isInitPwd);
                 }
             }
             catch (OperationCanceledException)
@@ -957,14 +867,12 @@ namespace RUINORERP.UI
 
         /// <summary>
         /// 执行新的登录流程
+        /// ✅ 优化：连接逻辑已在 btnok_Click 中通过 ConnectAndWaitWelcomeAsync 统一处理
         /// </summary>
         /// <param name="isInitPwd">是否为初始密码</param>
-        /// <param name="serverPort">服务器端口</param>
-        /// <param name="needsReconnect">是否需要重新连接</param>
-        private async Task ExecuteNewLoginFlow(bool isInitPwd, int serverPort, bool needsReconnect)
+        private async Task ExecuteNewLoginFlow(bool isInitPwd)
         {
-            MainForm.Instance?.logger?.LogInformation("[登录流程] 开始执行 - IsInitPwd: {IsInitPwd}, ServerPort: {ServerPort}, NeedsReconnect: {NeedsReconnect}",
-                isInitPwd, serverPort, needsReconnect);
+            MainForm.Instance?.logger?.LogInformation("[登录流程] 开始执行 - IsInitPwd: {IsInitPwd}", isInitPwd);
 
             try
             {
@@ -974,44 +882,7 @@ namespace RUINORERP.UI
                     MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.LoggingIn;
                 }
 
-                // 创建组合取消令牌：包含用户取消和超时取消
-                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(8)); // ✅ 8秒超时,快速失败便于重试
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-                    timeoutCts.Token,
-                    _loginCancellationTokenSource?.Token ?? CancellationToken.None);
-
-                // 1. 连接服务器（仅在需要时连接）
-                if (needsReconnect)
-                {
-                    string serverIP = txtServerIP.Text.Trim();
-                    MainForm.Instance.PrintInfoLog($"正在连接到服务器 {serverIP}:{serverPort}...");
-                    MainForm.Instance?.logger?.LogDebug("[登录流程] 正在连接服务器: {ServerIP}:{ServerPort}", serverIP, serverPort);
-
-                    // 连接到服务器（✅ 缩短为8秒超时）
-                    var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
-                    var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(8), linkedCts.Token));
-
-                    if (completedTask != connectTask)
-                    {
-                        MainForm.Instance?.logger?.LogDebug("[登录流程] 连接服务器超时: {ServerIP}:{ServerPort}", serverIP, serverPort);
-                        throw new TimeoutException($"连接服务器 {serverIP}:{serverPort} 超时");
-                    }
-
-                    var connected = await connectTask;
-                    if (!connected)
-                    {
-                        MainForm.Instance?.logger?.LogDebug("[登录流程] 无法连接到服务器: {ServerIP}:{ServerPort}", serverIP, serverPort);
-                        throw new Exception($"无法连接到服务器 {serverIP}:{serverPort}");
-                    }
-                    MainForm.Instance.PrintInfoLog("服务器连接成功");
-                    MainForm.Instance?.logger?.LogInformation("[登录流程] 服务器连接成功");
-                }
-                else
-                {
-                    MainForm.Instance?.logger?.LogDebug("[登录流程] 使用现有连接");
-                }
-
-                // 2. 执行登录验证
+                // 执行登录验证
                 MainForm.Instance?.logger?.LogInformation("[登录流程] 正在发送登录请求到服务器...");
 
                 // ✅ 关键优化：为网络登录验证单独设置超时，不受连接时间影响
@@ -1034,10 +905,10 @@ namespace RUINORERP.UI
                 {
                     MainForm.Instance?.logger?.LogInformation("[登录流程] 登录验证成功，准备进入登录后初始化...");
 
-                    // ✅ 关键修复：登录验证成功后，不再受8秒超时限制
-                    // 先关闭超时令牌，避免后续非关键操作触发超时
-                    timeoutCts.Cancel();
-                    MainForm.Instance?.logger?.LogDebug("[登录流程] 已取消超时令牌，后续操作不受8秒限制");
+                    // ✅ 关键修复：登录验证成功后，不再受超时限制
+                    // 先关闭登录超时令牌，避免后续非关键操作触发超时
+                    loginTimeoutCts.Cancel();
+                    MainForm.Instance?.logger?.LogDebug("[登录流程] 已取消登录超时令牌，后续操作不受超时限制");
 
                     await HandleLoginSuccess(loginResponse, isInitPwd);
                 }

@@ -9,6 +9,18 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 
+/// <summary>
+/// IP黑名单管理器
+/// ⚠️ NAT环境重要提示：
+/// 1. 外网环境下，多台客户端通过路由器/NAT上网时会共享同一公网IP
+/// 2. 封禁某个外网IP会导致该IP下的所有正常用户无法访问系统
+/// 3. 建议优先使用用户名级别的限制（如登录次数限制），谨慎使用IP封禁功能
+/// 4. 仅在确认是恶意攻击且已验证不会影响正常用户时，才使用IP封禁
+/// 
+/// 适用场景：
+/// - 内网环境：可以安全使用IP封禁（每个设备有独立IP）
+/// - 外网环境：需要特别谨慎，建议结合用户名+IP进行综合判断
+/// </summary>
 public class BlacklistManager : INotifyCollectionChanged
 {
     private static readonly BindingList<BlacklistEntry> _bannedList = new BindingList<BlacklistEntry>();
@@ -39,15 +51,32 @@ public class BlacklistManager : INotifyCollectionChanged
         _allowedRanges.Add(new IpRange("169.254.0.0", "169.254.255.255"));
     }
 
+    /// <summary>
+    /// 封禁IP地址
+    /// ⚠️ NAT环境警告：外网环境下多台客户端可能共享同一公网IP（通过路由器/NAT）
+    /// 封禁某个IP会影响该IP下的所有正常用户，请谨慎使用！
+    /// 建议优先使用用户名级别的限制，仅在确认是恶意攻击时才使用IP封禁
+    /// </summary>
     public static void BanIp(string ip, TimeSpan duration)
+    {
+        BanIp(ip, duration, "系统自动封禁");
+    }
+
+    /// <summary>
+    /// 封禁IP地址（带原因说明）
+    /// ⚠️ NAT环境警告：外网环境下多台客户端可能共享同一公网IP（通过路由器/NAT）
+    /// 封禁某个IP会影响该IP下的所有正常用户，请谨慎使用！
+    /// 建议优先使用用户名级别的限制，仅在确认是恶意攻击时才使用IP封禁
+    /// </summary>
+    public static void BanIp(string ip, TimeSpan duration, string reason)
     {
         var expiry = DateTime.Now.Add(duration);
         _bannedIPs.AddOrUpdate(ip, expiry, (_, _) => expiry);
 
-        UpdateUiCollection(ip, expiry);
+        UpdateUiCollection(ip, expiry, reason);
     }
 
-    private static void UpdateUiCollection(string ip, DateTime expiry)
+    private static void UpdateUiCollection(string ip, DateTime expiry, string reason = "系统自动封禁")
     {
         if (_uiContext == null) return;
 
@@ -57,10 +86,17 @@ public class BlacklistManager : INotifyCollectionChanged
             if (existing != null)
             {
                 existing.解封时间 = expiry;
+                existing.Reason = reason;
             }
             else
             {
-                _bannedList.Add(new BlacklistEntry { IP地址 = ip, 解封时间 = expiry });
+                _bannedList.Add(new BlacklistEntry 
+                { 
+                    IP地址 = ip, 
+                    解封时间 = expiry, 
+                    BanTime = DateTime.Now,
+                    Reason = reason 
+                });
             }
         }
 
@@ -135,7 +171,7 @@ public class BlacklistManager : INotifyCollectionChanged
         }
     }
     
-    // 添加缺失的方法
+    // 获取所有黑名单条目
     public static List<BlacklistEntry> GetBlacklistEntries()
     {
         return _bannedList.ToList();
@@ -143,8 +179,8 @@ public class BlacklistManager : INotifyCollectionChanged
     
     public static void AddIpToBlacklist(string ipAddress, string reason)
     {
-        // 添加IP到黑名单，这里简单实现，实际可能需要保存原因
-        BanIp(ipAddress, TimeSpan.FromDays(30)); // 默认封禁30天
+        // 添加IP到黑名单，保存封禁原因
+        BanIp(ipAddress, TimeSpan.FromDays(30), string.IsNullOrEmpty(reason) ? "手动添加" : reason);
     }
     
     public static void RemoveFromBlacklist(string ipAddress)

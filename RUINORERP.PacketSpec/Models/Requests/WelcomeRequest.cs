@@ -45,7 +45,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
 
 
         /// <summary>
-        /// 创建欢迎请求(带公告信息)
+        /// 创建欢迎请求(带公告信息)1
         /// </summary>
         /// <param name="sessionId">会话ID</param>
         /// <param name="serverVersion">服务器版本</param>

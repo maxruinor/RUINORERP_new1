@@ -116,7 +116,7 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public void StopBackgroundTasks()
         {
-            _logger?.LogWarning("停止后台任务：停止自动重连，启用静默模式");
+            _logger?.LogInformation("停止后台任务：停止自动重连，启用静默模式");
             StopAutoReconnect();
         }
 
@@ -341,24 +341,42 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 内部断开连接方法
         /// </summary>
+        /// <param name="isInitiatedByServer">是否由服务器发起的断开（用于日志记录）</param>
         /// <returns>断开连接是否成功</returns>
-        private async Task<bool> DisconnectInternalAsync()
+        private async Task<bool> DisconnectInternalAsync(bool isInitiatedByServer = false)
         {
             if (!IsConnected)
                 return true;
 
             try
             {
-                _logger?.LogInformation("[主动断开连接] 开始断开与服务器的连接: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                // ✅ 根据断开发起方记录不同级别的日志
+                if (isInitiatedByServer)
+                {
+                    _logger?.LogInformation("[连接断开-服务器] 检测到服务器发起的连接断开: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                }
+                else
+                {
+                    _logger?.LogInformation("[连接断开-客户端] 开始断开与服务器的连接: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                }
 
                 bool result = await _socketClient.Disconnect();
                 OnConnectionStateChanged(false);
-                _logger?.LogDebug("已成功断开与服务器的连接: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                
+                if (isInitiatedByServer)
+                {
+                    _logger?.LogWarning("[连接断开-服务器] 已确认与服务器断开连接（服务器主动断开）: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                }
+                else
+                {
+                    _logger?.LogDebug("已成功断开与服务器的连接: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                }
+                
                 return result;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "断开与服务器 {ServerAddress}:{ServerPort} 的连接时发生异常", _serverAddress, _serverPort);
+                _logger?.LogError(ex, "[连接断开-异常] 断开与服务器 {ServerAddress}:{ServerPort} 的连接时发生异常", _serverAddress, _serverPort);
                 OnConnectionStateChanged(false);
                 return false;
             }
@@ -596,9 +614,21 @@ namespace RUINORERP.UI.Network
         /// 修复：增加延迟检查，避免短时间内重复触发重连
         /// 修复：添加连接关闭时间戳，防止短时间内重复处理同一关闭事件
         /// ✅ 修复：外网环境下增加更长的延迟，避免频繁重连导致立即失败
+        /// ✅ 增强：添加服务器断开检测和日志记录
         /// </summary>
         private DateTime _lastSocketClosedTime = DateTime.MinValue;
         private readonly object _socketClosedLock = new object();
+        private volatile bool _isServerInitiatedDisconnect = false; // 标记是否为服务器发起的断开
+
+        /// <summary>
+        /// 标记连接断开是由服务器发起的
+        /// 在收到服务器发送的断开指令后调用
+        /// </summary>
+        public void MarkServerInitiatedDisconnect()
+        {
+            _isServerInitiatedDisconnect = true;
+            _logger?.LogInformation("[连接断开-服务器] 标记为服务器发起的断开，服务器: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+        }
 
         private void OnSocketClosed(EventArgs e)
         {
@@ -613,6 +643,19 @@ namespace RUINORERP.UI.Network
                     return;
                 }
                 _lastSocketClosedTime = DateTime.Now;
+            }
+
+            // ✅ 判断断开是由服务器发起还是客户端发起
+            bool serverInitiated = _isServerInitiatedDisconnect;
+            _isServerInitiatedDisconnect = false; // 重置标记
+
+            if (serverInitiated)
+            {
+                _logger?.LogWarning("[连接断开-服务器] Socket连接已关闭（服务器主动断开），服务器: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+            }
+            else
+            {
+                _logger?.LogInformation("[连接断开-意外] Socket连接意外关闭，可能是网络问题或服务器断开，服务器: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
             }
 
             // 触发连接断开事件

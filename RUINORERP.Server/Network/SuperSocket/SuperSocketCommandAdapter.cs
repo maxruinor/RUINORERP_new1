@@ -61,17 +61,37 @@ namespace RUINORERP.Server.Network.SuperSocket
         private readonly MemoryMonitoringService _memoryMonitoringService; // 内存监控服务（用于熔断）
 
         /// <summary>
-        /// Token验证缓存（TTL: 30秒）
-        /// Key: AccessToken, Value: (验证结果, 缓存时间)
-        /// ✅ 外网优化：添加最大缓存大小限制，防止内存泄漏
+        /// Token缓存项信息（包含验证结果、缓存时间、最后访问时间）
         /// </summary>
-        private static readonly ConcurrentDictionary<string, (TokenValidationResult Result, DateTime CachedTime)> _tokenValidationCache 
-            = new ConcurrentDictionary<string, (TokenValidationResult, DateTime)>();
+        private class TokenCacheItem
+        {
+            public TokenValidationResult Result { get; set; }
+            public DateTime CachedTime { get; set; }
+            public DateTime LastAccessTime { get; set; }
+        }
+
+        /// <summary>
+        /// Token验证缓存（TTL: 30秒）
+        /// Key: AccessToken, Value: TokenCacheItem
+        /// ✅ 外网优化：添加最大缓存大小限制和LRU淘汰策略，防止内存泄漏
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, TokenCacheItem> _tokenValidationCache 
+            = new ConcurrentDictionary<string, TokenCacheItem>();
         
         /// <summary>
         /// Token缓存最大数量限制
         /// </summary>
         private const int MaxTokenCacheSize = 1000;
+
+        /// <summary>
+        /// 缓存清理定时器
+        /// </summary>
+        private static System.Threading.Timer _cacheTokenCleanupTimer;
+
+        /// <summary>
+        /// 缓存清理锁
+        /// </summary>
+        private static readonly object _cacheCleanupLock = new object();
 
         // P1-6修复: 按命令类别配置不同的超时时间(秒)
         // 根据CommandCategory枚举定义,不同类别的命令设置合理的超时时间
@@ -303,6 +323,18 @@ namespace RUINORERP.Server.Network.SuperSocket
             {
                 _commandDispatcher.ServiceProvider = _serviceProvider;
                 _logger?.LogDebug("SuperSocketCommandAdapter已配置为使用全局服务提供者");
+            }
+
+            // 启动Token缓存清理定时器（每60秒清理一次过期缓存）
+            if (_cacheTokenCleanupTimer == null)
+            {
+                _cacheTokenCleanupTimer = new System.Threading.Timer(
+                    callback: state => CleanupExpiredTokenCache(),
+                    state: null,
+                    dueTime: TimeSpan.FromSeconds(60),
+                    period: TimeSpan.FromSeconds(60)
+                );
+                _logger?.LogDebug("Token缓存清理定时器已启动");
             }
         }
 
@@ -1006,12 +1038,15 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
 
             var cacheKey = tokenInfo.AccessToken;
+            var now = DateTime.Now;
             
             // 检查缓存（TTL: 30秒）
             if (_tokenValidationCache.TryGetValue(cacheKey, out var cached))
             {
-                if ((DateTime.Now - cached.CachedTime).TotalSeconds < 30)
+                if ((now - cached.CachedTime).TotalSeconds < 30)
                 {
+                    // 更新最后访问时间（LRU）
+                    cached.LastAccessTime = now;
                     return cached.Result;
                 }
                 else
@@ -1026,16 +1061,22 @@ namespace RUINORERP.Server.Network.SuperSocket
             // ✅ 外网优化：仅缓存有效Token，并限制缓存大小
             if (result.IsValid)
             {
-                // 如果缓存已满，先清理过期项
+                // 如果缓存已满，先执行LRU淘汰策略
                 if (_tokenValidationCache.Count >= MaxTokenCacheSize)
                 {
-                    CleanupExpiredTokenCache();
+                    EnsureCacheSizeLimit();
                 }
                 
                 // 再次检查，如果仍然超限则不缓存
                 if (_tokenValidationCache.Count < MaxTokenCacheSize)
                 {
-                    _tokenValidationCache.TryAdd(cacheKey, (result, DateTime.Now));
+                    var cacheItem = new TokenCacheItem
+                    {
+                        Result = result,
+                        CachedTime = now,
+                        LastAccessTime = now
+                    };
+                    _tokenValidationCache.TryAdd(cacheKey, cacheItem);
                 }
             }
 
@@ -1043,9 +1084,47 @@ namespace RUINORERP.Server.Network.SuperSocket
         }
         
         /// <summary>
-        /// 清理过期的Token缓存项
+        /// 确保缓存大小不超过限制（LRU淘汰策略）
+        /// 移除最久未访问的缓存项
         /// </summary>
-        private void CleanupExpiredTokenCache()
+        private void EnsureCacheSizeLimit()
+        {
+            try
+            {
+                lock (_cacheCleanupLock)
+                {
+                    // 先清理过期项
+                    CleanupExpiredTokenCacheInternal();
+
+                    // 如果仍然超过限制，移除最久未访问的项（LRU）
+                    while (_tokenValidationCache.Count >= MaxTokenCacheSize)
+                    {
+                        var oldestKey = _tokenValidationCache
+                            .OrderBy(kvp => kvp.Value.LastAccessTime)
+                            .FirstOrDefault().Key;
+
+                        if (!string.IsNullOrEmpty(oldestKey))
+                        {
+                            _tokenValidationCache.TryRemove(oldestKey, out _);
+                            _logger?.LogDebug($"[Token缓存LRU] 移除最久未访问的Token: {oldestKey}");
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "[Token缓存LRU] 执行LRU淘汰策略时发生异常");
+            }
+        }
+        
+        /// <summary>
+        /// 清理过期的Token缓存项（内部方法，不带锁）
+        /// </summary>
+        private void CleanupExpiredTokenCacheInternal()
         {
             try
             {
@@ -1073,6 +1152,17 @@ namespace RUINORERP.Server.Network.SuperSocket
             catch (Exception ex)
             {
                 _logger?.LogWarning(ex, "[Token缓存清理] 清理过期Token缓存时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 清理过期的Token缓存项（定时器调用的方法）
+        /// </summary>
+        private void CleanupExpiredTokenCache()
+        {
+            lock (_cacheCleanupLock)
+            {
+                CleanupExpiredTokenCacheInternal();
             }
         }
 

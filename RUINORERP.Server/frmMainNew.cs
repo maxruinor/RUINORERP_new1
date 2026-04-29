@@ -1997,11 +1997,6 @@ namespace RUINORERP.Server
                     var workflowManagementControl = new WorkflowManagementControl();
                     workflowManagementControl.Dock = DockStyle.Fill;
                     return workflowManagementControl;
-                case "黑名单管理":
-                    // 创建黑名单管理控件实例
-                    var blacklistManagementControl = new BlacklistManagementControl();
-                    blacklistManagementControl.Dock = DockStyle.Fill;
-                    return blacklistManagementControl;
                 case "系统配置":
                     // 创建全局配置控件实例
                     var globalConfigControl = new GlobalConfigControl();
@@ -2056,9 +2051,6 @@ namespace RUINORERP.Server
 
                 // 初始化界面
                 InitializeUI();
-
-                // 初始化黑名单管理器（传入UI同步上下文，确保UI更新线程安全）
-                BlacklistManager.Initialize(SynchronizationContext.Current);
 
                 Initialize();
 
@@ -3109,15 +3101,6 @@ namespace RUINORERP.Server
             ShowTabPage("工作流管理");
         }
 
-        /// <summary>
-        /// 黑名单管理按钮点击事件
-        /// </summary>
-        /// <param name="sender">事件源</param>
-        /// <param name="e">事件参数</param>
-        private void buttonBlacklist_Click(object sender, EventArgs e)
-        {
-            ShowTabPage("黑名单管理");
-        }
 
         /// <summary>
         /// 系统配置按钮点击事件
@@ -3180,26 +3163,6 @@ namespace RUINORERP.Server
 
             var label = new Label();
             label.Text = "工作流管理功能开发中...";
-            label.AutoSize = true;
-            label.Font = new Font("微软雅黑", 12f);
-            label.ForeColor = Color.Gray;
-            label.Location = new Point((panel.Width - label.Width) / 2, (panel.Height - label.Height) / 2);
-
-            panel.Controls.Add(label);
-            return panel;
-        }
-
-        /// <summary>
-        /// 创建黑名单管理控件
-        /// </summary>
-        /// <returns>黑名单管理控件</returns>
-        private Control CreateBlacklistManagementControl()
-        {
-            var panel = new Panel();
-            panel.Dock = DockStyle.Fill;
-
-            var label = new Label();
-            label.Text = "黑名单管理功能开发中...";
             label.AutoSize = true;
             label.Font = new Font("微软雅黑", 12f);
             label.ForeColor = Color.Gray;
@@ -3384,15 +3347,6 @@ namespace RUINORERP.Server
             ShowTabPage("工作流管理");
         }
 
-        /// <summary>
-        /// 黑名单管理菜单项点击事件
-        /// </summary>
-        /// <param name="sender">事件源</param>
-        /// <param name="e">事件参数</param>
-        private void blacklistManagementToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowTabPage("黑名单管理");
-        }
 
         /// <summary>
         /// 序列管理菜单项点击事件

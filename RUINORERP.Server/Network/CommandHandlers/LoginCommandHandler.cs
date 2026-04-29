@@ -334,17 +334,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 
                 sessionInfo.ClientIp = realIp;
                 logger?.LogInformation($"[IP获取] SessionID={sessionInfo.SessionID}, ClientIp={sessionInfo.ClientIp}, Source=RemoteEndPoint");
-                
-                // ✅ 检查IP是否在黑名单中
-                // ⚠️ NAT环境警告：外网环境下多台客户端可能共享同一公网IP
-                // 如果封禁某个IP，会影响该IP下的所有正常用户
-                // 建议优先使用用户名级别的限制，谨慎使用IP封禁功能
-                if (BlacklistManager.IsIpBanned(sessionInfo.ClientIp))
-                {
-                    logger?.LogWarning($"[登录失败] IP地址在黑名单中: Username={loginRequest.Username}, ClientIp={sessionInfo.ClientIp}");
-                    logger?.LogWarning($"[NAT警告] 如果这是外网IP，封禁将影响该IP下的所有客户端用户");
-                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "您的IP地址已被限制访问，请联系管理员解除限制");
-                }
 
                 // 检查登录尝试次数
                 int currentAttempts = GetLoginAttempts(loginRequest.Username);
@@ -364,18 +353,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     
                     // 计算剩余尝试次数
                     int remainingAttempts = MaxLoginAttempts - newAttempts;
-                    
-                    // ✅ 优化：移除自动IP封禁功能 - 内网和NAT环境下不应封禁IP
-                    // 原因：
-                    // 1. 内网环境：多台电脑可能共享同一IP（NAT），封禁IP会影响所有用户
-                    // 2. 外网环境：通过路由器上网的多台电脑使用相同公网IP，封禁会误伤正常用户
-                    // 3. 已有用户名级别的登录次数限制，足以防止暴力破解
-                    // if (newAttempts >= MaxLoginAttempts)
-                    // {
-                    //     BlacklistManager.BanIp(sessionInfo.ClientIp, TimeSpan.FromHours(1), $"登录失败次数过多({newAttempts}次)");
-                    //     logger?.LogWarning($"[自动封禁] IP地址 {sessionInfo.ClientIp} 因登录失败次数过多被封禁1小时，Username={loginRequest.Username}, FailedAttempts={newAttempts}");
-                    //     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "登录尝试次数过多，您的IP已被临时限制访问，请稍后再试或联系管理员");
-                    // }
                     
                     // ✅ 详细记录认证失败，并提供剩余尝试次数提示（帮助正常用户了解状态）
                     string errorMessage = remainingAttempts > 0 
@@ -1194,7 +1171,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 公开方法：解除用户名的登录限制（重置登录尝试次数）
-        /// 供管理员在黑名单管理界面调用，实时生效
+        /// 供管理员调用，实时生效
         /// </summary>
         /// <param name="username">用户名</param>
         /// <returns>是否成功解除限制</returns>

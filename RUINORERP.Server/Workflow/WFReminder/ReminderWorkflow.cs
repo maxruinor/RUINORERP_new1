@@ -53,7 +53,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                 //   .Input(step => step.Password, data => data.Password)
                 //   .Output(data => data.UserId, step => step.UserId)
                 //默认30秒提醒一次，只要到期 或人为取消提醒（取消计划）才停止
-                  .Recur(data => TimeSpan.FromSeconds(60), data => data.IsRead || data.EndTime <= System.DateTime.Now)
+                  .Recur(data => GetRecurInterval(data), data => ShouldContinueRecur(data))
                   .Do(recur => recur
                   .StartWith<ReminderTask>
                   (
@@ -84,6 +84,20 @@ namespace RUINORERP.Server.Workflow.WFReminder
                 return ExecutionResult.Next();
             }
           );
+        }
+
+        private static TimeSpan GetRecurInterval(object data)
+        {
+            return TimeSpan.FromSeconds(60);
+        }
+
+        private static bool ShouldContinueRecur(object data)
+        {
+            if (data is ReminderData reminderData)
+            {
+                return reminderData.IsRead || reminderData.EndTime <= System.DateTime.Now;
+            }
+            return false;
         }
     }
 }

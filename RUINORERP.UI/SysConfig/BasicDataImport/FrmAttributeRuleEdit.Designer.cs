@@ -44,10 +44,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.btnOK = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1.SuspendLayout();
             this.kryptonPanel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.txtAttributeName)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtRegexPattern)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtTestText)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtTestResult)).BeginInit();
             this.kryptonPanel3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -194,10 +190,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.Text = "属性提取规则编辑";
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.txtAttributeName)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtRegexPattern)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtTestText)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtTestResult)).EndInit();
             this.kryptonPanel3.ResumeLayout(false);
             this.ResumeLayout(false);
 

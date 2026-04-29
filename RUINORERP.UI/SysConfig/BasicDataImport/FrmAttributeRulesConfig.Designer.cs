@@ -29,27 +29,31 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.dgvRules = new System.Windows.Forms.DataGridView();
             this.kryptonGroupBox1 = new Krypton.Toolkit.KryptonGroupBox();
             this.kbtnAdd = new Krypton.Toolkit.KryptonButton();
             this.kbtnEdit = new Krypton.Toolkit.KryptonButton();
             this.kbtnDelete = new Krypton.Toolkit.KryptonButton();
             this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
+            this.panel3 = new System.Windows.Forms.Panel();
             this.kbtnAddDefaultRules = new Krypton.Toolkit.KryptonButton();
             this.kbtnOK = new Krypton.Toolkit.KryptonButton();
             this.kbtnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonGroupBox1.SuspendLayout();
+            this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvRules)).BeginInit();
             this.kryptonGroupBox2.SuspendLayout();
+            this.panel3.SuspendLayout();
             this.kryptonPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonGroupBox1);
+            this.kryptonPanel1.Controls.Add(this.kryptonGroupBox2);
             this.kryptonPanel1.Controls.Add(this.kbtnOK);
             this.kryptonPanel1.Controls.Add(this.kbtnCancel);
-            this.kryptonPanel1.Controls.Add(this.kryptonGroupBox2);
-            this.kryptonPanel1.Controls.Add(this.kryptonGroupBox1);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
@@ -63,20 +67,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvRules.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvRules.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvRules.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvRules.Location = new System.Drawing.Point(3, 17);
+            this.dgvRules.Location = new System.Drawing.Point(3, 50);
+            this.dgvRules.MultiSelect = false;
             this.dgvRules.Name = "dgvRules";
+            this.dgvRules.ReadOnly = true;
             this.dgvRules.RowHeadersVisible = false;
             this.dgvRules.RowTemplate.Height = 23;
-            this.dgvRules.Size = new System.Drawing.Size(678, 180);
+            this.dgvRules.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvRules.Size = new System.Drawing.Size(678, 327);
             this.dgvRules.TabIndex = 0;
             this.dgvRules.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvRules_CellDoubleClick);
             // 
             // kryptonGroupBox1
             // 
-            this.kryptonGroupBox1.Controls.Add(this.dgvRules);
-            this.kryptonGroupBox1.Controls.Add(this.kbtnAdd);
-            this.kryptonGroupBox1.Controls.Add(this.kbtnEdit);
-            this.kryptonGroupBox1.Controls.Add(this.kbtnDelete);
+            this.kryptonGroupBox1.Controls.Add(this.panel2);
             this.kryptonGroupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonGroupBox1.Location = new System.Drawing.Point(0, 0);
             this.kryptonGroupBox1.Name = "kryptonGroupBox1";
@@ -84,36 +88,48 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBox1.TabIndex = 0;
             this.kryptonGroupBox1.Values.Heading = "属性提取规则";
             // 
+            // panel2
+            // 
+            this.panel2.Controls.Add(this.dgvRules);
+            this.panel2.Controls.Add(this.kbtnAdd);
+            this.panel2.Controls.Add(this.kbtnEdit);
+            this.panel2.Controls.Add(this.kbtnDelete);
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel2.Location = new System.Drawing.Point(3, 17);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(678, 360);
+            this.panel2.TabIndex = 0;
+            // 
             // kbtnAdd
             // 
-            this.kbtnAdd.Location = new System.Drawing.Point(15, 205);
+            this.kbtnAdd.Location = new System.Drawing.Point(15, 15);
             this.kbtnAdd.Name = "kbtnAdd";
-            this.kbtnAdd.Size = new System.Drawing.Size(75, 23);
+            this.kbtnAdd.Size = new System.Drawing.Size(75, 25);
             this.kbtnAdd.TabIndex = 1;
             this.kbtnAdd.Values.Text = "添加";
             this.kbtnAdd.Click += new System.EventHandler(this.kbtnAdd_Click);
             // 
             // kbtnEdit
             // 
-            this.kbtnEdit.Location = new System.Drawing.Point(96, 205);
+            this.kbtnEdit.Location = new System.Drawing.Point(96, 15);
             this.kbtnEdit.Name = "kbtnEdit";
-            this.kbtnEdit.Size = new System.Drawing.Size(75, 23);
+            this.kbtnEdit.Size = new System.Drawing.Size(75, 25);
             this.kbtnEdit.TabIndex = 2;
             this.kbtnEdit.Values.Text = "编辑";
             this.kbtnEdit.Click += new System.EventHandler(this.kbtnEdit_Click);
             // 
             // kbtnDelete
             // 
-            this.kbtnDelete.Location = new System.Drawing.Point(177, 205);
+            this.kbtnDelete.Location = new System.Drawing.Point(177, 15);
             this.kbtnDelete.Name = "kbtnDelete";
-            this.kbtnDelete.Size = new System.Drawing.Size(75, 23);
+            this.kbtnDelete.Size = new System.Drawing.Size(75, 25);
             this.kbtnDelete.TabIndex = 3;
             this.kbtnDelete.Values.Text = "删除";
             this.kbtnDelete.Click += new System.EventHandler(this.kbtnDelete_Click);
             // 
             // kryptonGroupBox2
             // 
-            this.kryptonGroupBox2.Controls.Add(this.kbtnAddDefaultRules);
+            this.kryptonGroupBox2.Controls.Add(this.panel3);
             this.kryptonGroupBox2.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.kryptonGroupBox2.Location = new System.Drawing.Point(0, 380);
             this.kryptonGroupBox2.Name = "kryptonGroupBox2";
@@ -121,11 +137,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBox2.TabIndex = 1;
             this.kryptonGroupBox2.Values.Heading = "快速配置";
             // 
+            // panel3
+            // 
+            this.panel3.Controls.Add(this.kbtnAddDefaultRules);
+            this.panel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel3.Location = new System.Drawing.Point(3, 17);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(678, 40);
+            this.panel3.TabIndex = 0;
+            // 
             // kbtnAddDefaultRules
             // 
-            this.kbtnAddDefaultRules.Location = new System.Drawing.Point(15, 20);
+            this.kbtnAddDefaultRules.Location = new System.Drawing.Point(15, 8);
             this.kbtnAddDefaultRules.Name = "kbtnAddDefaultRules";
-            this.kbtnAddDefaultRules.Size = new System.Drawing.Size(200, 23);
+            this.kbtnAddDefaultRules.Size = new System.Drawing.Size(200, 25);
             this.kbtnAddDefaultRules.TabIndex = 0;
             this.kbtnAddDefaultRules.Values.Text = "添加常用属性规则（颜色、规格）";
             this.kbtnAddDefaultRules.Click += new System.EventHandler(this.kbtnAddDefaultRules_Click);
@@ -136,7 +161,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.kbtnOK.Location = new System.Drawing.Point(524, 426);
             this.kbtnOK.Name = "kbtnOK";
-            this.kbtnOK.Size = new System.Drawing.Size(75, 23);
+            this.kbtnOK.Size = new System.Drawing.Size(75, 25);
             this.kbtnOK.TabIndex = 4;
             this.kbtnOK.Values.Text = "确定";
             // 
@@ -146,7 +171,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.kbtnCancel.Location = new System.Drawing.Point(609, 426);
             this.kbtnCancel.Name = "kbtnCancel";
-            this.kbtnCancel.Size = new System.Drawing.Size(75, 23);
+            this.kbtnCancel.Size = new System.Drawing.Size(75, 25);
             this.kbtnCancel.TabIndex = 5;
             this.kbtnCancel.Values.Text = "取消";
             // 
@@ -164,8 +189,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "属性提取规则配置";
             this.kryptonGroupBox1.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvRules)).EndInit();
             this.kryptonGroupBox2.ResumeLayout(false);
+            this.panel3.ResumeLayout(false);
             this.kryptonPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -174,6 +201,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         #endregion
 
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.DataGridView dgvRules;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
         private Krypton.Toolkit.KryptonButton kbtnAdd;

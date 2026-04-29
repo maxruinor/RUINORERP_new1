@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using RUINORERP.Model;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.Workflow.WFReminder;
@@ -31,7 +31,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
         {
             builder
                 .StartWith(context => System.Diagnostics.Debug.WriteLine("任务开始时间: " + DateTime.Now))
-              .Recur(data => TimeSpan.FromMinutes(30), data => StopSondition(data))
+              .Recur(data => GetRecurInterval(data), data => ShouldStopRecur(data))
                   .Do(recur => recur
                   .StartWith<NightlyTaskStep>
                   (
@@ -44,21 +44,24 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                 .Then(context => System.Diagnostics.Debug.WriteLine("任务结束时间: " + DateTime.Now));
         }
 
-        /// <summary>
-        /// 返回为真是会取消循环
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public bool StopSondition(GlobalScheduledData data)
+        private static TimeSpan GetRecurInterval(object data)
         {
-            bool result = System.DateTime.Now.Date.Hour == 10 && data.ExecutionFrequency == 3;
-            if (data.ExecutionFrequency > 10)
+            return TimeSpan.FromMinutes(30);
+        }
+
+        private static bool ShouldStopRecur(object data)
+        {
+            if (data is GlobalScheduledData scheduleData)
             {
-                data.ExecutionFrequency = 0;
+                bool result = System.DateTime.Now.Date.Hour == 10 && scheduleData.ExecutionFrequency == 3;
+                if (scheduleData.ExecutionFrequency > 10)
+                {
+                    scheduleData.ExecutionFrequency = 0;
+                }
+                frmMainNew.Instance.PrintInfoLog($"判断条件是否停止={result}:{scheduleData.ExecutionFrequency}");
+                return false;
             }
-            frmMainNew.Instance.PrintInfoLog($"判断条件是否停止={result}:{data.ExecutionFrequency}");
-            //因为是一个每天都执行的。所以固定不会停止，只是在执行时算一下只执行一次
-            return false;
+            return true;
         }
 
         //Func<GlobalScheduledData, bool> GetFunc(GlobalScheduledData data)

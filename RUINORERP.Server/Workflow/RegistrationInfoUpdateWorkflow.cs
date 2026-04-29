@@ -34,7 +34,7 @@ namespace RUINORERP.Server.Workflow
                     var logger = Startup.GetFromFac<ILogger<RegistrationInfoUpdateWorkflow>>();
                     logger?.LogInformation($"注册信息更新工作流开始执行 - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 })
-                .Recur(data => NextTime, data => data.ToString() != "")
+                .Recur(data => GetNextExecutionTime(data), data => ShouldContinueLoop(data))
                     .Do(recur => recur
                         .StartWith<RegistrationInfoUpdateStep>(
                             context =>
@@ -49,6 +49,16 @@ namespace RUINORERP.Server.Workflow
                         var logger = Startup.GetFromFac<ILogger<RegistrationInfoUpdateWorkflow>>();
                         logger?.LogInformation($"注册信息更新工作流执行完成 - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                     });
+        }
+
+        private static TimeSpan GetNextExecutionTime(object data)
+        {
+            return ExecutionTime.AddDays(1) - DateTime.Now;
+        }
+
+        private static bool ShouldContinueLoop(object data)
+        {
+            return data != null && data.ToString() != "";
         }
     }
 

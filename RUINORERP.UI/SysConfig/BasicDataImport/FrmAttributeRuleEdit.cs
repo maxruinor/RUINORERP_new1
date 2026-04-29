@@ -20,16 +20,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         public AttributeExtractionRule Rule { get; private set; }
 
-        /// <summary>
-        /// 正则表达式测试结果
-        /// </summary>
-        private List<string> TestResults { get; set; }
-
         public FrmAttributeRuleEdit(AttributeExtractionRule rule, List<string> excelColumns)
         {
             ExcelColumns = excelColumns ?? new List<string>();
             Rule = rule ?? new AttributeExtractionRule();
-            TestResults = new List<string>();
             InitializeComponent();
             LoadExistingRule();
         }

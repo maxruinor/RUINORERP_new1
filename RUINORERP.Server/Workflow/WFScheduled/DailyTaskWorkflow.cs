@@ -67,14 +67,8 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                     return ExecutionResult.Next();
                 })
                 .Recur(
-                    data => 
-                        TimeSpan.FromMilliseconds(
-                            Math.Max(
-                                (((DailyTaskData)data).NextExecutionTime - DateTime.Now).TotalMilliseconds,
-                                60000
-                            )
-                        ),
-                    data => ((DailyTaskData)data).ShouldContinue)
+                    data => CalculateRecurInterval(data),
+                    data => ShouldContinueRecur(data))
                 .Do(recur => recur
                     .StartWith<DailyTaskStep>()
                     .Then(context =>
@@ -99,6 +93,25 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                     frmMainNew.Instance.PrintInfoLog($"每日任务工作流结束，总执行次数：{data.ExecutionCount}");
                     return ExecutionResult.Next();
                 });
+        }
+
+        private static TimeSpan CalculateRecurInterval(object data)
+        {
+            if (data is DailyTaskData taskData)
+            {
+                var interval = (taskData.NextExecutionTime - DateTime.Now).TotalMilliseconds;
+                return TimeSpan.FromMilliseconds(Math.Max(interval, 60000));
+            }
+            return TimeSpan.FromMinutes(5);
+        }
+
+        private static bool ShouldContinueRecur(object data)
+        {
+            if (data is DailyTaskData taskData)
+            {
+                return taskData.ShouldContinue;
+            }
+            return false;
         }
     }
 

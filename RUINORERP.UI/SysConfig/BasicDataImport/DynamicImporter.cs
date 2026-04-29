@@ -1017,13 +1017,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 将BaseEntity列表转换为强类型列表
                 var typedList = entityList.Cast<T>().ToList();
 
-                // 导入前处理特殊字段
-                foreach (var entity in typedList)
-                {
-                    await EntityImportHelper.PreProcessEntityAsync(typeof(T), entity, _db, importType);
-                }
+                // ✅ 优化：批量处理特殊字段（一次性查询排序值，避免N次数据库查询）
+                await EntityImportHelper.BatchPreProcessEntitiesAsync<T>(typedList, _db, importType);
 
-                // ✅ 使用 DbClient（从事务管理器获取）
+                // ✅ 使用 DbClient（从事务管理器获取）1
                 var dbClient = _unitOfWorkManage?.GetDbClient() ?? _db;
 
                 // ✅ 检查是否启用数据库级别去重（按业务字段跳过已存在记录）
@@ -1042,20 +1039,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     result.UpdatedCount = 0;
                     return;
                 }
+//这里是否能实现，按指定列的排除是否重复的值，在配置中有唯一性约束，如何应用这个约束？  
+    
+    
 
-                // ✅ 使用 Storageable 进行批量插入和更新（参考 DbHelper.cs）
+
+                // ✅ 使用 Storageable 进行批量插入和更新（Upsert）
+                // 参考 SqlSugar 文档：https://www.donet5.com/home/Doc?typeId=1193
                 var storage = await dbClient.Storageable<T>(typedList).ToStorageAsync();
                 
-                // ✅ 新增记录自动生成雪花ID
-                var insertIds = await storage.AsInsertable.ExecuteReturnSnowflakeIdListAsync();
+                // ✅ 批量插入新记录，自动生成雪花ID
+                // ExecuteReturnPkList<long>() 支持批量返回主键（包括雪花ID），性能优于逐个生成
+                var insertIds = await storage.AsInsertable.ExecuteReturnPkListAsync<long>();
                 
-                // ✅ 更新已有记录
+                // ✅ 批量更新已有记录（如果配置了业务键去重策略为 Update）
                 var updateCount = await storage.AsUpdateable.ExecuteCommandAsync();
 
                 result.InsertedCount = insertIds.Count;
                 result.UpdatedCount = updateCount;
                 
-                System.Diagnostics.Debug.WriteLine($"批量导入完成：新增 {insertIds.Count} 条，更新 {updateCount} 条");
+                System.Diagnostics.Debug.WriteLine($"批量导入完成：新增 {insertIds.Count} 条（已分配雪花ID），更新 {updateCount} 条");
             }
             catch (Exception ex)
             {

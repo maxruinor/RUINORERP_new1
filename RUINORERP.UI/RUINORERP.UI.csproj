@@ -2499,6 +2499,9 @@
     <Compile Include="SysConfig\BasicDataImport\FrmAttributeRulesConfig.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="SysConfig\BasicDataImport\FrmAttributeRulesConfig.Designer.cs">
+      <DependentUpon>FrmAttributeRulesConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="SysConfig\BasicDataImport\frmColumnMappingConfig.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -4819,6 +4822,12 @@
     <EmbeddedResource Include="SysConfig\BasicDataCleanup\UCBasicDataCleanup.resx">
       <DependentUpon>UCBasicDataCleanup.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SysConfig\BasicDataImport\FrmAttributeRuleEdit.resx">
+      <DependentUpon>FrmAttributeRuleEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SysConfig\BasicDataImport\FrmAttributeRulesConfig.resx">
+      <DependentUpon>FrmAttributeRulesConfig.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\BasicDataImport\frmColumnMappingConfig.resx">
       <DependentUpon>frmColumnMappingConfig.cs</DependentUpon>
     </EmbeddedResource>
@@ -5123,10 +5132,6 @@
     <Content Include="permission_rules.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="SysConfig\BasicDataImport\Profiles\01_供应商导入.json" />
-    <None Include="SysConfig\BasicDataImport\Profiles\02_产品类目导入.json" />
-    <None Include="SysConfig\BasicDataImport\Profiles\03_产品信息导入.json" />
-    <None Include="SysConfig\BasicDataImport\Profiles\示例_产品导入.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

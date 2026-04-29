@@ -1134,7 +1134,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 HashSet<string> addedColumns = new HashSet<string>();
 
                 // 【步骤1】创建结果表结构（使用SystemField.Value作为列名）
-                // SystemField.Value是数据库字段名（英文），用于显示给用户看
+                // SystemField.Key是数据库字段名（英文），
+                // SystemField.Value用于显示给用户看
                 foreach (var mapping in mappings)
                 {
                     string columnName = mapping.SystemField?.Value;
@@ -1180,10 +1181,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             case DataSourceType.Excel:
                                 // 【Excel数据源】直接从Excel列读取数据
                                 // Excel列名: mapping.ExcelColumn
-                                // 数据库字段: mapping.SystemField.Value
-                                if (sourceData.Columns.Contains(mapping.ExcelColumn))
+                                // 数据库字段显示: mapping.SystemField.Value
+                                // 数据库字段: mapping.SystemField.Key
+                                if (sourceData.Columns.Contains(mapping.SystemField.Value))
                                 {
-                                    object cellValue = sourceRow[mapping.ExcelColumn];
+                                    object cellValue = sourceRow[mapping.SystemField.Value];
 
                                     // 检查是否为空值
                                     bool isEmpty = cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString());
@@ -1634,10 +1636,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 初始化DynamicImporter
                 _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
                 
-                // ✅ 设置当前配置，以便DynamicImporter读取业务键等信息
-                _dynamicImporter.SetCurrentConfiguration(_currentConfig);
-
-                // 直接执行导入
+                      // 直接执行导入
                 await ExecuteSingleImport();
             }
             catch (Exception ex)

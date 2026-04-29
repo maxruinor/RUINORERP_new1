@@ -147,7 +147,135 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 处理产品分类的特殊字段
+        /// 批量预处理实体列表（优化版本：批量查询排序值，避免N次数据库查询）
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="entities">实体列表</param>
+        /// <param name="db">数据库客户端</param>
+        /// <param name="importType">导入类型标识</param>
+        public static async System.Threading.Tasks.Task BatchPreProcessEntitiesAsync<T>(List<T> entities, ISqlSugarClient db, string importType = null) where T : BaseEntity
+        {
+            if (entities == null || entities.Count == 0)
+            {
+                return;
+            }
+
+            var entityType = typeof(T);
+            string typeName = entityType.Name;
+
+            // 根据实体类型进行批量处理
+            switch (typeName)
+            {
+                case "tb_ProdCategories":
+                    await BatchProcessProdCategoriesAsync(entities.Cast<tb_ProdCategories>().ToList(), db);
+                    break;
+                case "tb_CustomerVendor":
+                    bool isCustomer = importType == "客户表";
+                    bool isVendor = importType == "供应商表";
+                    foreach (var entity in entities.Cast<tb_CustomerVendor>())
+                    {
+                        await CustomerVendorAsync(entity, db, isCustomer, isVendor);
+                    }
+                    break;
+                case "tb_Prod":
+                    foreach (var entity in entities.Cast<tb_Prod>())
+                    {
+                        await ProdBaseAsync(entity, db);
+                    }
+                    break;
+                case "tb_ProdDetail":
+                    foreach (var entity in entities.Cast<tb_ProdDetail>())
+                    {
+                        await ProdDetailAsync(entity, db);
+                    }
+                    break;
+                default:
+                    // 默认逐个处理
+                    foreach (var entity in entities)
+                    {
+                        await PreProcessEntityAsync(entityType, entity, db, importType);
+                    }
+                    break;
+            }
+
+            // 统一初始化实体基础字段
+            foreach (var entity in entities)
+            {
+                Business.BusinessHelper.Instance.InitEntity(entity);
+            }
+        }
+
+        /// <summary>
+        /// 批量处理产品分类的特殊字段（优化版：一次性查询最大Sort值）
+        /// </summary>
+        /// <param name="categories">产品分类实体列表</param>
+        /// <param name="db">数据库客户端</param>
+        private static async System.Threading.Tasks.Task BatchProcessProdCategoriesAsync(List<tb_ProdCategories> categories, ISqlSugarClient db)
+        {
+            if (categories == null || categories.Count == 0)
+            {
+                return;
+            }
+
+            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+            if (bizCodeService == null)
+            {
+                throw new InvalidOperationException("无法获取ClientBizCodeService实例");
+            }
+
+            // 按 Parent_id 分组，每组独立计算 Sort
+            var groupedByParent = categories.GroupBy(c => c.Parent_id);
+
+            foreach (var group in groupedByParent)
+            {
+                var parentId = group.Key;
+                var categoryList = group.ToList();
+
+                // ✅ 批量查询：一次性获取该父级分类下的最大 Sort 值
+                int maxSort = await db.Queryable<tb_ProdCategories>()
+                    .WhereIF(parentId.HasValue, c => c.Parent_id == parentId)
+                    .MaxAsync(c => (int?)c.Sort) ?? 0;
+
+                // ✅ 内存累加：为每个分类分配递增的 Sort 值
+                for (int i = 0; i < categoryList.Count; i++)
+                {
+                    var category = categoryList[i];
+
+                    // 1. 自动生成分类编码（如果用户未指定）
+                    if (string.IsNullOrWhiteSpace(category.CategoryCode))
+                    {
+                        category.CategoryCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProCategories);
+                    }
+
+                    // 2. 设置默认启用状态
+                    if (!category.Is_enabled.HasValue)
+                    {
+                        category.Is_enabled = true;
+                    }
+
+                    // 3. 设置默认分类级别
+                    if (!category.CategoryLevel.HasValue && category.Parent_id.HasValue)
+                    {
+                        category.CategoryLevel = 1;
+                    }
+
+                    // 4. 设置排序号（基于批量查询结果累加）
+                    if (!category.Sort.HasValue)
+                    {
+                        category.Sort = maxSort + i + 1;
+                    }
+
+                    // 5. 设置默认备注
+                    if (string.IsNullOrWhiteSpace(category.Notes))
+                    {
+                        category.Notes = "通过Excel导入";
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理产品分类的特殊字段（旧版：逐行查询，保留用于兼容）
         /// </summary>
         /// <param name="category">产品分类实体</param>
         /// <param name="db">数据库客户端</param>
@@ -158,10 +286,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
+            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+            if (bizCodeService == null)
+            {
+                throw new InvalidOperationException("无法获取ClientBizCodeService实例");
+            }
+
             // 1. 自动生成分类编码（如果用户未指定）
             if (string.IsNullOrWhiteSpace(category.CategoryCode))
             {
-                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                 category.CategoryCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProCategories);
             }
 
@@ -177,7 +310,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 category.CategoryLevel = 1;
             }
 
-            // 4. 设置排序号（按父级分类分别计算）
+            // 4. 设置排序号（按父级分类分别计算）- ❌ 性能问题：每次查询数据库
             if (!category.Sort.HasValue)
             {
                 int maxSort = await db.Queryable<tb_ProdCategories>()
@@ -191,7 +324,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 category.Notes = "通过Excel导入";
             }
-
         }
 
 

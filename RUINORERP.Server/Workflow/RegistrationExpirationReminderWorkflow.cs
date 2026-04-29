@@ -35,7 +35,7 @@ namespace RUINORERP.Server.Workflow
                     var logger = Startup.GetFromFac<ILogger<RegistrationExpirationReminderWorkflow>>();
                     logger?.LogInformation($"注册到期提醒工作流开始执行 - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 })
-                .Recur(data => NextTime, data => data.ToString() != "")
+                .Recur(data => GetNextExecutionTime(data), data => ShouldContinueLoop(data))
                     .Do(recur => recur
                         .StartWith<RegistrationExpirationReminderStep>(
                             context =>
@@ -50,6 +50,16 @@ namespace RUINORERP.Server.Workflow
                         var logger = Startup.GetFromFac<ILogger<RegistrationExpirationReminderWorkflow>>();
                         logger?.LogInformation($"注册到期提醒工作流执行完成 - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                     });
+        }
+
+        private static TimeSpan GetNextExecutionTime(object data)
+        {
+            return ExecutionTime.AddDays(1) - DateTime.Now;
+        }
+
+        private static bool ShouldContinueLoop(object data)
+        {
+            return data != null && data.ToString() != "";
         }
     }
 

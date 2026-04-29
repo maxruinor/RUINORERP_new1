@@ -68,5 +68,55 @@ namespace RUINORERP.Model.ImportEngine.Models
         /// 默认值
         /// </summary>
         public string DefaultValue { get; set; }
+        
+        /// <summary>
+        /// 是否为业务键字段
+        /// </summary>
+        public bool IsBusinessKey { get; set; }
+        
+        /// <summary>
+        /// 数据库存在性处理策略
+        /// </summary>
+        public ExistenceStrategy ExistenceStrategy { get; set; } = ExistenceStrategy.Update;
+        
+        /// <summary>
+        /// 是否系统生成
+        /// </summary>
+        public bool IsSystemGenerated { get; set; }
+        
+        /// <summary>
+        /// 自身引用字段
+        /// </summary>
+        public SerializableKeyValuePair<string> SelfReferenceField { get; set; }
+        
+        /// <summary>
+        /// 复制字段
+        /// </summary>
+        public SerializableKeyValuePair<string> CopyFromField { get; set; }
+        
+        /// <summary>
+        /// 枚举默认值配置
+        /// </summary>
+        public EnumDefaultConfig EnumDefaultConfig { get; set; }
+        
+        /// <summary>
+        /// 列拼接配置
+        /// </summary>
+        public ColumnConcatConfig ConcatConfig { get; set; }
+        
+        /// <summary>
+        /// 是否为图片列
+        /// </summary>
+        public bool IsImageColumn { get; set; }
+        
+        /// <summary>
+        /// 图片列类型
+        /// </summary>
+        public ImageColumnType ImageColumnType { get; set; }
+        
+        /// <summary>
+        /// Excel图片配置
+        /// </summary>
+        public ExcelImageConfig ImageConfig { get; set; }
     }
 }

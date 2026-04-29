@@ -272,6 +272,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     mapping.EnumDefaultConfig = propertyDialog.EnumDefaultConfig;
                     mapping.IsImageColumn = propertyDialog.IsImageColumn;
                     mapping.ImageColumnType = propertyDialog.ImageColumnType;
+                    mapping.IsBusinessKey = propertyDialog.IsBusinessKey;
+                    mapping.ExistenceStrategy = propertyDialog.ExistenceStrategy;
 
                     // 保存外键关联配置
                     if (propertyDialog.SelectedDataSourceType == DataSourceType.ForeignKey)

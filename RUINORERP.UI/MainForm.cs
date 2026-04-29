@@ -115,29 +115,34 @@ namespace RUINORERP.UI
     {
         /// <summary>
         /// 登录状态枚举
+        /// ✅ 简化:移除 LoggingOut,新增 Reconnecting 状态
         /// </summary>
         public enum LoginStatus
         {
             /// <summary>
-            /// 未登录
+            /// 未登录 / 初始状态
             /// </summary>
             None,
+            
             /// <summary>
-            /// 登录中
+            /// 登录中 (连接服务器 + 身份验证)
             /// </summary>
             LoggingIn,
+            
             /// <summary>
-            /// 已登录
+            /// 已登录 (正常工作状态)
             /// </summary>
             LoggedIn,
+            
             /// <summary>
-            /// 锁定状态
+            /// 重连中 (网络断开后自动重连)
             /// </summary>
-            Locked,
+            Reconnecting,
+            
             /// <summary>
-            /// 登出中
+            /// 锁定状态 (重连失败达到极限或用户主动锁定,需重新登录)
             /// </summary>
-            LoggingOut
+            Locked
         }
 
         /// <summary>
@@ -178,10 +183,6 @@ namespace RUINORERP.UI
         /// </summary>
         private readonly Services.TestManager.ITestManager _testManager;
 
-        /// <summary>
-        /// 系统锁定状态标志
-        /// </summary>
-        public bool IsLocked { get; private set; }
 
         /// <summary>
         /// 待处理的更新信息
@@ -195,79 +196,31 @@ namespace RUINORERP.UI
 
         #region 当前系统中所有用户信息
         /// <summary>
-        /// 处理重连失败事件，优化：仅通知用户，不强制锁定系统
+        /// 处理重连失败事件
+        /// ✅ 简化:达到最大重连次数后,直接进入锁定状态
         /// </summary>
         private void OnReconnectFailed()
         {
             try
             {
-                logger?.LogWarning("⚠️ 客户端重连失败，当前失败次数: {Count}", _reconnectFailureCount + 1);
+                logger?.LogWarning("⚠️ 客户端重连失败，已达到最大重试次数");
 
-                // 仅在已登录状态下通知用户网络问题
-                if (CurrentLoginStatus == LoginStatus.LoggedIn)
+                // 仅在已登录或重连中状态下才需要处理
+                if (CurrentLoginStatus != LoginStatus.LoggedIn && 
+                    CurrentLoginStatus != LoginStatus.Reconnecting)
                 {
-                    _reconnectFailureCount++;
-                    _lastReconnectFailureTime = DateTime.Now;
+                    logger?.LogDebug("当前状态为 {Status},忽略重连失败事件", CurrentLoginStatus);
+                    return;
+                }
 
-                    logger?.LogWarning("当前为已登录状态，重连失败第 {Count} 次", _reconnectFailureCount);
-
-                    // ✅ 检查是否超过最大失败次数
-                    if (_reconnectFailureCount >= MAX_RECONNECT_FAILURES)
-                    {
-                        // 在UI线程上显示退出提示
-                        if (InvokeRequired)
-                        {
-                            BeginInvoke(new Action(() =>
-                            {
-                                ShowExitDialogAfterReconnectFailures();
-                            }));
-                        }
-                        else
-                        {
-                            ShowExitDialogAfterReconnectFailures();
-                        }
-                    }
-                    else
-                    {
-                        // 在UI线程上显示网络状态提示
-                        if (InvokeRequired)
-                        {
-                            BeginInvoke(new Action(() =>
-                            {
-                                ShowStatusText($"网络连接失败，正在尝试重连...（第{_reconnectFailureCount}次/{MAX_RECONNECT_FAILURES}次）");
-                            }));
-                        }
-                        else
-                        {
-                            ShowStatusText($"网络连接失败，正在尝试重连...（第{_reconnectFailureCount}次/{MAX_RECONNECT_FAILURES}次）");
-                        }
-
-                        // ✅ 继续尝试重连
-                        communicationService?.ConnectionManager?.StartAutoReconnect();
-                    }
+                // 在UI线程上执行锁定操作
+                if (InvokeRequired)
+                {
+                    BeginInvoke(new Action(() => EnterLockedState()));
                 }
                 else
                 {
-                    // 如果当前不是登录中状态且已连接，则断开连接
-                    if (CurrentLoginStatus != LoginStatus.LoggingIn && communicationService != null && communicationService.ConnectionManager.IsConnected)
-                    {
-                        if (InvokeRequired)
-                        {
-                            BeginInvoke(new Action(async () =>
-                            {
-                                var disconnectResult = await communicationService.Disconnect();
-                                logger?.LogInformation($"重连失败处理中断开连接结果: {disconnectResult}");
-                            }));
-                        }
-                        else
-                        {
-                            Task.Run(async () =>
-                            {
-                                var disconnectResult = await communicationService.Disconnect();
-                                logger?.LogInformation($"重连失败处理中断开连接结果: {disconnectResult}");
-                            });
-                        }
-                    }
+                    EnterLockedState();
                 }
             }
             catch (Exception ex)
@@ -380,102 +333,23 @@ namespace RUINORERP.UI
             }
         }
 
-        /// <summary>
-        /// 重连多次失败后显示退出对话框
-        /// </summary>
-        private void ShowExitDialogAfterReconnectFailures()
-        {
-            var result = MessageBox.Show(
-                $"网络连接失败，已自动重试 {_reconnectFailureCount} 次未能恢复。\n\n" +
-                "可能的原因：\n" +
-                "• 服务器已关闭或维护\n" +
-                "• 网络连接中断\n" +
-                "• 防火墙阻止连接\n\n" +
-                "是否继续尝试重连？\n" +
-                "点击\"是\"继续尝试，点击\"否\"退出系统。",
-                "网络断开",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning);
-
-            if (result == DialogResult.No)
-            {
-                logger?.LogWarning("用户选择退出系统");
-
-                // 清理资源
-                try
-                {
-                    communicationService?.Disconnect().Wait(TimeSpan.FromSeconds(3));
-                }
-                catch { }
-
-                // 退出系统
-                Application.Exit();
-            }
-            else
-            {
-                logger?.LogInformation("用户选择继续重连，重置失败计数");
-
-                // ✅ 重置计数，继续重连
-                _reconnectFailureCount = 0;
-                communicationService?.ConnectionManager?.StartAutoReconnect();
-
-                ShowStatusText("继续尝试重连...");
-            }
-        }
-
-        /// <summary>
-        /// 重连成功事件处理
-        /// </summary>
-        private void OnReconnectSucceeded()
-        {
-            try
-            {
-                logger?.LogInformation("✅ 重连成功，重置失败计数");
-
-                // ✅ 重置重连失败计数
-                _reconnectFailureCount = 0;
-                _lastReconnectFailureTime = DateTime.MinValue;
-
-                // ✅ 重连成功后，重置性能监控状态，确保使用新的Token
-                try
-                {
-                    var performanceMonitorService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ClientPerformanceMonitorService>();
-                    if (performanceMonitorService != null)
-                    {
-                        performanceMonitorService.Reset();
-                        performanceMonitorService.Start();
-                        logger?.LogDebug("性能监控服务已重置并重新启动");
-                    }
-                }
-                catch (Exception perfEx)
-                {
-                    logger?.LogWarning(perfEx, "重置性能监控服务时发生异常");
-                }
-
-                // 在UI线程上显示恢复提示
-                if (InvokeRequired)
-                {
-                    BeginInvoke(new Action(() =>
-                    {
-                        ShowStatusText("网络已恢复，系统正常工作");
-                    }));
-                }
-                else
-                {
-                    ShowStatusText("网络已恢复，系统正常工作");
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "处理重连成功事件时发生异常");
-            }
-        }
-
         #endregion
 
         // 在表单关闭时取消订阅事件，避免内存泄漏
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            _autoSaveTimer?.Dispose();
+            _autoSaveTimer = null;
+            
+            _clientVersionUpdateTimer?.Dispose();
+            _clientVersionUpdateTimer = null;
+
+            if (communicationService != null)
+            {
+                communicationService.ReconnectFailed -= OnReconnectFailed;
+                communicationService.HeartbeatFailureThresholdReached -= OnHeartbeatFailureThresholdReached;
+            }
+
             base.OnFormClosing(e);
         }
 
@@ -563,21 +437,6 @@ namespace RUINORERP.UI
         private readonly object _loginStatusLock = new object();
 
         /// <summary>
-        /// 重连失败计数器
-        /// </summary>
-        private int _reconnectFailureCount = 0;
-
-        /// <summary>
-        /// 最大重连失败次数，超过此次数后提示用户退出
-        /// </summary>
-        private const int MAX_RECONNECT_FAILURES = 5; // 最多重试5轮
-
-        /// <summary>
-        /// 上次重连失败时间，用于计算冷却时间
-        /// </summary>
-        private DateTime _lastReconnectFailureTime = DateTime.MinValue;
-
-        /// <summary>
         /// 获取或设置登录状态，确保线程安全
         /// </summary>
         public LoginStatus CurrentLoginStatus
@@ -630,11 +489,11 @@ namespace RUINORERP.UI
                 case LoginStatus.LoggingIn:
                     this.SystemOperatorState.Text = "登录中...";
                     break;
+                case LoginStatus.Reconnecting:
+                    this.SystemOperatorState.Text = "重连中...";
+                    break;
                 case LoginStatus.Locked:
                     this.SystemOperatorState.Text = "锁定";
-                    break;
-                case LoginStatus.LoggingOut:
-                    this.SystemOperatorState.Text = "登出中...";
                     break;
                 case LoginStatus.None:
                 default:
@@ -679,7 +538,7 @@ namespace RUINORERP.UI
             if (communicationService != null)
             {
                 communicationService.ReconnectFailed += OnReconnectFailed;
-                communicationService.ReconnectSucceeded += OnReconnectSucceeded; // ✅ 新增
+                // ✅ 简化:重连成功由 ClientCommunicationService.OnReconnectSucceeded() 统一处理
                 // 订阅心跳失败阈值事件，当连续心跳失败达到阈值时触发锁定
                 communicationService.HeartbeatFailureThresholdReached += OnHeartbeatFailureThresholdReached;
             }
@@ -1823,7 +1682,7 @@ namespace RUINORERP.UI
         /// <param name="isLocked">是否锁定</param>
         public void UpdateLockStatus(bool isLocked)
         {
-            IsLocked = isLocked; // 更新系统级锁定状态
+            // ✅ 简化:直接使用 CurrentLoginStatus 判断,不再需要 IsLocked 字段
             if (this.InvokeRequired)
             {
                 this.Invoke(new Action(() =>
@@ -2379,31 +2238,47 @@ namespace RUINORERP.UI
 
         /// <summary>
         /// 系统锁定，禁用所有用户操作，仅允许重新登录
+        /// ✅ 简化:统一入口,重连失败达到极限后调用此方法
         /// </summary>
         public void LogLock()
         {
             // 检查是否已经在注销过程中，防止重复执行
-            if (IsLoggingOut || CurrentLoginStatus == LoginStatus.LoggingOut || CurrentLoginStatus == LoginStatus.LoggingIn)
+            if (IsLoggingOut || CurrentLoginStatus == LoginStatus.Locked || CurrentLoginStatus == LoginStatus.LoggingIn)
             {
                 logger?.LogWarning("锁定操作已在进行中或正在登录，忽略重复调用");
                 return;
             }
 
-            // ✅ 关键优化：进入锁定状态时，直接停止后台任务
-            var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
-            connectionManager?.StopBackgroundTasks();
+            logger?.LogInformation("进入锁定状态(用户主动),准备显示登录界面");
+            EnterLockedState();
+        }
 
-            // ✅ 停止心跳和性能数据上传
+        /// <summary>
+        /// 进入锁定状态
+        /// ✅ 统一入口:重连失败达到极限后调用此方法
+        /// </summary>
+        private void EnterLockedState()
+        {
+            logger?.LogInformation("进入锁定状态,准备显示登录界面");
+
+            // 设置状态
+            CurrentLoginStatus = LoginStatus.Locked;
+
+            // 停止后台任务
+            var connectionManager = Startup.GetFromFac<ConnectionManager>();
+            connectionManager?.StopBackgroundTasks();
             communicationService?.StopHeartbeat();
+            
             var performanceMonitorService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ClientPerformanceMonitorService>();
             performanceMonitorService?.Stop();
 
-            logger?.LogInformation("已进入锁定状态，后台网络活动已暂停");
-
-            // 设置状态
-            IsLoggingOut = true;
-            CurrentLoginStatus = LoginStatus.Locked;
-            IsLocked = true; // 设置锁定状态标志
+            // 清除会话信息
+            Program.AppContextData.IsOnline = false;
+            if (AppContext?.CurUserInfo != null)
+            {
+                AppContext.CurUserInfo.IsAuthorized = false;
+                AppContext.CurUserInfo.IsOnline = false;
+            }
 
             // 确保在UI线程中执行UI相关操作
             if (this.InvokeRequired)
@@ -2412,15 +2287,6 @@ namespace RUINORERP.UI
                 {
                     try
                     {
-                        Program.AppContextData.IsOnline = false;
-
-                        // 安全检查：CurUserInfo可能为null
-                        if (MainForm.Instance?.AppContext?.CurUserInfo != null)
-                        {
-                            MainForm.Instance.AppContext.CurUserInfo.IsAuthorized = false;
-                            MainForm.Instance.AppContext.CurUserInfo.IsOnline = false;
-                        }
-
                         // 清除UI元素
                         ClearUI();
                         ClearRoles();
@@ -2456,77 +2322,22 @@ namespace RUINORERP.UI
                                 // 登录成功后加载界面
                                 if (this.InvokeRequired)
                                 {
-                                    this.BeginInvoke(new Action(() =>
-                                    {
-                                        LoadUIMenus();
-                                        LoadUIForIM_LogPages();
-
-                                        // ✅ 关键优化：登录成功后，恢复后台任务
-                                        var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
-                                        connectionManager?.StartBackgroundTasks();
-                                        
-                                        // ✅ 恢复心跳和性能数据上传
-                                        communicationService?.StartHeartbeat();
-                                        performanceMonitorService?.Start();
-                                        
-                                        logger?.LogInformation("锁定状态自动重登成功，后台活动已恢复");
-
-                                        // 登录成功后重置状态
-                                        IsLoggingOut = false;
-                                        CurrentLoginStatus = LoginStatus.LoggedIn;
-                                        IsLocked = false; // 重置锁定状态
-                                        // 更新锁定状态为正常
-                                        UpdateLockStatus(false);
-                                        // 重新启用UI组件
-                                        ReenableUIComponents();
-                                    }));
+                                    this.BeginInvoke(new Action(() => ExitLockedState()));
                                 }
                                 else
                                 {
-                                    LoadUIMenus();
-                                    LoadUIForIM_LogPages();
-
-                                    // ✅ 关键优化：登录成功后，恢复后台任务
-                                    var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
-                                    connectionManager?.StartBackgroundTasks();
-                                    
-                                    // ✅ 恢复心跳和性能数据上传
-                                    communicationService?.StartHeartbeat();
-                                    performanceMonitorService?.Start();
-                                    
-                                    // 登录成功后重置状态
-                                    IsLoggingOut = false;
-                                    CurrentLoginStatus = LoginStatus.LoggedIn;
-                                    IsLocked = false; // 重置锁定状态
-                                    // 更新锁定状态为正常
-                                    UpdateLockStatus(false);
-                                    // 重新启用UI组件
-                                    ReenableUIComponents();
+                                    ExitLockedState();
                                 }
                             }
                             catch (Exception ex)
                             {
-                                logger?.LogError(ex, "注销过程中发生异常");
-                                // 异常情况下重置注销状态
-                                if (this.InvokeRequired)
-                                {
-                                    this.BeginInvoke(new Action(() =>
-                                    {
-                                        IsLoggingOut = false;
-                                    }));
-                                }
-                                else
-                                {
-                                    IsLoggingOut = false;
-                                }
+                                logger?.LogError(ex, "锁定状态下登录异常");
                             }
                         });
                     }
                     catch (Exception ex)
                     {
-                        logger?.LogError(ex, "注销过程中发生异常");
-                        // 异常情况下重置注销状态
-                        IsLoggingOut = false;
+                        logger?.LogError(ex, "进入锁定状态时发生异常");
                     }
                 }));
             }
@@ -2534,15 +2345,6 @@ namespace RUINORERP.UI
             {
                 try
                 {
-                    Program.AppContextData.IsOnline = false;
-
-                    // 安全检查：CurUserInfo可能为null
-                    if (MainForm.Instance?.AppContext?.CurUserInfo != null)
-                    {
-                        MainForm.Instance.AppContext.CurUserInfo.IsAuthorized = false;
-                        MainForm.Instance.AppContext.CurUserInfo.IsOnline = false;
-                    }
-
                     // 清除UI元素
                     ClearUI();
                     ClearRoles();
@@ -2558,86 +2360,53 @@ namespace RUINORERP.UI
                             bool islogin = await Login();
                             if (!islogin)
                             {
-                                // ✅ 关键优化：登录失败时，恢复后台任务
-                                var connectionManager = Startup.GetFromFac<RUINORERP.UI.Network.ConnectionManager>();
-                                connectionManager?.StartBackgroundTasks();
-                                logger?.LogWarning("锁定状态自动重登失败，恢复正常日志和后台活动");
-                                
                                 // 登录失败时重置状态
-                                if (this.InvokeRequired)
-                                {
-                                    this.BeginInvoke(new Action(() =>
-                                    {
-                                        IsLoggingOut = false;
-                                        CurrentLoginStatus = LoginStatus.None;
-                                    }));
-                                }
-                                else
-                                {
-                                    IsLoggingOut = false;
-                                    CurrentLoginStatus = LoginStatus.None;
-                                }
+                                IsLoggingOut = false;
+                                CurrentLoginStatus = LoginStatus.None;
                                 return;
                             }
 
                             // 登录成功后加载界面
-                            if (this.InvokeRequired)
-                            {
-                                this.BeginInvoke(new Action(() =>
-                                {
-                                    LoadUIMenus();
-                                    LoadUIForIM_LogPages();
-
-                                    // 登录成功后重置状态
-                                    IsLoggingOut = false;
-                                    CurrentLoginStatus = LoginStatus.LoggedIn;
-                                    IsLocked = false; // 重置锁定状态
-                                    // 更新锁定状态为正常
-                                    UpdateLockStatus(false);
-                                    // 重新启用UI组件
-                                    ReenableUIComponents();
-                                }));
-                            }
-                            else
-                            {
-                                LoadUIMenus();
-                                LoadUIForIM_LogPages();
-
-                                // 登录成功后重置状态
-                                IsLoggingOut = false;
-                                CurrentLoginStatus = LoginStatus.LoggedIn;
-                                IsLocked = false; // 重置锁定状态
-                                // 更新锁定状态为正常
-                                UpdateLockStatus(false);
-                                // 重新启用UI组件
-                                ReenableUIComponents();
-                            }
+                            ExitLockedState();
                         }
                         catch (Exception ex)
                         {
-                            logger?.LogError(ex, "注销过程中发生异常");
-                            // 异常情况下重置注销状态
-                            if (this.InvokeRequired)
-                            {
-                                this.BeginInvoke(new Action(() =>
-                                {
-                                    IsLoggingOut = false;
-                                }));
-                            }
-                            else
-                            {
-                                IsLoggingOut = false;
-                            }
+                            logger?.LogError(ex, "锁定状态下登录异常");
                         }
                     });
                 }
                 catch (Exception ex)
                 {
-                    logger?.LogError(ex, "注销过程中发生异常");
-                    // 异常情况下重置注销状态
-                    IsLoggingOut = false;
+                    logger?.LogError(ex, "进入锁定状态时发生异常");
                 }
             }
+        }
+
+        /// <summary>
+        /// 退出锁定状态
+        /// ✅ 登录成功后调用此方法恢复正常工作状态
+        /// </summary>
+        private void ExitLockedState()
+        {
+            logger?.LogInformation("退出锁定状态,恢复正常工作");
+
+            IsLoggingOut = false;
+            CurrentLoginStatus = LoginStatus.LoggedIn;
+
+            // 恢复后台任务
+            var connectionManager = Startup.GetFromFac<ConnectionManager>();
+            connectionManager?.StartBackgroundTasks();
+            
+            communicationService?.StartHeartbeat();
+            
+            var performanceMonitorService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ClientPerformanceMonitorService>();
+            performanceMonitorService?.Start();
+
+            // 重新加载UI
+            LoadUIMenus();
+            LoadUIForIM_LogPages();
+            ReenableUIComponents();
+            UpdateLockStatus(false);
         }
 
         #endregion
@@ -3257,8 +3026,8 @@ namespace RUINORERP.UI
                 e.Cancel = false;
                 try
                 {
-                    // 设置状态为登出中
-                    CurrentLoginStatus = LoginStatus.LoggingOut;
+                    // ✅ 简化:登出是瞬时操作,不需要独立状态,直接设置为 None
+                    CurrentLoginStatus = LoginStatus.None;
 
                     if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                     {

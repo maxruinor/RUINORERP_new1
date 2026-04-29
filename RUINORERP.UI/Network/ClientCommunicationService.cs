@@ -38,6 +38,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static RUINORERP.UI.MainForm;
 using Timer = System.Threading.Timer;
 
 namespace RUINORERP.UI.Network
@@ -314,6 +315,10 @@ namespace RUINORERP.UI.Network
 
             _connectionManager.ReconnectSucceeded -= OnReconnectSucceeded;
             _connectionManager.ReconnectSucceeded += OnReconnectSucceeded;
+            
+            // ✅ 订阅重连开始事件,更新UI状态为 Reconnecting
+            _connectionManager.ReconnectStarted -= OnReconnectStarted;
+            _connectionManager.ReconnectStarted += OnReconnectStarted;
 
             // 注意：不再在构造函数中初始化命令调度器，以避免循环依赖
             // 而是通过外部调用InitializeClientCommandDispatcherAsync方法进行初始化
@@ -480,84 +485,128 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 处理连接管理器重连成功事件
-        /// 优化：网络恢复后自动恢复工作状态，不再依赖锁定机制
+        /// 优化：网络恢复后自动恢复工作状态，不再依赖依赖锁定机制
         /// 🆕 新增：自动重新登录逻辑（后台执行，不显示登录窗体）
         /// ✅ 修复：重连成功后不立即启动心跳，等待登录完成后再启动
         /// </summary>
-        private async void OnReconnectSucceeded()
+        private void OnReconnectSucceeded()
         {
-            try
+            _ = Task.Run(async () =>
             {
-                // ConnectionManager会自动管理重连状态，无需手动重置
-
-                // 重置心跳失败计数（仅一次）
-                Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-
-                // ✅ 触发重连成功事件
                 try
                 {
-                    _clientEventManager?.OnReconnectSucceeded();
-                }
-                catch (Exception eventEx)
-                {
-                    _logger?.LogWarning(eventEx, "触发ReconnectSucceeded事件时发生异常");
-                }
+                    // ConnectionManager会自动管理重连状态，无需手动重置
 
-                // 🆕 尝试恢复登录状态（后台执行，不显示登录窗体）
-                // ✅ 关键：登录完成后会自动启动心跳
-                await TryRestoreLoginStateAsync();
+                    // 重置心跳失败计数（仅一次）
+                    Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
 
-                // 显示重连成功信息到UI
-                try
-                {
-                    if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                    // ✅ 触发重连成功事件
+                    try
                     {
-                        if (MainForm.Instance.InvokeRequired)
+                        _clientEventManager?.OnReconnectSucceeded();
+                    }
+                    catch (Exception eventEx)
+                    {
+                        _logger?.LogWarning(eventEx, "触发ReconnectSucceeded事件时发生异常");
+                    }
+
+                    // 🆕 尝试恢复登录状态（后台执行，不显示登录窗体）
+                    // ✅ 关键：登录完成后会自动启动心跳
+                    await TryRestoreLoginStateAsync();
+
+                    // 显示重连成功信息到UI
+                    try
+                    {
+                        if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
                         {
-                            MainForm.Instance.BeginInvoke(new Action(() =>
+                            if (MainForm.Instance.InvokeRequired)
+                            {
+                                MainForm.Instance.BeginInvoke(new Action(() =>
+                                {
+                                    // 显示网络恢复状态
+                                    MainForm.Instance.ShowStatusText("网络已恢复，正在验证会话...");
+                                    MainForm.Instance.PrintInfoLog("网络重连成功，正在验证会话状态");
+
+                                    // ✅ 简化:直接使用 CurrentLoginStatus 判断锁定状态
+                                    if (MainForm.Instance.CurrentLoginStatus == LoginStatus.Locked)
+                                    {
+                                        MainForm.Instance.UpdateLockStatus(false);
+                                        MainForm.Instance.PrintInfoLog("重连成功，已解除客户端锁定状态");
+                                    }
+                                }));
+                            }
+                            else
                             {
                                 // 显示网络恢复状态
                                 MainForm.Instance.ShowStatusText("网络已恢复，正在验证会话...");
                                 MainForm.Instance.PrintInfoLog("网络重连成功，正在验证会话状态");
 
-                                // 保持向后兼容：如果之前是锁定状态，解除锁定
-                                // 注意：由于心跳失败不再导致锁定，此逻辑主要用于手动锁定场景
-                                if (MainForm.Instance.IsLocked)
+                                // ✅ 简化:直接使用 CurrentLoginStatus 判断锁定状态
+                                if (MainForm.Instance.CurrentLoginStatus == LoginStatus.Locked)
                                 {
                                     MainForm.Instance.UpdateLockStatus(false);
                                     MainForm.Instance.PrintInfoLog("重连成功，已解除客户端锁定状态");
                                 }
-                            }));
-                        }
-                        else
-                        {
-                            // 显示网络恢复状态
-                            MainForm.Instance.ShowStatusText("网络已恢复，正在验证会话...");
-                            MainForm.Instance.PrintInfoLog("网络重连成功，正在验证会话状态");
-
-                            // 保持向后兼容：如果之前是锁定状态，解除锁定
-                            if (MainForm.Instance.IsLocked)
-                            {
-                                MainForm.Instance.UpdateLockStatus(false);
-                                MainForm.Instance.PrintInfoLog("重连成功，已解除客户端锁定状态");
                             }
                         }
                     }
+                    catch (Exception uiEx)
+                    {
+                        _logger?.LogWarning(uiEx, "更新重连成功UI时发生异常");
+                    }
+
+                    // ✅ 移除：不在这里启动队列处理，等待登录完成后再启动
+                    // _ = Task.Run(ProcessCommandQueueAsync);
+
+                    // ✅ 移除：不在这里启动心跳，等待登录完成后再启动
+                    // StartHeartbeat();
                 }
-                catch (Exception uiEx)
+                catch (Exception ex)
                 {
-                    _logger?.LogWarning(uiEx, "更新重连成功UI时发生异常");
+                    _logger?.LogError(ex, "OnReconnectSucceeded发生未预期异常");
                 }
-
-                // ✅ 移除：不在这里启动队列处理，等待登录完成后再启动
-                // _ = Task.Run(ProcessCommandQueueAsync);
-
-                // ✅ 移除：不在这里启动心跳，等待登录完成后再启动
-                // StartHeartbeat();
+            });
+        }
+        
+        /// <summary>
+        /// 处理连接管理器重连开始事件
+        /// ✅ 更新UI状态为 Reconnecting
+        /// </summary>
+        private void OnReconnectStarted()
+        {
+            try
+            {
+                // 在UI线程上更新状态
+                if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                {
+                    if (MainForm.Instance.InvokeRequired)
+                    {
+                        MainForm.Instance.BeginInvoke(new Action(() =>
+                        {
+                            // 仅在已登录状态下才更新为重连中
+                            if (MainForm.Instance.CurrentLoginStatus == LoginStatus.LoggedIn)
+                            {
+                                MainForm.Instance.CurrentLoginStatus = LoginStatus.Reconnecting;
+                                MainForm.Instance.ShowStatusText("网络连接断开，正在尝试重连...");
+                                MainForm.Instance.PrintInfoLog("检测到连接断开，开始自动重连");
+                            }
+                        }));
+                    }
+                    else
+                    {
+                        // 仅在已登录状态下才更新为重连中
+                        if (MainForm.Instance.CurrentLoginStatus == LoginStatus.LoggedIn)
+                        {
+                            MainForm.Instance.CurrentLoginStatus = LoginStatus.Reconnecting;
+                            MainForm.Instance.ShowStatusText("网络连接断开，正在尝试重连...");
+                            MainForm.Instance.PrintInfoLog("检测到连接断开，开始自动重连");
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "OnReconnectSucceeded发生未预期异常");
+                _logger?.LogWarning(ex, "更新重连开始UI时发生异常");
             }
         }
 
@@ -1312,13 +1361,43 @@ namespace RUINORERP.UI.Network
         /// </summary>
         private async Task TryRestoreLoginStateAsync()
         {
-            // 创建本地取消令牌源，用于控制整个会话恢复流程
+            try
+            {
+                _logger?.LogDebug("开始尝试恢复登录状态...");
+
+                await Task.Delay(500);
+
+                if (MainForm.Instance?.IsDisposed == true)
+                {
+                    _logger?.LogDebug("窗体已释放，跳过会话恢复");
+                    return;
+                }
+
+                var currentStatus = MainForm.Instance?.CurrentLoginStatus;
+                if (currentStatus != LoginStatus.LoggedIn && currentStatus != LoginStatus.Locked)
+                {
+                    _logger?.LogDebug("当前状态为 {Status}，不需要会话恢复", currentStatus);
+                    return;
+                }
+
+                if (_disposed)
+                {
+                    _logger?.LogDebug("服务已释放，跳过会话恢复");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "会话恢复前检查失败");
+                return;
+            }
+
             using var sessionRestoreCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             var ct = sessionRestoreCts.Token;
             
             try
             {
-                _logger?.LogDebug("开始尝试恢复登录状态...");
+                _logger?.LogDebug("继续尝试恢复登录状态...");
 
                 // 检查是否已取消
                 ct.ThrowIfCancellationRequested();

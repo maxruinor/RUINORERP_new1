@@ -134,3 +134,23 @@ WITH CTE AS (
         AND IsChild = 1
 )
 DELETE FROM CTE WHERE rn > 1;
+
+
+
+
+
+--有应收应付，丢了实现了入库出库
+SELECT * FROM tb_FM_ReceivablePayable 
+WHERE
+ SourceBizType=4
+ and
+ SourceBillNo not in (
+ SELECT PurEntryNo from tb_PurEntry )
+ 
+ ;
+ SELECT * FROM tb_FM_ReceivablePayable 
+WHERE
+ SourceBizType=1
+ and
+ SourceBillNo not in (
+ SELECT SaleOutNo from tb_SaleOut )

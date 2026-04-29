@@ -283,8 +283,8 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
                         if (updateInfo != null)
                         {
-                            // 检查系统是否处于锁定状态或登录界面显示状态，避免弹窗冲突
-                            bool isSystemLocked = MainForm.Instance?.IsLocked ?? false;
+                            // ✅ 简化:直接使用 CurrentLoginStatus 判断锁定状态
+                            bool isSystemLocked = MainForm.Instance?.CurrentLoginStatus == MainForm.LoginStatus.Locked;
                             bool isLoginScreenVisible = IsLoginScreenVisible();
                             
                             if (isSystemLocked || isLoginScreenVisible)

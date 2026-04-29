@@ -20,7 +20,7 @@ namespace RUINORERP.UI.Network
         private readonly ConnectionManagerConfig _config;
 
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         private bool _isReconnecting = false;
         private bool _disposed = false;
@@ -63,6 +63,12 @@ namespace RUINORERP.UI.Network
         /// 重连成功时触发
         /// </summary>
         public event Action ReconnectSucceeded;
+        
+        /// <summary>
+        /// 重连开始事件
+        /// 开始重连时触发,用于UI显示“重连中”状态
+        /// </summary>
+        public event Action ReconnectStarted;
 
         /// <summary>
         /// 当前连接状态
@@ -320,6 +326,10 @@ namespace RUINORERP.UI.Network
                 _isReconnecting = true;
                 _reconnectStopped = false;
                 _reconnectTask = Task.Run(ReconnectLoopAsync, _cancellationTokenSource.Token);
+                
+                // ✅ 触发重连开始事件,通知UI更新状态
+                OnReconnectStarted();
+                
                 _logger?.LogDebug("启动自动重连任务");
             }
         }
@@ -413,12 +423,8 @@ namespace RUINORERP.UI.Network
                 finally
                 {
                     _reconnectTask = null;
-                    // 重新创建取消令牌源
-                    if (!_cancellationTokenSource.IsCancellationRequested)
-                    {
-                        _cancellationTokenSource.Dispose();
-                    }
-                    // 注意：这里不重新创建，因为我们可能在重连循环中
+                    _cancellationTokenSource.Dispose();
+                    _cancellationTokenSource = new CancellationTokenSource();
                 }
             }
         }
@@ -777,6 +783,22 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _logger?.LogWarning(ex, "触发重连成功事件时发生异常");
+            }
+        }
+        
+        /// <summary>
+        /// 触发重连开始事件
+        /// </summary>
+        private void OnReconnectStarted()
+        {
+            try
+            {
+                ReconnectStarted?.Invoke();
+                _logger?.LogDebug("触发重连开始事件");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "触发重连开始事件时发生异常");
             }
         }
 

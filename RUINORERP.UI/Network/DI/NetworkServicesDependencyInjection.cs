@@ -63,9 +63,23 @@ namespace RUINORERP.UI.Network.DI
             builder.RegisterType<SuperSocketClient>().As<ISocketClient>().SingleInstance();
             
             // 注册连接管理器
+            // ✅ 简化:设置 MaxReconnectAttempts = 0 (无限重试),由上层业务逻辑决定何时停止
+            var connectionManagerConfig = new ConnectionManagerConfig
+            {
+                AutoReconnect = true,           // 始终启用自动重连
+                ReconnectInterval = 5000,       // 5秒基础间隔
+                MaxReconnectAttempts = 0,       // ✅ 无限重试
+                EnableExponentialBackoff = true,
+                MaxBackoffInterval = 120000,    // 最大2分钟
+                BackoffMultiplier = 2.0,
+                EnableRandomJitter = true,
+                JitterRatio = 0.3,
+                ReconnectDelayMs = 3000         // 断开后延迟3秒再重连
+            };
+            
             builder.RegisterType<ConnectionManager>().AsSelf().SingleInstance()
                 .WithParameter((pi, ctx) => pi.ParameterType == typeof(ConnectionManagerConfig),
-                               (pi, ctx) => ConnectionManagerConfig.Default);
+                               (pi, ctx) => connectionManagerConfig);
 
             // 注册客户端命令调度器
             builder.RegisterType<ClientCommandDispatcher>()

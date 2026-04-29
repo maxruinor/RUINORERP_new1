@@ -12,6 +12,7 @@ using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.Server.Services.BizCode;
 using RUINORERP.PacketSpec.Models.BizCodeGenerate;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.Model.Context;
 
 
 namespace RUINORERP.Server.Network.CommandHandlers
@@ -23,15 +24,20 @@ namespace RUINORERP.Server.Network.CommandHandlers
     public class BizCodeCommandHandler : BaseCommandHandler
     {
         private readonly ILogger<BizCodeCommandHandler> logger;
-        private readonly ServerBizCodeGenerateService _bizCodeService;
+        private readonly ApplicationContext _applicationContext;
+
+        private ServerBizCodeGenerateService _bizCodeService => 
+            _applicationContext.GetRequiredService<ServerBizCodeGenerateService>();
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public BizCodeCommandHandler(ILogger<BizCodeCommandHandler> logger, ServerBizCodeGenerateService bizCodeService) : base(logger)
+        public BizCodeCommandHandler(
+            ApplicationContext applicationContext,
+            ILogger<BizCodeCommandHandler> logger) : base(logger)
         {
+            _applicationContext = applicationContext;
             this.logger = logger;
-            _bizCodeService = bizCodeService;
 
             // 设置支持的命令
             SetSupportedCommands(

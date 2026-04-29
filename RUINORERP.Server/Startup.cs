@@ -894,10 +894,15 @@ namespace RUINORERP.Server
 
                 if (tempTypes[i].Name == "SqlSugarRowLevelAuthFilter")
                 {
+                    // 【修复】：明确指定使用带 ILogger<T> 的构造函数，避免 Autofac 构造函数歧义
                     builder.RegisterType<SqlSugarRowLevelAuthFilter>()
                     .AsSelf()
                     .SingleInstance() // 注册为单例
-                    .PropertiesAutowired();
+                    .PropertiesAutowired()
+                    .WithParameter(new Autofac.Core.ResolvedParameter(
+                        (pi, ctx) => pi.ParameterType == typeof(Microsoft.Extensions.Logging.ILogger<SqlSugarRowLevelAuthFilter>),
+                        (pi, ctx) => ctx.Resolve<Microsoft.Extensions.Logging.ILogger<SqlSugarRowLevelAuthFilter>>()
+                    ));
                     continue;
                 }
 

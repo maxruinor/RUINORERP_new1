@@ -81,7 +81,7 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 创建处理器实例 - 泛型版本
+        /// 创建处理器实例 - 泛型版本1
         /// </summary>
         /// <typeparam name="T">处理器类型</typeparam>
         /// <returns>处理器实例</returns>
@@ -155,71 +155,124 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private Func<ICommandHandler> CreateDiFactoryMethod(ConstructorInfo constructor, ParameterInfo[] parameters)
         {
+            var handlerType = constructor.DeclaringType;
+            
             return () =>
             {
                 try
                 {
+                    // 【优化1】：首先尝试直接使用DI容器创建处理器实例
+                    // 这是最可靠的方式，因为DI容器可以处理所有依赖关系和生命周期
+                    try
+                    {
+                        var getServiceMethod = typeof(ServiceProviderServiceExtensions)
+                            .GetMethod("GetService", new[] { typeof(IServiceProvider) })
+                            .MakeGenericMethod(handlerType);
+                        
+                        var instance = getServiceMethod.Invoke(null, new object[] { _serviceProvider });
+                        if (instance != null && instance is ICommandHandler handler)
+                        {
+#if DEBUG
+                            System.Diagnostics.Debug.WriteLine($"成功通过DI容器创建处理器: {handlerType.FullName}");
+#endif
+                            return handler;
+                        }
+                    }
+                    catch (Exception diEx)
+                    {
+                        // DI容器创建失败，记录详细错误信息
+                        System.Diagnostics.Debug.WriteLine($"DI容器直接创建处理器失败: {handlerType.FullName}, 错误: {diEx.Message}\r\n{diEx.StackTrace}");
+                    }
+                    
+                    // 【优化2】：如果直接创建失败，手动解析构造函数参数并调用Activator.CreateInstance
                     var args = new object[parameters.Length];
+                    bool allParametersResolved = true;
                     
                     for (int i = 0; i < parameters.Length; i++)
                     {
                         var paramType = parameters[i].ParameterType;
                         
-                        // 处理泛型类型参数
-                        if (paramType.IsGenericType && !paramType.IsConstructedGenericType)
+                        try
                         {
-                            // 尝试构造具体的泛型类型
-                            var genericDefinition = paramType.GetGenericTypeDefinition();
-                            var typeArgs = constructor.DeclaringType.GetGenericArguments();
-                            
-                            if (typeArgs.Length > 0)
+                            // 处理泛型类型参数
+                            if (paramType.IsGenericType && !paramType.IsConstructedGenericType)
                             {
-                                // 使用处理器类型的泛型参数构造具体的泛型类型
-                                var concreteType = genericDefinition.MakeGenericType(typeArgs);
+                                // 尝试构造具体的泛型类型
+                                var genericDefinition = paramType.GetGenericTypeDefinition();
+                                var typeArgs = handlerType.GetGenericArguments();
                                 
-                                // 确保所有泛型参数都已替换
-                                if (concreteType.IsGenericType && concreteType.ContainsGenericParameters)
+                                if (typeArgs.Length > 0)
                                 {
-                                    // 如果仍然包含泛型参数，回退到反射创建
-                                    return CreateReflectionFactoryMethod(constructor)();
+                                    // 使用处理器类型的泛型参数构造具体的泛型类型
+                                    var concreteType = genericDefinition.MakeGenericType(typeArgs);
+                                    
+                                    // 确保所有泛型参数都已替换
+                                    if (concreteType.IsGenericType && concreteType.ContainsGenericParameters)
+                                    {
+                                        // 如果仍然包含泛型参数，标记为无法解析
+                                        allParametersResolved = false;
+                                        args[i] = null;
+                                        continue;
+                                    }
+                                    
+                                    // 使用DI容器获取具体类型的实例
+                                    var getRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
+                                        .GetMethod("GetRequiredService", new[] { typeof(IServiceProvider) })
+                                        .MakeGenericMethod(concreteType);
+                                    
+                                    args[i] = getRequiredServiceMethod.Invoke(null, new object[] { _serviceProvider });
                                 }
-                                
-                                // 使用DI容器获取具体类型的实例
-                                var getRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
-                                    .GetMethod("GetRequiredService", new[] { typeof(IServiceProvider) })
-                                    .MakeGenericMethod(concreteType);
-                                
-                                args[i] = getRequiredServiceMethod.Invoke(null, new object[] { _serviceProvider });
+                                else
+                                {
+                                    // 如果无法构造具体类型，使用默认值
+                                    args[i] = paramType.IsValueType ? Activator.CreateInstance(paramType) : null;
+                                }
                             }
                             else
                             {
-                                // 如果无法构造具体类型，使用默认值
-                                args[i] = paramType.IsValueType ? Activator.CreateInstance(paramType) : null;
+                                // 确保非泛型类型也不包含泛型参数
+                                if (paramType.ContainsGenericParameters)
+                                {
+                                    // 如果包含泛型参数，标记为无法解析
+                                    allParametersResolved = false;
+                                    args[i] = null;
+                                    continue;
+                                }
+                                
+                                // 非泛型类型，直接使用DI容器获取
+                                var getRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
+                                    .GetMethod("GetRequiredService", new[] { typeof(IServiceProvider) })
+                                    .MakeGenericMethod(paramType);
+                                
+                                args[i] = getRequiredServiceMethod.Invoke(null, new object[] { _serviceProvider });
                             }
                         }
-                        else
+                        catch (Exception paramEx)
                         {
-                            // 确保非泛型类型也不包含泛型参数
-                            if (paramType.ContainsGenericParameters)
-                            {
-                                // 如果包含泛型参数，回退到反射创建
-                                return CreateReflectionFactoryMethod(constructor)();
-                            }
-                            
-                            // 非泛型类型，直接使用DI容器获取
-                            var getRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
-                                .GetMethod("GetRequiredService", new[] { typeof(IServiceProvider) })
-                                .MakeGenericMethod(paramType);
-                            
-                            args[i] = getRequiredServiceMethod.Invoke(null, new object[] { _serviceProvider });
+                            // 参数解析失败，记录错误并标记
+                            System.Diagnostics.Debug.WriteLine($"解析参数 {i} ({paramType.Name}) 失败: {paramEx.Message}");
+                            allParametersResolved = false;
+                            args[i] = null;
                         }
                     }
                     
-                    return (ICommandHandler)Activator.CreateInstance(constructor.DeclaringType, args);
+                    // 如果所有参数都成功解析，使用Activator.CreateInstance
+                    if (allParametersResolved && args.All(a => a != null))
+                    {
+#if DEBUG
+                        System.Diagnostics.Debug.WriteLine($"通过手动解析参数创建处理器: {handlerType.FullName}");
+#endif
+                        return (ICommandHandler)Activator.CreateInstance(handlerType, args);
+                    }
+                    
+                    // 【优化3】：如果上述方法都失败，回退到反射工厂方法
+                    System.Diagnostics.Debug.WriteLine($"所有DI方法都失败，回退到反射创建: {handlerType.FullName}");
+                    return CreateReflectionFactoryMethod(constructor)();
                 }
                 catch (Exception ex)
                 {
-                    // 如果DI创建失败，回退到反射创建
+                    // 最后的兜底方案：使用反射工厂方法
+                    System.Diagnostics.Debug.WriteLine($"DI工厂方法异常，最终回退到反射创建: {handlerType.FullName}, 错误: {ex.Message}\r\n{ex.StackTrace}");
                     return CreateReflectionFactoryMethod(constructor)();
                 }
             };

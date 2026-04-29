@@ -528,6 +528,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
         //后面再优化。相当于多个制令单的批量转单
+        //请将这个业务逻辑放到业务层。然后提供给这里和单据转换器使用。逻辑用一套代码。
         private async Task LoadSubLines(long? MainID)
         {
             ButtonSpecAny bsa = (txtRef_BillNo as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");

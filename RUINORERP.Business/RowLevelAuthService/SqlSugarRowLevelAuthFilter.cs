@@ -16,11 +16,15 @@ namespace RUINORERP.Business.RowLevelAuthService
     /// </summary>
     public class SqlSugarRowLevelAuthFilter
     {
-        private readonly ILogger<SqlSugarRowLevelAuthFilter> _logger;
+        private readonly ILogger _logger;
 
+        /// <summary>
+        /// 构造函数 - 接受特定类型的ILogger
+        /// </summary>
+        /// <param name="logger">日志记录器</param>
         public SqlSugarRowLevelAuthFilter(ILogger<SqlSugarRowLevelAuthFilter> logger)
         {
-            _logger = logger;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>

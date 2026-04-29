@@ -70,72 +70,49 @@ namespace RUINORERP.Business.Document.Converters
         {
             try
             {
-                // 使用AutoMapper进行基础映射
-                _mapper.Map(source, target);
-
-                // 重置状态字段 - 与业务层保持一致
-                target.ApprovalOpinions = "快捷转单";
-                target.ApprovalResults = null;
-                target.DataStatus = (int)DataStatus.草稿;
-                target.ApprovalStatus = (int)ApprovalStatus.未审核;
-                target.Approver_at = null;
-                target.Approver_by = null;
-                target.PrintStatus = 0;
-                target.ActionStatus = ActionStatus.新增;
-                target.Modified_at = null;
-                target.Modified_by = null;
-                target.Created_at = null;
-                target.Created_by = null;
-
-                // 生成缴库单号（使用重试机制）
+                // 调用业务层核心转换方法
+                var controller = _appContext.GetRequiredService<tb_FinishedGoodsInvController<tb_FinishedGoodsInv>>();
+                var result = await controller.CreateFromManufacturingOrderAsync(source);
+                
+                if (!result.Succeeded)
+                {
+                    throw new InvalidOperationException(result.ErrorMsg);
+                }
+                
+                // 将转换结果复制到目标对象
+                var convertedEntity = result.ReturnObject;
+                
+                // 复制主表字段
+                target.MOID = convertedEntity.MOID;
+                target.MONo = convertedEntity.MONo;
+                target.DepartmentID = convertedEntity.DepartmentID;
+                target.Employee_ID = convertedEntity.Employee_ID;
+                target.IsOutSourced = convertedEntity.IsOutSourced;
+                target.CustomerVendor_ID = convertedEntity.CustomerVendor_ID;
+                target.DataStatus = convertedEntity.DataStatus;
+                target.ApprovalStatus = convertedEntity.ApprovalStatus;
+                target.ApprovalResults = convertedEntity.ApprovalResults;
+                target.ApprovalOpinions = convertedEntity.ApprovalOpinions;
+                target.PrintStatus = convertedEntity.PrintStatus;
+                target.ActionStatus = convertedEntity.ActionStatus;
+                target.DeliveryDate = convertedEntity.DeliveryDate;
+                target.Notes = convertedEntity.Notes;
+                target.Created_at = convertedEntity.Created_at;
+                target.Created_by = convertedEntity.Created_by;
+                
+                // 复制明细
+                target.tb_FinishedGoodsInvDetails = convertedEntity.tb_FinishedGoodsInvDetails;
+                
+                // 关联制令单
+                target.tb_manufacturingorder = convertedEntity.tb_manufacturingorder;
+                
+                // 生成缴库单号
                 target.DeliveryBillNo = await BizCodeHelper.GenerateBizBillNoWithRetryAsync(
                     _bizCodeService, BizType.缴库单, maxRetries: 3, initialDelayMs: 500, logger: _logger);
-                target.DeliveryDate = DateTime.Now;
-                target.Notes = $"由制令单{source.MONO}生成";
-
-                // 设置关联信息
-                if (source.MOID > 0)
-                {
-                    target.MOID = source.MOID;
-                    target.MONo = source.MONO;
-                    target.DepartmentID = source.DepartmentID;
-                    target.IsOutSourced = source.IsOutSourced;
-                    
-                    // 设置外发工厂
-                    if (source.IsOutSourced)
-                    {
-                        target.CustomerVendor_ID = source.CustomerVendor_ID_Out;
-                    }
-                    else
-                    {
-                        target.CustomerVendor_ID = null;
-                    }
-                }
-
-                // 转换主表字段 - 复用业务层核心逻辑
-                ConvertMainFieldsAsync(source, target);
-
-                // 初始化明细集合
-                if (target.tb_FinishedGoodsInvDetails == null)
-                {
-                    target.tb_FinishedGoodsInvDetails = new List<tb_FinishedGoodsInvDetail>();
-                }
-
-                // 转换明细 - 复用业务层核心逻辑
-                await ConvertDetailsAsync(source, target);
-
-                // 重新计算汇总字段
-                RecalculateSummaryFields(target);
-
-                // 初始化实体
-                BusinessHelper.Instance.InitEntity(target);
-
-                // 设置关联的制令单对象
-                target.tb_manufacturingorder = source;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "制令单到缴库单转换失败，制令单号：{MONO}", source.MONO);
+                _logger.LogError(ex, "制令单到缴库单转换失败,制令单号: {MONO}", source.MONO);
                 throw;
             }
         }
@@ -277,11 +254,11 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
-                // 检查是否已结案（结案后不允许再缴库）
-                if (source.DataStatus != (int)DataStatus.完结)
+                // 检查是否已结案(结案后不允许再缴库)
+                if (source.DataStatus == (int)DataStatus.完结)
                 {
                     result.CanConvert = false;
-                    result.ErrorMessage = "制令单已结案，不允许再生成缴库单";
+                    result.ErrorMessage = "制令单已结案,不允许再生成缴库单";
                     return result;
                 }
 

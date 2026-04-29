@@ -76,8 +76,9 @@ namespace RUINORERP.Model.ImportEngine.Models
         
         /// <summary>
         /// 数据库存在性处理策略
+        /// ✅ 临时注释：ExistenceStrategy 在UI层定义，为避免循环依赖
         /// </summary>
-        public ExistenceStrategy ExistenceStrategy { get; set; } = ExistenceStrategy.Update;
+        // public ExistenceStrategy ExistenceStrategy { get; set; } = ExistenceStrategy.Update;
         
         /// <summary>
         /// 是否系统生成
@@ -96,13 +97,15 @@ namespace RUINORERP.Model.ImportEngine.Models
         
         /// <summary>
         /// 枚举默认值配置
+        /// ✅ 临时注释：EnumDefaultConfig 在UI层定义，为避免循环依赖
         /// </summary>
-        public EnumDefaultConfig EnumDefaultConfig { get; set; }
+        // public EnumDefaultConfig EnumDefaultConfig { get; set; }
         
         /// <summary>
         /// 列拼接配置
+        /// ✅ 临时注释：ColumnConcatConfig 在UI层定义，为避免循环依赖
         /// </summary>
-        public ColumnConcatConfig ConcatConfig { get; set; }
+        // public ColumnConcatConfig ConcatConfig { get; set; }
         
         /// <summary>
         /// 是否为图片列
@@ -111,12 +114,14 @@ namespace RUINORERP.Model.ImportEngine.Models
         
         /// <summary>
         /// 图片列类型
+        /// ✅ 临时注释：ImageColumnType 在UI层定义，为避免循环依赖
         /// </summary>
-        public ImageColumnType ImageColumnType { get; set; }
+        // public ImageColumnType ImageColumnType { get; set; }
         
         /// <summary>
         /// Excel图片配置
+        /// ✅ 临时注释：ExcelImageConfig 在UI层定义，为避免循环依赖
         /// </summary>
-        public ExcelImageConfig ImageConfig { get; set; }
+        // public ExcelImageConfig ImageConfig { get; set; }
     }
 }

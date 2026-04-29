@@ -80,6 +80,24 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <param name="roleId">角色ID</param>
         /// <returns>移除是否成功</returns>
         bool RemovePolicyFromRole(long policyId, long roleId);
+
+        /// <summary>
+        /// 分配权限策略给用户
+        /// </summary>
+        /// <param name="policyId">策略ID</param>
+        /// <param name="userId">用户ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>分配是否成功</returns>
+        bool AssignPolicyToUser(long policyId, long userId, long menuId);
+
+        /// <summary>
+        /// 从用户移除权限策略
+        /// </summary>
+        /// <param name="policyId">策略ID</param>
+        /// <param name="userId">用户ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>移除是否成功</returns>
+        bool RemovePolicyFromUser(long policyId, long userId, long menuId);
     }
 
     /// <summary>

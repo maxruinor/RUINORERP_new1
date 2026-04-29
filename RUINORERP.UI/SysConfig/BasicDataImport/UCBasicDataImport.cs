@@ -45,6 +45,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private ImportConfiguration _currentConfig;
         private DataTable _rawExcelData;           // 原始Excel数据（预览用）
         private DataTable _parsedImportData;         // 根据映射配置解析后的数据
+        private DataTable _finalPreviewData;         // 最终预览数据（包含所有可预生成的值）
         private Type _selectedEntityType;
 
         #region 图片缓存管理
@@ -221,6 +222,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _currentConfig = new ImportConfiguration();
             _rawExcelData = new DataTable();
             _parsedImportData = new DataTable();
+            _finalPreviewData = new DataTable();
             
             // 初始化宽表导入引擎
             _wideTableEngine = new RUINORERP.Business.ImportEngine.SmartImportEngine(_db);
@@ -236,6 +238,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             dgvParsedImportData.UseCustomColumnDisplay = false;
             dgvParsedImportData.UseSelectedColumn = true;
             dgvParsedImportData.CellFormatting += DgvParsedImportData_CellFormatting;
+
+            dgvFinalPreview.AutoGenerateColumns = true;
+            dgvFinalPreview.DataSource = _finalPreviewData;
+            dgvFinalPreview.UseCustomColumnDisplay = false;
+            dgvFinalPreview.UseSelectedColumn = true;
+            dgvFinalPreview.CellFormatting += DgvParsedImportData_CellFormatting;
             // 初始化实体类型选择下拉框
             InitializeEntityTypes();
 
@@ -1656,10 +1664,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                // 直接使用解析后已经去重好的数据，不再重新读取Excel
-                // _parsedImportData 已经在解析时完成了映射和去重处理
-
-                DataTable fullParsedData = _parsedImportData;
+                // 优先使用最终预览数据（包含所有可预生成的值）
+                // 如果没有最终预览数据，则使用解析后的数据
+                DataTable fullParsedData = _finalPreviewData?.Rows.Count > 0 ? _finalPreviewData : _parsedImportData;
 
                 // 检查是否有勾选的行
                 var selectedRows = GetSelectedRows();
@@ -1773,6 +1780,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
                 bool hasImageFields = mappings.Any(m => m.DataSourceType == DataSourceType.ExcelImage || m.IsImageColumn);
 
+                // ✅ 检查是否使用最终预览数据（已预处理）
+                bool isPreprocessed = (_finalPreviewData?.Rows.Count > 0 && importData == _finalPreviewData);
+                
+                if (isPreprocessed)
+                {
+                    MainForm.Instance.ShowStatusText("检测到已预处理的预览数据，将跳过重复的外键解析和系统字段生成...");
+                }
+
                 DynamicImporter.ImportResult importResult;
 
                 // 获取Excel文件路径
@@ -1793,8 +1808,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
                 else
                 {
-                    // 执行普通导入（异步）
-                    importResult = await _dynamicImporter.ImportAsync(importData, mappings, _selectedEntityType, importType);
+                    // ✅ 执行普通导入（异步），传递 isPreprocessed 标志
+                    importResult = await _dynamicImporter.ImportAsync(importData, mappings, _selectedEntityType, importType, isPreprocessed);
                 }
 
                 // 显示导入结果
@@ -2060,10 +2075,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>包含勾选行的新数据表格</returns>
         private DataTable GetSelectedRows()
         {
-            DataTable selectedData = _parsedImportData.Clone();
+            // 根据当前选中的页面获取数据源
+            DataTable sourceData = null;
+            DataGridView dataGridView = null;
+
+            if (kryptonNavigatorDynamic.SelectedPage == kryptonPageFinalPreview && _finalPreviewData?.Rows.Count > 0)
+            {
+                // 使用最终预览数据
+                sourceData = _finalPreviewData;
+                dataGridView = dgvFinalPreview;
+            }
+            else
+            {
+                // 使用解析后的数据
+                sourceData = _parsedImportData;
+                dataGridView = dgvParsedImportData;
+            }
+
+            if (sourceData == null || sourceData.Rows.Count == 0)
+            {
+                return new DataTable();
+            }
+
+            DataTable selectedData = sourceData.Clone();
 
             // 遍历DataGridView的每一行
-            foreach (DataGridViewRow dgvRow in dgvParsedImportData.Rows)
+            foreach (DataGridViewRow dgvRow in dataGridView.Rows)
             {
                 // 检查是否为数据行（非新增行）
                 if (dgvRow.IsNewRow)
@@ -2072,7 +2109,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 检查是否勾选
-                if (dgvParsedImportData.Columns.Contains("Selected") &&
+                if (dataGridView.Columns.Contains("Selected") &&
                     dgvRow.Cells["Selected"] != null &&
                     dgvRow.Cells["Selected"].Value != null &&
                     dgvRow.Cells["Selected"].Value is bool &&
@@ -2080,9 +2117,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     // 从DataTable中获取对应的行并导入
                     int rowIndex = dgvRow.Index;
-                    if (rowIndex >= 0 && rowIndex < _parsedImportData.Rows.Count)
+                    if (rowIndex >= 0 && rowIndex < sourceData.Rows.Count)
                     {
-                        selectedData.ImportRow(_parsedImportData.Rows[rowIndex]);
+                        selectedData.ImportRow(sourceData.Rows[rowIndex]);
                     }
                 }
             }
@@ -2166,7 +2203,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 生成结果预览按钮点击事件
-        /// 预加载外键数据并解析为真实值，供用户确认后再导入
+        /// 生成包含所有可预生成值的最终预览数据（除主键外）
         /// </summary>
         private async void kbtnGeneratePreview_Click(object sender, EventArgs e)
         {
@@ -2178,31 +2215,245 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                MainForm.Instance.ShowStatusText("正在生成结果预览...");
+                MainForm.Instance.ShowStatusText("正在生成最终结果预览...");
                 kbtnGeneratePreview.Enabled = false;
 
                 // 1. 预加载所有外键数据到缓存
                 PreloadForeignKeyData();
 
-                // 2. 创建带外键解析的数据副本
-                DataTable previewData = _parsedImportData.Copy();
-                
-                // 3. 解析外键字段为真实值
-                ResolveForeignKeysInPreview(previewData);
+                // 2. 生成最终的预览数据
+                _finalPreviewData = await GenerateFinalPreviewDataAsync(_parsedImportData);
 
-                // 4. 显示预览
-                dgvParsedImportData.DataSource = previewData;
+                // 3. 显示预览
+                dgvFinalPreview.DataSource = _finalPreviewData;
+
+                // 4. 切换到最终预览页面
+                kryptonNavigatorDynamic.SelectedIndex = 2;
 
                 // 5. 启用导入按钮
                 kbtnDynamicImport.Enabled = true;
-                
-                MainForm.Instance.ShowStatusText($"结果预览生成完成，共 {previewData.Rows.Count} 行数据，可以点击\"导入\"按钮保存到数据库（可选，已经可以直接导入）");
+
+                MainForm.Instance.ShowStatusText($"最终预览生成完成，共 {_finalPreviewData.Rows.Count} 行数据，可以点击\"导入\"按钮保存到数据库");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"生成结果预览失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"生成最终预览失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 kbtnGeneratePreview.Enabled = true;
             }
+        }
+
+        /// <summary>
+        /// 生成最终的预览数据（关键步骤：执行所有业务逻辑预处理）
+        /// 包含所有可预生成的字段值（Excel数据、外键ID、系统生成值、复制值、拼接值等）
+        /// ✅ 优化：预览数据即为最终可导入数据库的形态，避免重复预处理
+        /// </summary>
+        /// <param name="parsedData">已解析的数据</param>
+        /// <returns>最终预览数据表</returns>
+        private async Task<DataTable> GenerateFinalPreviewDataAsync(DataTable parsedData)
+        {
+            if (parsedData == null || parsedData.Rows.Count == 0)
+            {
+                return new DataTable();
+            }
+
+            var result = new DataTable("FinalPreview");
+            var mappings = _currentConfig.ColumnMappings ?? new List<ColumnMapping>();
+
+            // 1. 创建结果表结构（使用SystemField.Value作为列名）
+            foreach (var mapping in mappings)
+            {
+                if (!string.IsNullOrEmpty(mapping.SystemField?.Value) && !result.Columns.Contains(mapping.SystemField.Value))
+                {
+                    result.Columns.Add(mapping.SystemField.Value, typeof(string));
+                }
+            }
+
+            // 2. 批量预加载外键数据到缓存（性能优化）
+            PreloadForeignKeyData();
+
+            // 3. 处理每一行数据 - 执行所有预处理逻辑
+            foreach (DataRow sourceRow in parsedData.Rows)
+            {
+                DataRow targetRow = result.NewRow();
+
+                foreach (var mapping in mappings)
+                {
+                    string fieldName = mapping.SystemField?.Value;
+                    if (string.IsNullOrEmpty(fieldName))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        switch (mapping.DataSourceType)
+                        {
+                            case DataSourceType.Excel:
+                                // Excel数据：直接从解析后的数据中获取
+                                if (parsedData.Columns.Contains(fieldName))
+                                {
+                                    targetRow[fieldName] = sourceRow[fieldName]?.ToString() ?? "";
+                                }
+                                break;
+
+                            case DataSourceType.ForeignKey:
+                                // ✅ 外键关联：查询数据库获取真实ID（使用缓存）
+                                string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
+                                string targetTable = mapping.ForeignConfig?.ForeignKeyTable?.Value;
+                                string targetField = mapping.ForeignConfig?.ForeignKeyField?.Value;
+
+                                if (!string.IsNullOrEmpty(sourceColumn) && parsedData.Columns.Contains(sourceColumn))
+                                {
+                                    string sourceValue = sourceRow[sourceColumn]?.ToString() ?? "";
+                                    if (!string.IsNullOrEmpty(sourceValue) && !string.IsNullOrEmpty(targetTable) && !string.IsNullOrEmpty(targetField))
+                                    {
+                                        // ✅ 使用缓存的外键服务查询（已在PreloadForeignKeyData中预加载）
+                                        object foreignKeyId = _foreignKeyService.GetForeignKeyId(sourceValue, targetTable, targetField);
+                                        targetRow[fieldName] = foreignKeyId?.ToString() ?? "";
+                                    }
+                                }
+                                break;
+
+                            case DataSourceType.SystemGenerated:
+                                // ✅ 简化：预览阶段不生成真实值，仅显示提示信息
+                                // 实际值在导入阶段由 InitEntity 和 BatchPreProcessEntitiesAsync 统一处理
+                                targetRow[fieldName] = GetSystemFieldHint(fieldName);
+                                break;
+
+                            case DataSourceType.DefaultValue:
+                                // ✅ 默认值：直接应用配置中的默认值
+                                if (mapping.EnumDefaultConfig != null)
+                                {
+                                    targetRow[fieldName] = mapping.EnumDefaultConfig.EnumValue.ToString();
+                                }
+                                else
+                                {
+                                    targetRow[fieldName] = mapping.DefaultValue ?? "";
+                                }
+                                break;
+
+
+
+                            case DataSourceType.FieldCopy:
+                                // ✅ 字段复制：复制另一个字段的值
+                                string copyFromField = mapping.CopyFromField?.Key;
+                                if (!string.IsNullOrEmpty(copyFromField) && parsedData.Columns.Contains(copyFromField))
+                                {
+                                    targetRow[fieldName] = sourceRow[copyFromField]?.ToString() ?? "";
+                                }
+                                break;
+
+                            case DataSourceType.ColumnConcat:
+                                // ✅ 列拼接：拼接多个列的值
+                                targetRow[fieldName] = GenerateConcatValue(sourceRow, mapping.ConcatConfig);
+                                break;
+
+                            case DataSourceType.SelfReference:
+                                // ⚠️ 自身引用：需要在数据库中查找，标记为导入时处理
+                                // （因为需要先生成主记录才能建立引用关系）
+                                targetRow[fieldName] = "[导入时处理]";
+                                break;
+
+                            case DataSourceType.ExcelImage:
+                                // ✅ 图片列：从Excel列获取路径或Base64
+                                if (parsedData.Columns.Contains(mapping.ExcelColumn))
+                                {
+                                    targetRow[fieldName] = sourceRow[mapping.ExcelColumn]?.ToString() ?? "";
+                                }
+                                break;
+
+                            default:
+                                targetRow[fieldName] = "";
+                                break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 记录错误但继续处理其他字段
+                        System.Diagnostics.Debug.WriteLine($"预览数据处理失败 [{fieldName}]: {ex.Message}");
+                        targetRow[fieldName] = $"[错误: {ex.Message}]";
+                    }
+                }
+
+                result.Rows.Add(targetRow);
+            }
+
+            return await Task.FromResult(result);
+        }
+
+ 
+        /// <summary>
+        /// ✅ 获取系统字段的友好提示信息（简化版）
+        /// 预览阶段仅显示提示，实际值在导入阶段由 InitEntity 统一处理
+        /// </summary>
+        /// <param name="fieldName">字段名</param>
+        /// <returns>提示信息</returns>
+        private string GetSystemFieldHint(string fieldName)
+        {
+            if (string.IsNullOrEmpty(fieldName))
+                return "[系统生成]";
+
+            fieldName = fieldName.ToUpper();
+
+            if (fieldName.Contains("CREATETIME") || fieldName.Contains("CREATEDTIME"))
+                return "[导入时自动生成当前时间]";
+            
+            if (fieldName.Contains("CREATEDATE"))
+                return "[导入时自动生成当前日期]";
+            
+            if (fieldName.Contains("CREATEUSER") || fieldName.Contains("CREATEBY"))
+                return "[导入时使用当前登录用户]";
+            
+            if (fieldName.Contains("CODE") || fieldName.Contains("NO") || fieldName.Contains("NUMBER"))
+                return "[导入时自动生成编号]";
+            
+            if (fieldName.Contains("STATUS") || fieldName.Contains("STATE"))
+                return "[导入时设置为启用状态]";
+            
+            if (fieldName.Contains("ISDELETED") || fieldName.Contains("DELETE"))
+                return "[导入时设置为未删除]";
+            
+            return "[导入时系统自动生成]";
+        }
+
+
+
+        /// <summary>
+        /// 生成列拼接值
+        /// </summary>
+        /// <param name="row">数据行</param>
+        /// <param name="concatConfig">拼接配置</param可能为空，请添加检查
+        /// <returns>拼接后的值</returns>
+        private string GenerateConcatValue(DataRow row, ColumnConcatConfig concatConfig)
+        {
+            if (concatConfig?.SourceColumns == null || concatConfig.SourceColumns.Count == 0)
+            {
+                return "";
+            }
+
+            var values = new List<string>();
+
+            foreach (var sourceCol in concatConfig.SourceColumns)
+            {
+                if (row.Table.Columns.Contains(sourceCol))
+                {
+                    string value = row[sourceCol]?.ToString() ?? "";
+
+                    if (concatConfig.TrimWhitespace)
+                    {
+                        value = value.Trim();
+                    }
+
+                    if (concatConfig.IgnoreEmptyColumns && string.IsNullOrEmpty(value))
+                    {
+                        continue;
+                    }
+
+                    values.Add(value);
+                }
+            }
+
+            return string.Join(concatConfig.Separator ?? "", values);
         }
 
         /// <summary>

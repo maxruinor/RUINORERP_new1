@@ -24,6 +24,7 @@ using RUINORERP.Model.Context;
 using RUINORERP.Business.EntityLoadService;
 using RUINORERP.Business.DataCorrectionServices;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.Business.DI
 {
@@ -403,10 +404,15 @@ namespace RUINORERP.Business.DI
             try
             {
                 // 注册行级权限过滤器
+                // 【修复】：明确指定使用带 ILogger<T> 的构造函数，避免 Autofac 构造函数歧义
                 builder.RegisterType<SqlSugarRowLevelAuthFilter>()
                     .AsSelf()
                     .SingleInstance()
-                    .PropertiesAutowired();
+                    .PropertiesAutowired()
+                    .WithParameter(new ResolvedParameter(
+                        (pi, ctx) => pi.ParameterType == typeof(ILogger<SqlSugarRowLevelAuthFilter>),
+                        (pi, ctx) => ctx.Resolve<ILogger<SqlSugarRowLevelAuthFilter>>()
+                    ));
 
                 // 注册默认行级权限规则提供者
                 builder.RegisterType<DefaultRowAuthRuleProvider>()

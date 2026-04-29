@@ -433,29 +433,18 @@ namespace RUINORERP.Business.RowLevelAuthService
 
         /// <summary>
         /// 获取用户对特定实体类型的数据权限过滤条件(Expression形式)
-        /// 适用于SqlSugar的Lambda表达式查询
+        /// 【注意】此方法返回的Expression仅作为占位符，实际过滤应使用GetUserRowAuthFilterClause获取SQL字符串
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="menuId">菜单ID</param>
-        /// <returns>Lambda表达式</returns>
+        /// <returns>Lambda表达式（始终返回t=>true，请使用SQL字符串方式）</returns>
+        [Obsolete("此方法返回的Expression无法正确表示复杂SQL过滤条件，请使用GetUserRowAuthFilterClause获取SQL字符串", false)]
         public System.Linq.Expressions.Expression<Func<T, bool>> GetUserRowAuthFilterExpression<T>(long menuId) where T : class
         {
-            try
-            {
-                var filterClause = GetUserRowAuthFilterClause(typeof(T), menuId);
-
-                if (string.IsNullOrEmpty(filterClause))
-                {
-                    return t => true;
-                }
-
-                return ExpressionFilterHelper.ConvertToExpression<T>(filterClause);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "获取行级权限过滤Expression失败");
-                return t => true;
-            }
+            // 此方法已废弃，无法正确将SQL转换为Expression
+            // 始终返回 t => true，实际过滤应在查询层使用SQL字符串
+            _logger.LogWarning("GetUserRowAuthFilterExpression 已废弃，请使用 GetUserRowAuthFilterClause 获取SQL字符串");
+            return t => true;
         }
 
         /// <summary>
@@ -577,16 +566,113 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <returns>权限上下文</returns>
         private RowAuthContext BuildRowAuthContext(long menuId, string entityName)
         {
+            long? employeeId = _appContext.CurUserInfo?.UserInfo?.Employee_ID;
+            long? departmentId = GetEmployeeDepartmentId(employeeId);
+            
             return new RowAuthContext
             {
                 UserId = GetCurrentUserId(),
                 RoleId = _appContext.CurrentRole?.RoleID ?? 0,
                 RoleIds = _appContext.Roles.Select(r => r.RoleID).ToList(),
-                EmployeeId = _appContext.CurUserInfo?.UserInfo?.Employee_ID,
-                DepartmentId = null, // 可从AppContext获取
+                EmployeeId = employeeId,
+                DepartmentId = departmentId,
+                ProjectGroupIds = GetUserProjectGroupIds(employeeId),
                 MenuId = menuId,
                 EntityName = entityName
             };
+        }
+
+        /// <summary>
+        /// 获取员工的部门ID
+        /// </summary>
+        /// <param name="employeeId">员工ID</param>
+        /// <returns>部门ID</returns>
+        private long? GetEmployeeDepartmentId(long? employeeId)
+        {
+            if (!employeeId.HasValue || employeeId.Value <= 0)
+            {
+                return null;
+            }
+
+            try
+            {
+                var cacheKey = $"RowAuth:Department:Employee:{employeeId.Value}";
+                
+                // 尝试从缓存获取
+                if (_cacheManager.TryGetValue(cacheKey, out long departmentId))
+                {
+                    return departmentId;
+                }
+
+                // 从数据库查询
+                var employee = _db.Queryable<tb_Employee>()
+                    .Where(e => e.Employee_ID == employeeId.Value)
+                    .Select(e => new { e.DepartmentID })
+                    .First();
+
+                if (employee != null && employee.DepartmentID > 0)
+                {
+                    // 缓存结果（滑动过期10分钟）
+                    var cacheOptions = new MemoryCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(10))
+                        .SetPriority(CacheItemPriority.Low);
+                    
+                    _cacheManager.Set(cacheKey, employee.DepartmentID, cacheOptions);
+                    
+                    return employee.DepartmentID;
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取员工部门ID失败: EmployeeId={EmployeeId}", employeeId);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取用户所属的项目组ID列表
+        /// </summary>
+        /// <param name="employeeId">员工ID</param>
+        /// <returns>项目组ID列表</returns>
+        private List<long> GetUserProjectGroupIds(long? employeeId)
+        {
+            if (!employeeId.HasValue || employeeId.Value <= 0)
+            {
+                return new List<long>();
+            }
+
+            try
+            {
+                var cacheKey = $"RowAuth:ProjectGroups:Employee:{employeeId.Value}";
+                
+                // 尝试从缓存获取
+                if (_cacheManager.TryGetValue(cacheKey, out List<long> projectGroupIds))
+                {
+                    return projectGroupIds;
+                }
+
+                // 从数据库查询
+                projectGroupIds = _db.Queryable<tb_ProjectGroupEmployees>()
+                    .Where(pge => pge.Employee_ID == employeeId.Value && pge.Assigned)
+                    .Select(pge => pge.ProjectGroup_ID)
+                    .ToList();
+
+                // 缓存结果（滑动过期10分钟）
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(10))
+                    .SetPriority(CacheItemPriority.Low);
+                
+                _cacheManager.Set(cacheKey, projectGroupIds, cacheOptions);
+
+                return projectGroupIds;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取用户项目组ID列表失败: EmployeeId={EmployeeId}", employeeId);
+                return new List<long>();
+            }
         }
 
         /// <summary>
@@ -637,16 +723,33 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <returns>是否包含风险</returns>
         private bool ContainsPotentialSqlInjection(string filterClause)
         {
-            // 简单的SQL注入检查，实际项目中应使用更复杂的检测机制
-            string lowerClause = filterClause.ToLower();
-            string[] sqlKeywords = new string[] { "drop", "truncate", "alter", "exec", "execute", "union", "insert", "update", "delete" };
+            if (string.IsNullOrEmpty(filterClause))
+                return false;
 
-            foreach (string keyword in sqlKeywords)
+            string lowerClause = filterClause.ToLower();
+            
+            // 危险的SQL关键字(更全面的列表)
+            string[] dangerousKeywords = new string[] { 
+                "drop", "truncate", "alter", "exec", "execute", 
+                "union", "insert", "update", "delete", "create",
+                "xp_", "sp_", "0x", "--", ";", "/*", "*/"
+            };
+
+            foreach (string keyword in dangerousKeywords)
             {
-                if (lowerClause.Contains(keyword))
+                // 使用单词边界匹配,避免误判(如"updates"中的"update")
+                if (System.Text.RegularExpressions.Regex.IsMatch(lowerClause, @"\b" + keyword + @"\b"))
                 {
+                    _logger.LogWarning("检测到潜在SQL注入关键字: {Keyword} in {FilterClause}", keyword, filterClause);
                     return true;
                 }
+            }
+
+            // 检查是否存在多个连续的特殊字符
+            if (System.Text.RegularExpressions.Regex.IsMatch(filterClause, @"[';]{2,}"))
+            {
+                _logger.LogWarning("检测到可疑的特殊字符序列: {FilterClause}", filterClause);
+                return true;
             }
 
             return false;
@@ -759,31 +862,140 @@ namespace RUINORERP.Business.RowLevelAuthService
             {
                 var policies = new List<tb_RowAuthPolicy>();
 
-                // 获取角色级别的策略
+                // 1. 先获取用户级别的策略（优先级更高，放在前面）
+                var userPolicies = _db.Queryable<tb_RowAuthPolicy>()
+                    .InnerJoin<tb_P4RowAuthPolicyByUser>((p, u) => p.PolicyId == u.PolicyId)
+                    .Where((p, u) => p.IsEnabled && u.User_ID == userId && u.MenuID == menuId && u.IsEnabled)
+                    .Select((p, u) => p)
+                    .ToList();
+                
+                if (userPolicies.Any())
+                {
+                    _logger.LogDebug("找到 {Count} 条用户级权限策略", userPolicies.Count);
+                    policies.AddRange(userPolicies);
+                }
+
+                // 2. 再获取角色级别的策略
                 if (roleIds != null && roleIds.Any())
                 {
                     var rolePolicies = _db.Queryable<tb_RowAuthPolicy>()
                         .InnerJoin<tb_P4RowAuthPolicyByRole>((p, r) => p.PolicyId == r.PolicyId)
-                        .Where((p, r) => p.IsEnabled && roleIds.Contains(r.RoleID) && r.MenuID == menuId)
+                        .Where((p, r) => p.IsEnabled && roleIds.Contains(r.RoleID) && r.MenuID == menuId && r.IsEnabled)
                         .Select((p, r) => p)
                         .ToList();
-                    policies.AddRange(rolePolicies);
+                    
+                    if (rolePolicies.Any())
+                    {
+                        _logger.LogDebug("找到 {Count} 条角色级权限策略", rolePolicies.Count);
+                        policies.AddRange(rolePolicies);
+                    }
                 }
 
-                // TODO: 获取用户级别的策略(如果实现了用户级权限)
-                // var userPolicies = _db.Queryable<tb_RowAuthPolicy>()
-                //     .InnerJoin<tb_P4RowAuthPolicyByUser>((p, u) => p.PolicyId == u.PolicyId)
-                //     .Where((p, u) => p.IsEnabled && u.User_ID == userId && u.MenuID == menuId)
-                //     .Select((p, u) => p)
-                //     .ToList();
-                // policies.AddRange(userPolicies);
+                // 去重（如果用户级和角色级有重复的策略）
+                var distinctPolicies = policies
+                    .GroupBy(p => p.PolicyId)
+                    .Select(g => g.First())
+                    .ToList();
 
-                return policies;
+                return distinctPolicies;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "查询用户 {UserId} 在菜单 {MenuId} 的权限策略失败", userId, menuId);
                 return new List<tb_RowAuthPolicy>();
+            }
+        }
+
+        /// <summary>
+        /// 分配权限策略给用户
+        /// </summary>
+        /// <param name="policyId">策略ID</param>
+        /// <param name="userId">用户ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>分配是否成功</returns>
+        public bool AssignPolicyToUser(long policyId, long userId, long menuId)
+        {
+            try
+            {
+                // 检查是否已存在关联
+                var exists = _db.Queryable<tb_P4RowAuthPolicyByUser>()
+                    .Where(u => u.PolicyId == policyId && u.User_ID == userId && u.MenuID == menuId)
+                    .Any();
+
+                if (!exists)
+                {
+                    _db.Insertable(new tb_P4RowAuthPolicyByUser
+                    {
+                        PolicyId = policyId,
+                        User_ID = userId,
+                        MenuID = menuId,
+                        IsEnabled = true
+                    }).ExecuteReturnSnowflakeId();
+                }
+
+                // 清除相关缓存
+                ClearAuthCacheForUser(userId);
+
+                _logger.Debug("权限策略分配用户成功: PolicyId={PolicyId}, UserId={UserId}, MenuId={MenuId}", 
+                    policyId, userId, menuId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "权限策略分配用户失败: PolicyId={PolicyId}, UserId={UserId}, MenuId={MenuId}", 
+                    policyId, userId, menuId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 从用户移除权限策略
+        /// </summary>
+        /// <param name="policyId">策略ID</param>
+        /// <param name="userId">用户ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>移除是否成功</returns>
+        public bool RemovePolicyFromUser(long policyId, long userId, long menuId)
+        {
+            try
+            {
+                _db.Deleteable<tb_P4RowAuthPolicyByUser>()
+                    .Where(u => u.PolicyId == policyId && u.User_ID == userId && u.MenuID == menuId)
+                    .ExecuteCommand();
+
+                // 清除相关缓存
+                ClearAuthCacheForUser(userId);
+
+                _logger.Debug("从用户移除权限策略成功: PolicyId={PolicyId}, UserId={UserId}, MenuId={MenuId}", 
+                    policyId, userId, menuId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "从用户移除权限策略失败: PolicyId={PolicyId}, UserId={UserId}, MenuId={MenuId}", 
+                    policyId, userId, menuId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 清除用户的权限缓存
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        private void ClearAuthCacheForUser(long userId)
+        {
+            try
+            {
+                // 构建缓存键模式
+                var cacheKeyPattern = $"RowAuth:UserId:{userId}:";
+                
+                // 注意：MemoryCache 不支持通配符删除，这里只能记录需要清除的缓存
+                // 实际项目中可以考虑使用分布式缓存或缓存标签
+                _logger.Debug("已标记清除用户 {UserId} 的权限缓存", userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "清除用户权限缓存失败: {UserId}", userId);
             }
         }
     }

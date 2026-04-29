@@ -43,40 +43,37 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly string _fileStoragePath;
         private readonly ServerGlobalConfig _serverConfig;
         public readonly IUnitOfWorkManage _unitOfWorkManage;
-        // 添加业务控制器用于数据库操作
-        private readonly tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo> _fileStorageInfoController;
-        private readonly tb_FS_BusinessRelationController<tb_FS_BusinessRelation> _businessRelationController;
-        private readonly tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> _fileStorageVersionController;
         private readonly ApplicationContext _applicationContext;
 
-        // 新增服务:文件更新和清理
+        // 业务控制器 - 通过 ApplicationContext 动态获取
+        private tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo> _fileStorageInfoController => 
+            _applicationContext.GetRequiredService<tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo>>();
+        
+        private tb_FS_BusinessRelationController<tb_FS_BusinessRelation> _businessRelationController => 
+            _applicationContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
+        
+        private tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> _fileStorageVersionController => 
+            _applicationContext.GetRequiredService<tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion>>();
+
         private readonly FileUpdateService _fileUpdateService;
         private readonly FileCleanupService _fileCleanupService;
         private readonly HasAttachmentSyncService _hasAttachmentSyncService;
         private readonly ImageCacheService _imageCacheService;
-        /// <summary>
-        /// 解析路径（不再解析环境变量，保留方法兼容性）
-        /// </summary>
-        /// <param name="path">路径</param>
-        /// <returns>原路径</returns>
+
         private string ResolveEnvironmentVariables(string path)
         {
             return path;
         }
 
-
         public FileCommandHandler(
             ApplicationContext applicationContext,
             SessionService sessionService,
             IUnitOfWorkManage unitOfWorkManage,
-            ILogger<FileCommandHandler> logger = null,
-            tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo> fileStorageInfoController = null,
-            tb_FS_BusinessRelationController<tb_FS_BusinessRelation> businessRelationController = null,
-            tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> fileStorageVersionController = null,
-            FileUpdateService fileUpdateService = null,
-            FileCleanupService fileCleanupService = null,
-            HasAttachmentSyncService hasAttachmentSyncService = null,
-            ImageCacheService imageCacheService = null)
+            ILogger<FileCommandHandler> logger,
+            FileUpdateService fileUpdateService,
+            FileCleanupService fileCleanupService,
+            HasAttachmentSyncService hasAttachmentSyncService,
+            ImageCacheService imageCacheService)
         {
             _applicationContext = applicationContext;
             _sessionService = sessionService;
@@ -106,16 +103,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
             }
 
-            // 注入业务控制器
-            _fileStorageInfoController = fileStorageInfoController ?? throw new ArgumentNullException(nameof(fileStorageInfoController));
-            _businessRelationController = businessRelationController ?? throw new ArgumentNullException(nameof(businessRelationController));
-            _fileStorageVersionController = fileStorageVersionController;
-
-            // 注入文件更新和清理服务(通过DI容器)
-            _fileUpdateService = fileUpdateService ?? throw new ArgumentNullException(nameof(fileUpdateService));
-            _fileCleanupService = fileCleanupService ?? throw new ArgumentNullException(nameof(fileCleanupService));
+            _fileUpdateService = fileUpdateService;
+            _fileCleanupService = fileCleanupService;
             _hasAttachmentSyncService = hasAttachmentSyncService;
-            _imageCacheService = imageCacheService ?? throw new ArgumentNullException(nameof(imageCacheService));
+            _imageCacheService = imageCacheService;
 
             // 初始化文件存储路径
             FileStorageHelper.InitializeStoragePath(_serverConfig);

@@ -714,6 +714,147 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
+        /// 从制令单创建缴库单(核心转换逻辑)
+        /// 该方法封装了制令单到缴库单的完整转换逻辑,供UI层和转换器复用
+        /// </summary>
+        /// <param name="manufacturingOrder">源制令单</param>
+        /// <returns>转换后的缴库单草稿对象</returns>
+        public async Task<ReturnResults<tb_FinishedGoodsInv>> CreateFromManufacturingOrderAsync(tb_ManufacturingOrder manufacturingOrder)
+        {
+            var rs = new ReturnResults<tb_FinishedGoodsInv>();
+            
+            try
+            {
+                // 1. 参数验证
+                if (manufacturingOrder == null)
+                {
+                    rs.Succeeded = false;
+                    rs.ErrorMsg = "制令单不能为空";
+                    return rs;
+                }
+                
+                // 2. 业务规则验证
+                if (manufacturingOrder.DataStatus != (int)DataStatus.确认)
+                {
+                    rs.Succeeded = false;
+                    rs.ErrorMsg = "只能从已确认的制令单生成缴库单";
+                    return rs;
+                }
+                
+                if (manufacturingOrder.ApprovalStatus != (int)ApprovalStatus.审核通过)
+                {
+                    rs.Succeeded = false;
+                    rs.ErrorMsg = "只能从已审核通过的制令单生成缴库单";
+                    return rs;
+                }
+                
+                // 3. 检查是否已全部缴库
+                if (manufacturingOrder.QuantityDelivered >= manufacturingOrder.ManufacturingQty)
+                {
+                    rs.Succeeded = false;
+                    rs.ErrorMsg = $"制令单:{manufacturingOrder.MONO}已全部缴库,无需再生成缴库单";
+                    return rs;
+                }
+                
+                // 4. 创建缴库单主表
+                var finishedGoodsInv = new tb_FinishedGoodsInv();
+                
+                // 4.1 基础映射
+                finishedGoodsInv.MOID = manufacturingOrder.MOID;
+                finishedGoodsInv.MONo = manufacturingOrder.MONO;
+                finishedGoodsInv.DepartmentID = manufacturingOrder.DepartmentID;
+                finishedGoodsInv.Employee_ID = manufacturingOrder.Employee_ID;
+                finishedGoodsInv.IsOutSourced = manufacturingOrder.IsOutSourced;
+                
+                // 4.2 设置外发工厂
+                if (manufacturingOrder.IsOutSourced)
+                {
+                    finishedGoodsInv.CustomerVendor_ID = manufacturingOrder.CustomerVendor_ID_Out;
+                }
+                else
+                {
+                    finishedGoodsInv.CustomerVendor_ID = null;
+                }
+                
+                // 4.3 初始化状态字段
+                finishedGoodsInv.DataStatus = (int)DataStatus.草稿;
+                finishedGoodsInv.ApprovalStatus = (int)ApprovalStatus.未审核;
+                finishedGoodsInv.ApprovalResults = null;
+                finishedGoodsInv.ApprovalOpinions = "";
+                finishedGoodsInv.PrintStatus = 0;
+                finishedGoodsInv.ActionStatus = ActionStatus.新增;
+                finishedGoodsInv.DeliveryDate = DateTime.Now;
+                finishedGoodsInv.Notes = $"由制令单{manufacturingOrder.MONO}生成";
+                
+                // 4.4 初始化实体(设置创建时间等)
+                BusinessHelper.Instance.InitEntity(finishedGoodsInv);
+                
+                // 5. 创建缴库单明细
+                var newDetails = new List<tb_FinishedGoodsInvDetail>();
+                var tipsMsg = new List<string>();
+                
+                // 5.1 创建明细行(一个制令单对应一个成品,一行明细)
+                var newDetail = new tb_FinishedGoodsInvDetail();
+                
+                // 5.2 计算应缴数量
+                newDetail.PayableQty = manufacturingOrder.ManufacturingQty - manufacturingOrder.QuantityDelivered;
+                newDetail.Qty = 0; // 实缴数量初始化为0,由用户手动输入
+                newDetail.UnpaidQty = newDetail.PayableQty - newDetail.Qty;
+                newDetail.Location_ID = manufacturingOrder.Location_ID;
+                newDetail.ProdDetailID = manufacturingOrder.ProdDetailID;
+                
+                // 5.3 计算单位成本(按生产数量平均分摊)
+                if (manufacturingOrder.ManufacturingQty > 0)
+                {
+                    newDetail.NetWorkingHours = Math.Round(manufacturingOrder.WorkingHour / manufacturingOrder.ManufacturingQty, 4);
+                    newDetail.NetMachineHours = Math.Round(manufacturingOrder.MachineHour / manufacturingOrder.ManufacturingQty, 4);
+                    newDetail.MaterialCost = Math.Round(manufacturingOrder.TotalMaterialCost / manufacturingOrder.ManufacturingQty, 4);
+                    newDetail.ManuFee = Math.Round(manufacturingOrder.TotalManuFee / manufacturingOrder.ManufacturingQty, 4);
+                    newDetail.ApportionedCost = Math.Round(manufacturingOrder.ApportionedCost / manufacturingOrder.ManufacturingQty, 4);
+                    
+                    newDetail.UnitCost = newDetail.MaterialCost + newDetail.ManuFee + newDetail.ApportionedCost;
+                    newDetail.ProductionAllCost = Math.Round(newDetail.UnitCost * newDetail.Qty, 4);
+                }
+                
+                // 5.4 添加到明细列表
+                if (newDetail.PayableQty > 0)
+                {
+                    newDetails.Add(newDetail);
+                }
+                else
+                {
+                    tipsMsg.Add($"制令单:{manufacturingOrder.MONO}已全部缴库,请检查数据!");
+                }
+                
+                // 5.5 设置明细集合
+                finishedGoodsInv.tb_FinishedGoodsInvDetails = newDetails;
+                
+                // 5.6 关联制令单对象
+                finishedGoodsInv.tb_manufacturingorder = manufacturingOrder;
+                
+                // 6. 返回结果
+                rs.ReturnObject = finishedGoodsInv;
+                rs.Succeeded = true;
+                
+                // 7. 记录提示信息(如果有)
+                if (tipsMsg.Count > 0)
+                {
+                    rs.WarningMessages = tipsMsg;
+                    _logger.LogWarning("制令单转换提示信息: {Tips}", string.Join("; ", tipsMsg));
+                }
+                
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "从制令单创建缴库单失败,制令单号: {MONO}", manufacturingOrder?.MONO);
+                rs.Succeeded = false;
+                rs.ErrorMsg = $"转换失败: {ex.Message}";
+                return rs;
+            }
+        }
+
+        /// <summary>
         /// 反审核
         /// 优化：事务区间最小化，查询操作移到事务外
         /// </summary>

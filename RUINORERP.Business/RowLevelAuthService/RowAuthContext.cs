@@ -34,6 +34,11 @@ namespace RUINORERP.Business.RowLevelAuthService
         public long? DepartmentId { get; set; }
 
         /// <summary>
+        /// ✅ 新增: 用户所属的项目组ID列表
+        /// </summary>
+        public List<long> ProjectGroupIds { get; set; }
+
+        /// <summary>
         /// 菜单ID
         /// </summary>
         public long MenuId { get; set; }
@@ -54,6 +59,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         public RowAuthContext()
         {
             RoleIds = new List<long>();
+            ProjectGroupIds = new List<long>(); // ✅ 初始化项目组列表
             ExtendedProperties = new Dictionary<string, object>();
         }
 

@@ -2137,55 +2137,43 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.logger.LogDebug("获取到行级权限过滤条件: {FilterClause}", filterClause);
                     try
                     {
-                        // 预处理filterClause，移除可能导致问题的外层括号和标准化SQL语法
-                        string processedFilterClause = PreprocessFilterClause(filterClause);
-
-                        #region 新逻辑
-
-                        #endregion
-
-
-
-
-                        // 检查是否包含复杂SQL结构(如EXISTS子查询)
-                        if (ContainsComplexSqlStructure(processedFilterClause))
+                        // ✅ 通过DI容器获取SqlSugarRowLevelAuthFilter实例，而不是手动创建
+                        var sqlSugarFilter = Startup.GetFromFac<Business.RowLevelAuthService.SqlSugarRowLevelAuthFilter>();
+                        
+                        if (sqlSugarFilter == null)
                         {
-                            MainForm.Instance.logger.LogDebug("检测到复杂SQL表达式，使用专门的处理机制");
-                            // 对于复杂SQL表达式，直接使用包装方法处理
-                            Expression<Func<M, bool>> complexFilterExpression = t => EvaluateComplexFilterExpression(t, processedFilterClause);
-
-                            if (LimitQueryConditions != null)
-                            {
-                                // 合并现有条件和复杂SQL条件
-                                LimitQueryConditions = MergeWithComplexCondition(LimitQueryConditions, complexFilterExpression);
-                            }
-                            else
-                            {
-                                // 直接使用复杂SQL条件
-                                LimitQueryConditions = complexFilterExpression;
-                            }
-
-                            // 不将复杂条件添加到QueryConditionFilter.FilterLimitExpressions中，避免SQL转换错误
-                            MainForm.Instance.logger.LogDebug("复杂条件仅保存在LimitQueryConditions中，不添加到FilterLimitExpressions");
+                            MainForm.Instance.logger.LogWarning("无法从DI容器获取SqlSugarRowLevelAuthFilter实例");
+                            return;
                         }
-                        else
+                        
+                        string whereClause = sqlSugarFilter.BuildFilterClause<M>(filterClause);
+                        
+                        if (!string.IsNullOrEmpty(whereClause))
                         {
+                            MainForm.Instance.logger.LogDebug("构建的行级权限Where条件: {WhereClause}", whereClause);
+                            
                             // 如果已有查询条件，将行级权限条件添加到现有条件中
                             if (LimitQueryConditions != null)
                             {
                                 // 合并查询条件和行级权限条件
-                                LimitQueryConditions = MergeQueryConditions(LimitQueryConditions, processedFilterClause);
+                                LimitQueryConditions = MergeQueryConditions(LimitQueryConditions, whereClause);
                             }
                             else
                             {
                                 // 如果没有现有条件，直接使用行级权限条件
-                                LimitQueryConditions = CreateRowAuthExpression(processedFilterClause);
+                                LimitQueryConditions = CreateRowAuthExpression(whereClause);
                             }
+                            
+                            MainForm.Instance.logger.LogDebug("已成功应用行级权限过滤条件");
+                        }
+                        else
+                        {
+                            MainForm.Instance.logger.LogWarning("构建行级权限Where条件失败，跳过过滤");
                         }
                     }
                     catch (Exception ex)
                     {
-                        MainForm.Instance.logger.LogError(ex, "解析行级权限过滤条件时发生错误: {FilterClause}", filterClause);
+                        MainForm.Instance.logger.LogError(ex, "应用行级权限过滤条件时发生错误: {FilterClause}", filterClause);
                         // 详细记录异常信息，便于调试
                         MainForm.Instance.logger.LogError(ex.StackTrace);
                         // 发生错误时继续执行，不阻止查询

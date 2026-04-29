@@ -139,16 +139,138 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 动态导入数据（异步）
+        /// 重复值检测结果
         /// </summary>
-        /// <param name="dataTable">Excel数据表格</param>
+        public class DuplicateValueCheckResult
+        {
+            /// <summary>
+            /// 列名
+            /// </summary>
+            public string ColumnName { get; set; }
+
+            /// <summary>
+            /// 列显示名
+            /// </summary>
+            public string DisplayName { get; set; }
+
+            /// <summary>
+            /// 是否有重复值
+            /// </summary>
+            public bool HasDuplicates { get; set; }
+
+            /// <summary>
+            /// 重复的值列表（每个值及其出现次数）
+            /// </summary>
+            public Dictionary<object, int> DuplicateValues { get; set; } = new Dictionary<object, int>();
+
+            /// <summary>
+            /// 重复值的数量
+            /// </summary>
+            public int DuplicateCount => DuplicateValues?.Count ?? 0;
+        }
+
+        /// <summary>
+        /// 检测数据表中指定列的重复值
+        /// </summary>
+        /// <param name="dataTable">数据表</param>
+        /// <param name="mappings">列映射配置</param>
+        /// <param name="columnName">列名（Excel列名或系统字段名）</param>
+        /// <returns>重复值检测结果</returns>
+        public DuplicateValueCheckResult CheckDuplicateValues(DataTable dataTable, ColumnMappingCollection mappings, string columnName = null)
+        {
+            var result = new DuplicateValueCheckResult();
+
+            if (dataTable == null || dataTable.Rows.Count == 0 || mappings == null || mappings.Count == 0)
+            {
+                return result;
+            }
+
+            try
+            {
+                ColumnMapping targetMapping = null;
+
+                if (!string.IsNullOrEmpty(columnName))
+                {
+                    // 根据指定的列名查找映射
+                    targetMapping = mappings.FirstOrDefault(m => 
+                        m.ExcelColumn?.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true ||
+                        m.SystemField?.Key?.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true);
+                }
+                else
+                {
+                    // 自动查找唯一值列
+                    targetMapping = mappings.FirstOrDefault(m =>  m.IsUniqueValue);
+                }
+
+                if (targetMapping == null)
+                {
+                    return result;
+                }
+
+                result.ColumnName = targetMapping.SystemField?.Key ?? targetMapping.ExcelColumn;
+                result.DisplayName = targetMapping.SystemField?.Value ?? result.ColumnName;
+
+                if (string.IsNullOrEmpty(result.ColumnName))
+                {
+                    return result;
+                }
+
+                // 统计每个值的出现次数
+                var valueCount = new Dictionary<string, int>();
+                string excelColumnName = targetMapping.ExcelColumn;
+
+                if (dataTable.Columns.Contains(excelColumnName))
+                {
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+                        var value = row[excelColumnName]?.ToString() ?? "";
+
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            if (valueCount.ContainsKey(value))
+                            {
+                                valueCount[value]++;
+                            }
+                            else
+                            {
+                                valueCount[value] = 1;
+                            }
+                        }
+                    }
+
+                    // 找出重复的值（出现次数 > 1）
+                    foreach (var kvp in valueCount)
+                    {
+                        if (kvp.Value > 1)
+                        {
+                            result.DuplicateValues.Add(kvp.Key, kvp.Value);
+                        }
+                    }
+                }
+
+                result.HasDuplicates = result.DuplicateValues.Count > 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"检测重复值失败: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 动态导入数据（异步）
+        /// ✅ 优化：支持已预处理数据的直接导入，避免重复处理
+        /// </summary>
+        /// <param name="dataTable">Excel数据表格（可能是已预处理的最终预览数据）</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="entityType">目标实体类型</param>
         /// <param name="importType">导入类型标识（用于区分客户和供应商等使用相同表的情况）</param>
+        /// <param name="isPreprocessed">✅ 新增：数据是否已在预览阶段预处理过（默认false）</param>
         /// <returns>导入结果</returns>
         /// <exception cref="ArgumentNullException">参数为空时抛出</exception>
         /// <exception cref="ArgumentException">映射配置无效时抛出</exception>
-        public async System.Threading.Tasks.Task<ImportResult> ImportAsync(DataTable dataTable, ColumnMappingCollection mappings, Type entityType, string importType = null)
+        public async System.Threading.Tasks.Task<ImportResult> ImportAsync(DataTable dataTable, ColumnMappingCollection mappings, Type entityType, string importType = null, bool isPreprocessed = false)
         {
             if (dataTable == null || dataTable.Rows.Count == 0)
             {
@@ -180,8 +302,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     DataRow row = dataTable.Rows[i];
                     try
                     {
-                        // 创建实体对象
-                        var entity = CreateEntityFromRow(row, mappings, entityType, i + 2); // +2 因为Excel从第2行开始（第1行是标题）
+                        // ✅ 创建实体对象：如果数据已预处理，则跳过外键解析和系统字段生成
+                        var entity = CreateEntityFromRow(row, mappings, entityType, i + 2, isPreprocessed);
 
                         // 使用Validator进行业务验证
                         string validationError = ValidateEntityWithValidator(entity, entityType);
@@ -216,7 +338,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     try
                     {
-                        await BatchImportEntitiesAsync(entityList, entityType, result, mappings, importType);
+                        // ✅ 传递 isPreprocessed 标志，避免重复预处理
+                        await BatchImportEntitiesAsync(entityList, entityType, result, mappings, importType, isPreprocessed);
                     }
                     catch (Exception batchEx)
                     {
@@ -534,16 +657,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 从数据行创建实体对象
+        /// ✅ 优化：支持已预处理数据的直接导入，避免重复处理
         /// </summary>
         /// <param name="row">数据行（已应用映射，列名为SystemField）</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="entityType">实体类型</param>
         /// <param name="rowNumber">行号</param>
+        /// <param name="isPreprocessed">✅ 新增：数据是否已在预览阶段预处理过</param>
         /// <returns>实体对象</returns>
-        /// <summary>
-        /// 从数据行创建实体对象
-        /// </summary>
-        private object CreateEntityFromRow(DataRow row, ColumnMappingCollection mappings, Type entityType, int rowNumber)
+        private object CreateEntityFromRow(DataRow row, ColumnMappingCollection mappings, Type entityType, int rowNumber, bool isPreprocessed = false)
         {
             var entity = Activator.CreateInstance(entityType);
 
@@ -575,8 +697,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             break;
 
                         case DataSourceType.SystemGenerated:
-                            // 系统生成的值，不从Excel读取，后续可以在导入后处理
-                            cellValue = null;
+                            // ✅ 系统生成的值：如果数据已预处理，直接从DataTable中读取；否则留空由BatchPreProcessEntitiesAsync处理
+                            if (isPreprocessed && dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
+                            {
+                                cellValue = row[mapping.SystemField?.Value];
+                                
+                                // 如果值为占位符或错误标记，跳过（将由BatchPreProcessEntitiesAsync处理）
+                                string strValue = cellValue?.ToString();
+                                if (string.IsNullOrEmpty(strValue) || 
+                                    strValue.StartsWith("[") && strValue.EndsWith("]"))
+                                {
+                                    cellValue = null; // 让后续预处理逻辑处理
+                                }
+                            }
+                            else
+                            {
+                                cellValue = null; // 未预处理，留空由后续处理
+                            }
                             break;
 
                         case DataSourceType.DefaultValue:
@@ -594,15 +731,37 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             break;
 
                         case DataSourceType.ForeignKey:
-                            // 外键关联
-                            // 使用ForeignKeyService获取外键值
-                            string foreignKeyError;
-                            object foreignKeyId = _foreignKeyService.GetForeignKeyValue(row, mapping, rowNumber, out foreignKeyError);
-                            if (!string.IsNullOrEmpty(foreignKeyError))
+                            // ✅ 外键关联：如果数据已预处理，直接从DataTable中读取ID；否则查询数据库
+                            if (isPreprocessed && dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
                             {
-                                throw new Exception(foreignKeyError);
+                                // 从预处理的DataTable中直接读取外键ID
+                                cellValue = row[mapping.SystemField?.Value];
+                                
+                                // 如果值为空或错误标记，尝试重新查询
+                                string strValue = cellValue?.ToString();
+                                if (string.IsNullOrEmpty(strValue) || strValue.StartsWith("["))
+                                {
+                                    // 回退到实时查询
+                                    string foreignKeyError;
+                                    object foreignKeyId = _foreignKeyService.GetForeignKeyValue(row, mapping, rowNumber, out foreignKeyError);
+                                    if (!string.IsNullOrEmpty(foreignKeyError))
+                                    {
+                                        throw new Exception(foreignKeyError);
+                                    }
+                                    cellValue = foreignKeyId;
+                                }
                             }
-                            cellValue = foreignKeyId;
+                            else
+                            {
+                                // 未预处理，实时查询外键ID
+                                string foreignKeyError;
+                                object foreignKeyId = _foreignKeyService.GetForeignKeyValue(row, mapping, rowNumber, out foreignKeyError);
+                                if (!string.IsNullOrEmpty(foreignKeyError))
+                                {
+                                    throw new Exception(foreignKeyError);
+                                }
+                                cellValue = foreignKeyId;
+                            }
                             break;
 
                         case DataSourceType.SelfReference:
@@ -670,8 +829,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         throw new Exception($"实体 {entityType.Name} 不存在属性 {mapping.SystemField?.Key}");
                     }
 
-                    // 跳过预设字段，这些字段会在PreProcessEntity中自动填充默认值
-                    if (predefinedFields.Contains(mapping.SystemField?.Key))
+                    // ✅ 如果数据已预处理，跳过预设字段的检查（因为值已经在预览阶段生成）
+                    if (!isPreprocessed && predefinedFields.Contains(mapping.SystemField?.Key))
                     {
                         continue;
                     }
@@ -901,16 +1060,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// <summary>
         /// 批量导入实体到数据库
         /// 使用Storageable进行批量插入和更新操作，提升性能
+        /// ✅ 优化：支持已预处理数据的直接导入
         /// </summary>
         /// <param name="entityList">实体列表</param>
         /// <param name="entityType">实体类型</param>
         /// <param name="result">导入结果</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="importType">导入类型标识（用于区分客户和供应商等使用相同表的情况）</param>
-        private async System.Threading.Tasks.Task BatchImportEntitiesAsync(List<BaseEntity> entityList, Type entityType, ImportResult result, ColumnMappingCollection mappings, string importType = null)
+        /// <param name="isPreprocessed">✅ 新增：数据是否已在预览阶段预处理过</param>
+        private async System.Threading.Tasks.Task BatchImportEntitiesAsync(List<BaseEntity> entityList, Type entityType, ImportResult result, ColumnMappingCollection mappings, string importType = null, bool isPreprocessed = false)
         {
             try
             {
@@ -922,7 +1082,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 var genericMethod = method.MakeGenericMethod(entityType);
 
-                await (System.Threading.Tasks.Task)genericMethod.Invoke(this, new object[] { entityList, primaryKeyName, result, importType });
+                await (System.Threading.Tasks.Task)genericMethod.Invoke(this, new object[] { entityList, primaryKeyName, result, importType, isPreprocessed });
             }
             catch (Exception ex)
             {
@@ -1005,20 +1165,31 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 批量导入实体内部实现（泛型方法）
         /// ✅ 修复：使用统一事务管理器 + Storageable + 雪花ID
         /// ✅ 增强：支持按业务字段去重（跳过数据库中已存在的记录）
+        /// ✅ 优化：支持已预处理数据的直接导入，避免重复预处理
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="entityList">实体列表</param>
         /// <param name="primaryKeyName">主键字段名</param>
         /// <param name="result">导入结果</param>
-        private async System.Threading.Tasks.Task BatchImportEntitiesInternalAsync<T>(List<BaseEntity> entityList, string primaryKeyName, ImportResult result, string importType = null) where T : BaseEntity, new()
+        /// <param name="importType">导入类型标识</param>
+        /// <param name="isPreprocessed">✅ 新增：数据是否已在预览阶段预处理过</param>
+        private async System.Threading.Tasks.Task BatchImportEntitiesInternalAsync<T>(List<BaseEntity> entityList, string primaryKeyName, ImportResult result, string importType = null, bool isPreprocessed = false) where T : BaseEntity, new()
         {
             try
             {
                 // 将BaseEntity列表转换为强类型列表
                 var typedList = entityList.Cast<T>().ToList();
 
-                // ✅ 优化：批量处理特殊字段（一次性查询排序值，避免N次数据库查询）
-                await EntityImportHelper.BatchPreProcessEntitiesAsync<T>(typedList, _db, importType);
+                // ✅ 优化：如果数据未预处理，则批量处理特殊字段（一次性查询排序值，避免N次数据库查询）
+                // 如果数据已在预览阶段预处理过，则跳过此步骤，直接使用预览中的值
+                if (!isPreprocessed)
+                {
+                    await EntityImportHelper.BatchPreProcessEntitiesAsync<T>(typedList, _db, importType);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"数据已预处理，跳过 BatchPreProcessEntitiesAsync，直接导入 {typedList.Count} 条记录");
+                }
 
                 // ✅ 使用 DbClient（从事务管理器获取）1
                 var dbClient = _unitOfWorkManage?.GetDbClient() ?? _db;
@@ -1039,10 +1210,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     result.UpdatedCount = 0;
                     return;
                 }
-//这里是否能实现，按指定列的排除是否重复的值，在配置中有唯一性约束，如何应用这个约束？  
-    
-    
-
 
                 // ✅ 使用 Storageable 进行批量插入和更新（Upsert）
                 // 参考 SqlSugar 文档：https://www.donet5.com/home/Doc?typeId=1193
@@ -1406,6 +1573,221 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 重新抛出非业务异常
                 throw;
             }
+        }
+
+        /// <summary>
+        /// ✅ 统一预处理服务：接收原始 DataTable，返回预处理后的 DataTable
+        /// 所有业务逻辑（外键解析、系统字段生成等）都在这里处理
+        /// UI层只需调用此方法，然后直接显示结果
+        /// </summary>
+        /// <param name="rawData">原始解析后的 DataTable</param>
+        /// <param name="mappings">列映射配置</param>
+        /// <param name="entityType">目标实体类型</param>
+        /// <returns>预处理后的 DataTable（可直接用于导入）</returns>
+        public async Task<DataTable> PreprocessDataAsync(DataTable rawData, ColumnMappingCollection mappings, Type entityType)
+        {
+            if (rawData == null || rawData.Rows.Count == 0)
+            {
+                return new DataTable();
+            }
+
+            // 创建结果表结构
+            var result = rawData.Clone();
+            
+            // 预加载外键数据到缓存（性能优化）
+            PreloadForeignKeyCache(mappings);
+
+            // 处理每一行数据
+            foreach (DataRow sourceRow in rawData.Rows)
+            {
+                DataRow targetRow = result.NewRow();
+                
+                // 复制所有原始数据
+                foreach (DataColumn col in rawData.Columns)
+                {
+                    targetRow[col.ColumnName] = sourceRow[col.ColumnName];
+                }
+                
+                // 处理需要预处理的字段
+                foreach (var mapping in mappings)
+                {
+                    string fieldName = mapping.SystemField?.Value;
+                    if (string.IsNullOrEmpty(fieldName) || !result.Columns.Contains(fieldName))
+                        continue;
+
+                    switch (mapping.DataSourceType)
+                    {
+                        case DataSourceType.ForeignKey:
+                            // 外键关联：查询数据库获取真实ID
+                            await ProcessForeignKeyFieldAsync(sourceRow, targetRow, mapping);
+                            break;
+                            
+                        case DataSourceType.SystemGenerated:
+                            // 系统生成字段：生成真实值
+                            ProcessSystemGeneratedField(targetRow, mapping);
+                            break;
+                            
+                        case DataSourceType.DefaultValue:
+                            // 默认值：应用配置的默认值
+                            ProcessDefaultValueField(targetRow, mapping);
+                            break;
+                            
+                        case DataSourceType.FieldCopy:
+                            // 字段复制：复制另一个字段的值
+                            ProcessFieldCopyField(sourceRow, targetRow, mapping);
+                            break;
+                            
+                        case DataSourceType.ColumnConcat:
+                            // 列拼接：拼接多个列的值
+                            ProcessColumnConcatField(sourceRow, targetRow, mapping);
+                            break;
+                    }
+                }
+                
+                result.Rows.Add(targetRow);
+            }
+
+            return await Task.FromResult(result);
+        }
+
+        /// <summary>
+        /// 预加载外键数据到缓存
+        /// </summary>
+        private void PreloadForeignKeyCache(ColumnMappingCollection mappings)
+        {
+            var foreignKeyMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ForeignKey).ToList();
+            foreach (var mapping in foreignKeyMappings)
+            {
+                // TODO: 实现外键缓存预加载逻辑
+                // _foreignKeyService.PreloadCache(mapping.ForeignConfig);
+            }
+        }
+
+        /// <summary>
+        /// 处理外键字段
+        /// </summary>
+        private async Task ProcessForeignKeyFieldAsync(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
+        {
+            string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
+            string targetTable = mapping.ForeignConfig?.ForeignKeyTable?.Value;
+            string targetField = mapping.ForeignConfig?.ForeignKeyField?.Value;
+            string fieldName = mapping.SystemField?.Value;
+
+            if (string.IsNullOrEmpty(sourceColumn) || string.IsNullOrEmpty(fieldName))
+                return;
+
+            if (!sourceRow.Table.Columns.Contains(sourceColumn))
+                return;
+
+            string sourceValue = sourceRow[sourceColumn]?.ToString() ?? "";
+            if (string.IsNullOrEmpty(sourceValue) || string.IsNullOrEmpty(targetTable) || string.IsNullOrEmpty(targetField))
+                return;
+
+            // 查询外键ID
+            object foreignKeyId = _foreignKeyService.GetForeignKeyId(sourceValue, targetTable, targetField);
+            targetRow[fieldName] = foreignKeyId?.ToString() ?? "";
+        }
+
+        /// <summary>
+        /// 处理系统生成字段
+        /// </summary>
+        private void ProcessSystemGeneratedField(DataRow targetRow, ColumnMapping mapping)
+        {
+            string fieldName = mapping.SystemField?.Value;
+            if (string.IsNullOrEmpty(fieldName))
+                return;
+
+            var fieldUpper = fieldName.ToUpper();
+
+            // 时间字段
+            if (fieldUpper.Contains("CREATETIME") || fieldUpper.Contains("CREATEDTIME"))
+            {
+                targetRow[fieldName] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+            else if (fieldUpper.Contains("CREATEDATE"))
+            {
+                targetRow[fieldName] = DateTime.Now.ToString("yyyy-MM-dd");
+            }
+            // 用户字段
+            else if (fieldUpper.Contains("CREATEUSER") || fieldUpper.Contains("CREATEBY"))
+            {
+                var currentUser = Business.BusinessHelper._appContext?.CurUserInfo;
+                targetRow[fieldName] = currentUser?.EmployeeId.ToString() ?? "1";
+            }
+            // 状态字段
+            else if (fieldUpper.Contains("STATUS") || fieldUpper.Contains("STATE"))
+            {
+                targetRow[fieldName] = mapping.DefaultValue ?? "1";
+            }
+            // 删除标记
+            else if (fieldUpper.Contains("ISDELETED") || fieldUpper.Contains("DELETE"))
+            {
+                targetRow[fieldName] = "0";
+            }
+        }
+
+        /// <summary>
+        /// 处理默认值字段
+        /// </summary>
+        private void ProcessDefaultValueField(DataRow targetRow, ColumnMapping mapping)
+        {
+            string fieldName = mapping.SystemField?.Value;
+            if (string.IsNullOrEmpty(fieldName))
+                return;
+
+            if (mapping.EnumDefaultConfig != null)
+            {
+                targetRow[fieldName] = mapping.EnumDefaultConfig.EnumValue.ToString();
+            }
+            else
+            {
+                targetRow[fieldName] = mapping.DefaultValue ?? "";
+            }
+        }
+
+        /// <summary>
+        /// 处理字段复制
+        /// </summary>
+        private void ProcessFieldCopyField(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
+        {
+            string fieldName = mapping.SystemField?.Value;
+            string copyFromField = mapping.CopyFromField?.Key;
+            
+            if (string.IsNullOrEmpty(fieldName) || string.IsNullOrEmpty(copyFromField))
+                return;
+
+            if (sourceRow.Table.Columns.Contains(copyFromField))
+            {
+                targetRow[fieldName] = sourceRow[copyFromField]?.ToString() ?? "";
+            }
+        }
+
+        /// <summary>
+        /// 处理列拼接
+        /// </summary>
+        private void ProcessColumnConcatField(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
+        {
+            string fieldName = mapping.SystemField?.Value;
+            if (string.IsNullOrEmpty(fieldName) || mapping.ConcatConfig == null)
+                return;
+
+            var values = new List<string>();
+            foreach (var sourceCol in mapping.ConcatConfig.SourceColumns)
+            {
+                if (sourceRow.Table.Columns.Contains(sourceCol))
+                {
+                    string value = sourceRow[sourceCol]?.ToString() ?? "";
+                    if (mapping.ConcatConfig.TrimWhitespace)
+                        value = value.Trim();
+                    
+                    if (!mapping.ConcatConfig.IgnoreEmptyColumns || !string.IsNullOrEmpty(value))
+                    {
+                        values.Add(value);
+                    }
+                }
+            }
+
+            targetRow[fieldName] = string.Join(mapping.ConcatConfig.Separator ?? "", values);
         }
     }
 }

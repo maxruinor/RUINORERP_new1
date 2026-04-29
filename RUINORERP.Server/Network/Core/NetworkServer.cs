@@ -192,20 +192,17 @@ namespace RUINORERP.Server.Network.Core
                 var packetSpecAssembly = Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommandDispatcher));
                 var serverAssembly = Assembly.GetExecutingAssembly();
 
-                // 初始化命令调度器,里面会扫描并注册所有命令类型到命令调度器
-                await _commandDispatcher.InitializeAsync(CancellationToken.None, packetSpecAssembly, serverAssembly).ConfigureAwait(false);
-
-
-
-                // 获取全局服务提供者，确保SuperSocket服务器使用与应用程序相同的服务
+                // 【关键修复】：在初始化命令调度器之前，先设置ServiceProvider
+                // 这样CommandHandlerFactory在创建处理器实例时就能使用DI容器
                 var globalServiceProvider = Program.ServiceProvider;
-
-                // 将全局服务提供者设置给命令调度器
-                // 这确保命令处理器能够访问Startup中注册的所有服务
                 if (globalServiceProvider != null && _commandDispatcher is RUINORERP.PacketSpec.Commands.CommandDispatcher commandDispatcherImpl)
                 {
                     commandDispatcherImpl.ServiceProvider = globalServiceProvider;
+                    _logger?.LogDebug("已设置CommandDispatcher的ServiceProvider，确保命令处理器可以使用DI容器");
                 }
+
+                // 初始化命令调度器,里面会扫描并注册所有命令类型到命令调度器
+                await _commandDispatcher.InitializeAsync(CancellationToken.None, packetSpecAssembly, serverAssembly).ConfigureAwait(false);
 
                 _host = MultipleServerHostBuilder.Create()
                 .ConfigureHostConfiguration(config =>

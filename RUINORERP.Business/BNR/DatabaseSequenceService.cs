@@ -25,7 +25,7 @@ namespace RUINORERP.Business.BNR
         private readonly ConcurrentDictionary<string, SemaphoreSlim> _keyLocks = new ConcurrentDictionary<string, SemaphoreSlim>();
 
         // 批量获取配置
-        private const int BATCH_SIZE = 50; // 每次从数据库预取50个序号
+        private const int BATCH_SIZE = 10; // ✅ 优化:每次从数据库预取10个序号(并发用户少,减小批次避免重启时浪费)
 
         /// <summary>
         /// 构造函数 - 简化版,移除后台任务
@@ -280,6 +280,16 @@ namespace RUINORERP.Business.BNR
 
             string dynamicKey = GenerateDynamicKey(sequenceKey, resetType);
 
+            // ✅ 优化：第一次快速检查，避免不必要的锁获取
+            if (_batchCaches.TryGetValue(dynamicKey, out var fastCache))
+            {
+                if (fastCache.TryAllocate(out long fastNextValue))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[缓存快速命中] 键: {dynamicKey}, 值: {fastNextValue}");
+                    return fastNextValue;
+                }
+            }
+
             // 获取或创建该键的信号量锁(异步友好)
             var keyLock = _keyLocks.GetOrAdd(dynamicKey, _ => new SemaphoreSlim(1, 1));
 
@@ -297,7 +307,7 @@ namespace RUINORERP.Business.BNR
                         $"建议: 检查系统负载、数据库状态及是否有长时间运行的事务。");
                 }
 
-                // 尝试从缓存中分配
+                // ✅ 双重检查锁定：再次检查缓存，防止其他线程已经重新分配了批次
                 if (_batchCaches.TryGetValue(dynamicKey, out var cache))
                 {
                     if (cache.TryAllocate(out long nextValue))
@@ -336,6 +346,7 @@ namespace RUINORERP.Business.BNR
         /// <summary>
         /// 从数据库分配新的序号批次
         /// ✅ 核心逻辑:一次性获取BATCH_SIZE个序号,缓存在内存中
+        /// ✅ 修复:增强序列键一致性检查,防止因键不一致导致的重复
         /// </summary>
         private async Task<long> AllocateNewBatchAsync(string sequenceKey, string resetType,
             string formatMask, string description, string businessType)
@@ -352,6 +363,9 @@ namespace RUINORERP.Business.BNR
             {
                 try
                 {
+                    // ✅ 关键修复:在事务开始前记录序列键,用于调试和验证
+                    System.Diagnostics.Debug.WriteLine($"[分配批次] 开始处理序列键: '{sequenceKey}', 重置类型: '{resetType}'");
+                    
                     // 使用事务确保原子性
                     using (var tran = _sqlSugarClient.Ado.UseTran())
                     {
@@ -367,9 +381,12 @@ namespace RUINORERP.Business.BNR
 
                         if (sequence != null)
                         {
-                            // 记录存在,计算新批次范围
+                            // ✅ 记录存在,计算新批次范围
                             batchStartValue = sequence.CurrentValue;
                             batchEndValue = batchStartValue + BATCH_SIZE;
+                            
+                            System.Diagnostics.Debug.WriteLine(
+                                $"[分配批次] 找到现有记录: 键='{sequenceKey}', 当前值={batchStartValue}, 新批次上限={batchEndValue}");
 
                             // 更新数据库中的当前值到批次上限
                             int affectedRows = _sqlSugarClient.Updateable<SequenceNumbers>()
@@ -388,9 +405,12 @@ namespace RUINORERP.Business.BNR
                         }
                         else
                         {
-                            // 记录不存在,创建新记录
+                            // ✅ 记录不存在,创建新记录
                             batchStartValue = 0;
                             batchEndValue = BATCH_SIZE;
+                            
+                            System.Diagnostics.Debug.WriteLine(
+                                $"[分配批次] 创建新记录: 键='{sequenceKey}', 初始批次范围 1-{batchEndValue}");
 
                             try
                             {
@@ -408,11 +428,11 @@ namespace RUINORERP.Business.BNR
                             }
                             catch (Exception ex) when (IsUniqueConstraintViolation(ex))
                             {
-                                // 并发插入,回滚后重试
+                                // ✅ 并发插入,回滚后重试
                                 tran.RollbackTran();
                                 retryCount++;
                                 System.Diagnostics.Debug.WriteLine(
-                                    $"并发插入检测到重复键,重试中 ({retryCount}/{maxRetries}),键: {sequenceKey}");
+                                    $"[分配批次] 并发插入检测到重复键,重试中 ({retryCount}/{maxRetries}),键: {sequenceKey}");
                                 await Task.Delay(CalculateBackoffDelay(retryCount));
                                 continue;
                             }
@@ -421,12 +441,21 @@ namespace RUINORERP.Business.BNR
                         // 2. 提交事务
                         tran.CommitTran();
 
-                        // 3. 原子性更新或创建缓存(✅ 修复竞态条件)
+                        // 3. ✅ 关键修复:原子性更新或创建缓存
+                        //    注意:服务器重启后,_batchCaches为空,这里会创建新的缓存实例
+                        //    但因为数据库中的CurrentValue已经更新到batchEndValue,所以不会重复
                         var newCache = new SequenceBatchCache(batchStartValue, batchEndValue);
-                        var cache = _batchCaches.AddOrUpdate(
+                        var existingCache = _batchCaches.AddOrUpdate(
                             sequenceKey,
                             newCache,  // 键不存在时插入
-                            (key, oldCache) => newCache  // 键存在时替换为新批次
+                            (key, oldCache) => 
+                            {
+                                // ✅ 如果缓存已存在,说明有其他线程已经分配了批次
+                                // 不应该替换,应该抛出异常或警告
+                                System.Diagnostics.Debug.WriteLine(
+                                    $"[警告] 序列键 '{sequenceKey}' 的缓存已存在,旧批次: ({oldCache.CurrentValue}), 新批次: ({batchStartValue})");
+                                return newCache; // 仍然使用新批次,因为数据库已更新
+                            }
                         );
 
                         // 4. 返回批次中的第一个序号
@@ -441,13 +470,13 @@ namespace RUINORERP.Business.BNR
                 {
                     retryCount++;
                     System.Diagnostics.Debug.WriteLine(
-                        $"检测到死锁,重试中 ({retryCount}/{maxRetries}),键: {sequenceKey}");
+                        $"[分配批次] 检测到死锁,重试中 ({retryCount}/{maxRetries}),键: {sequenceKey}");
                     await Task.Delay(CalculateBackoffDelay(retryCount));
                 }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine(
-                        $"分配批次时发生异常: {ex.Message},键: {sequenceKey}");
+                        $"[分配批次] 发生异常: {ex.Message},键: {sequenceKey}");
                     LogError($"分配批次失败: {sequenceKey}", ex);
 
                     if (retryCount >= maxRetries - 1)

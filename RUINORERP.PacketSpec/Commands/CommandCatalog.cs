@@ -101,7 +101,7 @@ namespace RUINORERP.PacketSpec.Commands
         public const ushort System_WelcomeAck = 0x0011;
 
         /// <summary>
-        /// 性能数据上报 - 客户端向服务器上报性能监控数据
+        /// 性能数据上报 - 客户端向服务器请求性能监控数据
         /// </summary>
         public const ushort System_PerformanceDataUpload = 0x0012;
 

@@ -1383,6 +1383,10 @@ namespace RUINORERP.Server.Services.BizCode
         {
             try
             {
+                // ✅ 新增：设置当前业务类型上下文
+                BNRFactory.SetCurrentBusinessType("ProductNo");
+                _logger.LogDebug("设置业务类型上下文: ProductNo");
+
                 // 产品编号（ProductNo）格式优化：
                 // 原格式：[分类代码] - [产品类型] - [年月] - [流水号]
                 // 优化格式：[分类代码][产品序号]
@@ -1398,6 +1402,9 @@ namespace RUINORERP.Server.Services.BizCode
                 string prodType = GetProdType(prod);
 
                 string prodNo = $"{categoryCode}{productSequence}-{prodType}";
+                
+                _logger.LogDebug("生成产品编号: {ProdNo}, 类目代码: {CategoryCode}", prodNo, categoryCode);
+                
                 return prodNo;
             }
             catch (Exception ex)
@@ -1406,6 +1413,11 @@ namespace RUINORERP.Server.Services.BizCode
                 _logger.LogError(ex, "生成产品编号失败");
                 // 如果发生异常，返回基于当前时间的唯一编码
                 return $"PROD-{DateTime.Now:yyyyMMddHHmmss}-{new Random().Next(100, 999)}";
+            }
+            finally
+            {
+                // ✅ 新增：清理业务类型上下文
+                BNRFactory.SetCurrentBusinessType(null);
             }
         }
 

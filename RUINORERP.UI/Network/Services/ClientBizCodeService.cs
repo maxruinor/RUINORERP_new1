@@ -98,7 +98,7 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 本地生成基础信息编号
+        /// 本地生成基础信息编号1
         /// 使用BNR架构体系的轻量级实现，不依赖数据库和Redis
         /// </summary>
         /// <param name="baseInfoType">基础信息类型枚举</param>

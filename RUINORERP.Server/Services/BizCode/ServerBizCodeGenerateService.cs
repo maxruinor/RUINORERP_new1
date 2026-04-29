@@ -350,6 +350,11 @@ namespace RUINORERP.Server.Services.BizCode
         {
             try
             {
+                // ✅ 新增：设置当前业务类型上下文，确保 DatabaseSequenceParameter 能获取正确的业务类型
+                BNRFactory.SetCurrentBusinessType(bizType.ToString());
+                
+                logger?.LogDebug("设置业务类型上下文: {BizType}", bizType);
+
                 // 获取完整的规则配置对象，包含显示模式和加密方法
                 var ruleConfig = await GetBillNoRuleConfigFromDatabaseAsync((int)bizType, (int)RuleType.业务单据编号, ct);
 
@@ -371,6 +376,8 @@ namespace RUINORERP.Server.Services.BizCode
                 // 生成原始编号
                 string generatedNumber = _bnrFactory.Create(rule);
 
+                logger?.LogDebug("成功生成业务单据编号: {GeneratedNumber}, 业务类型: {BizType}", generatedNumber, bizType);
+
                 return generatedNumber;
             }
             catch (Exception ex)
@@ -382,6 +389,11 @@ namespace RUINORERP.Server.Services.BizCode
                 string fallbackNumber = _bnrFactory.Create(fallbackRule);
 
                 return fallbackNumber;
+            }
+            finally
+            {
+                // ✅ 新增：清理业务类型上下文，防止影响后续请求
+                BNRFactory.SetCurrentBusinessType(null);
             }
         }
 
@@ -620,6 +632,10 @@ namespace RUINORERP.Server.Services.BizCode
             {
                 logger?.LogDebug("开始生成基础信息编号: {InfoType}", infoType);
 
+                // ✅ 新增：设置当前业务类型上下文
+                BNRFactory.SetCurrentBusinessType(infoType.ToString());
+                logger?.LogDebug("设置业务类型上下文: {InfoType}", infoType);
+
                 string rule;
                 int encryptionMethod = 0;
 
@@ -650,8 +666,8 @@ namespace RUINORERP.Server.Services.BizCode
                     string generatedNumber = _bnrFactory.Create(rule);
                     
                     stopwatch.Stop();
-                    logger?.LogDebug("编号生成完成: {InfoType}, 耗时: {ElapsedMs}ms", 
-                        infoType, stopwatch.ElapsedMilliseconds);
+                    logger?.LogDebug("编号生成完成: {InfoType}, 编号: {GeneratedNumber}, 耗时: {ElapsedMs}ms", 
+                        infoType, generatedNumber, stopwatch.ElapsedMilliseconds);
                     
                     return generatedNumber;
                 }
@@ -669,18 +685,16 @@ namespace RUINORERP.Server.Services.BizCode
                     string fallbackNumber = _bnrFactory.Create(rule);
 
                     stopwatch.Stop();
-                    logger?.LogWarning("使用备用规则生成编号: {InfoType}, 耗时: {ElapsedMs}ms", 
-                        infoType, stopwatch.ElapsedMilliseconds);
+                    logger?.LogWarning("使用备用规则生成编号: {InfoType}, 编号: {GeneratedNumber}, 耗时: {ElapsedMs}ms", 
+                        infoType, fallbackNumber, stopwatch.ElapsedMilliseconds);
 
                     return fallbackNumber;
                 }
             }
-            catch (Exception ex)
+            finally
             {
-                stopwatch.Stop();
-                logger?.LogError(ex, "生成基础信息编号最终失败: {InfoType}, 耗时: {ElapsedMs}ms", 
-                    infoType, stopwatch.ElapsedMilliseconds);
-                throw;
+                // ✅ 新增：清理业务类型上下文
+                BNRFactory.SetCurrentBusinessType(null);
             }
         }
 

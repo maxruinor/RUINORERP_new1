@@ -1,4 +1,4 @@
-using FluentValidation.Results;
+﻿using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using RUINORERP.Business.CommService;
@@ -62,7 +62,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新库存  from 8 to   from-qty=to+qty;
@@ -80,7 +80,7 @@ namespace RUINORERP.Business
                     invDict1.TryGetValue(keyFrom, out var invForm);
                     if (invForm == null)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmrs.ErrorMsg = $"来源产品必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。转换失败。" +
                             $"\r\n可以尝用【期初盘点】数量为零的方式或开启【手工录入】初始成本。";
                         rmrs.Succeeded = false;
@@ -95,7 +95,7 @@ namespace RUINORERP.Business
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (invForm.Quantity - TransferQty) < 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rmrs.ErrorMsg = $"来源产品库存为：{invForm.Quantity}，拟转换数量为：{TransferQty}\r\n 系统设置不允许负库存， 请检查要转换出库数量的情况。";
                             rmrs.Succeeded = false;
                             return rmrs;
@@ -117,7 +117,7 @@ namespace RUINORERP.Business
                     {
                         if (child.TargetInitCost == 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rmrs.ErrorMsg = $"来源产品必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。转换失败。" +
                                  $"\r\n可以尝用【期初盘点】数量为零的方式或开启【手工录入】初始成本。";
                             rmrs.Succeeded = false;
@@ -149,7 +149,7 @@ namespace RUINORERP.Business
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (invTo.Quantity + TransferQty) < 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rmrs.ErrorMsg = $"目标产品库存为：{invTo.Quantity}，拟转换数量为：{TransferQty}\r\n 系统设置不允许负库存， 请检查要转换出库数量的情况。";
                             rmrs.Succeeded = false;
                             return rmrs;
@@ -221,14 +221,14 @@ namespace RUINORERP.Business
                                             .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                             .ExecuteCommandHasChangeAsync();
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
@@ -247,7 +247,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 #region 结案
 
 
@@ -271,14 +271,14 @@ namespace RUINORERP.Business
 
                 #endregion
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
@@ -323,7 +323,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
@@ -331,7 +331,7 @@ namespace RUINORERP.Business
                 if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
                 {
                     rmrs.ErrorMsg = "只能反审核已确认,并且有审核结果的订单 ";
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
@@ -371,7 +371,7 @@ namespace RUINORERP.Business
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (invForm.Quantity + TransferQty) < 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rmrs.ErrorMsg = $"反审转换单时，来源产品库存为：{invForm.Quantity}，拟转换数量为：{TransferQty}\r\n 系统设置不允许负库存， 请检查要转换出库数量的情况。";
                             rmrs.Succeeded = false;
                             return rmrs;
@@ -405,7 +405,7 @@ namespace RUINORERP.Business
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (invTo.Quantity - TransferQty) < 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rmrs.ErrorMsg = $"反审转换单时，目标产品库存为：{invTo.Quantity}，拟转换数量为：{TransferQty}\r\n 系统设置不允许负库存， 请检查要转换出库数量的情况。";
                             rmrs.Succeeded = false;
                             return rmrs;
@@ -464,7 +464,7 @@ namespace RUINORERP.Business
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw new Exception("库存更新数据为0，更新失败！");
                 }
 
@@ -479,13 +479,13 @@ namespace RUINORERP.Business
                                              .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_ProdConversion)).ToString() + "事务回滚=>" + ex.Message;

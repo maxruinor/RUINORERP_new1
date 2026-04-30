@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -85,7 +85,7 @@ namespace RUINORERP.Business
 
                 var paymentRecordController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 //注意，反审 将对应的预付生成的收款单，只有收款单没有审核前，可以删除
                 //不能直接删除上级。要让对应的人员自己删除。不然不清楚。逻辑也不对。只能通过判断
@@ -99,7 +99,7 @@ namespace RUINORERP.Business
                     if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.待审核)
                         && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.未审核)))
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmrs.ErrorMsg = $"存在【待审核】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单，请联系上级财务删除后才能反审。";
                         rmrs.Succeeded = false;
                         return rmrs;
@@ -110,7 +110,7 @@ namespace RUINORERP.Business
                     if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
                         && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmrs.ErrorMsg = $"存在【已支付】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单，不能反审预款单,请联系上级财务，或作退回处理。";
                         rmrs.Succeeded = false;
                         return rmrs;
@@ -145,7 +145,7 @@ namespace RUINORERP.Business
                 }).ExecuteCommandAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
 
@@ -169,7 +169,7 @@ namespace RUINORERP.Business
                         entity?.PreRPNO);
                 }
                 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -309,7 +309,7 @@ namespace RUINORERP.Business
 
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 BusinessHelper.Instance.ApproverEntity(entity);
 
@@ -325,7 +325,7 @@ namespace RUINORERP.Business
                     it.ApprovalOpinions,
                 }).ExecuteCommandAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
 
@@ -350,7 +350,7 @@ namespace RUINORERP.Business
                         entity?.PreRPNO);
                 }
                 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -781,7 +781,7 @@ namespace RUINORERP.Business
         //    try
         //    {
         //        // 开启事务，保证数据一致性
-        //        _unitOfWorkManage.BeginTran();
+        //        await _unitOfWorkManage.BeginTranAsync();
         //        if (!approvalEntity.ApprovalResults)
         //        {
         //            if (entitys == null)
@@ -806,7 +806,7 @@ namespace RUINORERP.Business
         //            }
         //        }
         //        // 注意信息的完整性
-        //        _unitOfWorkManage.CommitTran();
+        //        await _unitOfWorkManage.CommitTranAsync();
 
         //        //_logger.Info(approvalEntity.bizName + "审核事务成功");
         //        return true;
@@ -814,7 +814,7 @@ namespace RUINORERP.Business
         //    catch (Exception ex)
         //    {
         //        _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
-        //        _unitOfWorkManage.RollbackTran();
+        //        await _unitOfWorkManage.RollbackTranAsync();
         //        _logger.Error(approvalEntity.bizName + "事务回滚");
         //        return false;
         //    }
@@ -868,7 +868,7 @@ namespace RUINORERP.Business
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 for (int m = 0; m < entitys.Count; m++)
                 {
                     tb_FM_PreReceivedPayment entity = entitys[m] as tb_FM_PreReceivedPayment;
@@ -877,7 +877,7 @@ namespace RUINORERP.Business
                     var validateResult = StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, PrePaymentStatus.结案);
                     if (!validateResult.IsSuccess)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以结案";
                         rs.Succeeded = false;
                         return rs;
@@ -892,13 +892,13 @@ namespace RUINORERP.Business
                         it.Remark
                     }).ExecuteCommandAsync();
                 }
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, "预收付款单结案失败");
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
@@ -920,7 +920,7 @@ namespace RUINORERP.Business
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 
                 for (int m = 0; m < entitys.Count; m++)
                 {
@@ -930,7 +930,7 @@ namespace RUINORERP.Business
                     var currentStatus = (PrePaymentStatus)entity.PrePaymentStatus;
                     if (currentStatus != PrePaymentStatus.结案)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.ErrorMsg = $"只有状态为【结案】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单才可以反结案，当前状态为【{currentStatus.ToString()}】";
                         rs.Succeeded = false;
                         return rs;
@@ -957,7 +957,7 @@ namespace RUINORERP.Business
                     var validateResult = StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, targetStatus);
                     if (!validateResult.IsSuccess)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以反结案到【{targetStatus.ToString()}】状态";
                         rs.Succeeded = false;
                         return rs;
@@ -974,13 +974,13 @@ namespace RUINORERP.Business
                         it.Remark
                     }).ExecuteCommandAsync();
                 }
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, "预收付款单反结案失败");
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;

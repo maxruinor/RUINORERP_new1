@@ -528,7 +528,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
         //后面再优化。相当于多个制令单的批量转单
-        //请将这个业务逻辑放到业务层。然后提供给这里和单据转换器使用。逻辑用一套代码。
+        //已将业务逻辑放到业务层，然后提供给这里和单据转换器使用。逻辑用一套代码。
         private async Task LoadSubLines(long? MainID)
         {
             ButtonSpecAny bsa = (txtRef_BillNo as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
@@ -536,93 +536,42 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 return;
             }
+            
             var SourceBill = bsa.Tag as tb_ManufacturingOrder;
+            
+            // 重新查询最新数据
             SourceBill = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
-                // .Includes(c => c.tb_MaterialRequisitions, b => b.tb_MaterialRequisitionDetails)
-                // .Includes(c => c.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails)
                 .Where(c => c.MOID == MainID && c.DataStatus == (int)DataStatus.确认)
-            .SingleAsync();
-            //新增时才可以转单
-            if (SourceBill != null && SourceBill.ManufacturingQty != SourceBill.QuantityDelivered
-                && SourceBill.QuantityDelivered < SourceBill.ManufacturingQty)
+                .SingleAsync();
+            
+            if (SourceBill == null)
             {
-
-
-                tb_FinishedGoodsInv entity = MainForm.Instance.mapper.Map<tb_FinishedGoodsInv>(SourceBill);
-                entity.MONo = SourceBill.MONO;
-                entity.MOID = SourceBill.MOID;
-                entity.DeliveryDate = System.DateTime.Now;
-                entity.tb_manufacturingorder = SourceBill;
-                entity.IsOutSourced = SourceBill.IsOutSourced;
-                if (entity.IsOutSourced)
-                {
-                    entity.CustomerVendor_ID = SourceBill.CustomerVendor_ID_Out;
-                }
-                else
-                {
-                    entity.CustomerVendor_ID = null;
-                }
-                entity.DepartmentID = SourceBill.DepartmentID;
-                List<tb_FinishedGoodsInvDetail> NewDetails = new List<tb_FinishedGoodsInvDetail>(); //这里是多行>
-                List<string> tipsMsg = new List<string>();
-                //一个制令就一个成品，就一行数据。将来优化同时 多个制令的批量转单
-                //可以多次缴库
-                #region 每行产品ID唯一
-
-                tb_FinishedGoodsInvDetail NewDetail = MainForm.Instance.mapper.Map<tb_FinishedGoodsInvDetail>(SourceBill);
-
-                NewDetail.PayableQty = SourceBill.ManufacturingQty - SourceBill.QuantityDelivered;
-                NewDetail.Qty = 0;
-                NewDetail.UnpaidQty = NewDetail.PayableQty - NewDetail.Qty;// 已经交数量去掉
-                NewDetail.Location_ID = SourceBill.Location_ID;
-
-                //NewDetail.SubtotalMaterialCost = SourceBill.TotalMaterialCost;
-                //这里根据制令单的时间 费用假设全缴库时算出单位时间
-                //再手动输入实缴时再算
-
-                NewDetail.NetWorkingHours = decimal.Round(SourceBill.WorkingHour / SourceBill.ManufacturingQty, 4);
-                NewDetail.NetMachineHours = decimal.Round(SourceBill.MachineHour / SourceBill.ManufacturingQty, 4);
-
-                NewDetail.MaterialCost = decimal.Round(SourceBill.TotalMaterialCost / SourceBill.ManufacturingQty, 4);
-                NewDetail.ManuFee = decimal.Round(SourceBill.TotalManuFee / SourceBill.ManufacturingQty, 4);
-                NewDetail.ApportionedCost = decimal.Round(SourceBill.ApportionedCost / SourceBill.ManufacturingQty, 4);
-
-                NewDetail.UnitCost = NewDetail.MaterialCost + NewDetail.ManuFee + NewDetail.ApportionedCost;
-                NewDetail.ProductionAllCost = decimal.Round(NewDetail.UnitCost * NewDetail.Qty, 4);
-
-                #endregion
-                NewDetails.Add(NewDetail);
-                if (NewDetails.Count == 0)
-                {
-                    tipsMsg.Add($"制令单:{entity.MONo}已全部缴库，请检查数据！");
-                }
-                StringBuilder msg = new StringBuilder();
-                foreach (var item in tipsMsg)
-                {
-                    msg.Append(item).Append("\r\n");
-                }
-                if (tipsMsg.Count > 0)
-                {
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-                entity.tb_FinishedGoodsInvDetails = NewDetails;
+                MessageBox.Show("未找到对应的制令单!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+            try
+            {
+                // 调用业务层核心转换方法
+                var controller = MainForm.Instance.AppContext.GetRequiredService<tb_FinishedGoodsInvController<tb_FinishedGoodsInv>>();
+                var result = await controller.CreateFromManufacturingOrderAsync(SourceBill);
                 
-                entity.DataStatus = (int)DataStatus.草稿;
-                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                entity.ApprovalResults = null;
-                entity.ApprovalOpinions = "";
-                entity.Modified_at = null;
-                entity.Modified_by = null;
-                entity.Approver_at = null;
-                entity.Approver_by = null;
-                entity.PrintStatus = 0;
-                entity.ActionStatus = ActionStatus.新增;
-
-                BusinessHelper.Instance.InitEntity(entity);
-
+                if (!result.Succeeded)
+                {
+                    MessageBox.Show(result.ErrorMsg, "转换失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                
+                // 绑定数据到UI
+                var entity = result.ReturnObject;
                 ActionStatus actionStatus = ActionStatus.无操作;
                 BindData(entity, actionStatus);
                 base.BindData(entity);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"转换失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MainForm.Instance.logger?.LogError(ex, "LoadSubLines转换失败");
             }
         }
 

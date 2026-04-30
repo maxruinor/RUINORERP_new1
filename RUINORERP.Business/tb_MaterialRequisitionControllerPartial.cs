@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -56,7 +56,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 #region 结案
                 foreach (var entity in entitys)
                 {
@@ -80,13 +80,13 @@ namespace RUINORERP.Business
 
                 #endregion
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
@@ -130,27 +130,30 @@ namespace RUINORERP.Business
                 #region 审核 通过时
                 if (entity.ApprovalResults.Value)
                 {
+                    // ✅ 修复：先开启事务，再执行数据库查询，避免残留事务
+                    await _unitOfWorkManage.BeginTranAsync();
+                    
                     //要更新制令单的已发货物料数量
-                    entity.tb_manufacturingorder = _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+                    entity.tb_manufacturingorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
                         .Includes(t => t.tb_ManufacturingOrderDetails)
                         .Includes(t => t.tb_MaterialRequisitions, b => b.tb_MaterialRequisitionDetails)
                     .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                       .Includes(a => a.tb_ManufacturingOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
-                        .Where(c => c.MOID == entity.MOID).Single();
+                        .Where(c => c.MOID == entity.MOID).SingleAsync();
 
 
-                    //如果领料明细中的产品。不存在于制令单明细中。意思是领料的东西必须是制令单中的明细数据。如果不是 可以用其他 出库
-                    foreach (var child in entity.tb_MaterialRequisitionDetails)
+                //如果领料明细中的产品。不存在于制令单明细中。意思是领料的东西必须是制令单中的明细数据。如果不是 可以用其他 出库
+                foreach (var child in entity.tb_MaterialRequisitionDetails)
+                {
+                    if (!entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                     {
-                        if (!entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
-                        {
-                            rrs.Succeeded = false;
-                            rrs.ErrorMsg = $"领料明细中，有不属于当前制令单的明细!请检查数据后重试！";
-                            // ✅ 修复：不再弹出MessageBox，由UI层显示错误信息
-                            _logger.Debug(rrs.ErrorMsg);
-                            return rrs;
-                        }
+                        rrs.Succeeded = false;
+                        rrs.ErrorMsg = $"领料明细中，有不属于当前制令单的明细!请检查数据后重试！";
+                        _logger.Debug(rrs.ErrorMsg);
+                        await _unitOfWorkManage.RollbackTranAsync();  // ✅ 修复：回滚事务
+                        return rrs;
                     }
+                }
 
 
                     #region
@@ -175,8 +178,7 @@ namespace RUINORERP.Business
                             if (entity.tb_MaterialRequisitionDetails.Any(c => c.ManufacturingOrderDetailRowID == 0))
                             {
                                 string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】在明细中拥有多行记录，必须使用引用的方式添加。";
-                                // ✅ 修复：不再弹出MessageBox，由UI层显示错误信息
-                                //_unitOfWorkManage.RollbackTran();
+                               await _unitOfWorkManage.RollbackTranAsync();
                                 rrs.ErrorMsg = msg;
                                 _logger.Debug(msg);
                                 return rrs;
@@ -224,7 +226,7 @@ namespace RUINORERP.Business
                                 if (!entity.ReApply)
                                 {
                                     string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量{totalSent}不能大于制令单对应行的应发数量{mochild.ShouldSendQty}。";
-                                    // ✅ 修复：不再弹出MessageBox，由UI层显示错误信息
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     rrs.ErrorMsg = msg;
                                     _logger.Debug(msg);
                                     return rrs;
@@ -259,7 +261,7 @@ namespace RUINORERP.Business
                         //    {
                         //        string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量{totalSent}不能大于制令单对应行的应发数量{mochild.ShouldSendQty}。";
                         //        MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        //        //_unitOfWorkManage.RollbackTran();
+                        //        //await _unitOfWorkManage.RollbackTranAsync();
                         //        rrs.ErrorMsg = msg;
                         //        _logger.Debug(msg);
                         //        return rrs;
@@ -276,7 +278,7 @@ namespace RUINORERP.Business
                     }
                     #endregion
 
-                    #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                    #region 【死锁优化】预处理阶段（事务内批量预加载库存）
                     var allKeys = new List<(long ProdDetailID, long Location_ID)>();
                     if (entity.tb_MaterialRequisitionDetails != null)
                     {
@@ -298,9 +300,6 @@ namespace RUINORERP.Business
                     }
                     #endregion
 
-                    // 开启事务，保证数据一致性
-                    _unitOfWorkManage.BeginTran();
-
                     //更新已交数量,制令单的
                     int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrderDetail>(entity.tb_manufacturingorder.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
                     if (poCounter > 0)
@@ -313,12 +312,11 @@ namespace RUINORERP.Business
 
                     #endregion
                     List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
-                    // 创建库存流水记录列表
+                    // ✅ P0修复：先创建所有库存流水记录（不插入）
                     List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
-                    //因为要计算未发数量，所以要更新库存要在最后一步
+                    
                     foreach (var child in entity.tb_MaterialRequisitionDetails)
                     {
-
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         // ✅ 从预加载字典获取（死锁优化）
                         var key = (child.ProdDetailID, child.Location_ID);
@@ -328,103 +326,58 @@ namespace RUINORERP.Business
                             if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.ActualSentQty) < 0)
                             {
                                 rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 rrs.Succeeded = false;
                                 return rrs;
                             }
+                            
+                            // ✅ P0修复：保存更新前的数量快照
+                            int beforeQty = inv.Quantity;
+                            
                             // 更新库存
                             inv.Quantity = inv.Quantity - child.ActualSentQty;
-                            // 不可能为空
-                            tb_ManufacturingOrderDetail MoDeltail = entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Where(c => c.ProdDetailID == inv.ProdDetailID && c.Location_ID == inv.Location_ID).FirstOrDefault();
-                            if (MoDeltail != null)
-                            {
-                                // 所有对应的领料明细减少去制令单中的应该发的差。
-                                decimal totalActualSentQty = entity.tb_manufacturingorder.tb_MaterialRequisitions
-                                    .Where(c => c.ApprovalStatus.HasValue && c.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && (c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结))
-                                    .Where(c => c.ApprovalResults.HasValue && c.ApprovalResults.Value == true)
-                                    .Sum(c => c.tb_MaterialRequisitionDetails.Where(c => c.ProdDetailID == inv.ProdDetailID && c.Location_ID == inv.Location_ID).Sum(d => d.ActualSentQty));
+                            inv.NotOutQty -= child.ActualSentQty.ToInt();
+                            inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
+                            inv.LatestOutboundTime = System.DateTime.Now;
+                            
+                            // 实时获取当前库存成本(使用更新前的快照)
+                            decimal realtimeCost = inv.Inv_Cost;
 
-                                // 允许的误差阈值
-                                const decimal tolerance = 1.0m;
+                            // 更新领料明细的成本为实时成本
+                            child.Cost = realtimeCost;
+                            child.SubtotalCost = realtimeCost * child.ActualSentQty;
 
-                                // 超发量
-                                decimal overQty = totalActualSentQty - MoDeltail.ShouldSendQty;
+                            // ✅ P0修复：创建库存流水记录(使用快照数据)
+                            tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                            transaction.ProdDetailID = inv.ProdDetailID;
+                            transaction.Location_ID = inv.Location_ID;
+                            transaction.BizType = (int)BizType.生产领料单;
+                            transaction.ReferenceId = entity.MR_ID;
+                            transaction.ReferenceNo = entity.MaterialRequisitionNO;
+                            transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 变动前的库存数量(快照)
+                            transaction.QuantityChange = -child.ActualSentQty; // 生产领料减少库存
+                            transaction.AfterQuantity = beforeQty - child.ActualSentQty; // ✅ P0修复: 变动后的库存数量
+                            transaction.UnitCost = realtimeCost; // 使用实时成本
+                            transaction.TransactionTime = DateTime.Now;
+                            transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                            transaction.Notes = $"生产领料单审核：{entity.MaterialRequisitionNO}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
 
-                                // 只有应发数量带小数时才允许 1 个单位以内的误差
-                                bool allowTolerance = (MoDeltail.ShouldSendQty % 1) != 0;
-
-                                // 真正需要拦截的超发：整数必须 0 误差；小数允许 1 以内
-                                bool realOver = overQty > 0 &&
-                                                (!allowTolerance || overQty > tolerance);
-
-                                if (realOver)
-                                {
-                                    // 所有实发的数量不能大于应发的数量，除非是补料
-                                    if (!entity.ReApply)
-                                    {
-                                        var pd = child?.tb_proddetail;
-                                        var p = pd?.tb_prod;
-                                        string prodName = p != null
-                                            ? (p.CNName ?? "") + (p.Specifications ?? "")
-                                            : $"[产品ID:{child.ProdDetailID}]";
-                                        string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量{totalActualSentQty}不能大于制令单对应行的应发数量{MoDeltail.ShouldSendQty}。";
-                                        rrs.ErrorMsg = msg;
-                                        _unitOfWorkManage.RollbackTran();
-                                        rrs.ErrorMsg = msg;
-                                        _logger.Debug(msg);
-                                        return rrs;
-
-                                    }
-                                    // 补料 → 累记超发
-                                    MoDeltail.OverSentQty += overQty;
-                                }
-                                inv.NotOutQty -= child.ActualSentQty.ToInt();
-                            }
-
-                            BusinessHelper.Instance.EditEntity(inv);
+                            transactionList.Add(transaction);
+                            
+                            // ✅ 修复：立即添加到更新列表，避免后续重复处理
+                            invUpdateList.Add(inv);
                         }
                         else
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rrs.ErrorMsg = $"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员";
                             _logger.Debug(rrs.ErrorMsg);
                             return rrs;
                         }
-                        // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
-                        // inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
-                        inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                        inv.LatestOutboundTime = System.DateTime.Now;
                         #endregion
-                        
-                        // ✅ P0修复：保存更新前的数量快照
-                        int beforeQty = inv.Quantity;
-                        
-                        invUpdateList.Add(inv);
-
-                        // 实时获取当前库存成本(使用更新前的快照)
-                        decimal realtimeCost = inv.Inv_Cost;
-
-                        // 更新领料明细的成本为实时成本
-                        child.Cost = realtimeCost;
-                        child.SubtotalCost = realtimeCost * child.ActualSentQty;
-
-                        // ✅ P0修复：创建库存流水记录(使用快照数据)
-                        tb_InventoryTransaction transaction = new tb_InventoryTransaction();
-                        transaction.ProdDetailID = inv.ProdDetailID;
-                        transaction.Location_ID = inv.Location_ID;
-                        transaction.BizType = (int)BizType.生产领料单;
-                        transaction.ReferenceId = entity.MR_ID;
-                        transaction.ReferenceNo = entity.MaterialRequisitionNO;
-                        transaction.BeforeQuantity = beforeQty; // ✅ P0修复: 变动前的库存数量(快照)
-                        transaction.QuantityChange = -child.ActualSentQty; // 生产领料减少库存
-                        transaction.AfterQuantity = beforeQty - child.ActualSentQty; // ✅ P0修复: 变动后的库存数量
-                        transaction.UnitCost = realtimeCost; // 使用实时成本
-                        transaction.TransactionTime = DateTime.Now;
-                        transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                        transaction.Notes = $"生产领料单审核：{entity.MaterialRequisitionNO}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
-
-                        transactionList.Add(transaction);
                     }
+                    
+                    // ✅ 修复：批量更新库存（一次性提交，减少锁竞争）
                     DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                     var InvCounter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                     if (InvCounter == 0)
@@ -432,7 +385,7 @@ namespace RUINORERP.Business
                         _logger.Debug($"{entity.MaterialRequisitionNO}审核时，更新库存结果为0行，请检查数据！");
                     }
 
-                    // 记录库存流水
+                    // ✅ 修复：批量插入库存流水（在库存更新之后，避免死锁）
                     tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
                     await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
@@ -456,14 +409,14 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rrs.ReturnObject = entity as T;
                 rrs.Succeeded = true;
                 return rrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 return rrs;
@@ -492,14 +445,14 @@ namespace RUINORERP.Business
                 {
 
                     rs.ErrorMsg = "对应的制令单下存在已确认或已完结，或已审核的缴库单，不能反审核  ";
-                    //_unitOfWorkManage.RollbackTran();
+                    //await _unitOfWorkManage.RollbackTranAsync();
                     rs.Succeeded = false;
                     return rs;
                 }
                 if (entity.tb_MaterialReturns != null && (entity.tb_MaterialReturns.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_MaterialReturns.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                 {
                     rs.ErrorMsg = "对应的领料单下存在已确认或已完结，或已审核的退料单，不能反审核  ";
-                    //_unitOfWorkManage.RollbackTran();
+                    //await _unitOfWorkManage.RollbackTranAsync();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -509,7 +462,7 @@ namespace RUINORERP.Business
                 {
                     //return false;
                     rs.ErrorMsg = "有结案的单据，已经跳过反审";
-                    //_unitOfWorkManage.RollbackTran();
+                    //await _unitOfWorkManage.RollbackTranAsync();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -536,15 +489,12 @@ namespace RUINORERP.Business
                 }
                 #endregion
 
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                // ✅ P0修复：先开启事务，再执行数据库查询
+                await _unitOfWorkManage.BeginTranAsync();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                
                 //更新拟销售量减少
-
-
-
-
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;
@@ -563,7 +513,7 @@ namespace RUINORERP.Business
                     invDict2.TryGetValue(key, out var inv);
                     if (inv == null)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.ErrorMsg = $"{child.ProdDetailID}库存中没有当前的产品。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                         rs.Succeeded = false;
                         return rs;
@@ -635,13 +585,15 @@ namespace RUINORERP.Business
                 {
                     #region  反审检测写回    主要是修改制令单的实发数量，审核时是统计审核过生效的总和。反审只要减掉当前领料的数量即可？
 
-                    //要更新制令单的已发货物料数量
-                    entity.tb_manufacturingorder = _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+                    // ✅ P0修复：使用异步查询，避免残留事务
+                    entity.tb_manufacturingorder = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_ManufacturingOrder>()
                         .Includes(t => t.tb_ManufacturingOrderDetails)
                         .Includes(t => t.tb_MaterialRequisitions, b => b.tb_MaterialRequisitionDetails)
-                    .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                      .Includes(a => a.tb_ManufacturingOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
-                        .Where(c => c.MOID == entity.MOID).Single();
+                        .AsNavQueryable()
+                        .Includes(a => a.tb_ManufacturingOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
+                        .Where(c => c.MOID == entity.MOID)
+                        .SingleAsync();
 
                     //分两种情况处理。既然是处理领料单明细。就只要循环领料明细再对应到制令单明细的数据变更即可。
                     #region
@@ -686,7 +638,7 @@ namespace RUINORERP.Business
                         decimal diff = mochild.ActualSentQty - mochild.ShouldSendQty;
                         if (Difference < 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             throw new Exception($"领料单：{entity.MaterialRequisitionNO}反审核，对应的制令单：{entity.tb_manufacturingorder.MONO}，{prodName}的实发明细不能为负数！");
                         }
                         else
@@ -721,15 +673,14 @@ namespace RUINORERP.Business
                                             .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;

@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -84,7 +84,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
@@ -99,7 +99,7 @@ namespace RUINORERP.Business
 
                         // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
                         rs.ErrorMsg = $"产品拆分时，母件库存为：{invMother.Quantity}，拆分量为：{entity.SplitParentQty}\r\n 系统设置不允许负库存， 请检查母件数量与库存相关数据";
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.Succeeded = false;
                         return rs;
                     }
@@ -110,7 +110,7 @@ namespace RUINORERP.Business
                 }
                 else
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw new Exception("系统对应的仓库中没有母件库存,请检查数据！ ");
                 }
                 int InvInsertCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMother).ExecuteCommandAsync();
@@ -178,7 +178,7 @@ namespace RUINORERP.Business
                         //新增库存中有重复的商品，操作失败。请联系管理员。
                         rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                         rs.Succeeded = false;
-                        _unitOfWorkManage.RollbackTran(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
+                        await _unitOfWorkManage.RollbackTranAsync(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
                         _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                         return rs;
                     }
@@ -268,7 +268,7 @@ namespace RUINORERP.Business
 
                 //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 rs.ReturnObject = entity as T;
                 return rs;
@@ -276,7 +276,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 rs.Succeeded = false;
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
@@ -331,7 +331,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 
 
@@ -348,7 +348,7 @@ namespace RUINORERP.Business
                 }
                 else
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw new Exception("系统对应的仓库中没有母件库存,请检查数据！ ");
                 }
                 int InvInsertCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMother).ExecuteCommandAsync();
@@ -393,7 +393,7 @@ namespace RUINORERP.Business
                     var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                     if (Counter ==0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("子件库存更新失败！");
                     }
 
@@ -469,7 +469,7 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -477,7 +477,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
         
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.Succeeded = false;
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;

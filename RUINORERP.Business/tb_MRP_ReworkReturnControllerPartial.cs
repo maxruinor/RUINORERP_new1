@@ -56,12 +56,12 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //采购入库总数量和明细求和检查
                 if (entity.TotalQty.Equals(entity.tb_MRP_ReworkReturnDetails.Sum(c => c.Quantity)) == false)
                 {
                     rs.ErrorMsg = $"采入入库数量与明细之和不相等!请检查数据后重试！";
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -84,7 +84,7 @@ namespace RUINORERP.Business
                         if (!entity.tb_finishedgoodsinv.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                         {
                             rs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rs.ErrorMsg = $"退库明细中有产品不属于当前缴库单!请检查数据后重试！";
                             return rs;
                         }
@@ -113,7 +113,7 @@ namespace RUINORERP.Business
                         {
                             string msg = $"返工退库:{entity.ReworkReturnNo}的【{prodName}】的数量不能大于缴款单中数量\r\n" + $"或存在针对当前缴库单重复录入了返工退库单。";
                            rs.ErrorMsg=msg;
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             _logger.Debug(msg);
                             return rs;
                         }
@@ -128,7 +128,7 @@ namespace RUINORERP.Business
                     if (inv == null)
                     {
                         rs.ErrorMsg = $"必须要有库存初始数据!请检查数据后重试！";
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.Succeeded = false;
                         return rs;
                     }
@@ -142,7 +142,7 @@ namespace RUINORERP.Business
                     {
                         // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
                         rs.ErrorMsg = $"库存为：{inv.Quantity}，返工退库数量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查返工退库数量与库存相关数据";
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.Succeeded = false;
                         
                         return rs; 
@@ -181,14 +181,14 @@ namespace RUINORERP.Business
                                                 .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.Succeeded = false;
                 rs.ErrorMsg = ex.Message;
@@ -219,7 +219,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
@@ -232,7 +232,7 @@ namespace RUINORERP.Business
                     if (inv == null)
                     {
                         rs.ErrorMsg = $"必须要有库存初始数据!请检查数据后重试！";
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.Succeeded = false;
                         return rs;
                     }
@@ -274,7 +274,7 @@ namespace RUINORERP.Business
                                              .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                              .ExecuteCommandHasChangeAsync();
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -282,7 +282,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 return rs;

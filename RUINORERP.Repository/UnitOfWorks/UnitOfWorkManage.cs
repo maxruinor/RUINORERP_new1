@@ -282,6 +282,28 @@ namespace RUINORERP.Repository.UnitOfWorks
             var context = GetOrCreateTransactionContext();
             var dbClient = GetDbClient();
         
+            // ✅ P3 修复：在最外层事务开启前，检查是否有残留的事务对象
+            if (context.Depth == 0 && dbClient.Ado.Transaction != null)
+            {
+                var txConn = dbClient.Ado.Transaction.Connection;
+                var isValid = txConn != null && txConn.State == System.Data.ConnectionState.Open;
+                
+                if (isValid)
+                {
+                    _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到残留的物理事务对象，将先回滚");
+                    try
+                    {
+                        ClearPendingDataReader(dbClient);
+                        dbClient.Ado.RollbackTran();
+                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 残留事务已回滚");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, $"[Transaction-{context.TransactionId}] 回滚残留事务失败，将继续尝试开启新事务");
+                    }
+                }
+            }
+        
             // ✅ P1优化: 使用SemaphoreSlim.Wait()替代lock
             context.LockSemaphore.Wait();
             try
@@ -339,13 +361,6 @@ namespace RUINORERP.Repository.UnitOfWorks
                         
                         dbClient.Ado.Connection.Open();
                         _logger.LogInformation($"[Transaction-{context.TransactionId}] 数据库连接已打开，当前状态：{dbClient.Ado.Connection.State}");
-                    }
-                    
-                    // ✅ 防御性检查: 清理可能存在的挂起命令
-                    if (dbClient.Ado.Transaction != null)
-                    {
-                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到残留事务对象，先回滚");
-                        try { dbClient.Ado.RollbackTran(); } catch { }
                     }
                     
                     // ✅ P3 再次清理: 确保在开启事务前没有其他挂起操作
@@ -515,6 +530,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 
         /// <summary>
         /// 提交事务内部实现 - 使用SemaphoreSlim保护
+        /// ✅ P3 修复：增强事务对象保护机制，防止竞态条件
         /// </summary>
         private void CommitTranInternal()
         {
@@ -525,6 +541,14 @@ namespace RUINORERP.Repository.UnitOfWorks
                 return;
             }
                 
+            // ✅ P3 修复：获取锁前预检查事务状态
+            if (context.Depth <= 0)
+            {
+                _logger.LogWarning($"[Transaction-{context.TransactionId}] 提交请求但事务深度为 {context.Depth}，跳过提交");
+                ResetTransactionState();
+                return;
+            }
+                
             var dbClient = GetDbClient();
             var stopwatch = Stopwatch.StartNew();
                 
@@ -532,9 +556,10 @@ namespace RUINORERP.Repository.UnitOfWorks
             context.LockSemaphore.Wait();
             try
             {
+                // ✅ P3 修复：获取锁后再次检查事务状态，防止竞态条件
                 if (context.Depth <= 0)
                 {
-                    _logger.LogWarning($"[Transaction-{context.TransactionId}] 提交请求但事务深度为 {context.Depth}，跳过提交");
+                    _logger.LogWarning($"[Transaction-{context.TransactionId}] 提交请求但事务深度为 {context.Depth}（可能在等待锁时被其他线程修改），跳过提交");
                     ResetTransactionState();
                     return;
                 }
@@ -973,6 +998,7 @@ namespace RUINORERP.Repository.UnitOfWorks
 
         /// <summary>
         /// 重置事务状态
+        /// ✅ P3 修复：增强清理逻辑，确保彻底重置所有事务相关状态
         /// </summary>
         private void ResetTransactionState()
         {
@@ -998,42 +1024,78 @@ namespace RUINORERP.Repository.UnitOfWorks
                 _currentTransactionContext.Value = null;
                 _tranDepth.Value = 0;
         
-                // 关键修复：清理数据库连接实例，避免连接泄漏
+                // ✅ P3 修复：增强数据库连接清理逻辑
                 if (_asyncLocalClient.Value != null)
                 {
                     try
                     {
                         var dbClient = _asyncLocalClient.Value;
                         
-                        // ✅ 新增：先清理挂起的 DataReader
+                        // ✅ P3 修复：先清理挂起的 DataReader（防止后续操作失败）
                         ClearPendingDataReader(dbClient);
                         
-                        if (dbClient.Ado.Connection != null && dbClient.Ado.Connection.State == System.Data.ConnectionState.Open)
+                        // ✅ P3 修复：处理可能存在的残留事务对象
+                        if (dbClient.Ado.Transaction != null)
                         {
-                            dbClient.Ado.Connection.Close();
-                            _logger.LogDebug($"[Transaction-{transactionId}] 数据库连接已关闭");
+                            var txConn = dbClient.Ado.Transaction.Connection;
+                            var txIsActive = txConn != null && txConn.State == System.Data.ConnectionState.Open;
+                            
+                            if (txIsActive)
+                            {
+                                _logger.LogWarning($"[Transaction-{transactionId}] 检测到残留事务对象，尝试回滚");
+                                try
+                                {
+                                    dbClient.Ado.RollbackTran();
+                                    _logger.LogDebug($"[Transaction-{transactionId}] 残留事务已回滚");
+                                }
+                                catch (Exception rbEx)
+                                {
+                                    _logger.LogWarning(rbEx, $"[Transaction-{transactionId}] 回滚残留事务失败");
+                                }
+                            }
                         }
-                        else if (dbClient.Ado.Connection != null && dbClient.Ado.Connection.State == System.Data.ConnectionState.Connecting)
+                        
+                        // 关闭连接
+                        if (dbClient.Ado.Connection != null)
                         {
-                            _logger.LogWarning($"[Transaction-{transactionId}] 检测到连接处于 Connecting 状态，强制关闭");
-                            try
+                            var connState = dbClient.Ado.Connection.State;
+                            if (connState == System.Data.ConnectionState.Open)
                             {
                                 dbClient.Ado.Connection.Close();
+                                _logger.LogDebug($"[Transaction-{transactionId}] 数据库连接已关闭");
                             }
-                            catch (Exception closeEx)
+                            else if (connState == System.Data.ConnectionState.Connecting || connState == System.Data.ConnectionState.Connecting)
                             {
-                                _logger.LogWarning(closeEx, $"[Transaction-{transactionId}] 关闭 Connecting 状态的连接时异常");
+                                _logger.LogWarning($"[Transaction-{transactionId}] 检测到连接处于 {connState} 状态，强制关闭");
+                                try
+                                {
+                                    dbClient.Ado.Connection.Close();
+                                }
+                                catch (Exception closeEx)
+                                {
+                                    _logger.LogWarning(closeEx, $"[Transaction-{transactionId}] 关闭连接时异常");
+                                }
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, $"[Transaction-{transactionId}] 关闭数据库连接时发生异常");
+                        _logger.LogWarning(ex, $"[Transaction-{transactionId}] 清理数据库连接时发生异常");
                     }
                     finally
                     {
                         _asyncLocalClient.Value = null;
                     }
+                }
+        
+                // ✅ P3 修复：确保事务上下文完全释放
+                try
+                {
+                    context.Dispose();
+                }
+                catch (Exception disposeEx)
+                {
+                    _logger.LogWarning(disposeEx, $"[Transaction-{transactionId}] 释放事务上下文时发生异常");
                 }
         
                 _logger.LogDebug($"[Transaction-{transactionId}] 事务状态已重置");

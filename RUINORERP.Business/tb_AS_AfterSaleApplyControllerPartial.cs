@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -306,12 +306,12 @@ namespace RUINORERP.Business
                     invList.Add(inv);
                 }
 
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw new Exception("库存更新数据为0，更新失败！");
                 }
 
@@ -334,7 +334,7 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 
                                   
                 rmrs.ReturnObject = entity as T;
@@ -343,7 +343,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
@@ -400,7 +400,7 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal ConfirmedQty)>();
 
@@ -417,7 +417,7 @@ namespace RUINORERP.Business
                         if (inv == null)
                         {
                             //实际不会出现这个情况。因为审核时创建了。
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             throw new Exception("库存数据不存在,反审失败！");
                         }
 
@@ -482,13 +482,13 @@ namespace RUINORERP.Business
                 if (result > 0)
                 {
                     // 注意信息的完整性
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                     rmrs.ReturnObject = entity as T;
                     rmrs.Succeeded = true;
                 }
                 else
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     ;
                     rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_AS_AfterSaleApply)).ToString() + "事务回滚=> 保存出错";
                     rmrs.Succeeded = false;
@@ -496,7 +496,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                  
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_AS_AfterSaleApply)).ToString() + "事务回滚=>" + ex.Message;

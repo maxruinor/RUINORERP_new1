@@ -210,7 +210,7 @@ namespace RUINORERP.Business
      try
      {
          // 开启事务，保证数据一致性
-         _unitOfWorkManage.BeginTran();
+         await _unitOfWorkManage.BeginTranAsync();
          //主体是新加，后面的都是新加
          if (info.actionStatus == ActionStatus.新增 || info.ProdBaseID <= 0)
          {
@@ -329,7 +329,7 @@ namespace RUINORERP.Business
          }
          rr.ReturnObject = info;
          // 注意信息的完整性
-         _unitOfWorkManage.CommitTran();
+         await _unitOfWorkManage.CommitTranAsync();
          rr.Succeeded = true;
          _logger.Error("事务成功");
 
@@ -337,7 +337,7 @@ namespace RUINORERP.Business
      catch (Exception ex)
      {
          _logger.Error(ex);
-         _unitOfWorkManage.RollbackTran();
+         await _unitOfWorkManage.RollbackTranAsync();
          _logger.Error("事务回滚");
          rr.ErrorMsg = "事务回滚=>" + ex.Message;
      }

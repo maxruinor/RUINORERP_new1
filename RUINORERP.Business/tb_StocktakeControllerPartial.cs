@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -74,13 +74,13 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 提前开启事务，确保所有数据库操作都在事务内执行
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 if (entity == null)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     return rmrs;
                 }
 
@@ -109,7 +109,7 @@ namespace RUINORERP.Business
                             {
                                 view_Prod = _cacheManager.GetEntity<View_ProdDetail>(child.ProdDetailID);
                             }
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n当前盘点产品在当前仓库中，无库存数据。请使用【期初盘点】方式盘点。";
                             return rmrs;
                         }
@@ -118,7 +118,7 @@ namespace RUINORERP.Business
                         if (child.UntaxedCost == 0)
                         {
                             View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == entity.Location_ID).FirstAsync();
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n【期初盘点】时，必须输入正确的未税成本价格。";
                             return rmrs;
                         }
@@ -241,7 +241,7 @@ namespace RUINORERP.Business
 
                 if (CheckNewInvList.Count > 0)
                 {
-                    _unitOfWorkManage.RollbackTran(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
+                    await _unitOfWorkManage.RollbackTranAsync(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
                     //新增库存中有重复的商品，操作失败。请联系管理员。
                     rmrs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rmrs.Succeeded = false;
@@ -317,7 +317,7 @@ namespace RUINORERP.Business
                     }
                     catch (Exception)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("盘点单审核时，财务费用单数据保存失败！");
                     }
                 }
@@ -335,7 +335,7 @@ namespace RUINORERP.Business
                                     .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
@@ -343,7 +343,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
 
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
 
@@ -526,13 +526,13 @@ namespace RUINORERP.Business
                     //新增库存中有重复的商品，操作失败。请联系管理员。
                     rmsr.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rmsr.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
+                    await _unitOfWorkManage.RollbackTranAsync(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
                     _logger.LogError(rmsr.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                     return rmsr;
 
                 }
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
@@ -613,7 +613,7 @@ namespace RUINORERP.Business
                     }
                     catch (Exception)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("盘点单审核时，财务数据处理失败，更新失败！");
                     }
                 }
@@ -629,7 +629,7 @@ namespace RUINORERP.Business
                                              .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                              .ExecuteCommandHasChangeAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
 
                 rmsr.Succeeded = true;
                 rmsr.ReturnObject = entity as T;
@@ -638,7 +638,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 rmsr.ErrorMsg = ex.Message;
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 //  _logger.Error(approvalEntity.bizName +);

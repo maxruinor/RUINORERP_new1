@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -86,7 +86,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 #region 结案
 
 
@@ -124,7 +124,7 @@ namespace RUINORERP.Business
                                 //应该不会到这里面来了。
                                 //View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>()
                                 //    .Where(c => c.ProdDetailID == entitys[m].ProdDetailID && c.Location_ID==entitys[m].tb_ManufacturingOrderDetails[c].Location_ID).FirstAsync();
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 rs.ErrorMsg = $"{entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID}库存中没有当前的产品。请使用【期初盘点】的方式进行盘点后，再操作。";
                                 rs.Succeeded = false;
                                 return rs;
@@ -169,13 +169,13 @@ namespace RUINORERP.Business
 
                 #endregion
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
@@ -218,7 +218,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 // ✅ 修复：移除不必要的外部Controller引用，直接使用当前事务的DbClient
                 // tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
@@ -247,7 +247,7 @@ namespace RUINORERP.Business
                 {
 
                     rs.ErrorMsg = "存在已确认或已完结，或已审核的领料单，不能反审核  ";
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -257,7 +257,7 @@ namespace RUINORERP.Business
                 if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
                 {
                     rs.ErrorMsg = "计划单非确认或非完结，不能反审核  ";
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -323,7 +323,7 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception($"ProdDetailID:{item.ProdDetailID}, LocationID:{item.Location_ID} 不存在库存信息");
                     }
                     #endregion
@@ -339,7 +339,7 @@ namespace RUINORERP.Business
                 //int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
                 //if (InvUpdateCounter == 0)
                 //{
-                //    _unitOfWorkManage.RollbackTran();
+                //    await _unitOfWorkManage.RollbackTranAsync();
                 //    throw new Exception("库存更新失败！");
                 //}
                 //这部分是否能提出到上一级公共部分？
@@ -357,7 +357,7 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -365,7 +365,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.Succeeded = false;
                
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 // ✅ 修复：移除不必要的外部Controller引用
                 // tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
@@ -518,7 +518,7 @@ namespace RUINORERP.Business
                     //新增库存中有重复的商品，操作失败。请联系管理员。
                     rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rs.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                     return rs;
                 }
@@ -548,7 +548,7 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 //_logger.Info("审核事务成功");
@@ -557,7 +557,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 rs.ErrorMsg = ex.Message;
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
 

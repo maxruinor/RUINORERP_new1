@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -140,12 +140,12 @@ namespace RUINORERP.Business
                     invList.Add(inv);
                 }
 
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw new Exception("售后交付单，库存更新数据为0，更新失败！");
                 }
                 #region 回写售后交付数量
@@ -209,14 +209,14 @@ namespace RUINORERP.Business
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
@@ -317,7 +317,7 @@ namespace RUINORERP.Business
                         group.Qty += currentOutQty;
                         if (!_appContext.SysConfig.CheckNegativeInventory && (group.Inventory.Quantity - group.Qty) < 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             var detail = _cacheManager.GetEntity<View_ProdDetail>(group.Inventory.ProdDetailID);
                             if (detail != null)
                             {
@@ -347,12 +347,12 @@ namespace RUINORERP.Business
                     invList.Add(inv);
                 }
 
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw new Exception("售后交付单,库存更新数据为0，更新失败！");
                 }
                 #region 回写售后交付数量
@@ -418,14 +418,14 @@ namespace RUINORERP.Business
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;

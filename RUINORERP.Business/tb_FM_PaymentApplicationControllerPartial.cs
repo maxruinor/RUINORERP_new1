@@ -44,7 +44,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -56,7 +56,7 @@ namespace RUINORERP.Business
                                     .ExecuteCommandHasChangeAsync();
               
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
 
@@ -64,7 +64,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -81,7 +81,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
@@ -92,7 +92,7 @@ namespace RUINORERP.Business
                                         it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                     .ExecuteCommandHasChangeAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
                 return rmrs;
@@ -100,7 +100,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -132,7 +132,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 if (!approvalEntity.ApprovalResults)
                 {
                     if (entitys == null)
@@ -158,7 +158,7 @@ namespace RUINORERP.Business
                     }
                 }
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
 
                 //_logger.Info(approvalEntity.bizName + "审核事务成功");
                 return true;
@@ -166,7 +166,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(approvalEntity.bizName + "事务回滚");
                 return false;
             }
@@ -189,7 +189,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 #region 结案
                 //更新拟销售量  减少
                 for (int m = 0; m < entitys.Count; m++)
@@ -208,13 +208,13 @@ namespace RUINORERP.Business
                 }
                 #endregion
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;

@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -352,7 +352,7 @@ namespace RUINORERP.Business
             {
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
       
                 #region 由缴库更新库存
 
@@ -477,7 +477,7 @@ namespace RUINORERP.Business
                 {
                     rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rs.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                     return rs;
                 }
@@ -679,7 +679,7 @@ namespace RUINORERP.Business
                         }
                         catch (Exception)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             throw new Exception("缴库时，生成加工费用的应付款单处理失败！");
                         }
                     }
@@ -697,7 +697,7 @@ namespace RUINORERP.Business
                             .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -705,7 +705,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 rs.Succeeded = false;
                 rs.ErrorMsg = ex.Message;
                 return rs;
@@ -839,7 +839,8 @@ namespace RUINORERP.Business
                 // 7. 记录提示信息(如果有)
                 if (tipsMsg.Count > 0)
                 {
-                    rs.WarningMessages = tipsMsg;
+                    // ⚠️ ReturnResults 没有 WarningMessages 属性，使用 ErrorMsg 记录提示
+                    rs.ErrorMsg = string.Join("; ", tipsMsg);
                     _logger.LogWarning("制令单转换提示信息: {Tips}", string.Join("; ", tipsMsg));
                 }
                 
@@ -951,7 +952,7 @@ namespace RUINORERP.Business
             // 【事务开始】只包含更新操作，最小化事务区间
             try
             {
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
@@ -1081,7 +1082,7 @@ namespace RUINORERP.Business
                     //如果已交数据大于制令单数量 给出警告实际操作中 使用其他方式将备品入库
                     if (entity.tb_manufacturingorder.QuantityDelivered < 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception($"缴库单：{entity.DeliveryBillNo}反审核时，对应的制令单：{entity.tb_manufacturingorder.MONO}，{prodName}的生产数量不能为负数！");
                     }
 
@@ -1176,7 +1177,7 @@ namespace RUINORERP.Business
                         }
                         catch (Exception)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             throw new Exception("缴库时，生成加工费用的应付款单处理失败！");
                         }
                     }
@@ -1197,7 +1198,7 @@ namespace RUINORERP.Business
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                                     .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                     .ExecuteCommandHasChangeAsync();
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -1205,7 +1206,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 return rs;

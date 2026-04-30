@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -66,7 +66,7 @@ namespace RUINORERP.Business
                 var PaymentType = (ReceivePaymentType)entity.ReceivePaymentType;
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 var ARAPList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
                                      .Includes(c => c.tb_FM_ReceivablePayableDetails)
@@ -89,7 +89,7 @@ namespace RUINORERP.Business
                             if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
                                 && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 rmrs.ErrorMsg = $"当前调整单的应{PaymentType}单{arap.ARAPNo}，已关联生成{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单且状态为已支付，反审核失败。";
                                 rmrs.Succeeded = false;
                                 return rmrs;
@@ -114,7 +114,7 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rmrs.ErrorMsg = $"当前调整单的应{PaymentType}单{arap.ARAPNo}，状态为{(ARAPStatus)arap.ARAPStatus.Value}，反审核失败。";
                             rmrs.Succeeded = false;
                             return rmrs;
@@ -234,7 +234,7 @@ namespace RUINORERP.Business
                                             it.Approver_by
                                         })
                                         .ExecuteCommandHasChangeAsync();
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
 
@@ -242,7 +242,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -280,7 +280,7 @@ namespace RUINORERP.Business
 
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 //对于采购入库，价格调整单不生成新的入库单，不会影响数量，而是直接 修正库存总成本
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款
@@ -445,14 +445,14 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 ApprovalResult.Succeeded = true;
                 ApprovalResult.ReturnObject = entity as T;
                 return ApprovalResult;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 ApprovalResult.ErrorMsg += ex.Message;
                 return ApprovalResult;
@@ -489,7 +489,7 @@ namespace RUINORERP.Business
         //    try
         //    {
         //        // 开启事务，保证数据一致性
-        //        _unitOfWorkManage.BeginTran();
+        //        await _unitOfWorkManage.BeginTranAsync();
         //        if (!approvalEntity.ApprovalResults)
         //        {
         //            if (entitys == null)
@@ -514,7 +514,7 @@ namespace RUINORERP.Business
         //            }
         //        }
         //        // 注意信息的完整性
-        //        _unitOfWorkManage.CommitTran();
+        //        await _unitOfWorkManage.CommitTranAsync();
 
         //        //_logger.Info(approvalEntity.bizName + "审核事务成功");
         //        return true;
@@ -522,7 +522,7 @@ namespace RUINORERP.Business
         //    catch (Exception ex)
         //    {
         //        _logger.Error(ex);
-        //        _unitOfWorkManage.RollbackTran();
+        //        await _unitOfWorkManage.RollbackTranAsync();
         //        _logger.Error(approvalEntity.bizName + "事务回滚");
         //        return false;
         //    }
@@ -548,7 +548,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 #region 结案
                 //更新拟销售量  减少
                 for (int m = 0; m < entitys.Count; m++)
@@ -588,13 +588,13 @@ namespace RUINORERP.Business
                 }
                 #endregion
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;

@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -152,7 +152,7 @@ namespace RUINORERP.Business
                 var boms = preloadResult.BOMs;
 
                 // ========== 第二阶段: 事务内执行核心业务 ==========
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 
                 try
                 {
@@ -228,7 +228,7 @@ namespace RUINORERP.Business
                         .ExecuteCommandAsync();
 
                     // 提交主事务
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                     _logger.LogInformation($"采购入库单{entity.PurEntryNo}审核：主事务提交成功");
 
                     // ========== 第三阶段: 后置处理(独立事务) ==========
@@ -253,13 +253,13 @@ namespace RUINORERP.Business
                 }
                 catch (Exception ex)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw;
                 }
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, $"事务回滚{entity.PurEntryNo}: {ex.Message}");
                 rs.Succeeded = false;
                 rs.ErrorMsg = ex.Message;
@@ -496,7 +496,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
                 invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
@@ -507,7 +507,7 @@ namespace RUINORERP.Business
                     var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                     if (Counter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("入库时，库存更新数据为0，更新失败！");
                     }
 
@@ -522,7 +522,7 @@ namespace RUINORERP.Business
                     var BOM_SDetailCounter = await BOM_SDetaildbHelper.BaseDefaultAddElseUpdateAsync(BOM_SDetails);
                     if (BOM_SDetailCounter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("入库时，配方明细成本更新数据为0，更新失败！");
                     }
                 }
@@ -533,7 +533,7 @@ namespace RUINORERP.Business
                     var BOMCounter = await BOM_SdbHelper.BaseDefaultAddElseUpdateAsync(BOMs);
                     if (BOMCounter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("入库时，配方主表成本更新数据为0，更新失败！");
                     }
                 }
@@ -544,7 +544,7 @@ namespace RUINORERP.Business
                     var PriceRecordCounter = await PriceRecorddbHelper.BaseDefaultAddElseUpdateAsync(PriceRecords);
                     if (PriceRecordCounter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("入库时，采购价格历史记录更新数据为0，更新失败！");
                     }
                 }
@@ -590,7 +590,7 @@ namespace RUINORERP.Business
                                 //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
                                     _logger.Debug(msg);
@@ -607,7 +607,7 @@ namespace RUINORERP.Business
                             {
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量。";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
                                     _logger.Debug(msg);
@@ -626,7 +626,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity < 0)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     throw new Exception($"入库单：{entity.PurEntryNo}反审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，{prodName}的明细不能为负数！");
                                 }
                             }
@@ -642,7 +642,7 @@ namespace RUINORERP.Business
 
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量。";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
                                     _logger.Debug(msg);
@@ -659,7 +659,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity < 0)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     throw new Exception($"入库单：{entity.PurEntryNo}反审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，{prodName}的明细不能为负数！");
                                 }
                             }
@@ -679,7 +679,7 @@ namespace RUINORERP.Business
                     int updatecounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrderDetail>(entity.tb_purorder.tb_PurOrderDetails).ExecuteCommandAsync();
                     if (updatecounter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception($"入库单：{entity.PurEntryNo}反审核时，对应的订单：{entity.tb_purorder.PurOrderNo}明细中的已交数更新出错！");
                     }
 
@@ -738,7 +738,7 @@ namespace RUINORERP.Business
                         else
                         {
                             //不会为多行。有错误
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rs.ErrorMsg = $"采购入库单{entity.PurEntryNo}有多张应付款单，数据重复，请检查数据正确性后，再操作。";
                             rs.Succeeded = false;
                             return rs;
@@ -751,7 +751,7 @@ namespace RUINORERP.Business
 
                 #endregion
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
 
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
@@ -763,7 +763,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 return rs;

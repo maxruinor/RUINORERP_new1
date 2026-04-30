@@ -61,7 +61,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_BOM_S entity = model as tb_BOM_S;
@@ -104,14 +104,14 @@ namespace RUINORERP.Business
                 //}
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rsms.ReturnObject = entity as T;
                 entity.PrimaryKeyID = entity.BOM_ID;
                 rsms.Succeeded = rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 //出错后，取消生成的ID等值
                 command.Undo();
                 _logger.Error(ex);
@@ -137,19 +137,19 @@ namespace RUINORERP.Business
             try
             {
                 tb_BOM_S _bom = bom as tb_BOM_S;
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 var affected = await _unitOfWorkManage.GetDbClient().
                 Updateable<tb_ProdDetail>()
                 .SetColumns(it => it.BOM_ID == null)
                 .Where(it => it.BOM_ID == _bom.BOM_ID).ExecuteCommandHasChangeAsync();
 
                 bool affectedDetail = await BaseDeleteByNavAsync(bom);
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rrs.Succeeded = true;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 return rrs;
             }
             return rrs;
@@ -182,7 +182,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 //更新产品表回写他的配方号
                 //entity.tb_proddetail.DataStatus = (int)DataStatus.完结;
@@ -245,14 +245,14 @@ namespace RUINORERP.Business
                                     .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 return rmrs;
             }
@@ -604,7 +604,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 tb_ProdDetailController<tb_ProdDetail> ctrDetail = _appContext.GetRequiredService<tb_ProdDetailController<tb_ProdDetail>>();
                 tb_BOM_SController<tb_BOM_S> ctrinv = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
 
@@ -639,7 +639,7 @@ namespace RUINORERP.Business
                                     .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -647,7 +647,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.Succeeded = false;
                 return rs;

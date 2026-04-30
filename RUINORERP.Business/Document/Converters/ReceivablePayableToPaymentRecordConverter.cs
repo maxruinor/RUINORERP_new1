@@ -117,8 +117,8 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
-                // 检查是否已结案（结案后不允许再收付款）
-                if (source.ARAPStatus == (int)ARAPStatus.全部支付 && source.ARAPStatus == (int)ARAPStatus.已冲销)
+                // 检查是否已结案(结案后不允许再收付款)
+                if (source.ARAPStatus == (int)ARAPStatus.全部支付 || source.ARAPStatus == (int)ARAPStatus.已冲销)
                 {
                     result.CanConvert = false;
                     result.ErrorMessage = $"应收应付款单{source.ARAPNo}已结案，不允许再进行收付款操作";

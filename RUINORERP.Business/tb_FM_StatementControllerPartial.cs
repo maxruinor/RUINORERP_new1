@@ -1,4 +1,4 @@
-// **************************************
+﻿// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
@@ -73,7 +73,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 // 查找与当前对账单关联的收付款单
                 var paymentRecordList = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
@@ -85,7 +85,7 @@ namespace RUINORERP.Business
                 {
                     if (paymentRecordList.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付 && c.ApprovalStatus == (int)ApprovalStatus.审核通过))
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmrs.ErrorMsg = $"存在【已支付】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单，反审失败。";
                         rmrs.Succeeded = false;
                         return rmrs;
@@ -170,7 +170,7 @@ namespace RUINORERP.Business
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
 
@@ -178,7 +178,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -321,7 +321,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 // 更新应收付款单的已对账金额并标记为不允许再加入对账单
                 foreach (var detail in entity.tb_FM_StatementDetails)
@@ -397,19 +397,19 @@ namespace RUINORERP.Business
 
                 if (result <= 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.ErrorMsg = "更新结果为零，请确保数据完整。请检查当前单据数据是否存在。";
                     return rmrs;
                 }
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -853,7 +853,7 @@ namespace RUINORERP.Business
                 _logger.LogInformation($"开始执行红蓝单对冲核销:对账单号={statement.StatementNo},正数明细={positiveDetails.Count}条({positiveTotal:N2}),负数明细={negativeDetails.Count}条({negativeTotal:N2})");
 
                 // 开启事务
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 // 核销所有明细
                 foreach (var detail in statement.tb_FM_StatementDetails)
@@ -864,7 +864,7 @@ namespace RUINORERP.Business
 
                     if (arap == null)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmrs.ErrorMsg = $"未找到应收应付单ID：{detail.ARAPId}";
                         rmrs.Succeeded = false;
                         return rmrs;
@@ -934,13 +934,13 @@ namespace RUINORERP.Business
 
                 if (result <= 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.ErrorMsg = "更新对账单失败";
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
 
                 // 记录核销成功日志
                 _logger.LogInformation($"红蓝单对冲核销成功完成:对账单号={statement.StatementNo},状态变更为{((StatementStatus)statement.StatementStatus)},已核销明细={statement.tb_FM_StatementDetails.Count}条");
@@ -952,7 +952,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(statement));
                 rmrs.ErrorMsg = $"红蓝单对冲核销失败：{ex.Message}";
                 rmrs.Succeeded = false;

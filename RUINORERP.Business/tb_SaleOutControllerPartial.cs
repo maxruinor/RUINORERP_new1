@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -51,7 +51,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 tb_SaleOutRe entity = new tb_SaleOutRe();
                 //转单
                 if (saleout != null)
@@ -226,13 +226,13 @@ namespace RUINORERP.Business
                 }
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
@@ -258,7 +258,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 #region 结案
                 foreach (var entity in entitys)
                 {
@@ -284,13 +284,13 @@ namespace RUINORERP.Business
 
                 #endregion
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
@@ -443,7 +443,7 @@ namespace RUINORERP.Business
                 var crmUpdateData = PrepareCrmUpdateData(entity);
 
                 // ========== 第二阶段: 事务内执行核心业务 ==========
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 
                 try
                 {
@@ -531,7 +531,7 @@ namespace RUINORERP.Business
                                 if (entity.tb_saleorder.tb_SaleOrderDetails.Any(c => c.SaleOrderDetail_ID == 0))
                                 {
                                     string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加。";
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     throw new Exception(msg);
                                 }
                                 #endregion
@@ -543,7 +543,7 @@ namespace RUINORERP.Business
 
                                 if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，\r\n" +
                                         $"或存在当前销售订单重复录入了销售出库单。";
                                     throw new Exception(msg);
@@ -568,7 +568,7 @@ namespace RUINORERP.Business
                                     //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                     if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                     {
-                                        _unitOfWorkManage.RollbackTran();
+                                        await _unitOfWorkManage.RollbackTranAsync();
                                         string msg = $"销售出库单：{entity.SaleOutNo}审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，入库总数量不能大于订单数量！";
                                         throw new Exception(msg);
                                     }
@@ -582,7 +582,7 @@ namespace RUINORERP.Business
                                 ).Sum(c => c.Quantity);
                                 if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，\r\n" +
                                         $"或存在当前销售订单重复录入了销售出库单，审核失败！";
                                     throw new Exception(msg);
@@ -607,7 +607,7 @@ namespace RUINORERP.Business
                                     //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                     if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                     {
-                                        _unitOfWorkManage.RollbackTran();
+                                        await _unitOfWorkManage.RollbackTranAsync();
                                         string msg = $"销售出库单：{entity.SaleOutNo}审核时，【{prodName}】的出库总数量不能大于订单数量！";
                                         throw new Exception(msg);
                                     }
@@ -618,7 +618,7 @@ namespace RUINORERP.Business
                         //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                         if (entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) > entity.tb_saleorder.TotalQty)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             string msg = $"销售订单：{entity.tb_saleorder.SOrderNo}中，出库总交付数量不能大于订单数量！";
                             throw new Exception(msg);
                         }
@@ -679,7 +679,7 @@ namespace RUINORERP.Business
                         .ExecuteCommandAsync();
 
                     // 提交主事务(快速提交,~50ms)
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                     _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：主事务提交成功");
 
                     if (entity.tb_saleorder != null && entity.tb_saleorder.DataStatus == (int)DataStatus.完结)
@@ -791,13 +791,13 @@ namespace RUINORERP.Business
                 }
                 catch (Exception ex)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw;
                 }
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, $"销售出库单{entity?.SaleOutNo}审核异常: {ex.Message}");
                 rrs.Succeeded = false;
                 rrs.ErrorMsg = ex.Message;
@@ -1199,7 +1199,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
@@ -1378,7 +1378,7 @@ namespace RUINORERP.Business
                                 //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                                 string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 _logger.Debug(msg);
                                 return rs;
                             }
@@ -1392,7 +1392,7 @@ namespace RUINORERP.Business
                             {
                                 string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量。";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 _logger.Debug(msg);
                                 return rs;
                             }
@@ -1407,7 +1407,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty < 0)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     throw new Exception($"销售出库单：{entity.SaleOutNo}反审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，{prodName}的明细不能为负数！");
                                 }
                             }
@@ -1423,7 +1423,7 @@ namespace RUINORERP.Business
 
                                 string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量。";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 _logger.Debug(msg);
                                 return rs;
                             }
@@ -1438,7 +1438,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty < 0)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     throw new Exception($"销售出库单：{entity.SaleOutNo}反审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，{prodName}的明细不能为负数！");
                                 }
                             }
@@ -1527,7 +1527,7 @@ namespace RUINORERP.Business
                         else if (receivableList.Count > 1)
                         {
                             //不会为多行。有错误
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rs.ErrorMsg = $"销售出库单{entity.SaleOutNo}有多张应收款单，数据重复，请检查数据正确性后，再操作。";
                             rs.Succeeded = false;
                             return rs;
@@ -1544,7 +1544,7 @@ namespace RUINORERP.Business
                         else if (PayableList.Count > 1)
                         {
                             //不会为多行。有错误
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rs.ErrorMsg = $"销售出库单{entity.SaleOutNo}有多张佣金的应付款单，数据重复，请检查数据正确性后，再操作。";
                             rs.Succeeded = false;
                             return rs;
@@ -1574,14 +1574,14 @@ namespace RUINORERP.Business
                 }).ExecuteCommandAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;

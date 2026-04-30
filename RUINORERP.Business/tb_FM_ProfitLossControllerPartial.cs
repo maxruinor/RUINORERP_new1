@@ -1,4 +1,4 @@
-// **************************************
+﻿// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
@@ -63,7 +63,7 @@ namespace RUINORERP.Business
 
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;
@@ -78,7 +78,7 @@ namespace RUINORERP.Business
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
 
@@ -86,7 +86,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -155,7 +155,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
@@ -171,7 +171,7 @@ namespace RUINORERP.Business
                 }).ExecuteCommandAsync();
                 if (result <= 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.ErrorMsg = "更新结果为零，请确保数据完整。请检查当前单据数据是否存在。";
                     return rmrs;
                 }
@@ -205,14 +205,14 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;

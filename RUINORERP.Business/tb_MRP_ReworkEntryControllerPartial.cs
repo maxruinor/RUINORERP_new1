@@ -88,7 +88,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
                 List<tb_MRP_ReworkEntryDetail> detailList = new List<tb_MRP_ReworkEntryDetail>();
                 foreach (var item in entity.tb_mrp_reworkreturn.tb_MRP_ReworkEntries)
@@ -110,7 +110,7 @@ namespace RUINORERP.Business
                     {
                         string msg = $"返工退库:{entity.tb_mrp_reworkreturn.ReworkReturnNo}的【{prodName}】的入库数量不能大于返工退库单中对应行的数量\r\n" + $"或存在重复录入了返工入库单。";
                         rs.ErrorMsg = msg;
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         _logger.Debug(msg);
                         return rs;
                     }
@@ -122,7 +122,7 @@ namespace RUINORERP.Business
                         //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                         if (entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].DeliveredQuantity > entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Quantity)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             throw new Exception($"返工入库：{entity.ReworkEntryNo}审核时，对应的退库单：{entity.tb_mrp_reworkreturn.ReworkReturnNo}，入库总数量不能大于退库数量！");
                         }
                     }
@@ -145,7 +145,7 @@ namespace RUINORERP.Business
                     if (inv == null)
                     {
 
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception($"返工入库：{entity.ReworkEntryNo}审核时，对应的入库明细没有对应的库存初始数据！");
                     }
                     else
@@ -219,14 +219,14 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, RUINORERP.Business.EntityLoadService.EntityDataExtractor.ExtractDataContent(entity));
                 rs.Succeeded = false;
                 rs.ErrorMsg = ex.Message;
@@ -250,7 +250,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
@@ -261,7 +261,7 @@ namespace RUINORERP.Business
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception($"返工入库：{entity.ReworkEntryNo}审核时，对应的入库明细没有对应的库存初始数据！");
                     }
                     else
@@ -325,7 +325,7 @@ namespace RUINORERP.Business
 
                             string msg = $"返工退库:{entity.tb_mrp_reworkreturn.ReworkReturnNo}的【{prodName}】的返工入库数量不能大于对应退库时的数量。";
                             rs.ErrorMsg = msg;
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
                                 _logger.Debug(msg);
@@ -341,7 +341,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].DeliveredQuantity < 0)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 throw new Exception($"返工入库：{entity.ReworkEntryNo}反审核时，对应的退库：{entity.tb_mrp_reworkreturn.ReworkReturnNo}，{prodName}的明细不能为负数！");
                             }
                         }
@@ -375,7 +375,7 @@ namespace RUINORERP.Business
                     await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_mrp_reworkreturn).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
                 }
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -383,7 +383,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 return rs;

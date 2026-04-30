@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -190,7 +190,7 @@ namespace RUINORERP.Business
                 }
                 #endregion
 
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 if (entity.tb_saleout != null)
                 {
@@ -210,7 +210,7 @@ namespace RUINORERP.Business
                             exist = entity.tb_saleout.tb_SaleOutDetails.Where(c => c.SaleOutDetail_ID == child.SaleOutDetail_ID).Any();
                             if (!exist)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 View_ProdInfo view_Prod = _cacheManager.GetEntity<View_ProdInfo>(child.ProdDetailID);
                                 if (view_Prod != null)
                                 {
@@ -264,7 +264,7 @@ namespace RUINORERP.Business
                         //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                         if (child.TotalReturnedQty > child.Quantity)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
 
                             var prodinfo = _cacheManager.GetEntity<View_ProdInfo>(child.ProdDetailID);
                             if (prodinfo != null)
@@ -280,7 +280,7 @@ namespace RUINORERP.Business
                         }
                         if (child.TotalReturnedQty < 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             var prodinfo = _cacheManager.GetEntity<View_ProdInfo>(child.ProdDetailID);
                             if (prodinfo != null)
                             {
@@ -330,7 +330,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (orderDetail.TotalReturnedQty > totalOrderTotalQty)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 View_ProdDetail ProdDetail = _cacheManager.GetEntity<View_ProdDetail>(orderDetail.ProdDetailID);
 
                                 if (ProdDetail != null)
@@ -472,7 +472,7 @@ namespace RUINORERP.Business
                             invDict1.TryGetValue(key, out var inv);
                             if (inv == null)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 rrs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法当入销售退货翻新物料。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                                 rrs.Succeeded = false;
                                 return rrs;
@@ -501,7 +501,7 @@ namespace RUINORERP.Business
                                 .ExecuteCommandAsync();
                             if (invMaterialsCounter == 0)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 throw new Exception("翻新物料的库存更新失败！");
                             }
                         }
@@ -621,14 +621,14 @@ namespace RUINORERP.Business
                     it.RefundStatus,
                 }).ExecuteCommandAsync();
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rrs.ReturnObject = entity as T;
                 rrs.Succeeded = true;
                 return rrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 rrs.Succeeded = false;
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
 
@@ -720,7 +720,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //处理业务数据
                 if (!entity.RefundOnly)
                 {
@@ -746,7 +746,7 @@ namespace RUINORERP.Business
                         invDict2.TryGetValue(key, out var inv);
                         if (inv == null)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rrs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法反审核。";
                             rrs.Succeeded = false;
                             return rrs;
@@ -879,7 +879,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (orderDetail.TotalReturnedQty < 0)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 rrs.ErrorMsg = $"销售退回单反审核时，对应销售订单：{entity.tb_saleout.tb_saleorder.SOrderNo}中，明细退回总数量不能小于0！请检查数据后重试！";
                                 rrs.Succeeded = false;
                                 return rrs;
@@ -921,14 +921,14 @@ namespace RUINORERP.Business
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (child.TotalReturnedQty > child.Quantity)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，SKU明细的退回总数量不能大于出库数量！";
                                 rrs.Succeeded = false;
                                 return rrs;
                             }
                             if (child.TotalReturnedQty < 0)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能小于0！请检查数据后重试！";
                                 rrs.Succeeded = false;
                                 return rrs;
@@ -980,7 +980,7 @@ namespace RUINORERP.Business
                                 if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
                                     && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                                 {
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     rrs.ErrorMsg = $"存在【已支付】的{((ReceivePaymentType)returnpayable.ReceivePaymentType).ToString()}单，反审失败,请联系上级财务，或作退回处理。";
                                     rrs.Succeeded = false;
                                     return rrs;
@@ -1003,7 +1003,7 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中,对应的应收红字数据状态为【{(ARAPStatus)returnpayable.ARAPStatus}】。无法反审核！";
                             rrs.Succeeded = false;
                             return rrs;
@@ -1115,14 +1115,14 @@ namespace RUINORERP.Business
                 }).ExecuteCommandAsync();
 
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rrs.Succeeded = true;
                 rrs.ReturnObject = entity as T;
                 return rrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, $"销售退回单：{entity.SaleOut_NO}");
                 rrs.Succeeded = false;
                 rrs.ErrorMsg = ex.Message;

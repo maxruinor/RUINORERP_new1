@@ -1,4 +1,4 @@
-
+﻿
 
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
@@ -322,7 +322,7 @@ namespace RUINORERP.Business
 
                 //相同客户，多个应收可以合成一个收款 。所以明细中就是对应的应收单。
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //收款单 中的明细中的业务类型，对账单，应收应付， 预收付。 三种只会一种？ 暂时不处理混合情况
                 foreach (var group in GroupResult)
                 {
@@ -399,7 +399,7 @@ namespace RUINORERP.Business
                             if (Math.Abs(ARAPTotalPaidAmount) > Math.Abs(totalNetAmount) + tolerance)
                             {
                                 // 提供专业的错误提示，说明业务规则违反情况
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 rmrs.ErrorMsg = $"实付金额（{ARAPTotalPaidAmount}）超过了应收应付抵冲后的净支付金额（{totalNetAmount}）。\n超过部分应作为预付款/预收款处理，而非通过对账单核销。";
                                 rmrs.Succeeded = false;
                                 rmrs.ReturnObject = entity as T;
@@ -1570,7 +1570,7 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
                 return rmrs;
@@ -1593,7 +1593,7 @@ namespace RUINORERP.Business
                         entity?.PaymentNo);
                 }
                 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -3138,7 +3138,7 @@ namespace RUINORERP.Business
                 if (shouldManageTransaction)
                 {
                     _logger.LogDebug("BaseSaveOrUpdateWithChild: 开启新事务");
-                    _unitOfWorkManage.BeginTran();
+                    await _unitOfWorkManage.BeginTranAsync();
                 }
                 else if (isInExistingTransaction)
                 {
@@ -3162,7 +3162,7 @@ namespace RUINORERP.Business
                 // 仅在当前方法管理事务时才提交
                 if (shouldManageTransaction)
                 {
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                 }
 
                 rsms.ReturnObject = entity as T;
@@ -3177,7 +3177,7 @@ namespace RUINORERP.Business
                 // 仅在当前方法管理事务时才回滚
                 if (shouldManageTransaction)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     _logger.LogError(ex, "BaseSaveOrUpdateWithChild: 保存失败，事务已回滚");
                 }
                 else if (isInExistingTransaction)
@@ -3210,7 +3210,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 if (!approvalEntity.ApprovalResults)
                 {
                     if (entitys == null)
@@ -3243,12 +3243,12 @@ namespace RUINORERP.Business
                     }).ExecuteCommandHasChangeAsync();
                 }
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(approvalEntity));
                 return false;
             }

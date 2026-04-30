@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -319,7 +319,7 @@ namespace RUINORERP.Business
 
 
 
-                    _unitOfWorkManage.BeginTran();
+                    await _unitOfWorkManage.BeginTranAsync();
                     var MaterialQtyResult = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder.tb_AS_RepairOrderMaterialDetails).UpdateColumns(it => new
                     {
                         it.ActualSentQty,
@@ -329,7 +329,7 @@ namespace RUINORERP.Business
                     var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                     if (Counter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("维修领料单审核时，库存更新数据为0，更新失败！");
                     }
 
@@ -395,14 +395,14 @@ namespace RUINORERP.Business
                 }
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
@@ -465,7 +465,7 @@ namespace RUINORERP.Business
                         //{
                         //    // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
                         //    rmrs.ErrorMsg = $"sku:{group.Inventory.tb_proddetail.SKU}库存为：{group.Inventory.Quantity}，维修领料数量为：{group.RepairQty}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
-                        //    _unitOfWorkManage.RollbackTran();
+                        //    await _unitOfWorkManage.RollbackTranAsync();
                         //    rmrs.Succeeded = false;
                         //    return rmrs;
                         //}
@@ -545,7 +545,7 @@ namespace RUINORERP.Business
                         }
                     }
 
-                    _unitOfWorkManage.BeginTran();
+                    await _unitOfWorkManage.BeginTranAsync();
                     var MaterialQtyResult = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder.tb_AS_RepairOrderMaterialDetails).UpdateColumns(it => new
                     {
                         it.ActualSentQty,
@@ -556,7 +556,7 @@ namespace RUINORERP.Business
                     var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                     if (Counter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("库存更新数据为0，更新失败！");
                     }
 
@@ -611,14 +611,14 @@ namespace RUINORERP.Business
                     }).ExecuteCommandAsync();
                 }
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;

@@ -38,7 +38,7 @@ namespace RUINORERP.Business
         /// <param name="transaction">库存流水实体</param>
         /// <param name="useTransaction">是否使用当前事务（默认true）</param>
         /// <returns>是否成功</returns>
-        public bool RecordTransaction(tb_InventoryTransaction transaction, bool useTransaction = true)
+        public async Task<bool> RecordTransaction(tb_InventoryTransaction transaction, bool useTransaction = true)
         {
             if (transaction == null)
                 throw new ArgumentNullException(nameof(transaction));
@@ -52,30 +52,31 @@ namespace RUINORERP.Business
 
             // 获取数据库客户端
             var dbClient = _unitOfWorkManage.GetDbClient();
-            
+
             // 检查当前事务状态（使用TranCount判断是否在事务中）
             bool inTransaction = _unitOfWorkManage.TranCount > 0;
-            
+
             // 如果要求使用事务但当前没有事务，则开启新事务
             if (useTransaction && !inTransaction)
             {
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 try
                 {
-                    var result = dbClient.Insertable(transaction).ExecuteCommand();
-                    _unitOfWorkManage.CommitTran();
+                    var result = await dbClient.Insertable(transaction).ExecuteCommandAsync();
+                    await _unitOfWorkManage.CommitTranAsync();
                     return result > 0;
                 }
                 catch (Exception ex)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw new Exception($"插入库存流水失败（独立事务），TranID：{transaction.TranID}，错误：{ex.Message}", ex);
                 }
             }
             else
             {
                 // 在当前事务中执行，或直接执行（不使用事务）
-                return dbClient.Insertable(transaction).ExecuteCommand() > 0;
+                var result = await dbClient.Insertable(transaction).ExecuteCommandAsync();
+                return result > 0;
             }
         }
 
@@ -102,32 +103,22 @@ namespace RUINORERP.Business
                 tran.TransactionTime = now;
             }
 
-            // 获取数据库客户端
+            // ✅ P0修复：强制使用当前事务，禁止嵌套事务
+            // 如果调用方没有开启事务，则直接插入（不使用事务）
             var dbClient = _unitOfWorkManage.GetDbClient();
-            
-            // 检查当前事务状态（使用TranCount判断是否在事务中）
             bool inTransaction = _unitOfWorkManage.TranCount > 0;
             
-            // 如果要求使用事务但当前没有事务，则开启新事务
-            if (useTransaction && !inTransaction)
+            if (!inTransaction)
             {
-                _unitOfWorkManage.BeginTran();
-                try
-                {
-                    var rs = await dbClient.Insertable(validTransactions)
-                        .ExecuteReturnSnowflakeIdListAsync();
-                    _unitOfWorkManage.CommitTran();
-                    return rs.Count > 0;
-                }
-                catch (Exception ex)
-                {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception($"批量插入库存流水失败（独立事务），记录数：{validTransactions.Count}，错误：{ex.Message}", ex);
-                }
+                // ⚠️ 警告：不在事务中执行批量插入
+                _logger.LogWarning($"[BatchRecordTransactions] 警告：当前不在事务中，直接插入 {validTransactions.Count} 条库存流水记录");
+                var rs = await dbClient.Insertable(validTransactions)
+                    .ExecuteReturnSnowflakeIdListAsync();
+                return rs.Count > 0;
             }
             else
             {
-                // 在当前事务中执行，或直接执行（不使用事务）
+                // ✅ 在当前事务中执行（推荐方式）
                 var rs = await dbClient.Insertable(validTransactions)
                     .ExecuteReturnSnowflakeIdListAsync();
                 return rs.Count > 0;
@@ -143,14 +134,14 @@ namespace RUINORERP.Business
         /// <param name="initialRetryDelayMs">初始重试延迟（毫秒，默认100）</param>
         /// <returns>是否成功</returns>
         public async Task<bool> BatchRecordTransactionsWithRetry(
-            List<tb_InventoryTransaction> transactions, 
+            List<tb_InventoryTransaction> transactions,
             bool useTransaction = true,
             int maxRetries = 3,
             int initialRetryDelayMs = 100)
         {
             int retryCount = 0;
             int retryDelayMs = initialRetryDelayMs;
-            
+
             while (retryCount < maxRetries)
             {
                 try
@@ -160,15 +151,15 @@ namespace RUINORERP.Business
                 catch (Exception ex)
                 {
                     retryCount++;
-                    
+
                     // 检查是否为死锁或锁超时错误
-                    bool isLockError = ex.Message.Contains("deadlock") || 
+                    bool isLockError = ex.Message.Contains("deadlock") ||
                                       ex.Message.Contains("1205") || // MySQL锁超时
                                       ex.Message.Contains("锁") ||
                                       ex.Message.Contains("lock") ||
                                       ex.Message.Contains("timeout") ||
                                       ex.Message.Contains("deadlocked");
-                    
+
                     if (!isLockError || retryCount >= maxRetries)
                     {
                         // 不是锁错误或已达到最大重试次数，重新抛出异常
@@ -176,18 +167,18 @@ namespace RUINORERP.Business
                             $"批量插入库存流水失败，重试次数：{retryCount}/{maxRetries}，" +
                             $"记录数：{transactions?.Count ?? 0}，错误：{ex.Message}", ex);
                     }
-                    
+
                     // 等待后重试（指数退避）
                     Console.WriteLine(
                         $"检测到锁冲突，第{retryCount}次重试，等待{retryDelayMs}ms，" +
                         $"记录数：{transactions?.Count ?? 0}，错误：{ex.Message}");
                     await Task.Delay(retryDelayMs);
-                    
+
                     // 指数退避：每次延迟时间翻倍
                     retryDelayMs = Math.Min(retryDelayMs * 2, 2000); // 最大2秒
                 }
             }
-            
+
             return false;
         }
 

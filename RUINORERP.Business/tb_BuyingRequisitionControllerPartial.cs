@@ -49,7 +49,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 #region 结案
                 foreach (var entity in entitys)
                 {
@@ -80,14 +80,14 @@ namespace RUINORERP.Business
 
                 #endregion
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 rs.ErrorMsg = ex.Message;
                 _logger.Error(ex);
                 rs.Succeeded = false;
@@ -119,7 +119,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 // 使用统一状态管理器设置状态
@@ -128,7 +128,7 @@ namespace RUINORERP.Business
                 {
                     rmrs.ErrorMsg = statusResult.ErrorMessage;
                     rmrs.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     return rmrs;
                 }
 
@@ -142,14 +142,14 @@ namespace RUINORERP.Business
                                     .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 rmrs.ErrorMsg = ex.Message;
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 return rmrs;
@@ -177,7 +177,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 foreach (var child in entity.tb_BuyingRequisitionDetails)
@@ -191,7 +191,7 @@ namespace RUINORERP.Business
                 {
                     rs.ErrorMsg = statusResult.ErrorMessage;
                     rs.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     return rs;
                 }
 
@@ -199,14 +199,14 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisition>(entity).ExecuteCommandAsync();
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 return rs;

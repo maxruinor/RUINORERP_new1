@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -90,7 +90,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
@@ -117,7 +117,7 @@ namespace RUINORERP.Business
                         if (!entity.tb_prodborrowing.tb_ProdBorrowingDetails.Any(c => c.ProdDetailID == child.ProdDetailID))
                         {
                             rs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rs.ErrorMsg = $"归还明细中有产品不属于对应的借出单!请检查数据后重试！";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
@@ -151,7 +151,7 @@ namespace RUINORERP.Business
                         {
                             string msg = $"归还单:{entity.tb_prodborrowing.BorrowNo}的【{prodName}】的归还数量不能大于借出中对应行的数量，\r\n" +
                                 $"或存在当前借出单重复录入了归还单。";
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             // ✅ 修复：不再弹出MessageBox，而是返回错误信息
                             _logger.Debug(msg);
                             rs.ErrorMsg = msg;
@@ -166,7 +166,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 归还数量 给出警告实际操作中 
                             if (entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ReQty > entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Qty)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 throw new Exception($"归还单：{entity.ReturnNo}审核时，【{prodName}】的归还总数不能大于借出时数量！");
                             }
                         }
@@ -176,7 +176,7 @@ namespace RUINORERP.Business
                     //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                     if (entity.tb_prodborrowing.tb_ProdBorrowingDetails.Sum(c => c.ReQty) > entity.tb_prodborrowing.TotalQty)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception($"归还单：{entity.ReturnNo}审核时，归还总数不能大于借出时数量！");
                     }
 
@@ -277,7 +277,7 @@ namespace RUINORERP.Business
                     //新增库存中有重复的商品，操作失败。请联系管理员。
                     rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rs.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
+                    await _unitOfWorkManage.RollbackTranAsync(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
                     _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                     return rs;
                 }
@@ -295,7 +295,7 @@ namespace RUINORERP.Business
                                              .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                              .ExecuteCommandHasChangeAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -303,7 +303,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.Succeeded = false;
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
@@ -357,7 +357,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
 
@@ -399,7 +399,7 @@ namespace RUINORERP.Business
                         string msg = $"归还单:{entity.tb_prodborrowing.BorrowNo}的【{prodName}】的归还数量不能于小于零，\r\n\" " +
                             "反审失败！";
                         rs.ErrorMsg = msg;
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         _logger.Debug(msg);
                         return rs;
                     }
@@ -488,7 +488,7 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -496,7 +496,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 rs.Succeeded = false;
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;

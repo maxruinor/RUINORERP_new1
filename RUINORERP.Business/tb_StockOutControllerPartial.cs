@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -64,7 +64,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StockOutDetails)
@@ -73,14 +73,14 @@ namespace RUINORERP.Business
                     // ✅ 从预加载字典获取（死锁优化）
                     if (!invDict.TryGetValue((child.ProdDetailID, child.Location_ID), out var inv) || inv == null)
                     {
-                        _unitOfWorkManage.RollbackTran(); 
+                        await _unitOfWorkManage.RollbackTranAsync(); 
                         throw new Exception($"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员");
                     }
                     
                     if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Qty) < 0)
                     {
                         rsms.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rsms.Succeeded = false;
                         return rsms;
                     }
@@ -165,7 +165,7 @@ namespace RUINORERP.Business
                                               .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                               .ExecuteCommandHasChangeAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
 
                 // entitys[ii].tb_purorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核入库单:" + entitys[ii].PurEntryNo + "结案。"; ;
                 rsms.ReturnObject = entity as T;
@@ -175,7 +175,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rsms.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rsms;
@@ -210,7 +210,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 
                 //更新拟销售量减少
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
@@ -250,7 +250,7 @@ namespace RUINORERP.Business
                     //新增库存中有重复的商品，操作失败。请联系管理员。
                     rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rs.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
+                    await _unitOfWorkManage.RollbackTranAsync(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
                     _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                     return rs;
 
@@ -327,7 +327,7 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -335,7 +335,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 //  _logger.Error(approvalEntity.bizName + "事务回滚");
                 return rs;

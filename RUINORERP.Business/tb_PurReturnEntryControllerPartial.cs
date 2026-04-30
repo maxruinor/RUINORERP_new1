@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -68,7 +68,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
 
@@ -83,7 +83,7 @@ namespace RUINORERP.Business
                 if (entity.tb_purentryre == null)
                 {
                     rs.ErrorMsg = $"没有找到对应的采购退货单!请检查数据后重试！";
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -100,7 +100,7 @@ namespace RUINORERP.Business
                     if (!entity.is_force_offset && !entity.tb_purentryre.tb_PurEntryReDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                     {
                         rs.Succeeded = false;
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.ErrorMsg = $"入库明细中有产品不属于采购退货单!请检查数据后重试！";
                         return rs;
                     }
@@ -118,7 +118,7 @@ namespace RUINORERP.Business
                     var key = (child.ProdDetailID, child.Location_ID);
                     if (!invDict.TryGetValue(key, out var inv) || inv == null)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法进行采购退货入库。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                         rs.Succeeded = false;
                         return rs;
@@ -222,7 +222,7 @@ namespace RUINORERP.Business
                             //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                             string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】在明细中拥有多行记录，必须使用引用的方式添加。";
                             rs.ErrorMsg = msg;
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             _logger.Debug(msg);
                             return rs;
                         }
@@ -234,7 +234,7 @@ namespace RUINORERP.Business
                         {
                             string msg = $"【{prodName}】的采购退货入库数量不能大于退货单中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购退货入库单。";
                             rs.ErrorMsg = msg;
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             _logger.Debug(msg);
                             return rs;
                         }
@@ -250,7 +250,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 throw new Exception($"采购退货入库：{entity.PurReEntryNo}审核时，对应的采购退货单：{entity.tb_purentryre.PurEntryReNo}中，入库总数量不能大于退货数量！");
                             }
                         }
@@ -266,7 +266,7 @@ namespace RUINORERP.Business
                         {
                             string msg = $"采购退回入库单:{entity.PurReEntryNo}的【{prodName}】的入库数量不能大于【采购退货单】中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购入库单。";
                             rs.ErrorMsg = msg;
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             _logger.Debug(msg);
                             return rs;
                         }
@@ -281,7 +281,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 throw new Exception($"采购退回入库单：{entity.PurReEntryNo}审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，入库总数量不能大于退货单数量！");
                             }
                         }
@@ -344,21 +344,21 @@ namespace RUINORERP.Business
                     }
                     catch (Exception ex)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("采购退回入库时，财务数据处理失败，审核失败！");
                     }
                 }
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, RUINORERP.Business.EntityLoadService.EntityDataExtractor.ExtractDataContent(entity));
                 rs.Succeeded = false;
                 rs.ErrorMsg = ex.Message;
@@ -397,7 +397,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 // 创建反向库存流水记录列表
@@ -475,7 +475,7 @@ namespace RUINORERP.Business
                     //新增库存中有重复的商品，操作失败。请联系管理员。
                     rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
                     rs.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
+                    await _unitOfWorkManage.RollbackTranAsync(); // ⚠️ P0 BUG修复：事务中返回前必须回滚
                     _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                     return rs;
                 }
@@ -536,7 +536,7 @@ namespace RUINORERP.Business
                                 //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                                 string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】在退货单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
                                     _logger.Debug(msg);
@@ -553,7 +553,7 @@ namespace RUINORERP.Business
                             {
                                 string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】的入库数量不能大于退货单中对应行的数量。";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
                                     _logger.Debug(msg);
@@ -573,7 +573,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity < 0)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     throw new Exception($"入库单：{entity.PurReEntryNo}反审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，{prodName}的明细不能为负数！"); throw new Exception($"入库单：{entity.PurReEntryNo}审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，入库总数量不能大于退货单数量！");
                                 }
                             }
@@ -587,7 +587,7 @@ namespace RUINORERP.Business
 
                                 string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】的入库数量不能大于退货单中对应行的数量。";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
                                     _logger.Debug(msg);
@@ -605,7 +605,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity < 0)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     throw new Exception($"入库单：{entity.PurReEntryNo}反审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，{prodName}的明细不能为负数！");
                                 }
                             }
@@ -642,7 +642,7 @@ namespace RUINORERP.Business
                 }
 
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -650,7 +650,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 return rs;

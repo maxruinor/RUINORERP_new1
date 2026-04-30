@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -79,13 +79,13 @@ namespace RUINORERP.Business
                 );
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 //如果是应收已经有收款记录，则生成反向收款，否则直接删除应收
                 var Antiresult = await AntiApplyManualPaymentAllocation(entity, (ReceivePaymentType)entity.ReceivePaymentType, false, false);
                 if (!Antiresult)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.ErrorMsg = $"应{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}款单反核销操作失败";
                     return rmrs;
                 }
@@ -102,7 +102,7 @@ namespace RUINORERP.Business
                     if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
                         && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmrs.ErrorMsg = $"存在【已支付】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单，反审失败,请联系上级财务，或作退回处理。";
                         rmrs.Succeeded = false;
                         return rmrs;
@@ -137,7 +137,7 @@ namespace RUINORERP.Business
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
 
@@ -145,7 +145,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -331,7 +331,7 @@ namespace RUINORERP.Business
 
                 BusinessHelper.Instance.ApproverEntity(entity);
 
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                 {
@@ -350,7 +350,7 @@ namespace RUINORERP.Business
                 }).ExecuteCommandAsync();
                 if (result <= 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.ErrorMsg = "更新结果为零，请确保数据完整。请检查当前单据数据是否存在。";
                     return rmrs;
                 }
@@ -373,14 +373,14 @@ namespace RUINORERP.Business
                 }
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -1072,7 +1072,7 @@ namespace RUINORERP.Business
                 var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 await settlementController.GenerateSettlement(receivablePayable, receivablePayable.LocalBalanceAmount, receivablePayable.ForeignBalanceAmount);
 
@@ -1106,14 +1106,14 @@ namespace RUINORERP.Business
                     it.Remark,
                 }).ExecuteCommandAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 returnResults.Succeeded = true;
                 returnResults.ReturnObject = receivablePayable as tb_FM_ReceivablePayable;
                 return returnResults;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(receivablePayable));
                 returnResults.ErrorMsg = ex.Message;
                 return returnResults;
@@ -1144,7 +1144,7 @@ namespace RUINORERP.Business
                 if (UseTransaction)
                 {
                     // 开启事务，保证数据一致性
-                    _unitOfWorkManage.BeginTran();
+                    await _unitOfWorkManage.BeginTranAsync();
                 }
 
                 #region 反写预收付款
@@ -1258,7 +1258,7 @@ namespace RUINORERP.Business
                         case (int)ARAPStatus.已冲销:
                             if (UseTransaction)
                             {
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                             }
                             string msg = $"应{(ReceivePaymentType)payable.ReceivePaymentType}单状态为【{((ARAPStatus)payable.ARAPStatus.Value).ToString()}】，无法反核销。请联系管理员";
                             _logger.Debug(msg);
@@ -1283,7 +1283,7 @@ namespace RUINORERP.Business
                                 //正常不会到这里的。
                                 if (UseTransaction)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                 }
                                 string errormsg = $"应{(ReceivePaymentType)payable.ReceivePaymentType}单状态为【{payable.ARAPStatus}】未核销金额为{payable.LocalBalanceAmount}，核销金额为{payable.LocalPaidAmount}，无法反核销";
 
@@ -1420,7 +1420,7 @@ namespace RUINORERP.Business
                 // 注意信息的完整性
                 if (UseTransaction)
                 {
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                 }
                 result = true;
             }
@@ -1428,7 +1428,7 @@ namespace RUINORERP.Business
             {
                 if (UseTransaction)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     _logger.Error(ex, EntityDataExtractor.ExtractDataContent(payable));
                 }
                 result = false;
@@ -1466,7 +1466,7 @@ namespace RUINORERP.Business
                 if (UseTransaction)
                 {
                     // 开启事务，保证数据一致性
-                    _unitOfWorkManage.BeginTran();
+                    await _unitOfWorkManage.BeginTranAsync();
                 }
 
                 #region 反写预收付款
@@ -1807,7 +1807,7 @@ namespace RUINORERP.Business
                 // 注意信息的完整性
                 if (UseTransaction)
                 {
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                 }
                 result = true;
             }
@@ -1815,7 +1815,7 @@ namespace RUINORERP.Business
             {
                 if (UseTransaction)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                 }
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(payable));
                 result = false;
@@ -1844,7 +1844,7 @@ namespace RUINORERP.Business
                 if (UseTransaction)
                 {
                     // 开启事务，保证数据一致性
-                    _unitOfWorkManage.BeginTran();
+                    await _unitOfWorkManage.BeginTranAsync();
                 }
                 var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
                 var fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
@@ -2057,7 +2057,7 @@ namespace RUINORERP.Business
                 // 注意信息的完整性
                 if (UseTransaction)
                 {
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                 }
                 result = true;
             }
@@ -2081,7 +2081,7 @@ namespace RUINORERP.Business
                 
                 if (UseTransaction)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 }
                 result = false;
@@ -3212,7 +3212,7 @@ namespace RUINORERP.Business
         //    try
         //    {
         //        // 开启事务，保证数据一致性
-        //        _unitOfWorkManage.BeginTran();
+        //        await _unitOfWorkManage.BeginTranAsync();
         //        if (!approvalEntity.ApprovalResults)
         //        {
         //            if (entitys == null)
@@ -3237,7 +3237,7 @@ namespace RUINORERP.Business
         //            }
         //        }
         //        // 注意信息的完整性
-        //        _unitOfWorkManage.CommitTran();
+        //        await _unitOfWorkManage.CommitTranAsync();
 
         //        //_logger.Info(approvalEntity.bizName + "审核事务成功");
         //        return true;
@@ -3245,7 +3245,7 @@ namespace RUINORERP.Business
         //    catch (Exception ex)
         //    {
         //        _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
-        //        _unitOfWorkManage.RollbackTran();
+        //        await _unitOfWorkManage.RollbackTranAsync();
         //        _logger.Error(approvalEntity.bizName + "事务回滚");
         //        return false;
         //    }
@@ -3271,7 +3271,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 #region 结案
                 //更新拟销售量  减少
                 for (int m = 0; m < entitys.Count; m++)
@@ -3311,13 +3311,13 @@ namespace RUINORERP.Business
                 }
                 #endregion
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;

@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -50,7 +50,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 
                 // 设置报销单状态为新建和未审核
                 entity.DataStatus = (int)DataStatus.新建;
@@ -80,7 +80,7 @@ namespace RUINORERP.Business
                         
                         if (invalidPaymentRecords.Any())
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             var invalidBillNos = string.Join(", ", invalidPaymentRecords.Select(c => c.PaymentNo));
                             rmrs.ErrorMsg = $"存在【已支付】或【已审核】的付款单（{invalidBillNos}），不能反审，请联系上级财务，或作退回处理。";
                             rmrs.Succeeded = false;
@@ -99,7 +99,7 @@ namespace RUINORERP.Business
                     }
                 }
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
 
@@ -107,7 +107,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = $"反审核失败：{ex.Message}";
                 return rmrs;
@@ -123,7 +123,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
                     }
                 }
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
                 return rmrs;
@@ -182,7 +182,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
@@ -214,7 +214,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 if (!approvalEntity.ApprovalResults)
                 {
                     if (entitys == null)
@@ -248,7 +248,7 @@ namespace RUINORERP.Business
                     }
                 }
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
 
                 //_logger.Info(approvalEntity.bizName + "审核事务成功");
                 return true;
@@ -256,7 +256,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(approvalEntity.bizName + "事务回滚");
                 return false;
             }
@@ -279,7 +279,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 #region 结案
                 //更新拟销售量  减少
                 for (int m = 0; m < entitys.Count; m++)
@@ -298,13 +298,13 @@ namespace RUINORERP.Business
                 }
                 #endregion
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;

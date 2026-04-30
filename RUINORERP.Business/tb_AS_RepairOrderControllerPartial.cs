@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -62,7 +62,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 //// 后面可以优化  需求单 请求这种。
                 //if (entity.tb_as_aftersaleapply == null && entity.ASApplyID > 0)
@@ -101,7 +101,7 @@ namespace RUINORERP.Business
                     // 获取付款方式信息
                     if (_appContext.PaymentMethodOfPeriod == null)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmrs.Succeeded = false;
                         rmrs.ErrorMsg = $"请先配置付款方式信息！";
                         if (_appContext.SysConfig.ShowDebugInfo)
@@ -116,14 +116,14 @@ namespace RUINORERP.Business
                 }
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
@@ -351,12 +351,12 @@ namespace RUINORERP.Business
                 }
 
 
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw new Exception("库存更新数据为0，更新失败！");
                 }
 
@@ -372,14 +372,14 @@ namespace RUINORERP.Business
                     it.RepairStatus,
                 }).ExecuteCommandAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, "维修工单处理时，事务回滚" + ex.Message);
                 rmrs.ErrorMsg = "维修工单处理时 事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
@@ -436,7 +436,7 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var allKeys2 = new List<(long ProdDetailID, long LocationID)>();
@@ -478,7 +478,7 @@ namespace RUINORERP.Business
                         if (inv == null)
                         {
                             //实际不会出现这个情况。因为审核时创建了。
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             throw new Exception("库存数据不存在,反审失败！");
                         }
 
@@ -553,7 +553,7 @@ namespace RUINORERP.Business
                                     if (PaymentList.Count > 1 && PaymentList.Sum(c => c.TotalLocalAmount) == 0 && PaymentList.Any(c => c.IsReversed))
                                     {
                                         //退款冲销过
-                                        _unitOfWorkManage.RollbackTran();
+                                        await _unitOfWorkManage.RollbackTranAsync();
                                         rmrs.ErrorMsg = $" 维修工单{Paymentable.SourceBillNo}的应收款单{Paymentable.ARAPNo}状态为【已冲销】，不能反审,只能【取消】作废。";
                                         rmrs.Succeeded = false;
                                         return rmrs;
@@ -573,7 +573,7 @@ namespace RUINORERP.Business
                                         }
                                         else
                                         {
-                                            _unitOfWorkManage.RollbackTran();
+                                            await _unitOfWorkManage.RollbackTranAsync();
                                             rmrs.ErrorMsg = $"对应的收款单{Payment.PaymentNo}状态为【{(PaymentStatus)Payment.PaymentStatus}】，不能反审\r\n" +
                                                 $"只能进行冲销处理";
                                             rmrs.Succeeded = false;
@@ -630,13 +630,13 @@ namespace RUINORERP.Business
                 if (result > 0)
                 {
                     // 注意信息的完整性
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                     rmrs.ReturnObject = entity as T;
                     rmrs.Succeeded = true;
                 }
                 else
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
 
                     rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_AS_RepairOrder)).ToString() + "事务回滚=> 保存出错";
                     rmrs.Succeeded = false;
@@ -644,7 +644,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
 
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_AS_RepairOrder)).ToString() + "事务回滚=>" + ex.Message;

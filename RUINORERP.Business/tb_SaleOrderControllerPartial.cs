@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
@@ -59,7 +59,7 @@ namespace RUINORERP.Business
                 List<tb_SaleOrderDetail> detailsToAdd = new List<tb_SaleOrderDetail>();
 
                 // 1. 保存主表
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 try
                 {
                     if (isUpdate)
@@ -70,11 +70,11 @@ namespace RUINORERP.Business
                     {
                         await db.Insertable(order).ExecuteReturnSnowflakeIdAsync();
                     }
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                 }
                 catch (Exception ex)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     result.Succeeded = false;
                     result.ErrorMsg = ex.Message;
                     throw;
@@ -107,7 +107,7 @@ namespace RUINORERP.Business
                     }
 
                     // 批量处理明细（事务内）
-                    _unitOfWorkManage.BeginTran();
+                    await _unitOfWorkManage.BeginTranAsync();
                     try
                     {
                         // 批量删除
@@ -130,11 +130,11 @@ namespace RUINORERP.Business
                             await db.Insertable(detailsToAdd).ExecuteCommandAsync();
                         }
 
-                        _unitOfWorkManage.CommitTran();
+                        await _unitOfWorkManage.CommitTranAsync();
                     }
                     catch (Exception ex)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         result.Succeeded = false;
                         result.ErrorMsg = ex.Message;
                         throw;
@@ -284,14 +284,14 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 // 更新库存拟销售量
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw new Exception("库存更新数据为0，更新失败！");
                 }
 
@@ -311,7 +311,7 @@ namespace RUINORERP.Business
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 _logger.LogInformation($"销售订单{entity.SOrderNo}审核：主事务提交成功");
 
                 // 【事务优化】财务独立事务处理（主事务提交后执行）
@@ -339,7 +339,7 @@ namespace RUINORERP.Business
                     var transactionState = _unitOfWorkManage.GetTransactionState();
                     if (transactionState.IsActive)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         _logger.LogInformation($"销售订单审核：事务已回滚");
                     }
                 }
@@ -742,7 +742,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 if (!approvalEntity.ApprovalResults)
                 {
@@ -808,14 +808,14 @@ namespace RUINORERP.Business
                 }
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
 
                 return true;
             }
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, approvalEntity.bizName + "事务回滚");
                 return false;
             }
@@ -1233,7 +1233,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_SaleOrder entity = model as tb_SaleOrder;
@@ -1272,14 +1272,14 @@ namespace RUINORERP.Business
                 }
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rsms.ReturnObject = entity as T;
                 entity.PrimaryKeyID = entity.SOrder_ID;
                 rsms.Succeeded = rs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 //出错后，取消生成的ID等值
                 command.Undo();
                 _logger.Error(ex);
@@ -1358,7 +1358,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, int SaleQtySum)>();
 
@@ -1375,7 +1375,7 @@ namespace RUINORERP.Business
                         if (!invDict4.TryGetValue(key, out var inv) || inv == null)
                         {
                             //实际不会出现这个情况。因为审核时创建了。
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             throw new Exception("库存数据不存在,反审失败！");
                         }
 
@@ -1450,7 +1450,7 @@ namespace RUINORERP.Business
                                 if (PaymentList.Count > 1 && PaymentList.Sum(c => c.TotalLocalAmount) == 0 && PaymentList.Any(c => c.IsReversed))
                                 {
                                     //退款冲销过
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     rmrs.ErrorMsg = $"销售订单{PrePayment.SourceBillNo}的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能反审,只能【取消】作废。";
                                     rmrs.Succeeded = false;
                                     return rmrs;
@@ -1470,7 +1470,7 @@ namespace RUINORERP.Business
                                     }
                                     else
                                     {
-                                        _unitOfWorkManage.RollbackTran();
+                                        await _unitOfWorkManage.RollbackTranAsync();
                                         rmrs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，反审失败\r\n" +
                                             $"需将预收款单【退款】，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
                                             $"当前订单【作废】后，重新录入正确的销售订单。";
@@ -1521,13 +1521,13 @@ namespace RUINORERP.Business
                 if (result > 0)
                 {
                     // 注意信息的完整性
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                     rmrs.ReturnObject = entity as T;
                     rmrs.Succeeded = true;
                 }
                 else
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
 
                     rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=> 保存出错";
                     rmrs.Succeeded = false;
@@ -1535,7 +1535,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
 
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
@@ -1558,13 +1558,13 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //判断是否需要财务更新
                 if (!entity.ApprovalResults.HasValue || (entity.DataStatus == (int)DataStatus.草稿 || entity.DataStatus == (int)DataStatus.新建) || entity.ApprovalResults.Value == false)
                 {
 
                     rmrs.ErrorMsg = "只能更新已审核且通过的订单";
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
@@ -1586,12 +1586,12 @@ namespace RUINORERP.Business
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity.tb_SaleOuts).UpdateColumns(it => new { it.PayStatus, it.Paytype_ID, it.ProjectGroup_ID }).ExecuteCommandAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
 
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
                 _logger.Error(ex);
@@ -2035,7 +2035,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 var authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
@@ -2067,7 +2067,7 @@ namespace RUINORERP.Business
                                     else
                                     {
                                         //退款冲销过
-                                        _unitOfWorkManage.RollbackTran();
+                                        await _unitOfWorkManage.RollbackTranAsync();
                                         rmrs.ErrorMsg = $"销售订单{PrePayment.SourceBillNo}的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能直接取消订单,只能【预收款退款】作废。";
                                         rmrs.Succeeded = false;
                                         return rmrs;
@@ -2103,7 +2103,7 @@ namespace RUINORERP.Business
                                         }
                                         else
                                         {
-                                            _unitOfWorkManage.RollbackTran();
+                                            await _unitOfWorkManage.RollbackTranAsync();
                                             rmrs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，取消失败\r\n" +
                                                 $"需将预收款单【退款】，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
                                                 $"当前订单【作废】后，重新录入正确的销售订单。";
@@ -2127,7 +2127,7 @@ namespace RUINORERP.Business
                                 || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.混合结清)
                             {
                                 rmrs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请撤销核销，再退款处理,或部分退款";
-                                _unitOfWorkManage.RollbackTran();
+                                await _unitOfWorkManage.RollbackTranAsync();
                                 rmrs.Succeeded = false;
                                 return rmrs;
                             }
@@ -2149,7 +2149,7 @@ namespace RUINORERP.Business
                                 else
                                 {
                                     rmrs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请进行【退款】处理。";
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     rmrs.Succeeded = false;
                                     return rmrs;
                                 }
@@ -2187,7 +2187,7 @@ namespace RUINORERP.Business
                     && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                 {
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能直接取消订单,请进行退货退款处理。";
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
@@ -2235,13 +2235,13 @@ namespace RUINORERP.Business
                 if (result > 0)
                 {
                     // 注意信息的完整性
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                     rmrs.ReturnObject = entity;
                     rmrs.Succeeded = true;
                 }
                 else
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
 
                     rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=> 订单取消失败";
                     rmrs.Succeeded = false;
@@ -2249,7 +2249,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
 
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;

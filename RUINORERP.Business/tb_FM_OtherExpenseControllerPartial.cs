@@ -54,7 +54,7 @@ namespace RUINORERP.Business
             {
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -77,7 +77,7 @@ namespace RUINORERP.Business
                 }
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rrs.ReturnObject = entity as T;
                 rrs.Succeeded = true;
                 return rrs;
@@ -85,7 +85,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rrs.ErrorMsg = ex.Message;
                 rrs.Succeeded = false;
@@ -111,7 +111,7 @@ namespace RUINORERP.Business
             {
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalOpinions = "反审核";
@@ -136,7 +136,7 @@ namespace RUINORERP.Business
                         if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
                             && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             if (entity.EXPOrINC==true)
                             {
                                 rrs.ErrorMsg = "存在【已支付】的收款单，不能反审,请联系上级财务，或作退回处理。";
@@ -167,14 +167,14 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rrs.Succeeded = true;
                 return rrs;
             }
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rrs.ErrorMsg = ex.Message;
                 rrs.Succeeded = false;

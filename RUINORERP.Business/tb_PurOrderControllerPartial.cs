@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -123,7 +123,7 @@ namespace RUINORERP.Business
                 // 批量更新库存（事务内）
                 if (invUpdateList.Any())
                 {
-                    _unitOfWorkManage.BeginTran();
+                    await _unitOfWorkManage.BeginTranAsync();
                     try
                     {
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
@@ -132,11 +132,11 @@ namespace RUINORERP.Business
                         {
                             _logger.Debug($"更新库存结果为0行，请检查数据！");
                         }
-                        _unitOfWorkManage.CommitTran();
+                        await _unitOfWorkManage.CommitTranAsync();
                     }
                     catch (Exception ex)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.Succeeded = false;
                         rs.ErrorMsg = ex.Message;
                         return rs;
@@ -168,7 +168,7 @@ namespace RUINORERP.Business
                                         PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核)
                                     {
                                         // 开启独立事务处理预付款单
-                                        _unitOfWorkManage.BeginTran();
+                                        await _unitOfWorkManage.BeginTranAsync();
                                         try
                                         {
                                             //没有付款记录的，直接删除关闭
@@ -182,7 +182,7 @@ namespace RUINORERP.Business
                                             {
                                                 if (PaymentList.Count > 1 && PaymentList.Sum(c => c.TotalLocalAmount) == 0 && PaymentList.Any(c => c.IsReversed))
                                                 {
-                                                    _unitOfWorkManage.RollbackTran();
+                                                    await _unitOfWorkManage.RollbackTranAsync();
                                                     _logger.LogWarning($"采购订单{PrePayment.SourceBillNo}的预付款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能作废结案，只能【预付款退款】作废。");
                                                 }
                                                 else
@@ -196,18 +196,18 @@ namespace RUINORERP.Business
                                                     }
                                                     else
                                                     {
-                                                        _unitOfWorkManage.RollbackTran();
+                                                        await _unitOfWorkManage.RollbackTranAsync();
                                                         _logger.LogWarning($"对应的预付款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，作废结案失败\r\n" +
                                                             $"需将预付款单【退款】，对付款单{Payment.PaymentNo}进行冲销处理\r\n" +
                                                             $"当前订单【作废结案】后，重新录入正确的采购订单。");
                                                     }
                                                 }
                                             }
-                                            _unitOfWorkManage.CommitTran();
+                                            await _unitOfWorkManage.CommitTranAsync();
                                         }
                                         catch (Exception ex)
                                         {
-                                            _unitOfWorkManage.RollbackTran();
+                                            await _unitOfWorkManage.RollbackTranAsync();
                                             _logger.LogError(ex, $"处理采购订单{entity.PurOrderNo}的预付款单时出错");
                                         }
                                     }
@@ -223,7 +223,7 @@ namespace RUINORERP.Business
                                         else
                                         {
                                             // 已经有实际收款，需要退款后才能结案
-                                            _unitOfWorkManage.RollbackTran();
+                                            await _unitOfWorkManage.RollbackTranAsync();
                                             _logger.LogWarning($"采购订单存在预付款单{PrePayment.PreRPNO}，且已实际收款{PrePayment.LocalPrepaidAmount - PrePayment.LocalBalanceAmount}元，不能直接作废结案,请先完成【预付款退款】处理。");
                                         }
                                     }
@@ -235,7 +235,7 @@ namespace RUINORERP.Business
                                         if (Math.Abs(PrePayment.LocalBalanceAmount) > tolerance)
                                         {
                                             // 有余额，需要先退款
-                                            _unitOfWorkManage.RollbackTran();
+                                            await _unitOfWorkManage.RollbackTranAsync();
                                             _logger.LogWarning($"存在预付款单{PrePayment.PreRPNO}，状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus}，本币余额{PrePayment.LocalBalanceAmount}元，不能直接作废结案,请进行【退款】处理。");
                                         }
                                         // 余额为0，理论上不应该出现在这两个状态，但为了容错允许结案
@@ -249,7 +249,7 @@ namespace RUINORERP.Business
                                         if (Math.Abs(PrePayment.LocalBalanceAmount) > tolerance)
                                         {
                                             // 理论上不应该出现这种情况，但为了安全还是检查一下
-                                            _unitOfWorkManage.RollbackTran();
+                                            await _unitOfWorkManage.RollbackTranAsync();
                                             _logger.LogWarning($"存在预付款单，状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus}，但本币余额{PrePayment.LocalBalanceAmount}元不为0，数据异常，请联系管理员。");
                                         }
                                     }
@@ -265,7 +265,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 #region 更新订单状态（批量操作）
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 try
                 {
                     foreach (var entity in ordersToProcess)
@@ -282,11 +282,11 @@ namespace RUINORERP.Business
                             it.Modified_by
                         }).ExecuteCommandAsync();
                     }
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                 }
                 catch (Exception ex)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rs.Succeeded = false;
                     rs.ErrorMsg = ex.Message;
                     return rs;
@@ -455,7 +455,7 @@ namespace RUINORERP.Business
                 }
 
                 // ========== 第二阶段: 事务内执行核心业务 ==========
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 try
                 {
@@ -486,7 +486,7 @@ namespace RUINORERP.Business
                         .ExecuteCommandHasChangeAsync();
 
                     // 提交主事务(快速提交,~50ms)
-                    _unitOfWorkManage.CommitTran();
+                    await _unitOfWorkManage.CommitTranAsync();
                     _logger.LogInformation($"采购订单{entity.PurOrderNo}审核：主事务提交成功");
 
                     // ========== 第三阶段: 后置处理(独立事务) ==========
@@ -507,13 +507,13 @@ namespace RUINORERP.Business
                 }
                 catch (Exception ex)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw;
                 }
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rmrs;
@@ -532,7 +532,7 @@ namespace RUINORERP.Business
                 {
 
                     rs.ErrorMsg = "存在已确认或已完结，或已审核的采购入库单，不能反审核  ";
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -540,7 +540,7 @@ namespace RUINORERP.Business
 
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var requiredKeys3 = entity.tb_PurOrderDetails
@@ -682,7 +682,7 @@ namespace RUINORERP.Business
                                 if (PaymentList.Count > 1 && PaymentList.Sum(c => c.TotalLocalAmount) == 0 && PaymentList.Any(c => c.IsReversed))
                                 {
                                     //退款冲销过
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     rs.ErrorMsg = $"采购订单{PrePayment.SourceBillNo}的预付款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能反审,只能【取消】作废。";
                                     rs.Succeeded = false;
                                     return rs;
@@ -702,7 +702,7 @@ namespace RUINORERP.Business
                                     }
                                     else
                                     {
-                                        _unitOfWorkManage.RollbackTran();
+                                        await _unitOfWorkManage.RollbackTranAsync();
                                         rs.ErrorMsg = $"对应的预付款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，反审失败\r\n" +
                                             $"需将预付款单【退款】，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
                                             $"取消当前订单后，重新录入正确的采购订单。";
@@ -734,7 +734,7 @@ namespace RUINORERP.Business
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrder>(entity)
                      .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                     .ExecuteCommandAsync();
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
@@ -742,7 +742,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rs;
@@ -770,7 +770,7 @@ namespace RUINORERP.Business
                 // 获取付款方式信息
                 if (_appContext.PaymentMethodOfPeriod == null)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.Succeeded = false;
                     rmrs.ErrorMsg = $"请先配置付款方式信息！";
                     if (_appContext.SysConfig.ShowDebugInfo)
@@ -786,7 +786,7 @@ namespace RUINORERP.Business
                     if (entity.PayStatus != (int)PayStatus.未付款)
                     {
                         rmrs.Succeeded = false;
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
@@ -801,7 +801,7 @@ namespace RUINORERP.Business
                     if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
                     {
                         rmrs.Succeeded = false;
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
@@ -824,7 +824,7 @@ namespace RUINORERP.Business
                     if (!paymentCheck.CanDo)
                     {
                         rmrs.Succeeded = false;
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmrs.ErrorMsg = paymentCheck.Message;
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
@@ -854,7 +854,7 @@ namespace RUINORERP.Business
 
                             // 处理预付款单生成失败的情况
                             rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rmrs.ErrorMsg = $"预付款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
@@ -877,7 +877,7 @@ namespace RUINORERP.Business
                                 if (!autoApproval.Succeeded)
                                 {
                                     rmrs.Succeeded = false;
-                                    _unitOfWorkManage.RollbackTran();
+                                    await _unitOfWorkManage.RollbackTranAsync();
                                     rmrs.ErrorMsg = $"预付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                     if (_appContext.SysConfig.ShowDebugInfo)
                                     {
@@ -901,7 +901,7 @@ namespace RUINORERP.Business
                 else
                 {
                     rmrs.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.ErrorMsg = "只有未付款或部分预付的订单才能生成预付款单";
                     if (_appContext.SysConfig.ShowDebugInfo)
                     {

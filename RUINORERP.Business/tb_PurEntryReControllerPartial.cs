@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -107,7 +107,7 @@ namespace RUINORERP.Business
 
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 // ✅ 修复: 创建库存流水记录列表
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
@@ -129,7 +129,7 @@ namespace RUINORERP.Business
                     
                     if (!invDict.TryGetValue(key, out var inv) || inv == null)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.ErrorMsg = $"产品{ReDetail.ProdDetailID}在仓库{ReDetail.Location_ID}中无库存数据，无法进行采购退货出库。";
                         rs.Succeeded = false;
                         return rs;
@@ -137,7 +137,7 @@ namespace RUINORERP.Business
 
                     if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - ReDetail.Quantity) < 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
                         rs.ErrorMsg = $"库存为：{inv.Quantity}，采购退回数量为：{ReDetail.Quantity}\r\n 系统设置不允许负库存， 请检查退回数量与库存相关数据";
                         rs.Succeeded = false;
@@ -198,7 +198,7 @@ namespace RUINORERP.Business
             int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
             if (InvUpdateCounter == 0)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 throw new Exception("采购退货审核时，库存更新失败！");
             }
 
@@ -224,7 +224,7 @@ namespace RUINORERP.Business
                         //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
                         if (purEntryLines.ReturnedQty > purEntryLines.Quantity)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             throw new Exception($"退回数量{purEntryLines.ReturnedQty}不能大于对应入库单{purEntry.PurEntryNo}对应明细的数量{purEntryLines.Quantity}！");
                         }
                         if (needupdatePurEntryDetails.ContainsKey(purEntry.PurEntryNo))
@@ -250,7 +250,7 @@ namespace RUINORERP.Business
                         //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
                         if (purorderdetail.TotalReturnedQty > purorderdetail.Quantity)
                         {
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             throw new Exception($"退回数量{detail.Quantity}不能大于对应采购订单{entity.tb_purentry.tb_purorder.PurOrderNo}对应明细的数量{purorderdetail.Quantity}！");
                         }
                         if (needupdatePurOrderDetails.ContainsKey(entity.tb_purentry.tb_purorder.PurOrderNo))
@@ -404,7 +404,7 @@ namespace RUINORERP.Business
                                          .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                          .ExecuteCommandHasChangeAsync();
             // 注意信息的完整性
-            _unitOfWorkManage.CommitTran();
+            await _unitOfWorkManage.CommitTranAsync();
             rs.ReturnObject = entity as T;
             rs.Succeeded = true;
             return rs;
@@ -412,7 +412,7 @@ namespace RUINORERP.Business
         }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, RUINORERP.Business.EntityLoadService.EntityDataExtractor.ExtractDataContent(entity));
                 rs.ErrorMsg = ex.Message;
                 return rs;
@@ -443,7 +443,7 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         }
 
         // 开启事务，保证数据一致性
-        _unitOfWorkManage.BeginTran();
+        await _unitOfWorkManage.BeginTranAsync();
 
         #region 【死锁优化】预处理阶段（事务外批量预加载库存）
         var requiredKeys2 = entity.tb_PurEntryReDetails
@@ -498,7 +498,7 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
             if (!invDict2.TryGetValue(key, out var inv) || inv == null)
             {
                 //不应该为空
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 throw new Exception(child.ProdDetailID + "期初库存不应该为空.");
             }
 
@@ -568,12 +568,12 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
                     //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
                     if (purEntryLines.ReturnedQty > purEntryLines.Quantity)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception($"退回数量{purEntryLines.ReturnedQty}不能大于对应入库单{purEntry.PurEntryNo}对应明细的数量{purEntryLines.Quantity}！");
                     }                                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                     if (purEntryLines.ReturnedQty < 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("入库单中已退回数量不能小于0！");
                     }
                     if (needupdatePurEntryDetails.ContainsKey(purEntry.PurEntryNo))
@@ -599,13 +599,13 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
                     //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
                     if (purorderdetail.TotalReturnedQty > purorderdetail.Quantity)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception($"退回数量{detail.Quantity}不能大于对应采购订单{entity.tb_purentry.tb_purorder.PurOrderNo}对应明细的数量{purorderdetail.Quantity}！");
                     }
                     //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                     if (purorderdetail.TotalReturnedQty < 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("采购退订单中已退回数量不能小于0！");
                     }
                     if (needupdatePurOrderDetails.ContainsKey(entity.tb_purentry.tb_purorder.PurOrderNo))
@@ -675,7 +675,7 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
                     }
                     else
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rs.ErrorMsg = $"采购退货单：{entity.PurEntryReNo}中,对应的应收红字数据已经生效。无法反审核！";
                         rs.Succeeded = false;
                         return rs;
@@ -706,14 +706,14 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         }).ExecuteCommandAsync();
         // await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryRe>(entity).ExecuteCommandAsync();
 
-        _unitOfWorkManage.CommitTran();
+        await _unitOfWorkManage.CommitTranAsync();
         rs.ReturnObject = entity as T;
         rs.Succeeded = true;
         return rs;
     }
     catch (Exception ex)
     {
-        _unitOfWorkManage.RollbackTran();
+        await _unitOfWorkManage.RollbackTranAsync();
         _logger.Error(ex);
         rs.ErrorMsg = ex.Message;
         return rs;
@@ -738,7 +738,7 @@ public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> Need
     try
     {
         // 开启事务，保证数据一致性
-        _unitOfWorkManage.BeginTran();
+        await _unitOfWorkManage.BeginTranAsync();
         #region 结案
         foreach (var entity in entitys)
         {
@@ -805,14 +805,14 @@ public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> Need
 
         #endregion
         // 注意信息的完整性
-        _unitOfWorkManage.CommitTran();
+        await _unitOfWorkManage.CommitTranAsync();
         rs.Succeeded = true;
         return rs;
     }
     catch (Exception ex)
     {
 
-        _unitOfWorkManage.RollbackTran();
+        await _unitOfWorkManage.RollbackTranAsync();
         _logger.Error(ex);
         rs.ErrorMsg = ex.Message;
         rs.Succeeded = false;

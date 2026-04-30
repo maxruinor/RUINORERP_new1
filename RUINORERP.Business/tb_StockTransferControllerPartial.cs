@@ -1,4 +1,4 @@
-// *************************************
+﻿// *************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
@@ -76,7 +76,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
               var   ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 // 创建库存更新列表（合并调出和调入）
@@ -104,7 +104,7 @@ namespace RUINORERP.Business
                     if (!invDict.TryGetValue((child.ProdDetailID, entity.Location_ID_from), out var invFrom) || invFrom == null)
                     {
                         rmsr.ErrorMsg = "调出仓库中不存在这个产品的库存，出库产品必须存在于仓库中。";
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmsr.Succeeded = false;
                         return rmsr;
                     }
@@ -112,7 +112,7 @@ namespace RUINORERP.Business
                     if (!_appContext.SysConfig.CheckNegativeInventory && (invFrom.Quantity - child.Qty) < 0)
                     {
                         rmsr.ErrorMsg = "系统设置不允许负库存，请检查调出数量与库存相关数据";
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmsr.Succeeded = false;
                         return rmsr;
                     }
@@ -219,7 +219,7 @@ namespace RUINORERP.Business
                         .ExecuteCommandAsync();
                     if (updateCount == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmsr.ErrorMsg = "库存更新失败。";
                         throw new Exception("库存更新失败！");
                     }
@@ -231,7 +231,7 @@ namespace RUINORERP.Business
                     var insertResult = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
                     if (insertResult.Count == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmsr.ErrorMsg = "库存插入失败。";
                         throw new Exception("库存插入失败！");
                     }
@@ -247,14 +247,14 @@ namespace RUINORERP.Business
                                     .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmsr.ReturnObject = entity as T;
                 rmsr.Succeeded = true;
                 return rmsr;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, BizTypeText + "事务回滚");
                 rmsr.ErrorMsg = BizTypeText + ex.Message;
                 return rmsr;
@@ -301,7 +301,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 // 创建批量更新列表
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
@@ -327,7 +327,7 @@ namespace RUINORERP.Business
                     if (!invDict.TryGetValue((child.ProdDetailID, entity.Location_ID_from), out var invFrom) || invFrom == null)
                     {
                         rmsr.ErrorMsg = "调出仓库中不存在这个产品的库存，出库产品必须存在于仓库中。";
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmsr.Succeeded = false;
                         return rmsr;
                     }
@@ -372,14 +372,14 @@ namespace RUINORERP.Business
                     if (!invDict.TryGetValue((child.ProdDetailID, entity.Location_ID_to), out var invTo) || invTo == null)
                     {
                         //正常逻辑不会执行到这里
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception("调入仓库中不存在这个产品的库存，出库产品必须存在于仓库中。");
                     }
 
                     if (!_appContext.SysConfig.CheckNegativeInventory && (invTo.Quantity - child.Qty) < 0)
                     {
                         rmsr.ErrorMsg = "系统设置不允许负库存，请检查调出数量与库存相关数据";
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rmsr.Succeeded = false;
                         return rmsr;
                     }
@@ -416,7 +416,7 @@ namespace RUINORERP.Business
                     .ExecuteCommandAsync();
                 if (updateCount == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     throw new Exception("库存更新失败！");
                 }
                 
@@ -434,14 +434,14 @@ namespace RUINORERP.Business
                                             .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                             .ExecuteCommandHasChangeAsync();
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmsr.Succeeded = true;
                 rmsr.ReturnObject = entity as T;
                 return rmsr;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 rmsr.ErrorMsg = BizTypeText + "反审失败，" + ex.Message;
                 _logger.Error(ex, BizTypeText + "事务回滚");
                 return rmsr;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
@@ -75,7 +75,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 【事务开始】只包含更新操作，最小化事务区间
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 //更新计划单中已分析字段,并且要具体到目标产品。计划可能多个成品。但是只能一个一个分析
                 if (entity.tb_productionplan != null && planDetails != null)
@@ -120,7 +120,7 @@ namespace RUINORERP.Business
 
                 }).ExecuteCommandAsync();
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
                 return rmrs;
@@ -128,7 +128,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rmrs;
@@ -155,7 +155,7 @@ namespace RUINORERP.Business
             try
             {
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 #region 结案
                 //更新拟销售量  减少
                 for (int m = 0; m < entitys.Count; m++)
@@ -177,14 +177,14 @@ namespace RUINORERP.Business
 
                 #endregion
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
 
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
@@ -255,7 +255,7 @@ namespace RUINORERP.Business
                 }
 
                 // 【事务开始】只包含更新操作，最小化事务区间
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 //判断是否能反审?
                 if (entity.tb_ManufacturingOrders != null
@@ -263,7 +263,7 @@ namespace RUINORERP.Business
                 {
 
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的制令单，不能反审核  ";
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
@@ -272,7 +272,7 @@ namespace RUINORERP.Business
                 if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
                 {
                     rmrs.ErrorMsg = "计划单非确认或非完结，不能反审核  ";
-                    _unitOfWorkManage.RollbackTran();
+                    await _unitOfWorkManage.RollbackTranAsync();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
@@ -317,14 +317,14 @@ namespace RUINORERP.Business
 
 
                 // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_ProductionDemand)).ToString() + "事务回滚=>" + ex.Message;

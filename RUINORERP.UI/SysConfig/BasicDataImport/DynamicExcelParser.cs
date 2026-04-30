@@ -1039,42 +1039,53 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             foreach (var mapping in columnMappings)
             {
                 // 1. 添加Excel数据源的列
-                if (mapping.DataSourceType == DataSourceType.Excel && !string.IsNullOrEmpty(mapping.ExcelColumn))
+                if (mapping.DataSourceType == DataSourceType.Excel && !string.IsNullOrEmpty(mapping.OriginalExcelColumn))
                 {
-                    requiredExcelColumns.Add(mapping.ExcelColumn);
+                    requiredExcelColumns.Add(mapping.OriginalExcelColumn);
                 }
 
                 // 2. 添加外键关联的来源列
-                if (mapping.DataSourceType == DataSourceType.ForeignKey &&
-                    mapping.ForeignConfig != null &&
-                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key))
+                if (mapping.DataSourceType == DataSourceType.ForeignKey)
                 {
-                    requiredExcelColumns.Add(mapping.ForeignConfig.ForeignKeySourceColumn.Key);
+                    var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                    if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
+                    {
+                        requiredExcelColumns.Add(fkConfig.ForeignKeySourceColumn.Key);
+                    }
                 }
 
                 // 3. 添加列拼接的源列
-                if (mapping.DataSourceType == DataSourceType.ColumnConcat &&
-                    mapping.ConcatConfig != null &&
-                    mapping.ConcatConfig.SourceColumns != null)
+                if (mapping.DataSourceType == DataSourceType.ColumnConcat)
                 {
-                    foreach (var sourceCol in mapping.ConcatConfig.SourceColumns)
+                    var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
+                    if (concatConfig != null && concatConfig.ConcatColumns != null)
                     {
-                        if (!string.IsNullOrEmpty(sourceCol))
+                        foreach (var sourceCol in concatConfig.ConcatColumns)
                         {
-                            requiredExcelColumns.Add(sourceCol);
+                            if (!string.IsNullOrEmpty(sourceCol?.Key))
+                            {
+                                requiredExcelColumns.Add(sourceCol.Key);
+                            }
                         }
                     }
                 }
 
                 // 4. 添加字段复制的源列
-                if (mapping.DataSourceType == DataSourceType.FieldCopy &&
-                    !string.IsNullOrEmpty(mapping.CopyFromField?.Key))
+                if (mapping.DataSourceType == DataSourceType.FieldCopy)
                 {
-                    // 需要找到被复制字段的Excel列
-                    var copyFromMapping = columnMappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField.Key);
-                    if (copyFromMapping != null && !string.IsNullOrEmpty(copyFromMapping.ExcelColumn))
+                    var copyConfig = mapping.DataSourceConfig as FieldCopyConfig;
+                    if (copyConfig != null && !string.IsNullOrEmpty(copyConfig.SourceFieldName))
                     {
-                        requiredExcelColumns.Add(copyFromMapping.ExcelColumn);
+                        // 需要找到被复制字段的Excel列
+                        var copyFromMapping = columnMappings.FirstOrDefault(m => m.SystemField?.Key == copyConfig.SourceFieldName);
+                        if (copyFromMapping != null)
+                        {
+                            var excelConfig = copyFromMapping.DataSourceConfig as ExcelConfig;
+                            if (excelConfig != null && !string.IsNullOrEmpty(excelConfig.ExcelColumn))
+                            {
+                                requiredExcelColumns.Add(excelConfig.ExcelColumn);
+                            }
+                        }
                     }
                 }
             }
@@ -1119,15 +1130,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 对于外键关联类型，额外添加外键来源列到结果表中
-                if (mapping.DataSourceType == DataSourceType.ForeignKey &&
-                    mapping.ForeignConfig != null &&
-                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key))
+                if (mapping.DataSourceType == DataSourceType.ForeignKey)
                 {
-                    string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
-                    if (!addedColumns.Contains(sourceColumnName))
+                    var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                    if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
                     {
-                        dataTable.Columns.Add(sourceColumnName, typeof(string));
-                        addedColumns.Add(sourceColumnName);
+                        string sourceColumnName = fkConfig.ForeignKeySourceColumn.Key;
+                        if (!addedColumns.Contains(sourceColumnName))
+                        {
+                            dataTable.Columns.Add(sourceColumnName, typeof(string));
+                            addedColumns.Add(sourceColumnName);
+                        }
                     }
                 }
             }
@@ -1172,8 +1185,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         switch (mapping.DataSourceType)
                         {
                             case DataSourceType.Excel:
-                                if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
-                                    columnIndexMap.TryGetValue(mapping.ExcelColumn, out int excelColIndex))
+                                if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn) &&
+                                    columnIndexMap.TryGetValue(mapping.OriginalExcelColumn, out int excelColIndex))
                                 {
                                     ICell cell = row.GetCell(excelColIndex);
                                     if (cell != null)
@@ -1182,7 +1195,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                         if (cell.CellType == CellType.Formula)
                                         {
                                             cellValue = HandleFormulaCell(cell, imageDictionary, i, excelColIndex);
-                                            isImageColumn = mapping.IsImageColumn;
+                                            var imageConfig = mapping.DataSourceConfig as ExcelImageConfig;
+                                            isImageColumn = imageConfig != null;
                                         }
                                         else
                                         {
@@ -1193,18 +1207,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 else
                                 {
                                     // 添加调试信息：列名未找到
-                                    if (!string.IsNullOrEmpty(mapping.ExcelColumn))
+                                    if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn))
                                     {
-                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到Excel列'{mapping.ExcelColumn}'，映射到字段'{mapping.SystemField?.Value}'");
+                                        var excelConfig = mapping.DataSourceConfig as ExcelConfig;
+                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到Excel列'{excelConfig?.ExcelColumn}'，映射到字段'{mapping.SystemField?.Value}'");
                                     }
                                 }
                                 break;
 
                             case DataSourceType.ForeignKey:
                                 // 读取外键来源列的值
-                                if (mapping.ForeignConfig != null &&
-                                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key) &&
-                                    columnIndexMap.TryGetValue(mapping.ForeignConfig.ForeignKeySourceColumn.Key, out int fkColIndex))
+                                var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                                if (fkConfig != null &&
+                                    !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key) &&
+                                    columnIndexMap.TryGetValue(fkConfig.ForeignKeySourceColumn.Key, out int fkColIndex))
                                 {
                                     ICell cell = row.GetCell(fkColIndex);
                                     if (cell != null)
@@ -1215,9 +1231,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 else
                                 {
                                     // 添加调试信息：外键来源列名未找到
-                                    if (mapping.ForeignConfig != null && !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key))
+                                    if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
                                     {
-                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到外键来源列'{mapping.ForeignConfig.ForeignKeySourceColumn.Key}'，映射到字段'{mapping.SystemField?.Value}'");
+                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到外键来源列'{fkConfig.ForeignKeySourceColumn.Key}'，映射到字段'{mapping.SystemField?.Value}'");
                                     }
                                 }
                                 break;
@@ -1250,14 +1266,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         }
 
                         // 如果是外键关联，同时设置外键来源列的值
-                        if (mapping.DataSourceType == DataSourceType.ForeignKey &&
-                            mapping.ForeignConfig != null &&
-                            !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key))
+                        if (mapping.DataSourceType == DataSourceType.ForeignKey)
                         {
-                            string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
-                            if (dataTable.Columns.Contains(sourceColumnName) && cellValue != null)
+                            var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                            if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
                             {
-                                dataRow[sourceColumnName] = cellValue;
+                                string sourceColumnName = fkConfig.ForeignKeySourceColumn.Key;
+                                if (dataTable.Columns.Contains(sourceColumnName) && cellValue != null)
+                                {
+                                    dataRow[sourceColumnName] = cellValue;
+                                }
                             }
                         }
                     }

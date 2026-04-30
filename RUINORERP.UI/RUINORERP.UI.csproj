@@ -2492,7 +2492,6 @@
     <Compile Include="SysConfig\BasicDataImport\DynamicImporter.cs" />
     <Compile Include="SysConfig\BasicDataImport\EntityImportHelper.cs" />
     <Compile Include="SysConfig\BasicDataImport\ForeignKeyService.cs" />
-    <Compile Include="SysConfig\BasicDataImport\ForeignRelatedConfig.cs" />
     <Compile Include="SysConfig\BasicDataImport\frmColumnMappingConfig.cs">
       <SubType>Form</SubType>
     </Compile>

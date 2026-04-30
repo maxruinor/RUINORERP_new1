@@ -293,15 +293,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 if (propertyDialog.ShowDialog() == DialogResult.OK)
                 {
-                    // 保存用户配置的属性
-                    mapping.IsUniqueValue = propertyDialog.IsUniqueValue;
-                    mapping.IsBusinessKey = propertyDialog.IsBusinessKey;
-                    mapping.ExistenceStrategy = propertyDialog.ExistenceStrategy;
-
                     // ✅ 保存统一的数据源配置接口（唯一数据源）
                     mapping.DataSourceConfig = propertyDialog.DataSourceConfig;
-                    mapping.DataSourceType = propertyDialog.SelectedDataSourceType;
-
                     return true;
                 }
                 return false;

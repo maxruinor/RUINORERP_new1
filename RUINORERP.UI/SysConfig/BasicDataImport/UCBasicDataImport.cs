@@ -1045,7 +1045,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             string importType = GetImportType();
             var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
-            bool hasImageFields = mappings.Any(m => m.DataSourceType == DataSourceType.ExcelImage || m.IsImageColumn);
+            bool hasImageFields = mappings.Any(m => m.DataSourceType == DataSourceType.ExcelImage);
             bool isPreprocessed = (_finalPreviewData?.Rows.Count > 0 && importData == _finalPreviewData);
 
             if (isPreprocessed)
@@ -1712,7 +1712,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void DgvRawExcelData_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            FormatImageCell(e, dgvRawExcelData, mapping => mapping.ExcelColumn);
+            FormatImageCell(e, dgvRawExcelData, mapping => mapping.OriginalExcelColumn);
         }
 
         /// <summary>
@@ -1770,13 +1770,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 Image loadedImage = null;
 
                 // ✅ 使用 ImageProcessor 加载图片（统一入口）
-                if (imageMapping.ImageColumnType == ImageColumnType.Path)
+                var imageConfig = imageMapping.DataSourceConfig as ExcelImageConfig;
+                if (imageConfig != null)
                 {
+                    // TODO: 根据 ExcelImageConfig 的配置加载图片
+                    // 目前简化处理，假设是路径类型
                     loadedImage = LoadImageFromPath(cellValue);
-                }
-                else if (imageMapping.ImageColumnType == ImageColumnType.Binary)
-                {
-                    loadedImage = LoadImageFromBinary(cellValue);
                 }
 
                 if (loadedImage != null)

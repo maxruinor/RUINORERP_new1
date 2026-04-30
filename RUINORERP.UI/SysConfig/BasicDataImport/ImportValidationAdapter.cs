@@ -102,13 +102,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 5. 验证图片配置
-            if (mapping.DataSourceType == DataSourceType.ExcelImage || mapping.IsImageColumn)
+            if (mapping.DataSourceType == DataSourceType.ExcelImage)
             {
-                if (mapping.ImageConfig != null)
+                var imageConfig = mapping.DataSourceConfig as ExcelImageConfig;
+                if (imageConfig != null)
                 {
                     // 验证图片命名规则
-                    if (mapping.ImageConfig.NamingRule == ImageNamingRule.ColumnValue &&
-                        string.IsNullOrEmpty(mapping.ImageConfig.NamingReferenceColumn))
+                    if (imageConfig.NamingRule == ImageNamingRule.ColumnValue &&
+                        string.IsNullOrEmpty(imageConfig.NamingReferenceColumn))
                     {
                         errors.Add($"字段【{mapping.SystemField.Value}】使用列值命名，但未指定参考列");
                         return false;
@@ -120,7 +121,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (mapping.IsBusinessKey)
             {
                 // 业务键字段通常应该是必填的
-                if (!mapping.IsRequired && mapping.DataSourceType == DataSourceType.Excel)
+                if (!isRequired && mapping.DataSourceType == DataSourceType.Excel)
                 {
                     // 警告但不阻止：业务键建议设置为必填
                     System.Diagnostics.Debug.WriteLine(

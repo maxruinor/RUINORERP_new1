@@ -67,8 +67,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return null;
 
             return mappings.FirstOrDefault(m => 
-                !string.IsNullOrEmpty(m.ExcelColumn) && 
-                m.ExcelColumn.Equals(excelColumn, System.StringComparison.OrdinalIgnoreCase));
+                !string.IsNullOrEmpty(m.OriginalExcelColumn) && 
+                m.OriginalExcelColumn.Equals(excelColumn, System.StringComparison.OrdinalIgnoreCase));
         }
     }
 }

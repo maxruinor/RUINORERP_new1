@@ -56,13 +56,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 按表分组预加载数据
-            var tableGroups = foreignKeyMappings.GroupBy(m => m.ForeignConfig?.ForeignKeyTable?.Key).Where(g => !string.IsNullOrEmpty(g.Key));
+            var tableGroups = foreignKeyMappings.GroupBy(m => 
+            {
+                var fkConfig = m.DataSourceConfig as ForeignKeyConfig;
+                return fkConfig?.ForeignTableName;
+            }).Where(g => !string.IsNullOrEmpty(g.Key));
             foreach (var group in tableGroups)
             {
                 string tableName = group.Key;
                 foreach (var mapping in group)
                 {
-                    if (!string.IsNullOrEmpty(mapping.ForeignConfig?.ForeignKeyField?.Key))
+                    var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                    if (!string.IsNullOrEmpty(fkConfig?.ForeignFieldName))
                     {
                         PreloadForeignKeyData(mapping);
                     }
@@ -77,25 +82,37 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="fieldName">字段名</param>
         public void PreloadForeignKeyData(ColumnMapping mapping)
         {
-            ForeignRelatedConfig foreignRelated = mapping.ForeignConfig;
+            var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+            if (fkConfig == null)
+            {
+                Debug.WriteLine("预加载外键数据失败: DataSourceConfig不是ForeignKeyConfig类型");
+                return;
+            }
+
             try
             {
-                string cacheKey = $"{foreignRelated.ForeignKeyTable.Key}_{foreignRelated.ForeignKeyField.Key}";
+                string cacheKey = $"{fkConfig.ForeignTableName}_{fkConfig.ForeignFieldName}";
                 if (_foreignKeyCache.ContainsKey(cacheKey))
                 {
                     return; // 已经缓存过
                 }
 
-                // 构建查询SQL
-                string sql = $"SELECT {foreignRelated.ForeignKeyField.Key}, {mapping.SystemField.Key}, {foreignRelated.ForeignKeySourceColumn.Key} FROM {foreignRelated.ForeignKeyTable.Key}";
+                // 构建查询SQL - 需要外键来源列配置
+                if (fkConfig.ForeignKeySourceColumn == null || string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn.Key))
+                {
+                    Debug.WriteLine($"预加载外键数据失败: {fkConfig.ForeignTableName}.{fkConfig.ForeignFieldName}, 缺少外键来源列配置");
+                    return;
+                }
+
+                string sql = $"SELECT {fkConfig.ForeignFieldName}, {mapping.SystemField.Key}, {fkConfig.ForeignKeySourceColumn.Key} FROM {fkConfig.ForeignTableName}";
                 var data = _db.Ado.GetDataTable(sql);
 
                 // 构建缓存
                 var fieldValueToIdMap = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
                 foreach (DataRow row in data.Rows)
                 {
-                    object id = row[foreignRelated.ForeignKeyField.Key];
-                    object fieldValue = row[foreignRelated.ForeignKeySourceColumn.Key];
+                    object id = row[fkConfig.ForeignFieldName];
+                    object fieldValue = row[fkConfig.ForeignKeySourceColumn.Key];
                     if (fieldValue != DBNull.Value && fieldValue != null)
                     {
                         string key = fieldValue.ToString().Trim();
@@ -107,7 +124,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"预加载外键数据失败: {foreignRelated.ForeignKeyTable.Key}.{foreignRelated.ForeignKeyField.Key}, 错误: {ex.Message}");
+                Debug.WriteLine($"预加载外键数据失败: {fkConfig.ForeignTableName}.{fkConfig.ForeignFieldName}, 错误: {ex.Message}");
             }
         }
 
@@ -140,7 +157,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 如果没有获取到编码值，返回错误
                 if (string.IsNullOrEmpty(sourceCodeValue))
                 {
-                    if (mapping.IsRequired)
+                    // 检查是否必填：通过 ExcelConfig 的 IgnoreEmptyValue 判断
+                    var excelConfig = mapping.DataSourceConfig as ExcelConfig;
+                    bool isRequired = excelConfig == null || !excelConfig.IgnoreEmptyValue;
+                    
+                    if (isRequired)
                     {
                         errorMessage = $"行 {rowNumber} 字段 {mapping.SystemField?.Value} 是必填字段，但无法从列 '{sourceColumnDisplayName}' 获取有效的外键值";
                     }
@@ -148,14 +169,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 步骤2: 从缓存中查找该编码值对应的主键ID
-                if (mapping.ForeignConfig != null &&
-                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyTable?.Key) &&
-                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyField?.Key) &&
-                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.Key))
+                var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                if (fkConfig != null &&
+                    !string.IsNullOrEmpty(fkConfig.ForeignTableName) &&
+                    !string.IsNullOrEmpty(fkConfig.ForeignFieldName) &&
+                    fkConfig.ForeignKeySourceColumn != null &&
+                    !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn.Key))
                 {
-                    string tableName = mapping.ForeignConfig.ForeignKeyTable.Key;
-                    string relatedField = mapping.ForeignConfig.ForeignKeyField.Key;
-                    string sourceField = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
+                    string tableName = fkConfig.ForeignTableName;
+                    string relatedField = fkConfig.ForeignFieldName;
+                    string sourceField = fkConfig.ForeignKeySourceColumn.Key;
                     
                     // 构建缓存键
                     string cacheKey = $"{tableName}_{relatedField}";
@@ -226,20 +249,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             displayName = string.Empty;
 
             // 1. 优先从指定的外键来源列获取（Excel列）
-            if (mapping.ForeignConfig?.ForeignKeySourceColumn != null && 
-                !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
+            var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+            if (fkConfig != null && fkConfig.ForeignKeySourceColumn != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn.Key))
             {
-                displayName = mapping.ForeignConfig.ForeignKeySourceColumn.Value ?? mapping.ForeignConfig.ForeignKeySourceColumn.Key;
-                return mapping.ForeignConfig.ForeignKeySourceColumn.Key;
+                displayName = fkConfig.ForeignKeySourceColumn.Value ?? fkConfig.ForeignKeySourceColumn.Key;
+                return fkConfig.ForeignKeySourceColumn.Key;
             }
             
             // 2. 如果没有指定外键来源列，但映射有Excel列，使用映射的Excel列
-            if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
-                !mapping.ExcelColumn.StartsWith("[") &&
-                !mapping.ExcelColumn.StartsWith("("))
+            if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn) &&
+                !mapping.OriginalExcelColumn.StartsWith("[") &&
+                !mapping.OriginalExcelColumn.StartsWith("("))
             {
-                displayName = mapping.ExcelColumn;
-                return mapping.ExcelColumn;
+                displayName = mapping.OriginalExcelColumn;
+                return mapping.OriginalExcelColumn;
             }
             
             // 3. 尝试从系统字段列获取（映射后的列名）

@@ -104,14 +104,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>是否为系统生成或默认值映射</returns>
         private bool IsSystemGeneratedOrDefaultValueMapping(ColumnMapping mapping)
         {
-            // 检查ExcelColumn是否以特殊标记开头
-            if (string.IsNullOrEmpty(mapping.ExcelColumn))
+            // 检查 OriginalExcelColumn 是否以特殊标记开头
+            if (string.IsNullOrEmpty(mapping.OriginalExcelColumn))
             {
                 return false;
             }
-
-            return mapping.ExcelColumn.StartsWith("[系统生成]") ||
-                   mapping.ExcelColumn.StartsWith("[默认值]");
+        
+            return mapping.OriginalExcelColumn.StartsWith("[系统生成]") ||
+                   mapping.OriginalExcelColumn.StartsWith("[默认值]");
         }
 
         /// <summary>
@@ -190,7 +190,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (isEmpty)
                 {
                     // 如果没有设置忽略空值，空值仍然是错误
-                    if (!uniqueKeyMapping.IgnoreEmptyValue)
+                    var excelConfig = uniqueKeyMapping.DataSourceConfig as ExcelConfig;
+                    bool ignoreEmpty = excelConfig?.IgnoreEmptyValue ?? false;
+                    
+                    if (!ignoreEmpty)
                     {
                         errors.Add(new ValidationError
                         {

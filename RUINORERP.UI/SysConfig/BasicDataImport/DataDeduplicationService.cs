@@ -155,11 +155,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             if (config.ColumnMappings == null) return false;
 
-            return config.ColumnMappings.Any(map =>
-                map.DataSourceType == DataSourceType.ForeignKey &&
-                map.ForeignConfig != null &&
-                map.ForeignConfig.ForeignKeySourceColumn != null &&
-                map.ForeignConfig.ForeignKeySourceColumn.Key == fieldName);
+            var ColumnMapping = config.ColumnMappings.Where(x => x.DataSourceType == DataSourceType.ForeignKey && x.SystemField.Key == fieldName).FirstOrDefault();
+
+            if (ColumnMapping == null)
+            {
+                return false;
+            }
+            else if(ColumnMapping.DataSourceConfig is ForeignKeyConfig fkConfig)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

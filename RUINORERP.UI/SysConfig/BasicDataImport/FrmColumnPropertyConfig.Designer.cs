@@ -104,6 +104,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabelDataSource = new Krypton.Toolkit.KryptonLabel();
             this.kcmbDataSourceType = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.txtExcelDefaultValue = new Krypton.Toolkit.KryptonTextBox();
+            this.lblExcelDefaultValue = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             this.kryptonTabControl.SuspendLayout();
@@ -185,6 +187,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // tabExcel
             // 
+            this.tabExcel.Controls.Add(this.txtExcelDefaultValue);
+            this.tabExcel.Controls.Add(this.lblExcelDefaultValue);
             this.tabExcel.Controls.Add(this.kryptonLabelExcelTip);
             this.tabExcel.Controls.Add(this.kchkIgnoreEmptyValue);
             this.tabExcel.Controls.Add(this.kryptonLabelExcelIgnore);
@@ -238,7 +242,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.cmbDynamicDefaultList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbDynamicDefaultList.DropDownWidth = 280;
             this.cmbDynamicDefaultList.IntegralHeight = false;
-            this.cmbDynamicDefaultList.Location = new System.Drawing.Point(120, 28);
+            this.cmbDynamicDefaultList.Location = new System.Drawing.Point(120, 75);
             this.cmbDynamicDefaultList.Name = "cmbDynamicDefaultList";
             this.cmbDynamicDefaultList.Size = new System.Drawing.Size(280, 21);
             this.cmbDynamicDefaultList.TabIndex = 5;
@@ -249,7 +253,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.cmbDynamicDefaultEnum.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbDynamicDefaultEnum.DropDownWidth = 280;
             this.cmbDynamicDefaultEnum.IntegralHeight = false;
-            this.cmbDynamicDefaultEnum.Location = new System.Drawing.Point(120, 28);
+            this.cmbDynamicDefaultEnum.Location = new System.Drawing.Point(120, 118);
             this.cmbDynamicDefaultEnum.Name = "cmbDynamicDefaultEnum";
             this.cmbDynamicDefaultEnum.Size = new System.Drawing.Size(280, 21);
             this.cmbDynamicDefaultEnum.TabIndex = 4;
@@ -259,7 +263,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             this.dtpDynamicDefaultDateTime.CustomFormat = "yyyy-MM-dd HH:mm:ss";
             this.dtpDynamicDefaultDateTime.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpDynamicDefaultDateTime.Location = new System.Drawing.Point(120, 28);
+            this.dtpDynamicDefaultDateTime.Location = new System.Drawing.Point(120, 158);
             this.dtpDynamicDefaultDateTime.Name = "dtpDynamicDefaultDateTime";
             this.dtpDynamicDefaultDateTime.ShowCheckBox = true;
             this.dtpDynamicDefaultDateTime.Size = new System.Drawing.Size(180, 21);
@@ -268,7 +272,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // chkDynamicDefaultBool
             // 
-            this.chkDynamicDefaultBool.Location = new System.Drawing.Point(120, 28);
+            this.chkDynamicDefaultBool.Location = new System.Drawing.Point(120, 197);
             this.chkDynamicDefaultBool.Name = "chkDynamicDefaultBool";
             this.chkDynamicDefaultBool.Size = new System.Drawing.Size(153, 20);
             this.chkDynamicDefaultBool.TabIndex = 2;
@@ -492,7 +496,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // lblMaping
             // 
-            this.lblMaping.Location = new System.Drawing.Point(18, 129);
+            this.lblMaping.Location = new System.Drawing.Point(21, 94);
             this.lblMaping.Name = "lblMaping";
             this.lblMaping.Size = new System.Drawing.Size(62, 20);
             this.lblMaping.TabIndex = 8;
@@ -948,6 +952,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel1.TabIndex = 0;
             this.kryptonLabel1.Values.Text = "列属性配置";
             // 
+            // txtExcelDefaultValue
+            // 
+            this.txtExcelDefaultValue.Location = new System.Drawing.Point(120, 54);
+            this.txtExcelDefaultValue.Name = "txtExcelDefaultValue";
+            this.txtExcelDefaultValue.Size = new System.Drawing.Size(280, 23);
+            this.txtExcelDefaultValue.TabIndex = 4;
+            // 
+            // lblExcelDefaultValue
+            // 
+            this.lblExcelDefaultValue.Location = new System.Drawing.Point(30, 54);
+            this.lblExcelDefaultValue.Name = "lblExcelDefaultValue";
+            this.lblExcelDefaultValue.Size = new System.Drawing.Size(52, 20);
+            this.lblExcelDefaultValue.TabIndex = 3;
+            this.lblExcelDefaultValue.Values.Text = "默认值:";
+            // 
             // FrmColumnPropertyConfig
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -1111,5 +1130,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         // Excel列Tab提示标签
         private Krypton.Toolkit.KryptonLabel kryptonLabelExcelTip;
+        private Krypton.Toolkit.KryptonTextBox txtExcelDefaultValue;
+        private Krypton.Toolkit.KryptonLabel lblExcelDefaultValue;
     }
 }

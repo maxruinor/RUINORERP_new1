@@ -207,8 +207,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     // 根据指定的列名查找映射
                     targetMapping = mappings.FirstOrDefault(m =>
-                        m.ExcelColumn?.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true ||
-                        m.SystemField?.Key?.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true);
+                    {
+                        var excelConfig = m.DataSourceConfig as ExcelConfig;
+                        return (excelConfig?.ExcelColumn?.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true) ||
+                               m.SystemField?.Key?.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true;
+                    });
                 }
                 else
                 {
@@ -221,7 +224,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return result;
                 }
 
-                result.ColumnName = targetMapping.SystemField?.Key ?? targetMapping.ExcelColumn;
+                result.ColumnName = targetMapping.SystemField?.Key;
+                if (string.IsNullOrEmpty(result.ColumnName))
+                {
+                    var excelConfig = targetMapping.DataSourceConfig as ExcelConfig;
+                    result.ColumnName = excelConfig?.ExcelColumn;
+                }
                 result.DisplayName = targetMapping.SystemField?.Value ?? result.ColumnName;
 
                 if (string.IsNullOrEmpty(result.ColumnName))
@@ -231,9 +239,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 统计每个值的出现次数
                 var valueCount = new Dictionary<string, int>();
-                string excelColumnName = targetMapping.ExcelColumn;
+                
+                var excelConfig = targetMapping.DataSourceConfig as ExcelConfig;
+                string excelColumnName = excelConfig?.ExcelColumn;
 
-                if (dataTable.Columns.Contains(excelColumnName))
+                if (!string.IsNullOrEmpty(excelColumnName) && dataTable.Columns.Contains(excelColumnName))
                 {
                     foreach (DataRow row in dataTable.Rows)
                     {
@@ -875,7 +885,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 cellValue = row[mapping.SystemField?.Value];
 
                                 // 如果配置了忽略空值且值为DBNull，则跳过该字段
-                                if (cellValue == DBNull.Value && mapping.IgnoreEmptyValue)
+                                var excelConfig = mapping.DataSourceConfig as ExcelConfig;
+                                if (cellValue == DBNull.Value && excelConfig != null && excelConfig.IgnoreEmptyValue)
                                 {
                                     continue;
                                 }
@@ -904,16 +915,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                         case DataSourceType.DefaultValue:
                             // 默认值映射
-                            if (mapping.EnumDefaultConfig != null)
+                            var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
+                            if (defaultConfig != null)
                             {
                                 // 如果是枚举类型默认值，使用枚举的数值
-                                cellValue = mapping.EnumDefaultConfig.EnumValue;
+                                cellValue = defaultConfig.EnumValue;
                             }
-                            else
-                            {
-                                // 普通默认值
-                                cellValue = mapping.DefaultValue;
-                            }
+                            
                             break;
 
                         case DataSourceType.ForeignKey:
@@ -952,12 +960,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                         case DataSourceType.SelfReference:
                             // 自身字段引用
+                            var selfRefConfig = mapping.DataSourceConfig as SelfReferenceConfig;
                             // 从映射后的数据表中获取显示值，然后从已导入的数据中查找对应的引用值
                             if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
                             {
                                 string displayValue = row[mapping.SystemField?.Key]?.ToString();
                                 if (!string.IsNullOrEmpty(displayValue) &&
-                                    !string.IsNullOrEmpty(mapping.SelfReferenceField?.Key))
+                                    !string.IsNullOrEmpty(selfRefConfig?.ReferenceFieldName))
                                 {
                                     // 处理自身引用逻辑（在导入过程中实现）
                                     cellValue = displayValue; // 暂时使用显示值，后续在导入过程中处理
@@ -968,10 +977,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         case DataSourceType.FieldCopy:
                             // 字段复制
                             // 复制同一记录中另一个字段的值
-                            if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
+                            var fieldCopyConfig = mapping.DataSourceConfig as FieldCopyConfig;
+                            if (fieldCopyConfig != null && !string.IsNullOrEmpty(fieldCopyConfig.SourceFieldName))
                             {
                                 // 获取被复制字段的映射配置
-                                var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField?.Key);
+                                var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == fieldCopyConfig.SourceFieldName);
 
                                 if (copyFromMapping != null && !string.IsNullOrEmpty(copyFromMapping.SystemField?.Value))
                                 {
@@ -997,9 +1007,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     // 如果值为空，检查是否有默认值
                     if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
                     {
-                        if (!string.IsNullOrEmpty(mapping.DefaultValue))
+                        var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
+                        if (defaultConfig != null && !string.IsNullOrEmpty(defaultConfig.Value))
                         {
-                            cellValue = mapping.DefaultValue;
+                            cellValue = defaultConfig.Value;
                         }
                         else
                         {
@@ -1030,7 +1041,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception($"行 {rowNumber} 字段 {mapping.SystemField} (Excel列: {mapping.ExcelColumn}) 转换失败: {ex.Message}", ex);
+                    var excelConfig = mapping.DataSourceConfig as ExcelConfig;
+                    string excelColName = excelConfig?.ExcelColumn ?? "未知";
+                    throw new Exception($"行 {rowNumber} 字段 {mapping.SystemField?.Value} (Excel列: {excelColName}) 转换失败: {ex.Message}", ex);
                 }
             }
 
@@ -1837,18 +1850,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
 
                     // 对于外键关联类型，需要额外添加外键来源列到解析结果中
-                    if (mapping.DataSourceType == DataSourceType.ForeignKey &&
-                        mapping.ForeignConfig != null &&
-                        mapping.ForeignConfig.ForeignKeySourceColumn != null &&
-                        !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
+                    if (mapping.DataSourceType == DataSourceType.ForeignKey)
                     {
-                        string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
-
-                        // 检查源数据中是否包含该列
-                        if (sourceData.Columns.Contains(sourceColumnName) && !addedColumns.Contains(sourceColumnName))
+                        var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                        if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.SourceColumnName))
                         {
-                            result.Columns.Add(sourceColumnName, typeof(string));
-                            addedColumns.Add(sourceColumnName);
+                            string sourceColumnName = fkConfig.SourceColumnName;
+
+                            // 检查源数据中是否包含该列
+                            if (sourceData.Columns.Contains(sourceColumnName) && !addedColumns.Contains(sourceColumnName))
+                            {
+                                result.Columns.Add(sourceColumnName, typeof(string));
+                                addedColumns.Add(sourceColumnName);
+                            }
                         }
                     }
                 }
@@ -1870,14 +1884,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     object cellValue = sourceRow[excelColumnName];
                                     bool isEmpty = cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString());
 
-                                    if (mapping.IgnoreEmptyValue && isEmpty)
+                                    var excelConfig = mapping.DataSourceConfig as ExcelConfig;
+                                    if (excelConfig != null && excelConfig.IgnoreEmptyValue && isEmpty)
                                     {
                                         targetRow[mapping.SystemField?.Value] = DBNull.Value;
                                     }
                                     else
                                     {
                                         // 如果是图片列，处理图片
-                                        if (mapping.IsImageColumn && _imageOutputDirectory != null)
+                                        var imageConfig = mapping.DataSourceConfig as ExcelImageConfig;
+                                        if (imageConfig != null && _imageOutputDirectory != null)
                                         {
                                             string imagePath = cellValue?.ToString();
                                             if (!string.IsNullOrEmpty(imagePath) && File.Exists(imagePath))
@@ -1922,7 +1938,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                             case DataSourceType.DefaultValue:
                                 // 默认值映射：使用配置的默认值
-                                string defaultValue = mapping.DefaultValue ?? "";
+                                var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
+                                string defaultValue = defaultConfig?.Value ?? "";
                                 // 检查是否需要转换为枚举值
                                 if (entityType != null)
                                 {
@@ -1945,7 +1962,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             case DataSourceType.ForeignKey:
                                 // 外键关联：保留源值用于后续处理
                                 string foreignKeySourceValue = "";
-                                string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
+                                var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                                string sourceColumn = fkConfig?.ForeignKeySourceColumn?.Key ?? mapping.OriginalExcelColumn;
 
                                 if (!string.IsNullOrEmpty(sourceColumn) &&
                                     !sourceColumn.StartsWith("[") &&
@@ -1962,24 +1980,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                                 if (!string.IsNullOrEmpty(foreignKeySourceValue))
                                 {
-                                    string sourceColumnDisplay = mapping.ForeignConfig?.ForeignKeySourceColumn?.Value ?? sourceColumn;
-                                    targetRow[mapping.SystemField?.Key] = $"[通过关联外键:{sourceColumnDisplay}:{foreignKeySourceValue}->找{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
+                                    string sourceColumnDisplay = fkConfig?.ForeignKeySourceColumn?.Value ?? sourceColumn;
+                                    targetRow[mapping.SystemField?.Key] = $"[通过关联外键:{sourceColumnDisplay}:{foreignKeySourceValue}->找{fkConfig?.ForeignTableDisplayName}.{fkConfig?.ForeignFieldDisplayName}]";
                                 }
                                 else
                                 {
-                                    targetRow[mapping.SystemField?.Key] = $"[外键关联:{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
+                                    targetRow[mapping.SystemField?.Key] = $"[外键关联:{fkConfig?.ForeignTableDisplayName}.{fkConfig?.ForeignFieldDisplayName}]";
                                 }
                                 break;
 
                             case DataSourceType.SelfReference:
                                 // 自身字段引用
-                                targetRow[mapping.SystemField?.Value] = $"[自身引用:{mapping.SelfReferenceField?.Value}]";
+                                var selfRefConfig = mapping.DataSourceConfig as SelfReferenceConfig;
+                                targetRow[mapping.SystemField?.Value] = $"[自身引用:{selfRefConfig?.ReferenceFieldDisplayName}]";
                                 break;
 
                             case DataSourceType.FieldCopy:
                                 // 字段复制：复制同一记录中另一个字段的值
                                 var fieldCopyConfig = mapping.DataSourceConfig as FieldCopyConfig;
-                                string sourceFieldKey = fieldCopyConfig?.SourceFieldName ?? mapping.CopyFromField?.Key;
+                                string sourceFieldKey = fieldCopyConfig?.SourceFieldName;
                                 
                                 if (!string.IsNullOrEmpty(sourceFieldKey))
                                 {
@@ -1994,15 +2013,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                             object copiedValue = targetRow[copyFromMapping.SystemField?.Value];
                                             targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
                                         }
-                                        else if (!string.IsNullOrEmpty(copyFromMapping.ExcelColumn) &&
-                                                sourceData.Columns.Contains(copyFromMapping.ExcelColumn))
-                                        {
-                                            object copiedValue = sourceRow[copyFromMapping.ExcelColumn];
-                                            targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
-                                        }
                                         else
                                         {
-                                            targetRow[mapping.SystemField?.Value] = "[字段复制:源数据为空]";
+                                            var excelConfig = copyFromMapping.DataSourceConfig as ExcelConfig;
+                                            if (excelConfig != null && !string.IsNullOrEmpty(excelConfig.ExcelColumn) &&
+                                                    sourceData.Columns.Contains(excelConfig.ExcelColumn))
+                                            {
+                                                object copiedValue = sourceRow[excelConfig.ExcelColumn];
+                                                targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
+                                            }
+                                            else
+                                            {
+                                                targetRow[mapping.SystemField?.Value] = "[字段复制:源数据为空]";
+                                            }
                                         }
                                     }
                                     else
@@ -2018,18 +2041,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                             case DataSourceType.ColumnConcat:
                                 // 列拼接：将Excel中的多个列值拼接后赋值给目标字段
-                                var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig ?? mapping.ConcatConfig;
+                                var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
                                 if (concatConfig != null &&
-                                    concatConfig.SourceColumns != null &&
-                                    concatConfig.SourceColumns.Count >= 2)
+                                    concatConfig.ConcatColumns != null &&
+                                    concatConfig.ConcatColumns.Count >= 2)
                                 {
                                     var concatValues = new List<string>();
 
-                                    foreach (var sourceCol in concatConfig.SourceColumns)
+                                    foreach (var sourceCol in concatConfig.ConcatColumns)
                                     {
-                                        if (sourceData.Columns.Contains(sourceCol))
+                                        if (sourceData.Columns.Contains(sourceCol.Key))
                                         {
-                                            object cellValue = sourceRow[sourceCol];
+                                            object cellValue = sourceRow[sourceCol.Key];
                                             string valueStr = cellValue?.ToString() ?? "";
 
                                             if (concatConfig.TrimWhitespace)
@@ -2085,9 +2108,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void ProcessForeignKeyField(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
         {
-            string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
-            string targetTable = mapping.ForeignConfig?.ForeignKeyTable?.Value;
-            string targetField = mapping.ForeignConfig?.ForeignKeyField?.Value;
+            var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+            string sourceColumn = fkConfig?.ForeignKeySourceColumn?.Key ?? mapping.OriginalExcelColumn;
+            string targetTable = fkConfig?.ForeignTableName;
+            string targetField = fkConfig?.ForeignFieldName;
             string fieldName = mapping.SystemField?.Value;
 
             if (string.IsNullOrEmpty(sourceColumn) || string.IsNullOrEmpty(fieldName))
@@ -2129,9 +2153,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 兼容旧版本配置
-            if (mapping.SystemGeneratedConfig != null)
+            var sysConfig = mapping.DataSourceConfig as SystemGeneratedConfig;
+            if (sysConfig != null)
             {
-                object generatedValue = GenerateSystemValue(mapping.SystemGeneratedConfig);
+                object generatedValue = GenerateSystemValue(sysConfig);
                 if (generatedValue != null)
                 {
                     targetRow[fieldName] = generatedValue;
@@ -2160,7 +2185,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 状态字段
             else if (fieldUpper.Contains("STATUS") || fieldUpper.Contains("STATE"))
             {
-                targetRow[fieldName] = mapping.DefaultValue ?? "1";
+                var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
+                targetRow[fieldName] = defaultConfig?.Value ?? "1";
             }
             // 删除标记
             else if (fieldUpper.Contains("ISDELETED") || fieldUpper.Contains("DELETE"))
@@ -2296,13 +2322,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (string.IsNullOrEmpty(fieldName))
                 return;
 
-            if (mapping.EnumDefaultConfig != null)
+            var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
+            if (defaultConfig != null)
             {
-                targetRow[fieldName] = mapping.EnumDefaultConfig.EnumValue.ToString();
+                targetRow[fieldName] = defaultConfig.EnumValue.ToString();
             }
             else
             {
-                targetRow[fieldName] = mapping.DefaultValue ?? "";
+                var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
+                targetRow[fieldName] = defaultConfig?.Value ?? "";
             }
         }
 
@@ -2312,7 +2340,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void ProcessFieldCopyField(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
         {
             string fieldName = mapping.SystemField?.Value;
-            string copyFromField = mapping.CopyFromField?.Key;
+            
+            var fieldCopyConfig = mapping.DataSourceConfig as FieldCopyConfig;
+            string copyFromField = fieldCopyConfig?.SourceFieldName;
 
             if (string.IsNullOrEmpty(fieldName) || string.IsNullOrEmpty(copyFromField))
                 return;
@@ -2334,11 +2364,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
 
             var values = new List<string>();
-            foreach (var sourceCol in concatConfig.SourceColumns)
+            foreach (var sourceCol in concatConfig.ConcatColumns)
             {
-                if (sourceRow.Table.Columns.Contains(sourceCol))
+                if (sourceRow.Table.Columns.Contains(sourceCol.Key))
                 {
-                    string value = sourceRow[sourceCol]?.ToString() ?? "";
+                    string value = sourceRow[sourceCol.Key]?.ToString() ?? "";
                     if (concatConfig.TrimWhitespace)
                         value = value.Trim();
 
@@ -2349,7 +2379,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
             }
 
-            targetRow[fieldName] = string.Join(mapping.ConcatConfig.Separator ?? "", values);
+            targetRow[fieldName] = string.Join(concatConfig.Separator ?? "", values);
         }
     }
 }

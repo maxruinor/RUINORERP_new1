@@ -49,14 +49,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Type _selectedEntityType;
 
         #region 图片缓存管理
-        // 【内存优化】图片缓存，防止重复加载同一图片
+        // 【内存优化】统一的图片缓存，防止重复加载同一图片
         private readonly Dictionary<string, Image> _imageCache = new Dictionary<string, Image>();
         private readonly object _imageCacheLock = new object();
-        private const int MaxImageCacheSize = 100; // 最多缓存100张图片
-        
-        // 【P0修复】跟踪当前显示的Bitmap对象，用于及时释放
-        private readonly Dictionary<string, Image> _currentDisplayImages = new Dictionary<string, Image>();
-        private readonly object _displayImagesLock = new object();
+        private const int MaxImageCacheSize = 100;
 
         /// <summary>
         /// 注册图片到缓存（线程安全）
@@ -73,10 +69,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     var keysToRemove = _imageCache.Keys.Take(10).ToList();
                     foreach (var k in keysToRemove)
                     {
-                        if (_imageCache.TryGetValue(k, out var oldImg))
-                        {
-                            oldImg?.Dispose();
-                        }
+                        _imageCache[k]?.Dispose();
                         _imageCache.Remove(k);
                     }
                 }
@@ -86,32 +79,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     _imageCache[key] = image;
                 }
-            }
-            
-            // 【P0修复】同时注册到当前显示图片追踪字典
-            RegisterDisplayImage(image, key);
-        }
-        
-        /// <summary>
-        /// 【P0修复】注册当前显示的图片，用于及时释放旧图片
-        /// </summary>
-        private void RegisterDisplayImage(Image image, string key)
-        {
-            if (image == null || string.IsNullOrEmpty(key)) return;
-            
-            lock (_displayImagesLock)
-            {
-                // 如果该key已有显示的图片，先释放旧图片
-                if (_currentDisplayImages.TryGetValue(key, out var oldImage))
-                {
-                    // 只有当旧图片不在缓存中时才释放（缓存中的图片可能被复用）
-                    if (!_imageCache.ContainsKey(key))
-                    {
-                        oldImage?.Dispose();
-                    }
-                }
-                
-                _currentDisplayImages[key] = image;
             }
         }
 
@@ -127,20 +94,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     img?.Dispose();
                 }
                 _imageCache.Clear();
-            }
-            
-            // 【P0修复】同时清理当前显示的图片追踪
-            lock (_displayImagesLock)
-            {
-                foreach (var img in _currentDisplayImages.Values)
-                {
-                    // 只释放不在缓存中的图片（缓存中的已在上面释放）
-                    if (!_imageCache.ContainsValue(img))
-                    {
-                        img?.Dispose();
-                    }
-                }
-                _currentDisplayImages.Clear();
             }
         }
         #endregion
@@ -910,89 +863,43 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 动态导入-映射配置按钮点击事件
-        /// 【功能说明】打开列映射配置界面，用户可以：
-        /// 1. 新增模式：创建新的Excel列与系统字段的映射关系
-        /// 2. 编辑模式：修改已保存的映射配置
-        /// 【映射类型支持】
-        /// - Excel直接映射：Excel列 → 系统字段
-        /// - 外键关联：通过编码/名称查找关联表的主键ID
-        /// - 默认值：固定值或枚举值
-        /// - 系统生成：自动生成（如创建时间、创建人）
-        /// - 字段复制/拼接：从其他字段复制或组合
+        /// 【功能说明】打开列映射配置界面，用户可以新增或编辑映射关系
         /// 【操作流程】选择数据类型 → 点击此按钮 → 配置映射 → 保存配置
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
         private void KbtnDynamicMap_Click(object sender, EventArgs e)
         {
             try
             {
-                // 检查是否选择了实体类型
                 if (_selectedEntityType == null)
                 {
                     MessageBox.Show("请先选择数据类型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                // 判断是编辑模式还是新增模式
                 bool isEditMode = kcmbDynamicMappingName.SelectedIndex > 0;
-                string mappingName = string.Empty;
+                string mappingName = isEditMode ? GetMappingNameFromCombo() : string.Empty;
                 
-                if (isEditMode)
-                {
-                    // 【修复】从下拉框获取配置名时需要去除"[配置] "前缀
-                    string selectedText = kcmbDynamicMappingName.SelectedItem.ToString();
-                    if (selectedText.StartsWith("[配置] "))
-                    {
-                        mappingName = selectedText.Substring(5); // 移除 "[配置] " 前缀
-                    }
-                    else
-                    {
-                        mappingName = selectedText;
-                    }
-                }
-
-                // 如果是编辑模式，先加载选中的配置
                 if (isEditMode)
                 {
                     LoadSelectedMapping();
                 }
 
-                // 使用原始Excel数据进行映射配置
                 using (var frmMapping = new frmColumnMappingConfig(_selectedEntityType, _rawExcelData))
                 {
-                    // 设置参数
                     frmMapping.ImportConfig = _currentConfig;
                     frmMapping.IsEditMode = isEditMode;
                     frmMapping.OriginalMappingName = mappingName;
 
-                    // 订阅映射配置保存成功事件
                     frmMapping.MappingSaved += (s, args) =>
                     {
-                        // 刷新映射配置下拉列表
                         LoadMappingConfigsForEntityType();
-
-                        // 【修复】自动选中刚保存的配置 - 需要匹配带前缀的格式
-                        if (!string.IsNullOrEmpty(frmMapping.SavedMappingName))
-                        {
-                            string configText = $"[配置] {frmMapping.SavedMappingName}";
-                            int index = kcmbDynamicMappingName.FindStringExact(configText);
-                            if (index > 0)
-                            {
-                                kcmbDynamicMappingName.SelectedIndex = index;
-                            }
-                        }
+                        AutoSelectSavedMapping(frmMapping.SavedMappingName);
                     };
 
-                    // 显示映射配置窗体
                     if (frmMapping.ShowDialog() == DialogResult.OK)
                     {
-                        // 更新映射配置
                         _currentConfig = frmMapping.ImportConfig;
-
-                        // 更新按钮状态
                         UpdateMappingControlStates();
-
                         string operationType = isEditMode ? "编辑" : "新增";
                         MessageBox.Show($"列映射配置已{operationType}，可以点击\"解析\"按钮进行数据转换",
                             "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -1002,6 +909,34 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             catch (Exception ex)
             {
                 MessageBox.Show($"打开映射配置界面失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 从下拉框获取映射配置名称（去除前缀）
+        /// </summary>
+        private string GetMappingNameFromCombo()
+        {
+            string selectedText = kcmbDynamicMappingName.SelectedItem.ToString();
+            if (selectedText.StartsWith("[配置] "))
+                return selectedText.Substring(5);
+            if (selectedText.StartsWith("[Profile] "))
+                return selectedText.Substring(10);
+            return selectedText;
+        }
+
+        /// <summary>
+        /// 自动选中刚保存的映射配置
+        /// </summary>
+        private void AutoSelectSavedMapping(string savedMappingName)
+        {
+            if (string.IsNullOrEmpty(savedMappingName)) return;
+            
+            string configText = $"[配置] {savedMappingName}";
+            int index = kcmbDynamicMappingName.FindStringExact(configText);
+            if (index > 0)
+            {
+                kcmbDynamicMappingName.SelectedIndex = index;
             }
         }
 
@@ -1043,37 +978,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 执行动态导入
-        /// 【功能说明】将解析后的数据写入数据库，完整流程：
-        /// 1. 验证前置条件（已选择数据类型、已配置映射、已解析数据）
-        /// 2. 初始化 DynamicImporter（含外键服务、事务管理器）
-        /// 3. 执行单表导入（BatchImportEntitiesAsync）
-        ///    - 业务验证（调用 Validator）
-        ///    - 数据库去重检查（按业务键跳过/更新/报错）
-        ///    - 批量插入/更新（使用 SqlSugar Storageable + 雪花ID）
-        ///    - 图片导入（如果配置了图片字段）
-        /// 4. 显示导入结果统计（成功/失败/新增/更新/图片数量）
-        /// 【事务管理】使用 IUnitOfWorkManage 确保数据一致性
+        /// 执行动态导入（统一入口）
+        /// 【功能说明】将解析后的数据写入数据库
         /// </summary>
         private async Task ExecuteDynamicImport()
         {
             try
             {
-                // 检查是否选择了实体类型
                 if (_selectedEntityType == null)
                 {
                     MessageBox.Show("请先选择数据类型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                // 检查是否配置了映射
                 if (_currentConfig == null || _currentConfig.ColumnMappings == null || _currentConfig.ColumnMappings.Count == 0)
                 {
                     MessageBox.Show("请先配置列映射关系", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                // 检查是否有解析后的数据
                 if (_parsedImportData == null || _parsedImportData.Rows.Count == 0)
                 {
                     MessageBox.Show("没有可导入的数据，请先点击\"解析\"按钮转换数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1082,18 +1005,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 初始化DynamicImporter
                 _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
-                
-                      // 直接执行导入
                 await ExecuteSingleImport();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"导入数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                // 【修改】不再恢复按钮状态，因为从未禁用过
-                // kbtnDynamicImport.Enabled = true;
-                // kbtnDynamicBrowse.Enabled = true;
-                // kbtnDynamicParse.Enabled = true;
-                // kbtnDynamicMap.Enabled = true;
             }
         }
 
@@ -1102,174 +1018,87 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private async Task ExecuteSingleImport()
         {
-            try
+            // 优先使用最终预览数据（包含所有可预生成的值）
+            DataTable importData = _finalPreviewData?.Rows.Count > 0 ? _finalPreviewData : _parsedImportData;
+
+            // 获取勾选的行
+            var selectedRows = GetSelectedRows();
+            if (selectedRows.Rows.Count == 0)
             {
-                // 优先使用最终预览数据（包含所有可预生成的值）
-                // 如果没有最终预览数据，则使用解析后的数据
-                DataTable fullParsedData = _finalPreviewData?.Rows.Count > 0 ? _finalPreviewData : _parsedImportData;
-
-                // 检查是否有勾选的行
-                var selectedRows = GetSelectedRows();
-                if (selectedRows.Rows.Count == 0)
+                if (importData.Rows.Count > 0)
                 {
-                    if (fullParsedData.Rows.Count > 0)
-                    {
-                        MessageBox.Show("请先勾选需要导入的数据行", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-                    else
-                    {
-                        MessageBox.Show("没有可导入的数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-                }
-
-                // 使用勾选的行数据
-                DataTable importData = selectedRows;
-
-                // 唯一性检查（在数据验证之前执行）
-                var duplicateErrors = CheckUniqueValues(importData);
-                if (duplicateErrors.Count > 0)
-                {
-                    string duplicateSummary = $"发现 {duplicateErrors.Count} 条数据与数据库中已存在的数据重复：\n\n";
-
-                    // 只显示前10个重复记录
-                    int displayCount = Math.Min(10, duplicateErrors.Count);
-                    for (int i = 0; i < displayCount; i++)
-                    {
-                        var error = duplicateErrors[i];
-                        duplicateSummary += $"行 {error.RowNumber} - {error.FieldName}: {error.ErrorMessage}\n";
-                    }
-
-                    if (duplicateErrors.Count > displayCount)
-                    {
-                        duplicateSummary += $"\n... 还有 {duplicateErrors.Count - displayCount} 条重复记录未显示";
-                    }
-
-                    duplicateSummary += "\n\n是否继续导入（跳过重复的记录）？";
-
-                    if (MessageBox.Show(duplicateSummary, "唯一性检查警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
-                    {
-                        return;
-                    }
-
-                    // 移除重复的记录
-                    var rowsToRemove = duplicateErrors.Select(e => e.RowNumber).Distinct().ToList();
-                    for (int i = importData.Rows.Count - 1; i >= 0; i--)
-                    {
-                        // Excel行号从1开始，转换为DataTable索引（从0开始）
-                        int rowNumber = i + 1;
-                        if (rowsToRemove.Contains(rowNumber))
-                        {
-                            importData.Rows.RemoveAt(i);
-                        }
-                    }
-                }
-
-                // 数据验证
-                var validationErrors = _dynamicDataValidator.Validate(importData, new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()), _selectedEntityType);
-                if (validationErrors.Count > 0)
-                {
-                    string errorSummary = $"发现 {validationErrors.Count} 个数据验证错误：\n\n";
-
-                    // 只显示前10个错误
-                    int displayCount = Math.Min(10, validationErrors.Count);
-                    for (int i = 0; i < displayCount; i++)
-                    {
-                        var error = validationErrors[i];
-                        errorSummary += $"行 {error.RowNumber} - {error.FieldName}: {error.ErrorMessage}\n";
-                    }
-
-                    if (validationErrors.Count > displayCount)
-                    {
-                        errorSummary += $"\n... 还有 {validationErrors.Count - displayCount} 个错误未显示";
-                    }
-
-                    errorSummary += "\n\n是否继续导入（跳过有错误的记录）？";
-
-                    if (MessageBox.Show(errorSummary, "数据验证警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
-                    {
-                        return;
-                    }
-                }
-                if (importData.Rows.Count == 0)
-                {
-                    // 显示确认对话框
-                    MessageBox.Show($"导入数据为： {importData.Rows.Count} 条数据到 {_selectedEntityType.Name}！", "导入取消", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-                    return;
-                }
-
-                // 开始导入
-                // 【修改】不再禁用按钮，允许用户多次操作
-                // kbtnDynamicImport.Enabled = false;
-                // kbtnDynamicBrowse.Enabled = false;
-                // kbtnDynamicParse.Enabled = false;
-                // kbtnDynamicMap.Enabled = false;
-
-                // 移除不必要的Application.DoEvents()，后续的await会让UI线程有机会处理消息
-
-                // 初始化导入器，传入共享的ForeignKeyService实例
-                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
-                
-                // ✅ 设置当前配置，以便DynamicImporter读取业务键等信息
-                _dynamicImporter.SetCurrentConfiguration(_currentConfig);
-
-                // 获取导入类型标识（用于区分客户和供应商等使用相同表的情况）
-                string importType = GetImportType();
-
-                // 检查是否有图片字段映射
-                var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
-                bool hasImageFields = mappings.Any(m => m.DataSourceType == DataSourceType.ExcelImage || m.IsImageColumn);
-
-                // ✅ 检查是否使用最终预览数据（已预处理）
-                bool isPreprocessed = (_finalPreviewData?.Rows.Count > 0 && importData == _finalPreviewData);
-                
-                if (isPreprocessed)
-                {
-                    MainForm.Instance.ShowStatusText("检测到已预处理的预览数据，将跳过重复的外键解析和系统字段生成...");
-                }
-
-                DynamicImporter.ImportResult importResult;
-
-                // 获取Excel文件路径
-                string excelFilePath = ktxtDynamicFilePath?.Text;
-
-                if (hasImageFields && !string.IsNullOrEmpty(excelFilePath) && File.Exists(excelFilePath))
-                {
-                    // 使用支持图片导入的方法
-                    int sheetIndex = kcmbDynamicSheetName.SelectedIndex;
-                    int headerRowIndex = 0; // 默认第一行为标题行
-                    importResult = await _dynamicImporter.ImportFromExcelAsync(
-                        excelFilePath, 
-                        mappings, 
-                        _selectedEntityType, 
-                        sheetIndex, 
-                        headerRowIndex,
-                        importType);
+                    MessageBox.Show("请先勾选需要导入的数据行", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
                 else
                 {
-                    // ✅ 执行普通导入（异步），传递 isPreprocessed 标志
-                    importResult = await _dynamicImporter.ImportAsync(importData, mappings, _selectedEntityType, importType, isPreprocessed);
+                    MessageBox.Show("没有可导入的数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-
-                // 显示导入结果
-                DisplayImportResult(importResult);
-
-                // 重置状态
-                kbtnDynamicImport.Enabled = true;
-                kbtnDynamicBrowse.Enabled = true;
-                kbtnDynamicParse.Enabled = kcmbDynamicSheetName.SelectedIndex >= 0;
-                kbtnDynamicMap.Enabled = true;
+                return;
             }
-            catch (Exception ex)
+
+            importData = selectedRows;
+
+            // 唯一性检查
+            var duplicateErrors = CheckUniqueValues(importData);
+            if (duplicateErrors.Count > 0 && !ConfirmContinueWithDuplicates(duplicateErrors))
             {
-                MessageBox.Show($"导入数据失败，请检查数据格式和映射配置。{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                kbtnDynamicImport.Enabled = true;
-                kbtnDynamicBrowse.Enabled = true;
-                kbtnDynamicParse.Enabled = true;
-                kbtnDynamicMap.Enabled = true;
+                return;
             }
+
+            // 移除重复的记录
+            if (duplicateErrors.Count > 0)
+            {
+                RemoveDuplicateRows(importData, duplicateErrors);
+            }
+
+            // 数据验证
+            var validationErrors = _dynamicDataValidator.Validate(importData, 
+                new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()), 
+                _selectedEntityType);
+            
+            if (validationErrors.Count > 0 && !ConfirmContinueWithValidationErrors(validationErrors))
+            {
+                return;
+            }
+
+            if (importData.Rows.Count == 0)
+            {
+                MessageBox.Show("没有有效数据可导入", "导入取消", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            MainForm.Instance.ShowStatusText("正在导入数据到数据库...");
+
+            // 初始化导入器
+            _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+            _dynamicImporter.SetCurrentConfiguration(_currentConfig);
+
+            string importType = GetImportType();
+            var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
+            bool hasImageFields = mappings.Any(m => m.DataSourceType == DataSourceType.ExcelImage || m.IsImageColumn);
+            bool isPreprocessed = (_finalPreviewData?.Rows.Count > 0 && importData == _finalPreviewData);
+
+            if (isPreprocessed)
+            {
+                MainForm.Instance.ShowStatusText("检测到已预处理的预览数据，将跳过重复的外键解析和系统字段生成...");
+            }
+
+            DynamicImporter.ImportResult importResult;
+            string excelFilePath = ktxtDynamicFilePath?.Text;
+
+            if (hasImageFields && !string.IsNullOrEmpty(excelFilePath) && File.Exists(excelFilePath))
+            {
+                int sheetIndex = kcmbDynamicSheetName.SelectedIndex;
+                importResult = await _dynamicImporter.ImportFromExcelAsync(
+                    excelFilePath, mappings, _selectedEntityType, sheetIndex, 0, importType);
+            }
+            else
+            {
+                importResult = await _dynamicImporter.ImportAsync(importData, mappings, _selectedEntityType, importType, isPreprocessed);
+            }
+
+            DisplayImportResult(importResult);
+            UpdateButtonStatesAfterImport();
         }
 
         /// <summary>

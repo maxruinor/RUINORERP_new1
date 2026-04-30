@@ -42,20 +42,7 @@ namespace RUINORERP.Business.ImportEngine
         /// </summary>
         Task<DataTable> ParseExcelAsync(string filePath, int sheetIndex = 0);
         
-        /// <summary>
-        /// 执行宽表导入(支持多表拆分)
-        /// </summary>
-        Task<ImportReport> ExecuteWideTableImportAsync(string filePath, string profileName);
 
-        /// <summary>
-        /// 分步导入 - 仅导入依赖表(基础数据)
-        /// </summary>
-        Task<ImportReport> ImportDependencyTablesOnlyAsync(string filePath, string profileName);
-
-        /// <summary>
-        /// 分步导入 - 仅导入主表(需先导入依赖表)
-        /// </summary>
-        Task<ImportReport> ImportMasterTableOnlyAsync(string filePath, string profileName);
 
         /// <summary>
         /// 获取AI智能列映射建议

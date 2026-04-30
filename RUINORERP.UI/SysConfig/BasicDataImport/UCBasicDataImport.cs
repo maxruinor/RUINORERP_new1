@@ -2,6 +2,7 @@ using Krypton.Navigator;
 using Krypton.Toolkit;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
+using RUINORERP.UI.UControls;  // NewSumDataGridView控件
 using RUINORERP.Common;
 using RUINORERP.UI.SysConfig.BasicDataImport;
 using RUINORERP.Repository.UnitOfWorks;  // ✅ 新增：IUnitOfWorkManage
@@ -11,7 +12,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
-using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -144,10 +144,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
         }
         #endregion
-        
-        // 宽表导入相关字段
-        private RUINORERP.Business.ImportEngine.SmartImportEngine _wideTableEngine;
-        private bool _isWideTableMode = false;  // 是否启用宽表模式
 
         /// <summary>
         /// 实体类型映射字典
@@ -223,9 +219,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _rawExcelData = new DataTable();
             _parsedImportData = new DataTable();
             _finalPreviewData = new DataTable();
-            
-            // 初始化宽表导入引擎
-            _wideTableEngine = new RUINORERP.Business.ImportEngine.SmartImportEngine(_db);
 
             // 初始化数据网格视图
             dgvRawExcelData.AutoGenerateColumns = true;
@@ -262,171 +255,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             UpdateMappingControlStates();
         }
 
-        /// <summary>
-        /// 添加导入模式选择面板
-        /// </summary>
-        /// <summary>
-        /// 单表导入单选按钮改变事件
-        /// </summary>
-        private void KradioSingleTable_CheckedChanged(object sender, EventArgs e)
-        {
-            if (kradioSingleTable.Checked)
-            {
-                SwitchToSingleTableMode();
-            }
-        }
         
-        /// <summary>
-        /// 宽表导入单选按钮改变事件
-        /// </summary>
-        private void KradioWideTable_CheckedChanged(object sender, EventArgs e)
-        {
-            if (kradioWideTable.Checked)
-            {
-                SwitchToWideTableMode();
-            }
-        }
-        
-        /// <summary>
-        /// 切换到单表导入模式
-        /// </summary>
-        private void SwitchToSingleTableMode()
-        {
-            _isWideTableMode = false;
-            klblModeDescription.Values.Text = "单表导入：适合单个Excel表导入一个数据库表，需要配置列映射关系";
-            MainForm.Instance.ShowStatusText("✓ 已切换到单表导入模式");
-            
-            // 启用实体类型选择
-            kcmbDynamicEntityType.Enabled = true;
-            
-            // 重置下拉框提示文本
-            if (kcmbDynamicMappingName.Items.Count > 0 && kcmbDynamicMappingName.SelectedIndex == 0)
-            {
-                kcmbDynamicMappingName.Items[0] = "-- 请选择导入配置 --";
-            }
-            
-            // 重新加载单表配置
-            if (_selectedEntityType != null)
-            {
-                LoadMappingConfigsForEntityType();
-            }
-            else
-            {
-                kcmbDynamicMappingName.Items.Clear();
-                kcmbDynamicMappingName.Items.Add("-- 请先选择实体类型 --");
-                kcmbDynamicMappingName.SelectedIndex = 0;
-            }
-            
-            UpdateMappingControlStates();
-        }
-        
-        /// <summary>
-        /// 切换到宽表导入模式
-        /// </summary>
-        private void SwitchToWideTableMode()
-        {
-            _isWideTableMode = true;
-            klblModeDescription.Values.Text = "宽表导入：适合一个Excel表包含主表和多个依赖表的数据，使用预定义的Profile配置";
-            MainForm.Instance.ShowStatusText("✓ 已切换到宽表导入模式");
-            
-            // 禁用实体类型选择（宽表不需要）
-            kcmbDynamicEntityType.Enabled = false;
-            
-            // 清空并重新加载宽表配置
-            LoadWideTableProfilesOnly();
-            
-            // 宽表模式按钮状态
-            kbtnDynamicParse.Enabled = false;
-            kbtnDynamicMap.Enabled = false;
-            kbtnGeneratePreview.Enabled = false;
-            kbtnDynamicImport.Enabled = true;
-        }
-        
-        /// <summary>
-        /// 仅加载宽表Profile配置
-        /// </summary>
-        private void LoadWideTableProfilesOnly()
-        {
-            try
-            {
-                kcmbDynamicMappingName.Items.Clear();
-                kcmbDynamicMappingName.Items.Add("-- 请选择宽表Profile --");
-                
-                var profileDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SysConfig", "DataMigration", "Profiles");
-                if (!Directory.Exists(profileDirectory))
-                {
-                    MainForm.Instance.ShowStatusText("未找到宽表Profile配置目录");
-                    return;
-                }
-
-                // 查找所有宽表Profile文件
-                var wideTableProfiles = new List<string>();
-                foreach (var jsonFile in Directory.GetFiles(profileDirectory, "*.json"))
-                {
-                    try
-                    {
-                        var content = File.ReadAllText(jsonFile);
-                        if (content.Contains("\"MasterTable\"") || content.Contains("\"DependencyTables\""))
-                        {
-                            var profileName = Path.GetFileNameWithoutExtension(jsonFile);
-                            wideTableProfiles.Add(profileName);
-                        }
-                    }
-                    catch
-                    {
-                        // 忽略无法读取的文件
-                    }
-                }
-
-                // 添加宽表Profile
-                foreach (var profile in wideTableProfiles.OrderBy(p => p))
-                {
-                    kcmbDynamicMappingName.Items.Add($"[宽表] {profile}");
-                }
-                
-                MainForm.Instance.ShowStatusText($"已加载 {wideTableProfiles.Count} 个宽表Profile配置");
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.ShowStatusText($"加载宽表Profile失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 添加宽表Profile管理按钮和生成结果预览按钮
-        /// </summary>
-        /// <summary>
-        /// 管理宽表Profile按钮点击事件
-        /// </summary>
-        private async void kbtnManageProfiles_Click(object sender, EventArgs e)
-        {
-            await OpenWideTableProfileEditor();
-        }
-        
-        /// <summary>
-        /// 打开宽表Profile编辑器
-        /// </summary>
-        private async Task OpenWideTableProfileEditor()
-        {
-            try
-            {
-                var frm = new FrmWideTableProfileEditor(_db);
-                var result = frm.ShowDialog();
-
-                if (result == DialogResult.OK)
-                {
-                    // 重新加载Profile列表
-                    LoadWideTableProfiles();
-                    MessageBox.Show("Profile已保存,请从下拉框中选择", "提示", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"打开Profile编辑器失败: {ex.Message}", "错误", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
 
         /// <summary>
         /// 初始化实体类型选择下拉框
@@ -503,39 +332,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (kcmbDynamicMappingName.SelectedIndex <= 0)
                 {
                     _currentConfig = new ImportConfiguration();
-                    _isWideTableMode = false;
                     UpdateMappingControlStates();
                     return;
                 }
 
                 string selectedText = kcmbDynamicMappingName.SelectedItem.ToString();
                 
-                // 检查是否为宽表Profile
-                if (selectedText.StartsWith("[宽表] "))
-                {
-                    _isWideTableMode = true;
-                    MainForm.Instance.ShowStatusText($"✓ 已切换到宽表导入模式: {selectedText}");
-                    
-                    // 宽表模式不需要选择实体类型和映射配置
-                    kbtnDynamicParse.Enabled = false;  // 禁用解析按钮(宽表不需要预览解析)
-                    kbtnDynamicMap.Enabled = false;    // 禁用映射配置按钮
-                    kbtnGeneratePreview.Enabled = false; // 禁用预览按钮
-                    kbtnDynamicImport.Enabled = true;  // 宽表可以直接导入
-                    
-                    return;
-                }
-                else if (selectedText.StartsWith("[配置] "))
-                {
-                    // 单表配置模式
-                    _isWideTableMode = false;
-                    MainForm.Instance.ShowStatusText($"✓ 已切换到单表导入模式: {selectedText}");
-                }
-                else
-                {
-                    // 旧格式配置（兼容）
-                    _isWideTableMode = false;
-                }
-
                 // 加载选中的映射配置
                 LoadSelectedMapping();
 
@@ -748,124 +550,47 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             bool hasEntityType = _selectedEntityType != null;
             bool hasRawData = _rawExcelData != null && _rawExcelData.Rows.Count > 0;
             bool hasMappingSelected = kcmbDynamicMappingName.SelectedIndex > 0;
-            bool isWideTable = _isWideTableMode;
 
-            // 根据当前模式更新控件状态
-            if (isWideTable)
+            // 普通模式：根据条件启用按钮
+            
+            // 映射配置按钮：已选择实体类型，且（已加载原始数据 OR 已选择映射配置）
+            kbtnDynamicMap.Enabled = hasEntityType && (hasRawData || hasMappingSelected);
+
+            // 解析按钮：需要原始数据、实体类型、映射配置都具备
+            bool hasMappingConfig = _currentConfig != null && _currentConfig.ColumnMappings != null && _currentConfig.ColumnMappings.Count > 0;
+            kbtnDynamicParse.Enabled = hasRawData && hasEntityType && hasMappingConfig;
+            
+            // 生成结果预览按钮：需要有解析后的数据
+            if (kbtnGeneratePreview != null)
             {
-                // 宽表模式：禁用解析和映射配置按钮
-                kbtnDynamicParse.Enabled = false;  // 宽表不需要解析
-                kbtnDynamicMap.Enabled = false;    // 宽表不需要映射配置
-                kbtnGeneratePreview.Enabled = false; // 宽表不需要预览
-                kbtnDynamicImport.Enabled = true;   // 宽表可以直接导入
-                
-                // 禁用实体类型选择（宽表不需要）
-                if (kcmbDynamicEntityType != null)
-                {
-                    kcmbDynamicEntityType.Enabled = false;
-                }
+                kbtnGeneratePreview.Enabled = _parsedImportData != null && _parsedImportData.Rows.Count > 0;
+            }
+            
+            // 导入按钮：需要在解析后或生成预览后才能启用
+            if (_parsedImportData != null && _parsedImportData.Rows.Count > 0)
+            {
+                // 有解析数据就可以导入，不需要强制点“生成结果预览”
+                kbtnDynamicImport.Enabled = true;
             }
             else
             {
-                // 普通模式：根据条件启用按钮
-                
-                // 映射配置按钮：已选择实体类型，且（已加载原始数据 OR 已选择映射配置）
-                kbtnDynamicMap.Enabled = hasEntityType && (hasRawData || hasMappingSelected);
-
-                // 解析按钮：需要原始数据、实体类型、映射配置都具备
-                bool hasMappingConfig = _currentConfig != null && _currentConfig.ColumnMappings != null && _currentConfig.ColumnMappings.Count > 0;
-                kbtnDynamicParse.Enabled = hasRawData && hasEntityType && hasMappingConfig;
-                
-                // 生成结果预览按钮：需要有解析后的数据
-                if (kbtnGeneratePreview != null)
-                {
-                    kbtnGeneratePreview.Enabled = _parsedImportData != null && _parsedImportData.Rows.Count > 0;
-                }
-                
-                // 导入按钮：需要在解析后或生成预览后才能启用
-                if (_parsedImportData != null && _parsedImportData.Rows.Count > 0)
-                {
-                    // 有解析数据就可以导入，不需要强制点“生成结果预览”
-                    kbtnDynamicImport.Enabled = true;
-                }
-                else
-                {
-                    kbtnDynamicImport.Enabled = false;
-                }
-                
-                // 启用实体类型选择
-                if (kcmbDynamicEntityType != null)
-                {
-                    kcmbDynamicEntityType.Enabled = true;
-                }
+                kbtnDynamicImport.Enabled = false;
+            }
+            
+            // 启用实体类型选择
+            if (kcmbDynamicEntityType != null)
+            {
+                kcmbDynamicEntityType.Enabled = true;
             }
         }
 
         /// <summary>
-        /// 加载映射配置列表（根据当前模式）
+        /// 加载映射配置列表
         /// </summary>
         private void LoadMappingConfigs()
         {
-            if (_isWideTableMode)
-            {
-                // 宽表模式：只加载宽表Profile
-                LoadWideTableProfilesOnly();
-            }
-            else
-            {
-                // 单表模式：只加载单表配置
-                LoadMappingConfigsForEntityType();
-            }
-        }
-
-        /// <summary>
-        /// 加载宽表Profile配置列表
-        /// </summary>
-        private void LoadWideTableProfiles()
-        {
-            try
-            {
-                var profileDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SysConfig", "DataMigration", "Profiles");
-                if (!Directory.Exists(profileDirectory))
-                {
-                    return;
-                }
-
-                // 查找所有宽表Profile文件(包含MasterTable字段的JSON)
-                var wideTableProfiles = new List<string>();
-                foreach (var jsonFile in Directory.GetFiles(profileDirectory, "*.json"))
-                {
-                    try
-                    {
-                        var content = File.ReadAllText(jsonFile);
-                        if (content.Contains("\"MasterTable\"") || content.Contains("\"DependencyTables\""))
-                        {
-                            var profileName = Path.GetFileNameWithoutExtension(jsonFile);
-                            wideTableProfiles.Add(profileName);
-                        }
-                    }
-                    catch
-                    {
-                        // 忽略无法读取的文件
-                    }
-                }
-
-                // 将宽表Profile添加到下拉框(用特殊前缀标识)
-                foreach (var profile in wideTableProfiles.OrderBy(p => p))
-                {
-                    // 检查是否已存在
-                    if (!kcmbDynamicMappingName.Items.Contains($"[宽表] {profile}"))
-                    {
-                        kcmbDynamicMappingName.Items.Add($"[宽表] {profile}");
-                    }
-                }
-                
-                MainForm.Instance.ShowStatusText($"已加载 {wideTableProfiles.Count} 个宽表Profile配置");
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.ShowStatusText($"加载宽表Profile失败: {ex.Message}");
-            }
+            // 单表模式：只加载单表配置
+            LoadMappingConfigsForEntityType();
         }
 
         /// <summary>
@@ -1650,10 +1375,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             catch (Exception ex)
             {
                 MessageBox.Show($"导入数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                kbtnDynamicImport.Enabled = true;
-                kbtnDynamicBrowse.Enabled = true;
-                kbtnDynamicParse.Enabled = true;
-                kbtnDynamicMap.Enabled = true;
+                // 【修改】不再恢复按钮状态，因为从未禁用过
+                // kbtnDynamicImport.Enabled = true;
+                // kbtnDynamicBrowse.Enabled = true;
+                // kbtnDynamicParse.Enabled = true;
+                // kbtnDynamicMap.Enabled = true;
             }
         }
 
@@ -1760,10 +1486,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 开始导入
-                kbtnDynamicImport.Enabled = false;
-                kbtnDynamicBrowse.Enabled = false;
-                kbtnDynamicParse.Enabled = false;
-                kbtnDynamicMap.Enabled = false;
+                // 【修改】不再禁用按钮，允许用户多次操作
+                // kbtnDynamicImport.Enabled = false;
+                // kbtnDynamicBrowse.Enabled = false;
+                // kbtnDynamicParse.Enabled = false;
+                // kbtnDynamicMap.Enabled = false;
 
                 // 移除不必要的Application.DoEvents()，后续的await会让UI线程有机会处理消息
 
@@ -2215,14 +1942,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                MainForm.Instance.ShowStatusText("正在生成最终结果预览...");
-                kbtnGeneratePreview.Enabled = false;
+                MainForm.Instance.ShowStatusText("正在预处理数据...");
+                // 【修改】不再禁用按钮，允许用户多次操作
+                // kbtnGeneratePreview.Enabled = false;
 
                 // 1. 预加载所有外键数据到缓存
                 PreloadForeignKeyData();
 
-                // 2. 生成最终的预览数据
-                _finalPreviewData = await GenerateFinalPreviewDataAsync(_parsedImportData);
+                // 2. 使用DynamicImporter的预处理功能（避免UI层重复实现）
+                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+                var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
+                
+                _finalPreviewData = await _dynamicImporter.PreprocessDataAsync(_parsedImportData, mappings, _selectedEntityType);
 
                 // 3. 显示预览
                 dgvFinalPreview.DataSource = _finalPreviewData;
@@ -2230,326 +1961,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 4. 切换到最终预览页面
                 kryptonNavigatorDynamic.SelectedIndex = 2;
 
-                // 5. 启用导入按钮
+                // 5. 启用批量导入按钮
                 kbtnDynamicImport.Enabled = true;
 
-                MainForm.Instance.ShowStatusText($"最终预览生成完成，共 {_finalPreviewData.Rows.Count} 行数据，可以点击\"导入\"按钮保存到数据库");
+                MainForm.Instance.ShowStatusText($"预处理完成，共 {_finalPreviewData.Rows.Count} 行数据，可以点击\"批量导入\"按钮保存到数据库");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"生成最终预览失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                kbtnGeneratePreview.Enabled = true;
+                MessageBox.Show($"预处理失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 【修改】不再恢复按钮状态，因为从未禁用过
+                // kbtnGeneratePreview.Enabled = true;
             }
         }
 
         /// <summary>
-        /// 生成最终的预览数据（关键步骤：执行所有业务逻辑预处理）
-        /// 包含所有可预生成的字段值（Excel数据、外键ID、系统生成值、复制值、拼接值等）
-        /// ✅ 优化：预览数据即为最终可导入数据库的形态，避免重复预处理
-        /// </summary>
-        /// <param name="parsedData">已解析的数据</param>
-        /// <returns>最终预览数据表</returns>
-        private async Task<DataTable> GenerateFinalPreviewDataAsync(DataTable parsedData)
-        {
-            if (parsedData == null || parsedData.Rows.Count == 0)
-            {
-                return new DataTable();
-            }
-
-            var result = new DataTable("FinalPreview");
-            var mappings = _currentConfig.ColumnMappings ?? new List<ColumnMapping>();
-
-            // 1. 创建结果表结构（使用SystemField.Value作为列名）
-            foreach (var mapping in mappings)
-            {
-                if (!string.IsNullOrEmpty(mapping.SystemField?.Value) && !result.Columns.Contains(mapping.SystemField.Value))
-                {
-                    result.Columns.Add(mapping.SystemField.Value, typeof(string));
-                }
-            }
-
-            // 2. 批量预加载外键数据到缓存（性能优化）
-            PreloadForeignKeyData();
-
-            // 3. 处理每一行数据 - 执行所有预处理逻辑
-            foreach (DataRow sourceRow in parsedData.Rows)
-            {
-                DataRow targetRow = result.NewRow();
-
-                foreach (var mapping in mappings)
-                {
-                    string fieldName = mapping.SystemField?.Value;
-                    if (string.IsNullOrEmpty(fieldName))
-                    {
-                        continue;
-                    }
-
-                    try
-                    {
-                        switch (mapping.DataSourceType)
-                        {
-                            case DataSourceType.Excel:
-                                // Excel数据：直接从解析后的数据中获取
-                                if (parsedData.Columns.Contains(fieldName))
-                                {
-                                    targetRow[fieldName] = sourceRow[fieldName]?.ToString() ?? "";
-                                }
-                                break;
-
-                            case DataSourceType.ForeignKey:
-                                // ✅ 外键关联：查询数据库获取真实ID（使用缓存）
-                                string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
-                                string targetTable = mapping.ForeignConfig?.ForeignKeyTable?.Value;
-                                string targetField = mapping.ForeignConfig?.ForeignKeyField?.Value;
-
-                                if (!string.IsNullOrEmpty(sourceColumn) && parsedData.Columns.Contains(sourceColumn))
-                                {
-                                    string sourceValue = sourceRow[sourceColumn]?.ToString() ?? "";
-                                    if (!string.IsNullOrEmpty(sourceValue) && !string.IsNullOrEmpty(targetTable) && !string.IsNullOrEmpty(targetField))
-                                    {
-                                        // ✅ 使用缓存的外键服务查询（已在PreloadForeignKeyData中预加载）
-                                        object foreignKeyId = _foreignKeyService.GetForeignKeyId(sourceValue, targetTable, targetField);
-                                        targetRow[fieldName] = foreignKeyId?.ToString() ?? "";
-                                    }
-                                }
-                                break;
-
-                            case DataSourceType.SystemGenerated:
-                                // ✅ 简化：预览阶段不生成真实值，仅显示提示信息
-                                // 实际值在导入阶段由 InitEntity 和 BatchPreProcessEntitiesAsync 统一处理
-                                targetRow[fieldName] = GetSystemFieldHint(fieldName);
-                                break;
-
-                            case DataSourceType.DefaultValue:
-                                // ✅ 默认值：直接应用配置中的默认值
-                                if (mapping.EnumDefaultConfig != null)
-                                {
-                                    targetRow[fieldName] = mapping.EnumDefaultConfig.EnumValue.ToString();
-                                }
-                                else
-                                {
-                                    targetRow[fieldName] = mapping.DefaultValue ?? "";
-                                }
-                                break;
-
-
-
-                            case DataSourceType.FieldCopy:
-                                // ✅ 字段复制：复制另一个字段的值
-                                string copyFromField = mapping.CopyFromField?.Key;
-                                if (!string.IsNullOrEmpty(copyFromField) && parsedData.Columns.Contains(copyFromField))
-                                {
-                                    targetRow[fieldName] = sourceRow[copyFromField]?.ToString() ?? "";
-                                }
-                                break;
-
-                            case DataSourceType.ColumnConcat:
-                                // ✅ 列拼接：拼接多个列的值
-                                targetRow[fieldName] = GenerateConcatValue(sourceRow, mapping.ConcatConfig);
-                                break;
-
-                            case DataSourceType.SelfReference:
-                                // ⚠️ 自身引用：需要在数据库中查找，标记为导入时处理
-                                // （因为需要先生成主记录才能建立引用关系）
-                                targetRow[fieldName] = "[导入时处理]";
-                                break;
-
-                            case DataSourceType.ExcelImage:
-                                // ✅ 图片列：从Excel列获取路径或Base64
-                                if (parsedData.Columns.Contains(mapping.ExcelColumn))
-                                {
-                                    targetRow[fieldName] = sourceRow[mapping.ExcelColumn]?.ToString() ?? "";
-                                }
-                                break;
-
-                            default:
-                                targetRow[fieldName] = "";
-                                break;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // 记录错误但继续处理其他字段
-                        System.Diagnostics.Debug.WriteLine($"预览数据处理失败 [{fieldName}]: {ex.Message}");
-                        targetRow[fieldName] = $"[错误: {ex.Message}]";
-                    }
-                }
-
-                result.Rows.Add(targetRow);
-            }
-
-            return await Task.FromResult(result);
-        }
-
- 
-        /// <summary>
-        /// ✅ 获取系统字段的友好提示信息（简化版）
-        /// 预览阶段仅显示提示，实际值在导入阶段由 InitEntity 统一处理
-        /// </summary>
-        /// <param name="fieldName">字段名</param>
-        /// <returns>提示信息</returns>
-        private string GetSystemFieldHint(string fieldName)
-        {
-            if (string.IsNullOrEmpty(fieldName))
-                return "[系统生成]";
-
-            fieldName = fieldName.ToUpper();
-
-            if (fieldName.Contains("CREATETIME") || fieldName.Contains("CREATEDTIME"))
-                return "[导入时自动生成当前时间]";
-            
-            if (fieldName.Contains("CREATEDATE"))
-                return "[导入时自动生成当前日期]";
-            
-            if (fieldName.Contains("CREATEUSER") || fieldName.Contains("CREATEBY"))
-                return "[导入时使用当前登录用户]";
-            
-            if (fieldName.Contains("CODE") || fieldName.Contains("NO") || fieldName.Contains("NUMBER"))
-                return "[导入时自动生成编号]";
-            
-            if (fieldName.Contains("STATUS") || fieldName.Contains("STATE"))
-                return "[导入时设置为启用状态]";
-            
-            if (fieldName.Contains("ISDELETED") || fieldName.Contains("DELETE"))
-                return "[导入时设置为未删除]";
-            
-            return "[导入时系统自动生成]";
-        }
-
-
-
-        /// <summary>
-        /// 生成列拼接值
-        /// </summary>
-        /// <param name="row">数据行</param>
-        /// <param name="concatConfig">拼接配置</param可能为空，请添加检查
-        /// <returns>拼接后的值</returns>
-        private string GenerateConcatValue(DataRow row, ColumnConcatConfig concatConfig)
-        {
-            if (concatConfig?.SourceColumns == null || concatConfig.SourceColumns.Count == 0)
-            {
-                return "";
-            }
-
-            var values = new List<string>();
-
-            foreach (var sourceCol in concatConfig.SourceColumns)
-            {
-                if (row.Table.Columns.Contains(sourceCol))
-                {
-                    string value = row[sourceCol]?.ToString() ?? "";
-
-                    if (concatConfig.TrimWhitespace)
-                    {
-                        value = value.Trim();
-                    }
-
-                    if (concatConfig.IgnoreEmptyColumns && string.IsNullOrEmpty(value))
-                    {
-                        continue;
-                    }
-
-                    values.Add(value);
-                }
-            }
-
-            return string.Join(concatConfig.Separator ?? "", values);
-        }
-
-        /// <summary>
-        /// 在预览数据中解析外键为真实值
-        /// </summary>
-        private void ResolveForeignKeysInPreview(DataTable previewData)
-        {
-            try
-            {
-                var foreignKeyMappings = _currentConfig.ColumnMappings
-                    .Where(m => m.DataSourceType == DataSourceType.ForeignKey && m.ForeignConfig != null)
-                    .ToList();
-
-                if (!foreignKeyMappings.Any())
-                {
-                    return;
-                }
-
-                int resolvedCount = 0;
-
-                foreach (var mapping in foreignKeyMappings)
-                {
-                    string systemFieldName = mapping.SystemField?.Key;
-                    if (string.IsNullOrEmpty(systemFieldName) || !previewData.Columns.Contains(systemFieldName))
-                    {
-                        continue;
-                    }
-
-                    string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn?.Key;
-                    if (string.IsNullOrEmpty(sourceColumnName) || !previewData.Columns.Contains(sourceColumnName))
-                    {
-                        continue;
-                    }
-
-                    string targetTable = mapping.ForeignConfig.ForeignKeyTable?.Value;
-                    string targetField = mapping.ForeignConfig.ForeignKeyField?.Value;
-
-                    if (string.IsNullOrEmpty(targetTable) || string.IsNullOrEmpty(targetField))
-                    {
-                        continue;
-                    }
-
-                    // 遍历每一行，解析外键
-                    foreach (DataRow row in previewData.Rows)
-                    {
-                        object sourceValue = row[sourceColumnName];
-                        if (sourceValue == null || sourceValue == DBNull.Value || string.IsNullOrEmpty(sourceValue.ToString()))
-                        {
-                            continue;
-                        }
-
-                        // 从缓存中获取外键ID
-                        object foreignKeyId = _foreignKeyService.GetForeignKeyId(
-                            sourceValue.ToString(),
-                            targetTable,
-                            targetField
-                        );
-
-                        if (foreignKeyId != null)
-                        {
-                            // 更新系统字段的值为真实的ID
-                            row[systemFieldName] = foreignKeyId;
-                            
-                            // 添加一列显示关联信息（可选，用于调试）
-                            string displayColName = $"{systemFieldName}_关联信息";
-                            if (!previewData.Columns.Contains(displayColName))
-                            {
-                                previewData.Columns.Add(displayColName, typeof(string));
-                            }
-                            row[displayColName] = $"{sourceValue} → ID:{foreignKeyId}";
-                            
-                            resolvedCount++;
-                        }
-                        else
-                        {
-                            // 外键未找到，标记为错误
-                            string errorColName = $"{systemFieldName}_错误";
-                            if (!previewData.Columns.Contains(errorColName))
-                            {
-                                previewData.Columns.Add(errorColName, typeof(string));
-                            }
-                            row[errorColName] = $"未找到: {sourceValue}";
-                        }
-                    }
-                }
-
-                MainForm.Instance.ShowStatusText($"已解析 {resolvedCount} 个外键关联");
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.ShowStatusText($"解析外键失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 动态导入-导入数据按钮点击事件
+        /// 批量导入按钮点击事件
+        /// 仅负责将预处理阶段生成的数据集合批量保存至数据库
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
@@ -2557,66 +1984,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                // 检查是否为宽表导入模式
-                if (_isWideTableMode)
+                // 检查是否已完成预处理
+                if (_finalPreviewData == null || _finalPreviewData.Rows.Count == 0)
                 {
-                    // 宽表导入模式
-                    if (kcmbDynamicMappingName.SelectedIndex <= 0)
-                    {
-                        MessageBox.Show("请先选择宽表导入Profile配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-
-                    string profileName = kcmbDynamicMappingName.SelectedItem.ToString();
-                    
-                    // 显示导入策略选择对话框
-                    var result = MessageBox.Show(
-                        $"请选择导入策略:\n\n" +
-                        $"【是】一键导入 - 自动处理所有表(推荐新手)\n" +
-                        $"【否】分步导入 - 先导入基础表,再导入主表(推荐高级用户)\n\n" +
-                        $"当前Profile: {profileName}",
-                        "宽表导入策略选择",
-                        MessageBoxButtons.YesNoCancel,
-                        MessageBoxIcon.Question
-                    );
-
-                    if (result == DialogResult.Yes)
-                    {
-                        // 一键导入
-                        await ExecuteWideTableImportOneClick(profileName);
-                    }
-                    else if (result == DialogResult.No)
-                    {
-                        // 分步导入 - 显示步骤选择
-                        var stepResult = MessageBox.Show(
-                            "分步导入:\n\n" +
-                            "【是】步骤1: 仅导入基础表(供应商/类目)\n" +
-                            "【否】步骤2: 仅导入主表(产品)\n\n" +
-                            "注意: 执行步骤2前必须先完成步骤1",
-                            "选择导入步骤",
-                            MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Question
-                        );
-
-                        if (stepResult == DialogResult.Yes)
-                        {
-                            await ExecuteWideTableImportStep1_DependencyTables(profileName);
-                        }
-                        else
-                        {
-                            await ExecuteWideTableImportStep2_MasterTable(profileName);
-                        }
-                    }
-                    // Cancel则不执行任何操作
+                    MessageBox.Show("请先点击\"预处理\"按钮生成最终数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                // 原有单表导入逻辑
-                // 确认导入
+                // 确认批量导入
                 var confirmResult = MessageBox.Show(
-                    $"确定要导入 {_parsedImportData?.Rows.Count ?? 0} 条数据到 {_selectedEntityType?.Name} 吗？\n\n" +
-                    $"请确保已点击\"生成结果预览\"并检查数据无误。",
-                    "确认导入",
+                    $"确定要批量导入 {_finalPreviewData.Rows.Count} 条数据到 {_selectedEntityType?.Name} 吗？\n\n" +
+                    $"数据已在预处理阶段完成处理，现在将直接保存到数据库。",
+                    "确认批量导入",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question
                 );
@@ -2626,15 +2005,125 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                // 预加载外键数据（确保缓存最新）
-                PreloadForeignKeyData();
-
-                // 执行动态导入（异步）
-                await ExecuteDynamicImport();
+                // 执行批量导入（异步）
+                await ExecuteBatchImport();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"导入数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"批量导入失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 执行批量导入任务
+        /// 仅负责将预处理阶段生成的数据集合批量保存至数据库
+        /// </summary>
+        private async Task ExecuteBatchImport()
+        {
+            try
+            {
+                // 检查是否有预处理数据
+                if (_finalPreviewData == null || _finalPreviewData.Rows.Count == 0)
+                {
+                    MessageBox.Show("没有可导入的数据，请先点击\"预处理\"按钮", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 检查是否有勾选的行
+                var selectedRows = GetSelectedRows();
+                if (selectedRows.Rows.Count == 0)
+                {
+                    if (_finalPreviewData.Rows.Count > 0)
+                    {
+                        MessageBox.Show("请先勾选需要导入的数据行", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    else
+                    {
+                        MessageBox.Show("没有可导入的数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+
+                // 使用勾选的行数据
+                DataTable importData = selectedRows;
+
+                // 数据验证（可选：预处理时已验证，这里再次验证确保数据完整性）
+                var validationErrors = _dynamicDataValidator.Validate(importData, new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()), _selectedEntityType);
+                if (validationErrors.Count > 0)
+                {
+                    string errorSummary = $"发现 {validationErrors.Count} 个数据验证错误：\n\n";
+
+                    // 只显示前10个错误
+                    int displayCount = Math.Min(10, validationErrors.Count);
+                    for (int i = 0; i < displayCount; i++)
+                    {
+                        var error = validationErrors[i];
+                        errorSummary += $"行 {error.RowNumber} - {error.FieldName}: {error.ErrorMessage}\n";
+                    }
+
+                    if (validationErrors.Count > displayCount)
+                    {
+                        errorSummary += $"\n... 还有 {validationErrors.Count - displayCount} 个错误未显示";
+                    }
+
+                    errorSummary += "\n\n是否继续导入（跳过有错误的记录）？";
+
+                    if (MessageBox.Show(errorSummary, "数据验证警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                    {
+                        return;
+                    }
+                }
+
+                if (importData.Rows.Count == 0)
+                {
+                    MessageBox.Show($"没有有效数据可导入", "导入取消", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 开始批量导入
+                // 【修改】不再禁用按钮，允许用户多次操作
+                // kbtnDynamicImport.Enabled = false;
+                // kbtnDynamicBrowse.Enabled = false;
+                // kbtnDynamicMap.Enabled = false;
+
+                MainForm.Instance.ShowStatusText("正在批量导入数据到数据库...");
+
+                // 初始化导入器，传入共享的ForeignKeyService实例
+                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+                
+                // 设置当前配置，以便DynamicImporter读取业务键等信息
+                _dynamicImporter.SetCurrentConfiguration(_currentConfig);
+
+                // 获取导入类型标识（用于区分客户和供应商等使用相同表的情况）
+                string importType = GetImportType();
+
+                var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
+
+                // ✅ 执行批量导入，数据已在预处理阶段处理（isPreprocessed = true）
+                DynamicImporter.ImportResult importResult = await _dynamicImporter.ImportAsync(
+                    importData, 
+                    mappings, 
+                    _selectedEntityType, 
+                    importType, 
+                    isPreprocessed: true  // 标记数据已预处理
+                );
+
+                // 显示导入结果
+                DisplayImportResult(importResult);
+
+                // 重置状态
+                kbtnDynamicImport.Enabled = true;
+                kbtnDynamicBrowse.Enabled = true;
+                kbtnDynamicMap.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"批量导入失败，请检查数据格式和映射配置。{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 【修改】不再恢复按钮状态，因为从未禁用过
+                // kbtnDynamicImport.Enabled = true;
+                // kbtnDynamicBrowse.Enabled = true;
+                // kbtnDynamicMap.Enabled = true;
             }
         }
 
@@ -2892,127 +2381,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 格式化失败不影响其他单元格
             }
         }
-
-        #region 宽表导入功能
-
-        /// <summary>
-        /// 执行宽表导入(一键式)
-        /// </summary>
-        private async Task ExecuteWideTableImportOneClick(string profileName)
-        {
-            try
-            {
-                MainForm.Instance.ShowStatusText("开始宽表导入...");
-                kbtnDynamicImport.Enabled = false;
-
-                var report = await _wideTableEngine.ExecuteWideTableImportAsync(
-                    ktxtDynamicFilePath.Text,
-                    profileName
-                );
-
-                if (report.IsSuccess)
-                {
-                    MessageBox.Show(
-                        $"宽表导入成功!\n\n总记录数: {report.TotalRows}\n成功记录: {report.SuccessRows}\n\n{report.Message}",
-                        "导入成功",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information
-                    );
-                    MainForm.Instance.ShowStatusText($"宽表导入完成: {report.SuccessRows} 条记录");
-                }
-                else
-                {
-                    MessageBox.Show(
-                        $"宽表导入失败:\n\n{report.Message}",
-                        "导入失败",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error
-                    );
-                    MainForm.Instance.ShowStatusText($"宽表导入失败: {report.Message}");
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"宽表导入异常: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                MainForm.Instance.ShowStatusText($"宽表导入异常: {ex.Message}");
-            }
-            finally
-            {
-                kbtnDynamicImport.Enabled = true;
-            }
-        }
-
-        /// <summary>
-        /// 执行分步导入 - 仅导入依赖表
-        /// </summary>
-        private async Task ExecuteWideTableImportStep1_DependencyTables(string profileName)
-        {
-            try
-            {
-                MainForm.Instance.ShowStatusText("步骤1: 导入基础表...");
-                
-                var report = await _wideTableEngine.ImportDependencyTablesOnlyAsync(
-                    ktxtDynamicFilePath.Text,
-                    profileName
-                );
-
-                if (report.IsSuccess)
-                {
-                    MessageBox.Show(
-                        $"基础表导入成功!\n\n处理记录: {report.SuccessRows}\n\n{report.Message}\n\n接下来可以执行步骤2: 导入主表",
-                        "步骤1完成",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information
-                    );
-                    MainForm.Instance.ShowStatusText($"基础表导入完成: {report.SuccessRows} 条记录");
-                }
-                else
-                {
-                    MessageBox.Show($"基础表导入失败:\n\n{report.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"基础表导入异常: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// 执行分步导入 - 仅导入主表
-        /// </summary>
-        private async Task ExecuteWideTableImportStep2_MasterTable(string profileName)
-        {
-            try
-            {
-                MainForm.Instance.ShowStatusText("步骤2: 导入主表...");
-                
-                var report = await _wideTableEngine.ImportMasterTableOnlyAsync(
-                    ktxtDynamicFilePath.Text,
-                    profileName
-                );
-
-                if (report.IsSuccess)
-                {
-                    MessageBox.Show(
-                        $"主表导入成功!\n\n处理记录: {report.SuccessRows}\n\n{report.Message}",
-                        "步骤2完成",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information
-                    );
-                    MainForm.Instance.ShowStatusText($"主表导入完成: {report.SuccessRows} 条记录");
-                }
-                else
-                {
-                    MessageBox.Show($"主表导入失败:\n\n{report.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"主表导入异常: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        #endregion
 
     }
 }

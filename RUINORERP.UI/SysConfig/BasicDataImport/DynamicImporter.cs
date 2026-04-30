@@ -258,6 +258,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             return result;
         }
 
+        
         /// <summary>
         /// 动态导入数据（异步）
         /// ✅ 优化：支持已预处理数据的直接导入，避免重复处理
@@ -653,6 +654,129 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 计算多个配置的导入顺序（根据依赖关系）
+        /// </summary>
+        /// <param name="configs">导入配置列表</param>
+        /// <returns>排序后的配置列表</returns>
+        public List<ImportConfiguration> CalculateImportOrder(List<ImportConfiguration> configs)
+        {
+            if (configs == null || configs.Count == 0)
+            {
+                return new List<ImportConfiguration>();
+            }
+
+            if (configs.Count == 1)
+            {
+                return new List<ImportConfiguration> { configs[0] };
+            }
+
+            var result = new List<ImportConfiguration>();
+            var processed = new HashSet<string>();
+            var remaining = new List<ImportConfiguration>(configs);
+            int maxIterations = configs.Count * configs.Count;
+            int iteration = 0;
+
+            while (remaining.Count > 0 && iteration < maxIterations)
+            {
+                bool foundAny = false;
+
+                foreach (var config in remaining.ToList())
+                {
+                    string tableName = config.TargetTable?.Key;
+                    if (string.IsNullOrEmpty(tableName))
+                    {
+                        tableName = config.EntityType;
+                    }
+
+                    if (string.IsNullOrEmpty(tableName))
+                    {
+                        result.Add(config);
+                        remaining.Remove(config);
+                        processed.Add(tableName ?? Guid.NewGuid().ToString());
+                        foundAny = true;
+                        continue;
+                    }
+
+                    bool dependenciesMet = true;
+                    if (config.DependentTables != null && config.DependentTables.Count > 0)
+                    {
+                        foreach (var dep in config.DependentTables)
+                        {
+                            if (!processed.Contains(dep))
+                            {
+                                dependenciesMet = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (dependenciesMet)
+                    {
+                        result.Add(config);
+                        remaining.Remove(config);
+                        processed.Add(tableName);
+                        foundAny = true;
+                    }
+                }
+
+                iteration++;
+
+                if (!foundAny && remaining.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"检测到循环依赖或未处理的表：{string.Join(", ", remaining.Select(c => c.TargetTable?.Key))}");
+                    break;
+                }
+            }
+
+            if (remaining.Count > 0)
+            {
+                result.AddRange(remaining);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 多个表的批量导入（支持关联表）
+        /// </summary>
+        /// <param name="configs">导入配置列表（每个配置包含数据表）</param>
+        /// <param name="entityTypes">实体类型列表</param>
+        /// <returns>导入结果列表</returns>
+        public async System.Threading.Tasks.Task<List<ImportResult>> ImportMultipleTablesAsync(
+            Dictionary<ImportConfiguration, DataTable> configDataMap,
+            Dictionary<ImportConfiguration, Type> configTypeMap)
+        {
+            var results = new List<ImportResult>();
+
+            try
+            {
+                var configs = configDataMap.Keys.ToList();
+                var orderedConfigs = CalculateImportOrder(configs);
+
+                foreach (var config in orderedConfigs)
+                {
+                    if (!configDataMap.TryGetValue(config, out DataTable data) ||
+                        !configTypeMap.TryGetValue(config, out Type entityType))
+                    {
+                        continue;
+                    }
+
+                    var mappings = new ColumnMappingCollection(config?.ColumnMappings ?? new List<ColumnMapping>());
+
+                    var result = await ImportAsync(data, mappings, entityType, null, isPreprocessed: true);
+                    results.Add(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"多表导入失败: {ex.Message}");
+                throw;
+            }
+
+            return results;
         }
 
         /// <summary>

@@ -31,7 +31,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             SystemFields = systemFields ?? new List<string>();
             AttributeRules = existingRules ?? new List<AttributeExtractionRule>();
             InitializeComponent();
-            LoadRules();
+            
+            if (!this.DesignMode)
+            {
+                LoadRules();
+            }
         }
 
         private void LoadRules()

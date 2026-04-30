@@ -108,6 +108,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string Version { get; set; } = "2.0";
 
         /// <summary>
+        /// 依赖的其他表名列表（用于关联表导入）
+        /// </summary>
+        /// <remarks>
+        /// 表示当前表的数据依赖哪些其他表的数据。导入时会先导入依赖表，再导入当前表。
+        /// 例如：产品明细表依赖产品表，则此处填入产品表名。
+        /// </remarks>
+        [XmlArray("DependentTables")]
+        [XmlArrayItem("TableName")]
+        public List<string> DependentTables { get; set; }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public ImportConfiguration()
@@ -117,6 +128,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             EnableDeduplication = false;
             DeduplicateFields = new List<string>();
             ColumnMappings = new List<ColumnMapping>();
+            DependentTables = new List<string>();
             CreateTime = DateTime.Now;
             UpdateTime = DateTime.Now;
         }

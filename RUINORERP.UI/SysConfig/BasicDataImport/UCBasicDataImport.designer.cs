@@ -1,16 +1,11 @@
+using RUINORERP.UI.UControls;
+
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     partial class UCBasicDataImport
     {
-        /// <summary>
-        /// 必需的设计器变量
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// 清理所有正在使用的资源
-        /// </summary>
-        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -22,10 +17,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         #region 组件设计器生成的代码
 
-        /// <summary>
-        /// 设计器支持所需的方法 - 不要修改
-        /// 使用代码编辑器修改此方法的内容
-        /// </summary>
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
@@ -33,12 +24,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.dgvImportData = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.selectAll = new System.Windows.Forms.ToolStripMenuItem();
             this.selectNoAll = new System.Windows.Forms.ToolStripMenuItem();
             this.kryptonPanel2 = new Krypton.Toolkit.KryptonPanel();
-            this.dgvRawExcelData = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonNavigatorMain = new Krypton.Navigator.KryptonNavigator();
             this.kryptonPageDynamicImport = new Krypton.Navigator.KryptonPage();
             this.kryptonGroupBoxDynamicImport = new Krypton.Toolkit.KryptonGroupBox();
@@ -46,9 +35,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonNavigatorDynamic = new Krypton.Navigator.KryptonNavigator();
             this.kryptonPageRawData = new Krypton.Navigator.KryptonPage();
             this.kryptonPageParsedData = new Krypton.Navigator.KryptonPage();
-            this.dgvParsedImportData = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonPageFinalPreview = new Krypton.Navigator.KryptonPage();
-            this.dgvFinalPreview = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonPanel5 = new Krypton.Toolkit.KryptonPanel();
             this.klblDynamicFilePath = new Krypton.Toolkit.KryptonLabel();
             this.ktxtDynamicFilePath = new Krypton.Toolkit.KryptonTextBox();
@@ -63,17 +50,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnDynamicMap = new Krypton.Toolkit.KryptonButton();
             this.kbtnDynamicImport = new Krypton.Toolkit.KryptonButton();
             this.kbtnGeneratePreview = new Krypton.Toolkit.KryptonButton();
-            this.kbtnManageProfiles = new Krypton.Toolkit.KryptonButton();
-            this.kpanelImportMode = new Krypton.Toolkit.KryptonPanel();
-            this.kradioSingleTable = new Krypton.Toolkit.KryptonRadioButton();
-            this.kradioWideTable = new Krypton.Toolkit.KryptonRadioButton();
-            this.klblModeDescription = new Krypton.Toolkit.KryptonLabel();
-            this.dgvDynamicImportData = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonPanel6 = new Krypton.Toolkit.KryptonPanel();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvImportData)).BeginInit();
+            this.dgvRawExcelData = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.dgvParsedImportData = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.dgvFinalPreview = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.dgvImportData = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.dgvDynamicImportData = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvRawExcelData)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigatorMain)).BeginInit();
             this.kryptonNavigatorMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageDynamicImport)).BeginInit();
@@ -90,56 +74,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPageRawData.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageParsedData)).BeginInit();
             this.kryptonPageParsedData.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvParsedImportData)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageFinalPreview)).BeginInit();
             this.kryptonPageFinalPreview.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvFinalPreview)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel5)).BeginInit();
             this.kryptonPanel5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDynamicEntityType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDynamicSheetName)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDynamicMappingName)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kpanelImportMode)).BeginInit();
-            this.kpanelImportMode.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvDynamicImportData)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel6)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvRawExcelData)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvParsedImportData)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvFinalPreview)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvImportData)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvDynamicImportData)).BeginInit();
             this.SuspendLayout();
-            // 
-            // dgvImportData
-            // 
-            this.dgvImportData.AllowUserToAddRows = false;
-            this.dgvImportData.AllowUserToDeleteRows = false;
-            this.dgvImportData.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.dgvImportData.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
-            this.dgvImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvImportData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvImportData.ContextMenuStrip = this.contextMenuStrip1;
-            this.dgvImportData.CustomRowNo = false;
-            this.dgvImportData.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvImportData.EnableFiltering = false;
-            this.dgvImportData.EnablePagination = false;
-            this.dgvImportData.EnableVirtualMode = true;
-            this.dgvImportData.IsShowSumRow = false;
-            this.dgvImportData.Location = new System.Drawing.Point(0, 0);
-            this.dgvImportData.MenuId = null;
-            this.dgvImportData.Name = "dgvImportData";
-            this.dgvImportData.NeedSaveColumnsXml = true;
-            this.dgvImportData.RowTemplate.Height = 23;
-            this.dgvImportData.Size = new System.Drawing.Size(863, 394);
-            this.dgvImportData.SumColumns = null;
-            this.dgvImportData.SummaryDescription = "数据预览";
-            this.dgvImportData.SumRowCellFormat = "N2";
-            this.dgvImportData.TabIndex = 0;
-            this.dgvImportData.UseBatchEditColumn = false;
-            this.dgvImportData.UseCustomColumnDisplay = true;
-            this.dgvImportData.UseSelectedColumn = false;
-            this.dgvImportData.Use是否使用内置右键功能 = true;
-            this.dgvImportData.VirtualModeThreshold = 5000;
-            this.dgvImportData.XmlFileName = "UCBasicDataImport";
             // 
             // contextMenuStrip1
             // 
@@ -167,39 +115,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel2.Name = "kryptonPanel2";
             this.kryptonPanel2.Size = new System.Drawing.Size(100, 100);
             this.kryptonPanel2.TabIndex = 0;
-            // 
-            // dgvRawExcelData
-            // 
-            this.dgvRawExcelData.AllowUserToAddRows = false;
-            this.dgvRawExcelData.AllowUserToDeleteRows = false;
-            this.dgvRawExcelData.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
-            this.dgvRawExcelData.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
-            this.dgvRawExcelData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvRawExcelData.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvRawExcelData.CustomRowNo = false;
-            this.dgvRawExcelData.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvRawExcelData.EnableFiltering = false;
-            this.dgvRawExcelData.EnablePagination = false;
-            this.dgvRawExcelData.EnableVirtualMode = true;
-            this.dgvRawExcelData.IsShowSumRow = false;
-            this.dgvRawExcelData.Location = new System.Drawing.Point(0, 0);
-            this.dgvRawExcelData.MenuId = null;
-            this.dgvRawExcelData.Name = "dgvRawExcelData";
-            this.dgvRawExcelData.NeedSaveColumnsXml = true;
-            this.dgvRawExcelData.Size = new System.Drawing.Size(1079, 366);
-            this.dgvRawExcelData.SumColumns = null;
-            this.dgvRawExcelData.SummaryDescription = "2020-08最新 带有合计列功能;";
-            this.dgvRawExcelData.SumRowCellFormat = "N2";
-            this.dgvRawExcelData.TabIndex = 0;
-            this.dgvRawExcelData.UseBatchEditColumn = false;
-            this.dgvRawExcelData.UseCustomColumnDisplay = true;
-            this.dgvRawExcelData.UseSelectedColumn = false;
-            this.dgvRawExcelData.Use是否使用内置右键功能 = true;
-            this.dgvRawExcelData.VirtualModeThreshold = 5000;
-            this.dgvRawExcelData.XmlFileName = "";
             // 
             // kryptonNavigatorMain
             // 
@@ -270,7 +185,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             this.kryptonNavigatorDynamic.ControlKryptonFormFeatures = false;
             this.kryptonNavigatorDynamic.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonNavigatorDynamic.Location = new System.Drawing.Point(0, 149);
+            this.kryptonNavigatorDynamic.Location = new System.Drawing.Point(0, 115);
             this.kryptonNavigatorDynamic.Name = "kryptonNavigatorDynamic";
             this.kryptonNavigatorDynamic.NavigatorMode = Krypton.Navigator.NavigatorMode.BarTabGroup;
             this.kryptonNavigatorDynamic.Owner = null;
@@ -280,7 +195,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPageParsedData,
             this.kryptonPageFinalPreview});
             this.kryptonNavigatorDynamic.SelectedIndex = 1;
-            this.kryptonNavigatorDynamic.Size = new System.Drawing.Size(1081, 393);
+            this.kryptonNavigatorDynamic.Size = new System.Drawing.Size(1081, 427);
             this.kryptonNavigatorDynamic.TabIndex = 0;
             // 
             // kryptonPageRawData
@@ -292,7 +207,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPageRawData.MinimumSize = new System.Drawing.Size(150, 50);
             this.kryptonPageRawData.Name = "kryptonPageRawData";
             this.kryptonPageRawData.Size = new System.Drawing.Size(1079, 366);
-            this.kryptonPageRawData.Text = "预览数据";
+            this.kryptonPageRawData.Text = "预览原始数据";
             this.kryptonPageRawData.TextTitle = "原始数据";
             this.kryptonPageRawData.ToolTipTitle = "Page ToolTip";
             this.kryptonPageRawData.UniqueName = "原始数据";
@@ -305,44 +220,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPageParsedData.LastVisibleSet = true;
             this.kryptonPageParsedData.MinimumSize = new System.Drawing.Size(150, 50);
             this.kryptonPageParsedData.Name = "kryptonPageParsedData";
-            this.kryptonPageParsedData.Size = new System.Drawing.Size(1079, 366);
+            this.kryptonPageParsedData.Size = new System.Drawing.Size(1079, 400);
             this.kryptonPageParsedData.Text = "解析结果";
             this.kryptonPageParsedData.TextTitle = "解析数据";
             this.kryptonPageParsedData.ToolTipTitle = "Page ToolTip";
             this.kryptonPageParsedData.UniqueName = "解析数据";
-            // 
-            // dgvParsedImportData
-            // 
-            this.dgvParsedImportData.AllowUserToAddRows = false;
-            this.dgvParsedImportData.AllowUserToDeleteRows = false;
-            this.dgvParsedImportData.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
-            this.dgvParsedImportData.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
-            this.dgvParsedImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvParsedImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvParsedImportData.CustomRowNo = false;
-            this.dgvParsedImportData.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvParsedImportData.EnableFiltering = false;
-            this.dgvParsedImportData.EnablePagination = false;
-            this.dgvParsedImportData.EnableVirtualMode = true;
-            this.dgvParsedImportData.IsShowSumRow = false;
-            this.dgvParsedImportData.Location = new System.Drawing.Point(0, 0);
-            this.dgvParsedImportData.MenuId = null;
-            this.dgvParsedImportData.Name = "dgvParsedImportData";
-            this.dgvParsedImportData.NeedSaveColumnsXml = true;
-            this.dgvParsedImportData.Size = new System.Drawing.Size(1079, 366);
-            this.dgvParsedImportData.SumColumns = null;
-            this.dgvParsedImportData.SummaryDescription = "2020-08最新 带有合计列功能;";
-            this.dgvParsedImportData.SumRowCellFormat = "N2";
-            this.dgvParsedImportData.TabIndex = 0;
-            this.dgvParsedImportData.UseBatchEditColumn = false;
-            this.dgvParsedImportData.UseCustomColumnDisplay = true;
-            this.dgvParsedImportData.UseSelectedColumn = false;
-            this.dgvParsedImportData.Use是否使用内置右键功能 = true;
-            this.dgvParsedImportData.VirtualModeThreshold = 5000;
-            this.dgvParsedImportData.XmlFileName = "";
             // 
             // kryptonPageFinalPreview
             // 
@@ -357,39 +239,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPageFinalPreview.TextTitle = "最终数据";
             this.kryptonPageFinalPreview.ToolTipTitle = "Page ToolTip";
             this.kryptonPageFinalPreview.UniqueName = "最终数据";
-            // 
-            // dgvFinalPreview
-            // 
-            this.dgvFinalPreview.AllowUserToAddRows = false;
-            this.dgvFinalPreview.AllowUserToDeleteRows = false;
-            this.dgvFinalPreview.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle4.BackColor = System.Drawing.Color.Beige;
-            this.dgvFinalPreview.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
-            this.dgvFinalPreview.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvFinalPreview.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvFinalPreview.CustomRowNo = false;
-            this.dgvFinalPreview.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvFinalPreview.EnableFiltering = false;
-            this.dgvFinalPreview.EnablePagination = false;
-            this.dgvFinalPreview.EnableVirtualMode = true;
-            this.dgvFinalPreview.IsShowSumRow = false;
-            this.dgvFinalPreview.Location = new System.Drawing.Point(0, 0);
-            this.dgvFinalPreview.MenuId = null;
-            this.dgvFinalPreview.Name = "dgvFinalPreview";
-            this.dgvFinalPreview.NeedSaveColumnsXml = true;
-            this.dgvFinalPreview.Size = new System.Drawing.Size(1079, 366);
-            this.dgvFinalPreview.SumColumns = null;
-            this.dgvFinalPreview.SummaryDescription = "2020-08最新 带有合计列功能;";
-            this.dgvFinalPreview.SumRowCellFormat = "N2";
-            this.dgvFinalPreview.TabIndex = 0;
-            this.dgvFinalPreview.UseBatchEditColumn = false;
-            this.dgvFinalPreview.UseCustomColumnDisplay = true;
-            this.dgvFinalPreview.UseSelectedColumn = true;
-            this.dgvFinalPreview.Use是否使用内置右键功能 = true;
-            this.dgvFinalPreview.VirtualModeThreshold = 5000;
-            this.dgvFinalPreview.XmlFileName = "";
             // 
             // kryptonPanel5
             // 
@@ -406,12 +255,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel5.Controls.Add(this.kbtnDynamicMap);
             this.kryptonPanel5.Controls.Add(this.kbtnDynamicImport);
             this.kryptonPanel5.Controls.Add(this.kbtnGeneratePreview);
-            this.kryptonPanel5.Controls.Add(this.kbtnManageProfiles);
-            this.kryptonPanel5.Controls.Add(this.kpanelImportMode);
             this.kryptonPanel5.Dock = System.Windows.Forms.DockStyle.Top;
             this.kryptonPanel5.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel5.Name = "kryptonPanel5";
-            this.kryptonPanel5.Size = new System.Drawing.Size(1081, 149);
+            this.kryptonPanel5.Size = new System.Drawing.Size(1081, 115);
             this.kryptonPanel5.TabIndex = 0;
             // 
             // klblDynamicFilePath
@@ -426,12 +273,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             this.ktxtDynamicFilePath.Location = new System.Drawing.Point(106, 7);
             this.ktxtDynamicFilePath.Name = "ktxtDynamicFilePath";
-            this.ktxtDynamicFilePath.Size = new System.Drawing.Size(605, 23);
+            this.ktxtDynamicFilePath.Size = new System.Drawing.Size(818, 23);
             this.ktxtDynamicFilePath.TabIndex = 1;
             // 
             // kbtnDynamicBrowse
             // 
-            this.kbtnDynamicBrowse.Location = new System.Drawing.Point(744, 7);
+            this.kbtnDynamicBrowse.Location = new System.Drawing.Point(948, 7);
             this.kbtnDynamicBrowse.Name = "kbtnDynamicBrowse";
             this.kbtnDynamicBrowse.Size = new System.Drawing.Size(80, 25);
             this.kbtnDynamicBrowse.TabIndex = 2;
@@ -439,7 +286,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // klblDynamicEntityType
             // 
-            this.klblDynamicEntityType.Location = new System.Drawing.Point(9, 113);
+            this.klblDynamicEntityType.Location = new System.Drawing.Point(9, 69);
             this.klblDynamicEntityType.Name = "klblDynamicEntityType";
             this.klblDynamicEntityType.Size = new System.Drawing.Size(91, 20);
             this.klblDynamicEntityType.TabIndex = 10;
@@ -450,7 +297,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbDynamicEntityType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbDynamicEntityType.DropDownWidth = 200;
             this.kcmbDynamicEntityType.IntegralHeight = false;
-            this.kcmbDynamicEntityType.Location = new System.Drawing.Point(106, 112);
+            this.kcmbDynamicEntityType.Location = new System.Drawing.Point(106, 68);
             this.kcmbDynamicEntityType.Name = "kcmbDynamicEntityType";
             this.kcmbDynamicEntityType.Size = new System.Drawing.Size(279, 21);
             this.kcmbDynamicEntityType.TabIndex = 11;
@@ -488,22 +335,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbDynamicMappingName.IntegralHeight = false;
             this.kcmbDynamicMappingName.Location = new System.Drawing.Point(507, 40);
             this.kcmbDynamicMappingName.Name = "kcmbDynamicMappingName";
-            this.kcmbDynamicMappingName.Size = new System.Drawing.Size(204, 21);
+            this.kcmbDynamicMappingName.Size = new System.Drawing.Size(417, 21);
             this.kcmbDynamicMappingName.TabIndex = 6;
             // 
             // kbtnDynamicParse
             // 
             this.kbtnDynamicParse.Enabled = false;
-            this.kbtnDynamicParse.Location = new System.Drawing.Point(744, 113);
+            this.kbtnDynamicParse.Location = new System.Drawing.Point(675, 72);
             this.kbtnDynamicParse.Name = "kbtnDynamicParse";
-            this.kbtnDynamicParse.Size = new System.Drawing.Size(80, 25);
+            this.kbtnDynamicParse.Size = new System.Drawing.Size(99, 25);
             this.kbtnDynamicParse.TabIndex = 7;
-            this.kbtnDynamicParse.Values.Text = "解析";
+            this.kbtnDynamicParse.Values.Text = "按配置解析数据";
             // 
             // kbtnDynamicMap
             // 
             this.kbtnDynamicMap.Enabled = false;
-            this.kbtnDynamicMap.Location = new System.Drawing.Point(744, 42);
+            this.kbtnDynamicMap.Location = new System.Drawing.Point(948, 42);
             this.kbtnDynamicMap.Name = "kbtnDynamicMap";
             this.kbtnDynamicMap.Size = new System.Drawing.Size(80, 25);
             this.kbtnDynamicMap.TabIndex = 8;
@@ -513,7 +360,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // kbtnDynamicImport
             // 
             this.kbtnDynamicImport.Enabled = false;
-            this.kbtnDynamicImport.Location = new System.Drawing.Point(849, 113);
+            this.kbtnDynamicImport.Location = new System.Drawing.Point(948, 73);
             this.kbtnDynamicImport.Name = "kbtnDynamicImport";
             this.kbtnDynamicImport.Size = new System.Drawing.Size(80, 25);
             this.kbtnDynamicImport.TabIndex = 9;
@@ -523,68 +370,162 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // kbtnGeneratePreview
             // 
             this.kbtnGeneratePreview.Enabled = false;
-            this.kbtnGeneratePreview.Location = new System.Drawing.Point(591, 113);
+            this.kbtnGeneratePreview.Location = new System.Drawing.Point(804, 73);
             this.kbtnGeneratePreview.Name = "kbtnGeneratePreview";
             this.kbtnGeneratePreview.Size = new System.Drawing.Size(120, 25);
             this.kbtnGeneratePreview.TabIndex = 10;
             this.kbtnGeneratePreview.Values.Text = "生成结果预览";
             this.kbtnGeneratePreview.Click += new System.EventHandler(this.kbtnGeneratePreview_Click);
             // 
-            // kbtnManageProfiles
+            // kryptonPanel6
             // 
-            this.kbtnManageProfiles.Location = new System.Drawing.Point(849, 41);
-            this.kbtnManageProfiles.Name = "kbtnManageProfiles";
-            this.kbtnManageProfiles.Size = new System.Drawing.Size(120, 25);
-            this.kbtnManageProfiles.TabIndex = 11;
-            this.kbtnManageProfiles.Values.Text = "管理宽表Profile";
-            this.kbtnManageProfiles.Click += new System.EventHandler(this.kbtnManageProfiles_Click);
+            this.kryptonPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanel6.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanel6.Name = "kryptonPanel6";
+            this.kryptonPanel6.Size = new System.Drawing.Size(794, 445);
+            this.kryptonPanel6.TabIndex = 0;
             // 
-            // kpanelImportMode
+            // dgvRawExcelData
             // 
-            this.kpanelImportMode.Controls.Add(this.kradioSingleTable);
-            this.kpanelImportMode.Controls.Add(this.kradioWideTable);
-            this.kpanelImportMode.Controls.Add(this.klblModeDescription);
-            this.kpanelImportMode.Location = new System.Drawing.Point(13, 72);
-            this.kpanelImportMode.Name = "kpanelImportMode";
-            this.kpanelImportMode.Size = new System.Drawing.Size(800, 35);
-            this.kpanelImportMode.TabIndex = 12;
+            this.dgvRawExcelData.AllowUserToAddRows = false;
+            this.dgvRawExcelData.AllowUserToDeleteRows = false;
+            this.dgvRawExcelData.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
+            this.dgvRawExcelData.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            this.dgvRawExcelData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgvRawExcelData.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvRawExcelData.CustomRowNo = false;
+            this.dgvRawExcelData.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvRawExcelData.EnableFiltering = false;
+            this.dgvRawExcelData.EnablePagination = false;
+            this.dgvRawExcelData.EnableVirtualMode = true;
+            this.dgvRawExcelData.IsShowSumRow = false;
+            this.dgvRawExcelData.Location = new System.Drawing.Point(0, 0);
+            this.dgvRawExcelData.MenuId = null;
+            this.dgvRawExcelData.Name = "dgvRawExcelData";
+            this.dgvRawExcelData.NeedSaveColumnsXml = true;
+            this.dgvRawExcelData.Size = new System.Drawing.Size(1079, 366);
+            this.dgvRawExcelData.SumColumns = null;
+            this.dgvRawExcelData.SummaryDescription = "2020-08最新 带有合计列功能;";
+            this.dgvRawExcelData.SumRowCellFormat = "N2";
+            this.dgvRawExcelData.TabIndex = 0;
+            this.dgvRawExcelData.UseBatchEditColumn = false;
+            this.dgvRawExcelData.UseCustomColumnDisplay = true;
+            this.dgvRawExcelData.UseSelectedColumn = false;
+            this.dgvRawExcelData.Use是否使用内置右键功能 = true;
+            this.dgvRawExcelData.VirtualModeThreshold = 5000;
+            this.dgvRawExcelData.XmlFileName = "";
             // 
-            // kradioSingleTable
+            // dgvParsedImportData
             // 
-            this.kradioSingleTable.Checked = true;
-            this.kradioSingleTable.Location = new System.Drawing.Point(95, 6);
-            this.kradioSingleTable.Name = "kradioSingleTable";
-            this.kradioSingleTable.Size = new System.Drawing.Size(74, 20);
-            this.kradioSingleTable.TabIndex = 1;
-            this.kradioSingleTable.Values.Text = "单表导入";
-            this.kradioSingleTable.CheckedChanged += new System.EventHandler(this.KradioSingleTable_CheckedChanged);
+            this.dgvParsedImportData.AllowUserToAddRows = false;
+            this.dgvParsedImportData.AllowUserToDeleteRows = false;
+            this.dgvParsedImportData.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.dgvParsedImportData.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            this.dgvParsedImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgvParsedImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvParsedImportData.CustomRowNo = false;
+            this.dgvParsedImportData.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvParsedImportData.EnableFiltering = false;
+            this.dgvParsedImportData.EnablePagination = false;
+            this.dgvParsedImportData.EnableVirtualMode = true;
+            this.dgvParsedImportData.IsShowSumRow = false;
+            this.dgvParsedImportData.Location = new System.Drawing.Point(0, 0);
+            this.dgvParsedImportData.MenuId = null;
+            this.dgvParsedImportData.Name = "dgvParsedImportData";
+            this.dgvParsedImportData.NeedSaveColumnsXml = true;
+            this.dgvParsedImportData.Size = new System.Drawing.Size(1079, 400);
+            this.dgvParsedImportData.SumColumns = null;
+            this.dgvParsedImportData.SummaryDescription = "2020-08最新 带有合计列功能;";
+            this.dgvParsedImportData.SumRowCellFormat = "N2";
+            this.dgvParsedImportData.TabIndex = 0;
+            this.dgvParsedImportData.UseBatchEditColumn = false;
+            this.dgvParsedImportData.UseCustomColumnDisplay = true;
+            this.dgvParsedImportData.UseSelectedColumn = false;
+            this.dgvParsedImportData.Use是否使用内置右键功能 = true;
+            this.dgvParsedImportData.VirtualModeThreshold = 5000;
+            this.dgvParsedImportData.XmlFileName = "";
             // 
-            // kradioWideTable
+            // dgvFinalPreview
             // 
-            this.kradioWideTable.Location = new System.Drawing.Point(225, 6);
-            this.kradioWideTable.Name = "kradioWideTable";
-            this.kradioWideTable.Size = new System.Drawing.Size(74, 20);
-            this.kradioWideTable.TabIndex = 2;
-            this.kradioWideTable.Values.Text = "宽表导入";
-            this.kradioWideTable.CheckedChanged += new System.EventHandler(this.KradioWideTable_CheckedChanged);
+            this.dgvFinalPreview.AllowUserToAddRows = false;
+            this.dgvFinalPreview.AllowUserToDeleteRows = false;
+            this.dgvFinalPreview.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
+            this.dgvFinalPreview.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
+            this.dgvFinalPreview.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgvFinalPreview.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvFinalPreview.CustomRowNo = false;
+            this.dgvFinalPreview.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvFinalPreview.EnableFiltering = false;
+            this.dgvFinalPreview.EnablePagination = false;
+            this.dgvFinalPreview.EnableVirtualMode = true;
+            this.dgvFinalPreview.IsShowSumRow = false;
+            this.dgvFinalPreview.Location = new System.Drawing.Point(0, 0);
+            this.dgvFinalPreview.MenuId = null;
+            this.dgvFinalPreview.Name = "dgvFinalPreview";
+            this.dgvFinalPreview.NeedSaveColumnsXml = true;
+            this.dgvFinalPreview.Size = new System.Drawing.Size(1079, 366);
+            this.dgvFinalPreview.SumColumns = null;
+            this.dgvFinalPreview.SummaryDescription = "2020-08最新 带有合计列功能;";
+            this.dgvFinalPreview.SumRowCellFormat = "N2";
+            this.dgvFinalPreview.TabIndex = 0;
+            this.dgvFinalPreview.UseBatchEditColumn = false;
+            this.dgvFinalPreview.UseCustomColumnDisplay = true;
+            this.dgvFinalPreview.UseSelectedColumn = true;
+            this.dgvFinalPreview.Use是否使用内置右键功能 = true;
+            this.dgvFinalPreview.VirtualModeThreshold = 5000;
+            this.dgvFinalPreview.XmlFileName = "";
             // 
-            // klblModeDescription
+            // dgvImportData
             // 
-            this.klblModeDescription.Location = new System.Drawing.Point(360, 8);
-            this.klblModeDescription.Name = "klblModeDescription";
-            this.klblModeDescription.Size = new System.Drawing.Size(314, 18);
-            this.klblModeDescription.StateNormal.ShortText.Color1 = System.Drawing.Color.Gray;
-            this.klblModeDescription.StateNormal.ShortText.Font = new System.Drawing.Font("微软雅黑", 8F);
-            this.klblModeDescription.TabIndex = 3;
-            this.klblModeDescription.Values.Text = "单表：一个Excel导入一个表 | 宽表：一个Excel包含多个关联表";
+            this.dgvImportData.AllowUserToAddRows = false;
+            this.dgvImportData.AllowUserToDeleteRows = false;
+            this.dgvImportData.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle4.BackColor = System.Drawing.Color.Beige;
+            this.dgvImportData.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            this.dgvImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgvImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvImportData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvImportData.ContextMenuStrip = this.contextMenuStrip1;
+            this.dgvImportData.CustomRowNo = false;
+            this.dgvImportData.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvImportData.EnableFiltering = false;
+            this.dgvImportData.EnablePagination = false;
+            this.dgvImportData.EnableVirtualMode = true;
+            this.dgvImportData.IsShowSumRow = false;
+            this.dgvImportData.Location = new System.Drawing.Point(0, 0);
+            this.dgvImportData.MenuId = null;
+            this.dgvImportData.Name = "dgvImportData";
+            this.dgvImportData.NeedSaveColumnsXml = true;
+            this.dgvImportData.RowTemplate.Height = 23;
+            this.dgvImportData.Size = new System.Drawing.Size(863, 394);
+            this.dgvImportData.SumColumns = null;
+            this.dgvImportData.SummaryDescription = "数据预览";
+            this.dgvImportData.SumRowCellFormat = "N2";
+            this.dgvImportData.TabIndex = 0;
+            this.dgvImportData.UseBatchEditColumn = false;
+            this.dgvImportData.UseCustomColumnDisplay = true;
+            this.dgvImportData.UseSelectedColumn = false;
+            this.dgvImportData.Use是否使用内置右键功能 = true;
+            this.dgvImportData.VirtualModeThreshold = 5000;
+            this.dgvImportData.XmlFileName = "UCBasicDataImport";
             // 
             // dgvDynamicImportData
             // 
             this.dgvDynamicImportData.AllowUserToAddRows = false;
             this.dgvDynamicImportData.AllowUserToDeleteRows = false;
             this.dgvDynamicImportData.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle4.BackColor = System.Drawing.Color.Beige;
-            this.dgvDynamicImportData.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            this.dgvDynamicImportData.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
             this.dgvDynamicImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -613,14 +554,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvDynamicImportData.VirtualModeThreshold = 5000;
             this.dgvDynamicImportData.XmlFileName = "UCBasicDataImport_Dynamic";
             // 
-            // kryptonPanel6
-            // 
-            this.kryptonPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanel6.Location = new System.Drawing.Point(0, 0);
-            this.kryptonPanel6.Name = "kryptonPanel6";
-            this.kryptonPanel6.Size = new System.Drawing.Size(794, 445);
-            this.kryptonPanel6.TabIndex = 0;
-            // 
             // UCBasicDataImport
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -628,10 +561,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.Controls.Add(this.kryptonNavigatorMain);
             this.Name = "UCBasicDataImport";
             this.Size = new System.Drawing.Size(1087, 597);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvImportData)).EndInit();
             this.contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvRawExcelData)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigatorMain)).EndInit();
             this.kryptonNavigatorMain.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageDynamicImport)).EndInit();
@@ -648,21 +579,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPageRawData.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageParsedData)).EndInit();
             this.kryptonPageParsedData.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvParsedImportData)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageFinalPreview)).EndInit();
             this.kryptonPageFinalPreview.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvFinalPreview)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel5)).EndInit();
             this.kryptonPanel5.ResumeLayout(false);
             this.kryptonPanel5.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDynamicEntityType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDynamicSheetName)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDynamicMappingName)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kpanelImportMode)).EndInit();
-            this.kpanelImportMode.ResumeLayout(false);
-            this.kpanelImportMode.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvDynamicImportData)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel6)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvRawExcelData)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvParsedImportData)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvFinalPreview)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvImportData)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvDynamicImportData)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -686,16 +616,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonButton kbtnDynamicMap;
         private Krypton.Toolkit.KryptonButton kbtnDynamicImport;
         private Krypton.Toolkit.KryptonButton kbtnGeneratePreview;
-        private Krypton.Toolkit.KryptonButton kbtnManageProfiles;
         private Krypton.Toolkit.KryptonLabel klblDynamicFilePath;
         private Krypton.Toolkit.KryptonTextBox ktxtDynamicFilePath;
         private Krypton.Toolkit.KryptonLabel klblDynamicSheetName;
         private Krypton.Toolkit.KryptonComboBox kcmbDynamicSheetName;
         private Krypton.Toolkit.KryptonLabel klblDynamicMappingName;
         private Krypton.Toolkit.KryptonComboBox kcmbDynamicMappingName;
-        private Krypton.Toolkit.KryptonButton kbtnSaveMapping;
-        private Krypton.Toolkit.KryptonButton kbtnLoadMapping;
-        private Krypton.Toolkit.KryptonButton kbtnDeleteMapping;
         private RUINORERP.UI.UControls.NewSumDataGridView dgvDynamicImportData;
         private Krypton.Navigator.KryptonNavigator kryptonNavigatorMain;
         private Krypton.Navigator.KryptonNavigator kryptonNavigatorDynamic;
@@ -704,9 +630,5 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonPanel kryptonPanel6;
         private Krypton.Toolkit.KryptonLabel klblDynamicEntityType;
         private Krypton.Toolkit.KryptonComboBox kcmbDynamicEntityType;
-        private Krypton.Toolkit.KryptonPanel kpanelImportMode;
-        private Krypton.Toolkit.KryptonRadioButton kradioSingleTable;
-        private Krypton.Toolkit.KryptonRadioButton kradioWideTable;
-        private Krypton.Toolkit.KryptonLabel klblModeDescription;
     }
 }

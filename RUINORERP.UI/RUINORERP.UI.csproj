@@ -2482,26 +2482,17 @@
     </Compile>
     <Compile Include="SysConfig\BasicDataImport\ColumnMapping.cs" />
     <Compile Include="SysConfig\BasicDataImport\ColumnMappingConstants.cs" />
+    <Compile Include="SysConfig\BasicDataImport\ColumnMappingExtensions.cs" />
+    <Compile Include="SysConfig\BasicDataImport\ColumnMappingCollection.cs" />
     <Compile Include="SysConfig\BasicDataImport\ColumnMappingManager.cs" />
     <Compile Include="SysConfig\BasicDataImport\DataDeduplicationService.cs" />
+    <Compile Include="SysConfig\BasicDataImport\DataSourceConfigs.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicDataValidator.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicExcelParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicImporter.cs" />
     <Compile Include="SysConfig\BasicDataImport\EntityImportHelper.cs" />
     <Compile Include="SysConfig\BasicDataImport\ForeignKeyService.cs" />
     <Compile Include="SysConfig\BasicDataImport\ForeignRelatedConfig.cs" />
-    <Compile Include="SysConfig\BasicDataImport\FrmAttributeRuleEdit.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SysConfig\BasicDataImport\FrmAttributeRuleEdit.Designer.cs">
-      <DependentUpon>FrmAttributeRuleEdit.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SysConfig\BasicDataImport\FrmAttributeRulesConfig.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SysConfig\BasicDataImport\FrmAttributeRulesConfig.Designer.cs">
-      <DependentUpon>FrmAttributeRulesConfig.cs</DependentUpon>
-    </Compile>
     <Compile Include="SysConfig\BasicDataImport\frmColumnMappingConfig.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2520,12 +2511,11 @@
     <Compile Include="SysConfig\BasicDataImport\frmDeduplicateFieldConfig.Designer.cs">
       <DependentUpon>frmDeduplicateFieldConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="SysConfig\BasicDataImport\IDataSourceConfig.cs" />
     <Compile Include="SysConfig\BasicDataImport\IForeignKeyService.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImageProcessor.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImportConfiguration.cs" />
-    <Compile Include="SysConfig\BasicDataImport\ImportTemplateManager.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImportValidationAdapter.cs" />
-    <Compile Include="SysConfig\BasicDataImport\MultiAttributeImportConfig.cs" />
     <Compile Include="SysConfig\BasicDataImport\SmartColumnMatcher.cs" />
     <Compile Include="SysConfig\BasicDataImport\UCBasicDataImport.cs">
       <SubType>UserControl</SubType>
@@ -4802,12 +4792,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\BasicDataCleanup\UCBasicDataCleanup.resx">
       <DependentUpon>UCBasicDataCleanup.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SysConfig\BasicDataImport\FrmAttributeRuleEdit.resx">
-      <DependentUpon>FrmAttributeRuleEdit.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SysConfig\BasicDataImport\FrmAttributeRulesConfig.resx">
-      <DependentUpon>FrmAttributeRulesConfig.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\BasicDataImport\frmColumnMappingConfig.resx">
       <DependentUpon>frmColumnMappingConfig.cs</DependentUpon>

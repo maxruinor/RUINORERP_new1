@@ -4,326 +4,50 @@ using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
 using RUINORERP.Global;
-using RUINORERP.Model.ImportEngine.Enums;  // ✅ 引用Model层的枚举
+using RUINORERP.Model.ImportEngine.Enums;
 using RUINORERP.Model.ImportEngine.Models;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
-    // ✅ DataSourceType 枚举已移至 RUINORERP.Model.ImportEngine.Enums
-    // UI层直接引用Model层的类型，避免重复定义
-    
     /// <summary>
     /// 数据库存在性处理策略枚举
     /// </summary>
     public enum ExistenceStrategy
     {
-        /// <summary>
-        /// 跳过已存在的记录
-        /// </summary>
         [Description("跳过")]
         Skip = 0,
-    
-        /// <summary>
-        /// 更新已存在的记录
-        /// </summary>
+
         [Description("更新")]
         Update = 1,
-    
-        /// <summary>
-        /// 报错提示
-        /// </summary>
+
         [Description("报错")]
         Error = 2
     }
 
     /// <summary>
-    /// 枚举默认值配置
-    /// 用于存储枚举类型默认值的详细信息
-    /// </summary>
-    [Serializable]
-    [XmlRoot("EnumDefaultConfig")]
-    public class EnumDefaultConfig
-    {
-        /// <summary>
-        /// 枚举类型完整名称
-        /// 格式："命名空间.枚举名" 如："RUINORERP.Model.EnumProductType"
-        /// </summary>
-        [XmlElement("EnumTypeName")]
-        public string EnumTypeName { get; set; }
-
-        /// <summary>
-        /// 枚举值（数值）
-        /// 例如：0, 1, 2 等
-        /// </summary>
-        [XmlElement("EnumValue")]
-        public int EnumValue { get; set; }
-
-        /// <summary>
-        /// 枚举名称（字符串表示）
-        /// 例如："RawMaterial", "SemiProduct" 等
-        /// </summary>
-        [XmlElement("EnumName")]
-        public string EnumName { get; set; }
-
-        /// <summary>
-        /// 枚举显示文本（Description特性或枚举名称）
-        /// 例如："原材料", "半成品" 等
-        /// </summary>
-        [XmlElement("EnumDisplayName")]
-        public string EnumDisplayName { get; set; }
-    }
-
-    /// <summary>
-    /// 列拼接配置
-    /// 用于配置多个Excel列的拼接规则
-    /// </summary>
-    [Serializable]
-    [XmlRoot("ColumnConcatConfig")]
-    public class ColumnConcatConfig
-    {
-        /// <summary>
-        /// 要拼接的Excel列名列表（按顺序拼接）
-        /// </summary>
-        [XmlArray("SourceColumns")]
-        [XmlArrayItem("Column")]
-        public List<string> SourceColumns { get; set; }
-
-        /// <summary>
-        /// 列之间的分隔符
-        /// 例如："-"、"_"、空格、空字符串等
-        /// </summary>
-        [XmlElement("Separator")]
-        public string Separator { get; set; }
-
-        /// <summary>
-        /// 是否去除每个列的前后空格
-        /// </summary>
-        [XmlElement("TrimWhitespace")]
-        public bool TrimWhitespace { get; set; }
-
-        /// <summary>
-        /// 是否忽略空值列
-        /// 为true时，空值列不会参与拼接
-        /// </summary>
-        [XmlElement("IgnoreEmptyColumns")]
-        public bool IgnoreEmptyColumns { get; set; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public ColumnConcatConfig()
-        {
-            SourceColumns = new List<string>();
-            Separator = "";
-            TrimWhitespace = true;
-            IgnoreEmptyColumns = false;
-        }
-
-        /// <summary>
-        /// 验证配置是否有效
-        /// </summary>
-        /// <param name="errorMessage">错误信息</param>
-        /// <returns>是否有效</returns>
-        public bool Validate(out string errorMessage)
-        {
-            errorMessage = string.Empty;
-
-            if (SourceColumns == null || SourceColumns.Count == 0)
-            {
-                errorMessage = "必须至少指定一个源列";
-                return false;
-            }
-
-            if (SourceColumns.Count < 2)
-            {
-                errorMessage = "列拼接至少需要两个源列";
-                return false;
-            }
-
-            return true;
-        }
-    }
-
-    /// <summary>
-    /// 图片类型枚举
-    /// </summary>
-    public enum ImageColumnType
-    {
-        /// <summary>
-        /// 二进制图片（真正的图片数据）
-        /// </summary>
-        Binary = 0,
-
-        /// <summary>
-        /// 图片路径（保存为字符串路径，但按图片逻辑处理）
-        /// </summary>
-        Path = 1
-    }
-
-    /// <summary>
-    /// Excel图片配置
-    /// 用于配置从Excel提取图片的规则
-    /// </summary>
-    [Serializable]
-    [XmlRoot("ExcelImageConfig")]
-    public class ExcelImageConfig
-    {
-        /// <summary>
-        /// 图片存储方式
-        /// </summary>
-        [XmlElement("StorageType")]
-        public ImageStorageType StorageType { get; set; } = ImageStorageType.FilePath;
-
-        /// <summary>
-        /// 图片输出目录（相对路径或绝对路径）
-        /// </summary>
-        [XmlElement("OutputDirectory")]
-        public string OutputDirectory { get; set; }
-
-        /// <summary>
-        /// 图片命名规则
-        /// </summary>
-        [XmlElement("NamingRule")]
-        public ImageNamingRule NamingRule { get; set; } = ImageNamingRule.AutoIncrement;
-
-        /// <summary>
-        /// 命名参考列（当使用指定列值命名时使用）
-        /// </summary>
-        [XmlElement("NamingReferenceColumn")]
-        public string NamingReferenceColumn { get; set; }
-
-        /// <summary>
-        /// 图片格式转换
-        /// </summary>
-        [XmlElement("FormatConversion")]
-        public ImageFormatConversion FormatConversion { get; set; } = ImageFormatConversion.KeepOriginal;
-
-        /// <summary>
-        /// 最大图片宽度（像素，0表示不限制）
-        /// </summary>
-        [XmlElement("MaxWidth")]
-        public int MaxWidth { get; set; }
-
-        /// <summary>
-        /// 最大图片高度（像素，0表示不限制）
-        /// </summary>
-        [XmlElement("MaxHeight")]
-        public int MaxHeight { get; set; }
-
-        /// <summary>
-        /// 图片质量（1-100，仅对JPEG有效）
-        /// </summary>
-        [XmlElement("Quality")]
-        public int Quality { get; set; } = 90;
-
-        /// <summary>
-        /// 是否压缩图片
-        /// </summary>
-        [XmlElement("CompressImage")]
-        public bool CompressImage { get; set; }
-
-        /// <summary>
-        /// 压缩阈值（KB，超过此大小才压缩）
-        /// </summary>
-        [XmlElement("CompressThresholdKB")]
-        public int CompressThresholdKB { get; set; } = 500;
-    }
-
-    /// <summary>
-    /// 图片存储类型
-    /// </summary>
-    public enum ImageStorageType
-    {
-        /// <summary>
-        /// 存储为文件路径（数据库保存路径字符串）
-        /// </summary>
-        FilePath = 0,
-
-        /// <summary>
-        /// 存储为Base64（数据库保存Base64字符串）
-        /// </summary>
-        Base64 = 1,
-
-        /// <summary>
-        /// 存储为二进制（数据库保存byte[]）
-        /// </summary>
-        Binary = 2
-    }
-
-    /// <summary>
-    /// 图片命名规则
-    /// </summary>
-    public enum ImageNamingRule
-    {
-        /// <summary>
-        /// 自动递增（Image_1, Image_2...）
-        /// </summary>
-        AutoIncrement = 0,
-
-        /// <summary>
-        /// 使用指定列的值作为文件名
-        /// </summary>
-        ColumnValue = 1,
-
-        /// <summary>
-        /// 使用GUID作为文件名
-        /// </summary>
-        Guid = 2,
-
-        /// <summary>
-        /// 使用时间戳作为文件名
-        /// </summary>
-        Timestamp = 3,
-
-        /// <summary>
-        /// 组合命名（列值_序号）
-        /// </summary>
-        Combined = 4
-    }
-
-    /// <summary>
-    /// 图片格式转换
-    /// </summary>
-    public enum ImageFormatConversion
-    {
-        /// <summary>
-        /// 保持原始格式
-        /// </summary>
-        KeepOriginal = 0,
-
-        /// <summary>
-        /// 转换为JPEG
-        /// </summary>
-        ToJpeg = 1,
-
-        /// <summary>
-        /// 转换为PNG
-        /// </summary>
-        ToPng = 2,
-
-        /// <summary>
-        /// 转换为WebP
-        /// </summary>
-        ToWebP = 3
-    }
-
-    /// <summary>
     /// 列映射配置模型
     /// 用于存储Excel列与系统字段的映射关系
+    /// 采用统一的数据源配置架构，每种数据来源类型都有对应的配置类
     /// </summary>
     [Serializable]
     [XmlRoot("ColumnMapping")]
-    [XmlInclude(typeof(ForeignRelatedConfig))]
+    [XmlInclude(typeof(ExcelConfig))]
+    [XmlInclude(typeof(DefaultValueConfig))]
+    [XmlInclude(typeof(SystemGeneratedConfig))]
+    [XmlInclude(typeof(ForeignKeyConfig))]
+    [XmlInclude(typeof(SelfReferenceConfig))]
+    [XmlInclude(typeof(FieldCopyConfig))]
     [XmlInclude(typeof(ColumnConcatConfig))]
-    [XmlInclude(typeof(EnumDefaultConfig))]
     [XmlInclude(typeof(ExcelImageConfig))]
     public class ColumnMapping
     {
+        #region 基础属性
+
         /// <summary>
-        /// Excel列名（数据来源标识）
+        /// 映射ID（唯一标识）
         /// </summary>
-        [XmlElement("ExcelColumn")]
-        public string ExcelColumn { get; set; }
+        [XmlElement("MappingId")]
+        public Guid MappingId { get; set; } = Guid.NewGuid();
 
         /// <summary>
         /// 系统字段引用（键值对：Key=英文字段名, Value=中文显示名）
@@ -332,34 +56,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public SerializableKeyValuePair<string> SystemField { get; set; }
 
         /// <summary>
-        /// 是否值唯一
+        /// 是否值唯一（用于去重判断）
         /// </summary>
         [XmlElement("IsUniqueValue")]
         public bool IsUniqueValue { get; set; }
 
         /// <summary>
-        /// 是否忽略空值（为空时不导入）
+        /// 是否为业务键字段（用于唯一性校验）
         /// </summary>
-        [XmlElement("IgnoreEmptyValue")]
-        public bool IgnoreEmptyValue { get; set; }
+        [XmlElement("IsBusinessKey")]
+        public bool IsBusinessKey { get; set; }
 
         /// <summary>
-        /// 数据类型
+        /// 数据类型（目标字段的数据类型）
         /// </summary>
         [XmlElement("DataType")]
         public string DataType { get; set; }
 
         /// <summary>
-        /// 默认值
+        /// 存在性处理策略（当记录已存在时的处理方式）
         /// </summary>
-        [XmlElement("DefaultValue")]
-        public string DefaultValue { get; set; }
+        [XmlElement("ExistenceStrategy")]
+        public ExistenceStrategy ExistenceStrategy { get; set; } = ExistenceStrategy.Skip;
 
-        /// <summary>
-        /// 是否系统生成
-        /// </summary>
-        [XmlElement("IsSystemGenerated")]
-        public bool IsSystemGenerated { get; set; }
+        #endregion
+
+        #region 统一数据源配置
 
         /// <summary>
         /// 数据来源类型
@@ -369,248 +91,276 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public DataSourceType DataSourceType { get; set; } = DataSourceType.Excel;
 
         /// <summary>
-        /// 外键关联配置（当DataSourceType为ForeignKey时使用）
-        /// 存储外部关联类型的列配置信息
+        /// 数据源配置（统一配置接口）
+        /// 根据DataSourceType的不同，存储对应的配置对象
         /// </summary>
-        [XmlElement("ForeignConfig")]
-        public ForeignRelatedConfig ForeignConfig { get; set; }
+        [XmlElement("DataSourceConfig")]
+        public IDataSourceConfig DataSourceConfig { get; set; }
 
-        /// <summary>
-        /// 自身引用字段（当DataSourceType为SelfReference时使用）
-        /// 键值对：Key=英文字段名, Value=中文显示名
-        /// 存储当前表自身的字段引用（如树结构中的父类ID对应ID字段）
-        /// </summary>
-        [XmlElement("SelfReferenceField")]
-        public SerializableKeyValuePair<string> SelfReferenceField { get; set; }
+        #endregion
 
-        /// <summary>
-        /// 复制字段（当DataSourceType为FieldCopy时使用）
-        /// 键值对：Key=英文字段名, Value=中文显示名
-        /// 存储当前表中要复制值的另一个字段名
-        /// 例如：ProductName字段复制ProductCode字段的值
-        /// </summary>
-        [XmlElement("CopyFromField")]
-        public SerializableKeyValuePair<string> CopyFromField { get; set; }
+        
 
-        /// <summary>
-        /// 列拼接配置（当DataSourceType为ColumnConcat时使用）
-        /// 存储多个Excel列的拼接规则
-        /// </summary>
-        [XmlElement("ConcatConfig")]
-        public ColumnConcatConfig ConcatConfig { get; set; }
-
-        /// <summary>
-        /// 枚举默认值配置（当DataSourceType为DefaultValue且值为枚举类型时使用）
-        /// 存储枚举类型的完整信息，用于后续的类型转换和验证
-        /// </summary>
-        [XmlElement("EnumDefaultConfig")]
-        public EnumDefaultConfig EnumDefaultConfig { get; set; }
-
-        /// <summary>
-        /// 枚举类型完整名称（保留用于向后兼容，建议使用EnumDefaultConfig）
-        /// 当数据库字段类型为int但实际使用枚举时，可手动指定枚举类型
-        /// 格式："命名空间.枚举名" 如："RUINORERP.Model.EnumProductType"
-        /// </summary>
-        [XmlElement("EnumTypeName")]
-        [Obsolete("请使用EnumDefaultConfig替代此属性")]
-        public string EnumTypeName { get; set; }
+        #region 便捷属性（用于兼容旧代码）
 
         /// <summary>
         /// 是否为图片列
-        /// 当字段在Excel中包含图片数据或图片路径时，需要手工指定为图片类型
         /// </summary>
-        [XmlElement("IsImageColumn")]
+        [XmlIgnore]
         public bool IsImageColumn { get; set; }
 
         /// <summary>
-        /// 图片列类型（当IsImageColumn为true时使用）
-        /// Binary: 二进制图片（真正的图片数据）
-        /// Path: 图片路径（保存为字符串路径，但按图片逻辑处理）
+        /// 图片列类型
         /// </summary>
-        [XmlElement("ImageColumnType")]
+        [XmlIgnore]
         public ImageColumnType ImageColumnType { get; set; } = ImageColumnType.Path;
 
         /// <summary>
-        /// Excel图片配置（当DataSourceType为ExcelImage时使用）
-        /// 配置图片提取和存储规则
+        /// 是否忽略空值（为空时不导入）
         /// </summary>
-        [XmlElement("ImageConfig")]
-        public ExcelImageConfig ImageConfig { get; set; }
+        [XmlIgnore]
+        public bool IgnoreEmptyValue { get; set; }
 
         /// <summary>
-        /// 是否为业务键字段
+        /// 是否系统生成
         /// </summary>
-        /// <remarks>
-        /// 业务键用于判断记录是否存在于数据库中
-        /// 例如：供应商名称、产品编码等能唯一标识业务的字段
-        /// </remarks>
-        [XmlElement("IsBusinessKey")]
-        public bool IsBusinessKey { get; set; }
+        [XmlIgnore]
+        public bool IsSystemGenerated { get; set; }
 
         /// <summary>
-        /// 数据库存在性处理策略
+        /// 自身引用字段
         /// </summary>
-        /// <remarks>
-        /// Skip: 跳过已存在的记录
-        /// Update: 更新已存在的记录
-        /// Error: 报错提示
-        /// </remarks>
-        [XmlElement("ExistenceStrategy")]
-        public ExistenceStrategy ExistenceStrategy { get; set; } = ExistenceStrategy.Update;
+        [XmlIgnore]
+        public SerializableKeyValuePair<string> SelfReferenceField { get; set; }
 
         /// <summary>
-        /// 是否必填字段
+        /// 复制字段
+        /// </summary>
+        [XmlIgnore]
+        public SerializableKeyValuePair<string> CopyFromField { get; set; }
+
+        /// <summary>
+        /// 是否必填
         /// </summary>
         [XmlIgnore]
         public bool IsRequired { get; set; }
 
         /// <summary>
-        /// 最大长度
+        /// 系统生成配置（便捷属性）
         /// </summary>
         [XmlIgnore]
-        public int MaxLength { get; set; }
+        public SystemGeneratedConfig SystemGeneratedConfig
+        {
+            get => DataSourceConfig as SystemGeneratedConfig;
+            set
+            {
+                DataSourceConfig = value;
+                if (value != null)
+                    DataSourceType = DataSourceType.SystemGenerated;
+            }
+        }
 
         /// <summary>
-        /// 验证字段值
+        /// Excel列名（便捷属性，从ExcelConfig获取）
         /// </summary>
-        /// <param name="value">要验证的值</param>
-        /// <param name="errorMessage">错误信息输出</param>
-        /// <returns>是否验证通过</returns>
-        public bool ValidateValue(object value, out string errorMessage)
+        [XmlIgnore]
+        public string ExcelColumn
+        {
+            get => (DataSourceConfig as ExcelConfig)?.ExcelColumn;
+            set
+            {
+                if (DataSourceConfig is ExcelConfig config)
+                {
+                    config.ExcelColumn = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 默认值（便捷属性，从DefaultValueConfig获取）
+        /// </summary>
+        [XmlIgnore]
+        public string DefaultValue
+        {
+            get => (DataSourceConfig as DefaultValueConfig)?.Value;
+            set
+            {
+                if (DataSourceConfig is DefaultValueConfig config)
+                {
+                    config.Value = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 外键配置（便捷属性）
+        /// </summary>
+        [XmlIgnore]
+        public ForeignRelatedConfig ForeignConfig
+        {
+            get
+            {
+                var config = DataSourceConfig as ForeignKeyConfig;
+                if (config != null)
+                {
+                    return new ForeignRelatedConfig
+                    {
+                        ForeignKeyTable = config.ForeignKeyTable,
+                        ForeignKeyField = config.ForeignKeyField,
+                        ForeignKeySourceColumn = config.ForeignKeySourceColumn
+                    };
+                }
+                return null;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    DataSourceConfig = new ForeignKeyConfig
+                    {
+                        ForeignKeyTable = value.ForeignKeyTable,
+                        ForeignKeyField = value.ForeignKeyField,
+                        ForeignKeySourceColumn = value.ForeignKeySourceColumn
+                    };
+                    DataSourceType = DataSourceType.ForeignKey;
+                }
+                else
+                {
+                    DataSourceConfig = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 列拼接配置（便捷属性）
+        /// </summary>
+        [XmlIgnore]
+        public ColumnConcatConfig ConcatConfig
+        {
+            get => DataSourceConfig as ColumnConcatConfig;
+            set
+            {
+                DataSourceConfig = value;
+                if (value != null)
+                    DataSourceType = DataSourceType.ColumnConcat;
+            }
+        }
+
+        /// <summary>
+        /// 图片配置（便捷属性）
+        /// </summary>
+        [XmlIgnore]
+        public ExcelImageConfig ImageConfig
+        {
+            get => DataSourceConfig as ExcelImageConfig;
+            set
+            {
+                DataSourceConfig = value;
+                if (value != null)
+                    DataSourceType = DataSourceType.ExcelImage;
+            }
+        }
+
+        /// <summary>
+        /// 枚举默认值配置（便捷属性，从DefaultValueConfig获取）
+        /// </summary>
+        [XmlIgnore]
+        public DefaultValueConfig EnumDefaultConfig
+        {
+            get => DataSourceConfig as DefaultValueConfig;
+            set
+            {
+                DataSourceConfig = value;
+                if (value != null)
+                    DataSourceType = DataSourceType.DefaultValue;
+            }
+        }
+
+        #endregion
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 获取系统字段名
+        /// </summary>
+        public string GetSystemFieldName()
+        {
+            return SystemField?.Key ?? string.Empty;
+        }
+
+        /// <summary>
+        /// 获取系统字段显示名
+        /// </summary>
+        public string GetSystemFieldDisplayName()
+        {
+            return SystemField?.Value ?? string.Empty;
+        }
+
+        /// <summary>
+        /// 获取配置的显示描述
+        /// </summary>
+        public string GetConfigDescription()
+        {
+            switch (DataSourceType)
+            {
+                case DataSourceType.Excel:
+                    var excelConfig = DataSourceConfig as ExcelConfig;
+                    return $"Excel列: {excelConfig?.ExcelColumn ?? string.Empty}";
+
+                case DataSourceType.DefaultValue:
+                    var defaultConfig = DataSourceConfig as DefaultValueConfig;
+                    return $"默认值: {defaultConfig?.Value ?? string.Empty}";
+
+                case DataSourceType.SystemGenerated:
+                    var sysConfig = DataSourceConfig as SystemGeneratedConfig;
+                    return $"系统生成: {sysConfig?.GetGeneratedTypeDisplayName() ?? "系统生成"}";
+
+                case DataSourceType.ForeignKey:
+                    var foreignConfig = DataSourceConfig as ForeignKeyConfig;
+                    return $"外键关联: {foreignConfig?.ForeignTableDisplayName ?? "外键"}";
+
+                case DataSourceType.SelfReference:
+                    var selfConfig = DataSourceConfig as SelfReferenceConfig;
+                    return $"自身引用: {selfConfig?.ReferenceFieldDisplayName ?? "自身引用"}";
+
+                case DataSourceType.FieldCopy:
+                    var copyConfig = DataSourceConfig as FieldCopyConfig;
+                    return $"字段复制: {copyConfig?.SourceFieldDisplayName ?? "字段复制"}";
+
+                case DataSourceType.ColumnConcat:
+                    return "列拼接";
+
+                case DataSourceType.ExcelImage:
+                    return "Excel图片";
+
+                default:
+                    return "未知来源";
+            }
+        }
+
+        /// <summary>
+        /// 验证配置是否有效
+        /// </summary>
+        public bool Validate(out string errorMessage)
         {
             errorMessage = string.Empty;
 
-            // 基础验证：检查必填字段
-            if (IsRequired && (value == null || value == DBNull.Value || string.IsNullOrEmpty(value?.ToString())))
+            // 验证系统字段必须设置
+            if (SystemField == null || string.IsNullOrWhiteSpace(SystemField.Key))
             {
-                errorMessage = $"字段【{SystemField?.Value ?? SystemField?.Key ?? string.Empty}】不能为空";
+                errorMessage = "请选择系统字段";
                 return false;
             }
 
-            // 外键关联验证
-            if (DataSourceType == DataSourceType.ForeignKey && ForeignConfig != null)
+            // 如果有数据源配置，验证配置
+            if (DataSourceConfig != null)
             {
-                if (!ForeignConfig.Validate(out string foreignError))
-                {
-                    errorMessage = foreignError;
-                    return false;
-                }
-            }
-
-            // 列拼接配置验证
-            if (DataSourceType == DataSourceType.ColumnConcat && ConcatConfig != null)
-            {
-                if (!ConcatConfig.Validate(out string concatError))
-                {
-                    errorMessage = concatError;
-                    return false;
-                }
+                return DataSourceConfig.Validate(out errorMessage);
             }
 
             return true;
         }
 
-        /// <summary>
-        /// 转换字段值到目标类型
-        /// </summary>
-        /// <param name="value">原始值</param>
-        /// <returns>转换后的值</returns>
-        public object ConvertValue(object value)
-        {
-            // 如果有默认值且值为空，返回默认值
-            if ((value == null || value == DBNull.Value || string.IsNullOrEmpty(value?.ToString()))
-                && !string.IsNullOrEmpty(DefaultValue))
-            {
-                return DefaultValue;
-            }
-
-            return value;
-        }
-
-        /// <summary>
-        /// 获取外键表名（便捷属性）
-        /// </summary>
-        [XmlIgnore]
-        public string ForeignKeyTableName => ForeignConfig?.ForeignKeyTable.Key;
-
-        /// <summary>
-        /// 获取外键字段名（便捷属性）
-        /// </summary>
-        [XmlIgnore]
-        public string ForeignKeyFieldName => ForeignConfig?.ForeignKeyField.Key;
-
-        /// <summary>
-        /// 获取外键来源列名（便捷属性）
-        /// </summary>
-        [XmlIgnore]
-        public string ForeignKeySourceColumnName => ForeignConfig?.ForeignKeySourceColumn?.Key;
-    }
-
-    /// <summary>
-    /// 列映射配置集合
-    /// </summary>
-    public class ColumnMappingCollection : List<ColumnMapping>
-    {
-        /// <summary>
-        /// 默认构造函数
-        /// </summary>
-        public ColumnMappingCollection() : base()
-        {
-        }
-
-        /// <summary>
-        /// 从现有集合初始化
-        /// </summary>
-        /// <param name="collection">列映射集合</param>
-        public ColumnMappingCollection(IEnumerable<ColumnMapping> collection) : base(collection)
-        {
-        }
-
-        /// <summary>
-        /// 根据Excel列名获取映射配置
-        /// </summary>
-        /// <param name="excelColumn">Excel列名</param>
-        /// <returns>列映射配置</returns>
-        public ColumnMapping GetMappingByExcelColumn(string excelColumn)
-        {
-            return this.FirstOrDefault(m => m.ExcelColumn.Equals(excelColumn, StringComparison.OrdinalIgnoreCase));
-        }
-
-        /// <summary>
-        /// 根据系统字段名获取映射配置
-        /// </summary>
-        /// <param name="systemField">系统字段名</param>
-        /// <returns>列映射配置</returns>
-        public ColumnMapping GetMappingBySystemField(string systemField)
-        {
-            return this.FirstOrDefault(m => m.SystemField?.Key.Equals(systemField, StringComparison.OrdinalIgnoreCase) ?? false);
-        }
-
-        /// <summary>
-        /// 获取唯一标识列映射
-        /// </summary>
-        /// <returns>唯一标识列映射配置</returns>
-        public ColumnMapping GetUniqueKeyMapping()
-        {
-            return this.FirstOrDefault(m => m.IsUniqueValue);
-        }
-
-        /// <summary>
-        /// 获取所有启用忽略空值的映射
-        /// </summary>
-        /// <returns>忽略空值的映射配置列表</returns>
-        public List<ColumnMapping> GetIgnoreEmptyValueMappings()
-        {
-            return this.Where(m => m.IgnoreEmptyValue).ToList();
-        }
-
-        /// <summary>
-        /// 获取所有外键关联映射
-        /// </summary>
-        /// <returns>外键关联映射配置列表</returns>
-        public List<ColumnMapping> GetForeignKeyMappings()
-        {
-            return this.Where(m => m.DataSourceType == DataSourceType.ForeignKey && m.ForeignConfig != null).ToList();
-        }
+        #endregion
     }
 }

@@ -4,6 +4,7 @@ using RUINORERP.Model.ImportEngine.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
@@ -30,6 +31,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         [XmlElement("EntityType")]
         public string EntityType { get; set; }
+
+        /// <summary>
+        /// 导入类型标识（用于区分客户和供应商等使用相同表的情况）
+        /// </summary>
+        [XmlElement("ImportType")]
+        public string ImportType { get; set; }
 
         /// <summary>
         /// 目标表引用

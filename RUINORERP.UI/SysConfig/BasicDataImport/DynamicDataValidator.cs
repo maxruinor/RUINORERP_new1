@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -33,7 +33,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="mappings">列映射配置</param>
         /// <param name="entityType">目标实体类型</param>
         /// <returns>验证结果列表</returns>
-        public List<ValidationError> Validate(DataTable dataTable, ColumnMappingCollection mappings, Type entityType)
+        public List<ValidationError> Validate(DataTable dataTable, List<ColumnMapping> mappings, Type entityType)
         {
             var errors = new List<ValidationError>();
 
@@ -73,7 +73,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="dataTable">数据表（已应用映射，列名为SystemField）</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="errors">错误列表</param>
-        private void ValidateRequiredColumns(DataTable dataTable, ColumnMappingCollection mappings, List<ValidationError> errors)
+        private void ValidateRequiredColumns(DataTable dataTable, List<ColumnMapping> mappings, List<ValidationError> errors)
         {
             foreach (var mapping in mappings)
             {
@@ -111,13 +111,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             return mapping.ExcelColumn.StartsWith("[系统生成]") ||
-                   mapping.ExcelColumn.StartsWith("[默认值:");
+                   mapping.ExcelColumn.StartsWith("[默认值]");
         }
 
         /// <summary>
         /// 验证数据类型是否匹配
         /// </summary>
-        private void ValidateDataTypes(DataTable dataTable, ColumnMappingCollection mappings, Type entityType, List<ValidationError> errors)
+        private void ValidateDataTypes(DataTable dataTable, List<ColumnMapping> mappings, Type entityType, List<ValidationError> errors)
         {
             for (int i = 0; i < dataTable.Rows.Count; i++)
             {
@@ -165,7 +165,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="dataTable">数据表（已应用映射，列名为SystemField）</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="errors">错误列表</param>
-        private void ValidateUniqueKeys(DataTable dataTable, ColumnMappingCollection mappings, List<ValidationError> errors)
+        private void ValidateUniqueKeys(DataTable dataTable, List<ColumnMapping> mappings, List<ValidationError> errors)
         {
             var uniqueKeyMapping = mappings.GetUniqueKeyMapping();
             if (uniqueKeyMapping == null)
@@ -249,7 +249,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 验证数据范围
         /// </summary>
-        private void ValidateDataRanges(DataTable dataTable, ColumnMappingCollection mappings, Type entityType, List<ValidationError> errors)
+        private void ValidateDataRanges(DataTable dataTable, List<ColumnMapping> mappings, Type entityType, List<ValidationError> errors)
         {
             for (int i = 0; i < dataTable.Rows.Count; i++)
             {
@@ -435,7 +435,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="dataTable">数据表</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="errors">错误列表</param>
-        private void ValidateForeignKeys(DataTable dataTable, ColumnMappingCollection mappings, List<ValidationError> errors)
+        private void ValidateForeignKeys(DataTable dataTable, List<ColumnMapping> mappings, List<ValidationError> errors)
         {
             // 筛选出所有外键映射
             var foreignKeyMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ForeignKey).ToList();
@@ -501,48 +501,48 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     }
 
     /// <summary>
-        /// 错误类型
+    /// 错误类型
+    /// </summary>
+    public enum ErrorType
+    {
+        /// <summary>
+        /// 数据表为空
         /// </summary>
-        public enum ErrorType
-        {
-            /// <summary>
-            /// 数据表为空
-            /// </summary>
-            EmptyData,
+        EmptyData,
 
-            /// <summary>
-            /// 列不存在
-            /// </summary>
-            ColumnNotFound,
+        /// <summary>
+        /// 列不存在
+        /// </summary>
+        ColumnNotFound,
 
-            /// <summary>
-            /// 类型不匹配
-            /// </summary>
-            TypeMismatch,
+        /// <summary>
+        /// 类型不匹配
+        /// </summary>
+        TypeMismatch,
 
-            /// <summary>
-            /// 必填字段为空
-            /// </summary>
-            EmptyRequiredField,
+        /// <summary>
+        /// 必填字段为空
+        /// </summary>
+        EmptyRequiredField,
 
-            /// <summary>
-            /// 重复值
-            /// </summary>
-            DuplicateValue,
+        /// <summary>
+        /// 重复值
+        /// </summary>
+        DuplicateValue,
 
-            /// <summary>
-            /// 长度超出限制
-            /// </summary>
-            LengthExceeded,
+        /// <summary>
+        /// 长度超出限制
+        /// </summary>
+        LengthExceeded,
 
-            /// <summary>
-            /// 数值超出范围
-            /// </summary>
-            OutOfRange,
+        /// <summary>
+        /// 数值超出范围
+        /// </summary>
+        OutOfRange,
 
-            /// <summary>
-            /// 外键验证失败
-            /// </summary>
-            ForeignKeyValidationFailed
-        }
+        /// <summary>
+        /// 外键验证失败
+        /// </summary>
+        ForeignKeyValidationFailed
+    }
 }

@@ -1,4 +1,4 @@
-using Krypton.Toolkit;
+﻿using Krypton.Toolkit;
 using RUINORERP.UI.Common;
 using RUINORERP.Common;
 using RUINORERP.Common.Helper;
@@ -36,11 +36,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private ColumnMappingManager _columnMappingManager;
 
         /// <summary>
-        /// 导入模板管理器
-        /// </summary>
-        private ImportTemplateManager _templateManager;
-
-        /// <summary>
         /// 目标实体类型
         /// </summary>
         public Type TargetEntityType { get; set; }
@@ -53,7 +48,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 列映射集合
         /// </summary>
-        public ColumnMappingCollection ColumnMappings { get; set; }
+        public List<ColumnMapping> ColumnMappings { get; set; }
 
         /// <summary>
         /// 是否为编辑模式
@@ -86,10 +81,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public frmColumnMappingConfig()
         {
             InitializeComponent();
-            ColumnMappings = new ColumnMappingCollection();
+            
+            // 设计时跳过初始化逻辑
+            if (DesignMode)
+            {
+                return;
+            }
+            
+            ColumnMappings = new List<ColumnMapping>();
             ImportConfig = new ImportConfiguration();
             _columnMappingManager = new ColumnMappingManager();
-            _templateManager = new ImportTemplateManager();
         }
 
         /// <summary>
@@ -177,8 +178,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             else if (!hasExcelColumn && hasSystemField)
             {
                 // 只选择了系统字段，Excel中没有指定列
-                // 创建新映射
-                var mapping = new ColumnMapping
+                // 创建新映射               
+                 var mapping = new ColumnMapping
                 {
                     ExcelColumn = string.Empty,
                     SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay)
@@ -342,8 +343,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             try
             {
                 // 【修复】初始化去重策略ComboBox默认值
-                kcmbDeduplicateStrategy.SelectedIndex = 0; // 默认选择“保留第一条记录”
-                
+                kcmbDeduplicateStrategy.SelectedIndex = 0; // 默认选择"保留第一条记录"                
                 // 设置配置文件路径
                 _configFilePath = ColumnMappingConstants.GetConfigFilePath();
 
@@ -724,7 +724,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 列的显示，unitName,<单位,true>
-        /// 列名，列中文，是否显示1
+        /// 列名，列中文，是否显示
         /// </summary>
         [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public ConcurrentDictionary<string, string> FieldNameList { get; set; } = new ConcurrentDictionary<string, string>();
@@ -785,7 +785,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 打开属性配置对话框，让用户选择数据来源类型
                 if (ConfigureMappingProperty(mapping))
                 {
-                    // 如果用户选择了"Excel数据源"但没有Excel列，则不允许
+                    // 如果用户选择了 Excel数据源 但没有Excel列，则不允许
                     if (mapping.DataSourceType == DataSourceType.Excel)
                     {
                         MessageBox.Show("由于没有选择Excel来源列，不能选择\"Excel数据源\"类型。请选择：默认值、系统生成、外键关联或自身字段引用。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -983,7 +983,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 if (kcmbDeduplicateStrategy.SelectedIndex < 0)
                 {
-                    MessageBox.Show("已启用去重功能，请选择去重策略（保留第一条记录 或 保留最后一条记录）", 
+                    MessageBox.Show("已启用去重功能，请选择去重策略（保留第一条记录或保留最后一条记录）", 
                         "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     kcmbDeduplicateStrategy.Focus();
                     return;
@@ -992,7 +992,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // ✅ 使用验证适配器进行配置验证
+                // ✅使用验证适配器进行配置验证
                 var validator = new ImportValidationAdapter();
                 if (!validator.ValidateImportConfiguration(ImportConfig, out List<string> validationErrors))
                 {
@@ -1056,8 +1056,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 【修复】重置去重设置到默认值
                 chkRemoveDuplicates.Checked = false;
-                kcmbDeduplicateStrategy.SelectedIndex = 0; // 默认选择“保留第一条记录”
-
+                kcmbDeduplicateStrategy.SelectedIndex = 0; // 默认选择"保留第一条记录"
                 // 重新加载Excel列和系统字段列表
                 LoadSystemFields();
                 if (ExcelData != null && ExcelData.Rows.Count > 0)
@@ -1074,7 +1073,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             string selectedItem = comboBoxSavedMappings.SelectedItem.ToString();
 
             // 【优化】处理模板选择
-            if (selectedItem.StartsWith("[模板] "))
+            if (selectedItem.StartsWith("[妯℃澘] "))
             {
                 string templateName = selectedItem.Substring(5); // 移除 "[模板] " 前缀
                 ApplyImportTemplate(templateName);
@@ -1082,7 +1081,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 【优化】处理配置选择
-            if (selectedItem.StartsWith("[配置] "))
+            if (selectedItem.StartsWith("[閰嶇疆] "))
             {
                 selectedItem = selectedItem.Substring(5); // 移除 "[配置] " 前缀
             }
@@ -1106,7 +1105,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 ImportConfig = config;
-                ColumnMappings = new ColumnMappingCollection(config?.ColumnMappings ?? new List<ColumnMapping>());
+                ColumnMappings = new List<ColumnMapping>(config?.ColumnMappings ?? new List<ColumnMapping>());
                 textBoxMappingName.Text = config?.MappingName ?? string.Empty;
 
                 // 更新去重复选框状态和策略
@@ -1243,12 +1242,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 int lowConfidence = matchResults.Count(r => r.Score < 0.75);
                 int primaryKeys = matchResults.Count(r => r.IsPrimaryKey);
                 
-                string message = $"智能匹配完成！\n\n" +
-                    $"✓ 总匹配数: {matchResults.Count}\n" +
+                string message = $"智能匹配完成：\n\n" +
+                    $"✅总匹配数: {matchResults.Count}\n" +
                     $"  - 高置信度(≥90%): {highConfidence}\n" +
                     $"  - 中置信度(75-90%): {mediumConfidence}\n" +
                     $"  - 低置信度(<75%): {lowConfidence}\n\n" +
-                    $"✓ 识别主键: {primaryKeys} 个\n\n" +
+                    $"✅识别主键: {primaryKeys} 个\n\n" +
                     $"请检查映射结果，如有需要请手动调整。";
                 
                 MessageBox.Show(message, "智能匹配结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -1339,8 +1338,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 设置已选字段
                 deduplicateConfigDialog.SelectedFields = ImportConfig.DeduplicateFields?.ToList() ?? new List<string>();
 
-                // 设置是否忽略空值
-                deduplicateConfigDialog.IgnoreEmptyValues = ImportConfig.IgnoreEmptyValuesInDeduplication;
+                // 设置是否忽略空值                deduplicateConfigDialog.IgnoreEmptyValues = ImportConfig.IgnoreEmptyValuesInDeduplication;
 
                 if (deduplicateConfigDialog.ShowDialog() == DialogResult.OK)
                 {
@@ -1393,8 +1391,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 加载全新的初始化配置
                 InitializeNewMapping();
 
-                // 刷新已保存映射列表
-                LoadSavedMappings();
+                // 刷新已保存映射列表                LoadSavedMappings();
             }
             catch (Exception ex)
             {
@@ -1433,7 +1430,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         #region 【新增】模板管理功能
-
         /// <summary>
         /// 保存为导入模板
         /// </summary>
@@ -1446,7 +1442,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 输入模板名称
-            string templateName = KryptonInputBox.Show("请输入模板名称:", "保存为模板", $"{TargetEntityType?.Name ?? "数据"}导入模板");
+            string templateName = KryptonInputBox.Show("请输入模板名称", "保存为模板", $"{TargetEntityType?.Name ?? "数据"}导入模板");
             if (string.IsNullOrWhiteSpace(templateName))
                 return;
 
@@ -1459,14 +1455,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ImportConfig.EnableDeduplication = chkRemoveDuplicates.Checked;
                 ImportConfig.DeduplicateStrategy = (DeduplicateStrategy)kcmbDeduplicateStrategy.SelectedIndex;
 
-                // 创建模板
-                var template = _templateManager.CreateTemplateFromConfig(
-                    ImportConfig,
-                    templateName,
-                    $"{TargetEntityType?.Name ?? "数据"}导入模板 - {DateTime.Now:yyyy-MM-dd HH:mm}");
-
-                // 保存模板
-                _templateManager.SaveTemplate(template);
+                // ✅直接保存 ImportConfiguration（不需要转换为 ImportTemplate）
+                ImportConfig.MappingName = templateName;
+                ImportConfig.EntityType = TargetEntityType?.FullName;
+                _columnMappingManager.SaveConfiguration(ImportConfig);
 
                 MessageBox.Show($"模板 [{templateName}] 保存成功！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
@@ -1490,18 +1482,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (string.IsNullOrWhiteSpace(templateName))
                 return;
 
-            var template = _templateManager.LoadTemplate(templateName);
-            if (template == null)
+            // ✅直接加载 ImportConfiguration
+            var config = _columnMappingManager.LoadConfiguration(templateName);
+            if (config == null)
             {
                 MessageBox.Show($"模板 [{templateName}] 不存在或已损坏", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            // 检查实体类型是否匹配
-            if (template.EntityType != TargetEntityType?.FullName)
+            // 检查实体类型是否匹配            if (!string.IsNullOrEmpty(config.EntityType) && config.EntityType != TargetEntityType?.FullName)
             {
                 var result = MessageBox.Show(
-                    $"模板 [{templateName}] 是为实体 [{template.EntityType}] 创建的，\n" +
+                    $"模板 [{templateName}] 是为实体 [{config.EntityType}] 创建的，\n" +
                     $"当前实体是 [{TargetEntityType?.FullName}]。\n\n" +
                     $"是否仍要应用此模板？",
                     "实体类型不匹配",
@@ -1514,11 +1506,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // 应用模板到当前配置
-                _templateManager.ApplyTemplate(ImportConfig, template);
+                // ✅直接将配置复制到 ImportConfig
+                ImportConfig.ColumnMappings = new List<ColumnMapping>(config.ColumnMappings);
+                ImportConfig.EnableDeduplication = config.EnableDeduplication;
+                ImportConfig.DeduplicateFields = config.DeduplicateFields != null ? new List<string>(config.DeduplicateFields) : new List<string>();
+                ImportConfig.DeduplicateStrategy = config.DeduplicateStrategy;
+                ImportConfig.IgnoreEmptyValuesInDeduplication = config.IgnoreEmptyValuesInDeduplication;
 
-                // 更新列映射集合
-                ColumnMappings = new ColumnMappingCollection();
+                // 更新列映射集合                ColumnMappings = new List<ColumnMapping>();
                 foreach (var mapping in ImportConfig.ColumnMappings)
                 {
                     ColumnMappings.Add(mapping);
@@ -1528,8 +1523,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 UpdateMappingsList();
 
                 // 更新去重设置
-                chkRemoveDuplicates.Checked = template.EnableDeduplication;
-                if (template.DeduplicateStrategy == DeduplicateStrategy.LastOccurrence)
+                chkRemoveDuplicates.Checked = config.EnableDeduplication;
+                if (config.DeduplicateStrategy == DeduplicateStrategy.LastOccurrence)
                     kcmbDeduplicateStrategy.SelectedIndex = 1;
                 else
                     kcmbDeduplicateStrategy.SelectedIndex = 0;
@@ -1540,7 +1535,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show($"模板 [{templateName}] 应用成功！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 // 记录日志
-                MainForm.Instance.PrintInfoLog($"应用导入模板: {templateName}, 映射数: {ColumnMappings.Count}");
+                MainForm.Instance.PrintInfoLog($"应用导入模板: {templateName}, 映射数={ColumnMappings.Count}");
             }
             catch (Exception ex)
             {
@@ -1559,18 +1554,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             comboBoxSavedMappings.Items.Clear();
             comboBoxSavedMappings.Items.Add("-- 新建映射 --");
 
-            // 添加已保存的映射配置
+            // ✅直接加载所有配置（不再区分配置和模板）
             var savedMappings = _columnMappingManager.GetAllMappingNames();
             foreach (var mappingName in savedMappings)
             {
-                comboBoxSavedMappings.Items.Add($"[配置] {mappingName}");
-            }
-
-            // 添加模板（按实体类型筛选）
-            var templates = _templateManager.GetTemplatesForEntity(TargetEntityType);
-            foreach (var template in templates)
-            {
-                comboBoxSavedMappings.Items.Add($"[模板] {template.TemplateName}");
+                comboBoxSavedMappings.Items.Add(mappingName);
             }
 
             // 恢复选择
@@ -1633,16 +1621,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                if (_templateManager.DeleteTemplate(templateName))
-                {
-                    MessageBox.Show($"模板 [{templateName}] 删除成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    LoadTemplateList();
-                    MainForm.Instance.PrintInfoLog($"删除导入模板: {templateName}");
-                }
-                else
-                {
-                    MessageBox.Show($"模板 [{templateName}] 不存在", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+                // ✅直接删除配置
+                _columnMappingManager.DeleteMapping(templateName);
+                MessageBox.Show($"模板 [{templateName}] 删除成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LoadTemplateList();
+                MainForm.Instance.PrintInfoLog($"删除导入模板: {templateName}");
             }
             catch (Exception ex)
             {

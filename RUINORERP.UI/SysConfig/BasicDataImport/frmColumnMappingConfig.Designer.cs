@@ -1,4 +1,4 @@
-namespace RUINORERP.UI.SysConfig.BasicDataImport
+﻿namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     partial class frmColumnMappingConfig
     {
@@ -30,6 +30,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kbtnConfigDeduplicateFields = new Krypton.Toolkit.KryptonButton();
+            this.kryptonLabelDedupHint = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabelDeduplicateStrategy = new Krypton.Toolkit.KryptonLabel();
             this.kcmbDeduplicateStrategy = new Krypton.Toolkit.KryptonComboBox();
             this.chkRemoveDuplicates = new Krypton.Toolkit.KryptonCheckBox();
@@ -59,6 +60,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // kryptonPanel1
             // 
             this.kryptonPanel1.Controls.Add(this.kbtnConfigDeduplicateFields);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabelDedupHint);
             this.kryptonPanel1.Controls.Add(this.kryptonLabelDeduplicateStrategy);
             this.kryptonPanel1.Controls.Add(this.kcmbDeduplicateStrategy);
             this.kryptonPanel1.Controls.Add(this.chkRemoveDuplicates);
@@ -94,6 +96,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnConfigDeduplicateFields.Values.Text = "配置去重字段";
             this.kbtnConfigDeduplicateFields.Click += new System.EventHandler(this.kbtnConfigDeduplicateFields_Click);
             // 
+            // kryptonLabelDedupHint
+            // 
+            this.kryptonLabelDedupHint.Location = new System.Drawing.Point(257, 574);
+            this.kryptonLabelDedupHint.Name = "kryptonLabelDedupHint";
+            this.kryptonLabelDedupHint.Size = new System.Drawing.Size(683, 20);
+            this.kryptonLabelDedupHint.TabIndex = 40;
+            this.kryptonLabelDedupHint.Values.Text = "提示: 如未配置去重字段，将使用标记为\"唯一值\"的字段去重；如需整行去重，请点击\"配置去重字段\"并全选所有字段。";
+            // 
             // kryptonLabelDeduplicateStrategy
             // 
             this.kryptonLabelDeduplicateStrategy.Location = new System.Drawing.Point(541, 538);
@@ -122,9 +132,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.chkRemoveDuplicates.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkRemoveDuplicates.Location = new System.Drawing.Point(450, 538);
             this.chkRemoveDuplicates.Name = "chkRemoveDuplicates";
-            this.chkRemoveDuplicates.Size = new System.Drawing.Size(75, 20);
+            this.chkRemoveDuplicates.Size = new System.Drawing.Size(88, 20);
             this.chkRemoveDuplicates.TabIndex = 36;
-            this.chkRemoveDuplicates.Values.Text = "去重复值";
+            this.chkRemoveDuplicates.Values.Text = "启用行去重";
             // 
             // kbtnAutoMatch
             // 
@@ -249,9 +259,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             this.kryptonLabel1.Location = new System.Drawing.Point(10, 25);
             this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(90, 20);
+            this.kryptonLabel1.Size = new System.Drawing.Size(87, 20);
             this.kryptonLabel1.TabIndex = 0;
-            this.kryptonLabel1.Values.Text = "Excel列 (可选):";
+            this.kryptonLabel1.Values.Text = "Excel列(可选):";
             // 
             // comboBoxSavedMappings
             // 
@@ -317,5 +327,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonComboBox kcmbDeduplicateStrategy;
         private Krypton.Toolkit.KryptonLabel kryptonLabelDeduplicateStrategy;
         private Krypton.Toolkit.KryptonButton kbtnConfigDeduplicateFields;
+        private Krypton.Toolkit.KryptonLabel kryptonLabelDedupHint;
     }
 }

@@ -230,7 +230,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvRawExcelData.EnableVirtualMode = true;
             this.dgvRawExcelData.IsShowSumRow = false;
             this.dgvRawExcelData.Location = new System.Drawing.Point(0, 0);
-            this.dgvRawExcelData.MenuId = null;
             this.dgvRawExcelData.Name = "dgvRawExcelData";
             this.dgvRawExcelData.NeedSaveColumnsXml = true;
             this.dgvRawExcelData.Size = new System.Drawing.Size(1079, 366);
@@ -277,7 +276,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvParsedImportData.EnableVirtualMode = true;
             this.dgvParsedImportData.IsShowSumRow = false;
             this.dgvParsedImportData.Location = new System.Drawing.Point(0, 0);
-            this.dgvParsedImportData.MenuId = null;
             this.dgvParsedImportData.Name = "dgvParsedImportData";
             this.dgvParsedImportData.NeedSaveColumnsXml = true;
             this.dgvParsedImportData.Size = new System.Drawing.Size(1079, 400);
@@ -324,7 +322,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvFinalPreview.EnableVirtualMode = true;
             this.dgvFinalPreview.IsShowSumRow = false;
             this.dgvFinalPreview.Location = new System.Drawing.Point(0, 0);
-            this.dgvFinalPreview.MenuId = null;
             this.dgvFinalPreview.Name = "dgvFinalPreview";
             this.dgvFinalPreview.NeedSaveColumnsXml = true;
             this.dgvFinalPreview.Size = new System.Drawing.Size(1079, 366);
@@ -506,7 +503,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvImportData.EnableVirtualMode = true;
             this.dgvImportData.IsShowSumRow = false;
             this.dgvImportData.Location = new System.Drawing.Point(0, 0);
-            this.dgvImportData.MenuId = null;
             this.dgvImportData.Name = "dgvImportData";
             this.dgvImportData.NeedSaveColumnsXml = true;
             this.dgvImportData.RowTemplate.Height = 23;
@@ -540,7 +536,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvDynamicImportData.EnableVirtualMode = true;
             this.dgvDynamicImportData.IsShowSumRow = false;
             this.dgvDynamicImportData.Location = new System.Drawing.Point(10, 132);
-            this.dgvDynamicImportData.MenuId = null;
             this.dgvDynamicImportData.Name = "dgvDynamicImportData";
             this.dgvDynamicImportData.NeedSaveColumnsXml = true;
             this.dgvDynamicImportData.RowTemplate.Height = 23;

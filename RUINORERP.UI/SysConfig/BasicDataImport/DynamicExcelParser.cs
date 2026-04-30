@@ -128,11 +128,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private readonly string _imageSavePath;
 
         /// <summary>
+        /// 临时图片目录名称
+        /// </summary>
+        private const string ImageTempDirectory = "TempImages";
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public DynamicExcelParser()
         {
-            _imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages");
+            _imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
             EnsureDirectoryExists(_imageSavePath);
         }
 
@@ -913,12 +918,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// ⚠️ 已过时：请使用 ImageProcessor 进行图片处理（支持压缩和优化）
         /// 保存图片到文件
         /// </summary>
         /// <param name="imageInfo">图片信息</param>
         /// <param name="outputDirectory">输出目录</param>
         /// <param name="fileName">文件名（不含扩展名）</param>
         /// <returns>保存的文件路径</returns>
+        [Obsolete("请使用 ImageProcessor.ProcessAndSaveImage 代替，该方法支持图片压缩和优化")]
         public string SaveImageToFile(ExcelImageInfo imageInfo, string outputDirectory, string fileName)
         {
             if (imageInfo?.ImageData == null)

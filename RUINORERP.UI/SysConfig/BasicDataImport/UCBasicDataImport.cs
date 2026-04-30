@@ -31,6 +31,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// </summary>
     public partial class UCBasicDataImport : UserControl
     {
+        #region 常量定义
+
+        /// <summary>
+        /// 临时图片保存目录
+        /// </summary>
+        private const string ImageTempDirectory = "TempImages";
+
+        #endregion
+
         private ISqlSugarClient _db;
         private IUnitOfWorkManage _unitOfWorkManage;  // ✅ 新增：统一事务管理器
         private ImageProcessor _imageProcessor;
@@ -148,7 +157,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             //dgvImportData.DataSource = _importData;
 
             // 设置图片保存路径
-            string imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ProductImages");
+            string imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
             _imageProcessor = new ImageProcessor(imageSavePath);
         }
 
@@ -255,6 +264,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 else
                 {
                     _selectedEntityType = null;
+                }
+
+                // ✅ 设置导入类型标识（用于区分客户和供应商等使用相同表的情况）
+                if (_currentConfig != null)
+                {
+                    _currentConfig.ImportType = selectedText;
                 }
 
                 // 加载对应的映射配置
@@ -718,7 +733,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 确保DynamicImporter已初始化
                 if (_dynamicImporter == null)
                 {
-                    _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+                    string imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
+                    _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath);
                 }
 
                 // 使用DynamicImporter的统一列映射方法（避免UI层重复实现）
@@ -1000,7 +1016,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 初始化DynamicImporter
-                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+                string imageSavePath2 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
+                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath2);
                 await ExecuteSingleImport();
             }
             catch (Exception ex)
@@ -1066,7 +1083,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             MainForm.Instance.ShowStatusText("正在导入数据到数据库...");
 
             // 初始化导入器
-            _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+            string imageSavePath3 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
+            _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath3);
             _dynamicImporter.SetCurrentConfiguration(_currentConfig);
 
             string importType = GetImportType();
@@ -1549,7 +1567,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MainForm.Instance.ShowStatusText("正在预处理数据...");
 
                 // 使用DynamicImporter的预处理功能（外键预加载已在内部处理）
-                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+                string imageSavePath4 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
+                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath4);
                 var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
                 
                 _finalPreviewData = await _dynamicImporter.PreprocessDataAsync(_parsedImportData, mappings, _selectedEntityType);
@@ -1689,7 +1708,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MainForm.Instance.ShowStatusText("正在批量导入数据到数据库...");
 
                 // 初始化导入器，传入共享的ForeignKeyService实例
-                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+                string imageSavePath5 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
+                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath5);
                 
                 // 设置当前配置，以便DynamicImporter读取业务键等信息
                 _dynamicImporter.SetCurrentConfiguration(_currentConfig);
@@ -1823,7 +1843,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // ✅ 如果配置了 ImageProcessor，使用它来处理
             if (_imageProcessor != null)
             {
-                string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", imagePath);
+                string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory, imagePath);
                 if (!File.Exists(fullPath)) return null;
 
                 using (Image img = Image.FromFile(fullPath))

@@ -398,6 +398,7 @@ namespace RUINORERP.Business.RowLevelAuthService
 
         /// <summary>
         /// 获取当前用户ID
+        /// 用户名对应的ID，不是员工ID。因为有些权限是基于用户的，而不是员工的。比如系统管理员可能没有员工信息，但需要有权限。
         /// </summary>
         /// <returns>当前用户ID</returns>
         private long GetCurrentUserId()

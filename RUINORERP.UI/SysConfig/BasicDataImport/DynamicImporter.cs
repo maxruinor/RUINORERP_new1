@@ -11,6 +11,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
@@ -21,10 +22,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// </summary>
     public class DynamicImporter
     {
+        #region 常量定义
+
+        /// <summary>
+        /// 临时图片目录名称
+        /// </summary>
+        private const string ImageTempDirectory = "TempImages";
+
+        #endregion
+
         private readonly ISqlSugarClient _db;
         private readonly IUnitOfWorkManage _unitOfWorkManage;  // ✅ 新增：统一事务管理
         private readonly IForeignKeyService _foreignKeyService;
         private readonly DynamicExcelParser _excelParser;
+        private readonly ImageProcessor _imageProcessor;  // ✅ 新增：图片处理器
         private string _imageOutputDirectory;
         private ImportConfiguration _currentConfig;  // ✅ 当前导入配置，用于读取业务键等信息
 
@@ -114,6 +125,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _unitOfWorkManage = unitOfWorkManage;  // ✅ 支持传入事务管理器
             _foreignKeyService = foreignKeyService ?? new ForeignKeyService(db);
             _excelParser = new DynamicExcelParser();
+            _imageProcessor = new ImageProcessor(imageOutputDirectory);  // ✅ 初始化图片处理器
             _imageOutputDirectory = imageOutputDirectory;
         }
 
@@ -178,7 +190,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="mappings">列映射配置</param>
         /// <param name="columnName">列名（Excel列名或系统字段名）</param>
         /// <returns>重复值检测结果</returns>
-        public DuplicateValueCheckResult CheckDuplicateValues(DataTable dataTable, ColumnMappingCollection mappings, string columnName = null)
+        public DuplicateValueCheckResult CheckDuplicateValues(DataTable dataTable, List<ColumnMapping> mappings, string columnName = null)
         {
             var result = new DuplicateValueCheckResult();
 
@@ -273,7 +285,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>导入结果</returns>
         /// <exception cref="ArgumentNullException">参数为空时抛出</exception>
         /// <exception cref="ArgumentException">映射配置无效时抛出</exception>
-        public async System.Threading.Tasks.Task<ImportResult> ImportAsync(DataTable dataTable, ColumnMappingCollection mappings, Type entityType, string importType = null, bool isPreprocessed = false)
+        public async System.Threading.Tasks.Task<ImportResult> ImportAsync(DataTable dataTable, List<ColumnMapping> mappings, Type entityType, string importType = null, bool isPreprocessed = false)
         {
             if (dataTable == null || dataTable.Rows.Count == 0)
             {
@@ -385,7 +397,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>导入结果</returns>
         public async System.Threading.Tasks.Task<ImportResult> ImportFromExcelAsync(
             string filePath,
-            ColumnMappingCollection mappings,
+            List<ColumnMapping> mappings,
             Type entityType,
             int sheetIndex = 0,
             int headerRowIndex = 0,
@@ -439,7 +451,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private async System.Threading.Tasks.Task ProcessImageImportAsync(
             ExcelParseResult parseResult,
-            ColumnMappingCollection mappings,
+            List<ColumnMapping> mappings,
             ImportResult importResult,
             Type entityType)
         {
@@ -451,7 +463,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (string.IsNullOrEmpty(outputDir))
             {
                 // 使用默认目录
-                outputDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", entityType.Name);
+                outputDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory, entityType.Name);
             }
 
             if (!Directory.Exists(outputDir))
@@ -483,8 +495,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         var imageInfo = images[imgIdx];
                         string fileName = images.Count > 1 ? $"{baseName}_{imgIdx + 1}" : baseName;
 
-                        // 保存图片
-                        string savedPath = _excelParser.SaveImageToFile(imageInfo, outputDir, fileName);
+                        // ✅ 使用 ImageProcessor 处理图片（压缩+优化）
+                        string savedPath = ProcessImageWithCompression(imageInfo, outputDir, fileName);
                         if (!string.IsNullOrEmpty(savedPath))
                         {
                             importResult.ImportedImagePaths.Add(savedPath);
@@ -504,9 +516,57 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// ✅ 使用 ImageProcessor 处理图片（压缩+优化）
+        /// </summary>
+        /// <param name="imageInfo">Excel中的图片信息</param>
+        /// <param name="outputDir">输出目录</param>
+        /// <param name="fileName">文件名（不含扩展名）</param>
+        /// <returns>保存后的文件路径</returns>
+        private string ProcessImageWithCompression(ExcelImageInfo imageInfo, string outputDir, string fileName)
+        {
+            if (imageInfo?.ImageData == null || imageInfo.ImageData.Length == 0)
+                return null;
+
+            try
+            {
+                // 1. 先保存为临时文件
+                string tempFilePath = Path.Combine(Path.GetTempPath(), $"temp_{Guid.NewGuid()}{imageInfo.ImageType}");
+                File.WriteAllBytes(tempFilePath, imageInfo.ImageData);
+
+                try
+                {
+                    // 2. 使用 ImageProcessor 处理（压缩+调整大小）
+                    // ImageProcessor 返回的是相对路径（文件名）
+                    string relativePath = _imageProcessor.ProcessAndSaveImage(tempFilePath, fileName);
+                    
+                    if (!string.IsNullOrEmpty(relativePath))
+                    {
+                        // 3. 返回完整路径
+                        return Path.Combine(outputDir, relativePath);
+                    }
+                    
+                    return null;
+                }
+                finally
+                {
+                    // 4. 清理临时文件
+                    if (File.Exists(tempFilePath))
+                    {
+                        try { File.Delete(tempFilePath); } catch { }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"图片处理失败: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 获取图片文件名
         /// </summary>
-        private string GetImageFileName(DataRow row, int rowIndex, ExcelImageConfig config, string namingColumn, ColumnMappingCollection mappings)
+        private string GetImageFileName(DataRow row, int rowIndex, ExcelImageConfig config, string namingColumn, List<ColumnMapping> mappings)
         {
             switch (config.NamingRule)
             {
@@ -568,7 +628,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 更新实体图片字段
         /// </summary>
-        private async System.Threading.Tasks.Task UpdateEntityImageFieldAsync(Type entityType, DataRow row, ColumnMapping mapping, object value, ColumnMappingCollection mappings)
+        private async System.Threading.Tasks.Task UpdateEntityImageFieldAsync(Type entityType, DataRow row, ColumnMapping mapping, object value, List<ColumnMapping> mappings)
         {
             // 获取唯一标识字段用于定位记录
             var uniqueMapping = mappings.GetUniqueKeyMapping();
@@ -766,7 +826,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         continue;
                     }
 
-                    var mappings = new ColumnMappingCollection(config?.ColumnMappings ?? new List<ColumnMapping>());
+                    var mappings = config?.ColumnMappings ?? new List<ColumnMapping>();
 
                     var result = await ImportAsync(data, mappings, entityType, null, isPreprocessed: true);
                     results.Add(result);
@@ -791,7 +851,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="rowNumber">行号</param>
         /// <param name="isPreprocessed">✅ 新增：数据是否已在预览阶段预处理过</param>
         /// <returns>实体对象</returns>
-        private object CreateEntityFromRow(DataRow row, ColumnMappingCollection mappings, Type entityType, int rowNumber, bool isPreprocessed = false)
+        private object CreateEntityFromRow(DataRow row, List<ColumnMapping> mappings, Type entityType, int rowNumber, bool isPreprocessed = false)
         {
             var entity = Activator.CreateInstance(entityType);
 
@@ -1091,7 +1151,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="mappings">列映射配置</param>
         /// <param name="importType">导入类型标识（用于区分客户和供应商等使用相同表的情况）</param>
         /// <param name="isPreprocessed">✅ 新增：数据是否已在预览阶段预处理过</param>
-        private async System.Threading.Tasks.Task BatchImportEntitiesAsync(List<BaseEntity> entityList, Type entityType, ImportResult result, ColumnMappingCollection mappings, string importType = null, bool isPreprocessed = false)
+        private async System.Threading.Tasks.Task BatchImportEntitiesAsync(List<BaseEntity> entityList, Type entityType, ImportResult result, List<ColumnMapping> mappings, string importType = null, bool isPreprocessed = false)
         {
             try
             {
@@ -1554,7 +1614,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="mappings">列映射配置</param>
         /// <param name="entityType">目标实体类型</param>
         /// <returns>预处理后的 DataTable（可直接用于导入）</returns>
-        public async Task<DataTable> PreprocessDataAsync(DataTable rawData, ColumnMappingCollection mappings, Type entityType)
+        public async Task<DataTable> PreprocessDataAsync(DataTable rawData, List<ColumnMapping> mappings, Type entityType)
         {
             if (rawData == null || rawData.Rows.Count == 0)
             {
@@ -1624,7 +1684,125 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 result.Rows.Add(targetRow);
             }
 
-            return await Task.FromResult(result);
+            // ✅ 关键改动：调用 EntityImportHelper 进行实体级别的批量预处理
+            // 这将处理预设字段（如自动生成编码、设置默认启用状态、计算排序号等）
+            result = await ApplyEntityImportHelperAsync(result, entityType);
+
+            return result;
+        }
+
+        /// <summary>
+        /// ✅ 应用 EntityImportHelper 进行实体级别的批量预处理
+        /// 将 DataTable 转换为实体对象，调用 EntityImportHelper 处理后再转换回 DataTable
+        /// </summary>
+        /// <param name="dataTable">预处理后的 DataTable</param>
+        /// <param name="entityType">目标实体类型</param>
+        /// <returns>经过 EntityImportHelper 处理后的 DataTable</returns>
+        private async Task<DataTable> ApplyEntityImportHelperAsync(DataTable dataTable, Type entityType)
+        {
+            if (dataTable == null || dataTable.Rows.Count == 0 || entityType == null)
+            {
+                return dataTable;
+            }
+
+            try
+            {
+                // 1. 将 DataTable 转换为实体对象列表
+                var entities = ConvertDataTableToEntities(dataTable, entityType);
+
+                // 2. 获取导入类型标识（用于区分客户和供应商等使用相同表的情况）
+                string importType = _currentConfig?.ImportType;
+
+                // 3. 调用 EntityImportHelper 进行批量预处理
+                await EntityImportHelper.BatchPreProcessEntitiesAsync(entities, _db, importType);
+
+                // 4. 将处理后的实体对象转换回 DataTable
+                return ConvertEntitiesToDataTable(entities, dataTable);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[EntityImportHelper] 预处理失败: {ex.Message}");
+                // 如果 EntityImportHelper 处理失败，返回原始数据（不会影响基本导入流程）
+                return dataTable;
+            }
+        }
+
+        /// <summary>
+        /// 将 DataTable 转换为实体对象列表
+        /// </summary>
+        private List<BaseEntity> ConvertDataTableToEntities(DataTable dataTable, Type entityType)
+        {
+            var entities = new List<BaseEntity>();
+            var properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (DataRow row in dataTable.Rows)
+            {
+                var entity = Activator.CreateInstance(entityType) as BaseEntity;
+                if (entity == null) continue;
+
+                foreach (var prop in properties)
+                {
+                    try
+                    {
+                        // 使用数据库字段名（大写）来匹配DataTable列
+                        string columnName = prop.Name;
+                        if (dataTable.Columns.Contains(columnName))
+                        {
+                            object value = row[columnName];
+                            if (value != DBNull.Value && value != null)
+                            {
+                                prop.SetValue(entity, Convert.ChangeType(value, prop.PropertyType));
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // 类型转换失败时跳过该属性
+                    }
+                }
+
+                entities.Add(entity);
+            }
+
+            return entities;
+        }
+
+        /// <summary>
+        /// 将实体对象列表转换回 DataTable
+        /// </summary>
+        private DataTable ConvertEntitiesToDataTable(List<BaseEntity> entities, DataTable templateTable)
+        {
+            var result = templateTable.Clone();
+            var properties = entities.FirstOrDefault()?.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            if (properties == null)
+                return result;
+
+            foreach (var entity in entities)
+            {
+                DataRow row = result.NewRow();
+
+                foreach (var prop in properties)
+                {
+                    try
+                    {
+                        string columnName = prop.Name;
+                        if (result.Columns.Contains(columnName))
+                        {
+                            object value = prop.GetValue(entity);
+                            row[columnName] = value ?? DBNull.Value;
+                        }
+                    }
+                    catch
+                    {
+                        // 属性访问失败时跳过
+                    }
+                }
+
+                result.Rows.Add(row);
+            }
+
+            return result;
         }
 
 
@@ -1636,7 +1814,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="mappings">列映射配置集合</param>
         /// <param name="entityType">目标实体类型（用于枚举转换）</param>
         /// <returns>转换后的数据表格（数据库字段名格式）</returns>
-        public DataTable ApplyColumnMapping(DataTable sourceData, ColumnMappingCollection mappings, Type entityType = null)
+        public DataTable ApplyColumnMapping(DataTable sourceData, List<ColumnMapping> mappings, Type entityType = null)
         {
             if (sourceData == null || sourceData.Rows.Count == 0 || mappings == null || mappings.Count == 0)
             {
@@ -1805,9 +1983,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                             case DataSourceType.FieldCopy:
                                 // 字段复制：复制同一记录中另一个字段的值
-                                if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
+                                var fieldCopyConfig = mapping.DataSourceConfig as FieldCopyConfig;
+                                string sourceFieldKey = fieldCopyConfig?.SourceFieldName ?? mapping.CopyFromField?.Key;
+                                
+                                if (!string.IsNullOrEmpty(sourceFieldKey))
                                 {
-                                    var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField?.Key);
+                                    var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == sourceFieldKey);
 
                                     if (copyFromMapping != null)
                                     {
@@ -1842,25 +2023,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                             case DataSourceType.ColumnConcat:
                                 // 列拼接：将Excel中的多个列值拼接后赋值给目标字段
-                                if (mapping.ConcatConfig != null &&
-                                    mapping.ConcatConfig.SourceColumns != null &&
-                                    mapping.ConcatConfig.SourceColumns.Count >= 2)
+                                var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig ?? mapping.ConcatConfig;
+                                if (concatConfig != null &&
+                                    concatConfig.SourceColumns != null &&
+                                    concatConfig.SourceColumns.Count >= 2)
                                 {
                                     var concatValues = new List<string>();
 
-                                    foreach (var sourceCol in mapping.ConcatConfig.SourceColumns)
+                                    foreach (var sourceCol in concatConfig.SourceColumns)
                                     {
                                         if (sourceData.Columns.Contains(sourceCol))
                                         {
                                             object cellValue = sourceRow[sourceCol];
                                             string valueStr = cellValue?.ToString() ?? "";
 
-                                            if (mapping.ConcatConfig.TrimWhitespace)
+                                            if (concatConfig.TrimWhitespace)
                                             {
                                                 valueStr = valueStr.Trim();
                                             }
 
-                                            if (mapping.ConcatConfig.IgnoreEmptyColumns &&
+                                            if (concatConfig.IgnoreEmptyColumns &&
                                                 string.IsNullOrEmpty(valueStr))
                                             {
                                                 continue;
@@ -1870,7 +2052,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                         }
                                         else
                                         {
-                                            if (!mapping.ConcatConfig.IgnoreEmptyColumns)
+                                            if (!concatConfig.IgnoreEmptyColumns)
                                             {
                                                 concatValues.Add("");
                                             }
@@ -1878,7 +2060,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     }
 
                                     string concatenatedValue = string.Join(
-                                        mapping.ConcatConfig.Separator ?? "",
+                                        concatConfig.Separator ?? "",
                                         concatValues);
 
                                     targetRow[mapping.SystemField?.Value] = concatenatedValue;
@@ -1937,6 +2119,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (string.IsNullOrEmpty(fieldName))
                 return;
 
+            // 使用统一配置接口获取系统生成配置
+            var sysConfig = mapping.DataSourceConfig as SystemGeneratedConfig;
+            
+            // 如果有系统生成配置，使用配置生成值
+            if (sysConfig != null)
+            {
+                object generatedValue = GenerateSystemValue(sysConfig);
+                if (generatedValue != null)
+                {
+                    targetRow[fieldName] = generatedValue;
+                    return;
+                }
+            }
+
+            // 兼容旧版本配置
+            if (mapping.SystemGeneratedConfig != null)
+            {
+                object generatedValue = GenerateSystemValue(mapping.SystemGeneratedConfig);
+                if (generatedValue != null)
+                {
+                    targetRow[fieldName] = generatedValue;
+                    return;
+                }
+            }
+
+            // 旧的字段名匹配方式（保持向后兼容）
             var fieldUpper = fieldName.ToUpper();
 
             // 时间字段
@@ -1964,6 +2172,124 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 targetRow[fieldName] = "0";
             }
+        }
+
+        /// <summary>
+        /// 根据系统生成配置生成值
+        /// </summary>
+        /// <param name="config">系统生成配置</param>
+        /// <returns>生成的值</returns>
+        private object GenerateSystemValue(SystemGeneratedConfig config)
+        {
+            switch (config.GeneratedType)
+            {
+                case SystemGeneratedType.DateTime:
+                    return DateTime.Now.ToString(config.DateTimeFormat);
+                
+                case SystemGeneratedType.Date:
+                    return DateTime.Now.Date.ToString(config.DateTimeFormat);
+                
+                case SystemGeneratedType.CreateUser:
+                    var currentUser = Business.BusinessHelper._appContext?.CurUserInfo;
+                    return currentUser?.EmployeeId.ToString() ?? "1";
+                
+                //case SystemGeneratedType.CreateUserName:
+                //    var user = Business.BusinessHelper._appContext?.CurUserInfo;
+                //    return user?.UserInfo?.UserName ?? "未知用户";
+                
+                case SystemGeneratedType.UpdateTime:
+                    return DateTime.Now.ToString(config.DateTimeFormat);
+                
+                case SystemGeneratedType.UpdateUser:
+                    var updateUser = Business.BusinessHelper._appContext?.CurUserInfo;
+                    return updateUser?.EmployeeId.ToString() ?? "1";
+                
+                case SystemGeneratedType.BusinessCode:
+                    return GenerateBusinessCode(config);
+                
+                case SystemGeneratedType.Guid:
+                    return Guid.NewGuid().ToString();
+                
+                case SystemGeneratedType.Status:
+                    return config.CustomDefaultValue ?? "1";
+                
+                case SystemGeneratedType.IsDeleted:
+                    return config.CustomDefaultValue ?? "0";
+                
+                case SystemGeneratedType.Sequence:
+                    return GetNextSequence().ToString().PadLeft(config.SequenceDigits, '0');
+                
+                case SystemGeneratedType.CustomExpression:
+                    return EvaluateCustomExpression(config.CustomExpression);
+                
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// 生成业务编码
+        /// </summary>
+        private string GenerateBusinessCode(SystemGeneratedConfig config)
+        {
+            string prefix = config.BusinessCodePrefix ?? string.Empty;
+            int digits = config.SequenceDigits;
+            string sequence = GetNextSequence().ToString().PadLeft(digits, '0');
+            
+            switch (config.BusinessCodeRule)
+            {
+                case BusinessCodeRule.DateSequence:
+                    return DateTime.Now.ToString("yyyyMMdd") + sequence;
+                
+                case BusinessCodeRule.PrefixDateSequence:
+                    return prefix + DateTime.Now.ToString("yyyyMMdd") + sequence;
+                
+                case BusinessCodeRule.PrefixSequence:
+                    return prefix + sequence;
+                
+                case BusinessCodeRule.OnlySequence:
+                    return sequence;
+                
+                case BusinessCodeRule.YearSequence:
+                    return DateTime.Now.ToString("yyyy") + sequence;
+                
+                case BusinessCodeRule.YearMonthSequence:
+                    return DateTime.Now.ToString("yyyyMM") + sequence;
+                
+                default:
+                    return DateTime.Now.ToString("yyyyMMdd") + sequence;
+            }
+        }
+
+        /// <summary>
+        /// 获取下一个序号
+        /// </summary>
+        private int GetNextSequence()
+        {
+            // 简单实现：使用静态计数器
+            return Interlocked.Increment(ref _sequenceCounter);
+        }
+
+        private static int _sequenceCounter = 0;
+
+        /// <summary>
+        /// 评估自定义表达式
+        /// </summary>
+        private string EvaluateCustomExpression(string expression)
+        {
+            if (string.IsNullOrEmpty(expression))
+                return string.Empty;
+            
+            var currentUser = Business.BusinessHelper._appContext?.CurUserInfo;
+            string result = expression
+                .Replace("{Now}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
+                .Replace("{NowDate}", DateTime.Now.Date.ToString("yyyy-MM-dd"))
+                .Replace("{NowTime}", DateTime.Now.ToString("HH:mm:ss"))
+                .Replace("{UserID}", currentUser?.EmployeeId.ToString() ?? "1")
+                .Replace("{Guid}", Guid.NewGuid().ToString())
+                .Replace("{Sequence}", GetNextSequence().ToString());
+            
+            return result;
         }
 
         /// <summary>

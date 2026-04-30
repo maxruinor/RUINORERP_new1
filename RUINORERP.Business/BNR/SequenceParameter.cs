@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -12,7 +12,11 @@ namespace RUINORERP.Business.BNR
     /// <summary>
     /// {N:ORDER/00000} 
     /// 序号参数
+    /// 
+    /// ✅ [已废弃] 此实现使用内存映射文件存储，多进程/服务器环境下不安全，可能产生重复编号
+    /// 请使用 DatabaseSequenceParameter + DatabaseSequenceService 替代
     /// </summary>
+    [Obsolete("此实现已废弃，请使用 DatabaseSequenceParameter + DatabaseSequenceService 替代")]
     [ParameterType("N")]
     public class SequenceParameter : IParameterHandler
     {

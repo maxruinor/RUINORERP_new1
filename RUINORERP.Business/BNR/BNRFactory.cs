@@ -165,7 +165,7 @@ namespace RUINORERP.Business.BNR
         //    }
         //}
 
-        public void Register<T>() where T : SequenceParameter
+        public void Register<T>() where T : DatabaseSequenceParameter
         {
             Register(typeof(T));
         }

@@ -259,6 +259,10 @@ namespace RUINORERP.Business.BNR
             {
                 throw new Exception($"更新序列值失败，已达到最大重试次数 ({maxRetries})");
             }
+
+            // ✅ 关键修复：更新数据库值后必须清除相关缓存
+            // 防止缓存中的旧批次与新的数据库值不一致导致重复
+            ClearRelatedCaches(sequenceKey);
         }
 
         /// <summary>
@@ -280,20 +284,14 @@ namespace RUINORERP.Business.BNR
 
             string dynamicKey = GenerateDynamicKey(sequenceKey, resetType);
 
-            // ✅ 优化：第一次快速检查，避免不必要的锁获取
-            if (_batchCaches.TryGetValue(dynamicKey, out var fastCache))
-            {
-                if (fastCache.TryAllocate(out long fastNextValue))
-                {
-                    System.Diagnostics.Debug.WriteLine($"[缓存快速命中] 键: {dynamicKey}, 值: {fastNextValue}");
-                    return fastNextValue;
-                }
-            }
+            // ✅ 关键修复：移除快速检查，确保所有序号分配都经过锁保护
+            // 快速检查存在竞态条件：线程A获取到缓存值后被抢占，线程B可能已分配完该值
+            // 虽然牺牲了一点性能，但确保了绝对不会产生重复编号
 
             // 获取或创建该键的信号量锁(异步友好)
             var keyLock = _keyLocks.GetOrAdd(dynamicKey, _ => new SemaphoreSlim(1, 1));
 
-            // ✅ 修复: 添加超时机制防止永久阻塞（编号生成应在毫秒级完成）
+            // ✅ 添加超时机制防止永久阻塞（编号生成应在毫秒级完成）
             const int LOCK_TIMEOUT_SECONDS = 5;
             bool lockAcquired = false;
             try
@@ -307,7 +305,7 @@ namespace RUINORERP.Business.BNR
                         $"建议: 检查系统负载、数据库状态及是否有长时间运行的事务。");
                 }
 
-                // ✅ 双重检查锁定：再次检查缓存，防止其他线程已经重新分配了批次
+                // 检查缓存是否有可用序号
                 if (_batchCaches.TryGetValue(dynamicKey, out var cache))
                 {
                     if (cache.TryAllocate(out long nextValue))
@@ -316,6 +314,7 @@ namespace RUINORERP.Business.BNR
                         System.Diagnostics.Debug.WriteLine($"[缓存命中] 键: {dynamicKey}, 值: {nextValue}");
                         return nextValue;
                     }
+                    // 缓存已耗尽，将在下一行获取新批次
                 }
 
                 // 缓存未命中或已耗尽,从数据库获取新批次
@@ -587,6 +586,36 @@ namespace RUINORERP.Business.BNR
             {
                 throw new Exception($"重置序列失败，已达到最大重试次数 ({maxRetries})");
             }
+
+            // ✅ 关键修复：重置数据库后必须清除所有相关缓存
+            // 否则缓存中的旧批次会继续被使用，导致重复编号
+            ClearRelatedCaches(key);
+        }
+
+        /// <summary>
+        /// 清除与指定键相关的所有缓存项
+        /// </summary>
+        /// <param name="key">序列键</param>
+        private void ClearRelatedCaches(string key)
+        {
+            // 查找所有匹配的缓存键（包括动态键）
+            var keysToRemove = new List<string>();
+            foreach (var cacheKey in _batchCaches.Keys)
+            {
+                if (cacheKey == key || cacheKey.StartsWith($"{key}_"))
+                {
+                    keysToRemove.Add(cacheKey);
+                }
+            }
+
+            // 移除所有匹配的缓存项
+            foreach (var cacheKey in keysToRemove)
+            {
+                if (_batchCaches.TryRemove(cacheKey, out _))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[缓存清除] 重置序列后清除缓存: {cacheKey}");
+                }
+            }
         }
 
         /// <summary>
@@ -784,6 +813,9 @@ namespace RUINORERP.Business.BNR
             {
                 throw new Exception($"重置序列值失败，已达到最大重试次数 ({maxRetries})");
             }
+
+            // ✅ 关键修复：重置数据库值后必须清除相关缓存
+            ClearRelatedCaches(key);
         }
 
         /// <summary>

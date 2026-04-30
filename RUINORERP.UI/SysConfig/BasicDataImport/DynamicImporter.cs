@@ -25,9 +25,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         #region 常量定义
 
         /// <summary>
-        /// 临时图片目录名称
+        /// 临时图片目录名称（使用统一常量）
         /// </summary>
-        private const string ImageTempDirectory = "TempImages";
+        private const string ImageTempDirectory = ColumnMappingConstants.ImageTempDirectoryName;
 
         #endregion
 
@@ -1383,11 +1383,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             switch (strategy)
             {
                 case ExistenceStrategy.Skip:
-                    return await FilterExistingRecordsAsync(dbClient, entities, businessKeys);
-
-                case ExistenceStrategy.Update:
-                    // TODO: 实现更新策略 - 标记需要更新的记录
-                    System.Diagnostics.Debug.WriteLine("更新策略暂未实现，使用跳过策略");
                     return await FilterExistingRecordsAsync(dbClient, entities, businessKeys);
 
                 case ExistenceStrategy.Error:

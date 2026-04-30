@@ -54,8 +54,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnDynamicImport = new Krypton.Toolkit.KryptonButton();
             this.kbtnGeneratePreview = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel6 = new Krypton.Toolkit.KryptonPanel();
-            this.dgvImportData = new RUINORERP.UI.UControls.NewSumDataGridView();
-            this.dgvDynamicImportData = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigatorMain)).BeginInit();
@@ -85,8 +83,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDynamicSheetName)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDynamicMappingName)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel6)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvImportData)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvDynamicImportData)).BeginInit();
             this.SuspendLayout();
             // 
             // contextMenuStrip1
@@ -483,74 +479,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel6.Size = new System.Drawing.Size(794, 445);
             this.kryptonPanel6.TabIndex = 0;
             // 
-            // dgvImportData
-            // 
-            this.dgvImportData.AllowUserToAddRows = false;
-            this.dgvImportData.AllowUserToDeleteRows = false;
-            this.dgvImportData.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
-            this.dgvImportData.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
-            this.dgvImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvImportData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvImportData.ContextMenuStrip = this.contextMenuStrip1;
-            this.dgvImportData.CustomRowNo = false;
-            this.dgvImportData.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvImportData.EnableFiltering = false;
-            this.dgvImportData.EnablePagination = false;
-            this.dgvImportData.EnableVirtualMode = true;
-            this.dgvImportData.IsShowSumRow = false;
-            this.dgvImportData.Location = new System.Drawing.Point(0, 0);
-            this.dgvImportData.Name = "dgvImportData";
-            this.dgvImportData.NeedSaveColumnsXml = true;
-            this.dgvImportData.RowTemplate.Height = 23;
-            this.dgvImportData.Size = new System.Drawing.Size(863, 394);
-            this.dgvImportData.SumColumns = null;
-            this.dgvImportData.SummaryDescription = "数据预览";
-            this.dgvImportData.SumRowCellFormat = "N2";
-            this.dgvImportData.TabIndex = 0;
-            this.dgvImportData.UseBatchEditColumn = false;
-            this.dgvImportData.UseCustomColumnDisplay = true;
-            this.dgvImportData.UseSelectedColumn = false;
-            this.dgvImportData.Use是否使用内置右键功能 = true;
-            this.dgvImportData.VirtualModeThreshold = 5000;
-            this.dgvImportData.XmlFileName = "UCBasicDataImport";
-            // 
-            // dgvDynamicImportData
-            // 
-            this.dgvDynamicImportData.AllowUserToAddRows = false;
-            this.dgvDynamicImportData.AllowUserToDeleteRows = false;
-            this.dgvDynamicImportData.AllowUserToOrderColumns = true;
-            this.dgvDynamicImportData.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
-            this.dgvDynamicImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvDynamicImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvDynamicImportData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvDynamicImportData.ContextMenuStrip = this.contextMenuStrip1;
-            this.dgvDynamicImportData.CustomRowNo = false;
-            this.dgvDynamicImportData.EnableFiltering = false;
-            this.dgvDynamicImportData.EnablePagination = false;
-            this.dgvDynamicImportData.EnableVirtualMode = true;
-            this.dgvDynamicImportData.IsShowSumRow = false;
-            this.dgvDynamicImportData.Location = new System.Drawing.Point(10, 132);
-            this.dgvDynamicImportData.Name = "dgvDynamicImportData";
-            this.dgvDynamicImportData.NeedSaveColumnsXml = true;
-            this.dgvDynamicImportData.RowTemplate.Height = 23;
-            this.dgvDynamicImportData.Size = new System.Drawing.Size(774, 307);
-            this.dgvDynamicImportData.SumColumns = null;
-            this.dgvDynamicImportData.SummaryDescription = "动态导入数据预览";
-            this.dgvDynamicImportData.SumRowCellFormat = "N2";
-            this.dgvDynamicImportData.TabIndex = 10;
-            this.dgvDynamicImportData.UseBatchEditColumn = false;
-            this.dgvDynamicImportData.UseCustomColumnDisplay = true;
-            this.dgvDynamicImportData.UseSelectedColumn = false;
-            this.dgvDynamicImportData.Use是否使用内置右键功能 = true;
-            this.dgvDynamicImportData.VirtualModeThreshold = 5000;
-            this.dgvDynamicImportData.XmlFileName = "UCBasicDataImport_Dynamic";
-            // 
             // UCBasicDataImport
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -588,15 +516,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDynamicSheetName)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDynamicMappingName)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel6)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvImportData)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvDynamicImportData)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
         private Krypton.Toolkit.KryptonPanel kryptonPanel2;
-        private RUINORERP.UI.UControls.NewSumDataGridView dgvImportData;
         private RUINORERP.UI.UControls.NewSumDataGridView dgvRawExcelData;
         private RUINORERP.UI.UControls.NewSumDataGridView dgvParsedImportData;
         private Krypton.Navigator.KryptonPage kryptonPageFinalPreview;

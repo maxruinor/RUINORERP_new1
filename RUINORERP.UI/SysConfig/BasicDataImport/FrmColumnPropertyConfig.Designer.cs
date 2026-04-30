@@ -887,7 +887,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbExistenceStrategy.IntegralHeight = false;
             this.kcmbExistenceStrategy.Items.AddRange(new object[] {
             "跳过",
-            "更新",
             "报错"});
             this.kcmbExistenceStrategy.Location = new System.Drawing.Point(120, 120);
             this.kcmbExistenceStrategy.Name = "kcmbExistenceStrategy";

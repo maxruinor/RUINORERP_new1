@@ -131,9 +131,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public bool IsBusinessKey { get; set; }
 
         /// <summary>
-        /// 数据库存在性处理策略
+        /// 数据库存在性处理策略（默认跳过）
         /// </summary>
-        public ExistenceStrategy ExistenceStrategy { get; set; } = ExistenceStrategy.Update;
+        public ExistenceStrategy ExistenceStrategy { get; set; } = ExistenceStrategy.Skip;
 
         /// <summary>
         /// Excel列名列表

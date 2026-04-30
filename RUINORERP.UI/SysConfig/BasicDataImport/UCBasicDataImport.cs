@@ -34,9 +34,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         #region 常量定义
 
         /// <summary>
-        /// 临时图片保存目录
+        /// 临时图片保存目录（使用统一常量）
         /// </summary>
-        private const string ImageTempDirectory = "TempImages";
+        private const string ImageTempDirectory = ColumnMappingConstants.ImageTempDirectoryName;
 
         #endregion
 
@@ -105,6 +105,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 _imageCache.Clear();
             }
         }
+
+        /// <summary>
+        /// 初始化DynamicImporter（单例模式，只初始化一次）
+        /// </summary>
+        private void InitializeDynamicImporter()
+        {
+            if (_dynamicImporter != null) return;
+
+            string imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
+            _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath);
+        }
         #endregion
 
         /// <summary>
@@ -151,11 +162,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void InitializeData()
         {
-
-            // 初始化数据网格视图
-            dgvImportData.AutoGenerateColumns = true;
-            //dgvImportData.DataSource = _importData;
-
             // 设置图片保存路径
             string imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
             _imageProcessor = new ImageProcessor(imageSavePath);
@@ -168,6 +174,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             // 初始化数据库连接
             LoadDbConnection();
+            
+            // 验证数据库连接是否成功
+            if (_db == null)
+            {
+                throw new InvalidOperationException("无法获取数据库连接，请确保 MainForm.Instance.AppContext.Db 已正确初始化");
+            }
 
             // 初始化外键服务（单例模式，整个导入流程共享）
             _foreignKeyService = new ForeignKeyService(_db);
@@ -730,12 +742,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     _currentConfig.ColumnMappings,
                     -1); // -1表示读取全部数据行
 
-                // 确保DynamicImporter已初始化
-                if (_dynamicImporter == null)
-                {
-                    string imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
-                    _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath);
-                }
+                // 确保DynamicImporter已初始化（单例模式）
+                InitializeDynamicImporter();
 
                 // 使用DynamicImporter的统一列映射方法（避免UI层重复实现）
                 var mappings = new ColumnMappingCollection(_currentConfig.ColumnMappings);
@@ -780,53 +788,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
         }
 
-        /// <summary>
-        /// 应用列映射配置转换数据
-        /// </summary>
-        /// <param name="sourceData">源数据表格（从Excel解析得到）</param>
-        /// <param name="mappings">列映射配置集合</param>
-        /// <returns>转换后的数据表格（数据库字段名格式）</returns>
-        /// <remarks>
-        /// 【重要】本方法负责将Excel列名转换为数据库字段名，并处理各种数据源类型：
-        /// 
-        /// 1. Excel数据源 (DataSourceType.Excel):
-        ///    - Excel列名: mapping.ExcelColumn (例如: "供应商名称", "产品编码")
-        ///    - 数据库字段: mapping.SystemField.Value (例如: "SupplierName", "ProductCode")
-        ///    - 示例: Excel中的"供应商名称"列 -> 数据库的SupplierName字段
-        /// 
-        /// 2. 外键关联 (DataSourceType.ForeignKey):
-        ///    - Excel来源列: mapping.ForeignConfig.ForeignKeySourceColumn.Key (例如: "供应商名称")
-        ///    - 外键表: mapping.ForeignConfig.ForeignKeyTable.Key (例如: "tb_Supplier")
-        ///    - 外键字段: mapping.ForeignConfig.ForeignKeyField.Key (例如: "SupplierID")
-        ///    - 目标字段: mapping.SystemField.Value (例如: "SupplierID")
-        ///    - 示例: Excel中的"供应商名称" -> 查询tb_Supplier表获取SupplierID -> 存入数据库的SupplierID字段
-        /// 
-        /// 3. 列拼接 (DataSourceType.ColumnConcat):
-        ///    - Excel源列列表: mapping.ConcatConfig.SourceColumns (例如: ["省", "市", "区"])
-        ///    - 分隔符: mapping.ConcatConfig.Separator (例如: "-")
-        ///    - 目标字段: mapping.SystemField.Value (例如: "FullAddress")
-        ///    - 示例: Excel中的"省"+"-"+"市"+"-"+"区" -> 数据库的FullAddress字段
-        /// 
-        /// 4. 字段复制 (DataSourceType.FieldCopy):
-        ///    - 源字段: mapping.CopyFromField.Key (例如: "ProductCode")
-        ///    - 目标字段: mapping.SystemField.Value (例如: "ProductName")
-        ///    - 示例: 将ProductCode字段的值复制到ProductName字段
-        /// 
-        /// 5. 系统生成 (DataSourceType.SystemGenerated):
-        ///    - 目标字段: mapping.SystemField.Value (例如: "CreateTime", "CreateUser")
-        ///    - 示例: 系统自动生成创建时间、创建人等字段
-        /// 
-        /// 6. 默认值 (DataSourceType.DefaultValue):
-        ///    - 默认值: mapping.DefaultValue (例如: "0", "Active")
-        ///    - 目标字段: mapping.SystemField.Value (例如: "Status")
-        ///    - 示例: Status字段默认为0(禁用)或Active状态
-        /// 
-        /// 注意：
-        /// - sourceData中的列名是Excel中的原始列名（中文显示名）
-        /// - result中的列名是数据库字段名（英文标识符）
-        /// - 转换过程通过ColumnMapping配置建立映射关系
-        /// </remarks>
-
+       
         /// <summary>
         /// Sheet选择改变事件
         /// </summary>
@@ -976,10 +938,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     mappingName = selectedText.Substring(5); // 移除 "[配置] " 前缀
                 }
-                else if (selectedText.StartsWith("[Profile] "))
-                {
-                    mappingName = selectedText.Substring(10); // 移除 "[Profile] " 前缀
-                }
                 
                 _currentConfig = _columnMappingManager.LoadConfiguration(mappingName, _selectedEntityType);
             }
@@ -1015,9 +973,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                // 初始化DynamicImporter
-                string imageSavePath2 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
-                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath2);
+                // 初始化DynamicImporter（单例模式）
+                InitializeDynamicImporter();
                 await ExecuteSingleImport();
             }
             catch (Exception ex)
@@ -1082,9 +1039,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             MainForm.Instance.ShowStatusText("正在导入数据到数据库...");
 
-            // 初始化导入器
-            string imageSavePath3 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
-            _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath3);
+            // 初始化DynamicImporter（单例模式）
+            InitializeDynamicImporter();
             _dynamicImporter.SetCurrentConfiguration(_currentConfig);
 
             string importType = GetImportType();
@@ -1566,9 +1522,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 MainForm.Instance.ShowStatusText("正在预处理数据...");
 
-                // 使用DynamicImporter的预处理功能（外键预加载已在内部处理）
-                string imageSavePath4 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
-                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath4);
+                // 初始化DynamicImporter（单例模式）
+                InitializeDynamicImporter();
                 var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
                 
                 _finalPreviewData = await _dynamicImporter.PreprocessDataAsync(_parsedImportData, mappings, _selectedEntityType);
@@ -1594,7 +1549,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 批量导入按钮点击事件
-        /// 仅负责将预处理阶段生成的数据集合批量保存至数据库
+        /// 支持从解析后的数据或预处理后的数据导入
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
@@ -1602,17 +1557,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                // 检查是否已完成预处理
-                if (_finalPreviewData == null || _finalPreviewData.Rows.Count == 0)
+                // 检查是否有数据可导入（支持解析后数据或预处理后数据）
+                bool hasParsedData = _parsedImportData != null && _parsedImportData.Rows.Count > 0;
+                bool hasPreviewData = _finalPreviewData != null && _finalPreviewData.Rows.Count > 0;
+
+                if (!hasParsedData && !hasPreviewData)
                 {
-                    MessageBox.Show("请先点击\"预处理\"按钮生成最终数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("请先点击\"解析\"按钮转换数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
+                // 使用预览数据（如果有），否则使用解析后的数据
+                DataTable sourceData = hasPreviewData ? _finalPreviewData : _parsedImportData;
+
                 // 确认批量导入
                 var confirmResult = MessageBox.Show(
-                    $"确定要批量导入 {_finalPreviewData.Rows.Count} 条数据到 {_selectedEntityType?.Name} 吗？\n\n" +
-                    $"数据已在预处理阶段完成处理，现在将直接保存到数据库。",
+                    $"确定要批量导入 {sourceData.Rows.Count} 条数据到 {_selectedEntityType?.Name} 吗？\n\n" +
+                    (hasPreviewData ? "数据已在预处理阶段完成处理，现在将直接保存到数据库。" : "数据将进行实时处理后保存到数据库。"),
                     "确认批量导入",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question
@@ -1623,8 +1584,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                // 执行批量导入（异步）
-                await ExecuteBatchImport();
+                // 执行动态导入（统一入口，支持两种模式）
+                await ExecuteDynamicImport();
             }
             catch (Exception ex)
             {
@@ -1707,9 +1668,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 MainForm.Instance.ShowStatusText("正在批量导入数据到数据库...");
 
-                // 初始化导入器，传入共享的ForeignKeyService实例
-                string imageSavePath5 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
-                _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath5);
+                // 初始化DynamicImporter（单例模式）
+                InitializeDynamicImporter();
                 
                 // 设置当前配置，以便DynamicImporter读取业务键等信息
                 _dynamicImporter.SetCurrentConfiguration(_currentConfig);

@@ -19,6 +19,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public const string ConfigFileExtension = ".xml";
 
         /// <summary>
+        /// 临时图片保存目录名称
+        /// </summary>
+        public const string ImageTempDirectoryName = "TempImages";
+
+        /// <summary>
         /// 获取列映射配置文件的完整保存路径
         /// </summary>
         /// <returns>配置文件保存路径</returns>

@@ -706,15 +706,38 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 加载已保存的映射配置和模板
-        /// 【优化】统一加载配置和模板
+        /// 加载已保存的映射配置
         /// </summary>
         private void LoadSavedMappings()
         {
             try
             {
-                // 【优化】使用新的 LoadTemplateList 方法
-                LoadTemplateList();
+                // 保存当前选择
+                string currentSelection = comboBoxSavedMappings.SelectedItem?.ToString();
+
+                comboBoxSavedMappings.Items.Clear();
+                comboBoxSavedMappings.Items.Add("-- 新建映射 --");
+
+                // 直接加载所有配置（添加"[配置]"前缀以保持与主界面一致）
+                var savedMappings = _columnMappingManager.GetAllMappingNames();
+                foreach (var mappingName in savedMappings)
+                {
+                    comboBoxSavedMappings.Items.Add($"[配置] {mappingName}");
+                }
+
+                // 恢复选择
+                if (!string.IsNullOrEmpty(currentSelection))
+                {
+                    int index = comboBoxSavedMappings.Items.IndexOf(currentSelection);
+                    if (index >= 0)
+                        comboBoxSavedMappings.SelectedIndex = index;
+                    else
+                        comboBoxSavedMappings.SelectedIndex = 0;
+                }
+                else
+                {
+                    comboBoxSavedMappings.SelectedIndex = 0;
+                }
             }
             catch (Exception ex)
             {
@@ -1007,6 +1030,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ImportConfig.ColumnMappings = ColumnMappings.ToList();
                 ImportConfig.EnableDeduplication = chkRemoveDuplicates.Checked;
                 ImportConfig.DeduplicateStrategy = (DeduplicateStrategy)kcmbDeduplicateStrategy.SelectedIndex;
+                // 注意：DeduplicateFields 和 IgnoreEmptyValuesInDeduplication 已在配置对话框中直接修改 ImportConfig
                 ImportConfig.UpdateTimestamp();
 
                 // 保存配置
@@ -1022,7 +1046,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 刷新已保存映射列表
                 LoadSavedMappings();
 
-                // 【修复】选中新保存的映射 - 需要匹配带前缀的格式
+                // 【修复】选中新保存的映射（带"[配置]"前缀）
                 string newItemText = $"[配置] {mappingName}";
                 int newIndex = comboBoxSavedMappings.Items.IndexOf(newItemText);
                 if (newIndex >= 0)
@@ -1072,20 +1096,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             string selectedItem = comboBoxSavedMappings.SelectedItem.ToString();
 
-            // 【优化】处理模板选择
-            if (selectedItem.StartsWith("[妯℃澘] "))
-            {
-                string templateName = selectedItem.Substring(5); // 移除 "[模板] " 前缀
-                ApplyImportTemplate(templateName);
-                return;
-            }
-
-            // 【优化】处理配置选择
-            if (selectedItem.StartsWith("[閰嶇疆] "))
-            {
-                selectedItem = selectedItem.Substring(5); // 移除 "[配置] " 前缀
-            }
-
             try
             {
                 // 【修复】提取真实的配置名称(去除前缀)
@@ -1111,6 +1121,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 更新去重复选框状态和策略
                 chkRemoveDuplicates.Checked = config?.EnableDeduplication ?? false;
                 kcmbDeduplicateStrategy.SelectedIndex = (int)(config?.DeduplicateStrategy ?? DeduplicateStrategy.FirstOccurrence);
+                
+                // 显示去重字段配置状态
+                if (config?.EnableDeduplication == true && config.DeduplicateFields != null && config.DeduplicateFields.Count > 0)
+                {
+                    MainForm.Instance.PrintInfoLog($"加载配置：已配置 {config.DeduplicateFields.Count} 个去重字段");
+                }
 
                 // 【修复】重新加载Excel列和系统字段列表
                 LoadSystemFields();
@@ -1428,212 +1444,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 更新窗口标题
             SetWindowTitle();
         }
-
-        #region 【新增】模板管理功能
-        /// <summary>
-        /// 保存为导入模板
-        /// </summary>
-        private void SaveAsTemplate()
-        {
-            if (ColumnMappings.Count == 0)
-            {
-                MessageBox.Show("请添加至少一个映射后再保存模板", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // 输入模板名称
-            string templateName = KryptonInputBox.Show("请输入模板名称", "保存为模板", $"{TargetEntityType?.Name ?? "数据"}导入模板");
-            if (string.IsNullOrWhiteSpace(templateName))
-                return;
-
-            try
-            {
-                // 更新导入配置
-                ImportConfig.MappingName = textBoxMappingName.Text.Trim();
-                ImportConfig.EntityType = TargetEntityType?.FullName;
-                ImportConfig.ColumnMappings = ColumnMappings.ToList();
-                ImportConfig.EnableDeduplication = chkRemoveDuplicates.Checked;
-                ImportConfig.DeduplicateStrategy = (DeduplicateStrategy)kcmbDeduplicateStrategy.SelectedIndex;
-
-                // ✅直接保存 ImportConfiguration（不需要转换为 ImportTemplate）
-                ImportConfig.MappingName = templateName;
-                ImportConfig.EntityType = TargetEntityType?.FullName;
-                _columnMappingManager.SaveConfiguration(ImportConfig);
-
-                MessageBox.Show($"模板 [{templateName}] 保存成功！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                // 刷新模板列表
-                LoadTemplateList();
-
-                // 记录日志
-                MainForm.Instance.PrintInfoLog($"保存导入模板: {templateName}, 实体: {TargetEntityType?.Name}");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"保存模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// 应用导入模板
-        /// </summary>
-        private void ApplyImportTemplate(string templateName)
-        {
-            if (string.IsNullOrWhiteSpace(templateName))
-                return;
-
-            // ✅直接加载 ImportConfiguration
-            var config = _columnMappingManager.LoadConfiguration(templateName);
-            if (config == null)
-            {
-                MessageBox.Show($"模板 [{templateName}] 不存在或已损坏", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            // 检查实体类型是否匹配            if (!string.IsNullOrEmpty(config.EntityType) && config.EntityType != TargetEntityType?.FullName)
-            {
-                var result = MessageBox.Show(
-                    $"模板 [{templateName}] 是为实体 [{config.EntityType}] 创建的，\n" +
-                    $"当前实体是 [{TargetEntityType?.FullName}]。\n\n" +
-                    $"是否仍要应用此模板？",
-                    "实体类型不匹配",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question);
-
-                if (result != DialogResult.Yes)
-                    return;
-            }
-
-            try
-            {
-                // ✅直接将配置复制到 ImportConfig
-                ImportConfig.ColumnMappings = new List<ColumnMapping>(config.ColumnMappings);
-                ImportConfig.EnableDeduplication = config.EnableDeduplication;
-                ImportConfig.DeduplicateFields = config.DeduplicateFields != null ? new List<string>(config.DeduplicateFields) : new List<string>();
-                ImportConfig.DeduplicateStrategy = config.DeduplicateStrategy;
-                ImportConfig.IgnoreEmptyValuesInDeduplication = config.IgnoreEmptyValuesInDeduplication;
-
-                // 更新列映射集合                ColumnMappings = new List<ColumnMapping>();
-                foreach (var mapping in ImportConfig.ColumnMappings)
-                {
-                    ColumnMappings.Add(mapping);
-                }
-
-                // 更新界面显示
-                UpdateMappingsList();
-
-                // 更新去重设置
-                chkRemoveDuplicates.Checked = config.EnableDeduplication;
-                if (config.DeduplicateStrategy == DeduplicateStrategy.LastOccurrence)
-                    kcmbDeduplicateStrategy.SelectedIndex = 1;
-                else
-                    kcmbDeduplicateStrategy.SelectedIndex = 0;
-
-                // 更新可用列列表
-                RefreshAvailableColumns();
-
-                MessageBox.Show($"模板 [{templateName}] 应用成功！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                // 记录日志
-                MainForm.Instance.PrintInfoLog($"应用导入模板: {templateName}, 映射数={ColumnMappings.Count}");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"应用模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// 加载模板列表
-        /// </summary>
-        private void LoadTemplateList()
-        {
-            // 保存当前选择
-            string currentSelection = comboBoxSavedMappings.SelectedItem?.ToString();
-
-            comboBoxSavedMappings.Items.Clear();
-            comboBoxSavedMappings.Items.Add("-- 新建映射 --");
-
-            // ✅直接加载所有配置（不再区分配置和模板）
-            var savedMappings = _columnMappingManager.GetAllMappingNames();
-            foreach (var mappingName in savedMappings)
-            {
-                comboBoxSavedMappings.Items.Add(mappingName);
-            }
-
-            // 恢复选择
-            if (!string.IsNullOrEmpty(currentSelection))
-            {
-                int index = comboBoxSavedMappings.Items.IndexOf(currentSelection);
-                if (index >= 0)
-                    comboBoxSavedMappings.SelectedIndex = index;
-                else
-                    comboBoxSavedMappings.SelectedIndex = 0;
-            }
-            else
-            {
-                comboBoxSavedMappings.SelectedIndex = 0;
-            }
-        }
-
-        /// <summary>
-        /// 刷新可用列列表（应用模板后）
-        /// </summary>
-        private void RefreshAvailableColumns()
-        {
-            // 重新加载所有列
-            LoadSystemFields();
-            if (ExcelData != null && ExcelData.Rows.Count > 0)
-            {
-                LoadExcelColumns();
-            }
-
-            // 从可用列表中移除已映射的列
-            foreach (var mapping in ColumnMappings)
-            {
-                if (!string.IsNullOrEmpty(mapping.ExcelColumn))
-                {
-                    RemoveFromExcelColumns(mapping.ExcelColumn);
-                }
-                if (mapping.SystemField != null)
-                {
-                    RemoveFromSystemFields(mapping.SystemField.Key);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 删除模板
-        /// </summary>
-        private void DeleteTemplate(string templateName)
-        {
-            if (string.IsNullOrWhiteSpace(templateName))
-                return;
-
-            var result = MessageBox.Show(
-                $"确定要删除模板 [{templateName}] 吗？\n此操作不可恢复。",
-                "确认删除",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
-
-            if (result != DialogResult.Yes)
-                return;
-
-            try
-            {
-                // ✅直接删除配置
-                _columnMappingManager.DeleteMapping(templateName);
-                MessageBox.Show($"模板 [{templateName}] 删除成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadTemplateList();
-                MainForm.Instance.PrintInfoLog($"删除导入模板: {templateName}");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"删除模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        #endregion
 
         /// <summary>
         /// 从Excel列列表中移除指定的列

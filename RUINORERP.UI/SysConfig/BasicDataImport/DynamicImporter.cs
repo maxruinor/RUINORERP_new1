@@ -240,8 +240,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 统计每个值的出现次数
                 var valueCount = new Dictionary<string, int>();
                 
-                var excelConfig = targetMapping.DataSourceConfig as ExcelConfig;
-                string excelColumnName = excelConfig?.ExcelColumn;
+                var targetExcelConfig = targetMapping.DataSourceConfig as ExcelConfig;
+                string excelColumnName = targetExcelConfig?.ExcelColumn;
 
                 if (!string.IsNullOrEmpty(excelColumnName) && dataTable.Columns.Contains(excelColumnName))
                 {
@@ -419,7 +419,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 检查是否有图片字段映射
-            var imageMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ExcelImage || m.IsImageColumn).ToList();
+            var imageMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ExcelImage).ToList();
             bool hasImageFields = imageMappings.Count > 0;
 
             ExcelParseResult parseResult = null;
@@ -465,7 +465,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ImportResult importResult,
             Type entityType)
         {
-            var imageMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ExcelImage || m.IsImageColumn).ToList();
+            var imageMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ExcelImage).ToList();
             if (imageMappings.Count == 0) return;
 
             // 确定图片输出目录
@@ -493,7 +493,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 foreach (var mapping in imageMappings)
                 {
-                    var config = mapping.ImageConfig ?? new ExcelImageConfig();
+                    var config = mapping.DataSourceConfig as ExcelImageConfig ?? new ExcelImageConfig();
                     string namingColumn = config.NamingReferenceColumn;
 
                     // 获取图片文件名基础
@@ -866,178 +866,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             var entity = Activator.CreateInstance(entityType);
 
             // 获取该实体类型的预设字段（在导入时会自动填充默认值的字段）
-            var predefinedFields = EntityImportHelper.GetPredefinedFields(entityType);
+            var predefinedFields = EntityImportHelper.GetPredefinedFields(entityType, _currentConfig);
 
             // 遍历所有映射配置
             foreach (var mapping in mappings)
             {
                 try
                 {
-                    // 根据数据来源类型获取值
-                    object cellValue = null;
-
-                    switch (mapping.DataSourceType)
-                    {
-                        case DataSourceType.Excel:
-                            // Excel数据源
-                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
-                            {
-                                cellValue = row[mapping.SystemField?.Value];
-
-                                // 如果配置了忽略空值且值为DBNull，则跳过该字段
-                                var excelConfig = mapping.DataSourceConfig as ExcelConfig;
-                                if (cellValue == DBNull.Value && excelConfig != null && excelConfig.IgnoreEmptyValue)
-                                {
-                                    continue;
-                                }
-                            }
-                            break;
-
-                        case DataSourceType.SystemGenerated:
-                            // ✅ 系统生成的值：如果数据已预处理，直接从DataTable中读取；否则留空由BatchPreProcessEntitiesAsync处理
-                            if (isPreprocessed && dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
-                            {
-                                cellValue = row[mapping.SystemField?.Value];
-
-                                // 如果值为占位符或错误标记，跳过（将由BatchPreProcessEntitiesAsync处理）
-                                string strValue = cellValue?.ToString();
-                                if (string.IsNullOrEmpty(strValue) ||
-                                    strValue.StartsWith("[") && strValue.EndsWith("]"))
-                                {
-                                    cellValue = null; // 让后续预处理逻辑处理
-                                }
-                            }
-                            else
-                            {
-                                cellValue = null; // 未预处理，留空由后续处理
-                            }
-                            break;
-
-                        case DataSourceType.DefaultValue:
-                            // 默认值映射
-                            var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
-                            if (defaultConfig != null)
-                            {
-                                // 如果是枚举类型默认值，使用枚举的数值
-                                cellValue = defaultConfig.EnumValue;
-                            }
-                            
-                            break;
-
-                        case DataSourceType.ForeignKey:
-                            // ✅ 外键关联：如果数据已预处理，直接从DataTable中读取ID；否则查询数据库
-                            if (isPreprocessed && dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
-                            {
-                                // 从预处理的DataTable中直接读取外键ID
-                                cellValue = row[mapping.SystemField?.Value];
-
-                                // 如果值为空或错误标记，尝试重新查询
-                                string strValue = cellValue?.ToString();
-                                if (string.IsNullOrEmpty(strValue) || strValue.StartsWith("["))
-                                {
-                                    // 回退到实时查询
-                                    string foreignKeyError;
-                                    object foreignKeyId = _foreignKeyService.GetForeignKeyValue(row, mapping, rowNumber, out foreignKeyError);
-                                    if (!string.IsNullOrEmpty(foreignKeyError))
-                                    {
-                                        throw new Exception(foreignKeyError);
-                                    }
-                                    cellValue = foreignKeyId;
-                                }
-                            }
-                            else
-                            {
-                                // 未预处理，实时查询外键ID
-                                string foreignKeyError;
-                                object foreignKeyId = _foreignKeyService.GetForeignKeyValue(row, mapping, rowNumber, out foreignKeyError);
-                                if (!string.IsNullOrEmpty(foreignKeyError))
-                                {
-                                    throw new Exception(foreignKeyError);
-                                }
-                                cellValue = foreignKeyId;
-                            }
-                            break;
-
-                        case DataSourceType.SelfReference:
-                            // 自身字段引用
-                            var selfRefConfig = mapping.DataSourceConfig as SelfReferenceConfig;
-                            // 从映射后的数据表中获取显示值，然后从已导入的数据中查找对应的引用值
-                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
-                            {
-                                string displayValue = row[mapping.SystemField?.Key]?.ToString();
-                                if (!string.IsNullOrEmpty(displayValue) &&
-                                    !string.IsNullOrEmpty(selfRefConfig?.ReferenceFieldName))
-                                {
-                                    // 处理自身引用逻辑（在导入过程中实现）
-                                    cellValue = displayValue; // 暂时使用显示值，后续在导入过程中处理
-                                }
-                            }
-                            break;
-
-                        case DataSourceType.FieldCopy:
-                            // 字段复制
-                            // 复制同一记录中另一个字段的值
-                            var fieldCopyConfig = mapping.DataSourceConfig as FieldCopyConfig;
-                            if (fieldCopyConfig != null && !string.IsNullOrEmpty(fieldCopyConfig.SourceFieldName))
-                            {
-                                // 获取被复制字段的映射配置
-                                var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == fieldCopyConfig.SourceFieldName);
-
-                                if (copyFromMapping != null && !string.IsNullOrEmpty(copyFromMapping.SystemField?.Value))
-                                {
-                                    // 从当前行中读取被复制字段的值
-                                    if (dataTableContainsColumn(row.Table, copyFromMapping.SystemField.Value))
-                                    {
-                                        cellValue = row[copyFromMapping.SystemField.Value];
-                                    }
-                                }
-                            }
-                            break;
-
-                        case DataSourceType.ColumnConcat:
-                            // 列拼接
-                            // 在ApplyColumnMapping阶段已经处理了拼接，直接从数据表中读取拼接后的值
-                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
-                            {
-                                cellValue = row[mapping.SystemField?.Value];
-                            }
-                            break;
-                    }
-
-                    // 如果值为空，检查是否有默认值
-                    if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
-                    {
-                        var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
-                        if (defaultConfig != null && !string.IsNullOrEmpty(defaultConfig.Value))
-                        {
-                            cellValue = defaultConfig.Value;
-                        }
-                        else
-                        {
-                            // 非必填字段且值为空，跳过
-                            continue;
-                        }
-                    }
-
-                    // 获取实体属性
-                    PropertyInfo property = entityType.GetProperty(mapping.SystemField?.Key);
-                    if (property == null)
-                    {
-                        throw new Exception($"实体 {entityType.Name} 不存在属性 {mapping.SystemField?.Key}");
-                    }
-
-                    // ✅ 如果数据已预处理，跳过预设字段的检查（因为值已经在预览阶段生成）
-                    if (!isPreprocessed && predefinedFields.Contains(mapping.SystemField?.Key))
+                    // 跳过系统生成和默认值的映射（如果未预处理）
+                    if (!isPreprocessed && IsAutoGeneratedMapping(mapping))
                     {
                         continue;
                     }
 
-                    // 类型转换
-                    object convertedValue = ConvertValue(cellValue, property.PropertyType);
-                    if (convertedValue != null)
+                    // 根据映射配置获取单元格值
+                    object cellValue = GetCellValueFromMapping(row, mapping, mappings, rowNumber, isPreprocessed);
+                    
+                    // 如果值为空，跳过
+                    if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
                     {
-                        property.SetValue(entity, convertedValue);
+                        continue;
                     }
+
+                    // 获取实体属性并设置值
+                    SetEntityProperty(entity, entityType, mapping, cellValue, rowNumber);
                 }
                 catch (Exception ex)
                 {
@@ -1048,6 +900,223 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             return entity;
+        }
+
+        /// <summary>
+        /// 判断是否为自动生成的映射（系统生成或默认值）
+        /// </summary>
+        private bool IsAutoGeneratedMapping(ColumnMapping mapping)
+        {
+            return mapping.DataSourceType == DataSourceType.SystemGenerated
+                || mapping.DataSourceType == DataSourceType.DefaultValue;
+        }
+
+        /// <summary>
+        /// 根据映射配置获取单元格值
+        /// </summary>
+        private object GetCellValueFromMapping(DataRow row, ColumnMapping mapping, List<ColumnMapping> allMappings, int rowNumber, bool isPreprocessed)
+        {
+            switch (mapping.DataSourceType)
+            {
+                case DataSourceType.Excel:
+                    return GetExcelCellValue(row, mapping);
+                    
+                case DataSourceType.ForeignKey:
+                    return GetForeignKeyCellValue(row, mapping, rowNumber, isPreprocessed);
+                    
+                case DataSourceType.SystemGenerated:
+                    return GetSystemGeneratedCellValue(row, mapping, isPreprocessed);
+                    
+                case DataSourceType.DefaultValue:
+                    return GetDefaultCellValue(mapping);
+                    
+                case DataSourceType.FieldCopy:
+                    return GetFieldCopyCellValue(row, mapping, allMappings);
+                    
+                case DataSourceType.ColumnConcat:
+                    return GetColumnConcatCellValue(row, mapping);
+                    
+                case DataSourceType.SelfReference:
+                    return GetSelfReferenceCellValue(row, mapping);
+                    
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取Excel数据源的值
+        /// </summary>
+        private object GetExcelCellValue(DataRow row, ColumnMapping mapping)
+        {
+            string columnName = mapping.SystemField?.Value;
+            if (string.IsNullOrEmpty(columnName) || !dataTableContainsColumn(row.Table, columnName))
+                return null;
+
+            object cellValue = row[columnName];
+
+            // 如果配置了忽略空值且值为DBNull，则返回null
+            var excelConfig = mapping.DataSourceConfig as ExcelConfig;
+            if (cellValue == DBNull.Value && excelConfig != null && excelConfig.IgnoreEmptyValue)
+            {
+                return null;
+            }
+
+            return cellValue;
+        }
+
+        /// <summary>
+        /// 获取外键关联的值
+        /// </summary>
+        private object GetForeignKeyCellValue(DataRow row, ColumnMapping mapping, int rowNumber, bool isPreprocessed)
+        {
+            // ✅ 外键关联：如果数据已预处理，直接从DataTable中读取ID；否则查询数据库
+            string columnName = mapping.SystemField?.Value;
+            
+            if (isPreprocessed && dataTableContainsColumn(row.Table, columnName))
+            {
+                // 从预处理的DataTable中直接读取外键ID
+                object cellValue = row[columnName];
+
+                // 如果值为空或错误标记，尝试重新查询
+                string strValue = cellValue?.ToString();
+                if (!string.IsNullOrEmpty(strValue) && !strValue.StartsWith("["))
+                {
+                    return cellValue;
+                }
+            }
+
+            // 未预处理或值为空，实时查询外键ID
+            string foreignKeyError;
+            object foreignKeyId = _foreignKeyService.GetForeignKeyValue(row, mapping, rowNumber, out foreignKeyError);
+            if (!string.IsNullOrEmpty(foreignKeyError))
+            {
+                throw new Exception(foreignKeyError);
+            }
+            return foreignKeyId;
+        }
+
+        /// <summary>
+        /// 获取系统生成字段的值
+        /// </summary>
+        private object GetSystemGeneratedCellValue(DataRow row, ColumnMapping mapping, bool isPreprocessed)
+        {
+            // ✅ 系统生成的值：如果数据已预处理，直接从DataTable中读取
+            string columnName = mapping.SystemField?.Value;
+            
+            if (isPreprocessed && dataTableContainsColumn(row.Table, columnName))
+            {
+                object cellValue = row[columnName];
+
+                // 如果值为空或占位符，返回null（将由后续处理）
+                string strValue = cellValue?.ToString();
+                if (string.IsNullOrEmpty(strValue) || (strValue.StartsWith("[") && strValue.EndsWith("]")))
+                {
+                    return null;
+                }
+                
+                return cellValue;
+            }
+
+            // 未预处理，返回null由后续处理
+            return null;
+        }
+
+        /// <summary>
+        /// 获取默认值
+        /// </summary>
+        private object GetDefaultCellValue(ColumnMapping mapping)
+        {
+            var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
+            if (defaultConfig != null)
+            {
+                // 如果是枚举类型默认值，使用枚举的数值
+                return defaultConfig.EnumValue.ToString();
+            }
+            
+            return null;
+        }
+
+        /// <summary>
+        /// 获取字段复制的值
+        /// </summary>
+        private object GetFieldCopyCellValue(DataRow row, ColumnMapping mapping, List<ColumnMapping> allMappings)
+        {
+            var fieldCopyConfig = mapping.DataSourceConfig as FieldCopyConfig;
+            if (fieldCopyConfig == null || string.IsNullOrEmpty(fieldCopyConfig.SourceFieldName))
+                return null;
+
+            // 获取被复制字段的映射配置
+            var copyFromMapping = allMappings.FirstOrDefault(m => m.SystemField?.Key == fieldCopyConfig.SourceFieldName);
+
+            if (copyFromMapping != null && !string.IsNullOrEmpty(copyFromMapping.SystemField?.Value))
+            {
+                // 从当前行中读取被复制字段的值
+                string sourceColumn = copyFromMapping.SystemField.Value;
+                if (dataTableContainsColumn(row.Table, sourceColumn))
+                {
+                    return row[sourceColumn];
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取列拼接的值
+        /// </summary>
+        private object GetColumnConcatCellValue(DataRow row, ColumnMapping mapping)
+        {
+            // 列拼接在ApplyColumnMapping阶段已经处理，直接从数据表中读取
+            string columnName = mapping.SystemField?.Value;
+            if (string.IsNullOrEmpty(columnName) || !dataTableContainsColumn(row.Table, columnName))
+                return null;
+
+            return row[columnName];
+        }
+
+        /// <summary>
+        /// 获取自身引用的值
+        /// </summary>
+        private object GetSelfReferenceCellValue(DataRow row, ColumnMapping mapping)
+        {
+            var selfRefConfig = mapping.DataSourceConfig as SelfReferenceConfig;
+            string columnName = mapping.SystemField?.Key;
+            
+            if (string.IsNullOrEmpty(columnName) || !dataTableContainsColumn(row.Table, columnName))
+                return null;
+
+            string displayValue = row[columnName]?.ToString();
+            if (!string.IsNullOrEmpty(displayValue) && !string.IsNullOrEmpty(selfRefConfig?.ReferenceFieldName))
+            {
+                // 暂时使用显示值，后续在导入过程中处理
+                return displayValue;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 设置实体属性值
+        /// </summary>
+        private void SetEntityProperty(object entity, Type entityType, ColumnMapping mapping, object cellValue, int rowNumber)
+        {
+            string propertyName = mapping.SystemField?.Key;
+            if (string.IsNullOrEmpty(propertyName))
+                return;
+
+            PropertyInfo property = entityType.GetProperty(propertyName);
+            if (property == null)
+            {
+                throw new Exception($"实体 {entityType.Name} 不存在属性 {propertyName}");
+            }
+
+            // 类型转换
+            object convertedValue = ConvertValue(cellValue, property.PropertyType);
+            if (convertedValue != null)
+            {
+                property.SetValue(entity, convertedValue);
+            }
         }
 
 
@@ -1853,9 +1922,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (mapping.DataSourceType == DataSourceType.ForeignKey)
                     {
                         var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
-                        if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.SourceColumnName))
+                        if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
                         {
-                            string sourceColumnName = fkConfig.SourceColumnName;
+                            string sourceColumnName = fkConfig.ForeignKeySourceColumn.Key;
 
                             // 检查源数据中是否包含该列
                             if (sourceData.Columns.Contains(sourceColumnName) && !addedColumns.Contains(sourceColumnName))
@@ -2148,50 +2217,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (generatedValue != null)
                 {
                     targetRow[fieldName] = generatedValue;
-                    return;
                 }
-            }
-
-            // 兼容旧版本配置
-            var sysConfig = mapping.DataSourceConfig as SystemGeneratedConfig;
-            if (sysConfig != null)
-            {
-                object generatedValue = GenerateSystemValue(sysConfig);
-                if (generatedValue != null)
-                {
-                    targetRow[fieldName] = generatedValue;
-                    return;
-                }
-            }
-
-            // 旧的字段名匹配方式（保持向后兼容）
-            var fieldUpper = fieldName.ToUpper();
-
-            // 时间字段
-            if (fieldUpper.Contains("CREATETIME") || fieldUpper.Contains("CREATEDTIME"))
-            {
-                targetRow[fieldName] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            }
-            else if (fieldUpper.Contains("CREATEDATE"))
-            {
-                targetRow[fieldName] = DateTime.Now.ToString("yyyy-MM-dd");
-            }
-            // 用户字段
-            else if (fieldUpper.Contains("CREATEUSER") || fieldUpper.Contains("CREATEBY"))
-            {
-                var currentUser = Business.BusinessHelper._appContext?.CurUserInfo;
-                targetRow[fieldName] = currentUser?.EmployeeId.ToString() ?? "1";
-            }
-            // 状态字段
-            else if (fieldUpper.Contains("STATUS") || fieldUpper.Contains("STATE"))
-            {
-                var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
-                targetRow[fieldName] = defaultConfig?.Value ?? "1";
-            }
-            // 删除标记
-            else if (fieldUpper.Contains("ISDELETED") || fieldUpper.Contains("DELETE"))
-            {
-                targetRow[fieldName] = "0";
             }
         }
 
@@ -2325,12 +2351,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
             if (defaultConfig != null)
             {
-                targetRow[fieldName] = defaultConfig.EnumValue.ToString();
-            }
-            else
-            {
-                var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
-                targetRow[fieldName] = defaultConfig?.Value ?? "";
+                // 如果有枚举值，使用枚举值；否则使用字符串值
+                if (!string.IsNullOrEmpty(defaultConfig.EnumTypeName))
+                {
+                    targetRow[fieldName] = defaultConfig.EnumValue.ToString();
+                }
+                else
+                {
+                    targetRow[fieldName] = defaultConfig.Value ?? "";
+                }
             }
         }
 

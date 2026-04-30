@@ -1,12 +1,14 @@
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.Model.ImportEngine.Enums;
 using RUINORERP.UI.Network.Services;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -71,20 +73,39 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 获取指定实体类型的预设字段列表
+        /// 优先从 ImportConfiguration 的 SystemGeneratedConfig 中读取
         /// </summary>
         /// <param name="entityType">实体类型</param>
+        /// <param name="config">导入配置（可选）</param>
         /// <returns>预设字段名集合，如果没有预设字段返回空集合</returns>
-        public static HashSet<string> GetPredefinedFields(Type entityType)
+        public static HashSet<string> GetPredefinedFields(Type entityType, ImportConfiguration config = null)
         {
             if (entityType == null)
             {
                 return new HashSet<string>();
             }
 
+            var predefinedFields = new HashSet<string>();
+
+            // 如果提供了配置，从配置的 SystemGenerated 映射中读取
+            if (config?.ColumnMappings != null)
+            {
+                var systemGeneratedFields = config.ColumnMappings
+                    .Where(m => m.DataSourceType == DataSourceType.SystemGenerated)
+                    .Select(m => m.SystemField?.Key)
+                    .Where(k => !string.IsNullOrEmpty(k));
+                
+                predefinedFields.UnionWith(systemGeneratedFields);
+            }
+
+            // 合并硬编码的预设字段（向后兼容）
             string typeName = entityType.Name;
-            return _predefinedFields.TryGetValue(typeName, out var fields)
-                ? new HashSet<string>(fields)
-                : new HashSet<string>();
+            if (_predefinedFields.TryGetValue(typeName, out var hardcodedFields))
+            {
+                predefinedFields.UnionWith(hardcodedFields);
+            }
+
+            return predefinedFields;
         }
 
         /// <summary>

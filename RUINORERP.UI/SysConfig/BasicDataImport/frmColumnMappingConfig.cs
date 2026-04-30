@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using RUINORERP.UI.Common;
 using RUINORERP.Common;
 using RUINORERP.Common.Helper;
@@ -805,11 +805,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 switch (mapping.DataSourceType)
                 {
                     case DataSourceType.Excel:
-                        // Excel数据源，如果有默认值则显示
+                        // Excel数据源，显示Excel列名
                         var excelConfig = mapping.DataSourceConfig as ExcelConfig;
-                        if (excelConfig != null && !string.IsNullOrEmpty(excelConfig.DefaultValue))
+                        if (excelConfig != null && !string.IsNullOrEmpty(excelConfig.ExcelColumn))
                         {
-                            flags.Add($"默认值:{excelConfig.DefaultValue}");
+                            flags.Add($"Excel列:{excelConfig.ExcelColumn}");
                         }
                         break;
                     case DataSourceType.DefaultValue:

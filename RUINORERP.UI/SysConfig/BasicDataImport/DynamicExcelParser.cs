@@ -1209,8 +1209,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     // 添加调试信息：列名未找到
                                     if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn))
                                     {
-                                        var excelConfig = mapping.DataSourceConfig as ExcelConfig;
-                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到Excel列'{excelConfig?.ExcelColumn}'，映射到字段'{mapping.SystemField?.Value}'");
+                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到Excel列'{mapping.OriginalExcelColumn}'，映射到字段'{mapping.SystemField?.Value}'");
                                     }
                                 }
                                 break;

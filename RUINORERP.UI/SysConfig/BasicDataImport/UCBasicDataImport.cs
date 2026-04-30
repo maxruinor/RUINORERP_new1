@@ -1742,7 +1742,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     string colName = columnNameSelector(m);
                     return !string.IsNullOrEmpty(colName) && 
                            colName.Equals(columnName, StringComparison.OrdinalIgnoreCase) &&
-                           m.IsImageColumn;
+                           m.DataSourceType == DataSourceType.ExcelImage;
                 });
 
                 if (imageMapping != null && e.Value != null)

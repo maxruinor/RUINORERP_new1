@@ -121,7 +121,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (mapping.IsBusinessKey)
             {
                 // 业务键字段通常应该是必填的
-                if (!isRequired && mapping.DataSourceType == DataSourceType.Excel)
+                // 检查是否为必填：Excel数据源且未配置忽略空值
+                bool isRequiredField = mapping.DataSourceType == DataSourceType.Excel &&
+                                       !(mapping.DataSourceConfig is ExcelConfig excelCfg && excelCfg.IgnoreEmptyValue);
+                
+                if (!isRequiredField)
                 {
                     // 警告但不阻止：业务键建议设置为必填
                     System.Diagnostics.Debug.WriteLine(

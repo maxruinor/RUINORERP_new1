@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -104,14 +104,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>是否为系统生成或默认值映射</returns>
         private bool IsSystemGeneratedOrDefaultValueMapping(ColumnMapping mapping)
         {
-            // 检查 OriginalExcelColumn 是否以特殊标记开头
-            if (string.IsNullOrEmpty(mapping.OriginalExcelColumn))
-            {
+            if (mapping == null)
                 return false;
-            }
-        
-            return mapping.OriginalExcelColumn.StartsWith("[系统生成]") ||
-                   mapping.OriginalExcelColumn.StartsWith("[默认值]");
+
+            // 使用 DataSourceType 判断，不再依赖字符串匹配
+            return mapping.DataSourceType == DataSourceType.SystemGenerated
+                || mapping.DataSourceType == DataSourceType.DefaultValue;
         }
 
         /// <summary>
@@ -167,14 +165,39 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="errors">错误列表</param>
         private void ValidateUniqueKeys(DataTable dataTable, List<ColumnMapping> mappings, List<ValidationError> errors)
         {
-            var uniqueKeyMapping = mappings.GetUniqueKeyMapping();
-            if (uniqueKeyMapping == null)
+            // 直接使用 IsUniqueValue 属性筛选所有唯一键映射
+            var uniqueKeyMappings = mappings.Where(m => m.IsUniqueValue).ToList();
+            
+            // 如果没有标记为唯一值的字段，尝试获取业务键或默认唯一键
+            if (uniqueKeyMappings.Count == 0)
+            {
+                var fallbackMapping = mappings.GetUniqueKeyMapping();
+                if (fallbackMapping != null)
+                {
+                    uniqueKeyMappings.Add(fallbackMapping);
+                }
+            }
+
+            if (uniqueKeyMappings.Count == 0)
             {
                 return;
             }
 
+            // 验证每个唯一键字段
+            foreach (var uniqueKeyMapping in uniqueKeyMappings)
+            {
+                ValidateSingleUniqueKey(dataTable, uniqueKeyMapping, errors);
+            }
+        }
+
+        /// <summary>
+        /// 验证单个唯一键字段
+        /// </summary>
+        private void ValidateSingleUniqueKey(DataTable dataTable, ColumnMapping uniqueKeyMapping, List<ValidationError> errors)
+        {
             // 使用SystemField检查列是否存在
-            if (!dataTable.Columns.Contains(uniqueKeyMapping.SystemField?.Key))
+            string fieldName = uniqueKeyMapping.SystemField?.Key;
+            if (string.IsNullOrEmpty(fieldName) || !dataTable.Columns.Contains(fieldName))
             {
                 return;
             }
@@ -183,7 +206,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             for (int i = 0; i < dataTable.Rows.Count; i++)
             {
-                object value = dataTable.Rows[i][uniqueKeyMapping.SystemField?.Key];
+                object value = dataTable.Rows[i][fieldName];
 
                 // 如果配置了忽略空值，则跳过空值的重复检查
                 bool isEmpty = value == DBNull.Value || string.IsNullOrEmpty(value?.ToString());
@@ -198,8 +221,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         errors.Add(new ValidationError
                         {
                             RowNumber = i + 2,
-                            FieldName = uniqueKeyMapping.SystemField?.Key,
-                            ErrorMessage = "唯一键列不能为空",
+                            FieldName = fieldName,
+                            ErrorMessage = $"唯一键列 '{uniqueKeyMapping.SystemField?.Value}' 不能为空",
                             ErrorType = ErrorType.EmptyRequiredField,
                             OriginalValue = null
                         });
@@ -224,8 +247,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     errors.Add(new ValidationError
                     {
                         RowNumber = rowNumber,
-                        FieldName = uniqueKeyMapping.SystemField?.Key,
-                        ErrorMessage = $"唯一键列值 '{kvp.Key}' 重复，共出现 {kvp.Value.Count} 次",
+                        FieldName = fieldName,
+                        ErrorMessage = $"唯一键列 '{uniqueKeyMapping.SystemField?.Value}' 值 '{kvp.Key}' 重复，共出现 {kvp.Value.Count} 次",
                         ErrorType = ErrorType.DuplicateValue,
                         OriginalValue = kvp.Key
                     });
@@ -440,7 +463,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="errors">错误列表</param>
         private void ValidateForeignKeys(DataTable dataTable, List<ColumnMapping> mappings, List<ValidationError> errors)
         {
-            // 筛选出所有外键映射
+            // 直接使用 DataSourceType 筛选外键映射
             var foreignKeyMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ForeignKey).ToList();
             if (!foreignKeyMappings.Any())
             {
@@ -456,6 +479,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 遍历所有外键映射
                 foreach (var mapping in foreignKeyMappings)
                 {
+                    var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                    if (fkConfig == null) continue;
+
+                    // 获取外键来源列的值
+                    string sourceColumn = fkConfig.ForeignKeySourceColumn?.Key;
+                    if (string.IsNullOrEmpty(sourceColumn) || !dataTable.Columns.Contains(sourceColumn))
+                        continue;
+
+                    object sourceValue = row[sourceColumn];
+                    if (sourceValue == DBNull.Value || string.IsNullOrEmpty(sourceValue?.ToString()))
+                        continue; // 空值不验证外键
+
                     string foreignKeyError;
                     if (!_foreignKeyService.ValidateForeignKey(row, mapping, rowNumber, out foreignKeyError))
                     {
@@ -463,8 +498,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         {
                             RowNumber = rowNumber,
                             FieldName = mapping.SystemField?.Key,
-                            ErrorMessage = foreignKeyError,
-                            ErrorType = ErrorType.ForeignKeyValidationFailed
+                            ErrorMessage = $"外键验证失败: {fkConfig.ForeignTableDisplayName}.{fkConfig.ForeignFieldDisplayName} = '{sourceValue}' 不存在",
+                            ErrorType = ErrorType.ForeignKeyValidationFailed,
+                            OriginalValue = sourceValue
                         });
                     }
                 }

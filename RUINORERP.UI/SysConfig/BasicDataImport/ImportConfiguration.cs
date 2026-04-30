@@ -180,17 +180,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 foreach (var mapping in ColumnMappings)
                 {
                     // 检查是否为外键关联类型
-                    if (mapping.DataSourceType == DataSourceType.ForeignKey &&
-                        mapping.ForeignConfig != null &&
-                        mapping.ForeignConfig.ForeignKeySourceColumn != null &&
-                        !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
+                    if (mapping.DataSourceType == DataSourceType.ForeignKey)
                     {
-                        // 添加外键来源列的Excel列名
-                        string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
-                        if (!foreignSourceColumns.Contains(sourceColumnName))
+                        var foreignConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                        if (foreignConfig != null &&
+                            foreignConfig.ForeignKeySourceColumn != null &&
+                            !string.IsNullOrEmpty(foreignConfig.ForeignKeySourceColumn.Key))
                         {
-                            resultFields.Add(sourceColumnName);
-                            foreignSourceColumns.Add(sourceColumnName);
+                            // 添加外键来源列的Excel列名
+                            string sourceColumnName = foreignConfig.ForeignKeySourceColumn.Key;
+                            if (!foreignSourceColumns.Contains(sourceColumnName))
+                            {
+                                resultFields.Add(sourceColumnName);
+                                foreignSourceColumns.Add(sourceColumnName);
+                            }
                         }
                     }
                 }
@@ -224,7 +227,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>映射配置，如果找不到则返回null</returns>
         public ColumnMapping GetMappingByExcelColumn(string excelColumn)
         {
-            return ColumnMappings?.FirstOrDefault(m => m.ExcelColumn == excelColumn);
+            return ColumnMappings?.FirstOrDefault(m => m.OriginalExcelColumn == excelColumn);
         }
     }
 

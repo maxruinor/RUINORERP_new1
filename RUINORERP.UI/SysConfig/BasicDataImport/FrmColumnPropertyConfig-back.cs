@@ -678,210 +678,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            // 根据数据来源类型构建配置
-            if (dataSourceType == DataSourceType.ForeignKey)
-            {
-                // 获取关联表名（提取括号中的表名）
-                string selectedTable = kcmbRelatedTable.SelectedItem.ToString();
-                int startIndex = selectedTable.IndexOf('(') + 1;
-                int endIndex = selectedTable.IndexOf(')');
-                string tableName;
-                if (startIndex > 0 && endIndex > startIndex)
-                {
-                    tableName = selectedTable.Substring(startIndex, endIndex - startIndex);
-                }
-                else
-                {
-                    tableName = selectedTable;
-                }
-
-                string displayName = ktxtRelatedField.SelectedItem?.ToString() ?? ktxtRelatedField.Text;
-                var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
-
-                // 获取外键来源列
-                string excelColumnName = string.Empty;
-                string columnDisplayName = string.Empty;
-                if (kcmbForeignExcelSourceColumn.SelectedIndex > 0)
-                {
-                    string selectedColumnText = kcmbForeignExcelSourceColumn.SelectedItem.ToString();
-                    int columnStartIndex = selectedColumnText.LastIndexOf('(');
-                    int columnEndIndex = selectedColumnText.LastIndexOf(')');
-
-                    if (columnStartIndex > 0 && columnEndIndex > columnStartIndex)
-                    {
-                        columnDisplayName = selectedColumnText.Substring(0, columnStartIndex).Trim();
-                        excelColumnName = selectedColumnText.Substring(columnStartIndex + 1, columnEndIndex - columnStartIndex - 1);
-                    }
-                    else
-                    {
-                        excelColumnName = selectedColumnText;
-                        columnDisplayName = excelColumnName;
-                    }
-                }
-
-                // 构建外键配置
-                DataSourceConfig = new ForeignKeyConfig
-                {
-                    ForeignTableName = tableName,
-                    ForeignTableDisplayName = GetTableDisplayName(tableName),
-                    ForeignFieldName = field.Key ?? string.Empty,
-                    ForeignFieldDisplayName = field.Value ?? displayName,
-                    DisplayFieldName = excelColumnName,
-                    DisplayFieldDisplayName = columnDisplayName
-                };
-
-                // 验证配置
-                if (!DataSourceConfig.Validate(out string errorMsg))
-                {
-                    MessageBox.Show(errorMsg, "配置验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-            }
-            else if (dataSourceType == DataSourceType.SelfReference)
-            {
-                string displayName = kcmbSelfReferenceField.SelectedItem?.ToString() ?? kcmbSelfReferenceField.Text;
-                var selfRefField = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
-
-                // 构建自身引用配置
-                DataSourceConfig = new SelfReferenceConfig
-                {
-                    ReferenceFieldName = selfRefField.Key ?? string.Empty,
-                    ReferenceFieldDisplayName = selfRefField.Value ?? displayName
-                };
-
-                // 验证配置
-                if (!DataSourceConfig.Validate(out string errorMsg))
-                {
-                    MessageBox.Show(errorMsg, "配置验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-            }
-            else if (dataSourceType == DataSourceType.FieldCopy)
-            {
-                string displayName = kcmbCopyFromField.SelectedItem?.ToString() ?? kcmbCopyFromField.Text;
-                var copyField = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
-
-                // 构建字段复制配置
-                DataSourceConfig = new FieldCopyConfig
-                {
-                    SourceFieldName = copyField.Key ?? string.Empty,
-                    SourceFieldDisplayName = copyField.Value ?? displayName
-                };
-
-                // 验证配置
-                if (!DataSourceConfig.Validate(out string errorMsg))
-                {
-                    MessageBox.Show(errorMsg, "配置验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-            }
-            else if (dataSourceType == DataSourceType.Excel)
-            {
-                // Excel数据源配置（从当前映射获取Excel列名）
-                string excelColumn = string.Empty;
-                if (CurrentMapping != null)
-                {
-                    var existingConfig = CurrentMapping.DataSourceConfig as ExcelConfig;
-                    if (existingConfig != null)
-                    {
-                        excelColumn = existingConfig.ExcelColumn;
-                    }
-                }
-                
-                DataSourceConfig = new ExcelConfig
-                {
-                    ExcelColumn = excelColumn,
-                    IgnoreEmptyValue = kchkIgnoreEmptyValue.Checked
-                };
-            }
-            else if (dataSourceType == DataSourceType.DefaultValue)
-            {
-                // 获取默认值
-                string defaultValue = GetDefaultValueFromDynamicControl();
-                if (string.IsNullOrWhiteSpace(defaultValue))
-                {
-                    MessageBox.Show("请输入默认值", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                // 构建默认值配置
-                DataSourceConfig = new DefaultValueConfig
-                {
-                    Value = defaultValue
-                };
-
-                // 如果是枚举类型控件，保存完整的枚举配置
-                if (_dynamicDefaultValueControl?.Name == "cmbDynamicDefaultEnum" &&
-                    _dynamicDefaultValueControl is KryptonComboBox enumComboBox &&
-                    enumComboBox.SelectedItem is EnumItemInfo enumInfo)
-                {
-                    var config = (DefaultValueConfig)DataSourceConfig;
-                    config.EnumTypeName = enumInfo.EnumType.FullName;
-                    config.EnumValue = enumInfo.EnumValue;
-                    config.EnumName = enumInfo.EnumName;
-                    config.EnumDisplayName = enumInfo.DisplayName;
-                }
-            }
-            else if (dataSourceType == DataSourceType.ColumnConcat)
-            {
-                // 获取选中的列
-                var selectedColumns = klstSourceColumns.SelectedItems.Cast<string>().ToList();
-
-                // 构建列拼接配置
-                DataSourceConfig = new ColumnConcatConfig
-                {
-                    SourceColumns = selectedColumns,
-                    Separator = ktxtSeparator.Text.Trim(),
-                    TrimWhitespace = kchkTrimWhitespace.Checked,
-                    IgnoreEmptyColumns = kchkIgnoreEmptyColumns.Checked
-                };
-
-                // 验证配置
-                if (!DataSourceConfig.Validate(out string errorMsg))
-                {
-                    MessageBox.Show(errorMsg, "配置验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-            }
-            else if (dataSourceType == DataSourceType.ExcelImage)
-            {
-                // 构建图片配置
-                DataSourceConfig = new ExcelImageConfig
-                {
-                    StorageType = (ImageStorageType)(kcmbImageStorageType?.SelectedIndex ?? 0),
-                    NamingRule = (ImageNamingRule)(kcmbImageNamingRule?.SelectedIndex ?? 0),
-                    OutputDirectory = ktxtImageOutputDir?.Text ?? string.Empty,
-                    NamingReferenceColumn = kcmbImageNamingColumn?.SelectedItem?.ToString() ?? string.Empty
-                };
-
-                // 验证配置
-                if (!DataSourceConfig.Validate(out string errorMsg))
-                {
-                    MessageBox.Show(errorMsg, "配置验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-            }
-            else if (dataSourceType == DataSourceType.SystemGenerated)
-            {
-                // 构建系统生成配置
-                DataSourceConfig = new SystemGeneratedConfig
-                {
-                    GeneratedType = (SystemGeneratedType)(kcmbSystemGeneratedType?.SelectedIndex ?? 0),
-                    DateTimeFormat = ktxtDateTimeFormat?.Text ?? "yyyy-MM-dd HH:mm:ss",
-                    BusinessCodePrefix = ktxtBusinessCodePrefix?.Text ?? string.Empty,
-                    BusinessCodeRule = (BusinessCodeRule)(kcmbBusinessCodeRule?.SelectedIndex ?? 0),
-                    SequenceDigits = int.TryParse(ktxtSequenceDigits?.Text, out int digits) ? digits : 4,
-                    CustomExpression = ktxtCustomExpression?.Text ?? string.Empty,
-                    CustomDefaultValue = ktxtCustomDefaultValue?.Text ?? "1"
-                };
-
-                // 验证系统生成配置
-                if (!DataSourceConfig.Validate(out string errorMsg))
-                {
-                    MessageBox.Show(errorMsg, "配置验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-            }
+            // ✅ 使用策略模式保存数据源配置
+            SaveDataSourceConfig(dataSourceType);
 
             IsUniqueValue = kchkIsUniqueValue.Checked;
             IsImageColumn = kchkIsImageColumn.Checked;
@@ -893,6 +691,27 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        /// <summary>
+        /// 使用策略模式保存数据源配置
+        /// </summary>
+        /// <param name="dataSourceType">数据源类型</param>
+        private void SaveDataSourceConfig(DataSourceType dataSourceType)
+        {
+            var strategy = DataSourceConfigStrategyManager.GetStrategy(dataSourceType);
+            if (strategy == null)
+                return;
+
+            // 使用策略验证配置
+            if (!strategy.Validate(this, out string errorMessage))
+            {
+                MessageBox.Show(errorMessage, "配置验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 使用策略保存配置
+            DataSourceConfig = strategy.SaveToConfig(this);
         }
 
         /// <summary>

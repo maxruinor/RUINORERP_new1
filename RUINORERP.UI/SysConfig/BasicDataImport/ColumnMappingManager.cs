@@ -13,7 +13,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class ColumnMappingManager
     {
         private readonly string _configPath;
-        private readonly XmlSerializer _serializer;
+        private XmlSerializer _serializer;  // 懒加载，避免构造函数中的序列化异常
 
         /// <summary>
         /// 构造函数
@@ -27,8 +27,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 Directory.CreateDirectory(_configPath);
             }
 
-            // 初始化XmlSerializer
-            _serializer = new XmlSerializer(typeof(ImportConfiguration));
+            // 延迟初始化XmlSerializer，避免构造函数中的序列化异常
+            // XmlSerializer 会在第一次使用时自动创建
+        }
+
+        /// <summary>
+        /// 获取XmlSerializer实例（懒加载）
+        /// </summary>
+        private XmlSerializer GetSerializer()
+        {
+            if (_serializer == null)
+            {
+                _serializer = new XmlSerializer(typeof(ImportConfiguration));
+            }
+            return _serializer;
         }
 
         /// <summary>
@@ -51,7 +63,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 string filePath = Path.Combine(_configPath, $"{config.MappingName}.xml");
                 using (StreamWriter writer = new StreamWriter(filePath))
                 {
-                    _serializer.Serialize(writer, config);
+                    GetSerializer().Serialize(writer, config);
                 }
             }
             catch (Exception ex)
@@ -79,7 +91,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 using (StreamReader reader = new StreamReader(filePath))
                 {
-                    return (ImportConfiguration)_serializer.Deserialize(reader);
+                    return (ImportConfiguration)GetSerializer().Deserialize(reader);
                 }
             }
             catch (Exception ex)

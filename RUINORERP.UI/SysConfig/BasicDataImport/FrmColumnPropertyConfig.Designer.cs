@@ -30,6 +30,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonTabControl = new System.Windows.Forms.TabControl();
             this.tabExcel = new System.Windows.Forms.TabPage();
+            this.kryptonLabelExcelTip = new Krypton.Toolkit.KryptonLabel();
             this.kchkIgnoreEmptyValue = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabelExcelIgnore = new Krypton.Toolkit.KryptonLabel();
             this.tabDefaultValue = new System.Windows.Forms.TabPage();
@@ -184,6 +185,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // tabExcel
             // 
+            this.tabExcel.Controls.Add(this.kryptonLabelExcelTip);
             this.tabExcel.Controls.Add(this.kchkIgnoreEmptyValue);
             this.tabExcel.Controls.Add(this.kryptonLabelExcelIgnore);
             this.tabExcel.Location = new System.Drawing.Point(4, 22);
@@ -191,6 +193,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.tabExcel.Size = new System.Drawing.Size(723, 336);
             this.tabExcel.TabIndex = 0;
             this.tabExcel.Text = "Excel列";
+            // 
+            // kryptonLabelExcelTip
+            // 
+            this.kryptonLabelExcelTip.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.kryptonLabelExcelTip.Location = new System.Drawing.Point(30, 100);
+            this.kryptonLabelExcelTip.Name = "kryptonLabelExcelTip";
+            this.kryptonLabelExcelTip.Size = new System.Drawing.Size(443, 36);
+            this.kryptonLabelExcelTip.TabIndex = 2;
+            this.kryptonLabelExcelTip.Values.Text = "提示: 如果选择\"Excel数据源\"但没有指定Excel列，该字段在导入时将为空值。\r\n建议为必填字段配置数据来源（如默认值、系统生成、外键关联等）。";
             // 
             // kchkIgnoreEmptyValue
             // 
@@ -818,7 +829,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kchkIsImageColumn
             // 
-            this.kchkIsImageColumn.Location = new System.Drawing.Point(120, 152);
+            this.kchkIsImageColumn.Location = new System.Drawing.Point(120, 158);
             this.kchkIsImageColumn.Name = "kchkIsImageColumn";
             this.kchkIsImageColumn.Size = new System.Drawing.Size(62, 20);
             this.kchkIsImageColumn.TabIndex = 2;
@@ -944,6 +955,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.ClientSize = new System.Drawing.Size(773, 585);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "FrmColumnPropertyConfig";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "列属性配置";
             this.Load += new System.EventHandler(this.FrmColumnPropertyConfig_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
@@ -1096,5 +1108,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonTextBox ktxtImageOutputDir;
         private Krypton.Toolkit.KryptonLabel kryptonLabel19;
         private Krypton.Toolkit.KryptonComboBox kcmbImageNamingColumn;
+
+        // Excel列Tab提示标签
+        private Krypton.Toolkit.KryptonLabel kryptonLabelExcelTip;
     }
 }

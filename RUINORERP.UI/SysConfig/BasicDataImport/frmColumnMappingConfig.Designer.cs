@@ -84,12 +84,12 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(952, 652);
+            this.kryptonPanel1.Size = new System.Drawing.Size(1228, 710);
             this.kryptonPanel1.TabIndex = 0;
             // 
             // kbtnConfigDeduplicateFields
             // 
-            this.kbtnConfigDeduplicateFields.Location = new System.Drawing.Point(786, 534);
+            this.kbtnConfigDeduplicateFields.Location = new System.Drawing.Point(761, 538);
             this.kbtnConfigDeduplicateFields.Name = "kbtnConfigDeduplicateFields";
             this.kbtnConfigDeduplicateFields.Size = new System.Drawing.Size(100, 25);
             this.kbtnConfigDeduplicateFields.TabIndex = 39;
@@ -98,7 +98,7 @@
             // 
             // kryptonLabelDedupHint
             // 
-            this.kryptonLabelDedupHint.Location = new System.Drawing.Point(257, 574);
+            this.kryptonLabelDedupHint.Location = new System.Drawing.Point(425, 569);
             this.kryptonLabelDedupHint.Name = "kryptonLabelDedupHint";
             this.kryptonLabelDedupHint.Size = new System.Drawing.Size(683, 20);
             this.kryptonLabelDedupHint.TabIndex = 40;
@@ -106,7 +106,7 @@
             // 
             // kryptonLabelDeduplicateStrategy
             // 
-            this.kryptonLabelDeduplicateStrategy.Location = new System.Drawing.Point(541, 538);
+            this.kryptonLabelDeduplicateStrategy.Location = new System.Drawing.Point(516, 542);
             this.kryptonLabelDeduplicateStrategy.Name = "kryptonLabelDeduplicateStrategy";
             this.kryptonLabelDeduplicateStrategy.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabelDeduplicateStrategy.TabIndex = 38;
@@ -121,7 +121,7 @@
             this.kcmbDeduplicateStrategy.Items.AddRange(new object[] {
             "保留第一条记录",
             "保留最后一条记录"});
-            this.kcmbDeduplicateStrategy.Location = new System.Drawing.Point(612, 537);
+            this.kcmbDeduplicateStrategy.Location = new System.Drawing.Point(587, 541);
             this.kcmbDeduplicateStrategy.Name = "kcmbDeduplicateStrategy";
             this.kcmbDeduplicateStrategy.Size = new System.Drawing.Size(165, 21);
             this.kcmbDeduplicateStrategy.TabIndex = 37;
@@ -130,7 +130,7 @@
             // 
             this.chkRemoveDuplicates.Checked = true;
             this.chkRemoveDuplicates.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkRemoveDuplicates.Location = new System.Drawing.Point(450, 538);
+            this.chkRemoveDuplicates.Location = new System.Drawing.Point(425, 542);
             this.chkRemoveDuplicates.Name = "chkRemoveDuplicates";
             this.chkRemoveDuplicates.Size = new System.Drawing.Size(88, 20);
             this.chkRemoveDuplicates.TabIndex = 36;
@@ -147,7 +147,7 @@
             // 
             // kbtnDeleteMapping
             // 
-            this.kbtnDeleteMapping.Location = new System.Drawing.Point(241, 538);
+            this.kbtnDeleteMapping.Location = new System.Drawing.Point(264, 538);
             this.kbtnDeleteMapping.Name = "kbtnDeleteMapping";
             this.kbtnDeleteMapping.Size = new System.Drawing.Size(80, 21);
             this.kbtnDeleteMapping.TabIndex = 14;
@@ -184,7 +184,7 @@
             // kbtnCancel
             // 
             this.kbtnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.kbtnCancel.Location = new System.Drawing.Point(570, 600);
+            this.kbtnCancel.Location = new System.Drawing.Point(581, 658);
             this.kbtnCancel.Name = "kbtnCancel";
             this.kbtnCancel.Size = new System.Drawing.Size(88, 40);
             this.kbtnCancel.TabIndex = 7;
@@ -193,7 +193,7 @@
             // 
             // kbtnSaveMapping
             // 
-            this.kbtnSaveMapping.Location = new System.Drawing.Point(365, 600);
+            this.kbtnSaveMapping.Location = new System.Drawing.Point(376, 658);
             this.kbtnSaveMapping.Name = "kbtnSaveMapping";
             this.kbtnSaveMapping.Size = new System.Drawing.Size(128, 40);
             this.kbtnSaveMapping.TabIndex = 6;
@@ -233,7 +233,7 @@
             // 
             // kryptonLabel4
             // 
-            this.kryptonLabel4.Location = new System.Drawing.Point(15, 590);
+            this.kryptonLabel4.Location = new System.Drawing.Point(15, 569);
             this.kryptonLabel4.Name = "kryptonLabel4";
             this.kryptonLabel4.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel4.TabIndex = 12;
@@ -271,13 +271,13 @@
             this.comboBoxSavedMappings.IntegralHeight = false;
             this.comboBoxSavedMappings.Location = new System.Drawing.Point(99, 538);
             this.comboBoxSavedMappings.Name = "comboBoxSavedMappings";
-            this.comboBoxSavedMappings.Size = new System.Drawing.Size(130, 21);
+            this.comboBoxSavedMappings.Size = new System.Drawing.Size(156, 21);
             this.comboBoxSavedMappings.TabIndex = 15;
             this.comboBoxSavedMappings.SelectedIndexChanged += new System.EventHandler(this.comboBoxSavedMappings_SelectedIndexChanged);
             // 
             // textBoxMappingName
             // 
-            this.textBoxMappingName.Location = new System.Drawing.Point(99, 590);
+            this.textBoxMappingName.Location = new System.Drawing.Point(99, 569);
             this.textBoxMappingName.Name = "textBoxMappingName";
             this.textBoxMappingName.Size = new System.Drawing.Size(156, 23);
             this.textBoxMappingName.TabIndex = 14;
@@ -288,7 +288,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.kbtnCancel;
-            this.ClientSize = new System.Drawing.Size(952, 652);
+            this.ClientSize = new System.Drawing.Size(1228, 710);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "frmColumnMappingConfig";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

@@ -51,27 +51,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 2. 验证外键关联配置完整性
             if (mapping.DataSourceType == DataSourceType.ForeignKey)
             {
-                if (mapping.ForeignConfig == null)
+                var foreignConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                if (foreignConfig == null)
                 {
                     errors.Add($"字段【{mapping.SystemField.Value}】配置为外键关联，但未配置外关联信息");
                     return false;
                 }
 
-                if (string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyTable?.Key))
+                if (string.IsNullOrEmpty(foreignConfig.ForeignKeyTable?.Key))
                 {
                     errors.Add($"字段【{mapping.SystemField.Value}】的外键表未配置");
                     return false;
                 }
 
-                if (string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyField?.Key))
+                if (string.IsNullOrEmpty(foreignConfig.ForeignKeyField?.Key))
                 {
                     errors.Add($"字段【{mapping.SystemField.Value}】的外键字段未配置");
                     return false;
                 }
 
                 // 验证外键来源列（如果配置了）
-                if (mapping.ForeignConfig.ForeignKeySourceColumn != null &&
-                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
+                if (foreignConfig.ForeignKeySourceColumn != null &&
+                    !string.IsNullOrEmpty(foreignConfig.ForeignKeySourceColumn.Key))
                 {
                     // 可选：检查Excel列是否存在
                 }
@@ -80,18 +81,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 3. 验证列拼接配置
             if (mapping.DataSourceType == DataSourceType.ColumnConcat)
             {
-                if (mapping.ConcatConfig == null || mapping.ConcatConfig.SourceColumns == null || 
-                    mapping.ConcatConfig.SourceColumns.Count < 2)
+                var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
+                if (concatConfig == null || concatConfig.SourceColumns == null || 
+                    concatConfig.SourceColumns.Count < 2)
                 {
                     errors.Add($"字段【{mapping.SystemField.Value}】配置为列拼接，但至少需要指定2个源列");
                     return false;
                 }
             }
 
-            // 4. 验证枚举默认值配置
-            if (mapping.DataSourceType == DataSourceType.DefaultValue && mapping.EnumDefaultConfig != null)
+            // 4. 验证枚举默认值配置（只有当明确配置了枚举值但未配置类型名称时才报错）
+            var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
+            if (defaultConfig != null && !string.IsNullOrEmpty(defaultConfig.EnumName))
             {
-                if (string.IsNullOrEmpty(mapping.EnumDefaultConfig.EnumTypeName))
+                if (string.IsNullOrEmpty(defaultConfig.EnumTypeName))
                 {
                     errors.Add($"字段【{mapping.SystemField.Value}】的枚举类型名称未配置");
                     return false;

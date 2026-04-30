@@ -99,182 +99,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         #endregion
 
-        
-
-        #region 便捷属性（用于兼容旧代码）
+        #region 列映射基础属性
 
         /// <summary>
-        /// 是否为图片列
+        /// 原始Excel列名
+        /// 用户选择的Excel列名，如果未选择则为空
+        /// 用于显示和删除映射时恢复Excel列列表
         /// </summary>
-        [XmlIgnore]
-        public bool IsImageColumn { get; set; }
+        [XmlElement("OriginalExcelColumn")]
+        public string OriginalExcelColumn { get; set; }
 
         /// <summary>
-        /// 图片列类型
+        /// 目标字段数据类型
+        /// 用于在配置对话框中显示对应的Tab页
         /// </summary>
-        [XmlIgnore]
-        public ImageColumnType ImageColumnType { get; set; } = ImageColumnType.Path;
-
-        /// <summary>
-        /// 是否忽略空值（为空时不导入）
-        /// </summary>
-        [XmlIgnore]
-        public bool IgnoreEmptyValue { get; set; }
-
-        /// <summary>
-        /// 是否系统生成
-        /// </summary>
-        [XmlIgnore]
-        public bool IsSystemGenerated { get; set; }
-
-        /// <summary>
-        /// 自身引用字段
-        /// </summary>
-        [XmlIgnore]
-        public SerializableKeyValuePair<string> SelfReferenceField { get; set; }
-
-        /// <summary>
-        /// 复制字段
-        /// </summary>
-        [XmlIgnore]
-        public SerializableKeyValuePair<string> CopyFromField { get; set; }
-
-        /// <summary>
-        /// 是否必填
-        /// </summary>
-        [XmlIgnore]
-        public bool IsRequired { get; set; }
-
-        /// <summary>
-        /// 系统生成配置（便捷属性）
-        /// </summary>
-        [XmlIgnore]
-        public SystemGeneratedConfig SystemGeneratedConfig
-        {
-            get => DataSourceConfig as SystemGeneratedConfig;
-            set
-            {
-                DataSourceConfig = value;
-                if (value != null)
-                    DataSourceType = DataSourceType.SystemGenerated;
-            }
-        }
-
-        /// <summary>
-        /// Excel列名（便捷属性，从ExcelConfig获取）
-        /// </summary>
-        [XmlIgnore]
-        public string ExcelColumn
-        {
-            get => (DataSourceConfig as ExcelConfig)?.ExcelColumn;
-            set
-            {
-                if (DataSourceConfig is ExcelConfig config)
-                {
-                    config.ExcelColumn = value;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 默认值（便捷属性，从DefaultValueConfig获取）
-        /// </summary>
-        [XmlIgnore]
-        public string DefaultValue
-        {
-            get => (DataSourceConfig as DefaultValueConfig)?.Value;
-            set
-            {
-                if (DataSourceConfig is DefaultValueConfig config)
-                {
-                    config.Value = value;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 外键配置（便捷属性）
-        /// </summary>
-        [XmlIgnore]
-        public ForeignRelatedConfig ForeignConfig
-        {
-            get
-            {
-                var config = DataSourceConfig as ForeignKeyConfig;
-                if (config != null)
-                {
-                    return new ForeignRelatedConfig
-                    {
-                        ForeignKeyTable = config.ForeignKeyTable,
-                        ForeignKeyField = config.ForeignKeyField,
-                        ForeignKeySourceColumn = config.ForeignKeySourceColumn
-                    };
-                }
-                return null;
-            }
-            set
-            {
-                if (value != null)
-                {
-                    DataSourceConfig = new ForeignKeyConfig
-                    {
-                        ForeignKeyTable = value.ForeignKeyTable,
-                        ForeignKeyField = value.ForeignKeyField,
-                        ForeignKeySourceColumn = value.ForeignKeySourceColumn
-                    };
-                    DataSourceType = DataSourceType.ForeignKey;
-                }
-                else
-                {
-                    DataSourceConfig = null;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 列拼接配置（便捷属性）
-        /// </summary>
-        [XmlIgnore]
-        public ColumnConcatConfig ConcatConfig
-        {
-            get => DataSourceConfig as ColumnConcatConfig;
-            set
-            {
-                DataSourceConfig = value;
-                if (value != null)
-                    DataSourceType = DataSourceType.ColumnConcat;
-            }
-        }
-
-        /// <summary>
-        /// 图片配置（便捷属性）
-        /// </summary>
-        [XmlIgnore]
-        public ExcelImageConfig ImageConfig
-        {
-            get => DataSourceConfig as ExcelImageConfig;
-            set
-            {
-                DataSourceConfig = value;
-                if (value != null)
-                    DataSourceType = DataSourceType.ExcelImage;
-            }
-        }
-
-        /// <summary>
-        /// 枚举默认值配置（便捷属性，从DefaultValueConfig获取）
-        /// </summary>
-        [XmlIgnore]
-        public DefaultValueConfig EnumDefaultConfig
-        {
-            get => DataSourceConfig as DefaultValueConfig;
-            set
-            {
-                DataSourceConfig = value;
-                if (value != null)
-                    DataSourceType = DataSourceType.DefaultValue;
-            }
-        }
+        [XmlElement("TargetDataType")]
+        public string TargetDataType { get; set; }
 
         #endregion
 

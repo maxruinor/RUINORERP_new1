@@ -2329,19 +2329,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void ProcessColumnConcatField(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
         {
             string fieldName = mapping.SystemField?.Value;
-            if (string.IsNullOrEmpty(fieldName) || mapping.ConcatConfig == null)
+            var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
+            if (string.IsNullOrEmpty(fieldName) || concatConfig == null)
                 return;
 
             var values = new List<string>();
-            foreach (var sourceCol in mapping.ConcatConfig.SourceColumns)
+            foreach (var sourceCol in concatConfig.SourceColumns)
             {
                 if (sourceRow.Table.Columns.Contains(sourceCol))
                 {
                     string value = sourceRow[sourceCol]?.ToString() ?? "";
-                    if (mapping.ConcatConfig.TrimWhitespace)
+                    if (concatConfig.TrimWhitespace)
                         value = value.Trim();
 
-                    if (!mapping.ConcatConfig.IgnoreEmptyColumns || !string.IsNullOrEmpty(value))
+                    if (!concatConfig.IgnoreEmptyColumns || !string.IsNullOrEmpty(value))
                     {
                         values.Add(value);
                     }

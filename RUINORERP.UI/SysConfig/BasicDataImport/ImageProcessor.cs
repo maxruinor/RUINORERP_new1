@@ -1,4 +1,9 @@
-using System;using System.Collections.Generic;using System.Drawing;using System.Drawing.Imaging;using System.IO;using System.Linq;using System.Text;using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -34,12 +39,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="imageSavePath">图片保存路径</param>
         public ImageProcessor(string imageSavePath)
         {
-            if (string.IsNullOrWhiteSpace(imageSavePath))
-            {
-                throw new ArgumentException("图片保存路径不能为空", nameof(imageSavePath));
-            }
-            
-            _imageSavePath = imageSavePath;
+            _imageSavePath = imageSavePath ?? throw new ArgumentException("图片保存路径不能为空", nameof(imageSavePath));
             
             // 确保保存目录存在
             if (!Directory.Exists(_imageSavePath))

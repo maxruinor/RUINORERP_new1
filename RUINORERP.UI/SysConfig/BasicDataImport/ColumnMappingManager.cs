@@ -37,18 +37,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="config">导入配置对象</param>
         /// <exception cref="ArgumentNullException">当配置为空时抛出</exception>
         /// <exception cref="ArgumentException">当映射配置名称为空时抛出</exception>
-        /// <exception cref="Exception">当保存过程中发生错误时抛出</exception>
         public void SaveConfiguration(ImportConfiguration config)
         {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
-            if (string.IsNullOrEmpty(config.MappingName))
-            {
-                throw new ArgumentException("映射配置名称不能为空");
-            }
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (string.IsNullOrEmpty(config.MappingName)) throw new ArgumentException("映射配置名称不能为空");
 
             try
             {
@@ -76,26 +68,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>加载的导入配置对象</returns>
         /// <exception cref="ArgumentException">当映射配置名称为空时抛出</exception>
         /// <exception cref="FileNotFoundException">当配置文件不存在时抛出</exception>
-        /// <exception cref="Exception">当加载过程中发生错误时抛出</exception>
         public ImportConfiguration LoadConfiguration(string mappingName, Type entityType = null)
         {
-            if (string.IsNullOrEmpty(mappingName))
-            {
-                throw new ArgumentException("映射配置名称不能为空");
-            }
+            if (string.IsNullOrEmpty(mappingName)) throw new ArgumentException("映射配置名称不能为空");
 
             string filePath = Path.Combine(_configPath, $"{mappingName}.xml");
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("指定的列映射配置文件不存在", filePath);
-            }
+            if (!File.Exists(filePath)) throw new FileNotFoundException("指定的列映射配置文件不存在", filePath);
 
             try
             {
                 using (StreamReader reader = new StreamReader(filePath))
                 {
-                    var config = (ImportConfiguration)_serializer.Deserialize(reader);
-                    return config;
+                    return (ImportConfiguration)_serializer.Deserialize(reader);
                 }
             }
             catch (Exception ex)
@@ -137,16 +121,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <exception cref="FileNotFoundException">当配置文件不存在时抛出</exception>
         public void DeleteMapping(string mappingName)
         {
-            if (string.IsNullOrEmpty(mappingName))
-            {
-                throw new ArgumentException("映射配置名称不能为空");
-            }
+            if (string.IsNullOrEmpty(mappingName)) throw new ArgumentException("映射配置名称不能为空");
 
             string filePath = Path.Combine(_configPath, $"{mappingName}.xml");
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("指定的列映射配置文件不存在", filePath);
-            }
+            if (!File.Exists(filePath)) throw new FileNotFoundException("指定的列映射配置文件不存在", filePath);
 
             try
             {

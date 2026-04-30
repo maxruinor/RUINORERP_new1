@@ -207,20 +207,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>映射配置，如果找不到则返回null</returns>
         public ColumnMapping GetMappingBySystemField(string systemField)
         {
-            if (ColumnMappings == null)
-            {
-                return null;
-            }
-
-            foreach (var mapping in ColumnMappings)
-            {
-                if (mapping.SystemField?.Key == systemField)
-                {
-                    return mapping;
-                }
-            }
-
-            return null;
+            return ColumnMappings?.FirstOrDefault(m => m.SystemField?.Key == systemField);
         }
 
         /// <summary>
@@ -230,20 +217,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>映射配置，如果找不到则返回null</returns>
         public ColumnMapping GetMappingByExcelColumn(string excelColumn)
         {
-            if (ColumnMappings == null)
-            {
-                return null;
-            }
-
-            foreach (var mapping in ColumnMappings)
-            {
-                if (mapping.ExcelColumn == excelColumn)
-                {
-                    return mapping;
-                }
-            }
-
-            return null;
+            return ColumnMappings?.FirstOrDefault(m => m.ExcelColumn == excelColumn);
         }
     }
 

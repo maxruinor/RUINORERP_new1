@@ -24,16 +24,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         public ImportTemplateManager()
         {
-            // 设置配置文件保存路径
-            _templateDirectory = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
-                "ImportTemplates");
-
+            _templateDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportTemplates");
             if (!Directory.Exists(_templateDirectory))
             {
                 Directory.CreateDirectory(_templateDirectory);
             }
-
             _serializer = new XmlSerializer(typeof(ImportTemplate));
         }
 
@@ -45,10 +40,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <exception cref="ArgumentException">当模板名称为空时抛出</exception>
         public void SaveTemplate(ImportTemplate template)
         {
-            if (template == null)
-                throw new ArgumentNullException(nameof(template));
-
-            if (string.IsNullOrWhiteSpace(template.TemplateName))
+            if (template == null) throw new ArgumentNullException(nameof(template));
+            if (string.IsNullOrWhiteSpace(template.TemplateName)) 
                 throw new ArgumentException("模板名称不能为空", nameof(template.TemplateName));
 
             // 清理模板名称（去除非法字符）
@@ -57,8 +50,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 更新模板元数据
             template.UpdateTime = DateTime.Now;
-            if (template.CreateTime == default)
-                template.CreateTime = DateTime.Now;
+            if (template.CreateTime == default) template.CreateTime = DateTime.Now;
 
             using (var writer = new StreamWriter(filePath))
             {

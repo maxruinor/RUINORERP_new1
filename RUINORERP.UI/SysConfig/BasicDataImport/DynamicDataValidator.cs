@@ -117,10 +117,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 验证数据类型是否匹配
         /// </summary>
-        /// <param name="dataTable">数据表（已应用映射，列名为SystemField）</param>
-        /// <param name="mappings">列映射配置</param>
-        /// <param name="entityType">实体类型</param>
-        /// <param name="errors">错误列表</param>
         private void ValidateDataTypes(DataTable dataTable, ColumnMappingCollection mappings, Type entityType, List<ValidationError> errors)
         {
             for (int i = 0; i < dataTable.Rows.Count; i++)
@@ -129,45 +125,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 foreach (var mapping in mappings)
                 {
-                    // 跳过系统生成和默认值的映射
-                    if (IsSystemGeneratedOrDefaultValueMapping(mapping))
-                    {
-                        continue;
-                    }
-
-                    // 使用SystemField检查列是否存在
-                    //应该是验证显示名称
-                    if (!dataTable.Columns.Contains(mapping.SystemField?.Value))
-                    {
-                        continue;
-                    }
+                    if (IsSystemGeneratedOrDefaultValueMapping(mapping)) continue;
+                    if (!dataTable.Columns.Contains(mapping.SystemField?.Value)) continue;
 
                     object cellValue = row[mapping.SystemField?.Value];
-                    if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
-                    {
-                        continue; // 空值跳过
-                    }
+                    if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString())) continue;
 
-                    // 获取目标属性
                     PropertyInfo property = entityType.GetProperty(mapping.SystemField?.Key);
-                    if (property == null)
-                    {
-                        continue;
-                    }
+                    if (property == null) continue;
+
                     if (mapping.DataSourceType == DataSourceType.ForeignKey)
                     {
                         // 外键验证
                         string foreignKeyError;
                         if (!_foreignKeyService.ValidateForeignKey(row, mapping, i + 2, out foreignKeyError))
                         {
-                            errors.Add(new ValidationError
-                            {
-                                RowNumber = i + 2, // +2 因为Excel从第2行开始
-                                FieldName = mapping.SystemField?.Key,
-                                ErrorMessage = foreignKeyError,
-                                ErrorType = ErrorType.ForeignKeyValidationFailed,
-                                OriginalValue = cellValue
-                            });
+                            errors.Add(CreateValidationError(i + 2, mapping.SystemField?.Key, foreignKeyError, 
+                                ErrorType.ForeignKeyValidationFailed, cellValue));
                         }
                     }
                     else
@@ -176,14 +150,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         Type targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
                         if (!TryConvertValue(cellValue, targetType, out _))
                         {
-                            errors.Add(new ValidationError
-                            {
-                                RowNumber = i + 2, // +2 因为Excel从第2行开始
-                                FieldName = mapping.SystemField?.Key,
-                                ErrorMessage = $"值 '{cellValue}' 无法转换为类型 {targetType.Name}",
-                                ErrorType = ErrorType.TypeMismatch,
-                                OriginalValue = cellValue
-                            });
+                            errors.Add(CreateValidationError(i + 2, mapping.SystemField?.Key, 
+                                $"值 '{cellValue}' 无法转换为类型 {targetType.Name}", 
+                                ErrorType.TypeMismatch, cellValue));
                         }
                     }
                 }
@@ -262,12 +231,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 创建验证错误对象
+        /// </summary>
+        private ValidationError CreateValidationError(int rowNumber, string fieldName, string errorMessage, 
+            ErrorType errorType, object originalValue = null)
+        {
+            return new ValidationError
+            {
+                RowNumber = rowNumber,
+                FieldName = fieldName,
+                ErrorMessage = errorMessage,
+                ErrorType = errorType,
+                OriginalValue = originalValue
+            };
+        }
+
+        /// <summary>
         /// 验证数据范围
         /// </summary>
-        /// <param name="dataTable">数据表（已应用映射，列名为SystemField）</param>
-        /// <param name="mappings">列映射配置</param>
-        /// <param name="entityType">实体类型</param>
-        /// <param name="errors">错误列表</param>
         private void ValidateDataRanges(DataTable dataTable, ColumnMappingCollection mappings, Type entityType, List<ValidationError> errors)
         {
             for (int i = 0; i < dataTable.Rows.Count; i++)
@@ -276,30 +257,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 foreach (var mapping in mappings)
                 {
-                    // 跳过系统生成和默认值的映射
-                    if (IsSystemGeneratedOrDefaultValueMapping(mapping))
-                    {
-                        continue;
-                    }
-
-                    // 使用SystemField检查列是否存在
-                    if (!dataTable.Columns.Contains(mapping.SystemField?.Key))
-                    {
-                        continue;
-                    }
+                    if (IsSystemGeneratedOrDefaultValueMapping(mapping)) continue;
+                    if (!dataTable.Columns.Contains(mapping.SystemField?.Key)) continue;
 
                     object cellValue = row[mapping.SystemField?.Key];
-                    if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
-                    {
-                        continue;
-                    }
+                    if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString())) continue;
 
-                    // 获取目标属性
                     PropertyInfo property = entityType.GetProperty(mapping.SystemField?.Key);
-                    if (property == null)
-                    {
-                        continue;
-                    }
+                    if (property == null) continue;
 
                     Type targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
 
@@ -309,38 +274,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         int maxLength = GetMaxLength(property);
                         if (maxLength > 0 && cellValue.ToString().Length > maxLength)
                         {
-                            errors.Add(new ValidationError
-                            {
-                                RowNumber = i + 2,
-                                FieldName = mapping.SystemField?.Key,
-                                ErrorMessage = $"字符串长度 {cellValue.ToString().Length} 超过最大限制 {maxLength}",
-                                ErrorType = ErrorType.LengthExceeded,
-                                OriginalValue = cellValue
-                            });
+                            errors.Add(CreateValidationError(i + 2, mapping.SystemField?.Key,
+                                $"字符串长度 {cellValue.ToString().Length} 超过最大限制 {maxLength}",
+                                ErrorType.LengthExceeded, cellValue));
                         }
                     }
 
                     // 验证数值范围
-                    if (targetType == typeof(decimal) || targetType == typeof(double) || targetType == typeof(float))
+                    if ((targetType == typeof(decimal) || targetType == typeof(double) || targetType == typeof(float)) &&
+                        TryConvertValue(cellValue, targetType, out object convertedValue))
                     {
-                        if (TryConvertValue(cellValue, targetType, out object convertedValue))
+                        decimal numValue = Convert.ToDecimal(convertedValue);
+                        var range = GetNumberRange(property);
+                        if (range.HasValue && (numValue < range.Value.Min || numValue > range.Value.Max))
                         {
-                            decimal numValue = Convert.ToDecimal(convertedValue);
-                            var range = GetNumberRange(property);
-                            if (range.HasValue)
-                            {
-                                if (numValue < range.Value.Min || numValue > range.Value.Max)
-                                {
-                                    errors.Add(new ValidationError
-                                    {
-                                        RowNumber = i + 2,
-                                        FieldName = mapping.SystemField?.Key,
-                                        ErrorMessage = $"数值 {numValue} 超出有效范围 [{range.Value.Min}, {range.Value.Max}]",
-                                        ErrorType = ErrorType.OutOfRange,
-                                        OriginalValue = cellValue
-                                    });
-                                }
-                            }
+                            errors.Add(CreateValidationError(i + 2, mapping.SystemField?.Key,
+                                $"数值 {numValue} 超出有效范围 [{range.Value.Min}, {range.Value.Max}]",
+                                ErrorType.OutOfRange, cellValue));
                         }
                     }
                 }

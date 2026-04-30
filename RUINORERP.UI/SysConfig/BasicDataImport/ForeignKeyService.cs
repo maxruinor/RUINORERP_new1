@@ -204,42 +204,47 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>源代码值</returns>
         private string GetSourceCodeValueFromExcel(DataRow row, ColumnMapping mapping, out string sourceColumnDisplayName)
         {
-            string sourceColumnName = null;
             sourceColumnDisplayName = string.Empty;
-
-            // 优先从指定的外键来源列获取（Excel列）
-            if (mapping.ForeignConfig?.ForeignKeySourceColumn != null && 
-                !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
-            {
-                sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
-                sourceColumnDisplayName = mapping.ForeignConfig.ForeignKeySourceColumn.Value ?? sourceColumnName;
-            }
-            else if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
-                     !mapping.ExcelColumn.StartsWith("[") &&
-                     !mapping.ExcelColumn.StartsWith("("))
-            {
-                // 如果没有指定外键来源列，但映射有Excel列，使用映射的Excel列
-                sourceColumnName = mapping.ExcelColumn;
-                sourceColumnDisplayName = mapping.ExcelColumn;
-            }
-            else
-            {
-                // 尝试从系统字段列获取（映射后的列名）
-                sourceColumnName = mapping.SystemField?.Value;
-                sourceColumnDisplayName = mapping.SystemField?.Value;
-            }
+            
+            // 确定来源列名（优先级：外键来源列 > Excel列 > 系统字段列）
+            string sourceColumnName = DetermineSourceColumnName(mapping, out sourceColumnDisplayName);
 
             // 从Excel数据行中获取值
-            if (!string.IsNullOrEmpty(sourceColumnName))
+            if (!string.IsNullOrEmpty(sourceColumnName) && dataTableContainsColumn(row.Table, sourceColumnName))
             {
-                sourceColumnDisplayName = sourceColumnDisplayName ?? sourceColumnName;
-                if (dataTableContainsColumn(row.Table, sourceColumnName))
-                {
-                    return row[sourceColumnName]?.ToString()?.Trim();
-                }
+                return row[sourceColumnName]?.ToString()?.Trim();
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 确定来源列名
+        /// </summary>
+        private string DetermineSourceColumnName(ColumnMapping mapping, out string displayName)
+        {
+            displayName = string.Empty;
+
+            // 1. 优先从指定的外键来源列获取（Excel列）
+            if (mapping.ForeignConfig?.ForeignKeySourceColumn != null && 
+                !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
+            {
+                displayName = mapping.ForeignConfig.ForeignKeySourceColumn.Value ?? mapping.ForeignConfig.ForeignKeySourceColumn.Key;
+                return mapping.ForeignConfig.ForeignKeySourceColumn.Key;
+            }
+            
+            // 2. 如果没有指定外键来源列，但映射有Excel列，使用映射的Excel列
+            if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
+                !mapping.ExcelColumn.StartsWith("[") &&
+                !mapping.ExcelColumn.StartsWith("("))
+            {
+                displayName = mapping.ExcelColumn;
+                return mapping.ExcelColumn;
+            }
+            
+            // 3. 尝试从系统字段列获取（映射后的列名）
+            displayName = mapping.SystemField?.Value;
+            return mapping.SystemField?.Value;
         }
 
         /// <summary>

@@ -196,10 +196,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 加载映射配置列表
             LoadMappingConfigs();
 
-            // 绑定事件
-            kbtnDynamicBrowse.Click += KbtnDynamicBrowse_Click;
-            kbtnDynamicParse.Click += KbtnDynamicParse_Click;
-
             kcmbDynamicSheetName.SelectedIndexChanged += KcmbDynamicSheetName_SelectedIndexChanged;
             kcmbDynamicEntityType.SelectedIndexChanged += KcmbDynamicEntityType_SelectedIndexChanged;
             kcmbDynamicMappingName.SelectedIndexChanged += KcmbDynamicMappingName_SelectedIndexChanged;
@@ -1102,20 +1098,85 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 获取导入类型标识
-        /// 根据用户选择的实体类型返回对应的导入类型标识
-        /// 用于区分客户和供应商等使用相同表的情况
+        /// 确认是否继续导入（有重复数据时）
         /// </summary>
-        /// <returns>导入类型标识</returns>
-        private string GetImportType()
+        private bool ConfirmContinueWithDuplicates(List<ValidationError> duplicateErrors)
         {
-            if (kcmbDynamicEntityType.SelectedIndex <= 0)
+            string duplicateSummary = $"发现 {duplicateErrors.Count} 条数据与数据库中已存在的数据重复：\n\n";
+            int displayCount = Math.Min(10, duplicateErrors.Count);
+            
+            for (int i = 0; i < displayCount; i++)
             {
-                return null;
+                var error = duplicateErrors[i];
+                duplicateSummary += $"行 {error.RowNumber} - {error.FieldName}: {error.ErrorMessage}\n";
             }
 
-            string selectedText = kcmbDynamicEntityType.SelectedItem.ToString();
-            return selectedText;
+            if (duplicateErrors.Count > displayCount)
+            {
+                duplicateSummary += $"\n... 还有 {duplicateErrors.Count - displayCount} 条重复记录未显示";
+            }
+
+            duplicateSummary += "\n\n是否继续导入（跳过重复的记录）？";
+            return MessageBox.Show(duplicateSummary, "唯一性检查警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
+        }
+
+        /// <summary>
+        /// 移除重复的行
+        /// </summary>
+        private void RemoveDuplicateRows(DataTable importData, List<ValidationError> duplicateErrors)
+        {
+            var rowsToRemove = duplicateErrors.Select(e => e.RowNumber).Distinct().ToList();
+            for (int i = importData.Rows.Count - 1; i >= 0; i--)
+            {
+                int rowNumber = i + 1;
+                if (rowsToRemove.Contains(rowNumber))
+                {
+                    importData.Rows.RemoveAt(i);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 确认是否继续导入（有验证错误时）
+        /// </summary>
+        private bool ConfirmContinueWithValidationErrors(List<ValidationError> validationErrors)
+        {
+            string errorSummary = $"发现 {validationErrors.Count} 个数据验证错误：\n\n";
+            int displayCount = Math.Min(10, validationErrors.Count);
+            
+            for (int i = 0; i < displayCount; i++)
+            {
+                var error = validationErrors[i];
+                errorSummary += $"行 {error.RowNumber} - {error.FieldName}: {error.ErrorMessage}\n";
+            }
+
+            if (validationErrors.Count > displayCount)
+            {
+                errorSummary += $"\n... 还有 {validationErrors.Count - displayCount} 个错误未显示";
+            }
+
+            errorSummary += "\n\n是否继续导入（跳过有错误的记录）？";
+            return MessageBox.Show(errorSummary, "数据验证警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
+        }
+
+        /// <summary>
+        /// 导入后更新按钮状态
+        /// </summary>
+        private void UpdateButtonStatesAfterImport()
+        {
+            kbtnDynamicImport.Enabled = true;
+            kbtnDynamicBrowse.Enabled = true;
+            kbtnDynamicParse.Enabled = kcmbDynamicSheetName.SelectedIndex >= 0;
+            kbtnDynamicMap.Enabled = true;
+        }
+
+        /// <summary>
+        /// 获取导入类型标识
+        /// </summary>
+        private string GetImportType()
+        {
+            if (kcmbDynamicEntityType.SelectedIndex <= 0) return null;
+            return kcmbDynamicEntityType.SelectedItem.ToString();
         }
 
         /// <summary>
@@ -1666,107 +1727,47 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 原始Excel数据预览表格的单元格格式化事件
-        /// 用于显示图片列的图片
+        /// DataGridView单元格格式化事件（统一处理图片显示）
+        /// ✅ 简化：只负责UI层图片显示，不处理业务逻辑
         /// </summary>
         private void DgvRawExcelData_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
+            FormatImageCell(e, dgvRawExcelData, mapping => mapping.ExcelColumn);
+        }
+
+        /// <summary>
+        /// 解析后数据预览表格的单元格格式化事件
+        /// </summary>
+        private void DgvParsedImportData_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            FormatImageCell(e, dgvParsedImportData, mapping => mapping.SystemField?.Value);
+        }
+
+        /// <summary>
+        /// 统一的图片单元格格式化逻辑
+        /// ✅ 简化：从 ImageProcessor 加载并缓存图片
+        /// </summary>
+        private void FormatImageCell(DataGridViewCellFormattingEventArgs e, DataGridView dataGridView, Func<ColumnMapping, string> columnNameSelector)
+        {
             try
             {
-                // 如果没有当前配置或映射，不处理
                 if (_currentConfig?.ColumnMappings == null || _currentConfig.ColumnMappings.Count == 0)
-                {
                     return;
-                }
 
-                // 检查当前列是否配置为图片列
-                string columnName = dgvRawExcelData.Columns[e.ColumnIndex]?.Name;
-                if (string.IsNullOrEmpty(columnName))
-                {
-                    return;
-                }
+                string columnName = dataGridView.Columns[e.ColumnIndex]?.Name;
+                if (string.IsNullOrEmpty(columnName)) return;
 
-                // 根据Excel列名查找映射配置
                 var imageMapping = _currentConfig.ColumnMappings.FirstOrDefault(m =>
-                    m.ExcelColumn.Equals(columnName, StringComparison.OrdinalIgnoreCase) &&
-                    m.IsImageColumn);
+                {
+                    string colName = columnNameSelector(m);
+                    return !string.IsNullOrEmpty(colName) && 
+                           colName.Equals(columnName, StringComparison.OrdinalIgnoreCase) &&
+                           m.IsImageColumn;
+                });
 
                 if (imageMapping != null && e.Value != null)
                 {
-                    string cellValue = e.Value.ToString();
-
-                    // 如果是图片路径，尝试加载并显示图片
-                    if (!string.IsNullOrEmpty(cellValue))
-                    {
-                        if (imageMapping.ImageColumnType == ImageColumnType.Path)
-                        {
-                            // 图片路径类型：尝试加载图片
-                            try
-                            {
-                                string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
-                                if (File.Exists(imagePath))
-                                {
-                                    // 【内存优化】使用 using 确保原始图片及时释放
-                                    using (Image img = Image.FromFile(imagePath))
-                                    {
-                                        // 缩放图片以适应单元格
-                                        int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
-                                        // 【内存优化】创建缩略图副本，DataGridView需要独立实例
-                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
-                                        e.Value = scaledImg;
-                                        // 注意：scaledImg 由 DataGridView 管理，在 CellFormatting 中无法主动释放
-                                        // 通过缓存键追踪，后续可通过 ClearImageCache() 清理
-                                        RegisterImageCache(scaledImg, cellValue);
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // 图片加载失败，显示文本
-                                e.Value = cellValue;
-                            }
-                        }
-                        else if (imageMapping.ImageColumnType == ImageColumnType.Binary)
-                        {
-                            // 二进制图片类型：如果值是Base64编码，尝试解码并显示
-                            try
-                            {
-                                if (cellValue.Length > 0 && !cellValue.Contains(Path.DirectorySeparatorChar))
-                                {
-                                    // 尝试作为Base64解码
-                                    byte[] imageBytes = Convert.FromBase64String(cellValue);
-                                    using (MemoryStream ms = new MemoryStream(imageBytes))
-                                    using (Image img = Image.FromStream(ms))
-                                    {
-                                        int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
-                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
-                                        e.Value = scaledImg;
-                                        RegisterImageCache(scaledImg, $"binary_{e.RowIndex}_{e.ColumnIndex}");
-                                    }
-                                }
-                                else
-                                {
-                                    // 如果是路径，尝试加载
-                                    string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
-                                    if (File.Exists(imagePath))
-                                    {
-                                        using (Image img = Image.FromFile(imagePath))
-                                        {
-                                            int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
-                                            Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
-                                            e.Value = scaledImg;
-                                            RegisterImageCache(scaledImg, cellValue);
-                                        }
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // 二进制数据处理失败，显示文本
-                                e.Value = cellValue;
-                            }
-                        }
-                    }
+                    LoadAndDisplayImage(e, imageMapping, dataGridView);
                 }
             }
             catch
@@ -1776,109 +1777,86 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 解析后数据预览表格的单元格格式化事件
-        /// 用于显示图片列的图片
+        /// 加载并显示图片
+        /// ✅ 简化：直接使用 ImageProcessor，去掉重复逻辑
         /// </summary>
-        private void DgvParsedImportData_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        private void LoadAndDisplayImage(DataGridViewCellFormattingEventArgs e, ColumnMapping imageMapping, DataGridView dataGridView)
         {
+            string cellValue = e.Value.ToString();
+            if (string.IsNullOrEmpty(cellValue)) return;
+
             try
             {
-                // 如果没有当前配置或映射，不处理
-                if (_currentConfig?.ColumnMappings == null || _currentConfig.ColumnMappings.Count == 0)
+                Image loadedImage = null;
+
+                // ✅ 使用 ImageProcessor 加载图片（统一入口）
+                if (imageMapping.ImageColumnType == ImageColumnType.Path)
                 {
-                    return;
+                    loadedImage = LoadImageFromPath(cellValue);
+                }
+                else if (imageMapping.ImageColumnType == ImageColumnType.Binary)
+                {
+                    loadedImage = LoadImageFromBinary(cellValue);
                 }
 
-                // 检查当前列是否配置为图片列
-                string columnName = dgvParsedImportData.Columns[e.ColumnIndex]?.Name;
-                if (string.IsNullOrEmpty(columnName))
+                if (loadedImage != null)
                 {
-                    return;
-                }
-
-                // 根据系统字段名查找映射配置
-                var imageMapping = _currentConfig.ColumnMappings.FirstOrDefault(m =>
-                    m.SystemField?.Value.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true &&
-                    m.IsImageColumn);
-
-                if (imageMapping != null && e.Value != null)
-                {
-                    string cellValue = e.Value.ToString();
-
-                    // 如果是图片路径，尝试加载并显示图片
-                    if (!string.IsNullOrEmpty(cellValue))
-                    {
-                        if (imageMapping.ImageColumnType == ImageColumnType.Path)
-                        {
-                            // 图片路径类型：尝试加载图片
-                            try
-                            {
-                                string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
-                                if (File.Exists(imagePath))
-                                {
-                                    // 【内存优化】使用 using 确保原始图片及时释放
-                                    using (Image img = Image.FromFile(imagePath))
-                                    {
-                                        // 缩放图片以适应单元格
-                                        int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
-                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
-                                        e.Value = scaledImg;
-                                        RegisterImageCache(scaledImg, cellValue);
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // 图片加载失败，显示文本
-                                e.Value = cellValue;
-                            }
-                        }
-                        else if (imageMapping.ImageColumnType == ImageColumnType.Binary)
-                        {
-                            // 二进制图片类型：如果值是Base64编码，尝试解码并显示
-                            try
-                            {
-                                if (cellValue.Length > 0 && !cellValue.Contains(Path.DirectorySeparatorChar))
-                                {
-                                    // 尝试作为Base64解码
-                                    byte[] imageBytes = Convert.FromBase64String(cellValue);
-                                    using (MemoryStream ms = new MemoryStream(imageBytes))
-                                    using (Image img = Image.FromStream(ms))
-                                    {
-                                        int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
-                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
-                                        e.Value = scaledImg;
-                                        RegisterImageCache(scaledImg, $"binary_{e.RowIndex}_{e.ColumnIndex}");
-                                    }
-                                }
-                                else
-                                {
-                                    // 如果是路径，尝试加载
-                                    string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
-                                    if (File.Exists(imagePath))
-                                    {
-                                        using (Image img = Image.FromFile(imagePath))
-                                        {
-                                            int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
-                                            Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
-                                            e.Value = scaledImg;
-                                            RegisterImageCache(scaledImg, cellValue);
-                                        }
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // 二进制数据处理失败，显示文本
-                                e.Value = cellValue;
-                            }
-                        }
-                    }
+                    int maxSize = Math.Min(dataGridView.Rows[e.RowIndex].Height - 4, 80);
+                    Image scaledImg = new Bitmap(loadedImage, new Size(maxSize, maxSize));
+                    e.Value = scaledImg;
+                    RegisterImageCache(scaledImg, $"{cellValue}_{e.RowIndex}_{e.ColumnIndex}");
+                    loadedImage.Dispose(); // 释放原始图片
                 }
             }
             catch
             {
-                // 格式化失败不影响其他单元格
+                e.Value = cellValue; // 加载失败显示文本
+            }
+        }
+
+        /// <summary>
+        /// 从路径加载图片
+        /// ✅ 简化：直接使用 ImageProcessor 的方法
+        /// </summary>
+        private Image LoadImageFromPath(string imagePath)
+        {
+            // ✅ 如果配置了 ImageProcessor，使用它来处理
+            if (_imageProcessor != null)
+            {
+                string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", imagePath);
+                if (!File.Exists(fullPath)) return null;
+
+                using (Image img = Image.FromFile(fullPath))
+                {
+                    return new Bitmap(img); // 返回副本，原图在using中释放
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 从二进制数据加载图片
+        /// </summary>
+        private Image LoadImageFromBinary(string cellValue)
+        {
+            if (cellValue.Length == 0 || cellValue.Contains(Path.DirectorySeparatorChar))
+            {
+                // 如果是路径，尝试按路径加载
+                return LoadImageFromPath(cellValue);
+            }
+
+            try
+            {
+                byte[] imageBytes = Convert.FromBase64String(cellValue);
+                using (MemoryStream ms = new MemoryStream(imageBytes))
+                using (Image img = Image.FromStream(ms))
+                {
+                    return new Bitmap(img); // 返回副本
+                }
+            }
+            catch
+            {
+                return null;
             }
         }
 

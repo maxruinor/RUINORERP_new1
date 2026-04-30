@@ -978,112 +978,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
 
-        /// <summary>
-        /// 【已废弃】获取外键ID - 请使用 ForeignKeyService.GetForeignKeyId() 代替
-        /// 此方法保留仅为兼容旧代码，将在未来版本中移除
-        /// </summary>
-        [Obsolete("请使用 ForeignKeyService.GetForeignKeyId() 代替，该方法支持缓存优化")]
-        private object GetForeignKeyId(string foreignKeyValue, string relatedTableName, string relatedTableField)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(foreignKeyValue) ||
-                    string.IsNullOrEmpty(relatedTableName) ||
-                    string.IsNullOrEmpty(relatedTableField))
-                {
-                    return null;
-                }
 
-                // 构建查询SQL，通过代码字段查询主键ID
-                // 例如：SELECT ID FROM tb_ProdCategories WHERE CategoryCode = 'CATEGORY001'
-                // 例如：SELECT ID FROM tb_CustomerVendor WHERE VendorName = '供应商A'
-                string sql = $"SELECT ID FROM {relatedTableName} WHERE {relatedTableField} = @value";
-
-                // 使用参数化查询防止SQL注入
-                var parameters = new { value = foreignKeyValue.Trim() };
-
-                // 执行查询
-                var result = _db.Ado.GetDataTable(sql, parameters);
-
-                if (result != null && result.Rows.Count > 0)
-                {
-                    // 检查是否有多个匹配记录（唯一性验证）
-                    if (result.Rows.Count > 1)
-                    {
-                        // 对于供应商表等需要唯一性验证的表，记录警告
-                        System.Diagnostics.Debug.WriteLine(
-                            $"警告：外键查询返回多个结果。表：{relatedTableName}，字段：{relatedTableField}，值：{foreignKeyValue}，匹配数：{result.Rows.Count}");
-
-                        // 如果启用了严格模式，可以抛出异常
-                        // throw new Exception($"外键值 '{foreignKeyValue}' 在表 {relatedTableName} 中不唯一，找到 {result.Rows.Count} 条记录");
-                    }
-
-                    return result.Rows[0]["ID"];
-                }
-
-                // 如果没有找到，尝试模糊匹配（对于供应商名称等可能包含空格的情况）
-                if (relatedTableField.ToLower().Contains("name") ||
-                    relatedTableField.ToLower().Contains("vendor") ||
-                    relatedTableField.ToLower().Contains("supplier"))
-                {
-                    sql = $"SELECT ID FROM {relatedTableName} WHERE {relatedTableField} LIKE @value";
-                    parameters = new { value = $"%{foreignKeyValue.Trim()}%" };
-                    result = _db.Ado.GetDataTable(sql, parameters);
-
-                    if (result != null && result.Rows.Count > 0)
-                    {
-                        if (result.Rows.Count > 1)
-                        {
-                            System.Diagnostics.Debug.WriteLine(
-                                $"警告：模糊匹配返回多个结果。表：{relatedTableName}，字段：{relatedTableField}，值：{foreignKeyValue}");
-                        }
-                        return result.Rows[0]["ID"];
-                    }
-                }
-
-                // 如果没有找到，返回null
-                return null;
-            }
-            catch (Exception ex)
-            {
-                // 记录错误信息
-                System.Diagnostics.Debug.WriteLine($"查询外键ID失败: {ex.Message}");
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 获取自身引用字段的值
-        /// 【待完善】当前仅实现基础查询逻辑，自身引用关系的完整处理需在导入流程中实现
-        /// </summary>
-        /// <param name="displayValue">显示值</param>
-        /// <param name="tableName">表名</param>
-        /// <param name="selfReferenceField">自身引用字段</param>
-        /// <returns>自身引用值</returns>
-        private object GetSelfReferenceValue(string displayValue, string tableName, string selfReferenceField)
-        {
-            try
-            {
-                // 构建查询SQL
-                string sql = $"SELECT {selfReferenceField} FROM {tableName} WHERE ID = @value";
-                var parameters = new { value = displayValue };
-
-                // 执行查询
-                var result = _db.Ado.GetDataTable(sql, parameters);
-                if (result != null && result.Rows.Count > 0)
-                {
-                    return result.Rows[0][selfReferenceField];
-                }
-
-                // 如果没有找到，返回null
-                return null;
-            }
-            catch
-            {
-                // 如果查询失败，返回null
-                return null;
-            }
-        }
 
         /// <summary>
         /// 检查DataTable是否包含指定列
@@ -1359,39 +1254,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
         }
 
-        /// <summary>
-        /// 【未使用】检查值是否为默认值
-        /// 当前无调用点，如不需要可删除
-        /// </summary>
-        [Obsolete("此方法当前无调用点，如不需要可删除")]
-        private bool IsDefaultValue(object value)
-        {
-            if (value == null)
-            {
-                return true;
-            }
 
-            Type type = value.GetType();
-
-            if (type == typeof(int) || type == typeof(long) || type == typeof(short))
-            {
-                return Convert.ToInt64(value) == 0;
-            }
-            else if (type == typeof(decimal) || type == typeof(double) || type == typeof(float))
-            {
-                return Convert.ToDouble(value) == 0;
-            }
-            else if (type == typeof(string))
-            {
-                return string.IsNullOrEmpty(value.ToString());
-            }
-            else if (type == typeof(DateTime))
-            {
-                return Convert.ToDateTime(value) == DateTime.MinValue;
-            }
-
-            return false;
-        }
 
         /// <summary>
         /// 将数据行转换为字典
@@ -1408,26 +1271,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             return dict;
         }
 
-        /// <summary>
-        /// 【调试用】将实体对象转换为字典
-        /// 仅用于调试目的，无业务调用
-        /// </summary>
-        [Obsolete("仅用于调试，无业务调用")]
-        private Dictionary<string, object> EntityToDictionary(object entity)
-        {
-            var dict = new Dictionary<string, object>();
-            Type entityType = entity.GetType();
 
-            foreach (var prop in entityType.GetProperties())
-            {
-                var value = prop.GetValue(entity);
-                if (value != null)
-                {
-                    dict[prop.Name] = value;
-                }
-            }
-            return dict;
-        }
 
         /// <summary>
         /// 获取表的业务键字段列表
@@ -1703,7 +1547,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// ✅ 统一预处理服务：接收原始 DataTable，返回预处理后的 DataTable
-        /// 所有业务逻辑（外键解析、系统字段生成等）都在这里处理
+        /// 所有业务逻辑（外键解析、系统字段生成、实体特殊字段处理等）都在这里处理
         /// UI层只需调用此方法，然后直接显示结果
         /// </summary>
         /// <param name="rawData">原始解析后的 DataTable</param>
@@ -1720,9 +1564,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 创建结果表结构
             var result = rawData.Clone();
 
-            // 预加载外键数据到缓存（性能优化）
-            // 使用 ForeignKeyService 批量预加载所有外键数据
+            // ✅ 预加载外键数据到缓存（性能优化）
             _foreignKeyService.PreloadForeignKeyData(mappings);
+
+            // ✅ 获取该实体类型的预设字段（用于跳过已由 EntityImportHelper 处理的字段）
+            var predefinedFields = EntityImportHelper.GetPredefinedFields(entityType);
 
             // 处理每一行数据
             foreach (DataRow sourceRow in rawData.Rows)
@@ -1742,15 +1588,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (string.IsNullOrEmpty(fieldName) || !result.Columns.Contains(fieldName))
                         continue;
 
+                    // ✅ 如果该字段是预设字段，跳过（由 EntityImportHelper.BatchPreProcessEntitiesAsync 统一处理）
+                    if (predefinedFields.Contains(mapping.SystemField?.Key))
+                        continue;
+
                     switch (mapping.DataSourceType)
                     {
                         case DataSourceType.ForeignKey:
                             // 外键关联：查询数据库获取真实ID
-                             ProcessForeignKeyFieldAsync(sourceRow, targetRow, mapping);
+                            ProcessForeignKeyField(sourceRow, targetRow, mapping);
                             break;
 
                         case DataSourceType.SystemGenerated:
-                            // 系统生成字段：生成真实值
+                            // 系统生成字段：生成真实值（时间、用户等）
                             ProcessSystemGeneratedField(targetRow, mapping);
                             break;
 
@@ -2056,7 +1906,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 处理外键字段
         /// </summary>
-        private void ProcessForeignKeyFieldAsync(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
+        private void ProcessForeignKeyField(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
         {
             string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
             string targetTable = mapping.ForeignConfig?.ForeignKeyTable?.Value;
@@ -2073,7 +1923,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (string.IsNullOrEmpty(sourceValue) || string.IsNullOrEmpty(targetTable) || string.IsNullOrEmpty(targetField))
                 return;
 
-            // 查询外键ID
+            // ✅ 从缓存中查询外键ID（PreloadForeignKeyData 已预加载）
             object foreignKeyId = _foreignKeyService.GetForeignKeyId(sourceValue, targetTable, targetField);
             targetRow[fieldName] = foreignKeyId?.ToString() ?? "";
         }

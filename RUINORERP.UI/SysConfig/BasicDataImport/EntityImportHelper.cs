@@ -206,6 +206,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 通用业务编号生成辅助方法
+        /// </summary>
+        private static async System.Threading.Tasks.Task<string> GenerateBizCodeAsync(BaseInfoType bizType)
+        {
+            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+            if (bizCodeService == null)
+            {
+                throw new InvalidOperationException("无法获取ClientBizCodeService实例");
+            }
+            return await bizCodeService.GenerateBaseInfoNoAsync(bizType);
+        }
+
+        /// <summary>
         /// 批量处理产品分类的特殊字段（优化版：一次性查询最大Sort值）
         /// </summary>
         /// <param name="categories">产品分类实体列表</param>
@@ -215,12 +228,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (categories == null || categories.Count == 0)
             {
                 return;
-            }
-
-            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-            if (bizCodeService == null)
-            {
-                throw new InvalidOperationException("无法获取ClientBizCodeService实例");
             }
 
             // 按 Parent_id 分组，每组独立计算 Sort
@@ -240,37 +247,41 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 for (int i = 0; i < categoryList.Count; i++)
                 {
                     var category = categoryList[i];
-
-                    // 1. 自动生成分类编码（如果用户未指定）
-                    if (string.IsNullOrWhiteSpace(category.CategoryCode))
-                    {
-                        category.CategoryCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProCategories);
-                    }
-
-                    // 2. 设置默认启用状态
-                    if (!category.Is_enabled.HasValue)
-                    {
-                        category.Is_enabled = true;
-                    }
-
-                    // 3. 设置默认分类级别
-                    if (!category.CategoryLevel.HasValue && category.Parent_id.HasValue)
-                    {
-                        category.CategoryLevel = 1;
-                    }
-
-                    // 4. 设置排序号（基于批量查询结果累加）
-                    if (!category.Sort.HasValue)
-                    {
-                        category.Sort = maxSort + i + 1;
-                    }
-
-                    // 5. 设置默认备注
-                    if (string.IsNullOrWhiteSpace(category.Notes))
-                    {
-                        category.Notes = "通过Excel导入";
-                    }
+                    await FillProdCategoryDefaults(category, db, maxSort + i + 1);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 填充产品分类默认值
+        /// </summary>
+        private static async System.Threading.Tasks.Task FillProdCategoryDefaults(tb_ProdCategories category, ISqlSugarClient db, int? sortValue = null)
+        {
+            // 1. 自动生成分类编码（如果用户未指定）
+            if (string.IsNullOrWhiteSpace(category.CategoryCode))
+            {
+                category.CategoryCode = await GenerateBizCodeAsync(BaseInfoType.ProCategories);
+            }
+
+            // 2. 设置默认启用状态
+            category.Is_enabled ??= true;
+
+            // 3. 设置默认分类级别
+            if (!category.CategoryLevel.HasValue && category.Parent_id.HasValue)
+            {
+                category.CategoryLevel = 1;
+            }
+
+            // 4. 设置排序号
+            if (!category.Sort.HasValue && sortValue.HasValue)
+            {
+                category.Sort = sortValue.Value;
+            }
+
+            // 5. 设置默认备注
+            if (string.IsNullOrWhiteSpace(category.Notes))
+            {
+                category.Notes = "通过Excel导入";
             }
         }
 
@@ -281,28 +292,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="db">数据库客户端</param>
         private static async System.Threading.Tasks.Task ProcessProdCategoriesAsync(tb_ProdCategories category, ISqlSugarClient db)
         {
-            if (category == null)
-            {
-                return;
-            }
-
-            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-            if (bizCodeService == null)
-            {
-                throw new InvalidOperationException("无法获取ClientBizCodeService实例");
-            }
+            if (category == null) return;
 
             // 1. 自动生成分类编码（如果用户未指定）
             if (string.IsNullOrWhiteSpace(category.CategoryCode))
             {
-                category.CategoryCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProCategories);
+                category.CategoryCode = await GenerateBizCodeAsync(BaseInfoType.ProCategories);
             }
 
             // 2. 设置默认启用状态
-            if (!category.Is_enabled.HasValue)
-            {
-                category.Is_enabled = true;
-            }
+            category.Is_enabled ??= true;
 
             // 3. 设置默认分类级别
             if (!category.CategoryLevel.HasValue && category.Parent_id.HasValue)
@@ -328,45 +327,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
 
         /// <summary>
-        /// 处理产品分类的特殊字段
+        /// 处理客户/供应商的特殊字段
         /// </summary>
-        /// <param name="category">产品分类实体</param>
-        /// <param name="db">数据库客户端</param>
         private static async System.Threading.Tasks.Task CustomerVendorAsync(tb_CustomerVendor customerVendor, ISqlSugarClient db, bool IsCustomer = false, bool IsVendor = false)
         {
-            if (customerVendor == null)
-            {
-                return;
-            }
-            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-            if (bizCodeService == null)
-            {
-                throw new Exception("无法从容器中获取BizCodeService实例");
-            }
+            if (customerVendor == null) return;
 
-            // 1. 自动生成分类编码（如果用户未指定）
+            // 1. 自动生成编码（如果用户未指定）
             if (string.IsNullOrWhiteSpace(customerVendor.CVCode))
             {
-                if (IsCustomer)
-                {
-                    customerVendor.CVCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.Customer);
-                }
-                else
-                {
-                    customerVendor.CVCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.Supplier);
-                }
-
+                var bizType = IsCustomer ? BaseInfoType.Customer : BaseInfoType.Supplier;
+                customerVendor.CVCode = await GenerateBizCodeAsync(bizType);
             }
 
             customerVendor.IsVendor = IsVendor;
             customerVendor.IsCustomer = IsCustomer;
+            
             // 2. 设置默认启用状态
-            if (!customerVendor.Is_enabled.HasValue)
-            {
-                customerVendor.Is_enabled = true;
-            }
+            customerVendor.Is_enabled ??= true;
 
-            // 5. 设置默认备注
+            // 3. 设置默认备注
             if (string.IsNullOrWhiteSpace(customerVendor.Notes))
             {
                 customerVendor.Notes = "通过Excel导入";
@@ -375,48 +355,35 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
 
         /// <summary>
-        /// 处理产品分类的特殊字段
+        /// 处理产品基础信息的特殊字段
         /// </summary>
-        /// <param name="prod">产品实体</param>
-        /// <param name="db">数据库客户端</param>
         private static async System.Threading.Tasks.Task ProdBaseAsync(tb_Prod prod, ISqlSugarClient db)
         {
-            if (prod == null)
-            {
-                return;
-            }
-            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-            if (bizCodeService == null)
-            {
-                throw new InvalidOperationException("无法获取ClientBizCodeService实例");
-            }
-            
+            if (prod == null) return;
+
             // 1. 自动生成产品编号（如果用户未指定）
             if (string.IsNullOrWhiteSpace(prod.ProductNo))
             {
-                prod.ProductNo = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProductNo);
+                prod.ProductNo = await GenerateBizCodeAsync(BaseInfoType.ProductNo);
             }
+            
             prod.Is_enabled = true;
             prod.DataStatus = (int)DataStatus.新建;
         }
 
+        /// <summary>
+        /// 处理产品明细的特殊字段
+        /// </summary>
         private static async System.Threading.Tasks.Task ProdDetailAsync(tb_ProdDetail proddetail, ISqlSugarClient db)
         {
-            if (proddetail == null)
-            {
-                return;
-            }
-            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-            if (bizCodeService == null)
-            {
-                throw new InvalidOperationException("无法获取ClientBizCodeService实例");
-            }
-            
+            if (proddetail == null) return;
+
             // 1. 自动生成SKU编码（如果用户未指定）
             if (string.IsNullOrWhiteSpace(proddetail.SKU))
             {
-                proddetail.SKU = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.SKU_No);
+                proddetail.SKU = await GenerateBizCodeAsync(BaseInfoType.SKU_No);
             }
+            
             proddetail.Is_enabled = true;
             proddetail.isdeleted = false;
             proddetail.DataStatus = (int)DataStatus.新建;

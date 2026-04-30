@@ -121,7 +121,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="fieldNames">数据库字段名列表</param>
         /// <param name="config">导入配置</param>
         /// <returns>数据表显示名称列表</returns>
-        /// <exception cref="InvalidOperationException">字段映射不存在时抛出异常</exception>
         private List<string> ConvertToDisplayNames(List<string> fieldNames, ImportConfiguration config)
         {
             var displayNames = new List<string>();
@@ -134,36 +133,33 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     displayNames.Add(mapping.SystemField.Value);
                 }
+                else if (IsForeignKeySourceColumn(fieldName, config))
+                {
+                    // 外键来源列直接使用Excel列名作为显示名称
+                    displayNames.Add(fieldName);
+                }
                 else
                 {
-                    // 检查是否为外键来源列
-                    bool isForeignKeySourceColumn = false;
-                    if (config.ColumnMappings != null)
-                    {
-                        foreach (var map in config.ColumnMappings)
-                        {
-                            if (map.DataSourceType == DataSourceType.ForeignKey &&
-                                map.ForeignConfig != null &&
-                                map.ForeignConfig.ForeignKeySourceColumn != null &&
-                                map.ForeignConfig.ForeignKeySourceColumn.Key == fieldName)
-                            {
-                                // 外键来源列直接使用Excel列名作为显示名称
-                                displayNames.Add(fieldName);
-                                isForeignKeySourceColumn = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    // 如果不是外键来源列，则直接使用字段名（可能数据表就是用的字段名）
-                    if (!isForeignKeySourceColumn)
-                    {
-                        displayNames.Add(fieldName);
-                    }
+                    // 直接使用字段名（可能数据表就是用的字段名）
+                    displayNames.Add(fieldName);
                 }
             }
 
             return displayNames;
+        }
+
+        /// <summary>
+        /// 检查是否为外键来源列
+        /// </summary>
+        private bool IsForeignKeySourceColumn(string fieldName, ImportConfiguration config)
+        {
+            if (config.ColumnMappings == null) return false;
+
+            return config.ColumnMappings.Any(map =>
+                map.DataSourceType == DataSourceType.ForeignKey &&
+                map.ForeignConfig != null &&
+                map.ForeignConfig.ForeignKeySourceColumn != null &&
+                map.ForeignConfig.ForeignKeySourceColumn.Key == fieldName);
         }
 
         /// <summary>

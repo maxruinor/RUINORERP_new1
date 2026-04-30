@@ -133,9 +133,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public DynamicExcelParser()
         {
             _imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages");
-            if (!Directory.Exists(_imageSavePath))
+            EnsureDirectoryExists(_imageSavePath);
+        }
+
+        /// <summary>
+        /// 确保目录存在
+        /// </summary>
+        private void EnsureDirectoryExists(string path)
+        {
+            if (!Directory.Exists(path))
             {
-                Directory.CreateDirectory(_imageSavePath);
+                Directory.CreateDirectory(path);
             }
         }
 
@@ -718,19 +726,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                // 确保目录存在
-                if (!Directory.Exists(_imageSavePath))
-                {
-                    Directory.CreateDirectory(_imageSavePath);
-                    System.Diagnostics.Debug.WriteLine($"[保存图片] 创建图片保存目录: {_imageSavePath}");
-                }
-
-                // 使用图片ID（DISPIMG中的ID）作为文件名的一部分
-                string fileName;
-
                 // 使用行号列号和GUID生成文件名
-                fileName = $"image_r{rowIndex}_c{colIndex}_{Guid.NewGuid().ToString().Substring(0, 8)}{imageInfo.ImageType}";
-
+                string fileName = $"image_r{rowIndex}_c{colIndex}_{Guid.NewGuid().ToString().Substring(0, 8)}{imageInfo.ImageType}";
                 string fullPath = Path.Combine(_imageSavePath, fileName);
 
                 // 检查文件是否已存在，避免重复保存
@@ -741,7 +738,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 File.WriteAllBytes(fullPath, imageInfo.ImageData);
-                System.Diagnostics.Debug.WriteLine($"[保存图片] 成功保存图片: {fileName}, 路径: {fullPath}, 大小: {imageInfo.ImageData.Length} 字节");
+                System.Diagnostics.Debug.WriteLine($"[保存图片] 成功保存图片: {fileName}, 大小: {imageInfo.ImageData.Length} 字节");
                 return fileName;
             }
             catch (Exception ex)

@@ -766,10 +766,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     _currentConfig.ColumnMappings,
                     -1); // -1表示读取全部数据行
 
-                //
-                // 根据映射配置转换数据（不包含外键查询）
-                // ApplyColumnMapping方法会将Excel列名转换为数据库字段名，并处理各种数据源类型
-                _parsedImportData = ApplyColumnMapping(fullData, _currentConfig.ColumnMappings);
+                // 确保DynamicImporter已初始化
+                if (_dynamicImporter == null)
+                {
+                    _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
+                }
+
+                // 使用DynamicImporter的统一列映射方法（避免UI层重复实现）
+                var mappings = new ColumnMappingCollection(_currentConfig.ColumnMappings);
+                _parsedImportData = _dynamicImporter.ApplyColumnMapping(fullData, mappings, _selectedEntityType);
 
                 // 应用去重复逻辑（如果配置了去重）
                 if (_currentConfig.EnableDeduplication)
@@ -856,297 +861,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// - result中的列名是数据库字段名（英文标识符）
         /// - 转换过程通过ColumnMapping配置建立映射关系
         /// </remarks>
-        private DataTable ApplyColumnMapping(DataTable sourceData, List<ColumnMapping> mappings)
-        {
-            // 创建结果表，使用实体类型名称作为表名
-            DataTable result = new DataTable(_currentConfig?.EntityType ?? "ImportData");
-
-            try
-            {
-                // 用于跟踪已添加的列，避免重复添加
-                HashSet<string> addedColumns = new HashSet<string>();
-
-                // 【步骤1】创建结果表结构（使用SystemField.Value作为列名）
-                // SystemField.Key是数据库字段名（英文），
-                // SystemField.Value用于显示给用户看
-                foreach (var mapping in mappings)
-                {
-                    string columnName = mapping.SystemField?.Value;
-
-                    // 避免重复添加列
-                    if (!string.IsNullOrEmpty(columnName) && !addedColumns.Contains(columnName))
-                    {
-                        result.Columns.Add(columnName, typeof(string));
-                        addedColumns.Add(columnName);
-                    }
-
-                    // 对于外键关联类型，需要额外添加外键来源列到解析结果中
-                    // 这样在导入时才能从解析后的数据中获取外键参考值
-                    if (mapping.DataSourceType == DataSourceType.ForeignKey &&
-                        mapping.ForeignConfig != null &&
-                        mapping.ForeignConfig.ForeignKeySourceColumn != null &&
-                        !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
-                    {
-                        string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
-
-                        // 检查源数据中是否包含该列
-                        if (sourceData.Columns.Contains(sourceColumnName) && !addedColumns.Contains(sourceColumnName))
-                        {
-                            // 添加外键来源列到结果表
-                            result.Columns.Add(sourceColumnName, typeof(string));
-                            addedColumns.Add(sourceColumnName);
-                        }
-                    }
-                }
-
-
-                // 【步骤2】转换数据行
-                // 遍历Excel中的每一行数据，根据映射配置转换为数据库字段格式
-                foreach (DataRow sourceRow in sourceData.Rows)
-                {
-                    DataRow targetRow = result.NewRow();
-
-                    foreach (var mapping in mappings)
-                    {
-                        // 根据数据来源类型处理不同的转换逻辑
-                        switch (mapping.DataSourceType)
-                        {
-                            case DataSourceType.Excel:
-                                // 【Excel数据源】直接从Excel列读取数据
-                                // Excel列名: mapping.ExcelColumn
-                                // 数据库字段显示: mapping.SystemField.Value
-                                // 数据库字段: mapping.SystemField.Key
-                                if (sourceData.Columns.Contains(mapping.SystemField.Value))
-                                {
-                                    object cellValue = sourceRow[mapping.SystemField.Value];
-
-                                    // 检查是否为空值
-                                    bool isEmpty = cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString());
-
-                                    // 如果配置了忽略空值且值为空，则不处理该字段
-                                    if (mapping.IgnoreEmptyValue && isEmpty)
-                                    {
-                                        targetRow[mapping.SystemField?.Value] = DBNull.Value;
-                                    }
-                                    else
-                                    {
-                                        // 如果是图片列，直接使用Excel中的值（图片路径）
-                                        if (mapping.IsImageColumn)
-                                        {
-                                            // 尝试处理图片并保存
-                                            string imagePath = cellValue?.ToString();
-                                            if (!string.IsNullOrEmpty(imagePath) && File.Exists(imagePath))
-                                            {
-                                                try
-                                                {
-                                                    // 获取产品编码作为文件名前缀
-                                                    string productCode = sourceRow["ProductCode"]?.ToString() ?? "IMG";
-                                                    string savedPath = _imageProcessor.ProcessAndSaveImage(imagePath, productCode);
-                                                    targetRow[mapping.SystemField?.Value] = savedPath;
-                                                }
-                                                catch (Exception ex)
-                                                {
-                                                    System.Diagnostics.Debug.WriteLine($"图片处理失败: {ex.Message}");
-                                                    targetRow[mapping.SystemField?.Value] = imagePath; // 失败则保留原路径
-                                                }
-                                            }
-                                            else
-                                            {
-                                                targetRow[mapping.SystemField?.Value] = imagePath ?? "";
-                                            }
-                                        }
-                                        else
-                                        {
-                                            targetRow[mapping.SystemField?.Value] = cellValue?.ToString() ?? "";
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    // 添加调试信息：列名未在sourceData中找到
-                                    System.Diagnostics.Debug.WriteLine($"[ApplyColumnMapping] Excel列'{mapping.ExcelColumn}'未在源数据中找到，映射到字段'{mapping.SystemField?.Value}'");
-                                    targetRow[mapping.SystemField?.Value] = "";
-                                }
-                                break;
-
-                            case DataSourceType.SystemGenerated:
-                                // 【系统生成的值】暂时留空或使用特殊标记
-                                // 实际值在导入时由系统自动生成（如CreateTime, CreateUser等）
-                                targetRow[mapping.SystemField?.Value] = "[系统生成]";
-                                break;
-
-                            case DataSourceType.DefaultValue:
-                                // 【默认值映射】使用配置的默认值
-                                string defaultValue = mapping.DefaultValue ?? "";
-                                // 检查是否需要转换为枚举值
-                                Type enumType = EntityImportHelper.GetPredefinedEnumType(_currentConfig?.EntityType ?? "", mapping.SystemField?.Key ?? "");
-                                if (enumType != null && !string.IsNullOrEmpty(defaultValue))
-                                {
-                                    // 解析枚举名称并转换为int
-                                    try
-                                    {
-                                        defaultValue = Convert.ChangeType(Enum.Parse(enumType, defaultValue), typeof(int)).ToString();
-                                    }
-                                    catch
-                                    {
-                                        // 解析失败保持原值
-                                    }
-                                }
-                                targetRow[mapping.SystemField?.Value] = defaultValue;
-                                break;
-
-                            case DataSourceType.ForeignKey:
-                                // 【外键关联】需要通过关联表查询获取值
-                                // Excel来源列: mapping.ForeignConfig.ForeignKeySourceColumn.Key
-                                // 外键表: mapping.ForeignConfig.ForeignKeyTable.Key
-                                // 外键字段: mapping.ForeignConfig.ForeignKeyField.Key
-                                // 目标字段: mapping.SystemField.Value
-                                string foreignKeySourceValue = "";
-                                string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
-                                // DisplayName = 显示名称
-                                string sourceColumnDisplay = mapping.ForeignConfig?.ForeignKeySourceColumn?.Value ?? sourceColumn;
-
-                                if (!string.IsNullOrEmpty(sourceColumn) &&
-                                    !sourceColumn.StartsWith("[") &&
-                                    sourceData.Columns.Contains(sourceColumn))
-                                {
-                                    foreignKeySourceValue = sourceRow[sourceColumn]?.ToString() ?? "";
-
-                                    // 将外键来源列的值复制到结果表中
-                                    // 这样在后续导入时，可以从解析后的数据中获取参考值
-                                    if (result.Columns.Contains(sourceColumn))
-                                    {
-                                        targetRow[sourceColumn] = foreignKeySourceValue;
-                                    }
-                                }
-
-                                if (!string.IsNullOrEmpty(foreignKeySourceValue))
-                                {
-                                    targetRow[mapping.SystemField?.Key] = $"[通过关联外键:{sourceColumnDisplay}:{foreignKeySourceValue}->找{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
-                                }
-                                else
-                                {
-                                    targetRow[mapping.SystemField?.Key] = $"[外键关联:{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
-                                }
-                                break;
-
-                            case DataSourceType.SelfReference:
-                                // 【自身字段引用】通过已导入的数据获取值
-                                // 用于树形结构等自引用场景（如父类ID引用ID字段）
-                                targetRow[mapping.SystemField?.Value] = $"[自身引用:{mapping.SelfReferenceField?.Value}]";
-                                break;
-
-                            case DataSourceType.FieldCopy:
-                                // 【字段复制】复制同一记录中另一个字段的值
-                                // 源字段: mapping.CopyFromField.Key
-                                // 目标字段: mapping.SystemField.Value
-                                if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
-                                {
-                                    // 获取被复制字段的映射配置
-                                    var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField?.Key);
-
-                                    if (copyFromMapping != null)
-                                    {
-                                        // 优先从已处理的 targetRow 中读取（如果该字段已被处理）
-                                        if (targetRow.Table.Columns.Contains(copyFromMapping.SystemField?.Value) &&
-                                            targetRow[copyFromMapping.SystemField?.Value] != DBNull.Value &&
-                                            !string.IsNullOrEmpty(targetRow[copyFromMapping.SystemField?.Value]?.ToString()))
-                                        {
-                                            object copiedValue = targetRow[copyFromMapping.SystemField?.Value];
-                                            targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
-                                        }
-                                        // 如果 targetRow 中还没有该值，尝试从 sourceRow 的 Excel 列中读取
-                                        else if (!string.IsNullOrEmpty(copyFromMapping.ExcelColumn) &&
-                                                sourceData.Columns.Contains(copyFromMapping.ExcelColumn))
-                                        {
-                                            object copiedValue = sourceRow[copyFromMapping.ExcelColumn];
-                                            targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
-                                        }
-                                        else
-                                        {
-                                            targetRow[mapping.SystemField?.Value] = "[字段复制:源数据为空]";
-                                        }
-                                    }
-                                    else
-                                    {
-                                        targetRow[mapping.SystemField?.Value] = "[字段复制:找不到源字段]";
-                                    }
-                                }
-                                else
-                                {
-                                    targetRow[mapping.SystemField?.Value] = "[字段复制:未设置]";
-                                }
-                                break;
-
-                            case DataSourceType.ColumnConcat:
-                                // 【列拼接】将Excel中的多个列值拼接后赋值给目标字段
-                                // 源列列表: mapping.ConcatConfig.SourceColumns
-                                // 分隔符: mapping.ConcatConfig.Separator
-                                // 目标字段: mapping.SystemField.Value
-                                if (mapping.ConcatConfig != null &&
-                                    mapping.ConcatConfig.SourceColumns != null &&
-                                    mapping.ConcatConfig.SourceColumns.Count >= 2)
-                                {
-                                    var concatValues = new List<string>();
-
-                                    foreach (var sourceCol in mapping.ConcatConfig.SourceColumns)
-                                    {
-                                        if (sourceData.Columns.Contains(sourceCol))
-                                        {
-                                            object cellValue = sourceRow[sourceCol];
-                                            string valueStr = cellValue?.ToString() ?? "";
-
-                                            // 去除前后空格
-                                            if (mapping.ConcatConfig.TrimWhitespace)
-                                            {
-                                                valueStr = valueStr.Trim();
-                                            }
-
-                                            // 如果配置了忽略空值，跳过空列
-                                            if (mapping.ConcatConfig.IgnoreEmptyColumns &&
-                                                string.IsNullOrEmpty(valueStr))
-                                            {
-                                                continue;
-                                            }
-
-                                            concatValues.Add(valueStr);
-                                        }
-                                        else
-                                        {
-                                            // 列不存在时，根据配置决定是否继续
-                                            if (!mapping.ConcatConfig.IgnoreEmptyColumns)
-                                            {
-                                                concatValues.Add("");
-                                            }
-                                        }
-                                    }
-
-                                    // 拼接所有值
-                                    string concatenatedValue = string.Join(
-                                        mapping.ConcatConfig.Separator ?? "",
-                                        concatValues);
-
-                                    targetRow[mapping.SystemField?.Value] = concatenatedValue;
-                                }
-                                else
-                                {
-                                    targetRow[mapping.SystemField?.Value] = "[列拼接:配置无效]";
-                                }
-                                break;
-                        }
-                    }
-
-                    result.Rows.Add(targetRow);
-                }
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"应用列映射失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return result;
-            }
-        }
 
         /// <summary>
         /// Sheet选择改变事件
@@ -1943,13 +1657,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 MainForm.Instance.ShowStatusText("正在预处理数据...");
-                // 【修改】不再禁用按钮，允许用户多次操作
-                // kbtnGeneratePreview.Enabled = false;
 
-                // 1. 预加载所有外键数据到缓存
-                PreloadForeignKeyData();
-
-                // 2. 使用DynamicImporter的预处理功能（避免UI层重复实现）
+                // 使用DynamicImporter的预处理功能（外键预加载已在内部处理）
                 _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService);
                 var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
                 
@@ -2124,44 +1833,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // kbtnDynamicImport.Enabled = true;
                 // kbtnDynamicBrowse.Enabled = true;
                 // kbtnDynamicMap.Enabled = true;
-            }
-        }
-
-        /// <summary>
-        /// 预加载外键数据
-        /// 在导入前批量查询所有关联表数据，缓存起来用于外键服务类和验证服务类
-        /// 使用共享的ForeignKeyService实例，确保缓存复用
-        /// </summary>
-        private void PreloadForeignKeyData()
-        {
-            try
-            {
-                if (_currentConfig == null || _currentConfig.ColumnMappings == null)
-                {
-                    return;
-                }
-
-                // 筛选出所有外键关联的映射
-                var foreignKeyMappings = _currentConfig.ColumnMappings
-                    .Where(m => m.DataSourceType == DataSourceType.ForeignKey)
-                    .ToList();
-
-                if (!foreignKeyMappings.Any())
-                {
-                    return;
-                }
-
-                // 使用共享的ForeignKeyService实例预加载外键数据
-                // 确保验证和导入流程使用同一个缓存
-                _foreignKeyService.PreloadForeignKeyData(_currentConfig.ColumnMappings);
-
-                // 记录预加载成功的信息
-                MainForm.Instance.ShowStatusText($"成功预加载 {foreignKeyMappings.Count} 个外键关联表的数据");
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.ShowStatusText($"预加载外键数据失败: {ex.Message}");
-                // 记录错误但不阻止导入
             }
         }
 

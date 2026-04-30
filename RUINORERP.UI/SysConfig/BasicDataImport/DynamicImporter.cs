@@ -107,12 +107,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="db">SqlSugar数据库客户端</param>
         /// <param name="unitOfWorkManage">统一事务管理器（推荐）</param>
         /// <param name="foreignKeyService">外键服务（可选，默认创建新实例）</param>
-        public DynamicImporter(ISqlSugarClient db, IUnitOfWorkManage unitOfWorkManage = null, IForeignKeyService foreignKeyService = null)
+        /// <param name="imageOutputDirectory">图片输出目录（可选）</param>
+        public DynamicImporter(ISqlSugarClient db, IUnitOfWorkManage unitOfWorkManage = null, IForeignKeyService foreignKeyService = null, string imageOutputDirectory = null)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _unitOfWorkManage = unitOfWorkManage;  // ✅ 支持传入事务管理器
             _foreignKeyService = foreignKeyService ?? new ForeignKeyService(db);
             _excelParser = new DynamicExcelParser();
+            _imageOutputDirectory = imageOutputDirectory;
         }
 
         /// <summary>
@@ -1776,14 +1778,289 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 预加载外键数据到缓存
+        /// 使用共享的 ForeignKeyService 实例，确保验证和导入流程使用同一个缓存
         /// </summary>
         private void PreloadForeignKeyCache(ColumnMappingCollection mappings)
         {
-            var foreignKeyMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ForeignKey).ToList();
-            foreach (var mapping in foreignKeyMappings)
+            if (mappings == null || mappings.Count == 0)
+                return;
+
+            // 使用 ForeignKeyService 批量预加载所有外键数据
+            _foreignKeyService.PreloadForeignKeyData(mappings);
+        }
+
+        /// <summary>
+        /// 应用列映射配置转换数据（统一处理方法）
+        /// 将Excel列名转换为数据库字段名，并处理各种数据源类型
+        /// </summary>
+        /// <param name="sourceData">源数据表格（从Excel解析得到）</param>
+        /// <param name="mappings">列映射配置集合</param>
+        /// <param name="entityType">目标实体类型（用于枚举转换）</param>
+        /// <returns>转换后的数据表格（数据库字段名格式）</returns>
+        public DataTable ApplyColumnMapping(DataTable sourceData, ColumnMappingCollection mappings, Type entityType = null)
+        {
+            if (sourceData == null || sourceData.Rows.Count == 0 || mappings == null || mappings.Count == 0)
             {
-                // TODO: 实现外键缓存预加载逻辑
-                // _foreignKeyService.PreloadCache(mapping.ForeignConfig);
+                return new DataTable();
+            }
+
+            // 创建结果表
+            DataTable result = new DataTable();
+
+            try
+            {
+                // 用于跟踪已添加的列，避免重复添加
+                HashSet<string> addedColumns = new HashSet<string>();
+
+                // 步骤1：创建结果表结构（使用SystemField.Value作为列名）
+                foreach (var mapping in mappings)
+                {
+                    string columnName = mapping.SystemField?.Value;
+
+                    // 避免重复添加列
+                    if (!string.IsNullOrEmpty(columnName) && !addedColumns.Contains(columnName))
+                    {
+                        result.Columns.Add(columnName, typeof(string));
+                        addedColumns.Add(columnName);
+                    }
+
+                    // 对于外键关联类型，需要额外添加外键来源列到解析结果中
+                    if (mapping.DataSourceType == DataSourceType.ForeignKey &&
+                        mapping.ForeignConfig != null &&
+                        mapping.ForeignConfig.ForeignKeySourceColumn != null &&
+                        !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.Key))
+                    {
+                        string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.Key;
+
+                        // 检查源数据中是否包含该列
+                        if (sourceData.Columns.Contains(sourceColumnName) && !addedColumns.Contains(sourceColumnName))
+                        {
+                            result.Columns.Add(sourceColumnName, typeof(string));
+                            addedColumns.Add(sourceColumnName);
+                        }
+                    }
+                }
+
+                // 步骤2：转换数据行
+                foreach (DataRow sourceRow in sourceData.Rows)
+                {
+                    DataRow targetRow = result.NewRow();
+
+                    foreach (var mapping in mappings)
+                    {
+                        switch (mapping.DataSourceType)
+                        {
+                            case DataSourceType.Excel:
+                                // Excel数据源：直接从Excel列读取数据
+                                string excelColumnName = mapping.SystemField?.Value;
+                                if (sourceData.Columns.Contains(excelColumnName))
+                                {
+                                    object cellValue = sourceRow[excelColumnName];
+                                    bool isEmpty = cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString());
+
+                                    if (mapping.IgnoreEmptyValue && isEmpty)
+                                    {
+                                        targetRow[mapping.SystemField?.Value] = DBNull.Value;
+                                    }
+                                    else
+                                    {
+                                        // 如果是图片列，处理图片
+                                        if (mapping.IsImageColumn && _imageOutputDirectory != null)
+                                        {
+                                            string imagePath = cellValue?.ToString();
+                                            if (!string.IsNullOrEmpty(imagePath) && File.Exists(imagePath))
+                                            {
+                                                try
+                                                {
+                                                    string productCode = sourceRow["ProductCode"]?.ToString() ?? "IMG";
+                                                    string fileName = $"{productCode}_{Path.GetFileName(imagePath)}";
+                                                    string savedPath = Path.Combine(_imageOutputDirectory, fileName);
+                                                    
+                                                    // 复制图片到输出目录
+                                                    File.Copy(imagePath, savedPath, true);
+                                                    targetRow[mapping.SystemField?.Value] = savedPath;
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    System.Diagnostics.Debug.WriteLine($"图片处理失败: {ex.Message}");
+                                                    targetRow[mapping.SystemField?.Value] = imagePath;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                targetRow[mapping.SystemField?.Value] = imagePath ?? "";
+                                            }
+                                        }
+                                        else
+                                        {
+                                            targetRow[mapping.SystemField?.Value] = cellValue?.ToString() ?? "";
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    targetRow[mapping.SystemField?.Value] = "";
+                                }
+                                break;
+
+                            case DataSourceType.SystemGenerated:
+                                // 系统生成的值：暂时留空或使用特殊标记
+                                targetRow[mapping.SystemField?.Value] = "[系统生成]";
+                                break;
+
+                            case DataSourceType.DefaultValue:
+                                // 默认值映射：使用配置的默认值
+                                string defaultValue = mapping.DefaultValue ?? "";
+                                // 检查是否需要转换为枚举值
+                                if (entityType != null)
+                                {
+                                    Type enumType = EntityImportHelper.GetPredefinedEnumType(entityType.Name, mapping.SystemField?.Key ?? "");
+                                    if (enumType != null && !string.IsNullOrEmpty(defaultValue))
+                                    {
+                                        try
+                                        {
+                                            defaultValue = Convert.ChangeType(Enum.Parse(enumType, defaultValue), typeof(int)).ToString();
+                                        }
+                                        catch
+                                        {
+                                            // 解析失败保持原值
+                                        }
+                                    }
+                                }
+                                targetRow[mapping.SystemField?.Value] = defaultValue;
+                                break;
+
+                            case DataSourceType.ForeignKey:
+                                // 外键关联：保留源值用于后续处理
+                                string foreignKeySourceValue = "";
+                                string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
+
+                                if (!string.IsNullOrEmpty(sourceColumn) &&
+                                    !sourceColumn.StartsWith("[") &&
+                                    sourceData.Columns.Contains(sourceColumn))
+                                {
+                                    foreignKeySourceValue = sourceRow[sourceColumn]?.ToString() ?? "";
+
+                                    // 将外键来源列的值复制到结果表中
+                                    if (result.Columns.Contains(sourceColumn))
+                                    {
+                                        targetRow[sourceColumn] = foreignKeySourceValue;
+                                    }
+                                }
+
+                                if (!string.IsNullOrEmpty(foreignKeySourceValue))
+                                {
+                                    string sourceColumnDisplay = mapping.ForeignConfig?.ForeignKeySourceColumn?.Value ?? sourceColumn;
+                                    targetRow[mapping.SystemField?.Key] = $"[通过关联外键:{sourceColumnDisplay}:{foreignKeySourceValue}->找{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
+                                }
+                                else
+                                {
+                                    targetRow[mapping.SystemField?.Key] = $"[外键关联:{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
+                                }
+                                break;
+
+                            case DataSourceType.SelfReference:
+                                // 自身字段引用
+                                targetRow[mapping.SystemField?.Value] = $"[自身引用:{mapping.SelfReferenceField?.Value}]";
+                                break;
+
+                            case DataSourceType.FieldCopy:
+                                // 字段复制：复制同一记录中另一个字段的值
+                                if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
+                                {
+                                    var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField?.Key);
+
+                                    if (copyFromMapping != null)
+                                    {
+                                        if (targetRow.Table.Columns.Contains(copyFromMapping.SystemField?.Value) &&
+                                            targetRow[copyFromMapping.SystemField?.Value] != DBNull.Value &&
+                                            !string.IsNullOrEmpty(targetRow[copyFromMapping.SystemField?.Value]?.ToString()))
+                                        {
+                                            object copiedValue = targetRow[copyFromMapping.SystemField?.Value];
+                                            targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
+                                        }
+                                        else if (!string.IsNullOrEmpty(copyFromMapping.ExcelColumn) &&
+                                                sourceData.Columns.Contains(copyFromMapping.ExcelColumn))
+                                        {
+                                            object copiedValue = sourceRow[copyFromMapping.ExcelColumn];
+                                            targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
+                                        }
+                                        else
+                                        {
+                                            targetRow[mapping.SystemField?.Value] = "[字段复制:源数据为空]";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        targetRow[mapping.SystemField?.Value] = "[字段复制:找不到源字段]";
+                                    }
+                                }
+                                else
+                                {
+                                    targetRow[mapping.SystemField?.Value] = "[字段复制:未设置]";
+                                }
+                                break;
+
+                            case DataSourceType.ColumnConcat:
+                                // 列拼接：将Excel中的多个列值拼接后赋值给目标字段
+                                if (mapping.ConcatConfig != null &&
+                                    mapping.ConcatConfig.SourceColumns != null &&
+                                    mapping.ConcatConfig.SourceColumns.Count >= 2)
+                                {
+                                    var concatValues = new List<string>();
+
+                                    foreach (var sourceCol in mapping.ConcatConfig.SourceColumns)
+                                    {
+                                        if (sourceData.Columns.Contains(sourceCol))
+                                        {
+                                            object cellValue = sourceRow[sourceCol];
+                                            string valueStr = cellValue?.ToString() ?? "";
+
+                                            if (mapping.ConcatConfig.TrimWhitespace)
+                                            {
+                                                valueStr = valueStr.Trim();
+                                            }
+
+                                            if (mapping.ConcatConfig.IgnoreEmptyColumns &&
+                                                string.IsNullOrEmpty(valueStr))
+                                            {
+                                                continue;
+                                            }
+
+                                            concatValues.Add(valueStr);
+                                        }
+                                        else
+                                        {
+                                            if (!mapping.ConcatConfig.IgnoreEmptyColumns)
+                                            {
+                                                concatValues.Add("");
+                                            }
+                                        }
+                                    }
+
+                                    string concatenatedValue = string.Join(
+                                        mapping.ConcatConfig.Separator ?? "",
+                                        concatValues);
+
+                                    targetRow[mapping.SystemField?.Value] = concatenatedValue;
+                                }
+                                else
+                                {
+                                    targetRow[mapping.SystemField?.Value] = "[列拼接:配置无效]";
+                                }
+                                break;
+                        }
+                    }
+
+                    result.Rows.Add(targetRow);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"应用列映射失败: {ex.Message}");
+                return result;
             }
         }
 

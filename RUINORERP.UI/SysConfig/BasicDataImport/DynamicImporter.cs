@@ -100,7 +100,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             public Dictionary<string, object> Data { get; set; }
         }
 
-     
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -194,14 +194,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (!string.IsNullOrEmpty(columnName))
                 {
                     // 根据指定的列名查找映射
-                    targetMapping = mappings.FirstOrDefault(m => 
+                    targetMapping = mappings.FirstOrDefault(m =>
                         m.ExcelColumn?.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true ||
                         m.SystemField?.Key?.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true);
                 }
                 else
                 {
                     // 自动查找唯一值列
-                    targetMapping = mappings.FirstOrDefault(m =>  m.IsUniqueValue);
+                    targetMapping = mappings.FirstOrDefault(m => m.IsUniqueValue);
                 }
 
                 if (targetMapping == null)
@@ -260,7 +260,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             return result;
         }
 
-        
+
         /// <summary>
         /// 动态导入数据（异步）
         /// ✅ 优化：支持已预处理数据的直接导入，避免重复处理
@@ -353,7 +353,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             detailedError += $"\n内部异常: {batchEx.InnerException.Message}";
                         }
                         detailedError += $"\n堆栈跟踪: {batchEx.StackTrace}";
-                        
+
                         throw new Exception(detailedError, batchEx);
                     }
                 }
@@ -384,10 +384,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="importType">导入类型标识</param>
         /// <returns>导入结果</returns>
         public async System.Threading.Tasks.Task<ImportResult> ImportFromExcelAsync(
-            string filePath, 
-            ColumnMappingCollection mappings, 
-            Type entityType, 
-            int sheetIndex = 0, 
+            string filePath,
+            ColumnMappingCollection mappings,
+            Type entityType,
+            int sheetIndex = 0,
             int headerRowIndex = 0,
             string importType = null)
         {
@@ -438,8 +438,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 处理图片导入
         /// </summary>
         private async System.Threading.Tasks.Task ProcessImageImportAsync(
-            ExcelParseResult parseResult, 
-            ColumnMappingCollection mappings, 
+            ExcelParseResult parseResult,
+            ColumnMappingCollection mappings,
             ImportResult importResult,
             Type entityType)
         {
@@ -492,7 +492,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                             // 根据存储类型处理图片数据
                             object valueToStore = GetImageStorageValue(savedPath, imageInfo, config);
-                            
+
                             // 更新数据库中的图片字段值
                             await UpdateEntityImageFieldAsync(entityType, row, mapping, valueToStore, mappings);
                         }
@@ -585,22 +585,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 // 【P0修复】使用更严格的SQL注入防护 - 白名单验证
                 string tableName = entityType.Name;
-                
+
                 // 1. 首先检查是否为合法的SQL标识符
                 if (!IsValidSqlIdentifier(tableName) || !IsValidSqlIdentifier(imageField) || !IsValidSqlIdentifier(uniqueField))
                 {
                     throw new ArgumentException("无效的表名或字段名，可能包含非法字符");
                 }
-                
+
                 // 2. 【P0修复】额外验证：确保表名和字段名来自已知的实体元数据（白名单机制）
                 if (!IsKnownEntityField(entityType, imageField) || !IsKnownEntityField(entityType, uniqueField))
                 {
                     throw new ArgumentException("字段名不在实体的已知字段列表中，拒绝执行");
                 }
-                
+
                 // 3. 使用参数化查询（已经实现，保持不变）
                 string sql = $"UPDATE {tableName} SET {imageField} = @value WHERE {uniqueField} = @uniqueValue";
-                
+
                 await _db.Ado.ExecuteCommandAsync(sql, new { value, uniqueValue });
             }
             catch (Exception ex)
@@ -618,7 +618,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             if (string.IsNullOrEmpty(identifier))
                 return false;
-            
+
             // 【P0修复】更严格的正则表达式：
             // 1. 只能包含字母、数字、下划线
             // 2. 不能以数字开头
@@ -626,17 +626,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 4. 不能包含连续的下划线
             if (identifier.Length < 1 || identifier.Length > 128)
                 return false;
-                
+
             if (!System.Text.RegularExpressions.Regex.IsMatch(identifier, @"^[a-zA-Z_][a-zA-Z0-9_]*$"))
                 return false;
-                
+
             // 检查是否包含连续下划线
             if (identifier.Contains("__"))
                 return false;
-                
+
             return true;
         }
-        
+
         /// <summary>
         /// 【P0修复】验证字段是否属于实体的已知字段（白名单机制）
         /// </summary>
@@ -644,11 +644,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             if (entityType == null || string.IsNullOrEmpty(fieldName))
                 return false;
-            
+
             try
             {
                 // 通过反射检查实体是否有该属性
-                var property = entityType.GetProperty(fieldName, 
+                var property = entityType.GetProperty(fieldName,
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                 return property != null;
             }
@@ -827,10 +827,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             if (isPreprocessed && dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
                             {
                                 cellValue = row[mapping.SystemField?.Value];
-                                
+
                                 // 如果值为占位符或错误标记，跳过（将由BatchPreProcessEntitiesAsync处理）
                                 string strValue = cellValue?.ToString();
-                                if (string.IsNullOrEmpty(strValue) || 
+                                if (string.IsNullOrEmpty(strValue) ||
                                     strValue.StartsWith("[") && strValue.EndsWith("]"))
                                 {
                                     cellValue = null; // 让后续预处理逻辑处理
@@ -862,7 +862,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             {
                                 // 从预处理的DataTable中直接读取外键ID
                                 cellValue = row[mapping.SystemField?.Value];
-                                
+
                                 // 如果值为空或错误标记，尝试重新查询
                                 string strValue = cellValue?.ToString();
                                 if (string.IsNullOrEmpty(strValue) || strValue.StartsWith("["))
@@ -1322,7 +1322,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // ✅ 检查是否启用数据库级别去重（按业务字段跳过已存在记录）
                 var businessKeys = GetBusinessKeysForTable(typeof(T));
-                
+
                 if (businessKeys != null && businessKeys.Count > 0)
                 {
                     // 根据存在性策略处理记录
@@ -1340,17 +1340,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // ✅ 使用 Storageable 进行批量插入和更新（Upsert）
                 // 参考 SqlSugar 文档：https://www.donet5.com/home/Doc?typeId=1193
                 var storage = await dbClient.Storageable<T>(typedList).ToStorageAsync();
-                
+
                 // ✅ 批量插入新记录，自动生成雪花ID
                 // ExecuteReturnPkList<long>() 支持批量返回主键（包括雪花ID），性能优于逐个生成
                 var insertIds = await storage.AsInsertable.ExecuteReturnPkListAsync<long>();
-                
+
                 // ✅ 批量更新已有记录（如果配置了业务键去重策略为 Update）
                 var updateCount = await storage.AsUpdateable.ExecuteCommandAsync();
 
                 result.InsertedCount = insertIds.Count;
                 result.UpdatedCount = updateCount;
-                
+
                 System.Diagnostics.Debug.WriteLine($"批量导入完成：新增 {insertIds.Count} 条（已分配雪花ID），更新 {updateCount} 条");
             }
             catch (Exception ex)
@@ -1480,17 +1480,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 case ExistenceStrategy.Skip:
                     return await FilterExistingRecordsAsync(dbClient, entities, businessKeys);
-                
+
                 case ExistenceStrategy.Update:
                     // TODO: 实现更新策略 - 标记需要更新的记录
                     System.Diagnostics.Debug.WriteLine("更新策略暂未实现，使用跳过策略");
                     return await FilterExistingRecordsAsync(dbClient, entities, businessKeys);
-                
+
                 case ExistenceStrategy.Error:
                     // TODO: 实现报错策略 - 检测冲突并抛出异常
                     await CheckForConflictsAsync(dbClient, entities, businessKeys);
                     return entities; // 如果没有冲突，返回全部
-                
+
                 default:
                     return await FilterExistingRecordsAsync(dbClient, entities, businessKeys);
             }
@@ -1719,21 +1719,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 创建结果表结构
             var result = rawData.Clone();
-            
+
             // 预加载外键数据到缓存（性能优化）
-            PreloadForeignKeyCache(mappings);
+            // 使用 ForeignKeyService 批量预加载所有外键数据
+            _foreignKeyService.PreloadForeignKeyData(mappings);
 
             // 处理每一行数据
             foreach (DataRow sourceRow in rawData.Rows)
             {
                 DataRow targetRow = result.NewRow();
-                
+
                 // 复制所有原始数据
                 foreach (DataColumn col in rawData.Columns)
                 {
                     targetRow[col.ColumnName] = sourceRow[col.ColumnName];
                 }
-                
+
                 // 处理需要预处理的字段
                 foreach (var mapping in mappings)
                 {
@@ -1745,49 +1746,37 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     {
                         case DataSourceType.ForeignKey:
                             // 外键关联：查询数据库获取真实ID
-                            await ProcessForeignKeyFieldAsync(sourceRow, targetRow, mapping);
+                             ProcessForeignKeyFieldAsync(sourceRow, targetRow, mapping);
                             break;
-                            
+
                         case DataSourceType.SystemGenerated:
                             // 系统生成字段：生成真实值
                             ProcessSystemGeneratedField(targetRow, mapping);
                             break;
-                            
+
                         case DataSourceType.DefaultValue:
                             // 默认值：应用配置的默认值
                             ProcessDefaultValueField(targetRow, mapping);
                             break;
-                            
+
                         case DataSourceType.FieldCopy:
                             // 字段复制：复制另一个字段的值
                             ProcessFieldCopyField(sourceRow, targetRow, mapping);
                             break;
-                            
+
                         case DataSourceType.ColumnConcat:
                             // 列拼接：拼接多个列的值
                             ProcessColumnConcatField(sourceRow, targetRow, mapping);
                             break;
                     }
                 }
-                
+
                 result.Rows.Add(targetRow);
             }
 
             return await Task.FromResult(result);
         }
 
-        /// <summary>
-        /// 预加载外键数据到缓存
-        /// 使用共享的 ForeignKeyService 实例，确保验证和导入流程使用同一个缓存
-        /// </summary>
-        private void PreloadForeignKeyCache(ColumnMappingCollection mappings)
-        {
-            if (mappings == null || mappings.Count == 0)
-                return;
-
-            // 使用 ForeignKeyService 批量预加载所有外键数据
-            _foreignKeyService.PreloadForeignKeyData(mappings);
-        }
 
         /// <summary>
         /// 应用列映射配置转换数据（统一处理方法）
@@ -1875,7 +1864,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                                     string productCode = sourceRow["ProductCode"]?.ToString() ?? "IMG";
                                                     string fileName = $"{productCode}_{Path.GetFileName(imagePath)}";
                                                     string savedPath = Path.Combine(_imageOutputDirectory, fileName);
-                                                    
+
                                                     // 复制图片到输出目录
                                                     File.Copy(imagePath, savedPath, true);
                                                     targetRow[mapping.SystemField?.Value] = savedPath;
@@ -2067,7 +2056,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 处理外键字段
         /// </summary>
-        private async Task ProcessForeignKeyFieldAsync(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
+        private void ProcessForeignKeyFieldAsync(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
         {
             string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
             string targetTable = mapping.ForeignConfig?.ForeignKeyTable?.Value;
@@ -2153,7 +2142,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             string fieldName = mapping.SystemField?.Value;
             string copyFromField = mapping.CopyFromField?.Key;
-            
+
             if (string.IsNullOrEmpty(fieldName) || string.IsNullOrEmpty(copyFromField))
                 return;
 
@@ -2180,7 +2169,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     string value = sourceRow[sourceCol]?.ToString() ?? "";
                     if (mapping.ConcatConfig.TrimWhitespace)
                         value = value.Trim();
-                    
+
                     if (!mapping.ConcatConfig.IgnoreEmptyColumns || !string.IsNullOrEmpty(value))
                     {
                         values.Add(value);

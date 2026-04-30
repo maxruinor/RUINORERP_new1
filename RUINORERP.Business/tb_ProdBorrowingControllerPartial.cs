@@ -1,4 +1,4 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -63,7 +63,7 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
 
                 // 更新单据状态为确认
                 entity.DataStatus = (int)DataStatus.确认;
@@ -74,7 +74,7 @@ namespace RUINORERP.Business
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                                               .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                               .ExecuteCommandHasChangeAsync();
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
 
                 rsms.ReturnObject = entity as T;
                 rsms.Succeeded = true;
@@ -82,7 +82,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rsms.ErrorMsg = "审核事务回滚=>" + ex.Message;
                 return rsms;
@@ -125,7 +125,7 @@ namespace RUINORERP.Business
                 #endregion
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 // 创建库存流水记录列表
@@ -142,7 +142,7 @@ namespace RUINORERP.Business
                         if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Qty) < 0)
                         {
                             rsms.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                            _unitOfWorkManage.RollbackTran();
+                            await _unitOfWorkManage.RollbackTranAsync();
                             rsms.Succeeded = false;
                             return rsms;
                         }
@@ -153,7 +153,7 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         throw new Exception($"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员");
                     }
 
@@ -206,7 +206,7 @@ namespace RUINORERP.Business
                     .ExecuteCommandHasChangeAsync();
 
 
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
 
                 rsms.ReturnObject = entity as T;
                 rsms.Succeeded = true;
@@ -214,7 +214,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rsms.ErrorMsg = "确认执行事务回滚=>" + ex.Message;
                 return rsms;
@@ -260,7 +260,7 @@ namespace RUINORERP.Business
                 }
         
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
         
                 // 更新单据状态为新建（仅状态变更）
                 entity.DataStatus = (int)DataStatus.新建;
@@ -272,7 +272,7 @@ namespace RUINORERP.Business
                                          .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                          .ExecuteCommandHasChangeAsync();
         
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
         
                 rsms.ReturnObject = entity as T;
                 rsms.Succeeded = true;
@@ -280,7 +280,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rsms.ErrorMsg = "反审核事务回滚=>" + ex.Message;
                 return rsms;
@@ -340,7 +340,7 @@ namespace RUINORERP.Business
                 #endregion
         
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                await _unitOfWorkManage.BeginTranAsync();
         
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
         
@@ -356,7 +356,7 @@ namespace RUINORERP.Business
                     invDict2.TryGetValue(key, out var inv);
                     if (inv == null)
                     {
-                        _unitOfWorkManage.RollbackTran();
+                        await _unitOfWorkManage.RollbackTranAsync();
                         rsms.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法借出。请使用【期初盘点】【采购入库】【生产缴库】的方式进行盘点后，再操作。";
                         rsms.Succeeded = false;
                         return rsms;
@@ -409,7 +409,7 @@ namespace RUINORERP.Business
                     .UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions })
                     .ExecuteCommandHasChangeAsync();
         
-                _unitOfWorkManage.CommitTran();
+                await _unitOfWorkManage.CommitTranAsync();
         
                 rsms.ReturnObject = entity as T;
                 rsms.Succeeded = true;
@@ -417,7 +417,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                await _unitOfWorkManage.RollbackTranAsync();
                 _logger.Error(ex);
                 rsms.ErrorMsg = "反确认执行事务回滚=>" + ex.Message;
                 return rsms;

@@ -45,10 +45,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         public DataTable ExcelData { get; set; }
 
-        /// <summary>
-        /// 列映射集合
-        /// </summary>
-        public List<ColumnMapping> ColumnMappings { get; set; }
+
 
         /// <summary>
         /// 是否为编辑模式
@@ -81,14 +78,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public frmColumnMappingConfig()
         {
             InitializeComponent();
-            
+
             // 设计时跳过初始化逻辑
             if (DesignMode)
             {
                 return;
             }
-            
-            ColumnMappings = new List<ColumnMapping>();
+
             ImportConfig = new ImportConfiguration();
             _columnMappingManager = new ColumnMappingManager();
         }
@@ -129,7 +125,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 : systemFieldDisplay;
 
             // 检查是否已存在该系统字段的映射
-            var existingMapping = ColumnMappings.GetMappingBySystemField(systemField);
+            var existingMapping = ImportConfig.ColumnMappings.GetMappingBySystemField(systemField);
             if (existingMapping != null)
             {
                 MessageBox.Show($"系统字段 \"{systemField}\" 已被映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -142,7 +138,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 如果选择了Excel列，检查是否已被映射
             if (!string.IsNullOrEmpty(excelColumn))
             {
-                if (ColumnMappings.GetMappingByExcelColumn(excelColumn) != null)
+                if (ImportConfig.ColumnMappings.GetMappingByExcelColumn(excelColumn) != null)
                 {
                     MessageBox.Show($"Excel列 \"{excelColumn}\" 已被映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
@@ -163,7 +159,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 验证:如果两边都选择了,必须都选择
             bool hasExcelColumn = !string.IsNullOrEmpty(excelColumn);
             bool hasSystemField = !string.IsNullOrEmpty(systemField);
-        
+
             if (hasExcelColumn && hasSystemField)
             {
                 // 两边都选择了,创建映射
@@ -174,20 +170,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     ColumnDataSourceType = (int)DataSourceType.Excel,
                     DataSourceConfig = new ExcelConfig { ExcelColumn = excelColumn }
                 };
-        
+
                 // 先添加到集合
-                ColumnMappings.Add(mapping);
-        
+                ImportConfig.ColumnMappings.Add(mapping);
+
                 // 从两个列表中移除已选择的项
                 RemoveFromExcelColumns(excelColumn);
                 RemoveFromSystemFields(systemField);
-        
+
                 // 更新映射列表显示
                 UpdateMappingsList();
-        
+
                 // 选中新添加的映射项
                 SelectNewlyAddedMapping(mapping);
-        
+
                 // 打开属性配置对话框
                 ConfigureMappingProperty(mapping);
             }
@@ -195,40 +191,40 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 // 只选择了系统字段,Excel中没有指定列
                 // 创建新映射               
-                 var mapping = new ColumnMapping
+                var mapping = new ColumnMapping
                 {
                     OriginalExcelColumn = string.Empty,
                     SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay),
                     ColumnDataSourceType = (int)DataSourceType.DefaultValue,
                     DataSourceConfig = new DefaultValueConfig()
                 };
-        
+
                 // 先添加到集合
-                ColumnMappings.Add(mapping);
-        
+                ImportConfig.ColumnMappings.Add(mapping);
+
                 // 从系统字段列表中移除
                 RemoveFromSystemFields(systemField);
-        
+
                 // 更新映射列表显示
                 UpdateMappingsList();
-        
+
                 // 选中新添加的映射项
                 SelectNewlyAddedMapping(mapping);
-        
+
                 // 打开属性配置对话框
                 ConfigureMappingProperty(mapping);
-        
+
                 // 验证:如果用户没有修改数据来源类型,且是Excel数据源但没有Excel列,则删除
                 if (mapping.ColumnDataSourceType == (int)DataSourceType.Excel)
                 {
                     MessageBox.Show("由于没有选择Excel来源列,不能选择\"Excel数据源\"类型。请选择:默认值、系统生成、外键关联、自身字段引用、字段复制、列拼接或Excel图片。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     // 删除刚添加的映射
-                    ColumnMappings.RemoveAt(ColumnMappings.Count - 1);
+                    ImportConfig.ColumnMappings.RemoveAt(ImportConfig.ColumnMappings.Count - 1);
                     RestoreSystemField(mapping);
                     UpdateMappingsList();
                     return;
                 }
-        
+
                 // ✅ 只有当用户没有选择原始Excel列时,才根据数据来源类型设置显示文本
                 // 如果用户已经选择了Excel列,则保留原始值
                 if (!hasExcelColumn)
@@ -267,7 +263,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             break;
                     }
                 }
-                
+
                 // 更新映射列表显示(因为OriginalExcelColumn可能已更新)
                 UpdateMappingsList();
             }
@@ -327,10 +323,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 // 绑定配置名称到 ImportConfig（双向绑定）
                 BindMappingName();
-                
+
                 // 绑定去重配置到 ImportConfig（双向绑定）
                 BindDeduplicateConfig();
-                
+
                 // 绑定存在性策略到 ImportConfig（双向绑定）
                 BindExistenceConfig();
 
@@ -395,7 +391,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void ResetToNewConfig()
         {
-            ColumnMappings.Clear();
+            ImportConfig.ColumnMappings.Clear();
             ImportConfig = new ImportConfiguration();
             IsEditMode = false;
             OriginalMappingName = null;
@@ -421,7 +417,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             ImportConfig = config;
-            ColumnMappings = new List<ColumnMapping>(config.ColumnMappings ?? new List<ColumnMapping>());
+
 
             RebindAll();
 
@@ -432,16 +428,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 从列表中移除已映射的项
-            foreach (var mapping in ColumnMappings)
+            foreach (var mapping in ImportConfig.ColumnMappings)
             {
                 // 只有真正的Excel列才需要从可用列表中移除
-                if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn) && 
-                    !mapping.OriginalExcelColumn.StartsWith("[") && 
+                if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn) &&
+                    !mapping.OriginalExcelColumn.StartsWith("[") &&
                     !mapping.OriginalExcelColumn.Contains("]"))
                 {
                     RemoveFromExcelColumns(mapping.OriginalExcelColumn);
                 }
-                
+
                 // 从系统字段列表中移除
                 if (mapping.SystemField != null && !string.IsNullOrEmpty(mapping.SystemField.Key))
                 {
@@ -459,10 +455,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void BindMappingName()
         {
             DataBindingHelper.BindData4TextBox<ImportConfiguration>(
-                ImportConfig, 
-                nameof(ImportConfig.MappingName), 
-                textBoxMappingName, 
-                BindDataType4TextBox.Text, 
+                ImportConfig,
+                nameof(ImportConfig.MappingName),
+                textBoxMappingName,
+                BindDataType4TextBox.Text,
                 false);
         }
 
@@ -473,17 +469,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             // 绑定启用去重复选框
             DataBindingHelper.BindData4CheckBox<ImportConfiguration>(
-                ImportConfig, 
-                nameof(ImportConfig.EnableDeduplication), 
-                chkRemoveDuplicates, 
+                ImportConfig,
+                nameof(ImportConfig.EnableDeduplication),
+                chkRemoveDuplicates,
                 false);
 
             // 绑定去重策略ComboBox
             DataBindingHelper.BindData4CmbByEnum<ImportConfiguration>(
-                ImportConfig, 
-                nameof(ImportConfig.DeduplicateStrategy), 
-                typeof(DeduplicateStrategy), 
-                kcmbDeduplicateStrategy, 
+                ImportConfig,
+                nameof(ImportConfig.DeduplicateStrategy),
+                typeof(DeduplicateStrategy),
+                kcmbDeduplicateStrategy,
                 false);
         }
 
@@ -494,9 +490,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             // 使用 DataBindingHelper 绑定存在性策略 ComboBox
             DataBindingHelper.BindData4CmbByEnum<ImportConfiguration, ExistenceStrategyType>(
-                ImportConfig, 
-                nameof(ImportConfig.ExistenceStrategy), 
-                kcmbExistenceStrategy, 
+                ImportConfig,
+                nameof(ImportConfig.ExistenceStrategy),
+                kcmbExistenceStrategy,
                 false);
         }
 
@@ -611,10 +607,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     // 获取验证器类型名：实体名 + "Validator"
                     string validatorTypeName = TargetEntityType.Name + "Validator";
                     string fullTypeName = $"RUINORERP.Business.{validatorTypeName}";
-                    
+
                     // 使用AssemblyLoader工具类加载程序集
                     Type validatorType = AssemblyLoader.GetType("RUINORERP.Business", fullTypeName);
-                    
+
                     if (validatorType != null && MainForm.Instance?.AppContext != null)
                     {
                         // 从依赖注入容器获取验证器实例
@@ -891,7 +887,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void kbtnAddMapping_Click(object sender, EventArgs e)
         {
             // 验证：必须选择系统字段
-        if (listBoxSystemFields.SelectedItem == null)
+            if (listBoxSystemFields.SelectedItem == null)
             {
                 MessageBox.Show("必须选择系统字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -907,7 +903,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 获取实际显示字段名
             string systemField = FieldNameList.FirstOrDefault(c => c.Value == systemFieldDisplay).Key;
             // 检查是否已存在该系统字段的映射
-            if (ColumnMappings.GetMappingBySystemField(systemField) != null)
+            if (ImportConfig.ColumnMappings.GetMappingBySystemField(systemField) != null)
             {
                 MessageBox.Show($"系统字段 \"{systemField}\" 已被映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -919,7 +915,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 如果选择了Excel列，检查是否已被映射
             if (!string.IsNullOrEmpty(excelColumn))
             {
-                if (ColumnMappings.GetMappingByExcelColumn(excelColumn) != null)
+                if (ImportConfig.ColumnMappings.GetMappingByExcelColumn(excelColumn) != null)
                 {
                     MessageBox.Show($"Excel列 \"{excelColumn}\" 已被映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
@@ -934,15 +930,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 存储匹配结果的置信度信息（用于颜色标识）
         /// </summary>
         private Dictionary<string, double> _matchConfidenceScores = new Dictionary<string, double>();
-        
+
         /// <summary>
         /// 更新映射列表显示
         /// </summary>
         private void UpdateMappingsList()
         {
             listBoxMappings.Items.Clear();
-            
-            foreach (var mapping in ColumnMappings)
+
+            foreach (var mapping in ImportConfig.ColumnMappings)
             {
                 string displayText = $"{mapping.OriginalExcelColumn} -> {mapping.SystemField?.Value}";
                 string key = $"{mapping.OriginalExcelColumn}->{mapping.SystemField?.Key}";
@@ -979,7 +975,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         var copyConfig = mapping.DataSourceConfig as FieldCopyConfig;
                         flags.Add($"复制:{copyConfig?.SourceFieldDisplayName}");
                         break;
-                    case (int)  DataSourceType.ColumnConcat:
+                    case (int)DataSourceType.ColumnConcat:
                         var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
                         string concatCols = string.Join("+", concatConfig?.SourceColumns ?? new List<string>());
                         flags.Add($"列拼接:{concatCols}");
@@ -996,7 +992,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 listBoxMappings.Items.Add(displayText);
             }
         }
-        
+
         /// <summary>
         /// 设置匹配置信度分数（供智能匹配后调用）
         /// </summary>
@@ -1017,14 +1013,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             int selectedIndex = listBoxMappings.SelectedIndex;
-            var mapping = ColumnMappings[selectedIndex];
+            var mapping = ImportConfig.ColumnMappings[selectedIndex];
 
             // 删除前，将Excel列和系统字段恢复到对应的列表中
             RestoreExcelColumn(mapping);
             RestoreSystemField(mapping);
 
             // 从集合中删除
-            ColumnMappings.RemoveAt(selectedIndex);
+            ImportConfig.ColumnMappings.RemoveAt(selectedIndex);
             UpdateMappingsList();
         }
 
@@ -1077,12 +1073,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             int selectedIndex = listBoxMappings.SelectedIndex;
-            if (selectedIndex < 0 || selectedIndex >= ColumnMappings.Count)
+            if (selectedIndex < 0 || selectedIndex >= ImportConfig.ColumnMappings.Count)
             {
                 return null;
             }
 
-            return ColumnMappings[selectedIndex];
+            return ImportConfig.ColumnMappings[selectedIndex];
         }
 
         /// <summary>
@@ -1090,7 +1086,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void kbtnSaveMapping_Click(object sender, EventArgs e)
         {
-            
+
 
 
             // 验证去重配置
@@ -1098,7 +1094,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 if (kcmbDeduplicateStrategy.SelectedIndex < 0)
                 {
-                    MessageBox.Show("已启用去重功能，请选择去重策略（保留第一条记录或保留最后一条记录）", 
+                    MessageBox.Show("已启用去重功能，请选择去重策略（保留第一条记录或保留最后一条记录）",
                         "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     kcmbDeduplicateStrategy.Focus();
                     return;
@@ -1118,7 +1114,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 更新全局配置（去重配置和名称已通过双向绑定自动同步）
                 ImportConfig.EntityType = TargetEntityType?.Name;
-                ImportConfig.ColumnMappings = ColumnMappings.ToList();
+                ImportConfig.ColumnMappings = ImportConfig.ColumnMappings.ToList();
                 ImportConfig.UpdateTimestamp();
 
                 // 保存配置
@@ -1214,27 +1210,27 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 【优化】使用 SmartColumnMatcher 进行智能匹配
                 var matcher = new SmartColumnMatcher(MainForm.Instance.AppContext.Db);
-                
+
                 // 获取 Excel 列列表
                 var excelColumns = listBoxExcelColumns.Items.Cast<object>()
                     .Select(item => item.ToString())
                     .ToList();
-                
+
                 // 执行智能匹配
                 var matchResults = matcher.MatchColumns(excelColumns, TargetEntityType);
-                
+
                 if (matchResults.Count == 0)
                 {
                     MessageBox.Show("未找到匹配的列，请手动配置映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                
+
                 // 清空现有映射
-                ColumnMappings.Clear();
-                
+                ImportConfig.ColumnMappings.Clear();
+
                 // 【优化】保存匹配置信度分数
                 var confidenceScores = new Dictionary<string, double>();
-                
+
                 // 根据匹配结果创建映射
                 foreach (var result in matchResults)
                 {
@@ -1250,10 +1246,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             break;
                         }
                     }
-                    
+
                     if (systemFieldDisplay == null)
                         continue;
-                    
+
                     // 创建映射
                     var mapping = new ColumnMapping
                     {
@@ -1263,30 +1259,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         ColumnDataSourceType = (int)DataSourceType.Excel,
                         DataSourceConfig = new ExcelConfig { ExcelColumn = result.ExcelColumn }
                     };
-                    
-                    ColumnMappings.Add(mapping);
-                    
+
+                    ImportConfig.ColumnMappings.Add(mapping);
+
                     // 【优化】保存置信度分数
                     string key = $"{result.ExcelColumn}->{result.DbColumn}";
                     confidenceScores[key] = result.Score;
-                    
+
                     // 从两个列表中移除已选择的项
                     RemoveFromExcelColumns(result.ExcelColumn);
                     RemoveFromSystemFields(result.DbColumn);
                 }
-                
+
                 // 【优化】设置置信度分数供界面显示使用
                 SetMatchConfidenceScores(confidenceScores);
-                
+
                 // 更新映射列表显示
                 UpdateMappingsList();
-                
+
                 // 【优化】显示详细的匹配结果统计
                 int highConfidence = matchResults.Count(r => r.Score >= 0.9);
                 int mediumConfidence = matchResults.Count(r => r.Score >= 0.75 && r.Score < 0.9);
                 int lowConfidence = matchResults.Count(r => r.Score < 0.75);
                 int primaryKeys = matchResults.Count(r => r.IsPrimaryKey);
-                
+
                 string message = $"智能匹配完成：\n\n" +
                     $"✅总匹配数: {matchResults.Count}\n" +
                     $"  - 高置信度(≥90%): {highConfidence}\n" +
@@ -1294,9 +1290,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     $"  - 低置信度(<75%): {lowConfidence}\n\n" +
                     $"✅识别主键: {primaryKeys} 个\n\n" +
                     $"请检查映射结果，如有需要请手动调整。";
-                
+
                 MessageBox.Show(message, "智能匹配结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                
+
                 // 记录日志
                 MainForm.Instance.PrintInfoLog($"智能匹配完成: 实体={TargetEntityType?.Name}, 匹配数={matchResults.Count}, 主键数={primaryKeys}");
             }
@@ -1306,26 +1302,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
         }
 
- 
+
         /// <summary>
         /// 应用 AI 建议到当前映射列表
         /// </summary>
         private void ApplyAiSuggestions(RUINORERP.Business.AIServices.DataImport.IntelligentMappingResult aiResult)
         {
             // 清空现有映射
-            ColumnMappings.Clear();
-            
+            ImportConfig.ColumnMappings.Clear();
+
             var confidenceScores = new Dictionary<string, double>();
-            
+
             foreach (var kvp in aiResult.Mappings)
             {
                 string excelCol = kvp.Key;
                 var suggestion = kvp.Value;
-                
+
                 // 查找对应的系统字段显示名
                 string systemFieldDisplay = null;
                 string systemFieldKey = suggestion.TargetField;
-                
+
                 foreach (var item in listBoxSystemFields.Items)
                 {
                     string display = item.ToString();
@@ -1336,7 +1332,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         break;
                     }
                 }
-                
+
                 if (systemFieldDisplay == null) continue;
 
                 var mapping = new ColumnMapping
@@ -1347,17 +1343,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     ColumnDataSourceType = (int)DataSourceType.Excel,
                     DataSourceConfig = new ExcelConfig { ExcelColumn = excelCol }
                 };
-                
-                ColumnMappings.Add(mapping);
+
+                ImportConfig.ColumnMappings.Add(mapping);
                 confidenceScores[$"{excelCol}->{systemFieldKey}"] = suggestion.Confidence;
-                
+
                 RemoveFromExcelColumns(excelCol);
                 RemoveFromSystemFields(systemFieldKey);
             }
-            
+
             SetMatchConfidenceScores(confidenceScores);
             UpdateMappingsList();
-            
+
             MessageBox.Show($"已应用 AI 建议：共匹配 {aiResult.Mappings.Count} 个字段，建议逻辑主键为 [{aiResult.SuggestedLogicalKey}]。", "AI 辅助完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -1380,7 +1376,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             using (var deduplicateConfigDialog = new frmDeduplicateFieldConfig())
             {
                 // 设置可用字段
-                deduplicateConfigDialog.AvailableFields = ColumnMappings.Select(m => m.SystemField).ToList();
+                deduplicateConfigDialog.AvailableFields = ImportConfig.ColumnMappings.Select(m => m.SystemField).ToList();
 
                 // 设置已选字段
                 deduplicateConfigDialog.SelectedFields = ImportConfig.DeduplicateFields?.ToList() ?? new List<string>();
@@ -1505,7 +1501,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // ✅ 通过显示值查找对应的Key,然后与传入的systemField比较
                 string fieldKey = FieldNameList.FirstOrDefault(c => c.Value == fieldDisplayValue).Key;
-                
+
                 if (fieldKey == systemField)
                 {
                     listBoxSystemFields.Items.RemoveAt(i);
@@ -1522,22 +1518,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             // ✅ 从OriginalExcelColumn获取原始Excel列名
             string columnToRestore = mapping.OriginalExcelColumn;
-            
+
             // 如果 OriginalExcelColumn 为空，无法恢复
             if (string.IsNullOrEmpty(columnToRestore))
             {
                 return;
             }
-        
+
             // ✅ 检查是否是特殊数据来源的情况（虚拟列）
             bool isSpecialDataSource = columnToRestore.StartsWith("[") && columnToRestore.Contains("]");
-        
+
             if (isSpecialDataSource)
             {
                 // 这些情况不需要恢复到Excel列表
                 return;
             }
-        
+
             // 检查Excel列是否已经在列表中
             bool alreadyExists = false;
             foreach (var item in listBoxExcelColumns.Items)
@@ -1548,7 +1544,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     break;
                 }
             }
-        
+
             // 如果不存在，添加到列表中并保持排序
             if (!alreadyExists)
             {
@@ -1581,7 +1577,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // ✅ 通过显示值查找对应的Key,然后与mapping.SystemField.Key比较
                 string fieldKey = FieldNameList.FirstOrDefault(c => c.Value == fieldDisplayValue).Key;
-                
+
                 if (fieldKey == mapping.SystemField?.Key)
                 {
                     alreadyExists = true;
@@ -1605,7 +1601,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void SelectNewlyAddedMapping(ColumnMapping mapping)
         {
             // 查找新添加的映射在列表中的索引
-            int index = ColumnMappings.IndexOf(mapping);
+            int index = ImportConfig.ColumnMappings.IndexOf(mapping);
             if (index >= 0 && index < listBoxMappings.Items.Count)
             {
                 listBoxMappings.SelectedIndex = index;

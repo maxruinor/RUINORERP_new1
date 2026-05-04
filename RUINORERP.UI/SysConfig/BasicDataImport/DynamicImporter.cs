@@ -955,11 +955,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             object cellValue = row[columnName];
 
-            // 如果配置了忽略空值且值为DBNull，则返回null
             var excelConfig = mapping.DataSourceConfig as ExcelConfig;
-            if (cellValue == DBNull.Value && excelConfig != null && excelConfig.IgnoreEmptyValue)
+            if (excelConfig != null)
             {
-                return null;
+                bool isEmpty = (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()));
+                
+                if (isEmpty)
+                {
+                    // 如果配置了忽略空值，则返回null
+                    if (excelConfig.IgnoreEmptyValue)
+                    {
+                        return null;
+                    }
+                    
+                    // 如果配置了空值默认值，则返回默认值
+                    if (!string.IsNullOrEmpty(excelConfig.EmptyValueDefault))
+                    {
+                        return excelConfig.EmptyValueDefault;
+                    }
+                }
             }
 
             return cellValue;
@@ -1951,9 +1965,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     bool isEmpty = cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString());
 
                                     var excelConfig = mapping.DataSourceConfig as ExcelConfig;
-                                    if (excelConfig != null && excelConfig.IgnoreEmptyValue && isEmpty)
+                                    if (excelConfig != null && isEmpty)
                                     {
-                                        targetRow[mapping.SystemField?.Value] = DBNull.Value;
+                                        // 如果配置了忽略空值，则设置为DBNull
+                                        if (excelConfig.IgnoreEmptyValue)
+                                        {
+                                            targetRow[mapping.SystemField?.Value] = DBNull.Value;
+                                        }
+                                        // 如果配置了空值默认值，则使用默认值
+                                        else if (!string.IsNullOrEmpty(excelConfig.EmptyValueDefault))
+                                        {
+                                            targetRow[mapping.SystemField?.Value] = excelConfig.EmptyValueDefault;
+                                        }
+                                        else
+                                        {
+                                            targetRow[mapping.SystemField?.Value] = cellValue;
+                                        }
                                     }
                                     else
                                     {

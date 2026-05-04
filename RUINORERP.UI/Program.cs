@@ -1089,11 +1089,13 @@ namespace RUINORERP.UI
 
 
 
-        private static readonly MemoryCache _errorCache = new MemoryCache(new MemoryCacheOptions());
+        private static MemoryCache _errorCache = new MemoryCache(new MemoryCacheOptions());
         private static readonly MemoryCacheEntryOptions _cacheOptions = new MemoryCacheEntryOptions
         {
-            SlidingExpiration = TimeSpan.FromMinutes(30) // 30分钟内无访问自动过期
+            SlidingExpiration = TimeSpan.FromMinutes(30)
         };
+        private static readonly object _cacheLock = new object();
+        
         static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
             if (e.Exception == null)
@@ -1101,7 +1103,6 @@ namespace RUINORERP.UI
                 return;
             }
 
-            // 特殊异常处理列表
             List<string> IgnoreExceptionMsglist = new List<string>
             {
                 "执行 CreateHandle() 时无法调用值 Dispose()",
@@ -1109,7 +1110,6 @@ namespace RUINORERP.UI
                 "GDI+ 中发生一般性错误"
             };
 
-            // 检查是否需要忽略的异常
             bool isIgnored = false;
             foreach (var item in IgnoreExceptionMsglist)
             {
@@ -1120,33 +1120,64 @@ namespace RUINORERP.UI
                 }
             }
 
-            // 记录所有异常，包括被忽略的异常
             string errorDetails = string.Format("异常类型：{0}\r\n异常消息：{1}\r\n堆栈信息：{2}\r\n",
                 e.Exception.GetType().Name, e.Exception.Message, e.Exception.StackTrace);
 
             if (isIgnored)
             {
-                // 被忽略的异常仍然记录日志，但不显示给用户
                 return;
             }
 
-            // 处理特定类型的业务异常
             if (HandleUniqueConstraintException(e.Exception))
             {
                 return;
             }
 
-            // 改进缓存键生成策略，结合异常类型、消息和堆栈跟踪
             string errorHash = $"{e.Exception.GetType().FullName}:{e.Exception.Message}:{e.Exception.StackTrace}".GetHashCode().ToString();
-            if (_errorCache.TryGetValue(errorHash, out _))
+            
+            bool shouldShowError = true;
+            try
+            {
+                lock (_cacheLock)
+                {
+                    if (_errorCache != null)
+                    {
+                        if (_errorCache.TryGetValue(errorHash, out _))
+                        {
+                            shouldShowError = false;
+                        }
+                        else
+                        {
+                            _errorCache.Set(errorHash, DateTime.Now, _cacheOptions);
+                        }
+                    }
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                try
+                {
+                    lock (_cacheLock)
+                    {
+                        _errorCache = new MemoryCache(new MemoryCacheOptions());
+                        _errorCache.Set(errorHash, DateTime.Now, _cacheOptions);
+                    }
+                }
+                catch
+                {
+                    shouldShowError = true;
+                }
+            }
+            catch
+            {
+                shouldShowError = true;
+            }
+
+            if (!shouldShowError)
             {
                 return;
             }
 
-            // 添加到缓存，设置过期时间
-            _errorCache.Set(errorHash, DateTime.Now, _cacheOptions);
-
-            // 发送错误信息并记录日志
             try
             {
                 //TODO list 请实现将用户客户端报出来的异常发送到服务器。转发给管理员。
@@ -1156,23 +1187,33 @@ namespace RUINORERP.UI
                 // 确保异常上报失败不会影响主流程
             }
 
-            // 记录详细错误日志
-
-            // 显示错误信息给用户
             string userMessage = string.Format("系统发生错误：{0}\r\n\r\n请更新到最新版本，如果无法解决，请联系管理员！\r\n时间：{1}",
                 e.Exception.Message, DateTime.Now.ToString());
 
-            // 使用线程安全的方式显示消息框
-            if (MainForm.Instance != null && MainForm.Instance.InvokeRequired)
+            try
             {
-                MainForm.Instance.Invoke(new Action(() =>
+                if (MainForm.Instance != null && !MainForm.Instance.IsDisposed && MainForm.Instance.InvokeRequired)
+                {
+                    MainForm.Instance.Invoke(new Action(() =>
+                    {
+                        try
+                        {
+                            MessageBox.Show(userMessage, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        catch
+                        {
+                            // 忽略消息框显示失败
+                        }
+                    }));
+                }
+                else
                 {
                     MessageBox.Show(userMessage, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }));
+                }
             }
-            else
+            catch
             {
-                MessageBox.Show(userMessage, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 忽略消息框显示失败
             }
         }
         static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

@@ -349,8 +349,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 加载系统字段
                 LoadSystemFields();
 
-                // 如果有Excel数据，加载Excel列
-                if (ExcelData != null && ExcelData.Rows.Count > 0)
+                // 如果有Excel数据，加载Excel列（只要有列定义就加载，不要求有数据行）
+                if (ExcelData != null && ExcelData.Columns.Count > 0)
                 {
                     LoadExcelColumns();
                 }

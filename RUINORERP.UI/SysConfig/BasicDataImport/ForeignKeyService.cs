@@ -157,9 +157,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 如果没有获取到编码值，返回错误
                 if (string.IsNullOrEmpty(sourceCodeValue))
                 {
-                    // 检查是否必填：通过 ExcelConfig 的 IgnoreEmptyValue 判断
+                    // 检查是否必填：通过 ExcelConfig 的 IgnoreEmptyValue 和 EmptyValueDefault 判断
                     var excelConfig = mapping.DataSourceConfig as ExcelConfig;
-                    bool isRequired = excelConfig == null || !excelConfig.IgnoreEmptyValue;
+                    bool isRequired = excelConfig == null || 
+                                     (!excelConfig.IgnoreEmptyValue && string.IsNullOrEmpty(excelConfig.EmptyValueDefault));
                     
                     if (isRequired)
                     {

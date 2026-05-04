@@ -56,6 +56,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDeduplicateStrategy)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbExistenceStrategy)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.comboBoxSavedMappings)).BeginInit();
             this.SuspendLayout();
             // 
@@ -102,7 +103,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabelDedupHint
             // 
-            this.kryptonLabelDedupHint.Location = new System.Drawing.Point(425, 569);
+            this.kryptonLabelDedupHint.Location = new System.Drawing.Point(425, 572);
             this.kryptonLabelDedupHint.Name = "kryptonLabelDedupHint";
             this.kryptonLabelDedupHint.Size = new System.Drawing.Size(683, 20);
             this.kryptonLabelDedupHint.TabIndex = 40;
@@ -142,9 +143,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabelExistenceStrategy
             // 
-            this.kryptonLabelExistenceStrategy.Location = new System.Drawing.Point(425, 575);
+            this.kryptonLabelExistenceStrategy.Location = new System.Drawing.Point(477, 611);
             this.kryptonLabelExistenceStrategy.Name = "kryptonLabelExistenceStrategy";
-            this.kryptonLabelExistenceStrategy.Size = new System.Drawing.Size(89, 20);
+            this.kryptonLabelExistenceStrategy.Size = new System.Drawing.Size(104, 20);
             this.kryptonLabelExistenceStrategy.TabIndex = 41;
             this.kryptonLabelExistenceStrategy.Values.Text = "存在性处理策略:";
             // 
@@ -154,7 +155,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbExistenceStrategy.DropDownWidth = 165;
             this.kcmbExistenceStrategy.FormattingEnabled = true;
             this.kcmbExistenceStrategy.IntegralHeight = false;
-            this.kcmbExistenceStrategy.Location = new System.Drawing.Point(520, 574);
+            this.kcmbExistenceStrategy.Location = new System.Drawing.Point(587, 610);
             this.kcmbExistenceStrategy.Name = "kcmbExistenceStrategy";
             this.kcmbExistenceStrategy.Size = new System.Drawing.Size(165, 21);
             this.kcmbExistenceStrategy.TabIndex = 42;
@@ -321,6 +322,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDeduplicateStrategy)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbExistenceStrategy)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.comboBoxSavedMappings)).EndInit();
             this.ResumeLayout(false);
 

@@ -325,18 +325,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                // 初始化去重策略ComboBox默认值
-                kcmbDeduplicateStrategy.SelectedIndex = 0;
-                
-                // 初始化存在性策略ComboBox默认值
-                kcmbExistenceStrategy.SelectedIndex = 0;
+                // 绑定配置名称到 ImportConfig（双向绑定）
+                BindMappingName();
                 
                 // 绑定去重配置到 ImportConfig（双向绑定）
                 BindDeduplicateConfig();
                 
                 // 绑定存在性策略到 ImportConfig（双向绑定）
                 BindExistenceConfig();
-                
+
+                // 初始化去重策略ComboBox默认值
+                kcmbDeduplicateStrategy.SelectedIndex = 0;
+
+                // 初始化存在性策略ComboBox默认值
+                kcmbExistenceStrategy.SelectedIndex = 0;
                 // 设置配置文件路径
                 _configFilePath = ColumnMappingConstants.GetConfigFilePath();
 
@@ -368,37 +370,37 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 绑定配置名称到 ImportConfig（双向绑定）
+        /// </summary>
+        private void BindMappingName()
+        {
+            DataBindingHelper.BindData4TextBox<ImportConfiguration>(
+                ImportConfig, 
+                nameof(ImportConfig.MappingName), 
+                textBoxMappingName, 
+                BindDataType4TextBox.Text, 
+                false);
+        }
+
+        /// <summary>
         /// 绑定去重配置到 ImportConfig（双向绑定）
         /// </summary>
         private void BindDeduplicateConfig()
         {
             // 绑定启用去重复选框
-            chkRemoveDuplicates.DataBindings.Clear();
-            chkRemoveDuplicates.DataBindings.Add("Checked", ImportConfig, nameof(ImportConfig.EnableDeduplication), 
-                false, DataSourceUpdateMode.OnPropertyChanged);
+            DataBindingHelper.BindData4CheckBox<ImportConfiguration>(
+                ImportConfig, 
+                nameof(ImportConfig.EnableDeduplication), 
+                chkRemoveDuplicates, 
+                false);
 
             // 绑定去重策略ComboBox
-            kcmbDeduplicateStrategy.DataBindings.Clear();
-            var strategyBinding = new Binding("SelectedIndex", ImportConfig, nameof(ImportConfig.DeduplicateStrategy), 
-                false, DataSourceUpdateMode.OnPropertyChanged);
-            strategyBinding.Format += (s, args) => 
-            {
-                if (args.Value != null)
-                {
-                    args.Value = (int)(DeduplicateStrategy)args.Value;
-                }
-            };
-            strategyBinding.Parse += (s, args) => 
-            {
-                if (args.Value != null)
-                {
-                    args.Value = (DeduplicateStrategy)(int)args.Value;
-                }
-            };
-            kcmbDeduplicateStrategy.DataBindings.Add(strategyBinding);
-
-            // 绑定去重复选框改变事件，控制相关控件状态
-            chkRemoveDuplicates.CheckedChanged += chkRemoveDuplicates_CheckedChanged;
+            DataBindingHelper.BindData4CmbByEnum<ImportConfiguration>(
+                ImportConfig, 
+                nameof(ImportConfig.DeduplicateStrategy), 
+                typeof(DeduplicateStrategy), 
+                kcmbDeduplicateStrategy, 
+                false);
         }
 
         /// <summary>
@@ -994,14 +996,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 保存映射配置0
+        /// 保存映射配置
         /// </summary>
         private void kbtnSaveMapping_Click(object sender, EventArgs e)
         {
-            string mappingName = textBoxMappingName.Text.Trim();
+            // 验证配置名称（通过绑定已自动同步到 ImportConfig.MappingName）
+            string mappingName = ImportConfig.MappingName?.Trim();
             if (string.IsNullOrEmpty(mappingName))
             {
                 MessageBox.Show("请输入映射配置名称", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                textBoxMappingName.Focus();
                 return;
             }
 
@@ -1034,8 +1038,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                // 更新全局配置（去重配置已通过双向绑定自动同步）
-                ImportConfig.MappingName = mappingName;
+                // 更新全局配置（去重配置和名称已通过双向绑定自动同步）
                 ImportConfig.EntityType = TargetEntityType?.Name;
                 ImportConfig.ColumnMappings = ColumnMappings.ToList();
                 ImportConfig.UpdateTimestamp();
@@ -1079,17 +1082,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (comboBoxSavedMappings.SelectedIndex <= 0)
             {
                 // 新建映射 - 重新加载所有列表
-                textBoxMappingName.Text = string.Empty;
                 ColumnMappings.Clear();
                 ImportConfig = new ImportConfiguration();
                 UpdateMappingsList();
 
+                // 重新绑定配置名称到新的 ImportConfig
+                BindMappingName();
+                
                 // 重新绑定去重配置到新的 ImportConfig
                 BindDeduplicateConfig();
                 
                 // 重新加载Excel列和系统字段列表
                 LoadSystemFields();
-                if (ExcelData != null && ExcelData.Rows.Count > 0)
+                if (ExcelData != null && ExcelData.Columns.Count > 0)
                 {
                     LoadExcelColumns();
                 }
@@ -1122,8 +1127,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 ImportConfig = config;
                 ColumnMappings = new List<ColumnMapping>(config?.ColumnMappings ?? new List<ColumnMapping>());
-                textBoxMappingName.Text = config?.MappingName ?? string.Empty;
 
+                // 重新绑定配置名称到新的 ImportConfig（通过绑定自动显示名称）
+                BindMappingName();
+                
                 // 重新绑定去重配置到新的 ImportConfig
                 BindDeduplicateConfig();
                 
@@ -1135,7 +1142,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 重新加载Excel列和系统字段列表
                 LoadSystemFields();
-                if (ExcelData != null && ExcelData.Rows.Count > 0)
+                if (ExcelData != null && ExcelData.Columns.Count > 0)
                 {
                     LoadExcelColumns();
                 }
@@ -1435,15 +1442,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 重置编辑模式
             IsEditMode = false;
             OriginalMappingName = null;
-            textBoxMappingName.Text = string.Empty;
 
             // 重新创建 ImportConfig 并绑定
             ImportConfig = new ImportConfiguration();
+            BindMappingName();
             BindDeduplicateConfig();
 
             // 重新加载Excel列和系统字段列表
             LoadSystemFields();
-            if (ExcelData != null && ExcelData.Rows.Count > 0)
+            if (ExcelData != null && ExcelData.Columns.Count > 0)
             {
                 LoadExcelColumns();
             }

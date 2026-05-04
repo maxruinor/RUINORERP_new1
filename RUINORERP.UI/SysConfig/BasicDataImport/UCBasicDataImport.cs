@@ -672,7 +672,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     frmMapping.ImportConfig = _currentConfig;
                     frmMapping.IsEditMode = isEditMode;
-                    frmMapping.OriginalMappingName = mappingName;
 
                     frmMapping.MappingSaved += (s, args) =>
                     {

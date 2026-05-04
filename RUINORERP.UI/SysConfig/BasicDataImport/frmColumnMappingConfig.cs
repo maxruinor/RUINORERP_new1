@@ -52,10 +52,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         public bool IsEditMode { get; set; }
 
-        /// <summary>
-        /// 原始映射配置名称
-        /// </summary>
-        public string OriginalMappingName { get; set; }
 
         /// <summary>
         /// 映射配置保存事件
@@ -394,7 +390,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ImportConfig.ColumnMappings.Clear();
             ImportConfig = new ImportConfiguration();
             IsEditMode = false;
-            OriginalMappingName = null;
 
             RebindAll();
 
@@ -501,9 +496,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void SetWindowTitle()
         {
-            if (IsEditMode && !string.IsNullOrEmpty(OriginalMappingName))
+            if (IsEditMode && !string.IsNullOrEmpty(ImportConfig.MappingName))
             {
-                this.Text = $"编辑列映射配置 - {OriginalMappingName}";
+                this.Text = $"编辑列映射配置 - {ImportConfig.MappingName}";
             }
             else
             {
@@ -1178,7 +1173,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 LoadConfig(config);
 
                 IsEditMode = true;
-                OriginalMappingName = mappingName;
                 SetWindowTitle();
             }
             catch (Exception ex)
@@ -1403,16 +1397,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                // 只有在编辑模式下才能删除配置
-                if (!IsEditMode || string.IsNullOrEmpty(OriginalMappingName))
+                if (!IsEditMode || string.IsNullOrEmpty(ImportConfig.MappingName))
                 {
                     MessageBox.Show("只有编辑已保存的配置时才能删除", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
-                // 确认删除
                 var result = MessageBox.Show(
-                    $"确定要删除配置 \"{OriginalMappingName}\" 吗？此操作不可撤销。",
+                    $"确定要删除配置 \"{ImportConfig.MappingName}\" 吗？此操作不可撤销。",
                     "确认删除",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question);
@@ -1422,14 +1414,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                // 删除配置文件
-                string filePath = Path.Combine(_configFilePath, $"{OriginalMappingName}.xml");
+                string filePath = Path.Combine(_configFilePath, $"{ImportConfig.MappingName}.xml");
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
                 }
 
-                MessageBox.Show($"配置 \"{OriginalMappingName}\" 已删除", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show($"配置 \"{ImportConfig.MappingName}\" 已删除", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 // 加载全新的初始化配置
                 InitializeNewMapping();

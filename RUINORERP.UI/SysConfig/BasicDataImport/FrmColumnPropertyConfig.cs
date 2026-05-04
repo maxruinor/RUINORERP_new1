@@ -441,6 +441,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 绑定 ComboBox SelectedItem 到字符串属性（通用方法）
+        /// </summary>
+        private void BindComboBoxSelectedItem(object config, string propertyName, KryptonComboBox comboBox)
+        {
+            comboBox.DataBindings.Clear();
+            var binding = new Binding("SelectedItem", config, propertyName, 
+                false, DataSourceUpdateMode.OnPropertyChanged);
+            binding.Format += (s, args) => args.Value = args.Value ?? string.Empty;
+            binding.Parse += (s, args) => args.Value = args.Value ?? string.Empty;
+            comboBox.DataBindings.Add(binding);
+        }
+
+        /// <summary>
         /// 绑定自身引用配置
         /// </summary>
         private void BindSelfReferenceConfig(SelfReferenceConfig config)
@@ -450,12 +463,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             LoadSelfReferenceFields();
 
             // 双向绑定到显示名称（SelectedItem 绑定）
-            kcmbSelfReferenceField.DataBindings.Clear();
-            var binding = new Binding("SelectedItem", config, nameof(SelfReferenceConfig.ReferenceFieldDisplayName), 
-                false, DataSourceUpdateMode.OnPropertyChanged);
-            binding.Format += (s, args) => args.Value = args.Value ?? string.Empty;
-            binding.Parse += (s, args) => args.Value = args.Value ?? string.Empty;
-            kcmbSelfReferenceField.DataBindings.Add(binding);
+            BindComboBoxSelectedItem(config, nameof(SelfReferenceConfig.ReferenceFieldDisplayName), kcmbSelfReferenceField);
         }
 
         /// <summary>
@@ -468,12 +476,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             LoadCopyFromFields();
 
             // 双向绑定到显示名称（SelectedItem 绑定）
-            kcmbCopyFromField.DataBindings.Clear();
-            var binding = new Binding("SelectedItem", config, nameof(FieldCopyConfig.SourceFieldDisplayName), 
-                false, DataSourceUpdateMode.OnPropertyChanged);
-            binding.Format += (s, args) => args.Value = args.Value ?? string.Empty;
-            binding.Parse += (s, args) => args.Value = args.Value ?? string.Empty;
-            kcmbCopyFromField.DataBindings.Add(binding);
+            BindComboBoxSelectedItem(config, nameof(FieldCopyConfig.SourceFieldDisplayName), kcmbCopyFromField);
         }
 
         /// <summary>
@@ -549,12 +552,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 false);
 
             // 双向绑定到命名引用列
-            kcmbImageNamingColumn.DataBindings.Clear();
-            var binding = new Binding("SelectedItem", config, nameof(ExcelImageConfig.NamingReferenceColumn), 
-                false, DataSourceUpdateMode.OnPropertyChanged);
-            binding.Format += (s, args) => args.Value = args.Value ?? string.Empty;
-            binding.Parse += (s, args) => args.Value = args.Value ?? string.Empty;
-            kcmbImageNamingColumn.DataBindings.Add(binding);
+            BindComboBoxSelectedItem(config, nameof(ExcelImageConfig.NamingReferenceColumn), kcmbImageNamingColumn);
         }
 
         /// <summary>

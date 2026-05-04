@@ -1189,7 +1189,7 @@ namespace RUINORERP.UI.Common
         public static void BindData4CmbByEnum<TEntity, TEnum>(object entity, string keyName, KryptonComboBox cmbBox, bool addSelect, params TEnum[] excludeEnums)
               where TEnum : Enum
         {
-
+            cmbBox.DataBindings.Clear();
             cmbBox.Tag = keyName;
             InitDataToCmbByEnumDynamicGeneratedDataSource<TEnum>(keyName, cmbBox, addSelect, excludeEnums);
 
@@ -1342,6 +1342,7 @@ namespace RUINORERP.UI.Common
         public static void BindData4CmbByEnumWithInclude<TEntity, TEnum>(object entity, string keyName, KryptonComboBox cmbBox, bool addSelect, params TEnum[] includeEnums)
               where TEnum : Enum
         {
+            cmbBox.DataBindings.Clear();
             // 处理空值或无效枚举值情况
             if (includeEnums == null || includeEnums.Length == 0)
             {
@@ -1540,6 +1541,7 @@ namespace RUINORERP.UI.Common
         /// <param name="cmbBox"></param>
         public static void BindData4CmbByEnum<T>(object entity, string keyName, Type enumType, KryptonComboBox cmbBox, bool addSelect)
         {
+            cmbBox.DataBindings.Clear();
             cmbBox.Tag = keyName;
             InitDataToCmbByEnumDynamicGeneratedDataSource(enumType, keyName, cmbBox, addSelect);
 
@@ -2063,6 +2065,7 @@ namespace RUINORERP.UI.Common
 
         public static void BindData4CheckBox(object entity, string key, KryptonCheckBox chkBox, bool SyncUI)
         {
+            chkBox.DataBindings.Clear();
             Binding binddata = null;
             if (SyncUI)
             {
@@ -2689,6 +2692,7 @@ namespace RUINORERP.UI.Common
         public static void BindData4TextBox<T>(object entity, string textField, KryptonTextBox txtBox,
             BindDataType4TextBox type, bool SyncUI, bool validationEnabled = true)
         {
+            txtBox.DataBindings.Clear();
             Binding depa = null;
             if (SyncUI)
             {
@@ -2844,6 +2848,7 @@ namespace RUINORERP.UI.Common
         /// <param name="SyncUI"></param>
         public static void BindData4TextBox(object entity, string textField, KryptonTextBox txtBox, BindDataType4TextBox type, bool SyncUI)
         {
+            txtBox.DataBindings.Clear();
             Binding depa = null;
             if (SyncUI)
             {

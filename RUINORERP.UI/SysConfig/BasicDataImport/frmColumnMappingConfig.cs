@@ -370,6 +370,90 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 重新初始化所有绑定和列表（当 ImportConfig 改变时调用）
+        /// </summary>
+        private void RebindAll()
+        {
+            // 重新绑定所有配置
+            BindMappingName();
+            BindDeduplicateConfig();
+            BindExistenceConfig();
+
+            // 重新加载字段列表
+            LoadSystemFields();
+            if (ExcelData != null && ExcelData.Columns.Count > 0)
+            {
+                LoadExcelColumns();
+            }
+
+            // 更新映射列表显示
+            UpdateMappingsList();
+        }
+
+        /// <summary>
+        /// 重置为新的映射配置
+        /// </summary>
+        private void ResetToNewConfig()
+        {
+            ColumnMappings.Clear();
+            ImportConfig = new ImportConfiguration();
+            IsEditMode = false;
+            OriginalMappingName = null;
+
+            RebindAll();
+
+            // 重置已保存配置选择
+            comboBoxSavedMappings.SelectedIndex = 0;
+
+            // 更新窗口标题
+            SetWindowTitle();
+        }
+
+        /// <summary>
+        /// 加载已保存的配置对象
+        /// </summary>
+        private void LoadConfig(ImportConfiguration config)
+        {
+            if (config == null)
+            {
+                MessageBox.Show("加载配置失败: 配置数据为空", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            ImportConfig = config;
+            ColumnMappings = new List<ColumnMapping>(config.ColumnMappings ?? new List<ColumnMapping>());
+
+            RebindAll();
+
+            // 显示去重字段配置状态
+            if (config.EnableDeduplication && config.DeduplicateFields != null && config.DeduplicateFields.Count > 0)
+            {
+                MainForm.Instance.PrintInfoLog($"加载配置：已配置 {config.DeduplicateFields.Count} 个去重字段");
+            }
+
+            // 从列表中移除已映射的项
+            foreach (var mapping in ColumnMappings)
+            {
+                // 只有真正的Excel列才需要从可用列表中移除
+                if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn) && 
+                    !mapping.OriginalExcelColumn.StartsWith("[") && 
+                    !mapping.OriginalExcelColumn.Contains("]"))
+                {
+                    RemoveFromExcelColumns(mapping.OriginalExcelColumn);
+                }
+                
+                // 从系统字段列表中移除
+                if (mapping.SystemField != null && !string.IsNullOrEmpty(mapping.SystemField.Key))
+                {
+                    RemoveFromSystemFields(mapping.SystemField.Key);
+                }
+            }
+
+            // 更新映射列表显示
+            UpdateMappingsList();
+        }
+
+        /// <summary>
         /// 绑定配置名称到 ImportConfig（双向绑定）
         /// </summary>
         private void BindMappingName()
@@ -757,6 +841,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 保存当前选择
                 string currentSelection = comboBoxSavedMappings.SelectedItem?.ToString();
 
+                // 临时取消事件订阅，避免设置 SelectedIndex 时触发重复绑定
+                comboBoxSavedMappings.SelectedIndexChanged -= comboBoxSavedMappings_SelectedIndexChanged;
+
                 comboBoxSavedMappings.Items.Clear();
                 comboBoxSavedMappings.Items.Add("-- 新建映射 --");
 
@@ -780,6 +867,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     comboBoxSavedMappings.SelectedIndex = 0;
                 }
+
+                // 重新订阅事件
+                comboBoxSavedMappings.SelectedIndexChanged += comboBoxSavedMappings_SelectedIndexChanged;
             }
             catch (Exception ex)
             {
@@ -801,7 +891,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void kbtnAddMapping_Click(object sender, EventArgs e)
         {
             // 验证：必须选择系统字段
-            if (listBoxSystemFields.SelectedItem == null)
+        if (listBoxSystemFields.SelectedItem == null)
             {
                 MessageBox.Show("必须选择系统字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -1000,20 +1090,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void kbtnSaveMapping_Click(object sender, EventArgs e)
         {
-            // 验证配置名称（通过绑定已自动同步到 ImportConfig.MappingName）
-            string mappingName = ImportConfig.MappingName?.Trim();
-            if (string.IsNullOrEmpty(mappingName))
-            {
-                MessageBox.Show("请输入映射配置名称", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                textBoxMappingName.Focus();
-                return;
-            }
+            
 
-            if (ColumnMappings.Count == 0)
-            {
-                MessageBox.Show("请添加至少一个映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
 
             // 验证去重配置
             if (ImportConfig.EnableDeduplication)
@@ -1047,7 +1125,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 _columnMappingManager ??= new ColumnMappingManager();
                 _columnMappingManager.SaveConfiguration(ImportConfig);
 
-                SavedMappingName = mappingName;
+                SavedMappingName = ImportConfig.MappingName;
                 MessageBox.Show("映射配置保存成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 // 触发保存事件
@@ -1057,7 +1135,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 LoadSavedMappings();
 
                 // 【修复】选中新保存的映射（带"[配置]"前缀）
-                string newItemText = $"[配置] {mappingName}";
+                string newItemText = $"[配置] {ImportConfig.MappingName}";
                 int newIndex = comboBoxSavedMappings.Items.IndexOf(newItemText);
                 if (newIndex >= 0)
                 {
@@ -1081,27 +1159,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             if (comboBoxSavedMappings.SelectedIndex <= 0)
             {
-                // 新建映射 - 重新加载所有列表
-                ColumnMappings.Clear();
-                ImportConfig = new ImportConfiguration();
-                UpdateMappingsList();
-
-                // 重新绑定配置名称到新的 ImportConfig
-                BindMappingName();
-                
-                // 重新绑定去重配置到新的 ImportConfig
-                BindDeduplicateConfig();
-                
-                // 重新加载Excel列和系统字段列表
-                LoadSystemFields();
-                if (ExcelData != null && ExcelData.Columns.Count > 0)
-                {
-                    LoadExcelColumns();
-                }
-
-                IsEditMode = false;
-                OriginalMappingName = null;
-                SetWindowTitle();
+                // 新建映射 - 重置为新的配置
+                ResetToNewConfig();
                 return;
             }
 
@@ -1119,52 +1178,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 _columnMappingManager ??= new ColumnMappingManager();
                 var config = _columnMappingManager.LoadConfiguration(mappingName, TargetEntityType);
 
-                if (config == null)
-                {
-                    MessageBox.Show($"加载配置失败: 配置数据为空", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                ImportConfig = config;
-                ColumnMappings = new List<ColumnMapping>(config?.ColumnMappings ?? new List<ColumnMapping>());
-
-                // 重新绑定配置名称到新的 ImportConfig（通过绑定自动显示名称）
-                BindMappingName();
-                
-                // 重新绑定去重配置到新的 ImportConfig
-                BindDeduplicateConfig();
-                
-                // 显示去重字段配置状态
-                if (config?.EnableDeduplication == true && config.DeduplicateFields != null && config.DeduplicateFields.Count > 0)
-                {
-                    MainForm.Instance.PrintInfoLog($"加载配置：已配置 {config.DeduplicateFields.Count} 个去重字段");
-                }
-
-                // 重新加载Excel列和系统字段列表
-                LoadSystemFields();
-                if (ExcelData != null && ExcelData.Columns.Count > 0)
-                {
-                    LoadExcelColumns();
-                }
-
-                // 从列表中移除已映射的项
-                foreach (var mapping in ColumnMappings)
-                {
-                    // 只有真正的Excel列才需要从可用列表中移除
-                    if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn) && 
-                        !mapping.OriginalExcelColumn.StartsWith("[") && 
-                        !mapping.OriginalExcelColumn.Contains("]"))
-                    {
-                        RemoveFromExcelColumns(mapping.OriginalExcelColumn);
-                    }
-                    
-                    if (mapping.SystemField != null && !string.IsNullOrEmpty(mapping.SystemField.Key))
-                    {
-                        RemoveFromSystemFields(mapping.SystemField.Key);
-                    }
-                }
-
-                UpdateMappingsList();
+                // 加载配置对象并重新绑定
+                LoadConfig(config);
 
                 IsEditMode = true;
                 OriginalMappingName = mappingName;
@@ -1436,33 +1451,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void InitializeNewMapping()
         {
-            // 清空当前映射
-            ColumnMappings.Clear();
-
-            // 重置编辑模式
-            IsEditMode = false;
-            OriginalMappingName = null;
-
-            // 重新创建 ImportConfig 并绑定
-            ImportConfig = new ImportConfiguration();
-            BindMappingName();
-            BindDeduplicateConfig();
-
-            // 重新加载Excel列和系统字段列表
-            LoadSystemFields();
-            if (ExcelData != null && ExcelData.Columns.Count > 0)
-            {
-                LoadExcelColumns();
-            }
-
-            // 清空映射列表显示
-            UpdateMappingsList();
-
-            // 重置已保存配置选择
-            comboBoxSavedMappings.SelectedIndex = 0;
-
-            // 更新窗口标题
-            SetWindowTitle();
+            ResetToNewConfig();
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.SysConfig.BasicDataImport
+namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     partial class frmColumnMappingConfig
     {
@@ -34,6 +34,8 @@
             this.kryptonLabelDeduplicateStrategy = new Krypton.Toolkit.KryptonLabel();
             this.kcmbDeduplicateStrategy = new Krypton.Toolkit.KryptonComboBox();
             this.chkRemoveDuplicates = new Krypton.Toolkit.KryptonCheckBox();
+            this.kryptonLabelExistenceStrategy = new Krypton.Toolkit.KryptonLabel();
+            this.kcmbExistenceStrategy = new Krypton.Toolkit.KryptonComboBox();
             this.kbtnAutoMatch = new Krypton.Toolkit.KryptonButton();
             this.kbtnDeleteMapping = new Krypton.Toolkit.KryptonButton();
             this.kbtnSetColumnProperty = new Krypton.Toolkit.KryptonButton();
@@ -64,6 +66,8 @@
             this.kryptonPanel1.Controls.Add(this.kryptonLabelDeduplicateStrategy);
             this.kryptonPanel1.Controls.Add(this.kcmbDeduplicateStrategy);
             this.kryptonPanel1.Controls.Add(this.chkRemoveDuplicates);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabelExistenceStrategy);
+            this.kryptonPanel1.Controls.Add(this.kcmbExistenceStrategy);
             this.kryptonPanel1.Controls.Add(this.kbtnAutoMatch);
             this.kryptonPanel1.Controls.Add(this.kbtnDeleteMapping);
             this.kryptonPanel1.Controls.Add(this.kbtnSetColumnProperty);
@@ -135,6 +139,25 @@
             this.chkRemoveDuplicates.Size = new System.Drawing.Size(88, 20);
             this.chkRemoveDuplicates.TabIndex = 36;
             this.chkRemoveDuplicates.Values.Text = "启用行去重";
+            // 
+            // kryptonLabelExistenceStrategy
+            // 
+            this.kryptonLabelExistenceStrategy.Location = new System.Drawing.Point(425, 575);
+            this.kryptonLabelExistenceStrategy.Name = "kryptonLabelExistenceStrategy";
+            this.kryptonLabelExistenceStrategy.Size = new System.Drawing.Size(89, 20);
+            this.kryptonLabelExistenceStrategy.TabIndex = 41;
+            this.kryptonLabelExistenceStrategy.Values.Text = "存在性处理策略:";
+            // 
+            // kcmbExistenceStrategy
+            // 
+            this.kcmbExistenceStrategy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbExistenceStrategy.DropDownWidth = 165;
+            this.kcmbExistenceStrategy.FormattingEnabled = true;
+            this.kcmbExistenceStrategy.IntegralHeight = false;
+            this.kcmbExistenceStrategy.Location = new System.Drawing.Point(520, 574);
+            this.kcmbExistenceStrategy.Name = "kcmbExistenceStrategy";
+            this.kcmbExistenceStrategy.Size = new System.Drawing.Size(165, 21);
+            this.kcmbExistenceStrategy.TabIndex = 42;
             // 
             // kbtnAutoMatch
             // 
@@ -328,5 +351,7 @@
         private Krypton.Toolkit.KryptonLabel kryptonLabelDeduplicateStrategy;
         private Krypton.Toolkit.KryptonButton kbtnConfigDeduplicateFields;
         private Krypton.Toolkit.KryptonLabel kryptonLabelDedupHint;
+        private Krypton.Toolkit.KryptonLabel kryptonLabelExistenceStrategy;
+        private Krypton.Toolkit.KryptonComboBox kcmbExistenceStrategy;
     }
 }

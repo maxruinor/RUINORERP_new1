@@ -30,6 +30,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonTabControl = new System.Windows.Forms.TabControl();
             this.tabExcel = new System.Windows.Forms.TabPage();
+            this.txtExcelDefaultValue = new Krypton.Toolkit.KryptonTextBox();
+            this.lblExcelDefaultValue = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabelExcelTip = new Krypton.Toolkit.KryptonLabel();
             this.kchkIgnoreEmptyValue = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabelExcelIgnore = new Krypton.Toolkit.KryptonLabel();
@@ -99,13 +101,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnOK = new Krypton.Toolkit.KryptonButton();
             this.kchkIsUniqueValue = new Krypton.Toolkit.KryptonCheckBox();
             this.kchkIsBusinessKey = new Krypton.Toolkit.KryptonCheckBox();
-            this.kcmbExistenceStrategy = new Krypton.Toolkit.KryptonComboBox();
-            this.kryptonLabel20 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabelDataSource = new Krypton.Toolkit.KryptonLabel();
             this.kcmbDataSourceType = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            this.txtExcelDefaultValue = new Krypton.Toolkit.KryptonTextBox();
-            this.lblExcelDefaultValue = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             this.kryptonTabControl.SuspendLayout();
@@ -147,7 +145,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kcmbImageNamingRule)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbImageStorageType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbImageColumnType)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kcmbExistenceStrategy)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDataSourceType)).BeginInit();
             this.SuspendLayout();
             // 
@@ -158,8 +155,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.Controls.Add(this.kbtnOK);
             this.kryptonPanel1.Controls.Add(this.kchkIsUniqueValue);
             this.kryptonPanel1.Controls.Add(this.kchkIsBusinessKey);
-            this.kryptonPanel1.Controls.Add(this.kcmbExistenceStrategy);
-            this.kryptonPanel1.Controls.Add(this.kryptonLabel20);
             this.kryptonPanel1.Controls.Add(this.kryptonLabelDataSource);
             this.kryptonPanel1.Controls.Add(this.kcmbDataSourceType);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
@@ -198,22 +193,39 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.tabExcel.TabIndex = 0;
             this.tabExcel.Text = "Excel列";
             // 
+            // txtExcelDefaultValue
+            // 
+            this.txtExcelDefaultValue.Location = new System.Drawing.Point(246, 25);
+            this.txtExcelDefaultValue.Name = "txtExcelDefaultValue";
+            this.txtExcelDefaultValue.Size = new System.Drawing.Size(280, 23);
+            this.txtExcelDefaultValue.TabIndex = 4;
+            this.txtExcelDefaultValue.TextChanged += new System.EventHandler(this.txtExcelDefaultValue_TextChanged);
+            // 
+            // lblExcelDefaultValue
+            // 
+            this.lblExcelDefaultValue.Location = new System.Drawing.Point(123, 28);
+            this.lblExcelDefaultValue.Name = "lblExcelDefaultValue";
+            this.lblExcelDefaultValue.Size = new System.Drawing.Size(117, 20);
+            this.lblExcelDefaultValue.TabIndex = 3;
+            this.lblExcelDefaultValue.Values.Text = "空值指定为默认值:";
+            // 
             // kryptonLabelExcelTip
             // 
             this.kryptonLabelExcelTip.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.kryptonLabelExcelTip.Location = new System.Drawing.Point(30, 100);
             this.kryptonLabelExcelTip.Name = "kryptonLabelExcelTip";
-            this.kryptonLabelExcelTip.Size = new System.Drawing.Size(443, 36);
+            this.kryptonLabelExcelTip.Size = new System.Drawing.Size(548, 36);
             this.kryptonLabelExcelTip.TabIndex = 2;
-            this.kryptonLabelExcelTip.Values.Text = "提示: 如果选择\"Excel数据源\"但没有指定Excel列，该字段在导入时将为空值。\r\n建议为必填字段配置数据来源（如默认值、系统生成、外键关联等）。";
+            this.kryptonLabelExcelTip.Values.Text = "提示: 指定的Excel列的中可能有些有值，有些是空值，要么忽略空值，要么空值转换为默认值。\r\n只能二选一。";
             // 
             // kchkIgnoreEmptyValue
             // 
-            this.kchkIgnoreEmptyValue.Location = new System.Drawing.Point(120, 28);
+            this.kchkIgnoreEmptyValue.Location = new System.Drawing.Point(123, 54);
             this.kchkIgnoreEmptyValue.Name = "kchkIgnoreEmptyValue";
             this.kchkIgnoreEmptyValue.Size = new System.Drawing.Size(75, 20);
             this.kchkIgnoreEmptyValue.TabIndex = 1;
             this.kchkIgnoreEmptyValue.Values.Text = "忽略空值";
+            this.kchkIgnoreEmptyValue.CheckedChanged += new System.EventHandler(this.kchkIgnoreEmptyValue_CheckedChanged);
             // 
             // kryptonLabelExcelIgnore
             // 
@@ -496,7 +508,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // lblMaping
             // 
-            this.lblMaping.Location = new System.Drawing.Point(21, 94);
+            this.lblMaping.Location = new System.Drawing.Point(71, 29);
             this.lblMaping.Name = "lblMaping";
             this.lblMaping.Size = new System.Drawing.Size(62, 20);
             this.lblMaping.TabIndex = 8;
@@ -507,14 +519,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbForeignDbSourceColumn.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbForeignDbSourceColumn.DropDownWidth = 200;
             this.kcmbForeignDbSourceColumn.IntegralHeight = false;
-            this.kcmbForeignDbSourceColumn.Location = new System.Drawing.Point(120, 152);
+            this.kcmbForeignDbSourceColumn.Location = new System.Drawing.Point(170, 214);
             this.kcmbForeignDbSourceColumn.Name = "kcmbForeignDbSourceColumn";
             this.kcmbForeignDbSourceColumn.Size = new System.Drawing.Size(200, 21);
             this.kcmbForeignDbSourceColumn.TabIndex = 7;
             // 
             // kryptonLabel11
             // 
-            this.kryptonLabel11.Location = new System.Drawing.Point(18, 152);
+            this.kryptonLabel11.Location = new System.Drawing.Point(68, 214);
             this.kryptonLabel11.Name = "kryptonLabel11";
             this.kryptonLabel11.Size = new System.Drawing.Size(91, 20);
             this.kryptonLabel11.TabIndex = 6;
@@ -525,14 +537,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbForeignExcelSourceColumn.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbForeignExcelSourceColumn.DropDownWidth = 200;
             this.kcmbForeignExcelSourceColumn.IntegralHeight = false;
-            this.kcmbForeignExcelSourceColumn.Location = new System.Drawing.Point(120, 120);
+            this.kcmbForeignExcelSourceColumn.Location = new System.Drawing.Point(170, 182);
             this.kcmbForeignExcelSourceColumn.Name = "kcmbForeignExcelSourceColumn";
             this.kcmbForeignExcelSourceColumn.Size = new System.Drawing.Size(200, 21);
             this.kcmbForeignExcelSourceColumn.TabIndex = 5;
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(18, 120);
+            this.kryptonLabel2.Location = new System.Drawing.Point(68, 182);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(79, 20);
             this.kryptonLabel2.TabIndex = 4;
@@ -540,7 +552,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(18, 65);
+            this.kryptonLabel3.Location = new System.Drawing.Point(68, 127);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel3.TabIndex = 3;
@@ -551,7 +563,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbRelatedTable.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbRelatedTable.DropDownWidth = 200;
             this.kcmbRelatedTable.IntegralHeight = false;
-            this.kcmbRelatedTable.Location = new System.Drawing.Point(120, 32);
+            this.kcmbRelatedTable.Location = new System.Drawing.Point(170, 94);
             this.kcmbRelatedTable.Name = "kcmbRelatedTable";
             this.kcmbRelatedTable.Size = new System.Drawing.Size(250, 21);
             this.kcmbRelatedTable.TabIndex = 2;
@@ -562,14 +574,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.ktxtRelatedField.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ktxtRelatedField.DropDownWidth = 200;
             this.ktxtRelatedField.IntegralHeight = false;
-            this.ktxtRelatedField.Location = new System.Drawing.Point(120, 65);
+            this.ktxtRelatedField.Location = new System.Drawing.Point(170, 127);
             this.ktxtRelatedField.Name = "ktxtRelatedField";
             this.ktxtRelatedField.Size = new System.Drawing.Size(200, 21);
             this.ktxtRelatedField.TabIndex = 1;
             // 
             // kryptonLabel10
             // 
-            this.kryptonLabel10.Location = new System.Drawing.Point(18, 32);
+            this.kryptonLabel10.Location = new System.Drawing.Point(68, 94);
             this.kryptonLabel10.Name = "kryptonLabel10";
             this.kryptonLabel10.Size = new System.Drawing.Size(52, 20);
             this.kryptonLabel10.TabIndex = 0;
@@ -688,7 +700,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabel14
             // 
-            this.kryptonLabel14.Location = new System.Drawing.Point(320, 28);
+            this.kryptonLabel14.Location = new System.Drawing.Point(322, 31);
             this.kryptonLabel14.Name = "kryptonLabel14";
             this.kryptonLabel14.Size = new System.Drawing.Size(52, 20);
             this.kryptonLabel14.TabIndex = 3;
@@ -696,7 +708,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabel13
             // 
-            this.kryptonLabel13.Location = new System.Drawing.Point(320, 14);
+            this.kryptonLabel13.Location = new System.Drawing.Point(309, 14);
             this.kryptonLabel13.Name = "kryptonLabel13";
             this.kryptonLabel13.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel13.TabIndex = 2;
@@ -757,7 +769,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbImageNamingColumn.IntegralHeight = false;
             this.kcmbImageNamingColumn.Location = new System.Drawing.Point(120, 92);
             this.kcmbImageNamingColumn.Name = "kcmbImageNamingColumn";
-            this.kcmbImageNamingColumn.Size = new System.Drawing.Size(250, 21);
+            this.kcmbImageNamingColumn.Size = new System.Drawing.Size(480, 21);
             this.kcmbImageNamingColumn.TabIndex = 10;
             // 
             // kryptonLabel19
@@ -895,27 +907,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kchkIsBusinessKey.TabIndex = 14;
             this.kchkIsBusinessKey.Values.Text = "业务键字段";
             // 
-            // kcmbExistenceStrategy
-            // 
-            this.kcmbExistenceStrategy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.kcmbExistenceStrategy.DropDownWidth = 150;
-            this.kcmbExistenceStrategy.IntegralHeight = false;
-            this.kcmbExistenceStrategy.Items.AddRange(new object[] {
-            "跳过",
-            "报错"});
-            this.kcmbExistenceStrategy.Location = new System.Drawing.Point(120, 120);
-            this.kcmbExistenceStrategy.Name = "kcmbExistenceStrategy";
-            this.kcmbExistenceStrategy.Size = new System.Drawing.Size(150, 21);
-            this.kcmbExistenceStrategy.TabIndex = 13;
-            // 
-            // kryptonLabel20
-            // 
-            this.kryptonLabel20.Location = new System.Drawing.Point(30, 120);
-            this.kryptonLabel20.Name = "kryptonLabel20";
-            this.kryptonLabel20.Size = new System.Drawing.Size(78, 20);
-            this.kryptonLabel20.TabIndex = 12;
-            this.kryptonLabel20.Values.Text = "存在时处理:";
-            // 
             // kryptonLabelDataSource
             // 
             this.kryptonLabelDataSource.Location = new System.Drawing.Point(30, 37);
@@ -941,21 +932,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel1.Size = new System.Drawing.Size(75, 20);
             this.kryptonLabel1.TabIndex = 0;
             this.kryptonLabel1.Values.Text = "列属性配置";
-            // 
-            // txtExcelDefaultValue
-            // 
-            this.txtExcelDefaultValue.Location = new System.Drawing.Point(120, 54);
-            this.txtExcelDefaultValue.Name = "txtExcelDefaultValue";
-            this.txtExcelDefaultValue.Size = new System.Drawing.Size(280, 23);
-            this.txtExcelDefaultValue.TabIndex = 4;
-            // 
-            // lblExcelDefaultValue
-            // 
-            this.lblExcelDefaultValue.Location = new System.Drawing.Point(30, 54);
-            this.lblExcelDefaultValue.Name = "lblExcelDefaultValue";
-            this.lblExcelDefaultValue.Size = new System.Drawing.Size(52, 20);
-            this.lblExcelDefaultValue.TabIndex = 3;
-            this.lblExcelDefaultValue.Values.Text = "默认值:";
             // 
             // FrmColumnPropertyConfig
             // 
@@ -1017,7 +993,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kcmbImageNamingRule)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbImageStorageType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbImageColumnType)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kcmbExistenceStrategy)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDataSourceType)).EndInit();
             this.ResumeLayout(false);
 
@@ -1032,8 +1007,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonCheckBox kchkIgnoreEmptyValue;
         private Krypton.Toolkit.KryptonCheckBox kchkIsUniqueValue;
         private Krypton.Toolkit.KryptonCheckBox kchkIsBusinessKey;
-        private Krypton.Toolkit.KryptonComboBox kcmbExistenceStrategy;
-        private Krypton.Toolkit.KryptonLabel kryptonLabel20;
         private Krypton.Toolkit.KryptonButton kbtnCancel;
         private Krypton.Toolkit.KryptonButton kbtnOK;
         private System.Windows.Forms.TabControl kryptonTabControl;

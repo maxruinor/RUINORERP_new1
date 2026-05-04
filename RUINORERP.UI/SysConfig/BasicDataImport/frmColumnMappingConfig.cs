@@ -328,8 +328,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 初始化去重策略ComboBox默认值
                 kcmbDeduplicateStrategy.SelectedIndex = 0;
                 
+                // 初始化存在性策略ComboBox默认值
+                kcmbExistenceStrategy.SelectedIndex = 0;
+                
                 // 绑定去重配置到 ImportConfig（双向绑定）
                 BindDeduplicateConfig();
+                
+                // 绑定存在性策略到 ImportConfig（双向绑定）
+                BindExistenceConfig();
                 
                 // 设置配置文件路径
                 _configFilePath = ColumnMappingConstants.GetConfigFilePath();
@@ -393,6 +399,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 绑定去重复选框改变事件，控制相关控件状态
             chkRemoveDuplicates.CheckedChanged += chkRemoveDuplicates_CheckedChanged;
+        }
+
+        /// <summary>
+        /// 绑定存在性策略到 ImportConfig（双向绑定）
+        /// </summary>
+        private void BindExistenceConfig()
+        {
+            // 使用 DataBindingHelper 绑定存在性策略 ComboBox
+            DataBindingHelper.BindData4CmbByEnum<ImportConfiguration, ExistenceStrategyType>(
+                ImportConfig, 
+                nameof(ImportConfig.ExistenceStrategy), 
+                kcmbExistenceStrategy, 
+                false);
         }
 
         /// <summary>

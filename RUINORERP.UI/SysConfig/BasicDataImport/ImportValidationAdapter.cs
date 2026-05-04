@@ -49,7 +49,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 2. 验证外键关联配置完整性
-            if (mapping.ColumnDataSourceType == DataSourceType.ForeignKey)
+            if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
             {
                 var foreignConfig = mapping.DataSourceConfig as ForeignKeyConfig;
                 if (foreignConfig == null)
@@ -79,7 +79,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 3. 验证列拼接配置
-            if (mapping.ColumnDataSourceType == DataSourceType.ColumnConcat)
+            if (mapping.ColumnDataSourceType == (int)DataSourceType.ColumnConcat)
             {
                 var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
                 if (concatConfig == null || concatConfig.SourceColumns == null || 
@@ -102,7 +102,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 5. 验证图片配置
-            if (mapping.ColumnDataSourceType == DataSourceType.ExcelImage)
+            if (mapping.ColumnDataSourceType == (int)DataSourceType.ExcelImage)
             {
                 var imageConfig = mapping.DataSourceConfig as ExcelImageConfig;
                 if (imageConfig != null)
@@ -122,7 +122,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 // 业务键字段通常应该是必填的
                 // 检查是否为必填：Excel数据源且未配置忽略空值
-                bool isRequiredField = mapping.ColumnDataSourceType == DataSourceType.Excel &&
+                bool isRequiredField = mapping.ColumnDataSourceType == (int)DataSourceType.Excel &&
                                        !(mapping.DataSourceConfig is ExcelConfig excelCfg && excelCfg.IgnoreEmptyValue);
                 
                 if (!isRequiredField)
@@ -187,15 +187,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             var businessKeyMappings = config.ColumnMappings.Where(m => m.IsBusinessKey).ToList();
             if (businessKeyMappings.Count > 0)
             {
-                // 检查所有业务键是否都配置了存在性策略
-                foreach (var bkMapping in businessKeyMappings)
+                // 检查存在性策略配置
+                var existenceStrategy = (ExistenceStrategyType)config.ExistenceStrategy;
+                if (existenceStrategy == ExistenceStrategyType.Error)
                 {
-                    if (bkMapping.ExistenceStrategy == ExistenceStrategy.Error)
-                    {
-                        // Error策略需要特别注意，确保用户理解其含义
-                        System.Diagnostics.Debug.WriteLine(
-                            $"提示：字段【{bkMapping.SystemField.Value}】使用报错策略，遇到重复记录将中止导入");
-                    }
+                    // Error策略需要特别注意，确保用户理解其含义
+                    System.Diagnostics.Debug.WriteLine(
+                        $"提示：全局存在性策略为报错模式，遇到重复记录将中止导入");
                 }
             }
 

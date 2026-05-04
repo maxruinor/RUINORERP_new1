@@ -1,5 +1,7 @@
 using RUINORERP.Model.ImportEngine.Enums;
 using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -8,7 +10,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// 所有数据来源类型配置的统一接口
     /// 符合Windows设计器标准的配置模式
     /// </summary>
-    public interface IDataSourceConfig
+    public interface IDataSourceConfig : INotifyPropertyChanged
     {
         /// <summary>
         /// 数据来源类型
@@ -31,7 +33,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
     /// <summary>
     /// 数据源配置基类
-    /// 提供默认实现和通用功能
+    /// 提供默认实现、通用功能和属性变更通知
     /// </summary>
     [Serializable]
     public abstract class DataSourceConfigBase : IDataSourceConfig
@@ -40,6 +42,39 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 数据来源类型
         /// </summary>
         public abstract DataSourceType DataSourceType { get; }
+
+        /// <summary>
+        /// 属性变更事件
+        /// </summary>
+        [field: NonSerialized]
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// 触发属性变更事件
+        /// </summary>
+        /// <param name="propertyName">属性名称（调用者无需传递，编译器自动填充）</param>
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        /// <summary>
+        /// 设置属性值并触发变更事件
+        /// </summary>
+        /// <typeparam name="T">属性类型</typeparam>
+        /// <param name="field">字段引用</param>
+        /// <param name="value">新值</param>
+        /// <param name="propertyName">属性名称（调用者无需传递，编译器自动填充）</param>
+        /// <returns>如果值发生变化返回 true，否则返回 false</returns>
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (System.Collections.Generic.EqualityComparer<T>.Default.Equals(field, value))
+                return false;
+
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
 
         /// <summary>
         /// 验证配置是否有效

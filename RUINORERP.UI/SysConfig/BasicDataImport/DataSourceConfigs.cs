@@ -27,11 +27,55 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         [XmlElement("ExcelColumn")]
         public string ExcelColumn { get; set; }
 
+        private bool _ignoreEmptyValue;
         /// <summary>
         /// 是否忽略空值（为空时不导入）
+        /// 与 EmptyValueDefault 互斥，只能二选一
         /// </summary>
         [XmlElement("IgnoreEmptyValue")]
-        public bool IgnoreEmptyValue { get; set; }
+        public bool IgnoreEmptyValue
+        {
+            get => _ignoreEmptyValue;
+            set
+            {
+                if (_ignoreEmptyValue != value)
+                {
+                    _ignoreEmptyValue = value;
+                    // 如果启用忽略空值，则清空空值默认值
+                    if (value)
+                    {
+                        EmptyValueDefault = string.Empty;
+                    }
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private string _emptyValueDefault;
+        /// <summary>
+        /// 空值时使用的默认值
+        /// 与 IgnoreEmptyValue 互斥，只能二选一
+        /// 当此值不为空时，自动取消忽略空值设置
+        /// </summary>
+        [XmlElement("EmptyValueDefault")]
+        public string EmptyValueDefault
+        {
+            get => _emptyValueDefault;
+            set
+            {
+                if (_emptyValueDefault != value)
+                {
+                    _emptyValueDefault = value;
+                    // 如果设置了空值默认值，则取消忽略空值
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        _ignoreEmptyValue = false;
+                        OnPropertyChanged(nameof(IgnoreEmptyValue));
+                    }
+                    OnPropertyChanged();
+                }
+            }
+        }
     }
 
     #endregion

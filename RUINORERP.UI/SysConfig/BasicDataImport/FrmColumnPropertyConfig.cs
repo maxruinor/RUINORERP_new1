@@ -168,7 +168,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 1. 绑定业务键相关控件
             DataBindingHelper.BindData4CheckBox<ColumnMapping>(CurrentMapping, m => m.IsBusinessKey, kchkIsBusinessKey, false);
-            DataBindingHelper.BindData4CmbByEnum<ColumnMapping>(CurrentMapping, m => (int)m.ExistenceStrategy, typeof(ExistenceStrategy), kcmbExistenceStrategy, false);
 
             // 2. 绑定数据来源类型
             DataBindingHelper.BindData4CmbByEnum<ColumnMapping>(CurrentMapping, m => (int)m.ColumnDataSourceType, typeof(DataSourceType), kcmbDataSourceType, false);
@@ -254,6 +253,40 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 c => c.IgnoreEmptyValue,
                 kchkIgnoreEmptyValue,
                 false);
+
+            // 绑定空值默认值文本框
+            DataBindingHelper.BindData4TextBox<ExcelConfig>(
+                config,
+                c => c.EmptyValueDefault,
+                txtExcelDefaultValue,
+                BindDataType4TextBox.Text,
+                false);
+        }
+
+        /// <summary>
+        /// 忽略空值复选框状态改变事件
+        /// 实现与空值默认值的二选一互斥逻辑
+        /// </summary>
+        private void kchkIgnoreEmptyValue_CheckedChanged(object sender, EventArgs e)
+        {
+            if (kchkIgnoreEmptyValue.Checked)
+            {
+                // 如果勾选了忽略空值，则清空空值默认值
+                txtExcelDefaultValue.Text = string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 空值默认值文本框文本改变事件
+        /// 实现与忽略空值的二选一互斥逻辑
+        /// </summary>
+        private void txtExcelDefaultValue_TextChanged(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(txtExcelDefaultValue.Text))
+            {
+                // 如果输入了空值默认值，则取消勾选忽略空值
+                kchkIgnoreEmptyValue.Checked = false;
+            }
         }
 
         /// <summary>
@@ -416,11 +449,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             LoadSelfReferenceFields();
 
-            // 设置选中项
-            if (!string.IsNullOrEmpty(config.ReferenceFieldDisplayName))
-            {
-                kcmbSelfReferenceField.SelectedItem = config.ReferenceFieldDisplayName;
-            }
+            // 双向绑定到显示名称（SelectedItem 绑定）
+            kcmbSelfReferenceField.DataBindings.Clear();
+            var binding = new Binding("SelectedItem", config, nameof(SelfReferenceConfig.ReferenceFieldDisplayName), 
+                false, DataSourceUpdateMode.OnPropertyChanged);
+            binding.Format += (s, args) => args.Value = args.Value ?? string.Empty;
+            binding.Parse += (s, args) => args.Value = args.Value ?? string.Empty;
+            kcmbSelfReferenceField.DataBindings.Add(binding);
         }
 
         /// <summary>
@@ -432,11 +467,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             LoadCopyFromFields();
 
-            // 设置选中项
-            if (!string.IsNullOrEmpty(config.SourceFieldDisplayName))
-            {
-                kcmbCopyFromField.SelectedItem = config.SourceFieldDisplayName;
-            }
+            // 双向绑定到显示名称（SelectedItem 绑定）
+            kcmbCopyFromField.DataBindings.Clear();
+            var binding = new Binding("SelectedItem", config, nameof(FieldCopyConfig.SourceFieldDisplayName), 
+                false, DataSourceUpdateMode.OnPropertyChanged);
+            binding.Format += (s, args) => args.Value = args.Value ?? string.Empty;
+            binding.Parse += (s, args) => args.Value = args.Value ?? string.Empty;
+            kcmbCopyFromField.DataBindings.Add(binding);
         }
 
         /// <summary>
@@ -511,26 +548,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 BindDataType4TextBox.Text,
                 false);
 
-            // 设置命名引用列（ComboBox 无法直接绑定，需要手动设置）
-            if (!string.IsNullOrEmpty(config.NamingReferenceColumn))
-            {
-                kcmbImageNamingColumn.SelectedItem = config.NamingReferenceColumn;
-            }
-
-            // 绑定 SelectedIndexChanged 事件，自动同步到配置对象
-            kcmbImageNamingColumn.SelectedIndexChanged -= KcmbImageNamingColumn_SelectedIndexChanged_Binding;
-            kcmbImageNamingColumn.SelectedIndexChanged += KcmbImageNamingColumn_SelectedIndexChanged_Binding;
-        }
-
-        /// <summary>
-        /// 图片命名引用列选择改变事件（用于双向绑定）
-        /// </summary>
-        private void KcmbImageNamingColumn_SelectedIndexChanged_Binding(object sender, EventArgs e)
-        {
-            if (CurrentMapping?.DataSourceConfig is ExcelImageConfig config && kcmbImageNamingColumn.SelectedItem != null)
-            {
-                config.NamingReferenceColumn = kcmbImageNamingColumn.SelectedItem.ToString();
-            }
+            // 双向绑定到命名引用列
+            kcmbImageNamingColumn.DataBindings.Clear();
+            var binding = new Binding("SelectedItem", config, nameof(ExcelImageConfig.NamingReferenceColumn), 
+                false, DataSourceUpdateMode.OnPropertyChanged);
+            binding.Format += (s, args) => args.Value = args.Value ?? string.Empty;
+            binding.Parse += (s, args) => args.Value = args.Value ?? string.Empty;
+            kcmbImageNamingColumn.DataBindings.Add(binding);
         }
 
         /// <summary>
@@ -992,6 +1016,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 自身引用字段选择改变事件
+        /// 注意：中文显示名已通过双向绑定自动同步，这里只需要同步英文字段名
         /// </summary>
         private void kcmbSelfReferenceField_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -1000,17 +1025,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            // 根据中文显示名称获取实际字段名
-            string displayName = kcmbSelfReferenceField.SelectedItem.ToString();
+            string displayName = kcmbSelfReferenceField.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(displayName)) return;
+
             var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
-            if (field.Value != null)
+            if (field.Value != null && CurrentMapping?.DataSourceConfig is SelfReferenceConfig config)
             {
-                // 直接更新配置对象
-                if (CurrentMapping?.DataSourceConfig is SelfReferenceConfig config)
-                {
-                    config.ReferenceFieldName = field.Key;
-                    config.ReferenceFieldDisplayName = field.Value;
-                }
+                config.ReferenceFieldName = field.Key;
             }
         }
 
@@ -1059,6 +1080,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 字段复制选择改变事件
+        /// 注意：中文显示名已通过双向绑定自动同步，这里只需要同步英文字段名
         /// </summary>
         private void kcmbCopyFromField_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -1067,17 +1089,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            // 根据中文显示名称获取实际字段名
-            string displayName = kcmbCopyFromField.SelectedItem.ToString();
+            string displayName = kcmbCopyFromField.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(displayName)) return;
+
             var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
-            if (field.Value != null)
+            if (field.Value != null && CurrentMapping?.DataSourceConfig is FieldCopyConfig config)
             {
-                // 直接更新配置对象
-                if (CurrentMapping?.DataSourceConfig is FieldCopyConfig config)
-                {
-                    config.SourceFieldName = field.Key;
-                    config.SourceFieldDisplayName = field.Value;
-                }
+                config.SourceFieldName = field.Key;
             }
         }
 
@@ -1110,6 +1128,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 外键数据库字段选择改变事件
+        /// 注意：显示名称已通过双向绑定自动同步，这里只需要同步英文字段名
         /// </summary>
         private void kcmbForeignDbSourceColumn_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -1118,17 +1137,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            // 根据中文显示名称获取实际字段名
-            string displayName = kcmbForeignDbSourceColumn.SelectedItem.ToString();
-            var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
+            string displayName = kcmbForeignDbSourceColumn.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(displayName)) return;
 
+            var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
             if (field.Value != null && CurrentMapping?.DataSourceConfig is ForeignKeyConfig config)
             {
-                // 只更新数据库字段名部分，不覆盖 Excel 列名
                 config.ForeignKeySourceColumn = new SerializableKeyValuePair<string>
                 {
                     Key = config.ForeignKeySourceColumn?.Key ?? string.Empty,
-                    Value = field.Value
+                    Value = field.Key
                 };
             }
         }
@@ -1299,6 +1317,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             chkDynamicDefaultBool.Visible = true;
             _dynamicDefaultValueControl = chkDynamicDefaultBool;
 
+            // 设置初始值
+            if (CurrentMapping?.DataSourceConfig is DefaultValueConfig config)
+            {
+                bool boolValue = false;
+                if (bool.TryParse(config.Value, out boolValue))
+                {
+                    chkDynamicDefaultBool.Checked = boolValue;
+                }
+            }
+
             // 绑定事件（先解绑再绑定，避免重复）
             chkDynamicDefaultBool.CheckedChanged -= ChkDynamicDefaultBool_CheckedChanged;
             chkDynamicDefaultBool.CheckedChanged += ChkDynamicDefaultBool_CheckedChanged;
@@ -1309,10 +1337,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void ChkDynamicDefaultBool_CheckedChanged(object sender, EventArgs e)
         {
-            // 直接更新当前映射的默认值配置（如果存在）
-            if (CurrentMapping?.DataSourceConfig is DefaultValueConfig defaultConfig)
+            if (CurrentMapping?.DataSourceConfig is DefaultValueConfig config)
             {
-                defaultConfig.Value = chkDynamicDefaultBool.Checked.ToString();
+                config.Value = chkDynamicDefaultBool.Checked.ToString();
             }
         }
 

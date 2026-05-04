@@ -10,6 +10,31 @@ using System.Xml.Serialization;
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     /// <summary>
+    /// 数据库存在性处理策略枚举
+    /// 用于判断整行数据已存在于数据库中时的处理方式
+    /// </summary>
+    public enum ExistenceStrategyType
+    {
+        /// <summary>
+        /// 跳过（默认）
+        /// </summary>
+        [Description("跳过")]
+        Skip = 0,
+
+        /// <summary>
+        /// 更新
+        /// </summary>
+        [Description("更新")]
+        Update = 1,
+
+        /// <summary>
+        /// 报错
+        /// </summary>
+        [Description("报错")]
+        Error = 2
+    }
+
+    /// <summary>
     /// 数据导入全局配置类
     /// </summary>
     /// <remarks>
@@ -43,6 +68,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         [XmlElement("TargetTable")]
         public SerializableKeyValuePair<string> TargetTable { get; set; }
+
+        /// <summary>
+        /// 存在性处理策略（当整行数据已存在于数据库时的处理方式）
+        /// </summary>
+        /// <remarks>
+        /// 根据配置的业务键字段（IsBusinessKey）组合来判断整行数据是否存在
+        /// Skip: 跳过已存在的行（默认）
+        /// Update: 更新已存在的行
+        /// Error: 报错提示
+        /// </remarks>
+        [XmlElement("ExistenceStrategy")]
+        public int ExistenceStrategy { get; set; } = (int)ExistenceStrategyType.Skip;
 
         /// <summary>
         /// 是否启用全局去重
@@ -180,7 +217,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 foreach (var mapping in ColumnMappings)
                 {
                     // 检查是否为外键关联类型
-                    if (mapping.ColumnDataSourceType == DataSourceType.ForeignKey)
+                    if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
                     {
                         var foreignConfig = mapping.DataSourceConfig as ForeignKeyConfig;
                         if (foreignConfig != null &&
@@ -195,6 +232,31 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 foreignSourceColumns.Add(sourceColumnName);
                             }
                         }
+                    }
+                }
+            }
+
+            return resultFields;
+        }
+
+        /// <summary>
+        /// 获取业务键字段列表（用于存在性判断）
+        /// </summary>
+        /// <returns>业务键字段列表</returns>
+        /// <remarks>
+        /// 返回所有标记为 IsBusinessKey 的字段，用于判断整行数据是否存在于数据库中
+        /// </remarks>
+        public List<string> GetBusinessKeyFields()
+        {
+            var resultFields = new List<string>();
+
+            if (ColumnMappings != null)
+            {
+                foreach (var mapping in ColumnMappings)
+                {
+                    if (mapping.IsBusinessKey && !string.IsNullOrEmpty(mapping.SystemField?.Key))
+                    {
+                        resultFields.Add(mapping.SystemField.Key);
                     }
                 }
             }

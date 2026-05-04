@@ -1045,7 +1045,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             string importType = GetImportType();
             var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
-            bool hasImageFields = mappings.Any(m => m.ColumnDataSourceType == DataSourceType.ExcelImage);
+            bool hasImageFields = mappings.Any(m => m.ColumnDataSourceType == (int)DataSourceType.ExcelImage);
             bool isPreprocessed = (_finalPreviewData?.Rows.Count > 0 && importData == _finalPreviewData);
 
             if (isPreprocessed)
@@ -1742,7 +1742,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     string colName = columnNameSelector(m);
                     return !string.IsNullOrEmpty(colName) && 
                            colName.Equals(columnName, StringComparison.OrdinalIgnoreCase) &&
-                           m.ColumnDataSourceType == DataSourceType.ExcelImage;
+                           m.ColumnDataSourceType == (int)DataSourceType.ExcelImage;
                 });
 
                 if (imageMapping != null && e.Value != null)

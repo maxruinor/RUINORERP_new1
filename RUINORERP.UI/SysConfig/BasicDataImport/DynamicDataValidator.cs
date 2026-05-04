@@ -108,8 +108,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return false;
 
             // 使用 DataSourceType 判断，不再依赖字符串匹配
-            return mapping.ColumnDataSourceType == DataSourceType.SystemGenerated
-                || mapping.ColumnDataSourceType == DataSourceType.DefaultValue;
+            return mapping.ColumnDataSourceType == (int)DataSourceType.SystemGenerated
+                || mapping.ColumnDataSourceType == (int)DataSourceType.DefaultValue;
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     PropertyInfo property = entityType.GetProperty(mapping.SystemField?.Key);
                     if (property == null) continue;
 
-                    if (mapping.ColumnDataSourceType == DataSourceType.ForeignKey)
+                    if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
                     {
                         // 外键验证
                         string foreignKeyError;
@@ -464,7 +464,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void ValidateForeignKeys(DataTable dataTable, List<ColumnMapping> mappings, List<ValidationError> errors)
         {
             // 直接使用 DataSourceType 筛选外键映射
-            var foreignKeyMappings = mappings.Where(m => m.ColumnDataSourceType == DataSourceType.ForeignKey).ToList();
+            var foreignKeyMappings = mappings.Where(m => m.ColumnDataSourceType == (int)DataSourceType.ForeignKey).ToList();
             if (!foreignKeyMappings.Any())
             {
                 return;

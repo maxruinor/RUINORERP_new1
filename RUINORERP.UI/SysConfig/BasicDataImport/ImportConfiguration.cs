@@ -180,7 +180,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 foreach (var mapping in ColumnMappings)
                 {
                     // 检查是否为外键关联类型
-                    if (mapping.DataSourceType == DataSourceType.ForeignKey)
+                    if (mapping.ColumnDataSourceType == DataSourceType.ForeignKey)
                     {
                         var foreignConfig = mapping.DataSourceConfig as ForeignKeyConfig;
                         if (foreignConfig != null &&

@@ -91,7 +91,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (config?.ColumnMappings != null)
             {
                 var systemGeneratedFields = config.ColumnMappings
-                    .Where(m => m.DataSourceType == DataSourceType.SystemGenerated)
+                    .Where(m => m.ColumnDataSourceType == DataSourceType.SystemGenerated)
                     .Select(m => m.SystemField?.Key)
                     .Where(k => !string.IsNullOrEmpty(k));
                 

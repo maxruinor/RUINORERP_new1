@@ -155,7 +155,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             if (config.ColumnMappings == null) return false;
 
-            var ColumnMapping = config.ColumnMappings.Where(x => x.DataSourceType == DataSourceType.ForeignKey && x.SystemField.Key == fieldName).FirstOrDefault();
+            var ColumnMapping = config.ColumnMappings.Where(x => x.ColumnDataSourceType == DataSourceType.ForeignKey && x.SystemField.Key == fieldName).FirstOrDefault();
 
             if (ColumnMapping == null)
             {

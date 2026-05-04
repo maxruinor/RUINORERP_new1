@@ -88,7 +88,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 用于标识字段数据的来源方式
         /// </summary>
         [XmlElement("DataSourceType")]
-        public DataSourceType DataSourceType { get; set; } = DataSourceType.Excel;
+        public int ColumnDataSourceType { get; set; } = (int)DataSourceType.Excel;
 
         /// <summary>
         /// 数据源配置（统一配置接口）
@@ -141,36 +141,36 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         public string GetConfigDescription()
         {
-            switch (DataSourceType)
+            switch (ColumnDataSourceType)
             {
-                case DataSourceType.Excel:
+                case (int)DataSourceType.Excel:
                     var excelConfig = DataSourceConfig as ExcelConfig;
                     return $"Excel列: {excelConfig?.ExcelColumn ?? string.Empty}";
 
-                case DataSourceType.DefaultValue:
+                case (int)DataSourceType.DefaultValue:
                     var defaultConfig = DataSourceConfig as DefaultValueConfig;
                     return $"默认值: {defaultConfig?.Value ?? string.Empty}";
 
-                case DataSourceType.SystemGenerated:
+                case (int)DataSourceType.SystemGenerated:
                     var sysConfig = DataSourceConfig as SystemGeneratedConfig;
                     return $"系统生成: {sysConfig?.GetGeneratedTypeDisplayName() ?? "系统生成"}";
 
-                case DataSourceType.ForeignKey:
+                case (int)DataSourceType.ForeignKey:
                     var foreignConfig = DataSourceConfig as ForeignKeyConfig;
                     return $"外键关联: {foreignConfig?.ForeignTableDisplayName ?? "外键"}";
 
-                case DataSourceType.SelfReference:
+                case (int)DataSourceType.SelfReference:
                     var selfConfig = DataSourceConfig as SelfReferenceConfig;
                     return $"自身引用: {selfConfig?.ReferenceFieldDisplayName ?? "自身引用"}";
 
-                case DataSourceType.FieldCopy:
+                case (int)DataSourceType.FieldCopy:
                     var copyConfig = DataSourceConfig as FieldCopyConfig;
                     return $"字段复制: {copyConfig?.SourceFieldDisplayName ?? "字段复制"}";
 
-                case DataSourceType.ColumnConcat:
+                case (int)DataSourceType.ColumnConcat:
                     return "列拼接";
 
-                case DataSourceType.ExcelImage:
+                case (int)DataSourceType.ExcelImage:
                     return "Excel图片";
 
                 default:

@@ -929,20 +929,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbDataSourceType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbDataSourceType.DropDownWidth = 200;
             this.kcmbDataSourceType.IntegralHeight = false;
-            this.kcmbDataSourceType.Items.AddRange(new object[] {
-            "Excel列",
-            "默认值",
-            "系统生成",
-            "外键关联",
-            "自身引用",
-            "字段复制",
-            "列拼接",
-            "Excel图片"});
             this.kcmbDataSourceType.Location = new System.Drawing.Point(120, 37);
             this.kcmbDataSourceType.Name = "kcmbDataSourceType";
             this.kcmbDataSourceType.Size = new System.Drawing.Size(200, 21);
             this.kcmbDataSourceType.TabIndex = 1;
-            this.kcmbDataSourceType.SelectedIndexChanged += new System.EventHandler(this.kcmbDataSourceType_SelectedIndexChanged);
             // 
             // kryptonLabel1
             // 

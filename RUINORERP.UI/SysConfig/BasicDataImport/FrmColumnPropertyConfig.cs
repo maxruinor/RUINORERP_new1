@@ -82,14 +82,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             LoadRelatedTables();
-            LoadDataSourceTypes();
             _dataBindingHelper = new DataBindingHelper();
             _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
 
             // 手动绑定事件
-            kcmbDataSourceType.SelectedIndexChanged += kcmbDataSourceType_SelectedIndexChanged;
-            kcmbSelfReferenceField.SelectedIndexChanged += kcmbSelfReferenceField_SelectedIndexChanged;
-            kcmbCopyFromField.SelectedIndexChanged += kcmbCopyFromField_SelectedIndexChanged;
+            //kcmbDataSourceType.SelectedIndexChanged += kcmbDataSourceType_SelectedIndexChanged;
+            //kcmbSelfReferenceField.SelectedIndexChanged += kcmbSelfReferenceField_SelectedIndexChanged;
+            //kcmbCopyFromField.SelectedIndexChanged += kcmbCopyFromField_SelectedIndexChanged;
             this.FormClosing += FrmColumnPropertyConfig_FormClosing;
         }
 
@@ -158,30 +157,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show($"加载关联表列表失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        /// <summary>
-        /// 加载数据来源类型列表
-        /// </summary>
-        private void LoadDataSourceTypes()
-        {
-            try
-            {
-                kcmbDataSourceType.Items.Clear();
-                kcmbDataSourceType.Items.Add("Excel数据源");
-                kcmbDataSourceType.Items.Add("默认值");
-                kcmbDataSourceType.Items.Add("系统生成");
-                kcmbDataSourceType.Items.Add("外键关联");
-                kcmbDataSourceType.Items.Add("自身字段引用");
-                kcmbDataSourceType.Items.Add("字段复制");
-                kcmbDataSourceType.Items.Add("列拼接");
-                kcmbDataSourceType.Items.Add("Excel图片");
-                kcmbDataSourceType.SelectedIndex = 0;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"加载数据来源类型失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+ 
 
         /// <summary>
         /// 窗体加载事件（参考 UCSaleOrder.cs 的 BindData 方法）
@@ -195,45 +171,45 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             DataBindingHelper.BindData4CmbByEnum<ColumnMapping>(CurrentMapping, m => (int)m.ExistenceStrategy, typeof(ExistenceStrategy), kcmbExistenceStrategy, false);
 
             // 2. 绑定数据来源类型
-            DataBindingHelper.BindData4CmbByEnum<ColumnMapping>(CurrentMapping, m => (int)m.DataSourceType, typeof(DataSourceType), kcmbDataSourceType, false);
+            DataBindingHelper.BindData4CmbByEnum<ColumnMapping>(CurrentMapping, m => (int)m.ColumnDataSourceType, typeof(DataSourceType), kcmbDataSourceType, false);
 
             // 3. 根据 DataSourceType 切换到对应的 Tab 页
-            kryptonTabControl.SelectedIndex = (int)CurrentMapping.DataSourceType;
+            kryptonTabControl.SelectedIndex = (int)CurrentMapping.ColumnDataSourceType;
 
             // 4. 绑定数据源配置对象到控件（双向绑定）
             if (CurrentMapping.DataSourceConfig != null)
             {
-                switch (CurrentMapping.DataSourceType)
+                switch (CurrentMapping.ColumnDataSourceType)
                 {
-                    case DataSourceType.Excel:
+                    case (int)DataSourceType.Excel:
                         BindExcelConfig(CurrentMapping.DataSourceConfig as ExcelConfig);
                         break;
-                    case DataSourceType.DefaultValue:
+                    case (int)DataSourceType.DefaultValue:
                         BindDefaultValueConfig(CurrentMapping.DataSourceConfig as DefaultValueConfig);
                         break;
-                    case DataSourceType.SystemGenerated:
+                    case (int)DataSourceType.SystemGenerated:
                         BindSystemGeneratedConfig(CurrentMapping.DataSourceConfig as SystemGeneratedConfig);
                         break;
-                    case DataSourceType.ForeignKey:
+                    case (int)DataSourceType.ForeignKey:
                         BindForeignKeyConfig(CurrentMapping.DataSourceConfig as ForeignKeyConfig);
                         break;
-                    case DataSourceType.SelfReference:
+                    case (int)DataSourceType.SelfReference:
                         BindSelfReferenceConfig(CurrentMapping.DataSourceConfig as SelfReferenceConfig);
                         break;
-                    case DataSourceType.FieldCopy:
+                    case (int)DataSourceType.FieldCopy:
                         BindFieldCopyConfig(CurrentMapping.DataSourceConfig as FieldCopyConfig);
                         break;
-                    case DataSourceType.ColumnConcat:
+                    case (int)DataSourceType.ColumnConcat:
                         BindColumnConcatConfig(CurrentMapping.DataSourceConfig as ColumnConcatConfig);
                         break;
-                    case DataSourceType.ExcelImage:
+                    case (int)DataSourceType.ExcelImage:
                         BindExcelImageConfig(CurrentMapping.DataSourceConfig as ExcelImageConfig);
                         break;
                 }
             }
 
             // 5. 加载下拉框数据（如果需要）
-            LoadDropdownDataIfNeeded(CurrentMapping.DataSourceType);
+            LoadDropdownDataIfNeeded(CurrentMapping.ColumnDataSourceType);
 
             // 6. 更新控件状态
             UpdateControlStates();
@@ -242,23 +218,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 根据数据源类型加载下拉框数据
         /// </summary>
-        private void LoadDropdownDataIfNeeded(DataSourceType dataSourceType)
+        private void LoadDropdownDataIfNeeded(int dataSourceType)
         {
             switch (dataSourceType)
             {
-                case DataSourceType.SelfReference:
+                case (int)DataSourceType.SelfReference:
                     LoadSelfReferenceFields();
                     break;
-                case DataSourceType.FieldCopy:
+                case (int)DataSourceType.FieldCopy:
                     LoadCopyFromFields();
                     break;
-                case DataSourceType.ColumnConcat:
+                case (int)DataSourceType.ColumnConcat:
                     LoadConcatSourceColumns();
                     break;
-                case DataSourceType.ExcelImage:
+                case (int)DataSourceType.ExcelImage:
                     LoadImageNamingColumns();
                     break;
-                case DataSourceType.ForeignKey:
+                case (int)DataSourceType.ForeignKey:
                     LoadForeignKeySourceColumns();
                     break;
             }
@@ -403,7 +379,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 加载关联表列表
             LoadRelatedTables();
 
-            // 选中对应的关联表（ComboBox 无法直接绑定，需要手动设置）
+            // 选中对应的关联表
             if (!string.IsNullOrEmpty(config.ForeignTableName))
             {
                 for (int i = 0; i < kcmbRelatedTable.Items.Count; i++)
@@ -420,72 +396,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 LoadTableFields(config.ForeignTableName);
             }
 
-            // 绑定外键字段显示名称（通过事件同步）
+            // 绑定外键字段显示名称
             if (!string.IsNullOrEmpty(config.ForeignFieldDisplayName))
             {
                 ktxtRelatedField.SelectedItem = config.ForeignFieldDisplayName;
             }
 
-            // 绑定 SelectedIndexChanged 事件，自动同步到配置对象
-            ktxtRelatedField.SelectedIndexChanged -= KtxtRelatedField_SelectedIndexChanged_Binding;
-            ktxtRelatedField.SelectedIndexChanged += KtxtRelatedField_SelectedIndexChanged_Binding;
-
-            // 加载外键来源列
-            LoadForeignKeySourceColumns();
-
-            // 绑定外键来源列（通过事件同步）
-            if (config.ForeignKeySourceColumn != null && !string.IsNullOrEmpty(config.ForeignKeySourceColumn.Key))
-            {
-                string sourceColumn = config.ForeignKeySourceColumn.Key;
-                for (int i = 0; i < kcmbForeignExcelSourceColumn.Items.Count; i++)
-                {
-                    if (kcmbForeignExcelSourceColumn.Items[i].ToString() == sourceColumn)
-                    {
-                        kcmbForeignExcelSourceColumn.SelectedIndex = i;
-                        break;
-                    }
-                }
-            }
-
-            // 绑定 SelectedIndexChanged 事件，自动同步到配置对象
-            kcmbForeignExcelSourceColumn.SelectedIndexChanged -= KcmbForeignExcelSourceColumn_SelectedIndexChanged_Binding;
-            kcmbForeignExcelSourceColumn.SelectedIndexChanged += KcmbForeignExcelSourceColumn_SelectedIndexChanged_Binding;
-        }
-
-        /// <summary>
-        /// 外键字段选择改变事件（用于双向绑定）
-        /// </summary>
-        private void KtxtRelatedField_SelectedIndexChanged_Binding(object sender, EventArgs e)
-        {
-            if (CurrentMapping?.DataSourceConfig is ForeignKeyConfig config && ktxtRelatedField.SelectedItem != null)
-            {
-                string displayName = ktxtRelatedField.SelectedItem.ToString();
-                config.ForeignFieldDisplayName = displayName;
-
-                // 同时更新 ForeignFieldName
-                var field = _fieldInfoDict?.FirstOrDefault(f => f.Value == displayName);
-                if (field.Value.Key != null)
-                {
-                    config.ForeignFieldName = field.Value.Key;
-                }
-
-            }
-        }
-
-        /// <summary>
-        /// 外键来源列选择改变事件（用于双向绑定）
-        /// </summary>
-        private void KcmbForeignExcelSourceColumn_SelectedIndexChanged_Binding(object sender, EventArgs e)
-        {
-            if (CurrentMapping?.DataSourceConfig is ForeignKeyConfig config && kcmbForeignExcelSourceColumn.SelectedItem != null)
-            {
-                // 构建外键来源列配置
-                config.ForeignKeySourceColumn = new SerializableKeyValuePair<string>
-                {
-                    Key = kcmbForeignExcelSourceColumn.SelectedItem.ToString(),
-                    Value = kcmbForeignExcelSourceColumn.SelectedItem.ToString()
-                };
-            }
+            // 加载外键来源列并选中已配置的值
+            string foreignKeySourceColumn = config.ForeignKeySourceColumn?.Key;
+            LoadForeignKeySourceColumns(foreignKeySourceColumn);
         }
 
         /// <summary>
@@ -497,35 +416,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             LoadSelfReferenceFields();
 
-            // 设置选中项（ComboBox 无法直接绑定，需要手动设置）
+            // 设置选中项
             if (!string.IsNullOrEmpty(config.ReferenceFieldDisplayName))
             {
                 kcmbSelfReferenceField.SelectedItem = config.ReferenceFieldDisplayName;
-            }
-
-            // 绑定 SelectedIndexChanged 事件，自动同步到配置对象
-            kcmbSelfReferenceField.SelectedIndexChanged -= KcmbSelfReferenceField_SelectedIndexChanged_Binding;
-            kcmbSelfReferenceField.SelectedIndexChanged += KcmbSelfReferenceField_SelectedIndexChanged_Binding;
-        }
-
-        /// <summary>
-        /// 自身引用字段选择改变事件（用于双向绑定）
-        /// </summary>
-        private void KcmbSelfReferenceField_SelectedIndexChanged_Binding(object sender, EventArgs e)
-        {
-            if (CurrentMapping?.DataSourceConfig is SelfReferenceConfig config && kcmbSelfReferenceField.SelectedItem != null)
-            {
-                string displayName = kcmbSelfReferenceField.SelectedItem.ToString();
-                config.ReferenceFieldDisplayName = displayName;
-
-                // 同时更新 ReferenceFieldName
-                var field = _fieldInfoDict?.FirstOrDefault(f => f.Value == displayName);
-                if (field.Value.Key!=null)
-                {
-                    config.ReferenceFieldName = field.Value.Key;
-                }
-                
-
             }
         }
 
@@ -538,33 +432,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             LoadCopyFromFields();
 
-            // 设置选中项（ComboBox 无法直接绑定，需要手动设置）
+            // 设置选中项
             if (!string.IsNullOrEmpty(config.SourceFieldDisplayName))
             {
                 kcmbCopyFromField.SelectedItem = config.SourceFieldDisplayName;
-            }
-
-            // 绑定 SelectedIndexChanged 事件，自动同步到配置对象
-            kcmbCopyFromField.SelectedIndexChanged -= KcmbCopyFromField_SelectedIndexChanged_Binding;
-            kcmbCopyFromField.SelectedIndexChanged += KcmbCopyFromField_SelectedIndexChanged_Binding;
-        }
-
-        /// <summary>
-        /// 字段复制选择改变事件（用于双向绑定）
-        /// </summary>
-        private void KcmbCopyFromField_SelectedIndexChanged_Binding(object sender, EventArgs e)
-        {
-            if (CurrentMapping?.DataSourceConfig is FieldCopyConfig config && kcmbCopyFromField.SelectedItem != null)
-            {
-                string displayName = kcmbCopyFromField.SelectedItem.ToString();
-                config.SourceFieldDisplayName = displayName;
-
-                // 同时更新 SourceFieldName
-                var field = _fieldInfoDict?.FirstOrDefault(f => f.Value == displayName);
-                if (field.Value.Key != null)
-                {
-                    config.SourceFieldName = field.Value.Key;
-                }
             }
         }
 
@@ -742,7 +613,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 加载外键来源列（Excel列）
         /// </summary>
-        private void LoadForeignKeySourceColumns()
+        /// <param name="selectedValue">需要选中的值（可选）</param>
+        private void LoadForeignKeySourceColumns(string selectedValue = null)
         {
             try
             {
@@ -767,6 +639,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                 }
 
+                // 如果有指定需要选中的值，则选中它
+                if (!string.IsNullOrEmpty(selectedValue))
+                {
+                    for (int i = 0; i < kcmbForeignExcelSourceColumn.Items.Count; i++)
+                    {
+                        if (kcmbForeignExcelSourceColumn.Items[i].ToString() == selectedValue)
+                        {
+                            kcmbForeignExcelSourceColumn.SelectedIndex = i;
+                            return;
+                        }
+                    }
+                }
+
+                // 否则选择第一项
                 kcmbForeignExcelSourceColumn.SelectedIndex = 0;
             }
             catch (Exception ex)
@@ -832,29 +718,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         addedFields.Add(field.Value);
                     }
                 }
-
-                // 如果有已选中的字段,保持选中状态
-                //TODO 后面修复
-                //if (!string.IsNullOrEmpty(ForeignKeyField?.Value))
-                //{
-                //    int index = ktxtRelatedField.Items.IndexOf(ForeignKeyField?.Value);
-                //    if (index >= 0)
-                //    {
-                //        ktxtRelatedField.SelectedIndex = index;
-                //    }
-                //}
-
-                //// 如果有已选中的字段,保持选中状态
-                //string selectedDisplayName = ForeignKeySourceColumn?.Value;
-                //if (!string.IsNullOrEmpty(selectedDisplayName))
-                //{
-                //    int index = kcmbForeignDbSourceColumn.Items.IndexOf(selectedDisplayName);
-                //    if (index >= 0)
-                //    {
-                //        kcmbForeignDbSourceColumn.SelectedIndex = index;
-                //    }
-                //}
-
             }
             catch (Exception ex)
             {
@@ -1032,7 +895,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             UpdateControlStates();
 
             // ✅ 根据数据来源类型自动切换到对应的Tab页
-            kryptonTabControl.SelectedIndex = kcmbDataSourceType.SelectedIndex;
+            kryptonTabControl.SelectedIndex = (int)kcmbDataSourceType.SelectedValue;
 
             // 如果选择了自身引用，加载当前表的字段列表
             if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.SelfReference)
@@ -1120,17 +983,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         addedFields.Add(field.Value);
                     }
                 }
-
-                // 如果有已选中的字段,保持选中状态
-                // TODO 后面修复
-                //if (!string.IsNullOrEmpty(SelfReferenceField?.Value))
-                //{
-                //    int index = kcmbSelfReferenceField.Items.IndexOf(SelfReferenceField?.Value);
-                //    if (index >= 0)
-                //    {
-                //        kcmbSelfReferenceField.SelectedIndex = index;
-                //    }
-                //}
             }
             catch (Exception ex)
             {
@@ -1141,8 +993,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 自身引用字段选择改变事件
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
         private void kcmbSelfReferenceField_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (kcmbSelfReferenceField.SelectedIndex < 0 || _fieldInfoDict == null)
@@ -1161,16 +1011,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     config.ReferenceFieldName = field.Key;
                     config.ReferenceFieldDisplayName = field.Value;
                 }
-
-                // 显示字段信息提示
-                MessageBox.Show(
-                    $"已选择自身引用字段:\n" +
-                    $"字段名称: {field.Key}\n" +
-                    $"显示名称: {field.Value}\n\n" +
-                    $"说明: 当前字段将引用同一条记录的【{field.Value}】字段的值。",
-                    "自身引用字段提示",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
             }
         }
 
@@ -1210,17 +1050,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         }
                     }
                 }
-
-                // 如果有已选中的字段,保持选中状态
-                // TODO 后面修复
-                //if (!string.IsNullOrEmpty(CopyFromField?.Value))
-                //{
-                //    int index = kcmbCopyFromField.Items.IndexOf(CopyFromField?.Value);
-                //    if (index >= 0)
-                //    {
-                //        kcmbCopyFromField.SelectedIndex = index;
-                //    }
-                //}
             }
             catch (Exception ex)
             {
@@ -1231,8 +1060,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 字段复制选择改变事件
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
         private void kcmbCopyFromField_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (kcmbCopyFromField.SelectedIndex < 0 || _fieldInfoDict == null)
@@ -1251,17 +1078,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     config.SourceFieldName = field.Key;
                     config.SourceFieldDisplayName = field.Value;
                 }
-
-                // 显示字段信息提示
-                MessageBox.Show(
-                    $"已选择要复制的字段:\n" +
-                    $"字段名称: {field.Key}\n" +
-                    $"显示名称: {field.Value}\n\n" +
-                    $"说明: 当前字段【{CurrentMapping?.SystemField?.Value}】将复制【{field.Value}】字段的值。\n" +
-                    $"例如: Excel只提供了产品编码,产品名称字段可以复制产品编码的值。",
-                    "字段复制提示",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
             }
         }
 
@@ -1292,6 +1108,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             return tableName;
         }
 
+        /// <summary>
+        /// 外键数据库字段选择改变事件
+        /// </summary>
         private void kcmbForeignDbSourceColumn_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (kcmbForeignDbSourceColumn.SelectedIndex < 0 || _fieldInfoDict == null)
@@ -1303,27 +1122,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             string displayName = kcmbForeignDbSourceColumn.SelectedItem.ToString();
             var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
 
-            if (field.Value != null)
+            if (field.Value != null && CurrentMapping?.DataSourceConfig is ForeignKeyConfig config)
             {
-                // 直接更新配置对象
-                if (CurrentMapping?.DataSourceConfig is ForeignKeyConfig config)
+                // 只更新数据库字段名部分，不覆盖 Excel 列名
+                config.ForeignKeySourceColumn = new SerializableKeyValuePair<string>
                 {
-                    // 如果已经有Excel列名，更新数据库字段名部分
-                    string excelColumnName = config.ForeignKeySourceColumn?.Key ?? string.Empty;
-                    if (string.IsNullOrEmpty(excelColumnName))
-                    {
-                        excelColumnName = kcmbForeignExcelSourceColumn.SelectedItem.ToString();
-                    }
-
-                    // 构建外键来源列配置
-                    config.ForeignKeySourceColumn = new SerializableKeyValuePair<string>
-                    {
-                        Key = excelColumnName,
-                        Value = field.Value
-                    };
-                }
+                    Key = config.ForeignKeySourceColumn?.Key ?? string.Empty,
+                    Value = field.Value
+                };
             }
-
         }
 
         /// <summary>
@@ -1342,19 +1149,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     {
                         klstSourceColumns.Items.Add(column);
                     }
-
-                    // 如果已有配置，选中对应的列
-                    // TODO 后面修复
-                    //if (ConcatConfig != null && ConcatConfig.SourceColumns != null)
-                    //{
-                    //    for (int i = 0; i < klstSourceColumns.Items.Count; i++)
-                    //    {
-                    //        if (ConcatConfig.SourceColumns.Contains(klstSourceColumns.Items[i].ToString()))
-                    //        {
-                    //            klstSourceColumns.SetSelected(i, true);
-                    //        }
-                    //    }
-                    //}
                 }
                 else if (CurrentMapping != null && !string.IsNullOrEmpty(CurrentMapping.OriginalExcelColumn))
                 {
@@ -1505,14 +1299,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             chkDynamicDefaultBool.Visible = true;
             _dynamicDefaultValueControl = chkDynamicDefaultBool;
 
-            // 设置初始值
-            //TODO  后续版本完善：如果有默认值，尝试在下拉列表中选中对应项。需要根据实际数据结构进行匹配。
-            //bool boolValue = false;
-            //if (bool.TryParse(DefaultValue, out boolValue))
-            //{
-            //    chkDynamicDefaultBool.Checked = boolValue;
-            //}
-
             // 绑定事件（先解绑再绑定，避免重复）
             chkDynamicDefaultBool.CheckedChanged -= ChkDynamicDefaultBool_CheckedChanged;
             chkDynamicDefaultBool.CheckedChanged += ChkDynamicDefaultBool_CheckedChanged;
@@ -1541,14 +1327,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 显示日期时间控件
             dtpDynamicDefaultDateTime.Visible = true;
             _dynamicDefaultValueControl = dtpDynamicDefaultDateTime;
-
-            // 设置初始值
-            //TODO  后续版本完善：如果有默认值，尝试在下拉列表中选中对应项。需要根据实际数据结构进行匹配。
-            //if (DateTime.TryParse(DefaultValue, out DateTime dateTimeValue))
-            //{
-            //    dtpDynamicDefaultDateTime.Value = dateTimeValue;
-            //    dtpDynamicDefaultDateTime.Checked = true;
-            //}
 
             // 绑定事件（先解绑再绑定，避免重复）
             dtpDynamicDefaultDateTime.ValueChanged -= DtpDynamicDefaultDateTime_ValueChanged;
@@ -1598,38 +1376,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 };
                 cmbDynamicDefaultEnum.Items.Add(enumInfo);
             }
-
-            // 设置初始值
-            //TODO  后续版本完善：如果有默认值，尝试在下拉列表中选中对应项。需要根据实际数据结构进行匹配。
-            //if (!string.IsNullOrEmpty(DefaultValue) && CurrentMapping?.EnumDefaultConfig != null)
-            //{
-            //    // 尝试根据已保存的枚举值查找对应的项
-            //    foreach (EnumItemInfo item in cmbDynamicDefaultEnum.Items)
-            //    {
-            //        if (item.EnumValue == CurrentMapping.EnumDefaultConfig.EnumValue)
-            //        {
-            //            cmbDynamicDefaultEnum.SelectedItem = item;
-            //            break;
-            //        }
-            //    }
-            //}
-            //else if (!string.IsNullOrEmpty(DefaultValue))
-            //{
-            //    // 兼容旧版本：通过枚举名称查找
-            //    try
-            //    {
-            //        object enumValue = Enum.Parse(enumType, DefaultValue);
-            //        foreach (EnumItemInfo item in cmbDynamicDefaultEnum.Items)
-            //        {
-            //            if (item.EnumName == enumValue.ToString())
-            //            {
-            //                cmbDynamicDefaultEnum.SelectedItem = item;
-            //                break;
-            //            }
-            //        }
-            //    }
-            //    catch { }
-            //}
 
             // 显示枚举控件
             cmbDynamicDefaultEnum.Visible = true;
@@ -1730,22 +1476,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     {
                         // 使用 UIGenerateHelper 绑定外键数据
                         BindForeignKeyData(cmbDynamicDefaultList, fkEntityType, fkAttr);
-
-                        // 设置初始值（如果有默认值）
-                        //TODO  后续版本完善：如果有默认值，尝试在下拉列表中选中对应项。需要根据实际数据结构进行匹配。
-                        //if (!string.IsNullOrEmpty(DefaultValue) && cmbDynamicDefaultList.DataSource != null)
-                        //{
-                        //    // 尝试通过 ValueMember 查找对应的项
-                        //    string primaryKey = GetPrimaryKeyName(fkEntityType);
-                        //    foreach (System.Data.DataRowView row in cmbDynamicDefaultList.Items)
-                        //    {
-                        //        if (row[primaryKey]?.ToString() == DefaultValue)
-                        //        {
-                        //            cmbDynamicDefaultList.SelectedValue = row[primaryKey];
-                        //            break;
-                        //        }
-                        //    }
-                        //}
                     }
                     else
                     {

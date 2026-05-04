@@ -171,7 +171,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     OriginalExcelColumn = excelColumn,
                     SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay),
-                    DataSourceType = DataSourceType.Excel,
+                    ColumnDataSourceType = (int)DataSourceType.Excel,
                     DataSourceConfig = new ExcelConfig { ExcelColumn = excelColumn }
                 };
         
@@ -199,7 +199,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     OriginalExcelColumn = string.Empty,
                     SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay),
-                    DataSourceType = DataSourceType.DefaultValue,
+                    ColumnDataSourceType = (int)DataSourceType.DefaultValue,
                     DataSourceConfig = new DefaultValueConfig()
                 };
         
@@ -219,7 +219,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ConfigureMappingProperty(mapping);
         
                 // 验证:如果用户没有修改数据来源类型,且是Excel数据源但没有Excel列,则删除
-                if (mapping.DataSourceType == DataSourceType.Excel)
+                if (mapping.ColumnDataSourceType == (int)DataSourceType.Excel)
                 {
                     MessageBox.Show("由于没有选择Excel来源列,不能选择\"Excel数据源\"类型。请选择:默认值、系统生成、外键关联、自身字段引用、字段复制、列拼接或Excel图片。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     // 删除刚添加的映射
@@ -233,34 +233,34 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 如果用户已经选择了Excel列,则保留原始值
                 if (!hasExcelColumn)
                 {
-                    switch (mapping.DataSourceType)
+                    switch (mapping.ColumnDataSourceType)
                     {
-                        case DataSourceType.SystemGenerated:
+                        case (int)DataSourceType.SystemGenerated:
                             var sysConfig = mapping.DataSourceConfig as SystemGeneratedConfig;
                             mapping.OriginalExcelColumn = $"[系统生成] {systemField}";
                             break;
-                        case DataSourceType.DefaultValue:
+                        case (int)DataSourceType.DefaultValue:
                             var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
                             mapping.OriginalExcelColumn = $"[默认值:{defaultConfig?.Value}] {systemField}";
                             break;
-                        case DataSourceType.ForeignKey:
+                        case (int)DataSourceType.ForeignKey:
                             var foreignConfig = mapping.DataSourceConfig as ForeignKeyConfig;
                             mapping.OriginalExcelColumn = $"[外键关联:{foreignConfig?.ForeignKeyTable?.Value}] {systemField}";
                             break;
-                        case DataSourceType.SelfReference:
+                        case (int)DataSourceType.SelfReference:
                             var selfConfig = mapping.DataSourceConfig as SelfReferenceConfig;
                             mapping.OriginalExcelColumn = $"[自身引用:{selfConfig?.ReferenceFieldDisplayName}] {systemField}";
                             break;
-                        case DataSourceType.FieldCopy:
+                        case (int)DataSourceType.FieldCopy:
                             var copyConfig = mapping.DataSourceConfig as FieldCopyConfig;
                             mapping.OriginalExcelColumn = $"[字段复制:{copyConfig?.SourceFieldDisplayName}] {systemField}";
                             break;
-                        case DataSourceType.ColumnConcat:
+                        case (int)DataSourceType.ColumnConcat:
                             var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
                             string concatCols = string.Join("+", concatConfig?.SourceColumns ?? new List<string>());
                             mapping.OriginalExcelColumn = $"[列拼接:{concatCols}] {systemField}";
                             break;
-                        case DataSourceType.ExcelImage:
+                        case (int)DataSourceType.ExcelImage:
                             var imageConfig = mapping.DataSourceConfig as ExcelImageConfig;
                             string namingRule = imageConfig?.NamingRule.ToString() ?? "AutoIncrement";
                             mapping.OriginalExcelColumn = $"[Excel图片:{namingRule}] {systemField}";
@@ -325,8 +325,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                // 【修复】初始化去重策略ComboBox默认值
-                kcmbDeduplicateStrategy.SelectedIndex = 0; // 默认选择"保留第一条记录"                
+                // 初始化去重策略ComboBox默认值
+                kcmbDeduplicateStrategy.SelectedIndex = 0;
+                
+                // 绑定去重配置到 ImportConfig（双向绑定）
+                BindDeduplicateConfig();
+                
                 // 设置配置文件路径
                 _configFilePath = ColumnMappingConstants.GetConfigFilePath();
 
@@ -355,6 +359,40 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 MessageBox.Show($"初始化窗体失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// 绑定去重配置到 ImportConfig（双向绑定）
+        /// </summary>
+        private void BindDeduplicateConfig()
+        {
+            // 绑定启用去重复选框
+            chkRemoveDuplicates.DataBindings.Clear();
+            chkRemoveDuplicates.DataBindings.Add("Checked", ImportConfig, nameof(ImportConfig.EnableDeduplication), 
+                false, DataSourceUpdateMode.OnPropertyChanged);
+
+            // 绑定去重策略ComboBox
+            kcmbDeduplicateStrategy.DataBindings.Clear();
+            var strategyBinding = new Binding("SelectedIndex", ImportConfig, nameof(ImportConfig.DeduplicateStrategy), 
+                false, DataSourceUpdateMode.OnPropertyChanged);
+            strategyBinding.Format += (s, args) => 
+            {
+                if (args.Value != null)
+                {
+                    args.Value = (int)(DeduplicateStrategy)args.Value;
+                }
+            };
+            strategyBinding.Parse += (s, args) => 
+            {
+                if (args.Value != null)
+                {
+                    args.Value = (DeduplicateStrategy)(int)args.Value;
+                }
+            };
+            kcmbDeduplicateStrategy.DataBindings.Add(strategyBinding);
+
+            // 绑定去重复选框改变事件，控制相关控件状态
+            chkRemoveDuplicates.CheckedChanged += chkRemoveDuplicates_CheckedChanged;
         }
 
         /// <summary>
@@ -802,9 +840,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 List<string> flags = new List<string>();
 
                 // 根据数据来源类型添加标识
-                switch (mapping.DataSourceType)
+                switch (mapping.ColumnDataSourceType)
                 {
-                    case DataSourceType.Excel:
+                    case (int)DataSourceType.Excel:
                         // Excel数据源，显示Excel列名
                         var excelConfig = mapping.DataSourceConfig as ExcelConfig;
                         if (excelConfig != null && !string.IsNullOrEmpty(excelConfig.ExcelColumn))
@@ -812,25 +850,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             flags.Add($"Excel列:{excelConfig.ExcelColumn}");
                         }
                         break;
-                    case DataSourceType.DefaultValue:
+                    case (int)DataSourceType.DefaultValue:
                         var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
                         flags.Add($"默认值:{defaultConfig?.Value}");
                         break;
-                    case DataSourceType.SystemGenerated:
+                    case (int)DataSourceType.SystemGenerated:
                         flags.Add("系统生成");
                         break;
-                    case DataSourceType.ForeignKey:
+                    case (int)DataSourceType.ForeignKey:
                         flags.Add("外键");
                         break;
-                    case DataSourceType.SelfReference:
+                    case (int)DataSourceType.SelfReference:
                         flags.Add("自身引用");
                         break;
 
-                    case DataSourceType.FieldCopy:
+                    case (int)DataSourceType.FieldCopy:
                         var copyConfig = mapping.DataSourceConfig as FieldCopyConfig;
                         flags.Add($"复制:{copyConfig?.SourceFieldDisplayName}");
                         break;
-                    case DataSourceType.ColumnConcat:
+                    case (int)  DataSourceType.ColumnConcat:
                         var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
                         string concatCols = string.Join("+", concatConfig?.SourceColumns ?? new List<string>());
                         flags.Add($"列拼接:{concatCols}");
@@ -954,8 +992,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            // 【修复】验证去重配置
-            if (chkRemoveDuplicates.Checked)
+            // 验证去重配置
+            if (ImportConfig.EnableDeduplication)
             {
                 if (kcmbDeduplicateStrategy.SelectedIndex < 0)
                 {
@@ -968,7 +1006,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // ✅使用验证适配器进行配置验证
+                // 使用验证适配器进行配置验证
                 var validator = new ImportValidationAdapter();
                 if (!validator.ValidateImportConfiguration(ImportConfig, out List<string> validationErrors))
                 {
@@ -977,13 +1015,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                // 更新全局配置
+                // 更新全局配置（去重配置已通过双向绑定自动同步）
                 ImportConfig.MappingName = mappingName;
                 ImportConfig.EntityType = TargetEntityType?.Name;
                 ImportConfig.ColumnMappings = ColumnMappings.ToList();
-                ImportConfig.EnableDeduplication = chkRemoveDuplicates.Checked;
-                ImportConfig.DeduplicateStrategy = (DeduplicateStrategy)kcmbDeduplicateStrategy.SelectedIndex;
-                // 注意：DeduplicateFields 和 IgnoreEmptyValuesInDeduplication 已在配置对话框中直接修改 ImportConfig
                 ImportConfig.UpdateTimestamp();
 
                 // 保存配置
@@ -1019,7 +1054,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 加载已保存的映射配置或模板
-        /// 【优化】支持模板和配置的统一加载
         /// </summary>
         private void comboBoxSavedMappings_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -1031,9 +1065,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ImportConfig = new ImportConfiguration();
                 UpdateMappingsList();
 
-                // 【修复】重置去重设置到默认值
-                chkRemoveDuplicates.Checked = false;
-                kcmbDeduplicateStrategy.SelectedIndex = 0; // 默认选择"保留第一条记录"
+                // 重新绑定去重配置到新的 ImportConfig
+                BindDeduplicateConfig();
+                
                 // 重新加载Excel列和系统字段列表
                 LoadSystemFields();
                 if (ExcelData != null && ExcelData.Rows.Count > 0)
@@ -1051,11 +1085,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // 【修复】提取真实的配置名称(去除前缀)
+                // 提取真实的配置名称(去除前缀)
                 string mappingName = selectedItem;
                 if (selectedItem.StartsWith("[配置] "))
                 {
-                    mappingName = selectedItem.Substring(5); // 移除 "[配置] " 前缀
+                    mappingName = selectedItem.Substring(5);
                 }
 
                 _columnMappingManager ??= new ColumnMappingManager();
@@ -1071,9 +1105,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ColumnMappings = new List<ColumnMapping>(config?.ColumnMappings ?? new List<ColumnMapping>());
                 textBoxMappingName.Text = config?.MappingName ?? string.Empty;
 
-                // 更新去重复选框状态和策略
-                chkRemoveDuplicates.Checked = config?.EnableDeduplication ?? false;
-                kcmbDeduplicateStrategy.SelectedIndex = (int)(config?.DeduplicateStrategy ?? DeduplicateStrategy.FirstOccurrence);
+                // 重新绑定去重配置到新的 ImportConfig
+                BindDeduplicateConfig();
                 
                 // 显示去重字段配置状态
                 if (config?.EnableDeduplication == true && config.DeduplicateFields != null && config.DeduplicateFields.Count > 0)
@@ -1081,14 +1114,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     MainForm.Instance.PrintInfoLog($"加载配置：已配置 {config.DeduplicateFields.Count} 个去重字段");
                 }
 
-                // 【修复】重新加载Excel列和系统字段列表
+                // 重新加载Excel列和系统字段列表
                 LoadSystemFields();
                 if (ExcelData != null && ExcelData.Rows.Count > 0)
                 {
                     LoadExcelColumns();
                 }
 
-                // 【修复】从列表中移除已映射的项
+                // 从列表中移除已映射的项
                 foreach (var mapping in ColumnMappings)
                 {
                     // 只有真正的Excel列才需要从可用列表中移除
@@ -1186,7 +1219,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         OriginalExcelColumn = result.ExcelColumn,
                         SystemField = new SerializableKeyValuePair<string>(result.DbColumn, systemFieldDisplay),
                         IsUniqueValue = result.IsPrimaryKey,  // 【优化】智能识别主键
-                        DataSourceType = DataSourceType.Excel,
+                        ColumnDataSourceType = (int)DataSourceType.Excel,
                         DataSourceConfig = new ExcelConfig { ExcelColumn = result.ExcelColumn }
                     };
                     
@@ -1270,7 +1303,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     OriginalExcelColumn = excelCol,
                     SystemField = new SerializableKeyValuePair<string>(systemFieldKey, systemFieldDisplay),
                     IsUniqueValue = (suggestion.TargetField == aiResult.SuggestedLogicalKey),
-                    DataSourceType = DataSourceType.Excel,
+                    ColumnDataSourceType = (int)DataSourceType.Excel,
                     DataSourceConfig = new ExcelConfig { ExcelColumn = excelCol }
                 };
                 
@@ -1384,6 +1417,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             IsEditMode = false;
             OriginalMappingName = null;
             textBoxMappingName.Text = string.Empty;
+
+            // 重新创建 ImportConfig 并绑定
+            ImportConfig = new ImportConfiguration();
+            BindDeduplicateConfig();
 
             // 重新加载Excel列和系统字段列表
             LoadSystemFields();

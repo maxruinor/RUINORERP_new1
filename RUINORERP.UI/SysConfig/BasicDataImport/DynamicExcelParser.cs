@@ -1039,13 +1039,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             foreach (var mapping in columnMappings)
             {
                 // 1. 添加Excel数据源的列
-                if (mapping.DataSourceType == DataSourceType.Excel && !string.IsNullOrEmpty(mapping.OriginalExcelColumn))
+                if (mapping.ColumnDataSourceType == DataSourceType.Excel && !string.IsNullOrEmpty(mapping.OriginalExcelColumn))
                 {
                     requiredExcelColumns.Add(mapping.OriginalExcelColumn);
                 }
 
                 // 2. 添加外键关联的来源列
-                if (mapping.DataSourceType == DataSourceType.ForeignKey)
+                if (mapping.ColumnDataSourceType == DataSourceType.ForeignKey)
                 {
                     var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
                     if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
@@ -1055,7 +1055,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 3. 添加列拼接的源列
-                if (mapping.DataSourceType == DataSourceType.ColumnConcat)
+                if (mapping.ColumnDataSourceType == DataSourceType.ColumnConcat)
                 {
                     var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
                     if (concatConfig != null && concatConfig.ConcatColumns != null)
@@ -1071,7 +1071,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 4. 添加字段复制的源列
-                if (mapping.DataSourceType == DataSourceType.FieldCopy)
+                if (mapping.ColumnDataSourceType == DataSourceType.FieldCopy)
                 {
                     var copyConfig = mapping.DataSourceConfig as FieldCopyConfig;
                     if (copyConfig != null && !string.IsNullOrEmpty(copyConfig.SourceFieldName))
@@ -1130,7 +1130,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 对于外键关联类型，额外添加外键来源列到结果表中
-                if (mapping.DataSourceType == DataSourceType.ForeignKey)
+                if (mapping.ColumnDataSourceType == DataSourceType.ForeignKey)
                 {
                     var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
                     if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
@@ -1182,7 +1182,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         bool isImageColumn = false;
 
                         // 根据不同的数据来源类型读取数据
-                        switch (mapping.DataSourceType)
+                        switch (mapping.ColumnDataSourceType)
                         {
                             case DataSourceType.Excel:
                                 if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn) &&
@@ -1265,7 +1265,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         }
 
                         // 如果是外键关联，同时设置外键来源列的值
-                        if (mapping.DataSourceType == DataSourceType.ForeignKey)
+                        if (mapping.ColumnDataSourceType == DataSourceType.ForeignKey)
                         {
                             var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
                             if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))

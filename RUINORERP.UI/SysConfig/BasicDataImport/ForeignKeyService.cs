@@ -49,7 +49,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 收集所有外键映射
-            var foreignKeyMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ForeignKey).ToList();
+            var foreignKeyMappings = mappings.Where(m => m.ColumnDataSourceType == DataSourceType.ForeignKey).ToList();
             if (!foreignKeyMappings.Any())
             {
                 return;

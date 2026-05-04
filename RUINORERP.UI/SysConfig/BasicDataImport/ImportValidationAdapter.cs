@@ -49,7 +49,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 2. 验证外键关联配置完整性
-            if (mapping.DataSourceType == DataSourceType.ForeignKey)
+            if (mapping.ColumnDataSourceType == DataSourceType.ForeignKey)
             {
                 var foreignConfig = mapping.DataSourceConfig as ForeignKeyConfig;
                 if (foreignConfig == null)
@@ -79,7 +79,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 3. 验证列拼接配置
-            if (mapping.DataSourceType == DataSourceType.ColumnConcat)
+            if (mapping.ColumnDataSourceType == DataSourceType.ColumnConcat)
             {
                 var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
                 if (concatConfig == null || concatConfig.SourceColumns == null || 
@@ -102,7 +102,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 5. 验证图片配置
-            if (mapping.DataSourceType == DataSourceType.ExcelImage)
+            if (mapping.ColumnDataSourceType == DataSourceType.ExcelImage)
             {
                 var imageConfig = mapping.DataSourceConfig as ExcelImageConfig;
                 if (imageConfig != null)
@@ -122,7 +122,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 // 业务键字段通常应该是必填的
                 // 检查是否为必填：Excel数据源且未配置忽略空值
-                bool isRequiredField = mapping.DataSourceType == DataSourceType.Excel &&
+                bool isRequiredField = mapping.ColumnDataSourceType == DataSourceType.Excel &&
                                        !(mapping.DataSourceConfig is ExcelConfig excelCfg && excelCfg.IgnoreEmptyValue);
                 
                 if (!isRequiredField)

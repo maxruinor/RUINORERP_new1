@@ -2076,7 +2076,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 if (fkConfig != null && fkConfig.IsSelfReference)
                                 {
                                     // 自身表引用或字段复制
-                                    targetRow[mapping.SystemField?.Value] = $"[自身表引用:{fkConfig.ForeignFieldDisplayName}]";
+                                    string fieldDisplayName = GetFieldDisplayNameFromEntity(fkConfig.ForeignTableName, fkConfig.ForeignFieldName);
+                                    targetRow[mapping.SystemField?.Value] = $"[自身表引用:{fieldDisplayName}]";
                                 }
                                 else
                                 {
@@ -2100,11 +2101,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     if (!string.IsNullOrEmpty(foreignKeySourceValue))
                                     {
                                         string sourceColumnDisplay = fkConfig?.ForeignKeySourceColumn?.Value ?? sourceColumn;
-                                        targetRow[mapping.SystemField?.Key] = $"[通过关联外键:{sourceColumnDisplay}:{foreignKeySourceValue}->找{fkConfig?.ForeignTableDisplayName}.{fkConfig?.ForeignFieldDisplayName}]";
+                                        string tableDisplayName = GetTableDisplayName(fkConfig?.ForeignTableName);
+                                        string fieldDisplayName = GetFieldDisplayNameFromEntity(fkConfig?.ForeignTableName, fkConfig?.ForeignFieldName);
+                                        targetRow[mapping.SystemField?.Key] = $"[通过关联外键:{sourceColumnDisplay}:{foreignKeySourceValue}->找{tableDisplayName}.{fieldDisplayName}]";
                                     }
                                     else
                                     {
-                                        targetRow[mapping.SystemField?.Key] = $"[外键关联:{fkConfig?.ForeignTableDisplayName}.{fkConfig?.ForeignFieldDisplayName}]";
+                                        string tableDisplayName = GetTableDisplayName(fkConfig?.ForeignTableName);
+                                        string fieldDisplayName = GetFieldDisplayNameFromEntity(fkConfig?.ForeignTableName, fkConfig?.ForeignFieldName);
+                                        targetRow[mapping.SystemField?.Key] = $"[外键关联:{tableDisplayName}.{fieldDisplayName}]";
                                     }
                                 }
                                 break;
@@ -2401,6 +2406,85 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 .Replace("{Sequence}", GetNextSequence().ToString());
             
             return result;
+        }
+
+        /// <summary>
+        /// 获取表的中文显示名称
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>中文显示名称</returns>
+        private string GetTableDisplayName(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return tableName;
+
+            // 使用UCBasicDataImport中的EntityTypeMappings获取表的中文显示名称
+            if (UCBasicDataImport.EntityTypeMappings != null)
+            {
+                foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
+                {
+                    if (mapping.Value.Name == tableName)
+                    {
+                        return mapping.Key;
+                    }
+                }
+            }
+
+            return tableName;
+        }
+
+        /// <summary>
+        /// 获取字段的中文显示名称
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="fieldName">字段名（英文）</param>
+        /// <returns>中文显示名称</returns>
+        private string GetFieldDisplayNameFromEntity(string tableName, string fieldName)
+        {
+            if (string.IsNullOrEmpty(fieldName))
+                return fieldName;
+
+            // 尝试通过反射获取 DescriptionAttribute
+            try
+            {
+                Type entityType = null;
+                if (UCBasicDataImport.EntityTypeMappings != null)
+                {
+                    foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
+                    {
+                        if (mapping.Value.Name == tableName)
+                        {
+                            entityType = mapping.Value;
+                            break;
+                        }
+                    }
+                }
+
+                if (entityType != null)
+                {
+                    var propertyInfo = entityType.GetProperty(fieldName);
+                    if (propertyInfo != null)
+                    {
+                        var descAttr = propertyInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+                        if (descAttr != null)
+                        {
+                            return descAttr.Description;
+                        }
+
+                        var advAttr = propertyInfo.GetCustomAttribute<RUINORERP.Global.CustomAttribute.AdvQueryAttribute>();
+                        if (advAttr != null)
+                        {
+                            return advAttr.ColDesc;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 忽略反射异常
+            }
+
+            return fieldName;
         }
 
         /// <summary>

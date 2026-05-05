@@ -190,7 +190,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (foreignConfig != null)
                     {
                         string refType = foreignConfig.IsSelfReference ? "自身表" : "外键";
-                        return $"{refType}关联: {foreignConfig.ForeignTableDisplayName ?? "数据库表"}";
+                        string tableDisplayName = GetTableDisplayName(foreignConfig.ForeignTableName);
+                        return $"{refType}关联: {tableDisplayName}";
                     }
                     return "数据库表关联";
 
@@ -226,6 +227,35 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             return true;
+        }
+
+        #endregion
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 获取表的中文显示名称
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>中文显示名称</returns>
+        private string GetTableDisplayName(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return tableName;
+
+            // 使用UCBasicDataImport中的EntityTypeMappings获取表的中文显示名称
+            if (UCBasicDataImport.EntityTypeMappings != null)
+            {
+                foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
+                {
+                    if (mapping.Value.Name == tableName)
+                    {
+                        return mapping.Key;
+                    }
+                }
+            }
+
+            return tableName;
         }
 
         #endregion

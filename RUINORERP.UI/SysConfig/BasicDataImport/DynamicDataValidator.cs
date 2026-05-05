@@ -493,11 +493,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     string foreignKeyError;
                     if (!_foreignKeyService.ValidateForeignKey(row, mapping, rowNumber, out foreignKeyError))
                     {
+                        string tableDisplayName = GetTableDisplayName(fkConfig.ForeignTableName);
+                        string fieldDisplayName = GetFieldDisplayName(fkConfig.ForeignTableName, fkConfig.ForeignFieldName);
                         errors.Add(new ValidationError
                         {
                             RowNumber = rowNumber,
                             FieldName = mapping.SystemField?.Key,
-                            ErrorMessage = $"外键验证失败: {fkConfig.ForeignTableDisplayName}.{fkConfig.ForeignFieldDisplayName} = '{sourceValue}' 不存在",
+                            ErrorMessage = $"外键验证失败: {tableDisplayName}.{fieldDisplayName} = '{sourceValue}' 不存在",
                             ErrorType = ErrorType.ForeignKeyValidationFailed,
                             OriginalValue = sourceValue
                         });
@@ -505,6 +507,88 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
             }
         }
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 获取表的中文显示名称
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>中文显示名称</returns>
+        private string GetTableDisplayName(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return tableName;
+
+            // 使用UCBasicDataImport中的EntityTypeMappings获取表的中文显示名称
+            if (UCBasicDataImport.EntityTypeMappings != null)
+            {
+                foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
+                {
+                    if (mapping.Value.Name == tableName)
+                    {
+                        return mapping.Key;
+                    }
+                }
+            }
+
+            return tableName;
+        }
+
+        /// <summary>
+        /// 获取字段的中文显示名称
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="fieldName">字段名（英文）</param>
+        /// <returns>中文显示名称</returns>
+        private string GetFieldDisplayName(string tableName, string fieldName)
+        {
+            if (string.IsNullOrEmpty(fieldName))
+                return fieldName;
+
+            try
+            {
+                Type entityType = null;
+                if (UCBasicDataImport.EntityTypeMappings != null)
+                {
+                    foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
+                    {
+                        if (mapping.Value.Name == tableName)
+                        {
+                            entityType = mapping.Value;
+                            break;
+                        }
+                    }
+                }
+
+                if (entityType != null)
+                {
+                    var propertyInfo = entityType.GetProperty(fieldName);
+                    if (propertyInfo != null)
+                    {
+                        var descAttr = propertyInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+                        if (descAttr != null)
+                        {
+                            return descAttr.Description;
+                        }
+
+                        var advAttr = propertyInfo.GetCustomAttribute<RUINORERP.Global.CustomAttribute.AdvQueryAttribute>();
+                        if (advAttr != null)
+                        {
+                            return advAttr.ColDesc;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 忽略反射异常
+            }
+
+            return fieldName;
+        }
+
+        #endregion
     }
 
     /// <summary>

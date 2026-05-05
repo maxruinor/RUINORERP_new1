@@ -243,7 +243,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             if (dbRefConfig != null)
                             {
                                 string refType = dbRefConfig.IsSelfReference ? "自身表" : "外键";
-                                mapping.OriginalExcelColumn = $"[{refType}关联:{dbRefConfig.ForeignFieldDisplayName}] {systemField}";
+                                string fieldDisplayName = GetFieldDisplayName(dbRefConfig.ForeignTableName, dbRefConfig.ForeignFieldName);
+                                mapping.OriginalExcelColumn = $"[{refType}关联:{fieldDisplayName}] {systemField}";
                             }
                             break;
                         case (int)DataSourceType.ColumnConcat:
@@ -898,6 +899,58 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public ConcurrentDictionary<string, string> FieldNameList { get; set; } = new ConcurrentDictionary<string, string>();
 
+        /// <summary>
+        /// 获取字段的中文显示名称
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="fieldName">字段名（英文）</param>
+        /// <returns>中文显示名称</returns>
+        private string GetFieldDisplayName(string tableName, string fieldName)
+        {
+            if (string.IsNullOrEmpty(fieldName))
+                return fieldName;
+
+            try
+            {
+                Type entityType = null;
+                if (UCBasicDataImport.EntityTypeMappings != null)
+                {
+                    foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
+                    {
+                        if (mapping.Value.Name == tableName)
+                        {
+                            entityType = mapping.Value;
+                            break;
+                        }
+                    }
+                }
+
+                if (entityType != null)
+                {
+                    var propertyInfo = entityType.GetProperty(fieldName);
+                    if (propertyInfo != null)
+                    {
+                        var descAttr = propertyInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+                        if (descAttr != null)
+                        {
+                            return descAttr.Description;
+                        }
+
+                        var advAttr = propertyInfo.GetCustomAttribute<RUINORERP.Global.CustomAttribute.AdvQueryAttribute>();
+                        if (advAttr != null)
+                        {
+                            return advAttr.ColDesc;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 忽略反射异常
+            }
+
+            return fieldName;
+        }
 
         /// <summary>
         /// 添加映射
@@ -987,7 +1040,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         if (dbRefConfig != null)
                         {
                             string refType = dbRefConfig.IsSelfReference ? "自身表" : "外键";
-                            flags.Add($"{refType}关联:{dbRefConfig.ForeignFieldDisplayName}");
+                            string fieldDisplayName = GetFieldDisplayName(dbRefConfig.ForeignTableName, dbRefConfig.ForeignFieldName);
+                            flags.Add($"{refType}关联:{fieldDisplayName}");
                         }
                         break;
                     case (int)DataSourceType.ColumnConcat:
@@ -1740,16 +1794,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     {
                         IsSelfReference = foreignConfig.IsSelfReference,
                         ForeignTableName = foreignConfig.ForeignTableName,
-                        ForeignTableDisplayName = foreignConfig.ForeignTableDisplayName,
                         ForeignFieldName = foreignConfig.ForeignFieldName,
-                        ForeignFieldDisplayName = foreignConfig.ForeignFieldDisplayName,
-                        DisplayFieldName = foreignConfig.DisplayFieldName,
-                        DisplayFieldDisplayName = foreignConfig.DisplayFieldDisplayName,
                         ForeignKeySourceColumn = foreignConfig.ForeignKeySourceColumn != null
                             ? new SerializableKeyValuePair<string>(foreignConfig.ForeignKeySourceColumn.Key, foreignConfig.ForeignKeySourceColumn.Value)
-                            : null,
-                        UseDefaultWhenNotFound = foreignConfig.UseDefaultWhenNotFound,
-                        DefaultValueWhenNotFound = foreignConfig.DefaultValueWhenNotFound
+                            : null
                     };
 
                 case ColumnConcatConfig concatConfig:

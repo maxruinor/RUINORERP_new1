@@ -180,8 +180,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            var entityType = typeof(T);
+            var entityType = entities[0].GetType();
             string typeName = entityType.Name;
+
 
             // 根据实体类型进行批量处理
             switch (typeName)

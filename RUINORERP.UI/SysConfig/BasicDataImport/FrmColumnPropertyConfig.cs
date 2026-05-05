@@ -434,11 +434,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 2. 加载关联表列表
             LoadRelatedTables();
 
-            // 3. 如果是自身表引用，自动选中目标表
+            // 3. 如果是自身表引用，自动选中目标表并隐藏外键来源列控件
             if (config.IsSelfReference)
             {
                 config.ForeignTableName = TargetEntityType?.Name;
-                config.ForeignTableDisplayName = GetTargetTableDisplayName();
+                
+                // 自身表引用不需要外键来源列，隐藏相关控件
+                kcmbForeignExcelSourceColumn.Visible = false;
+                kryptonLabel2.Visible = false;
+                kcmbForeignDbSourceColumn.Visible = false;
+                kryptonLabel11.Visible = false;
+            }
+            else
+            {
+                // 外键关联模式，显示外键来源列控件
+                kcmbForeignExcelSourceColumn.Visible = true;
+                kryptonLabel2.Visible = true;
+                kcmbForeignDbSourceColumn.Visible = true;
+                kryptonLabel11.Visible = true;
             }
 
             // 4. 选中对应的关联表
@@ -458,15 +471,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 LoadTableFields(config.ForeignTableName);
             }
 
-            // 5. 绑定关联字段显示名称
-            if (!string.IsNullOrEmpty(config.ForeignFieldDisplayName))
+            // 5. 选中已配置的关联字段（通过英文字段名匹配）
+            if (!string.IsNullOrEmpty(config.ForeignFieldName) && _fieldInfoDict != null)
             {
-                ktxtRelatedField.SelectedItem = config.ForeignFieldDisplayName;
+                string fieldDisplayName = GetFieldDisplayName(
+                    _tableSchemaManager?.GetEntityType(config.ForeignTableName), 
+                    config.ForeignFieldName);
+                ktxtRelatedField.SelectedItem = fieldDisplayName;
             }
 
-            // 6. 加载外键来源列并选中已配置的值
-            string foreignKeySourceColumn = config.ForeignKeySourceColumn?.Key;
-            LoadForeignKeySourceColumns(foreignKeySourceColumn);
+            // 6. 加载外键来源列并选中已配置的值（仅在外键关联模式下）
+            if (!config.IsSelfReference)
+            {
+                string foreignKeySourceColumn = config.ForeignKeySourceColumn?.Key;
+                LoadForeignKeySourceColumns(foreignKeySourceColumn);
+            }
         }
 
         /// <summary>
@@ -668,8 +687,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     // 勾选时，自动设置为目标表并禁用下拉框
                     config.ForeignTableName = TargetEntityType?.Name;
-                    config.ForeignTableDisplayName = GetTargetTableDisplayName();
                     kcmbRelatedTable.Enabled = false;
+                    
+                    // 自身表引用不需要外键来源列，隐藏相关控件
+                    kcmbForeignExcelSourceColumn.Visible = false;
+                    kryptonLabel2.Visible = false;
+                    kcmbForeignDbSourceColumn.Visible = false;
+                    kryptonLabel11.Visible = false;
                     
                     // 加载目标表的字段
                     LoadTableFields(config.ForeignTableName);
@@ -681,10 +705,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     kcmbRelatedTable.SelectedIndex = 0;
                     ktxtRelatedField.Items.Clear();
                     
+                    // 外键关联模式，显示外键来源列控件
+                    kcmbForeignExcelSourceColumn.Visible = true;
+                    kryptonLabel2.Visible = true;
+                    kcmbForeignDbSourceColumn.Visible = true;
+                    kryptonLabel11.Visible = true;
+                    
                     config.ForeignTableName = null;
-                    config.ForeignTableDisplayName = null;
                     config.ForeignFieldName = null;
-                    config.ForeignFieldDisplayName = null;
                 }
             }
         }
@@ -855,7 +883,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (CurrentMapping?.DataSourceConfig is DatabaseReferenceConfig config)
                 {
                     config.ForeignFieldName = field.Key;
-                    config.ForeignFieldDisplayName = field.Value;
                 }
             }
         }
@@ -1184,6 +1211,53 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 回退到表名本身
             return tableName;
+        }
+
+        /// <summary>
+        /// 获取字段的中文显示名称
+        /// 通过反射获取 DescriptionAttribute 或从 _fieldInfoDict 中查找
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <param name="fieldName">字段名（英文）</param>
+        /// <returns>中文显示名称</returns>
+        private string GetFieldDisplayName(Type entityType, string fieldName)
+        {
+            if (entityType == null || string.IsNullOrEmpty(fieldName))
+                return fieldName;
+
+            // 优先从 _fieldInfoDict 中查找
+            if (_fieldInfoDict != null && _fieldInfoDict.TryGetValue(fieldName, out string displayName))
+            {
+                return displayName;
+            }
+
+            // 通过反射获取 DescriptionAttribute
+            try
+            {
+                var propertyInfo = entityType.GetProperty(fieldName);
+                if (propertyInfo != null)
+                {
+                    var descAttr = propertyInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+                    if (descAttr != null)
+                    {
+                        return descAttr.Description;
+                    }
+
+                    // 尝试 AdvQueryAttribute
+                    var advAttr = propertyInfo.GetCustomAttribute<RUINORERP.Global.CustomAttribute.AdvQueryAttribute>();
+                    if (advAttr != null)
+                    {
+                        return advAttr.ColDesc;
+                    }
+                }
+            }
+            catch
+            {
+                // 忽略反射异常
+            }
+
+            // 回退到字段名本身
+            return fieldName;
         }
 
         /// <summary>

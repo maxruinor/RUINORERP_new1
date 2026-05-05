@@ -340,57 +340,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 关联表名（英文）
         /// 当IsSelfReference=true时，此值为目标表名
+        /// 中文显示名可通过 TableSchemaManager 或 DescriptionAttribute 动态获取
         /// </summary>
         [XmlElement("ForeignTableName")]
         public string ForeignTableName { get; set; }
 
         /// <summary>
-        /// 关联表显示名（中文）
-        /// </summary>
-        [XmlElement("ForeignTableDisplayName")]
-        public string ForeignTableDisplayName { get; set; }
-
-        /// <summary>
         /// 关联字段名（英文）
+        /// 中文显示名可通过反射 DescriptionAttribute 动态获取
         /// </summary>
         [XmlElement("ForeignFieldName")]
         public string ForeignFieldName { get; set; }
-
-        /// <summary>
-        /// 关联字段显示名（中文）
-        /// </summary>
-        [XmlElement("ForeignFieldDisplayName")]
-        public string ForeignFieldDisplayName { get; set; }
-
-        /// <summary>
-        /// 显示字段名（用于在UI中显示的字段）
-        /// </summary>
-        [XmlElement("DisplayFieldName")]
-        public string DisplayFieldName { get; set; }
-
-        /// <summary>
-        /// 显示字段显示名（中文）
-        /// </summary>
-        [XmlElement("DisplayFieldDisplayName")]
-        public string DisplayFieldDisplayName { get; set; }
 
         /// <summary>
         /// 外键来源列（Excel中的列名）
         /// </summary>
         [XmlElement("ForeignKeySourceColumn")]
         public SerializableKeyValuePair<string> ForeignKeySourceColumn { get; set; }
-
-        /// <summary>
-        /// 当外键关联失败时是否使用默认值
-        /// </summary>
-        [XmlElement("UseDefaultWhenNotFound")]
-        public bool UseDefaultWhenNotFound { get; set; }
-
-        /// <summary>
-        /// 外键关联失败时的默认值
-        /// </summary>
-        [XmlElement("DefaultValueWhenNotFound")]
-        public string DefaultValueWhenNotFound { get; set; }
 
         /// <summary>
         /// 验证配置是否有效
@@ -429,6 +395,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         [XmlIgnore]
         public Type TargetEntityType { get; set; }
     }
+
 
     #endregion
 

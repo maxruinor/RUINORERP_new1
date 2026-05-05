@@ -18,11 +18,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class ExcelConfig : DataSourceConfigBase
     {
         /// <summary>
-        /// 数据来源类型
-        /// </summary>
-        public override DataSourceType DataSourceType => DataSourceType.Excel;
-
-        /// <summary>
         /// Excel列名
         /// </summary>
         [XmlElement("ExcelColumn")]
@@ -97,8 +92,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 数据来源类型
         /// </summary>
-        public override DataSourceType DataSourceType => DataSourceType.DefaultFixedValue;
-
         /// <summary>
         /// 默认固定值（字符串形式）
         /// 当Excel中没有对应数据源时，使用此固定值填充目标字段
@@ -188,11 +181,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     [XmlRoot("SystemGeneratedConfig")]
     public class SystemGeneratedConfig : DataSourceConfigBase
     {
-        /// <summary>
-        /// 数据来源类型
-        /// </summary>
-        public override DataSourceType DataSourceType => DataSourceType.SystemGenerated;
-
         /// <summary>
         /// 系统生成类型
         /// </summary>
@@ -333,12 +321,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class DatabaseReferenceConfig : DataSourceConfigBase
     {
         /// <summary>
-        /// 数据来源类型
-        /// 返回 ForeignKey 枚举值，通过 IsSelfReference 属性区分具体模式
-        /// </summary>
-        public override DataSourceType DataSourceType => DataSourceType.ForeignKey;
-
-        /// <summary>
         /// 是否为自身表引用
         /// true: 引用当前目标表自身的字段（如树结构中的父类ID）
         /// false: 引用其他表的字段（外键关联）
@@ -455,8 +437,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 数据来源类型
         /// </summary>
-        public override DataSourceType DataSourceType => DataSourceType.ColumnConcat;
-
         /// <summary>
         /// 拼接的列名列表（旧版本兼容）
         /// </summary>
@@ -591,11 +571,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     [XmlRoot("ExcelImageConfig")]
     public class ExcelImageConfig : DataSourceConfigBase
     {
-        /// <summary>
-        /// 数据来源类型
-        /// </summary>
-        public override DataSourceType DataSourceType => DataSourceType.ExcelImage;
-
         /// <summary>
         /// 图片存储类型
         /// </summary>

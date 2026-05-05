@@ -1363,7 +1363,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     OriginalExcelColumn = excelCol,
                     SystemField = new SerializableKeyValuePair<string>(systemFieldKey, systemFieldDisplay),
                     IsUniqueValue = (suggestion.TargetField == aiResult.SuggestedLogicalKey),
-                    ColumnDataSourceType = (int)DataSourceType.Excel,
                     DataSourceConfig = new ExcelConfig { ExcelColumn = excelCol }
                 };
 
@@ -1692,7 +1691,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     : null,
                 IsUniqueValue = mapping.IsUniqueValue,
                 IsBusinessKey = mapping.IsBusinessKey,
-                ColumnDataSourceType = mapping.ColumnDataSourceType,
                 DataSourceConfig = CloneDataSourceConfig(mapping.DataSourceConfig)
             };
 

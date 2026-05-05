@@ -12,11 +12,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public interface IDataSourceConfig : INotifyPropertyChanged
     {
         /// <summary>
-        /// 数据来源类型
-        /// </summary>
-        DataSourceType DataSourceType { get; }
-
-        /// <summary>
         /// 验证配置是否有效
         /// </summary>
         /// <param name="errorMessage">错误信息</param>
@@ -37,11 +32,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     [Serializable]
     public abstract class DataSourceConfigBase : IDataSourceConfig
     {
-        /// <summary>
-        /// 数据来源类型
-        /// </summary>
-        public abstract DataSourceType DataSourceType { get; }
-
         /// <summary>
         /// 属性变更事件
         /// </summary>

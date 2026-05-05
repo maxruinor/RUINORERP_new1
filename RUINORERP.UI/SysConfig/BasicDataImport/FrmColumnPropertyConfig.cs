@@ -160,10 +160,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             DataBindingHelper.BindData4CheckBox<ColumnMapping>(CurrentMapping, m => m.IsBusinessKey, kchkIsBusinessKey, false);
             DataBindingHelper.BindData4CheckBox<ColumnMapping>(CurrentMapping, m => m.IsUniqueValue, kchkIsUniqueValue, false);
             // 2. 绑定数据来源类型
-            DataBindingHelper.BindData4CmbByEnum<ColumnMapping>(CurrentMapping, m => (int)m.ColumnDataSourceType, typeof(DataSourceType), kcmbDataSourceType, false);
+            DataBindingHelper.BindData4CmbByEnum<ColumnMapping>(CurrentMapping, m => m.ColumnDataSourceType, typeof(DataSourceType), kcmbDataSourceType, false);
 
-            // 3. 根据 DataSourceType 切换到对应的 Tab 页
-            kryptonTabControl.SelectedIndex = (int)CurrentMapping.ColumnDataSourceType;
+            // 3. 根据 ColumnDataSourceType 切换到对应的 Tab 页
+            kryptonTabControl.SelectedIndex = CurrentMapping.ColumnDataSourceType;
 
             // 4. 绑定数据源配置对象到控件（双向绑定）
             if (CurrentMapping.DataSourceConfig != null)

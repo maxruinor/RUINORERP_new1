@@ -120,7 +120,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private DataSourceConfigBase _dataSourceConfig;
         /// <summary>
         /// 数据源配置（统一配置接口）
-        /// 根据DataSourceType的不同，存储对应的配置对象
+        /// 根据ColumnDataSourceType的不同，存储对应的配置对象
         /// </summary>
         [XmlElement("DataSourceConfig")]
         public DataSourceConfigBase DataSourceConfig

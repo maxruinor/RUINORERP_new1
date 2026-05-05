@@ -94,7 +94,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kbtnConfigDeduplicateFields
             // 
-            this.kbtnConfigDeduplicateFields.Location = new System.Drawing.Point(761, 538);
+            this.kbtnConfigDeduplicateFields.Location = new System.Drawing.Point(786, 538);
             this.kbtnConfigDeduplicateFields.Name = "kbtnConfigDeduplicateFields";
             this.kbtnConfigDeduplicateFields.Size = new System.Drawing.Size(100, 25);
             this.kbtnConfigDeduplicateFields.TabIndex = 39;
@@ -128,7 +128,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             "保留最后一条记录"});
             this.kcmbDeduplicateStrategy.Location = new System.Drawing.Point(587, 541);
             this.kcmbDeduplicateStrategy.Name = "kcmbDeduplicateStrategy";
-            this.kcmbDeduplicateStrategy.Size = new System.Drawing.Size(165, 21);
+            this.kcmbDeduplicateStrategy.Size = new System.Drawing.Size(193, 21);
             this.kcmbDeduplicateStrategy.TabIndex = 37;
             // 
             // chkRemoveDuplicates
@@ -157,12 +157,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbExistenceStrategy.IntegralHeight = false;
             this.kcmbExistenceStrategy.Location = new System.Drawing.Point(587, 610);
             this.kcmbExistenceStrategy.Name = "kcmbExistenceStrategy";
-            this.kcmbExistenceStrategy.Size = new System.Drawing.Size(165, 21);
+            this.kcmbExistenceStrategy.Size = new System.Drawing.Size(193, 21);
             this.kcmbExistenceStrategy.TabIndex = 42;
             // 
             // kbtnAutoMatch
             // 
-            this.kbtnAutoMatch.Location = new System.Drawing.Point(471, 246);
+            this.kbtnAutoMatch.Location = new System.Drawing.Point(460, 260);
             this.kbtnAutoMatch.Name = "kbtnAutoMatch";
             this.kbtnAutoMatch.Size = new System.Drawing.Size(100, 25);
             this.kbtnAutoMatch.TabIndex = 11;
@@ -180,7 +180,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kbtnSetColumnProperty
             // 
-            this.kbtnSetColumnProperty.Location = new System.Drawing.Point(786, 300);
+            this.kbtnSetColumnProperty.Location = new System.Drawing.Point(786, 442);
             this.kbtnSetColumnProperty.Name = "kbtnSetColumnProperty";
             this.kbtnSetColumnProperty.Size = new System.Drawing.Size(100, 25);
             this.kbtnSetColumnProperty.TabIndex = 12;
@@ -198,7 +198,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kbtnAddMapping
             // 
-            this.kbtnAddMapping.Location = new System.Drawing.Point(612, 246);
+            this.kbtnAddMapping.Location = new System.Drawing.Point(700, 269);
             this.kbtnAddMapping.Name = "kbtnAddMapping";
             this.kbtnAddMapping.Size = new System.Drawing.Size(80, 25);
             this.kbtnAddMapping.TabIndex = 8;
@@ -234,17 +234,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // listBoxSystemFields
             // 
-            this.listBoxSystemFields.Location = new System.Drawing.Point(460, 50);
+            this.listBoxSystemFields.Location = new System.Drawing.Point(460, 29);
             this.listBoxSystemFields.Name = "listBoxSystemFields";
-            this.listBoxSystemFields.Size = new System.Drawing.Size(320, 180);
+            this.listBoxSystemFields.Size = new System.Drawing.Size(320, 225);
             this.listBoxSystemFields.TabIndex = 4;
             this.listBoxSystemFields.DoubleClick += new System.EventHandler(this.listBoxSystemFields_DoubleClick);
             // 
             // listBoxExcelColumns
             // 
-            this.listBoxExcelColumns.Location = new System.Drawing.Point(10, 50);
+            this.listBoxExcelColumns.Location = new System.Drawing.Point(10, 29);
             this.listBoxExcelColumns.Name = "listBoxExcelColumns";
-            this.listBoxExcelColumns.Size = new System.Drawing.Size(320, 180);
+            this.listBoxExcelColumns.Size = new System.Drawing.Size(320, 225);
             this.listBoxExcelColumns.TabIndex = 3;
             // 
             // kryptonLabel5
@@ -273,7 +273,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(460, 25);
+            this.kryptonLabel2.Location = new System.Drawing.Point(460, 4);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel2.TabIndex = 1;
@@ -281,7 +281,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(10, 25);
+            this.kryptonLabel1.Location = new System.Drawing.Point(10, 4);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(87, 20);
             this.kryptonLabel1.TabIndex = 0;

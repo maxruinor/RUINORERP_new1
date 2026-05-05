@@ -73,14 +73,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            LoadRelatedTables();
-            _dataBindingHelper = new DataBindingHelper();
-            _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+            // ✅ 在设计时模式下,不要执行可能出错的初始化代码
+            try
+            {
+                LoadRelatedTables();
+                _dataBindingHelper = new DataBindingHelper();
+                _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
 
-            // 手动绑定事件
-            kcmbDataSourceType.SelectedIndexChanged += kcmbDataSourceType_SelectedIndexChanged;
-            chkIsSelfReference.CheckedChanged += chkIsSelfReference_CheckedChanged;
-            this.FormClosing += FrmColumnPropertyConfig_FormClosing;
+                // 手动绑定事件
+                kcmbDataSourceType.SelectedIndexChanged += kcmbDataSourceType_SelectedIndexChanged;
+                chkIsSelfReference.CheckedChanged += chkIsSelfReference_CheckedChanged;
+                this.FormClosing += FrmColumnPropertyConfig_FormClosing;
+            }
+            catch (Exception ex)
+            {
+                // 设计时出错不影响设计器加载
+                System.Diagnostics.Debug.WriteLine($"FrmColumnPropertyConfig 初始化失败: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -156,6 +165,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             if (CurrentMapping == null) return;
 
+            // ✅ 确保配置对象存在且类型匹配
+            EnsureDataSourceConfigExists();
+
             // 1. 绑定业务键相关控件
             DataBindingHelper.BindData4CheckBox<ColumnMapping>(CurrentMapping, m => m.IsBusinessKey, kchkIsBusinessKey, false);
             DataBindingHelper.BindData4CheckBox<ColumnMapping>(CurrentMapping, m => m.IsUniqueValue, kchkIsUniqueValue, false);
@@ -166,36 +178,90 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kryptonTabControl.SelectedIndex = CurrentMapping.ColumnDataSourceType;
 
             // 4. 绑定数据源配置对象到控件（双向绑定）
-            if (CurrentMapping.DataSourceConfig != null)
-            {
-                switch (CurrentMapping.ColumnDataSourceType)
-                {
-                    case (int)DataSourceType.Excel:
-                        BindExcelConfig(CurrentMapping.DataSourceConfig as ExcelConfig);
-                        break;
-                    case (int)DataSourceType.DefaultFixedValue:
-                        BindDefaultValueConfig(CurrentMapping.DataSourceConfig as DefaultValueConfig);
-                        break;
-                    case (int)DataSourceType.SystemGenerated:
-                        BindSystemGeneratedConfig(CurrentMapping.DataSourceConfig as SystemGeneratedConfig);
-                        break;
-                    case (int)DataSourceType.ForeignKey:
-                        BindDatabaseReferenceConfig(CurrentMapping.DataSourceConfig as DatabaseReferenceConfig);
-                        break;
-                    case (int)DataSourceType.ColumnConcat:
-                        BindColumnConcatConfig(CurrentMapping.DataSourceConfig as ColumnConcatConfig);
-                        break;
-                    case (int)DataSourceType.ExcelImage:
-                        BindExcelImageConfig(CurrentMapping.DataSourceConfig as ExcelImageConfig);
-                        break;
-                }
-            }
+            BindDataSourceConfigByType(CurrentMapping.ColumnDataSourceType);
 
             // 5. 加载下拉框数据（如果需要）
             LoadDropdownDataIfNeeded(CurrentMapping.ColumnDataSourceType);
 
             // 6. 更新控件状态
             UpdateControlStates();
+        }
+
+        /// <summary>
+        /// 确保数据源配置对象存在且类型匹配
+        /// </summary>
+        private void EnsureDataSourceConfigExists()
+        {
+            var targetType = (DataSourceType)CurrentMapping.ColumnDataSourceType;
+            
+            if (CurrentMapping.DataSourceConfig == null || !IsConfigTypeMatch(CurrentMapping.DataSourceConfig, targetType))
+            {
+                CurrentMapping.DataSourceConfig = CreateDefaultConfig(targetType);
+            }
+        }
+
+        /// <summary>
+        /// 检查配置对象类型是否匹配
+        /// </summary>
+        private bool IsConfigTypeMatch(DataSourceConfigBase config, DataSourceType targetType)
+        {
+            return targetType switch
+            {
+                DataSourceType.Excel => config is ExcelConfig,
+                DataSourceType.DefaultFixedValue => config is DefaultValueConfig,
+                DataSourceType.SystemGenerated => config is SystemGeneratedConfig,
+                DataSourceType.ForeignKey => config is DatabaseReferenceConfig,
+                DataSourceType.ColumnConcat => config is ColumnConcatConfig,
+                DataSourceType.ExcelImage => config is ExcelImageConfig,
+                _ => false
+            };
+        }
+
+        /// <summary>
+        /// 创建默认配置对象
+        /// </summary>
+        private DataSourceConfigBase CreateDefaultConfig(DataSourceType type)
+        {
+            return type switch
+            {
+                DataSourceType.Excel => new ExcelConfig(),
+                DataSourceType.DefaultFixedValue => new DefaultValueConfig(),
+                DataSourceType.SystemGenerated => new SystemGeneratedConfig(),
+                DataSourceType.ForeignKey => new DatabaseReferenceConfig(),
+                DataSourceType.ColumnConcat => new ColumnConcatConfig(),
+                DataSourceType.ExcelImage => new ExcelImageConfig(),
+                _ => new ExcelConfig()
+            };
+        }
+
+        /// <summary>
+        /// 根据数据源类型绑定配置对象
+        /// </summary>
+        private void BindDataSourceConfigByType(int dataSourceType)
+        {
+            if (CurrentMapping.DataSourceConfig == null) return;
+
+            switch (dataSourceType)
+            {
+                case (int)DataSourceType.Excel:
+                    BindExcelConfig(CurrentMapping.DataSourceConfig as ExcelConfig);
+                    break;
+                case (int)DataSourceType.DefaultFixedValue:
+                    BindDefaultValueConfig(CurrentMapping.DataSourceConfig as DefaultValueConfig);
+                    break;
+                case (int)DataSourceType.SystemGenerated:
+                    BindSystemGeneratedConfig(CurrentMapping.DataSourceConfig as SystemGeneratedConfig);
+                    break;
+                case (int)DataSourceType.ForeignKey:
+                    BindDatabaseReferenceConfig(CurrentMapping.DataSourceConfig as DatabaseReferenceConfig);
+                    break;
+                case (int)DataSourceType.ColumnConcat:
+                    BindColumnConcatConfig(CurrentMapping.DataSourceConfig as ColumnConcatConfig);
+                    break;
+                case (int)DataSourceType.ExcelImage:
+                    BindExcelImageConfig(CurrentMapping.DataSourceConfig as ExcelImageConfig);
+                    break;
+            }
         }
 
         /// <summary>
@@ -529,6 +595,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void UpdateControlStates()
         {
+            // ✅ 安全检查:确保 SelectedIndex 有效
+            if (kcmbDataSourceType == null || kcmbDataSourceType.SelectedIndex < 0)
+            {
+                return;
+            }
+
             DataSourceType dataSourceType = (DataSourceType)kcmbDataSourceType.SelectedIndex;
 
             // 根据数据来源类型控制控件状态
@@ -546,7 +618,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kryptonGroupBoxConcat.Visible = (dataSourceType == DataSourceType.ColumnConcat);
 
             // 控制图片配置GroupBox的显示和隐藏
-            kryptonGroupBoxImageType.Visible = (dataSourceType == DataSourceType.ExcelImage) || kchkIsImageColumn.Checked;
+            kryptonGroupBoxImageType.Visible = (dataSourceType == DataSourceType.ExcelImage) || (kchkIsImageColumn != null && kchkIsImageColumn.Checked);
 
             // 控制系统生成配置GroupBox的显示和隐藏
             kryptonGroupBoxSystemGenerated.Visible = (dataSourceType == DataSourceType.SystemGenerated);
@@ -555,7 +627,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             UpdateSystemGeneratedControlStates();
 
             // 如果选择了Excel图片类型，自动勾选图片列
-            if (dataSourceType == DataSourceType.ExcelImage)
+            if (dataSourceType == DataSourceType.ExcelImage && kchkIsImageColumn != null)
             {
                 kchkIsImageColumn.Checked = true;
             }
@@ -859,7 +931,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void UpdateSystemGeneratedControlStates()
         {
-            if (kcmbSystemGeneratedType == null) return;
+            if (kcmbSystemGeneratedType == null || kcmbBusinessCodeRule == null) return;
+
+            // ✅ 安全检查:确保 SelectedIndex 有效
+            if (kcmbSystemGeneratedType.SelectedIndex < 0)
+            {
+                // 如果未选择任何项,隐藏所有配置控件
+                kryptonLabel22.Visible = false;
+                ktxtDateTimeFormat.Visible = false;
+                kryptonLabel23.Visible = false;
+                kcmbBusinessCodeRule.Visible = false;
+                kryptonLabel24.Visible = false;
+                ktxtBusinessCodePrefix.Visible = false;
+                kryptonLabel25.Visible = false;
+                ktxtSequenceDigits.Visible = false;
+                kryptonLabel26.Visible = false;
+                ktxtCustomDefaultValue.Visible = false;
+                kryptonLabel27.Visible = false;
+                ktxtCustomExpression.Visible = false;
+                return;
+            }
 
             SystemGeneratedType generatedType = (SystemGeneratedType)kcmbSystemGeneratedType.SelectedIndex;
 
@@ -871,9 +962,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 业务编码相关配置
             kryptonLabel23.Visible = (generatedType == SystemGeneratedType.BusinessCode);
             kcmbBusinessCodeRule.Visible = kryptonLabel23.Visible;
-            kryptonLabel24.Visible = (generatedType == SystemGeneratedType.BusinessCode &&
-                                     (kcmbBusinessCodeRule.SelectedIndex == (int)BusinessCodeRule.PrefixDateSequence ||
-                                      kcmbBusinessCodeRule.SelectedIndex == (int)BusinessCodeRule.PrefixSequence));
+            
+            // ✅ 安全检查:确保 BusinessCodeRule 的 SelectedIndex 有效
+            bool shouldShowPrefix = false;
+            if (kcmbBusinessCodeRule.SelectedIndex >= 0)
+            {
+                shouldShowPrefix = (kcmbBusinessCodeRule.SelectedIndex == (int)BusinessCodeRule.PrefixDateSequence ||
+                                   kcmbBusinessCodeRule.SelectedIndex == (int)BusinessCodeRule.PrefixSequence);
+            }
+            kryptonLabel24.Visible = (generatedType == SystemGeneratedType.BusinessCode && shouldShowPrefix);
             ktxtBusinessCodePrefix.Visible = kryptonLabel24.Visible;
 
             // 序号位数配置
@@ -909,30 +1006,77 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="e">事件参数</param>
         private void kcmbDataSourceType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            UpdateControlStates();
+            if (kcmbDataSourceType.SelectedIndex < 0) return;
 
-            // ✅ 根据数据来源类型自动切换到对应的Tab页
+            var newType = (DataSourceType)kcmbDataSourceType.SelectedIndex;
+
+            // ✅ 创建新的配置对象（如果类型不匹配）
+            if (CurrentMapping.DataSourceConfig == null || 
+                !IsConfigTypeMatch(CurrentMapping.DataSourceConfig, newType))
+            {
+                // 保存旧配置（如果需要迁移数据）
+                var oldConfig = CurrentMapping.DataSourceConfig;
+                
+                // 创建新类型的默认配置
+                CurrentMapping.DataSourceConfig = CreateDefaultConfig(newType);
+                
+                // ✅ 尝试迁移相关数据（如Excel列名）
+                MigrateConfigData(oldConfig, CurrentMapping.DataSourceConfig, newType);
+            }
+
+            // ✅ 重新绑定配置到控件
+            BindDataSourceConfigByType(kcmbDataSourceType.SelectedIndex);
+            
+            // 切换Tab页
             if (kcmbDataSourceType.SelectedIndex >= 0 && kcmbDataSourceType.SelectedIndex < kryptonTabControl.TabCount)
             {
                 kryptonTabControl.SelectedIndex = kcmbDataSourceType.SelectedIndex;
             }
 
-            // 如果选择了数据库表关联引用，加载字段列表
-            if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.ForeignKey)
-            {
-                LoadSelfReferenceFields();
-            }
+            // 加载下拉框数据
+            LoadDropdownDataIfNeeded(kcmbDataSourceType.SelectedIndex);
+            
+            UpdateControlStates();
+        }
 
-            // 如果选择了列拼接，加载Excel列列表
-            if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.ColumnConcat)
-            {
-                LoadConcatSourceColumns();
-            }
+        /// <summary>
+        /// 迁移配置数据（在切换数据源类型时保留相关信息）
+        /// </summary>
+        private void MigrateConfigData(DataSourceConfigBase oldConfig, DataSourceConfigBase newConfig, DataSourceType newType)
+        {
+            if (oldConfig == null || newConfig == null) return;
 
-            // 如果选择了Excel图片，加载图片命名参考列
-            if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.ExcelImage)
+            // 如果旧配置是Excel配置，尝试保留Excel列名
+            if (oldConfig is ExcelConfig excelConfig)
             {
-                LoadImageNamingColumns();
+                switch (newType)
+                {
+                    case DataSourceType.ForeignKey:
+                        // 迁移到外键配置时，保留Excel来源列
+                        if (newConfig is DatabaseReferenceConfig fkConfig && 
+                            !string.IsNullOrEmpty(excelConfig.ExcelColumn))
+                        {
+                            fkConfig.ForeignKeySourceColumn = new SerializableKeyValuePair<string>
+                            {
+                                Key = excelConfig.ExcelColumn,
+                                Value = excelConfig.ExcelColumn
+                            };
+                        }
+                        break;
+                        
+                    case DataSourceType.ColumnConcat:
+                        // 迁移到列拼接时，将原列作为第一个拼接列
+                        if (newConfig is ColumnConcatConfig concatConfig && 
+                            !string.IsNullOrEmpty(excelConfig.ExcelColumn))
+                        {
+                            concatConfig.ConcatColumns.Add(new SerializableKeyValuePair<string>
+                            {
+                                Key = excelConfig.ExcelColumn,
+                                Value = excelConfig.ExcelColumn
+                            });
+                        }
+                        break;
+                }
             }
         }
 

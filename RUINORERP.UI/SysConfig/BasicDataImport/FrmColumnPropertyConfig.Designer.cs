@@ -409,6 +409,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbBusinessCodeRule.Name = "kcmbBusinessCodeRule";
             this.kcmbBusinessCodeRule.Size = new System.Drawing.Size(200, 21);
             this.kcmbBusinessCodeRule.TabIndex = 4;
+            this.kcmbBusinessCodeRule.SelectedIndex = -1;
             // 
             // kryptonLabel23
             // 
@@ -456,6 +457,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbSystemGeneratedType.Name = "kcmbSystemGeneratedType";
             this.kcmbSystemGeneratedType.Size = new System.Drawing.Size(200, 21);
             this.kcmbSystemGeneratedType.TabIndex = 0;
+            this.kcmbSystemGeneratedType.SelectedIndex = -1;
             this.kcmbSystemGeneratedType.SelectedIndexChanged += new System.EventHandler(this.kcmbSystemGeneratedType_SelectedIndexChanged);
             // 
             // kryptonLabel21
@@ -566,6 +568,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbRelatedTable.Name = "kcmbRelatedTable";
             this.kcmbRelatedTable.Size = new System.Drawing.Size(250, 21);
             this.kcmbRelatedTable.TabIndex = 2;
+            this.kcmbRelatedTable.SelectedIndex = -1;
             this.kcmbRelatedTable.SelectedIndexChanged += new System.EventHandler(this.kcmbRelatedTable_SelectedIndexChanged);
             // 
             // ktxtRelatedField

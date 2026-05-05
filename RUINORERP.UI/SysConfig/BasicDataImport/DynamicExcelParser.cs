@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
-using RUINORERP.Model.ImportEngine.Enums;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -130,7 +129,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 临时图片目录名称
         /// </summary>
-        private const string ImageTempDirectory = "TempImages";
+        private const string ImageTempDirectory = ColumnMappingConstants.ImageTempDirectoryName;
 
         /// <summary>
         /// 构造函数
@@ -434,8 +433,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                // 尝试通过反射获取图片的真实ID
-                // NPOI中，XSSFPicture有GetPackageRelationshipId方法
                 var type = picture.GetType();
                 var method = type.GetMethod("GetPackageRelationshipId", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                 if (method != null)
@@ -447,14 +444,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                 }
 
-                // 如果获取不到，尝试通过Formula获取
                 var formulaProperty = type.GetProperty("Formula", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                 if (formulaProperty != null)
                 {
                     var formula = formulaProperty.GetValue(picture)?.ToString();
                     if (!string.IsNullOrEmpty(formula))
                     {
-                        // 尝试从公式中提取ID
                         var match = System.Text.RegularExpressions.Regex.Match(formula, @"DISPIMG\s*\(\s*[""']([^""']+)[""']");
                         if (match.Success)
                         {
@@ -463,11 +458,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                 }
 
-                // 如果都获取不到，返回GUID
                 return Guid.NewGuid().ToString();
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[GetPictureId] 获取图片ID失败: {ex.Message}");
                 return Guid.NewGuid().ToString();
             }
         }
@@ -1047,7 +1042,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 2. 添加外键关联的来源列
                 if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
                 {
-                    var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                    var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
                     if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
                     {
                         requiredExcelColumns.Add(fkConfig.ForeignKeySourceColumn.Key);
@@ -1070,14 +1065,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                 }
 
-                // 4. 添加字段复制的源列
-                if (mapping.ColumnDataSourceType == (int)DataSourceType.FieldCopy)
+                // 4. 添加字段复制的源列（已合并到 DatabaseReferenceConfig）
+                if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
                 {
-                    var copyConfig = mapping.DataSourceConfig as FieldCopyConfig;
-                    if (copyConfig != null && !string.IsNullOrEmpty(copyConfig.SourceFieldName))
+                    var copyConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
+                    if (copyConfig != null && copyConfig.IsSelfReference && !string.IsNullOrEmpty(copyConfig.ForeignFieldName))
                     {
                         // 需要找到被复制字段的Excel列
-                        var copyFromMapping = columnMappings.FirstOrDefault(m => m.SystemField?.Key == copyConfig.SourceFieldName);
+                        var copyFromMapping = columnMappings.FirstOrDefault(m => m.SystemField?.Key == copyConfig.ForeignFieldName);
                         if (copyFromMapping != null)
                         {
                             var excelConfig = copyFromMapping.DataSourceConfig as ExcelConfig;
@@ -1132,7 +1127,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 对于外键关联类型，额外添加外键来源列到结果表中
                 if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
                 {
-                    var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                    var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
                     if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
                     {
                         string sourceColumnName = fkConfig.ForeignKeySourceColumn.Key;
@@ -1215,37 +1210,38 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 break;
 
                             case (int)DataSourceType.ForeignKey:
-                                // 读取外键来源列的值
-                                var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
-                                if (fkConfig != null &&
-                                    !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key) &&
-                                    columnIndexMap.TryGetValue(fkConfig.ForeignKeySourceColumn.Key, out int fkColIndex))
+                                // 数据库表关联引用：根据 IsSelfReference 区分处理
+                                var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
+                                if (fkConfig != null && fkConfig.IsSelfReference)
                                 {
-                                    ICell cell = row.GetCell(fkColIndex);
-                                    if (cell != null)
-                                    {
-                                        cellValue = GetCellValue(cell);
-                                    }
+                                    // 自身表引用或字段复制：不需要在这里处理，在ApplyColumnMapping中统一处理
+                                    cellValue = "";
                                 }
                                 else
                                 {
-                                    // 添加调试信息：外键来源列名未找到
-                                    if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
+                                    // 外键关联：读取外键来源列的值
+                                    if (fkConfig != null &&
+                                        !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key) &&
+                                        columnIndexMap.TryGetValue(fkConfig.ForeignKeySourceColumn.Key, out int fkColIndex))
                                     {
-                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到外键来源列'{fkConfig.ForeignKeySourceColumn.Key}'，映射到字段'{mapping.SystemField?.Value}'");
+                                        ICell cell = row.GetCell(fkColIndex);
+                                        if (cell != null)
+                                        {
+                                            cellValue = GetCellValue(cell);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // 添加调试信息：外键来源列名未找到
+                                        if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
+                                        {
+                                            System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到外键来源列'{fkConfig.ForeignKeySourceColumn.Key}'，映射到字段'{mapping.SystemField?.Value}'");
+                                        }
                                     }
                                 }
                                 break;
 
                             case (int)DataSourceType.ColumnConcat:
-                                // 列拼接不需要在这里处理，在ApplyColumnMapping中统一处理
-                                cellValue = "";
-                                break;
-
-                            case (int)DataSourceType.FieldCopy:
-                                // 字段复制不需要在这里处理，在ApplyColumnMapping中统一处理
-                                cellValue = "";
-                                break;
 
                             default:
                                 // 其他类型（系统生成、默认值等）在ApplyColumnMapping中处理
@@ -1267,7 +1263,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         // 如果是外键关联，同时设置外键来源列的值
                         if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
                         {
-                            var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                            var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
                             if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
                             {
                                 string sourceColumnName = fkConfig.ForeignKeySourceColumn.Key;

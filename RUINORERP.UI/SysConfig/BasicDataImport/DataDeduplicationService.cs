@@ -1,4 +1,3 @@
-using RUINORERP.Model.ImportEngine.Enums;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -161,7 +160,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 return false;
             }
-            else if(ColumnMapping.DataSourceConfig is ForeignKeyConfig fkConfig)
+            else if(ColumnMapping.DataSourceConfig is DatabaseReferenceConfig fkConfig)
             {
                 return true;
             }
@@ -187,12 +186,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 if (string.IsNullOrEmpty(key))
                 {
-                    // 空键，跳过该行（如果配置了忽略空值）
-                    if (ignoreEmptyValues)
-                    {
-                        continue;
-                    }
-                    key = "[EMPTY]";
+                    deduplicatedTable.ImportRow(row);
+                    continue;
                 }
 
                 if (!seenKeys.Contains(key))

@@ -5,8 +5,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 using RUINORERP.Global;
-using RUINORERP.Model.ImportEngine.Enums;
-using RUINORERP.Model.ImportEngine.Models;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -20,9 +18,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     [XmlInclude(typeof(ExcelConfig))]
     [XmlInclude(typeof(DefaultValueConfig))]
     [XmlInclude(typeof(SystemGeneratedConfig))]
-    [XmlInclude(typeof(ForeignKeyConfig))]
-    [XmlInclude(typeof(SelfReferenceConfig))]
-    [XmlInclude(typeof(FieldCopyConfig))]
+    [XmlInclude(typeof(DatabaseReferenceConfig))]
     [XmlInclude(typeof(ColumnConcatConfig))]
     [XmlInclude(typeof(ExcelImageConfig))]
     public class ColumnMapping : INotifyPropertyChanged
@@ -105,27 +101,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             set => SetProperty(ref _isBusinessKey, value);
         }
 
-        private string _dataType;
-        /// <summary>
-        /// 数据类型（目标字段的数据类型）
-        /// </summary>
-        [XmlElement("DataType")]
-        public string DataType
-        {
-            get => _dataType;
-            set => SetProperty(ref _dataType, value);
-        }
-
         #endregion
 
-        #region 统一数据源配置
+        #region 统一目标列的数据源配置
 
         private int _columnDataSourceType = (int)DataSourceType.Excel;
         /// <summary>
-        /// 数据来源类型
+        /// 目标列数据来源类型
         /// 用于标识字段数据的来源方式
         /// </summary>
-        [XmlElement("DataSourceType")]
+        [XmlElement("ColumnDataSourceType")]
         public int ColumnDataSourceType
         {
             get => _columnDataSourceType;
@@ -161,18 +146,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             set => SetProperty(ref _originalExcelColumn, value);
         }
 
-        private string _targetDataType;
-        /// <summary>
-        /// 目标字段数据类型
-        /// 用于在配置对话框中显示对应的Tab页
-        /// </summary>
-        [XmlElement("TargetDataType")]
-        public string TargetDataType
-        {
-            get => _targetDataType;
-            set => SetProperty(ref _targetDataType, value);
-        }
-
         #endregion
 
         #region 辅助方法
@@ -204,7 +177,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     var excelConfig = DataSourceConfig as ExcelConfig;
                     return $"Excel列: {excelConfig?.ExcelColumn ?? string.Empty}";
 
-                case (int)DataSourceType.DefaultValue:
+                case (int)DataSourceType.DefaultFixedValue:
                     var defaultConfig = DataSourceConfig as DefaultValueConfig;
                     return $"默认值: {defaultConfig?.Value ?? string.Empty}";
 
@@ -213,16 +186,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return $"系统生成: {sysConfig?.GetGeneratedTypeDisplayName() ?? "系统生成"}";
 
                 case (int)DataSourceType.ForeignKey:
-                    var foreignConfig = DataSourceConfig as ForeignKeyConfig;
-                    return $"外键关联: {foreignConfig?.ForeignTableDisplayName ?? "外键"}";
-
-                case (int)DataSourceType.SelfReference:
-                    var selfConfig = DataSourceConfig as SelfReferenceConfig;
-                    return $"自身引用: {selfConfig?.ReferenceFieldDisplayName ?? "自身引用"}";
-
-                case (int)DataSourceType.FieldCopy:
-                    var copyConfig = DataSourceConfig as FieldCopyConfig;
-                    return $"字段复制: {copyConfig?.SourceFieldDisplayName ?? "字段复制"}";
+                    var foreignConfig = DataSourceConfig as DatabaseReferenceConfig;
+                    if (foreignConfig != null)
+                    {
+                        string refType = foreignConfig.IsSelfReference ? "自身表" : "外键";
+                        return $"{refType}关联: {foreignConfig.ForeignTableDisplayName ?? "数据库表"}";
+                    }
+                    return "数据库表关联";
 
                 case (int)DataSourceType.ColumnConcat:
                     return "列拼接";

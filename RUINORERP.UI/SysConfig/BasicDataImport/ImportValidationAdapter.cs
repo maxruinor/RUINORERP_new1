@@ -1,6 +1,5 @@
 using RUINORERP.Business;
 using RUINORERP.Model.Context;
-using RUINORERP.Model.ImportEngine.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +13,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class ImportValidationAdapter
     {
         private readonly ApplicationContext _appContext;
+        private static readonly Dictionary<Type, object> _validatorCache = new Dictionary<Type, object>();
+        private static readonly Dictionary<Type, System.Reflection.MethodInfo> _validateMethodCache = new Dictionary<Type, System.Reflection.MethodInfo>();
+        private static readonly object _cacheLock = new object();
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="appContext">应用程序上下文</param>
         public ImportValidationAdapter(ApplicationContext appContext = null)
         {
             _appContext = appContext;
@@ -31,7 +29,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="mapping">列映射配置</param>
         /// <param name="errors">错误列表（输出）</param>
         /// <returns>是否验证通过</returns>
-        public bool ValidateColumnMapping(ColumnMapping mapping, out List<string> errors)
+        public bool ValidateColumnMapping(ColumnMapping mapping, out List<string> errors, Type targetEntityType = null)
         {
             errors = new List<string>();
 
@@ -41,40 +39,44 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return false;
             }
 
-            // 1. 验证系统字段不能为空
             if (string.IsNullOrEmpty(mapping.SystemField?.Key))
             {
                 errors.Add("系统字段不能为空");
                 return false;
             }
 
-            // 2. 验证外键关联配置完整性
             if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
             {
-                var foreignConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                var foreignConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
                 if (foreignConfig == null)
                 {
                     errors.Add($"字段【{mapping.SystemField.Value}】配置为外键关联，但未配置外关联信息");
                     return false;
                 }
 
-                if (string.IsNullOrEmpty(foreignConfig.ForeignKeyTable?.Key))
+                foreignConfig.TargetEntityType = targetEntityType;
+
+                if (string.IsNullOrEmpty(foreignConfig.ForeignTableName))
                 {
                     errors.Add($"字段【{mapping.SystemField.Value}】的外键表未配置");
                     return false;
                 }
 
-                if (string.IsNullOrEmpty(foreignConfig.ForeignKeyField?.Key))
+                if (string.IsNullOrEmpty(foreignConfig.ForeignFieldName))
                 {
                     errors.Add($"字段【{mapping.SystemField.Value}】的外键字段未配置");
                     return false;
                 }
 
-                // 验证外键来源列（如果配置了）
+                if (!foreignConfig.Validate(out string dbRefError))
+                {
+                    errors.Add($"字段【{mapping.SystemField.Value}】: {dbRefError}");
+                    return false;
+                }
+
                 if (foreignConfig.ForeignKeySourceColumn != null &&
                     !string.IsNullOrEmpty(foreignConfig.ForeignKeySourceColumn.Key))
                 {
-                    // 可选：检查Excel列是否存在
                 }
             }
 
@@ -90,15 +92,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
             }
 
-            // 4. 验证枚举默认值配置（只有当明确配置了枚举值但未配置类型名称时才报错）
+            // 4. 验证默认固定值配置
             var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
-            if (defaultConfig != null && !string.IsNullOrEmpty(defaultConfig.EnumName))
+            if (defaultConfig != null && string.IsNullOrEmpty(defaultConfig.Value))
             {
-                if (string.IsNullOrEmpty(defaultConfig.EnumTypeName))
-                {
-                    errors.Add($"字段【{mapping.SystemField.Value}】的枚举类型名称未配置");
-                    return false;
-                }
+                errors.Add($"字段【{mapping.SystemField.Value}】配置为默认固定值，但未指定值");
+                return false;
             }
 
             // 5. 验证图片配置
@@ -143,7 +142,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="config">导入配置</param>
         /// <param name="errors">错误列表（输出）</param>
         /// <returns>是否验证通过</returns>
-        public bool ValidateImportConfiguration(ImportConfiguration config, out List<string> errors)
+        public bool ValidateImportConfiguration(ImportConfiguration config, out List<string> errors, Type targetEntityType = null)
         {
             errors = new List<string>();
 
@@ -165,10 +164,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return false;
             }
 
-            // 验证每个列映射
             foreach (var mapping in config.ColumnMappings)
             {
-                if (!ValidateColumnMapping(mapping, out List<string> mappingErrors))
+                if (!ValidateColumnMapping(mapping, out List<string> mappingErrors, targetEntityType))
                 {
                     errors.AddRange(mappingErrors);
                 }
@@ -218,32 +216,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             try
             {
                 Type entityType = typeof(T);
-                
-                // 构造验证器类型名: 实体名 + Validator
                 string validatorName = $"{entityType.Name}Validator";
-                
-                // 在 RUINORERP.Business.Validator 命名空间下查找验证器
                 Type validatorType = Type.GetType($"RUINORERP.Business.Validator.{validatorName}");
                 
                 if (validatorType == null)
                 {
-                    // 没有对应的验证器，跳过验证
                     return string.Empty;
                 }
 
-                // 创建验证器实例
-                var validatorInstance = Activator.CreateInstance(validatorType, new object[] { _appContext });
-                
-                // 获取验证器的 Validate 方法
-                var validateMethod = validatorType.GetMethod("Validate",
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                object validatorInstance = GetOrCreateValidator(validatorType);
+                var validateMethod = GetOrCreateValidateMethod(validatorType);
                 
                 if (validateMethod == null)
                 {
                     return string.Empty;
                 }
 
-                // 调用验证方法
                 var validationResult = validateMethod.Invoke(validatorInstance, new[] { entity });
                 
                 if (validationResult == null)
@@ -251,65 +239,94 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return string.Empty;
                 }
 
-                // 处理验证结果
-                Type validationResultType = validationResult.GetType();
-                var errorsProperty = validationResultType.GetProperty("Errors");
-                
-                if (errorsProperty == null)
-                {
-                    return string.Empty;
-                }
-
-                var errors = errorsProperty.GetValue(validationResult);
-                if (errors == null)
-                {
-                    return string.Empty;
-                }
-
-                Type errorsType = errors.GetType();
-                var countProperty = errorsType.GetProperty("Count");
-                
-                if (countProperty == null)
-                {
-                    return string.Empty;
-                }
-
-                int errorCount = (int)countProperty.GetValue(errors);
-                if (errorCount == 0)
-                {
-                    return string.Empty;
-                }
-
-                // 收集所有错误消息
-                var errorMessages = new List<string>();
-                var indexerMethod = errorsType.GetMethod("get_Item");
-                
-                if (indexerMethod != null)
-                {
-                    for (int i = 0; i < errorCount; i++)
-                    {
-                        var error = indexerMethod.Invoke(errors, new object[] { i });
-                        var errorMessageProperty = error.GetType().GetProperty("ErrorMessage");
-                        
-                        if (errorMessageProperty != null)
-                        {
-                            string errorMessage = errorMessageProperty.GetValue(error)?.ToString();
-                            if (!string.IsNullOrEmpty(errorMessage))
-                            {
-                                errorMessages.Add(errorMessage);
-                            }
-                        }
-                    }
-                }
-
-                return string.Join("; ", errorMessages);
+                return ExtractValidationErrors(validationResult);
             }
             catch (Exception ex)
             {
-                // 验证过程出错，记录日志但不阻止导入
                 System.Diagnostics.Debug.WriteLine($"实体验证失败: {ex.Message}");
                 return $"验证过程出错: {ex.Message}";
             }
+        }
+
+        private object GetOrCreateValidator(Type validatorType)
+        {
+            lock (_cacheLock)
+            {
+                if (!_validatorCache.TryGetValue(validatorType, out var validator))
+                {
+                    validator = Activator.CreateInstance(validatorType, new object[] { _appContext });
+                    _validatorCache[validatorType] = validator;
+                }
+                return validator;
+            }
+        }
+
+        private System.Reflection.MethodInfo GetOrCreateValidateMethod(Type validatorType)
+        {
+            lock (_cacheLock)
+            {
+                if (!_validateMethodCache.TryGetValue(validatorType, out var method))
+                {
+                    method = validatorType.GetMethod("Validate",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    _validateMethodCache[validatorType] = method;
+                }
+                return method;
+            }
+        }
+
+        private string ExtractValidationErrors(object validationResult)
+        {
+            Type validationResultType = validationResult.GetType();
+            var errorsProperty = validationResultType.GetProperty("Errors");
+            
+            if (errorsProperty == null)
+            {
+                return string.Empty;
+            }
+
+            var errors = errorsProperty.GetValue(validationResult);
+            if (errors == null)
+            {
+                return string.Empty;
+            }
+
+            Type errorsType = errors.GetType();
+            var countProperty = errorsType.GetProperty("Count");
+            
+            if (countProperty == null)
+            {
+                return string.Empty;
+            }
+
+            int errorCount = (int)countProperty.GetValue(errors);
+            if (errorCount == 0)
+            {
+                return string.Empty;
+            }
+
+            var errorMessages = new List<string>();
+            var indexerMethod = errorsType.GetMethod("get_Item");
+            
+            if (indexerMethod != null)
+            {
+                for (int i = 0; i < errorCount; i++)
+                {
+                    var error = indexerMethod.Invoke(errors, new object[] { i });
+                    var errorMessageProperty = error.GetType().GetProperty("ErrorMessage");
+                    
+                    if (errorMessageProperty != null)
+                    {
+                        string errorMessage = errorMessageProperty.GetValue(error)?.ToString();
+                        if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            errorMessages.Add(errorMessage);
+                        }
+                    }
+                }
+            }
+
+            return string.Join("; ", errorMessages);
         }
     }
 }

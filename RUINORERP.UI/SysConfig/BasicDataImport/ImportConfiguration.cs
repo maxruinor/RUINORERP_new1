@@ -1,6 +1,5 @@
 using RUINORERP.Common;
 using RUINORERP.Global;
-using RUINORERP.Model.ImportEngine.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,23 +14,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// </summary>
     public enum ExistenceStrategyType
     {
-        /// <summary>
-        /// 跳过（默认）
-        /// </summary>
         [Description("跳过")]
         Skip = 0,
 
-        /// <summary>
-        /// 更新
-        /// </summary>
-        [Description("更新")]
-        Update = 1,
-
-        /// <summary>
-        /// 报错
-        /// </summary>
         [Description("报错")]
-        Error = 2
+        Error = 1
     }
 
     /// <summary>
@@ -46,9 +33,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     [XmlInclude(typeof(ExcelConfig))]
     [XmlInclude(typeof(DefaultValueConfig))]
     [XmlInclude(typeof(SystemGeneratedConfig))]
-    [XmlInclude(typeof(ForeignKeyConfig))]
-    [XmlInclude(typeof(SelfReferenceConfig))]
-    [XmlInclude(typeof(FieldCopyConfig))]
+    [XmlInclude(typeof(DatabaseReferenceConfig))]
     [XmlInclude(typeof(ColumnConcatConfig))]
     [XmlInclude(typeof(ExcelImageConfig))]
     public class ImportConfiguration
@@ -227,7 +212,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     // 检查是否为外键关联类型
                     if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
                     {
-                        var foreignConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                        var foreignConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
                         if (foreignConfig != null &&
                             foreignConfig.ForeignKeySourceColumn != null &&
                             !string.IsNullOrEmpty(foreignConfig.ForeignKeySourceColumn.Key))

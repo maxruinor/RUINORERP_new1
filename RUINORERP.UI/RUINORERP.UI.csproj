@@ -2484,10 +2484,10 @@
     <Compile Include="SysConfig\BasicDataImport\ColumnMapping.cs" />
     <Compile Include="SysConfig\BasicDataImport\ColumnMappingConstants.cs" />
     <Compile Include="SysConfig\BasicDataImport\ColumnMappingExtensions.cs" />
-    <Compile Include="SysConfig\BasicDataImport\ColumnMappingCollection.cs" />
     <Compile Include="SysConfig\BasicDataImport\ColumnMappingManager.cs" />
     <Compile Include="SysConfig\BasicDataImport\DataDeduplicationService.cs" />
     <Compile Include="SysConfig\BasicDataImport\DataSourceConfigs.cs" />
+    <Compile Include="SysConfig\BasicDataImport\DataSourceType.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicDataValidator.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicExcelParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicImporter.cs" />

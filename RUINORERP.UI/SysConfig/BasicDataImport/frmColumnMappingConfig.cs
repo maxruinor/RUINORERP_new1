@@ -14,8 +14,6 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using RUINORERP.Global;
-using RUINORERP.Model.ImportEngine.Models;
-using RUINORERP.Model.ImportEngine.Enums;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -196,7 +194,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     OriginalExcelColumn = string.Empty,
                     SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay),
-                    ColumnDataSourceType = (int)DataSourceType.DefaultValue,
+                    ColumnDataSourceType = (int)DataSourceType.DefaultFixedValue,
                     DataSourceConfig = new DefaultValueConfig()
                 };
 
@@ -236,21 +234,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             var sysConfig = mapping.DataSourceConfig as SystemGeneratedConfig;
                             mapping.OriginalExcelColumn = $"[系统生成] {systemField}";
                             break;
-                        case (int)DataSourceType.DefaultValue:
+                        case (int)DataSourceType.DefaultFixedValue:
                             var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
                             mapping.OriginalExcelColumn = $"[默认值:{defaultConfig?.Value}] {systemField}";
                             break;
                         case (int)DataSourceType.ForeignKey:
-                            var foreignConfig = mapping.DataSourceConfig as ForeignKeyConfig;
-                            mapping.OriginalExcelColumn = $"[外键关联:{foreignConfig?.ForeignKeyTable?.Value}] {systemField}";
-                            break;
-                        case (int)DataSourceType.SelfReference:
-                            var selfConfig = mapping.DataSourceConfig as SelfReferenceConfig;
-                            mapping.OriginalExcelColumn = $"[自身引用:{selfConfig?.ReferenceFieldDisplayName}] {systemField}";
-                            break;
-                        case (int)DataSourceType.FieldCopy:
-                            var copyConfig = mapping.DataSourceConfig as FieldCopyConfig;
-                            mapping.OriginalExcelColumn = $"[字段复制:{copyConfig?.SourceFieldDisplayName}] {systemField}";
+                            var dbRefConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
+                            if (dbRefConfig != null)
+                            {
+                                string refType = dbRefConfig.IsSelfReference ? "自身表" : "外键";
+                                mapping.OriginalExcelColumn = $"[{refType}关联:{dbRefConfig.ForeignFieldDisplayName}] {systemField}";
+                            }
                             break;
                         case (int)DataSourceType.ColumnConcat:
                             var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
@@ -981,7 +975,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             flags.Add($"Excel列:{excelConfig.ExcelColumn}");
                         }
                         break;
-                    case (int)DataSourceType.DefaultValue:
+                    case (int)DataSourceType.DefaultFixedValue:
                         var defaultConfig = mapping.DataSourceConfig as DefaultValueConfig;
                         flags.Add($"默认值:{defaultConfig?.Value}");
                         break;
@@ -989,15 +983,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         flags.Add("系统生成");
                         break;
                     case (int)DataSourceType.ForeignKey:
-                        flags.Add("外键");
-                        break;
-                    case (int)DataSourceType.SelfReference:
-                        flags.Add("自身引用");
-                        break;
-
-                    case (int)DataSourceType.FieldCopy:
-                        var copyConfig = mapping.DataSourceConfig as FieldCopyConfig;
-                        flags.Add($"复制:{copyConfig?.SourceFieldDisplayName}");
+                        var dbRefConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
+                        if (dbRefConfig != null)
+                        {
+                            string refType = dbRefConfig.IsSelfReference ? "自身表" : "外键";
+                            flags.Add($"{refType}关联:{dbRefConfig.ForeignFieldDisplayName}");
+                        }
                         break;
                     case (int)DataSourceType.ColumnConcat:
                         var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
@@ -1746,9 +1737,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         CustomExpression = sysConfig.CustomExpression
                     };
 
-                case ForeignKeyConfig foreignConfig:
-                    return new ForeignKeyConfig
+                case DatabaseReferenceConfig foreignConfig:
+                    return new DatabaseReferenceConfig
                     {
+                        IsSelfReference = foreignConfig.IsSelfReference,
                         ForeignTableName = foreignConfig.ForeignTableName,
                         ForeignTableDisplayName = foreignConfig.ForeignTableDisplayName,
                         ForeignFieldName = foreignConfig.ForeignFieldName,
@@ -1757,21 +1749,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         DisplayFieldDisplayName = foreignConfig.DisplayFieldDisplayName,
                         ForeignKeySourceColumn = foreignConfig.ForeignKeySourceColumn != null
                             ? new SerializableKeyValuePair<string>(foreignConfig.ForeignKeySourceColumn.Key, foreignConfig.ForeignKeySourceColumn.Value)
-                            : null
-                    };
-
-                case SelfReferenceConfig selfConfig:
-                    return new SelfReferenceConfig
-                    {
-                        ReferenceFieldName = selfConfig.ReferenceFieldName,
-                        ReferenceFieldDisplayName = selfConfig.ReferenceFieldDisplayName
-                    };
-
-                case FieldCopyConfig copyConfig:
-                    return new FieldCopyConfig
-                    {
-                        SourceFieldName = copyConfig.SourceFieldName,
-                        SourceFieldDisplayName = copyConfig.SourceFieldDisplayName
+                            : null,
+                        UseDefaultWhenNotFound = foreignConfig.UseDefaultWhenNotFound,
+                        DefaultValueWhenNotFound = foreignConfig.DefaultValueWhenNotFound
                     };
 
                 case ColumnConcatConfig concatConfig:

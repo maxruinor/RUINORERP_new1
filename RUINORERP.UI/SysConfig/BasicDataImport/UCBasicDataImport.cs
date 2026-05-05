@@ -20,7 +20,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualBasic;
 using RUINORERP.Business.BizMapperService;
-using RUINORERP.Model.ImportEngine.Enums;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -114,7 +113,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (_dynamicImporter != null) return;
 
             string imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ImageTempDirectory);
-            _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath);
+            _dynamicImporter = new DynamicImporter(_db, _unitOfWorkManage, _foreignKeyService, imageSavePath, _imageProcessor);
         }
         #endregion
 
@@ -556,7 +555,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 InitializeDynamicImporter();
 
                 // 使用DynamicImporter的统一列映射方法（避免UI层重复实现）
-                var mappings = new ColumnMappingCollection(_currentConfig.ColumnMappings);
+                var mappings = new List<ColumnMapping>(_currentConfig.ColumnMappings);
                 _parsedImportData = _dynamicImporter.ApplyColumnMapping(fullData, mappings, _selectedEntityType);
 
                 // 应用去重复逻辑（如果配置了去重）
@@ -832,7 +831,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 数据验证
             var validationErrors = _dynamicDataValidator.Validate(importData, 
-                new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()), 
+                new List<ColumnMapping>(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()), 
                 _selectedEntityType);
             
             if (validationErrors.Count > 0 && !ConfirmContinueWithValidationErrors(validationErrors))
@@ -853,7 +852,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _dynamicImporter.SetCurrentConfiguration(_currentConfig);
 
             string importType = GetImportType();
-            var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
+            var mappings = new List<ColumnMapping>(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
             bool hasImageFields = mappings.Any(m => m.ColumnDataSourceType == (int)DataSourceType.ExcelImage);
             bool isPreprocessed = (_finalPreviewData?.Rows.Count > 0 && importData == _finalPreviewData);
 
@@ -1041,7 +1040,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         {
                             duplicateErrors.Add(new ValidationError
                             {
-                                RowNumber = i + 1, // Excel行号从1开始
+                                RowNumber = i + 2,
                                 FieldName = fieldName,
                                 ErrorMessage = $"值【{valueStr}】已存在于数据库中，不能重复"
                             });
@@ -1297,25 +1296,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 根据实体类型获取对应的Controller实例
-        /// </summary>
-        /// <param name="entityType">实体类型</param>
-        /// <returns>Controller实例，如果未找到则返回null</returns>
-        private object GetControllerForEntityType(Type entityType)
-        {
-            try
-            {
-                // 简化实现：只返回null，让调用方回退到直接数据库导入
-                // 在实际使用中，用户需要手动在调用代码中获取正确的Controller实例
-                return null;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
         /// 生成结果预览按钮点击事件
         /// 生成包含所有可预生成值的最终预览数据（除主键外）
         /// </summary>
@@ -1333,7 +1313,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 初始化DynamicImporter（单例模式）
                 InitializeDynamicImporter();
-                var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
+                var mappings = new List<ColumnMapping>(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
                 
                 _finalPreviewData = await _dynamicImporter.PreprocessDataAsync(_parsedImportData, mappings, _selectedEntityType);
 
@@ -1437,7 +1417,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 DataTable importData = selectedRows;
 
                 // 数据验证（可选：预处理时已验证，这里再次验证确保数据完整性）
-                var validationErrors = _dynamicDataValidator.Validate(importData, new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()), _selectedEntityType);
+                var validationErrors = _dynamicDataValidator.Validate(importData, new List<ColumnMapping>(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()), _selectedEntityType);
                 if (validationErrors.Count > 0)
                 {
                     string errorSummary = $"发现 {validationErrors.Count} 个数据验证错误：\n\n";
@@ -1486,7 +1466,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 获取导入类型标识（用于区分客户和供应商等使用相同表的情况）
                 string importType = GetImportType();
 
-                var mappings = new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
+                var mappings = new List<ColumnMapping>(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>());
 
                 // ✅ 执行批量导入，数据已在预处理阶段处理（isPreprocessed = true）
                 DynamicImporter.ImportResult importResult = await _dynamicImporter.ImportAsync(

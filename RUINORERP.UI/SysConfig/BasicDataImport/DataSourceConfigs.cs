@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 using RUINORERP.Global;
-using RUINORERP.Model.ImportEngine.Enums;
+using RUINORERP.UI.SysConfig.BasicDataImport;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -10,6 +10,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
     /// <summary>
     /// Excel数据源配置
+    /// 对应枚举值：DataSourceType.Excel
     /// 数据来源于Excel文件的对应列
     /// </summary>
     [Serializable]
@@ -80,11 +81,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
     #endregion
 
-    #region 默认值配置 
+    #region 默认固定值配置 
 
     /// <summary>
-    /// 是用户配置Excel导入时可以将某一些没有Excelgo源的数据的目标列的值设置为一个固定的值。用户配置中直接输入指定
-    /// 数据来源于配置的默认值
+    /// 默认固定值配置
+    /// 对应枚举值：DataSourceType.DefaultFixedValue
+    /// 用于用户配置Excel导入时，将某些没有Excel数据源的目标列设置为一个固定的值
+    /// 用户在配置中直接输入指定的固定值（字符串形式）
+    /// 后台处理时会根据目标列的数据类型自动进行类型转换
     /// </summary>
     [Serializable]
     [XmlRoot("DefaultValueConfig")]
@@ -93,39 +97,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 数据来源类型
         /// </summary>
-        public override DataSourceType DataSourceType => DataSourceType.DefaultValue;
+        public override DataSourceType DataSourceType => DataSourceType.DefaultFixedValue;
 
         /// <summary>
-        /// 默认值
+        /// 默认固定值（字符串形式）
+        /// 当Excel中没有对应数据源时，使用此固定值填充目标字段
+        /// 后台会根据目标列的类型自动转换为相应的数据类型（如bool、int、DateTime等）
         /// </summary>
         [XmlElement("Value")]
         public string Value { get; set; }
-
-        /// <summary>
-        /// 枚举类型完整名称（当默认值为枚举类型时使用）
-        /// 格式："命名空间.枚举名"
-        /// </summary>
-        [XmlElement("EnumTypeName")]
-        public string EnumTypeName { get; set; }
-
-        /// <summary>
-        /// 枚举值（数值）
-        /// </summary>
-        [XmlElement("EnumValue")]
-        public int EnumValue { get; set; }
-
-        /// <summary>
-        /// 枚举名称（字符串表示）
-        /// </summary>
-        [XmlElement("EnumName")]
-        public string EnumName { get; set; }
-
-        /// <summary>
-        /// 枚举显示文本
-        /// </summary>
-        [XmlElement("EnumDisplayName")]
-        public string EnumDisplayName { get; set; }
     }
+    
 
     #endregion
 
@@ -199,6 +181,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
     /// <summary>
     /// 系统生成配置
+    /// 对应枚举值：DataSourceType.SystemGenerated
     /// 数据由系统自动生成（如时间、用户、业务编码等）
     /// </summary>
     [Serializable]
@@ -336,23 +319,36 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
     #endregion
 
-    #region 外键关联配置
+    #region 数据库表关联引用配置
 
     /// <summary>
-    /// 外键关联配置
-    /// 数据来源于其他表的外键关联字段
+    /// 数据库表关联引用配置
+    /// 对应枚举值：DataSourceType.ForeignKey
+    /// 数据来源于数据库表的关联字段，支持两种模式：
+    /// 1. 外键关联：关联其他表的字段（如产品关联供应商）
+    /// 2. 自身表引用：关联当前目标表自身的字段（如产品类目的父类ID、字段复制等）
     /// </summary>
     [Serializable]
-    [XmlRoot("ForeignKeyConfig")]
-    public class ForeignKeyConfig : DataSourceConfigBase
+    [XmlRoot("DatabaseReferenceConfig")]
+    public class DatabaseReferenceConfig : DataSourceConfigBase
     {
         /// <summary>
         /// 数据来源类型
+        /// 返回 ForeignKey 枚举值，通过 IsSelfReference 属性区分具体模式
         /// </summary>
         public override DataSourceType DataSourceType => DataSourceType.ForeignKey;
 
         /// <summary>
+        /// 是否为自身表引用
+        /// true: 引用当前目标表自身的字段（如树结构中的父类ID）
+        /// false: 引用其他表的字段（外键关联）
+        /// </summary>
+        [XmlElement("IsSelfReference")]
+        public bool IsSelfReference { get; set; } = false;
+
+        /// <summary>
         /// 关联表名（英文）
+        /// 当IsSelfReference=true时，此值为目标表名
         /// </summary>
         [XmlElement("ForeignTableName")]
         public string ForeignTableName { get; set; }
@@ -394,40 +390,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public SerializableKeyValuePair<string> ForeignKeySourceColumn { get; set; }
 
         /// <summary>
-        /// 外键表引用（便捷属性）
-        /// </summary>
-        [XmlIgnore]
-        public SerializableKeyValuePair<string> ForeignKeyTable
-        {
-            get => new SerializableKeyValuePair<string> { Key = ForeignTableName, Value = ForeignTableDisplayName };
-            set
-            {
-                if (value != null)
-                {
-                    ForeignTableName = value.Key;
-                    ForeignTableDisplayName = value.Value;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 外键字段引用（便捷属性）
-        /// </summary>
-        [XmlIgnore]
-        public SerializableKeyValuePair<string> ForeignKeyField
-        {
-            get => new SerializableKeyValuePair<string> { Key = ForeignFieldName, Value = ForeignFieldDisplayName };
-            set
-            {
-                if (value != null)
-                {
-                    ForeignFieldName = value.Key;
-                    ForeignFieldDisplayName = value.Value;
-                }
-            }
-        }
-
-        /// <summary>
         /// 当外键关联失败时是否使用默认值
         /// </summary>
         [XmlElement("UseDefaultWhenNotFound")]
@@ -458,100 +420,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return false;
             }
 
-            return true;
-        }
-    }
-
-    #endregion
-
-    #region 自身字段引用配置
-
-    /// <summary>
-    /// 产品类目表导入时 固定指定一个自身表的字段 如父类ID，后端业务代码通过这个列名去找到对应的值生成。最后保存
-    /// 数据来源于当前表自身的其他字段（如树结构中的父类ID）
-    /// </summary>
-    [Serializable]
-    [XmlRoot("SelfReferenceConfig")]
-    public class SelfReferenceConfig : DataSourceConfigBase
-    {
-        /// <summary>
-        /// 数据来源类型
-        /// </summary>
-        public override DataSourceType DataSourceType => DataSourceType.SelfReference;
-
-        /// <summary>
-        /// 引用字段名（英文）
-        /// </summary>
-        [XmlElement("ReferenceFieldName")]
-        public string ReferenceFieldName { get; set; }
-
-        /// <summary>
-        /// 引用字段显示名（中文）
-        /// </summary>
-        [XmlElement("ReferenceFieldDisplayName")]
-        public string ReferenceFieldDisplayName { get; set; }
-
-        /// <summary>
-        /// 验证配置是否有效
-        /// </summary>
-        public override bool Validate(out string errorMessage)
-        {
-            errorMessage = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(ReferenceFieldName))
+            if (IsSelfReference && !string.IsNullOrWhiteSpace(ForeignTableName))
             {
-                errorMessage = "请选择引用字段";
-                return false;
+                if (TargetEntityType != null && ForeignTableName != TargetEntityType.Name)
+                {
+                    errorMessage = "自身引用必须引用当前目标表";
+                    return false;
+                }
             }
 
             return true;
         }
-    }
-
-    #endregion
-
-    #region 字段复制配置
-
-    /// <summary>
-    /// 字段复制配置
-    /// 复制同一记录中另一个字段的值
-    /// </summary>
-    [Serializable]
-    [XmlRoot("FieldCopyConfig")]
-    public class FieldCopyConfig : DataSourceConfigBase
-    {
-        /// <summary>
-        /// 数据来源类型
-        /// </summary>
-        public override DataSourceType DataSourceType => DataSourceType.FieldCopy;
 
         /// <summary>
-        /// 源字段名（英文）
+        /// 目标实体类型（用于验证自身引用）
         /// </summary>
-        [XmlElement("SourceFieldName")]
-        public string SourceFieldName { get; set; }
-
-        /// <summary>
-        /// 源字段显示名（中文）
-        /// </summary>
-        [XmlElement("SourceFieldDisplayName")]
-        public string SourceFieldDisplayName { get; set; }
-
-        /// <summary>
-        /// 验证配置是否有效
-        /// </summary>
-        public override bool Validate(out string errorMessage)
-        {
-            errorMessage = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(SourceFieldName))
-            {
-                errorMessage = "请选择源字段";
-                return false;
-            }
-
-            return true;
-        }
+        [XmlIgnore]
+        public Type TargetEntityType { get; set; }
     }
 
     #endregion
@@ -560,6 +445,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
     /// <summary>
     /// 列拼接配置
+    /// 对应枚举值：DataSourceType.ColumnConcat
     /// 将Excel中的多个列值拼接后赋值给目标字段
     /// </summary>
     [Serializable]
@@ -698,6 +584,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
     /// <summary>
     /// Excel图片配置
+    /// 对应枚举值：DataSourceType.ExcelImage
     /// 数据来源于Excel中的嵌入式图片
     /// </summary>
     [Serializable]
@@ -781,4 +668,5 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     }
 
     #endregion
+
 }

@@ -1,7 +1,5 @@
 using RUINORERP.Global;
 using RUINORERP.Model;
-using RUINORERP.Model.ImportEngine.Enums;
-using RUINORERP.Model.ImportEngine.Models;
 using SqlSugar;
 using System;
 using System.Collections.Concurrent;
@@ -58,7 +56,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 按表分组预加载数据
             var tableGroups = foreignKeyMappings.GroupBy(m => 
             {
-                var fkConfig = m.DataSourceConfig as ForeignKeyConfig;
+                var fkConfig = m.DataSourceConfig as DatabaseReferenceConfig;
                 return fkConfig?.ForeignTableName;
             }).Where(g => !string.IsNullOrEmpty(g.Key));
             foreach (var group in tableGroups)
@@ -66,7 +64,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 string tableName = group.Key;
                 foreach (var mapping in group)
                 {
-                    var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                    var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
                     if (!string.IsNullOrEmpty(fkConfig?.ForeignFieldName))
                     {
                         PreloadForeignKeyData(mapping);
@@ -82,7 +80,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="fieldName">字段名</param>
         public void PreloadForeignKeyData(ColumnMapping mapping)
         {
-            var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+            var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
             if (fkConfig == null)
             {
                 Debug.WriteLine("预加载外键数据失败: DataSourceConfig不是ForeignKeyConfig类型");
@@ -170,7 +168,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 步骤2: 从缓存中查找该编码值对应的主键ID
-                var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
                 if (fkConfig != null &&
                     !string.IsNullOrEmpty(fkConfig.ForeignTableName) &&
                     !string.IsNullOrEmpty(fkConfig.ForeignFieldName) &&
@@ -250,7 +248,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             displayName = string.Empty;
 
             // 1. 优先从指定的外键来源列获取（Excel列）
-            var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+            var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
             if (fkConfig != null && fkConfig.ForeignKeySourceColumn != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn.Key))
             {
                 displayName = fkConfig.ForeignKeySourceColumn.Value ?? fkConfig.ForeignKeySourceColumn.Key;
@@ -317,46 +315,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 if (result != null && result.Rows.Count > 0)
                 {
-                    // 检查是否有多个匹配记录（唯一性验证）
                     if (result.Rows.Count > 1)
                     {
-                        // 对于供应商表等需要唯一性验证的表，记录警告
                         Debug.WriteLine(
                             $"警告：外键查询返回多个结果。表：{relatedTableName}，字段：{relatedTableField}，值：{foreignKeyValue}，匹配数：{result.Rows.Count}");
-
-                        // 如果启用了严格模式，可以抛出异常
-                        // throw new Exception($"外键值 '{foreignKeyValue}' 在表 {relatedTableName} 中不唯一，找到 {result.Rows.Count} 条记录");
                     }
 
                     object id = result.Rows[0]["ID"];
-                    // 将结果添加到缓存
                     AddToCache(cacheKey, trimmedValue, id);
                     return id;
                 }
 
-                // 如果没有找到，尝试模糊匹配（对于供应商名称等可能包含空格的情况）
-                if (relatedTableField.ToLower().Contains("name") ||
-                    relatedTableField.ToLower().Contains("vendor") ||
-                    relatedTableField.ToLower().Contains("supplier"))
-                {
-                    sql = $"SELECT ID FROM {relatedTableName} WHERE {relatedTableField} LIKE @value";
-                    parameters = new { value = $"%{trimmedValue}%" };
-                    result = _db.Ado.GetDataTable(sql, parameters);
-
-                    if (result != null && result.Rows.Count > 0)
-                    {
-                        if (result.Rows.Count > 1)
-                        {
-                            Debug.WriteLine(
-                                $"警告：模糊匹配返回多个结果。表：{relatedTableName}，字段：{relatedTableField}，值：{foreignKeyValue}");
-                        }
-                        object id = result.Rows[0]["ID"];
-                        // 模糊匹配结果不缓存，因为可能不准确
-                        return id;
-                    }
-                }
-
-                // 如果没有找到，返回null
                 return null;
             }
             catch (Exception ex)

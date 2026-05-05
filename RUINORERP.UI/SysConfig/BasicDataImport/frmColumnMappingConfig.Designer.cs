@@ -316,7 +316,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "frmColumnMappingConfig";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "列映射配置";
+            this.Text = "目标表的列映射配置";
             this.Load += new System.EventHandler(this.frmColumnMappingConfig_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);

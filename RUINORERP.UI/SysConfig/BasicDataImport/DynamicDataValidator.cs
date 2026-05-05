@@ -4,7 +4,6 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using RUINORERP.Model;
-using RUINORERP.Model.ImportEngine.Enums;
 using SqlSugar;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
@@ -109,7 +108,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 使用 DataSourceType 判断，不再依赖字符串匹配
             return mapping.ColumnDataSourceType == (int)DataSourceType.SystemGenerated
-                || mapping.ColumnDataSourceType == (int)DataSourceType.DefaultValue;
+                || mapping.ColumnDataSourceType == (int)DataSourceType.DefaultFixedValue;
         }
 
         /// <summary>
@@ -392,9 +391,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // 转换失败
+                System.Diagnostics.Debug.WriteLine($"[TryConvertValue] 类型转换失败: {ex.Message}");
             }
 
             return false;
@@ -479,7 +478,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 遍历所有外键映射
                 foreach (var mapping in foreignKeyMappings)
                 {
-                    var fkConfig = mapping.DataSourceConfig as ForeignKeyConfig;
+                    var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
                     if (fkConfig == null) continue;
 
                     // 获取外键来源列的值

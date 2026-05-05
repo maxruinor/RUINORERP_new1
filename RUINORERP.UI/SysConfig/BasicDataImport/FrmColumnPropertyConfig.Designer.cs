@@ -60,6 +60,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel21 = new Krypton.Toolkit.KryptonLabel();
             this.tabForeignKey = new System.Windows.Forms.TabPage();
             this.kryptonGroupBoxForeignType = new Krypton.Toolkit.KryptonGroupBox();
+            this.chkIsSelfReference = new Krypton.Toolkit.KryptonCheckBox();
             this.lblMaping = new Krypton.Toolkit.KryptonLabel();
             this.kcmbForeignDbSourceColumn = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel11 = new Krypton.Toolkit.KryptonLabel();
@@ -69,12 +70,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbRelatedTable = new Krypton.Toolkit.KryptonComboBox();
             this.ktxtRelatedField = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
-            this.tabSelfReference = new System.Windows.Forms.TabPage();
-            this.kcmbSelfReferenceField = new Krypton.Toolkit.KryptonComboBox();
-            this.kryptonLabelSelfRef = new Krypton.Toolkit.KryptonLabel();
-            this.tabFieldCopy = new System.Windows.Forms.TabPage();
-            this.kcmbCopyFromField = new Krypton.Toolkit.KryptonComboBox();
-            this.kryptonLabelCopy = new Krypton.Toolkit.KryptonLabel();
             this.tabColumnConcat = new System.Windows.Forms.TabPage();
             this.kryptonGroupBoxConcat = new Krypton.Toolkit.KryptonGroupBox();
             this.ktxtSeparator = new Krypton.Toolkit.KryptonTextBox();
@@ -123,14 +118,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxForeignType.Panel)).BeginInit();
             this.kryptonGroupBoxForeignType.Panel.SuspendLayout();
             this.kryptonGroupBoxForeignType.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chkIsSelfReference)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignDbSourceColumn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignExcelSourceColumn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbRelatedTable)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ktxtRelatedField)).BeginInit();
-            this.tabSelfReference.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kcmbSelfReferenceField)).BeginInit();
-            this.tabFieldCopy.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kcmbCopyFromField)).BeginInit();
             this.tabColumnConcat.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxConcat)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxConcat.Panel)).BeginInit();
@@ -170,8 +162,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonTabControl.Controls.Add(this.tabDefaultValue);
             this.kryptonTabControl.Controls.Add(this.tabSystemGenerated);
             this.kryptonTabControl.Controls.Add(this.tabForeignKey);
-            this.kryptonTabControl.Controls.Add(this.tabSelfReference);
-            this.kryptonTabControl.Controls.Add(this.tabFieldCopy);
             this.kryptonTabControl.Controls.Add(this.tabColumnConcat);
             this.kryptonTabControl.Controls.Add(this.tabImage);
             this.kryptonTabControl.Location = new System.Drawing.Point(30, 80);
@@ -245,9 +235,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.tabDefaultValue.Controls.Add(this.kryptonLabelDefault);
             this.tabDefaultValue.Location = new System.Drawing.Point(4, 22);
             this.tabDefaultValue.Name = "tabDefaultValue";
-            this.tabDefaultValue.Size = new System.Drawing.Size(723, 336);
+            this.tabDefaultValue.Size = new System.Drawing.Size(723, 396);
             this.tabDefaultValue.TabIndex = 1;
-            this.tabDefaultValue.Text = "默认值";
+            this.tabDefaultValue.Text = "默认固定值";
             // 
             // cmbDynamicDefaultList
             // 
@@ -302,16 +292,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             this.kryptonLabelDefault.Location = new System.Drawing.Point(30, 28);
             this.kryptonLabelDefault.Name = "kryptonLabelDefault";
-            this.kryptonLabelDefault.Size = new System.Drawing.Size(52, 20);
+            this.kryptonLabelDefault.Size = new System.Drawing.Size(91, 20);
             this.kryptonLabelDefault.TabIndex = 0;
-            this.kryptonLabelDefault.Values.Text = "默认值:";
+            this.kryptonLabelDefault.Values.Text = "固定值(字符串):";
             // 
             // tabSystemGenerated
             // 
             this.tabSystemGenerated.Controls.Add(this.kryptonGroupBoxSystemGenerated);
             this.tabSystemGenerated.Location = new System.Drawing.Point(4, 22);
             this.tabSystemGenerated.Name = "tabSystemGenerated";
-            this.tabSystemGenerated.Size = new System.Drawing.Size(723, 336);
+            this.tabSystemGenerated.Size = new System.Drawing.Size(723, 396);
             this.tabSystemGenerated.TabIndex = 2;
             this.tabSystemGenerated.Text = "系统生成";
             // 
@@ -337,7 +327,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxSystemGenerated.Panel.Controls.Add(this.kryptonLabel22);
             this.kryptonGroupBoxSystemGenerated.Panel.Controls.Add(this.kcmbSystemGeneratedType);
             this.kryptonGroupBoxSystemGenerated.Panel.Controls.Add(this.kryptonLabel21);
-            this.kryptonGroupBoxSystemGenerated.Size = new System.Drawing.Size(723, 336);
+            this.kryptonGroupBoxSystemGenerated.Size = new System.Drawing.Size(723, 396);
             this.kryptonGroupBoxSystemGenerated.TabIndex = 0;
             this.kryptonGroupBoxSystemGenerated.Values.Heading = "系统生成配置";
             // 
@@ -481,9 +471,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.tabForeignKey.Controls.Add(this.kryptonGroupBoxForeignType);
             this.tabForeignKey.Location = new System.Drawing.Point(4, 22);
             this.tabForeignKey.Name = "tabForeignKey";
-            this.tabForeignKey.Size = new System.Drawing.Size(723, 336);
+            this.tabForeignKey.Size = new System.Drawing.Size(723, 396);
             this.tabForeignKey.TabIndex = 3;
-            this.tabForeignKey.Text = "外键关联";
+            this.tabForeignKey.Text = "数据库表关联引用";
             // 
             // kryptonGroupBoxForeignType
             // 
@@ -493,6 +483,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonGroupBoxForeignType.Panel
             // 
+            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.chkIsSelfReference);
             this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.lblMaping);
             this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kcmbForeignDbSourceColumn);
             this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kryptonLabel11);
@@ -502,9 +493,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kcmbRelatedTable);
             this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.ktxtRelatedField);
             this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kryptonLabel10);
-            this.kryptonGroupBoxForeignType.Size = new System.Drawing.Size(723, 336);
+            this.kryptonGroupBoxForeignType.Size = new System.Drawing.Size(723, 396);
             this.kryptonGroupBoxForeignType.TabIndex = 0;
-            this.kryptonGroupBoxForeignType.Values.Heading = "外键关联配置";
+            this.kryptonGroupBoxForeignType.Values.Heading = "数据库表关联引用配置";
             // 
             // lblMaping
             // 
@@ -513,6 +504,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.lblMaping.Size = new System.Drawing.Size(62, 20);
             this.lblMaping.TabIndex = 8;
             this.lblMaping.Values.Text = "关联配置";
+            // 
+            // chkIsSelfReference
+            // 
+            this.chkIsSelfReference.Location = new System.Drawing.Point(170, 53);
+            this.chkIsSelfReference.Name = "chkIsSelfReference";
+            this.chkIsSelfReference.Size = new System.Drawing.Size(88, 20);
+            this.chkIsSelfReference.TabIndex = 9;
+            this.chkIsSelfReference.Values.Text = "自身表引用";
             // 
             // kcmbForeignDbSourceColumn
             // 
@@ -587,68 +586,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel10.TabIndex = 0;
             this.kryptonLabel10.Values.Text = "关联表:";
             // 
-            // tabSelfReference
-            // 
-            this.tabSelfReference.Controls.Add(this.kcmbSelfReferenceField);
-            this.tabSelfReference.Controls.Add(this.kryptonLabelSelfRef);
-            this.tabSelfReference.Location = new System.Drawing.Point(4, 22);
-            this.tabSelfReference.Name = "tabSelfReference";
-            this.tabSelfReference.Size = new System.Drawing.Size(723, 336);
-            this.tabSelfReference.TabIndex = 4;
-            this.tabSelfReference.Text = "自身引用";
-            // 
-            // kcmbSelfReferenceField
-            // 
-            this.kcmbSelfReferenceField.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.kcmbSelfReferenceField.DropDownWidth = 200;
-            this.kcmbSelfReferenceField.IntegralHeight = false;
-            this.kcmbSelfReferenceField.Location = new System.Drawing.Point(120, 28);
-            this.kcmbSelfReferenceField.Name = "kcmbSelfReferenceField";
-            this.kcmbSelfReferenceField.Size = new System.Drawing.Size(250, 21);
-            this.kcmbSelfReferenceField.TabIndex = 1;
-            // 
-            // kryptonLabelSelfRef
-            // 
-            this.kryptonLabelSelfRef.Location = new System.Drawing.Point(30, 28);
-            this.kryptonLabelSelfRef.Name = "kryptonLabelSelfRef";
-            this.kryptonLabelSelfRef.Size = new System.Drawing.Size(65, 20);
-            this.kryptonLabelSelfRef.TabIndex = 0;
-            this.kryptonLabelSelfRef.Values.Text = "引用字段:";
-            // 
-            // tabFieldCopy
-            // 
-            this.tabFieldCopy.Controls.Add(this.kcmbCopyFromField);
-            this.tabFieldCopy.Controls.Add(this.kryptonLabelCopy);
-            this.tabFieldCopy.Location = new System.Drawing.Point(4, 22);
-            this.tabFieldCopy.Name = "tabFieldCopy";
-            this.tabFieldCopy.Size = new System.Drawing.Size(723, 336);
-            this.tabFieldCopy.TabIndex = 5;
-            this.tabFieldCopy.Text = "字段复制";
-            // 
-            // kcmbCopyFromField
-            // 
-            this.kcmbCopyFromField.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.kcmbCopyFromField.DropDownWidth = 200;
-            this.kcmbCopyFromField.IntegralHeight = false;
-            this.kcmbCopyFromField.Location = new System.Drawing.Point(120, 28);
-            this.kcmbCopyFromField.Name = "kcmbCopyFromField";
-            this.kcmbCopyFromField.Size = new System.Drawing.Size(250, 21);
-            this.kcmbCopyFromField.TabIndex = 1;
-            // 
-            // kryptonLabelCopy
-            // 
-            this.kryptonLabelCopy.Location = new System.Drawing.Point(30, 28);
-            this.kryptonLabelCopy.Name = "kryptonLabelCopy";
-            this.kryptonLabelCopy.Size = new System.Drawing.Size(52, 20);
-            this.kryptonLabelCopy.TabIndex = 0;
-            this.kryptonLabelCopy.Values.Text = "源字段:";
-            // 
             // tabColumnConcat
             // 
             this.tabColumnConcat.Controls.Add(this.kryptonGroupBoxConcat);
             this.tabColumnConcat.Location = new System.Drawing.Point(4, 22);
             this.tabColumnConcat.Name = "tabColumnConcat";
-            this.tabColumnConcat.Size = new System.Drawing.Size(723, 336);
+            this.tabColumnConcat.Size = new System.Drawing.Size(723, 396);
             this.tabColumnConcat.TabIndex = 6;
             this.tabColumnConcat.Text = "列拼接";
             // 
@@ -667,7 +610,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxConcat.Panel.Controls.Add(this.kryptonLabel13);
             this.kryptonGroupBoxConcat.Panel.Controls.Add(this.kryptonLabel12);
             this.kryptonGroupBoxConcat.Panel.Controls.Add(this.klstSourceColumns);
-            this.kryptonGroupBoxConcat.Size = new System.Drawing.Size(723, 336);
+            this.kryptonGroupBoxConcat.Size = new System.Drawing.Size(723, 396);
             this.kryptonGroupBoxConcat.TabIndex = 0;
             this.kryptonGroupBoxConcat.Values.Heading = "列拼接配置";
             // 
@@ -735,7 +678,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.tabImage.Controls.Add(this.kryptonGroupBoxImageType);
             this.tabImage.Location = new System.Drawing.Point(4, 22);
             this.tabImage.Name = "tabImage";
-            this.tabImage.Size = new System.Drawing.Size(723, 336);
+            this.tabImage.Size = new System.Drawing.Size(723, 396);
             this.tabImage.TabIndex = 7;
             this.tabImage.Text = "图片配置";
             // 
@@ -758,7 +701,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxImageType.Panel.Controls.Add(this.kchkIsImageColumn);
             this.kryptonGroupBoxImageType.Panel.Controls.Add(this.kcmbImageColumnType);
             this.kryptonGroupBoxImageType.Panel.Controls.Add(this.kryptonLabel15);
-            this.kryptonGroupBoxImageType.Size = new System.Drawing.Size(723, 336);
+            this.kryptonGroupBoxImageType.Size = new System.Drawing.Size(723, 396);
             this.kryptonGroupBoxImageType.TabIndex = 0;
             this.kryptonGroupBoxImageType.Values.Heading = "图片配置";
             // 
@@ -967,16 +910,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxForeignType.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxForeignType)).EndInit();
             this.kryptonGroupBoxForeignType.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.chkIsSelfReference)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignDbSourceColumn)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignExcelSourceColumn)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbRelatedTable)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ktxtRelatedField)).EndInit();
-            this.tabSelfReference.ResumeLayout(false);
-            this.tabSelfReference.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kcmbSelfReferenceField)).EndInit();
-            this.tabFieldCopy.ResumeLayout(false);
-            this.tabFieldCopy.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kcmbCopyFromField)).EndInit();
             this.tabColumnConcat.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxConcat.Panel)).EndInit();
             this.kryptonGroupBoxConcat.Panel.ResumeLayout(false);
@@ -1014,8 +952,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private System.Windows.Forms.TabPage tabDefaultValue;
         private System.Windows.Forms.TabPage tabSystemGenerated;
         private System.Windows.Forms.TabPage tabForeignKey;
-        private System.Windows.Forms.TabPage tabSelfReference;
-        private System.Windows.Forms.TabPage tabFieldCopy;
         private System.Windows.Forms.TabPage tabColumnConcat;
         private System.Windows.Forms.TabPage tabImage;
 
@@ -1058,14 +994,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonLabel kryptonLabel11;
         private Krypton.Toolkit.KryptonComboBox kcmbForeignDbSourceColumn;
         private Krypton.Toolkit.KryptonLabel lblMaping;
-
-        // 自身引用配置
-        private Krypton.Toolkit.KryptonLabel kryptonLabelSelfRef;
-        private Krypton.Toolkit.KryptonComboBox kcmbSelfReferenceField;
-
-        // 字段复制配置
-        private Krypton.Toolkit.KryptonLabel kryptonLabelCopy;
-        private Krypton.Toolkit.KryptonComboBox kcmbCopyFromField;
+        private Krypton.Toolkit.KryptonCheckBox chkIsSelfReference;
 
         // 列拼接配置
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxConcat;

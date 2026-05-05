@@ -5,7 +5,6 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
-using RUINORERP.Model.ImportEngine.Enums;
 using RUINORERP.UI.Common;
 using SqlSugar;
 using System;
@@ -49,13 +48,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private System.Collections.Concurrent.ConcurrentDictionary<string, string> _fieldInfoDict;
 
-
-
-        /// <summary>
-        /// 动态生成的默认值控件
-        /// </summary>
-        private Control _dynamicDefaultValueControl;
-
         /// <summary>
         /// 数据绑定辅助类
         /// </summary>
@@ -86,9 +78,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
 
             // 手动绑定事件
-            //kcmbDataSourceType.SelectedIndexChanged += kcmbDataSourceType_SelectedIndexChanged;
-            //kcmbSelfReferenceField.SelectedIndexChanged += kcmbSelfReferenceField_SelectedIndexChanged;
-            //kcmbCopyFromField.SelectedIndexChanged += kcmbCopyFromField_SelectedIndexChanged;
+            kcmbDataSourceType.SelectedIndexChanged += kcmbDataSourceType_SelectedIndexChanged;
+            chkIsSelfReference.CheckedChanged += chkIsSelfReference_CheckedChanged;
             this.FormClosing += FrmColumnPropertyConfig_FormClosing;
         }
 
@@ -105,8 +96,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void FrmColumnPropertyConfig_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // 清理动态控件
-            RemoveDefaultValueControl();
+            // 不需要清理动态控件，已移除相关逻辑
         }
 
         /// <summary>
@@ -183,20 +173,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     case (int)DataSourceType.Excel:
                         BindExcelConfig(CurrentMapping.DataSourceConfig as ExcelConfig);
                         break;
-                    case (int)DataSourceType.DefaultValue:
+                    case (int)DataSourceType.DefaultFixedValue:
                         BindDefaultValueConfig(CurrentMapping.DataSourceConfig as DefaultValueConfig);
                         break;
                     case (int)DataSourceType.SystemGenerated:
                         BindSystemGeneratedConfig(CurrentMapping.DataSourceConfig as SystemGeneratedConfig);
                         break;
                     case (int)DataSourceType.ForeignKey:
-                        BindForeignKeyConfig(CurrentMapping.DataSourceConfig as ForeignKeyConfig);
-                        break;
-                    case (int)DataSourceType.SelfReference:
-                        BindSelfReferenceConfig(CurrentMapping.DataSourceConfig as SelfReferenceConfig);
-                        break;
-                    case (int)DataSourceType.FieldCopy:
-                        BindFieldCopyConfig(CurrentMapping.DataSourceConfig as FieldCopyConfig);
+                        BindDatabaseReferenceConfig(CurrentMapping.DataSourceConfig as DatabaseReferenceConfig);
                         break;
                     case (int)DataSourceType.ColumnConcat:
                         BindColumnConcatConfig(CurrentMapping.DataSourceConfig as ColumnConcatConfig);
@@ -221,20 +205,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             switch (dataSourceType)
             {
-                case (int)DataSourceType.SelfReference:
-                    LoadSelfReferenceFields();
-                    break;
-                case (int)DataSourceType.FieldCopy:
-                    LoadCopyFromFields();
+                case (int)DataSourceType.ForeignKey:
+                    // 数据库表关联引用：加载外键来源列
+                    LoadForeignKeySourceColumns();
                     break;
                 case (int)DataSourceType.ColumnConcat:
                     LoadConcatSourceColumns();
                     break;
                 case (int)DataSourceType.ExcelImage:
                     LoadImageNamingColumns();
-                    break;
-                case (int)DataSourceType.ForeignKey:
-                    LoadForeignKeySourceColumns();
                     break;
             }
         }
@@ -290,59 +269,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 绑定默认值配置
+        /// 绑定默认固定值配置
+        /// 只需要一个简单的文本框输入字符串值，后台会根据目标列类型自动转换
+        /// 
+        /// 注意：Designer.cs 中保留了其他动态控件（cmbDynamicDefaultList、cmbDynamicDefaultEnum等）的定义，
+        /// 但它们都设置为 Visible = false，不再使用。这是为了保持设计器兼容性。
         /// </summary>
         private void BindDefaultValueConfig(DefaultValueConfig config)
         {
             if (config == null) return;
 
-            // 生成动态默认值控件
-            GenerateDefaultValueControl();
-
-            // 设置默认值
-            if (_dynamicDefaultValueControl == ktxtDefaultValue)
-            {
-                ktxtDefaultValue.Text = config.Value ?? string.Empty;
-            }
-            else if (_dynamicDefaultValueControl == chkDynamicDefaultBool)
-            {
-                bool boolValue = false;
-                if (bool.TryParse(config.Value, out boolValue))
-                {
-                    chkDynamicDefaultBool.Checked = boolValue;
-                }
-            }
-            else if (_dynamicDefaultValueControl == dtpDynamicDefaultDateTime)
-            {
-                if (DateTime.TryParse(config.Value, out DateTime dateTimeValue))
-                {
-                    dtpDynamicDefaultDateTime.Value = dateTimeValue;
-                    dtpDynamicDefaultDateTime.Checked = true;
-                }
-            }
-            else if (_dynamicDefaultValueControl == cmbDynamicDefaultEnum && !string.IsNullOrEmpty(config.EnumTypeName))
-            {
-                // 枚举类型需要特殊处理
-                Type enumType = AssemblyLoader.GetType("RUINORERP.Model", config.EnumTypeName);
-                if (enumType != null && enumType.IsEnum)
-                {
-                    foreach (EnumItemInfo item in cmbDynamicDefaultEnum.Items)
-                    {
-                        if (item.EnumValue == config.EnumValue)
-                        {
-                            cmbDynamicDefaultEnum.SelectedItem = item;
-                            break;
-                        }
-                    }
-                }
-            }
-            else if (_dynamicDefaultValueControl == cmbDynamicDefaultList)
-            {
-                if (!string.IsNullOrEmpty(config.Value))
-                {
-                    cmbDynamicDefaultList.SelectedValue = config.Value;
-                }
-            }
+            // 使用 DataBindingHelper 进行双向绑定
+            DataBindingHelper.BindData4TextBox<DefaultValueConfig>(
+                config,
+                c => c.Value,
+                ktxtDefaultValue,
+                BindDataType4TextBox.Text,
+                false);
         }
 
         /// <summary>
@@ -403,16 +346,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 绑定外键关联配置
+        /// 绑定数据库表关联引用配置
+        /// 支持两种模式：外键关联和自身表引用
         /// </summary>
-        private void BindForeignKeyConfig(ForeignKeyConfig config)
+        private void BindDatabaseReferenceConfig(DatabaseReferenceConfig config)
         {
             if (config == null) return;
 
-            // 加载关联表列表
+            // 1. 绑定自身表引用复选框
+            DataBindingHelper.BindData4CheckBox<DatabaseReferenceConfig>(
+                config,
+                c => c.IsSelfReference,
+                chkIsSelfReference,
+                false);
+ 
+            // 3. 加载关联表列表
             LoadRelatedTables();
 
-            // 选中对应的关联表
+            // 4. 如果是自身表引用，自动选中目标表
+            if (config.IsSelfReference)
+            {
+                config.ForeignTableName = TargetEntityType?.Name;
+                config.ForeignTableDisplayName = GetTargetTableDisplayName();
+                kcmbRelatedTable.Enabled = false;
+            }
+
+            // 5. 选中对应的关联表
             if (!string.IsNullOrEmpty(config.ForeignTableName))
             {
                 for (int i = 0; i < kcmbRelatedTable.Items.Count; i++)
@@ -429,15 +388,51 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 LoadTableFields(config.ForeignTableName);
             }
 
-            // 绑定外键字段显示名称
+            // 6. 绑定关联字段显示名称
             if (!string.IsNullOrEmpty(config.ForeignFieldDisplayName))
             {
                 ktxtRelatedField.SelectedItem = config.ForeignFieldDisplayName;
             }
 
-            // 加载外键来源列并选中已配置的值
+            // 7. 加载外键来源列并选中已配置的值
             string foreignKeySourceColumn = config.ForeignKeySourceColumn?.Key;
             LoadForeignKeySourceColumns(foreignKeySourceColumn);
+        }
+
+        /// <summary>
+        /// 获取目标表的显示名称
+        /// </summary>
+        private string GetTargetTableDisplayName()
+        {
+            if (TargetEntityType == null) return string.Empty;
+            
+            // 从 FieldNameList 中查找目标表的中文名
+            foreach (var kvp in _fieldInfoDict)
+            {
+                if (kvp.Key == TargetEntityType.Name)
+                {
+                    return kvp.Value;
+                }
+            }
+            
+            return TargetEntityType.Name;
+        }
+
+        /// <summary>
+        /// 加载数据库表关联引用的字段列表
+        /// </summary>
+        private void LoadDatabaseReferenceFields(DatabaseReferenceConfig config)
+        {
+            if (config == null) return;
+
+            string tableName = config.IsSelfReference 
+                ? TargetEntityType?.Name 
+                : config.ForeignTableName;
+
+            if (!string.IsNullOrEmpty(tableName))
+            {
+                LoadTableFields(tableName);
+            }
         }
 
         /// <summary>
@@ -451,32 +446,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             binding.Format += (s, args) => args.Value = args.Value ?? string.Empty;
             binding.Parse += (s, args) => args.Value = args.Value ?? string.Empty;
             comboBox.DataBindings.Add(binding);
-        }
-
-        /// <summary>
-        /// 绑定自身引用配置
-        /// </summary>
-        private void BindSelfReferenceConfig(SelfReferenceConfig config)
-        {
-            if (config == null) return;
-
-            LoadSelfReferenceFields();
-
-            // 双向绑定到显示名称（SelectedItem 绑定）
-            BindComboBoxSelectedItem(config, nameof(SelfReferenceConfig.ReferenceFieldDisplayName), kcmbSelfReferenceField);
-        }
-
-        /// <summary>
-        /// 绑定字段复制配置
-        /// </summary>
-        private void BindFieldCopyConfig(FieldCopyConfig config)
-        {
-            if (config == null) return;
-
-            LoadCopyFromFields();
-
-            // 双向绑定到显示名称（SelectedItem 绑定）
-            BindComboBoxSelectedItem(config, nameof(FieldCopyConfig.SourceFieldDisplayName), kcmbCopyFromField);
         }
 
         /// <summary>
@@ -566,8 +535,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kcmbRelatedTable.Enabled = (dataSourceType == DataSourceType.ForeignKey);
             ktxtRelatedField.Enabled = (dataSourceType == DataSourceType.ForeignKey);
             kcmbForeignExcelSourceColumn.Enabled = (dataSourceType == DataSourceType.ForeignKey);
-            kcmbSelfReferenceField.Enabled = (dataSourceType == DataSourceType.SelfReference);
-            kcmbCopyFromField.Enabled = (dataSourceType == DataSourceType.FieldCopy);
+         
 
             // 根据数据来源类型设置相关标志（不再需要，直接使用 DataSourceType 判断）
             // IsForeignKey = (dataSourceType == DataSourceType.ForeignKey);
@@ -592,15 +560,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kchkIsImageColumn.Checked = true;
             }
 
-            // 处理默认值控件：选择默认值时动态生成控件
-            if (dataSourceType == DataSourceType.DefaultValue)
-            {
-                GenerateDefaultValueControl();
-            }
-            else
-            {
-                RemoveDefaultValueControl();
-            }
+            // 处理默认固定值控件：始终显示文本框，不需要动态生成
+            // 用户只需在文本框中输入字符串值，后台会根据目标列类型自动转换
         }
 
         /// <summary>
@@ -630,6 +591,40 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 加载表的字段列表
             LoadTableFields(tableName);
+        }
+
+        /// <summary>
+        /// 自身表引用复选框状态改变事件
+        /// </summary>
+        private void chkIsSelfReference_CheckedChanged(object sender, EventArgs e)
+        {
+            if (CurrentMapping?.DataSourceConfig is DatabaseReferenceConfig config)
+            {
+                config.IsSelfReference = chkIsSelfReference.Checked;
+
+                if (chkIsSelfReference.Checked)
+                {
+                    // 勾选时，自动设置为目标表并禁用下拉框
+                    config.ForeignTableName = TargetEntityType?.Name;
+                    config.ForeignTableDisplayName = GetTargetTableDisplayName();
+                    kcmbRelatedTable.Enabled = false;
+                    
+                    // 加载目标表的字段
+                    LoadTableFields(config.ForeignTableName);
+                }
+                else
+                {
+                    // 取消勾选时，启用下拉框并清空已选值
+                    kcmbRelatedTable.Enabled = true;
+                    kcmbRelatedTable.SelectedIndex = 0;
+                    ktxtRelatedField.Items.Clear();
+                    
+                    config.ForeignTableName = null;
+                    config.ForeignTableDisplayName = null;
+                    config.ForeignFieldName = null;
+                    config.ForeignFieldDisplayName = null;
+                }
+            }
         }
 
         /// <summary>
@@ -795,7 +790,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (field.Value != null)
             {
                 // 直接更新配置对象
-                if (CurrentMapping?.DataSourceConfig is ForeignKeyConfig config)
+                if (CurrentMapping?.DataSourceConfig is DatabaseReferenceConfig config)
                 {
                     config.ForeignFieldName = field.Key;
                     config.ForeignFieldDisplayName = field.Value;
@@ -812,7 +807,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 2. 使用验证适配器进行配置验证
             var validator = new ImportValidationAdapter();
-            if (!validator.ValidateColumnMapping(CurrentMapping, out List<string> validationErrors))
+            if (!validator.ValidateColumnMapping(CurrentMapping, out List<string> validationErrors, TargetEntityType))
             {
                 string errorMsg = "列配置验证失败：\n" + string.Join("\n", validationErrors);
                 MessageBox.Show(errorMsg, "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -917,18 +912,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             UpdateControlStates();
 
             // ✅ 根据数据来源类型自动切换到对应的Tab页
-            kryptonTabControl.SelectedIndex = (int)kcmbDataSourceType.SelectedValue;
-
-            // 如果选择了自身引用，加载当前表的字段列表
-            if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.SelfReference)
+            if (kcmbDataSourceType.SelectedIndex >= 0 && kcmbDataSourceType.SelectedIndex < kryptonTabControl.TabCount)
             {
-                LoadSelfReferenceFields();
+                kryptonTabControl.SelectedIndex = kcmbDataSourceType.SelectedIndex;
             }
 
-            // 如果选择了字段复制，加载当前表的字段列表
-            if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.FieldCopy)
+            // 如果选择了数据库表关联引用，加载字段列表
+            if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.ForeignKey)
             {
-                LoadCopyFromFields();
+                LoadSelfReferenceFields();
             }
 
             // 如果选择了列拼接，加载Excel列列表
@@ -989,9 +981,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 获取字段信息
                 var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
                 _fieldInfoDict = fieldNameList;
-
-                // ✅ 先清空下拉框,避免重复添加
-                kcmbSelfReferenceField.Items.Clear();
+ 
 
                 // ✅ 使用HashSet去重,防止字段名重复
                 var addedFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1001,7 +991,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     // 只有未添加过的字段才添加
                     if (!addedFields.Contains(field.Value))
                     {
-                        kcmbSelfReferenceField.Items.Add(field.Value); // 添加中文名
                         addedFields.Add(field.Value);
                     }
                 }
@@ -1012,90 +1001,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
         }
 
-        /// <summary>
-        /// 自身引用字段选择改变事件
-        /// 注意：中文显示名已通过双向绑定自动同步，这里只需要同步英文字段名
-        /// </summary>
-        private void kcmbSelfReferenceField_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (kcmbSelfReferenceField.SelectedIndex < 0 || _fieldInfoDict == null)
-            {
-                return;
-            }
+     
 
-            string displayName = kcmbSelfReferenceField.SelectedItem?.ToString();
-            if (string.IsNullOrEmpty(displayName)) return;
 
-            var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
-            if (field.Value != null && CurrentMapping?.DataSourceConfig is SelfReferenceConfig config)
-            {
-                config.ReferenceFieldName = field.Key;
-            }
-        }
 
-        /// <summary>
-        /// 加载可复制的字段列表
-        /// </summary>
-        private void LoadCopyFromFields()
-        {
-            try
-            {
-                if (TargetEntityType == null)
-                {
-                    MessageBox.Show("未设置目标实体类型", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                // 获取字段信息
-                var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
-                _fieldInfoDict = fieldNameList;
-
-                // ✅ 先清空下拉框,避免重复添加
-                kcmbCopyFromField.Items.Clear();
-
-                // ✅ 使用HashSet去重,防止字段名重复
-                var addedFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                foreach (var field in fieldNameList)
-                {
-                    // 排除当前字段本身
-                    if (field.Key != CurrentMapping?.SystemField?.Key)
-                    {
-                        // 只有未添加过的字段才添加
-                        if (!addedFields.Contains(field.Value))
-                        {
-                            kcmbCopyFromField.Items.Add(field.Value); // 添加中文名
-                            addedFields.Add(field.Value);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"加载可复制字段失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// 字段复制选择改变事件
-        /// 注意：中文显示名已通过双向绑定自动同步，这里只需要同步英文字段名
-        /// </summary>
-        private void kcmbCopyFromField_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (kcmbCopyFromField.SelectedIndex < 0 || _fieldInfoDict == null)
-            {
-                return;
-            }
-
-            string displayName = kcmbCopyFromField.SelectedItem?.ToString();
-            if (string.IsNullOrEmpty(displayName)) return;
-
-            var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
-            if (field.Value != null && CurrentMapping?.DataSourceConfig is FieldCopyConfig config)
-            {
-                config.SourceFieldName = field.Key;
-            }
-        }
+      
 
         /// <summary>
         /// 获取表的中文显示名称
@@ -1139,7 +1049,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (string.IsNullOrEmpty(displayName)) return;
 
             var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
-            if (field.Value != null && CurrentMapping?.DataSourceConfig is ForeignKeyConfig config)
+            if (field.Value != null && CurrentMapping?.DataSourceConfig is DatabaseReferenceConfig config)
             {
                 config.ForeignKeySourceColumn = new SerializableKeyValuePair<string>
                 {
@@ -1178,475 +1088,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             catch (Exception ex)
             {
                 MessageBox.Show($"加载列拼接源列失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// 生成动态默认值控件
-        /// 根据目标字段的数据类型自动生成合适的输入控件
-        /// </summary>
-        private void GenerateDefaultValueControl()
-        {
-            try
-            {
-                // 移除旧控件
-                RemoveDefaultValueControl();
-
-                if (CurrentMapping?.SystemField == null || TargetEntityType == null)
-                {
-                    // 如果没有映射信息，使用默认文本框
-                    ShowDefaultTextBox();
-                    return;
-                }
-
-                // 获取字段属性信息
-                string fieldName = CurrentMapping.SystemField.Key;
-                PropertyInfo property = TargetEntityType.GetProperty(fieldName);
-                if (property == null)
-                {
-                    ShowDefaultTextBox();
-                    return;
-                }
-
-                Type propertyType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
-
-                // 获取预定义的枚举类型（针对特殊字段）
-                Type enumType = GetPredefinedEnumType(TargetEntityType.Name, fieldName);
-
-
-                //根据生成目标表中的的目标字段的特性。去查找是不是有外键
-
-                // 根据字段类型生成控件
-                if (propertyType == typeof(bool))
-                {
-                    GenerateBooleanControl();
-                }
-                else if (propertyType == typeof(DateTime))
-                {
-                    GenerateDateTimeControl();
-                }
-                else if (propertyType.IsEnum)
-                {
-                    GenerateEnumControl(propertyType);
-                }
-                else if (enumType != null && enumType.IsEnum)
-                {
-                    GenerateEnumControl(enumType);
-                }
-                else if (propertyType == typeof(long) || propertyType == typeof(long?) || propertyType == typeof(int) || propertyType == typeof(int?))
-                {
-                    // 检查是否有外键特性
-                    var fkAttr = property?.GetCustomAttribute<FKRelationAttribute>();
-                    if (fkAttr != null)
-                    {
-                        GenerateForeignKeyControl(property, fieldName, fkAttr);
-                    }
-                    else
-                    {
-                        ShowDefaultTextBox();
-                    }
-                }
-                else
-                {
-                    ShowDefaultTextBox();
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"生成默认值控件失败: {ex.Message}");
-                ShowDefaultTextBox();
-            }
-        }
-
-        /// <summary>
-        /// 获取预定义的枚举类型（针对特殊字段）
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <param name="fieldName">字段名</param>
-        /// <returns>枚举类型，无预定义返回null</returns>
-        private Type GetPredefinedEnumType(string tableName, string fieldName)
-        {
-            return EntityImportHelper.GetPredefinedEnumType(tableName, fieldName);
-        }
-
-        /// <summary>
-        /// 移除动态生成的默认值控件（已废弃，现在使用 HideAllDefaultValueControls）
-        /// </summary>
-        private void RemoveDefaultValueControl()
-        {
-            // 不再需要动态删除控件，只需隐藏即可
-            HideAllDefaultValueControls();
-            _dynamicDefaultValueControl = null;
-        }
-
-        /// <summary>
-        /// 隐藏所有默认值控件
-        /// </summary>
-        private void HideAllDefaultValueControls()
-        {
-            ktxtDefaultValue.Visible = false;
-            chkDynamicDefaultBool.Visible = false;
-            dtpDynamicDefaultDateTime.Visible = false;
-            cmbDynamicDefaultEnum.Visible = false;
-            cmbDynamicDefaultList.Visible = false;
-        }
-
-        /// <summary>
-        /// 显示默认文本框
-        /// </summary>
-        private void ShowDefaultTextBox()
-        {
-            // 隐藏其他默认值控件
-            HideAllDefaultValueControls();
-
-            ktxtDefaultValue.Visible = true;
-            _dynamicDefaultValueControl = ktxtDefaultValue;
-        }
-
-        /// <summary>
-        /// 生成布尔类型控件
-        /// </summary>
-        private void GenerateBooleanControl()
-        {
-            // 隐藏其他默认值控件
-            HideAllDefaultValueControls();
-
-            // 显示布尔控件
-            chkDynamicDefaultBool.Visible = true;
-            _dynamicDefaultValueControl = chkDynamicDefaultBool;
-
-            // 设置初始值
-            if (CurrentMapping?.DataSourceConfig is DefaultValueConfig config)
-            {
-                bool boolValue = false;
-                if (bool.TryParse(config.Value, out boolValue))
-                {
-                    chkDynamicDefaultBool.Checked = boolValue;
-                }
-            }
-
-            // 绑定事件（先解绑再绑定，避免重复）
-            chkDynamicDefaultBool.CheckedChanged -= ChkDynamicDefaultBool_CheckedChanged;
-            chkDynamicDefaultBool.CheckedChanged += ChkDynamicDefaultBool_CheckedChanged;
-        }
-
-        /// <summary>
-        /// 布尔控件值改变事件
-        /// </summary>
-        private void ChkDynamicDefaultBool_CheckedChanged(object sender, EventArgs e)
-        {
-            if (CurrentMapping?.DataSourceConfig is DefaultValueConfig config)
-            {
-                config.Value = chkDynamicDefaultBool.Checked.ToString();
-            }
-        }
-
-        /// <summary>
-        /// 生成日期时间类型控件
-        /// </summary>
-        private void GenerateDateTimeControl()
-        {
-            // 隐藏其他默认值控件
-            HideAllDefaultValueControls();
-
-            // 显示日期时间控件
-            dtpDynamicDefaultDateTime.Visible = true;
-            _dynamicDefaultValueControl = dtpDynamicDefaultDateTime;
-
-            // 绑定事件（先解绑再绑定，避免重复）
-            dtpDynamicDefaultDateTime.ValueChanged -= DtpDynamicDefaultDateTime_ValueChanged;
-            dtpDynamicDefaultDateTime.ValueChanged += DtpDynamicDefaultDateTime_ValueChanged;
-        }
-
-        /// <summary>
-        /// 日期时间控件值改变事件
-        /// </summary>
-        private void DtpDynamicDefaultDateTime_ValueChanged(object sender, EventArgs e)
-        {
-            // 直接更新当前映射的默认值配置（如果存在）
-            if (CurrentMapping?.DataSourceConfig is DefaultValueConfig defaultConfig)
-            {
-                if (dtpDynamicDefaultDateTime.Checked)
-                {
-                    defaultConfig.Value = dtpDynamicDefaultDateTime.Value.ToString("yyyy-MM-dd HH:mm:ss");
-                }
-                else
-                {
-                    defaultConfig.Value = string.Empty;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 生成枚举类型控件
-        /// </summary>
-        private void GenerateEnumControl(Type enumType)
-        {
-            // 隐藏其他默认值控件
-            HideAllDefaultValueControls();
-
-            // 清空并重新加载枚举项
-            cmbDynamicDefaultEnum.Items.Clear();
-
-            // 加载枚举值（带显示文本）
-            foreach (var value in Enum.GetValues(enumType))
-            {
-                // 创建一个枚举信息对象存储
-                var enumInfo = new EnumItemInfo
-                {
-                    EnumType = enumType,
-                    EnumValue = (int)value,
-                    EnumName = value.ToString(),
-                    DisplayName = GetEnumDisplayName(enumType, value)
-                };
-                cmbDynamicDefaultEnum.Items.Add(enumInfo);
-            }
-
-            // 显示枚举控件
-            cmbDynamicDefaultEnum.Visible = true;
-            _dynamicDefaultValueControl = cmbDynamicDefaultEnum;
-
-            // 绑定事件（先解绑再绑定，避免重复）
-            cmbDynamicDefaultEnum.SelectedIndexChanged -= CmbDynamicDefaultEnum_SelectedIndexChanged;
-            cmbDynamicDefaultEnum.SelectedIndexChanged += CmbDynamicDefaultEnum_SelectedIndexChanged;
-        }
-
-        /// <summary>
-        /// 枚举控件选择改变事件
-        /// </summary>
-        private void CmbDynamicDefaultEnum_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (cmbDynamicDefaultEnum.SelectedItem is EnumItemInfo selectedInfo)
-            {
-                // 直接更新当前映射的默认值配置（如果存在）
-                if (CurrentMapping?.DataSourceConfig is DefaultValueConfig defaultConfig)
-                {
-                    defaultConfig.EnumTypeName = selectedInfo.EnumType.FullName;
-                    defaultConfig.EnumValue = selectedInfo.EnumValue;
-                    defaultConfig.EnumName = selectedInfo.EnumName;
-                    defaultConfig.EnumDisplayName = selectedInfo.DisplayName;
-                    defaultConfig.Value = selectedInfo.EnumName;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 获取枚举值的显示名称（优先使用Description特性）
-        /// </summary>
-        private string GetEnumDisplayName(Type enumType, object enumValue)
-        {
-            try
-            {
-                var field = enumType.GetField(enumValue.ToString());
-                if (field != null)
-                {
-                    var descAttr = field.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false)
-                        .FirstOrDefault() as System.ComponentModel.DescriptionAttribute;
-                    if (descAttr != null && !string.IsNullOrEmpty(descAttr.Description))
-                    {
-                        return descAttr.Description;
-                    }
-                }
-            }
-            catch { }
-            return enumValue.ToString();
-        }
-
-        /// <summary>
-        /// 枚举项信息（用于ComboBox显示和值存储）
-        /// </summary>
-        public class EnumItemInfo
-        {
-            public Type EnumType { get; set; }
-            public int EnumValue { get; set; }
-            public string EnumName { get; set; }
-            public string DisplayName { get; set; }
-
-            public override string ToString()
-            {
-                return !string.IsNullOrEmpty(DisplayName) ? $"{DisplayName} ({EnumName})" : EnumName;
-            }
-        }
-
-        /// <summary>
-        /// 生成外键类型控件（下拉列表）
-        /// </summary>
-        private void GenerateForeignKeyControl(PropertyInfo property, string fieldName, FKRelationAttribute fkAttr)
-        {
-            // 隐藏其他默认值控件
-            HideAllDefaultValueControls();
-
-            // 清空cmbDynamicDefaultList
-            cmbDynamicDefaultList.DataSource = null;
-            cmbDynamicDefaultList.Items.Clear();
-
-            try
-            {
-                if (fkAttr != null)
-                {
-                    // 获取关联表类型
-                    string fkTableName = fkAttr.FKTableName;
-                    Type fkEntityType = null;
-
-                    // 从 EntityTypeMappings 中查找关联表类型
-                    var mapping = UCBasicDataImport.EntityTypeMappings
-                        .FirstOrDefault(m => m.Value.Name == fkTableName || m.Value.Name.Contains(fkTableName));
-
-                    if (mapping.Value != null)
-                    {
-                        fkEntityType = mapping.Value;
-                    }
-
-                    if (fkEntityType != null)
-                    {
-                        // 使用 UIGenerateHelper 绑定外键数据
-                        BindForeignKeyData(cmbDynamicDefaultList, fkEntityType, fkAttr);
-                    }
-                    else
-                    {
-                        cmbDynamicDefaultList.Items.Add($"未找到关联表: {fkTableName}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"生成外键控件失败: {ex.Message}");
-                cmbDynamicDefaultList.Items.Clear();
-                cmbDynamicDefaultList.Items.Add($"加载失败: {ex.Message}");
-            }
-
-            // 显示外键控件
-            cmbDynamicDefaultList.Visible = true;
-            _dynamicDefaultValueControl = cmbDynamicDefaultList;
-
-            // 绑定事件（先解绑再绑定，避免重复）
-            cmbDynamicDefaultList.SelectedIndexChanged -= CmbDynamicDefaultList_SelectedIndexChanged;
-            cmbDynamicDefaultList.SelectedIndexChanged += CmbDynamicDefaultList_SelectedIndexChanged;
-        }
-
-        /// <summary>
-        /// 外键控件选择改变事件
-        /// </summary>
-        private void CmbDynamicDefaultList_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (cmbDynamicDefaultList.SelectedIndex >= 0 && cmbDynamicDefaultList.SelectedItem != null)
-            {
-                // 保存选中的值（ID）
-                var selectedValue = cmbDynamicDefaultList.SelectedValue;
-                if (selectedValue != null)
-                {
-                    // 直接更新当前映射的默认值配置（如果存在）
-                    if (CurrentMapping?.DataSourceConfig is DefaultValueConfig defaultConfig)
-                    {
-                        defaultConfig.Value = selectedValue.ToString();
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 绑定外键数据到下拉列表
-        /// </summary>
-        /// <param name="comboBox">下拉列表控件</param>
-        /// <param name="fkEntityType">外键关联实体类型</param>
-        /// <param name="fkAttr">外键关系特性</param>
-        private void BindForeignKeyData(KryptonComboBox comboBox, Type fkEntityType, FKRelationAttribute fkAttr)
-        {
-            try
-            {
-                // 如果数据库客户端为空，提示用户
-                if (_db == null)
-                {
-                    comboBox.Items.Clear();
-                    comboBox.Items.Add("数据库连接不可用");
-                    return;
-                }
-
-                // 获取主键名称
-                string primaryKey = GetPrimaryKeyName(fkEntityType);
-                string displayField = string.Empty;
-                // 获取显示字段（通常是名称字段）
-                var tableSchema = _tableSchemaManager.GetSchemaInfo(fkEntityType.Name);
-                if (tableSchema != null)
-                {
-                    displayField = tableSchema.DisplayField;
-                }
-                // 构建查询
-                string query = $"SELECT {primaryKey}, {displayField} FROM {fkAttr.FKTableName} ORDER BY {displayField}";
-
-                // 执行查询获取数据
-                var dataTable = _db.Ado.GetDataTable(query);
-
-                if (dataTable != null && dataTable.Rows.Count > 0)
-                {
-                    // 手动绑定数据到KryptonComboBox
-                    comboBox.DataSource = dataTable;
-                    comboBox.DisplayMember = displayField;
-                    comboBox.ValueMember = primaryKey;
-                }
-                else
-                {
-                    comboBox.Items.Clear();
-                    comboBox.Items.Add("无可用数据");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"绑定外键数据失败: {ex.Message}");
-                comboBox.Items.Clear();
-                comboBox.Items.Add($"加载失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 获取实体的主键名称
-        /// </summary>
-        private string GetPrimaryKeyName(Type entityType)
-        {
-            var properties = entityType.GetProperties();
-            foreach (var prop in properties)
-            {
-                var pkAttr = prop.GetCustomAttribute<SugarColumn>();
-                if (pkAttr != null && pkAttr.IsPrimaryKey)
-                {
-                    return prop.Name;
-                }
-            }
-            return entityType.Name + "ID"; // 默认命名规则
-        }
-
-
-        /// <summary>
-        /// 从动态控件获取默认值
-        /// </summary>
-        private string GetDefaultValueFromDynamicControl()
-        {
-            if (_dynamicDefaultValueControl == ktxtDefaultValue)
-            {
-                return ktxtDefaultValue.Text.Trim();
-            }
-
-            switch (_dynamicDefaultValueControl?.Name)
-            {
-                case "chkDynamicDefaultBool":
-                    return (_dynamicDefaultValueControl as KryptonCheckBox)?.Checked.ToString() ?? "False";
-                case "dtpDynamicDefaultDateTime":
-                    var dtp = _dynamicDefaultValueControl as KryptonDateTimePicker;
-                    return dtp?.Checked == true ? dtp.Value.ToString("yyyy-MM-dd HH:mm:ss") : string.Empty;
-                case "cmbDynamicDefaultEnum":
-                    // 枚举控件返回枚举名称
-                    var enumComboBox = _dynamicDefaultValueControl as KryptonComboBox;
-                    if (enumComboBox?.SelectedItem is EnumItemInfo enumInfo)
-                    {
-                        return enumInfo.EnumName;
-                    }
-                    return enumComboBox?.SelectedItem?.ToString() ?? string.Empty;
-                case "cmbDynamicDefaultForeignKey":
-                    // 外键控件应该返回SelectedValue（主键ID），而不是SelectedItem（显示字段值）
-                    var comboBox = _dynamicDefaultValueControl as KryptonComboBox;
-                    return comboBox?.SelectedValue?.ToString() ?? string.Empty;
-                default:
-                    return ktxtDefaultValue.Text.Trim();
             }
         }
 

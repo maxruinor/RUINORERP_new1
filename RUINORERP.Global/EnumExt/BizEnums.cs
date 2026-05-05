@@ -370,55 +370,102 @@ namespace RUINORERP.Global
         Other = 2
     }
     // [NoWantIOC()]
+    /// <summary>
+    /// 基础信息类型枚举
+    /// </summary>
     public enum BaseInfoType
     {
+        [Description("产品编号")]
         ProductNo,
 
         /// <summary>
         /// 会计科目
         /// </summary>
+        [Description("会计科目")]
         FMSubject,
 
         /// <summary>
         /// 产品助记码
         /// 类别拼单首字母+序号？
         /// </summary>
+        [Description("产品助记码")]
         ShortCode,
 
         /// <summary>
         /// 模块定义
         /// </summary>
+        [Description("模块定义")]
         ModuleDefinition,
+        /// <summary>
+        /// 产品分类
+        /// </summary>
+        [Description("产品分类")]
         ProCategories,
+        /// <summary>
+        /// 员工
+        /// </summary>
+        [Description("员工")]
         Employee,
+        /// <summary>
+        /// 部门
+        /// </summary>
+        [Description("部门")]
         Department,
+        /// <summary>
+        /// 仓库
+        /// </summary>
+        [Description("仓库")]
         Storehouse,
+        /// <summary>
+        /// 供应商
+        /// </summary>
+        [Description("供应商")]
         Supplier,
+        /// <summary>
+        /// 客户
+        /// </summary>
+        [Description("客户")]
         Customer,
 
         /// <summary>
         /// 其他
         /// </summary>
+        [Description("其它往来单位")]
         CVOther,
 
+
+        /// <summary>
+        /// 位置
+        /// </summary>
+        [Description("位置")]
         Location,
+        /// <summary>
+        /// SKU编号
+        /// </summary>
+        [Description("SKU编号")]
         SKU_No,
+        /// <summary>
+        /// 更新SKU编号
+        /// </summary>
+        [Description("更新SKU编号")]
         Update_SKU_No,
+        /// <summary>
+        /// 仓库代码
+        /// </summary>
+        [Description("仓库代码")]
         StoreCode,
         /// <summary>
         /// 项目代码
         /// </summary>
+        [Description("项目代码")]
         ProjectGroupCode,
 
         /// <summary>
         /// 区域代码
         /// </summary>
+        [Description("区域代码")]
         CRM_RegionCode,
-
-        /// <summary>
-        /// 往来单位
-        /// </summary>
-        BusinessPartner,
+ 
     }
 
     //上面只是测试，b

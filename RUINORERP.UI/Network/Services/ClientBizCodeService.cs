@@ -145,7 +145,6 @@ namespace RUINORERP.UI.Network.Services
                 BaseInfoType.Customer => "{S:L_CUST}{D:yyyyMMdd}{N:Customer/00000}",
                 BaseInfoType.Supplier => "{S:L_SUPP}{D:yyyyMMdd}{N:Supplier/00000}",
                 BaseInfoType.CVOther => "{S:L_CV}{D:yyyyMMdd}{N:CVOther/00000}",
-                BaseInfoType.BusinessPartner => "{S:L_BP}{D:yyyyMMdd}{N:BusinessPartner/00000}",
                 BaseInfoType.CRM_RegionCode => "{S:L_REG}{D:yyyyMM}{N:CRM_RegionCode/0000}",
                 BaseInfoType.Department => "{S:L_DEPT}{D:yyyyMM}{N:Department/000}",
                 BaseInfoType.Employee => "{S:L_EMP}{D:yyyyMM}{N:Employee/0000}",

@@ -95,7 +95,7 @@ namespace RUINORERP.UI.BI
                 if (string.IsNullOrEmpty(_EditEntity.CVCode))
                 {
                     var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-                    _EditEntity.CVCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.BusinessPartner);
+                    _EditEntity.CVCode = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.CVOther);
                 }
 
                 //新建时默认启用

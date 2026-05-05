@@ -36,10 +36,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kchkIgnoreEmptyValue = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabelExcelIgnore = new Krypton.Toolkit.KryptonLabel();
             this.tabDefaultValue = new System.Windows.Forms.TabPage();
-            this.cmbDynamicDefaultList = new Krypton.Toolkit.KryptonComboBox();
-            this.cmbDynamicDefaultEnum = new Krypton.Toolkit.KryptonComboBox();
-            this.dtpDynamicDefaultDateTime = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.chkDynamicDefaultBool = new Krypton.Toolkit.KryptonCheckBox();
             this.ktxtDefaultValue = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabelDefault = new Krypton.Toolkit.KryptonLabel();
             this.tabSystemGenerated = new System.Windows.Forms.TabPage();
@@ -63,7 +59,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.tabForeignKey = new System.Windows.Forms.TabPage();
             this.kryptonGroupBoxForeignType = new Krypton.Toolkit.KryptonGroupBox();
             this.chkIsSelfReference = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblMaping = new Krypton.Toolkit.KryptonLabel();
             this.kcmbForeignDbSourceColumn = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel11 = new Krypton.Toolkit.KryptonLabel();
             this.kcmbForeignExcelSourceColumn = new Krypton.Toolkit.KryptonComboBox();
@@ -106,8 +101,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonTabControl.SuspendLayout();
             this.tabExcel.SuspendLayout();
             this.tabDefaultValue.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbDynamicDefaultList)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbDynamicDefaultEnum)).BeginInit();
             this.tabSystemGenerated.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxSystemGenerated)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxSystemGenerated.Panel)).BeginInit();
@@ -115,12 +108,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxSystemGenerated.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbBusinessCodeRule)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbSystemGeneratedType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbEntityBizCodeType)).BeginInit();
             this.tabForeignKey.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxForeignType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxForeignType.Panel)).BeginInit();
             this.kryptonGroupBoxForeignType.Panel.SuspendLayout();
             this.kryptonGroupBoxForeignType.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.chkIsSelfReference)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignDbSourceColumn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignExcelSourceColumn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbRelatedTable)).BeginInit();
@@ -229,10 +222,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // tabDefaultValue
             // 
-            this.tabDefaultValue.Controls.Add(this.cmbDynamicDefaultList);
-            this.tabDefaultValue.Controls.Add(this.cmbDynamicDefaultEnum);
-            this.tabDefaultValue.Controls.Add(this.dtpDynamicDefaultDateTime);
-            this.tabDefaultValue.Controls.Add(this.chkDynamicDefaultBool);
             this.tabDefaultValue.Controls.Add(this.ktxtDefaultValue);
             this.tabDefaultValue.Controls.Add(this.kryptonLabelDefault);
             this.tabDefaultValue.Location = new System.Drawing.Point(4, 22);
@@ -240,48 +229,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.tabDefaultValue.Size = new System.Drawing.Size(723, 396);
             this.tabDefaultValue.TabIndex = 1;
             this.tabDefaultValue.Text = "默认固定值";
-            // 
-            // cmbDynamicDefaultList
-            // 
-            this.cmbDynamicDefaultList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbDynamicDefaultList.DropDownWidth = 280;
-            this.cmbDynamicDefaultList.IntegralHeight = false;
-            this.cmbDynamicDefaultList.Location = new System.Drawing.Point(120, 75);
-            this.cmbDynamicDefaultList.Name = "cmbDynamicDefaultList";
-            this.cmbDynamicDefaultList.Size = new System.Drawing.Size(280, 21);
-            this.cmbDynamicDefaultList.TabIndex = 5;
-            this.cmbDynamicDefaultList.Visible = false;
-            // 
-            // cmbDynamicDefaultEnum
-            // 
-            this.cmbDynamicDefaultEnum.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbDynamicDefaultEnum.DropDownWidth = 280;
-            this.cmbDynamicDefaultEnum.IntegralHeight = false;
-            this.cmbDynamicDefaultEnum.Location = new System.Drawing.Point(120, 118);
-            this.cmbDynamicDefaultEnum.Name = "cmbDynamicDefaultEnum";
-            this.cmbDynamicDefaultEnum.Size = new System.Drawing.Size(280, 21);
-            this.cmbDynamicDefaultEnum.TabIndex = 4;
-            this.cmbDynamicDefaultEnum.Visible = false;
-            // 
-            // dtpDynamicDefaultDateTime
-            // 
-            this.dtpDynamicDefaultDateTime.CustomFormat = "yyyy-MM-dd HH:mm:ss";
-            this.dtpDynamicDefaultDateTime.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpDynamicDefaultDateTime.Location = new System.Drawing.Point(120, 158);
-            this.dtpDynamicDefaultDateTime.Name = "dtpDynamicDefaultDateTime";
-            this.dtpDynamicDefaultDateTime.ShowCheckBox = true;
-            this.dtpDynamicDefaultDateTime.Size = new System.Drawing.Size(180, 21);
-            this.dtpDynamicDefaultDateTime.TabIndex = 3;
-            this.dtpDynamicDefaultDateTime.Visible = false;
-            // 
-            // chkDynamicDefaultBool
-            // 
-            this.chkDynamicDefaultBool.Location = new System.Drawing.Point(120, 197);
-            this.chkDynamicDefaultBool.Name = "chkDynamicDefaultBool";
-            this.chkDynamicDefaultBool.Size = new System.Drawing.Size(153, 20);
-            this.chkDynamicDefaultBool.TabIndex = 2;
-            this.chkDynamicDefaultBool.Values.Text = "如果默认是，则请勾选";
-            this.chkDynamicDefaultBool.Visible = false;
             // 
             // ktxtDefaultValue
             // 
@@ -294,7 +241,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             this.kryptonLabelDefault.Location = new System.Drawing.Point(30, 28);
             this.kryptonLabelDefault.Name = "kryptonLabelDefault";
-            this.kryptonLabelDefault.Size = new System.Drawing.Size(91, 20);
+            this.kryptonLabelDefault.Size = new System.Drawing.Size(98, 20);
             this.kryptonLabelDefault.TabIndex = 0;
             this.kryptonLabelDefault.Values.Text = "固定值(字符串):";
             // 
@@ -475,25 +422,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbEntityBizCodeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbEntityBizCodeType.DropDownWidth = 200;
             this.kcmbEntityBizCodeType.IntegralHeight = false;
-            this.kcmbEntityBizCodeType.Items.AddRange(new object[] {
-            "ProductNo",
-            "FMSubject",
-            "ShortCode",
-            "ModuleDefinition",
-            "ProCategories",
-            "Employee",
-            "Department",
-            "Storehouse",
-            "Supplier",
-            "Customer",
-            "CVOther",
-            "Location",
-            "SKU_No",
-            "Update_SKU_No",
-            "StoreCode",
-            "ProjectGroupCode",
-            "CRM_RegionCode",
-            "BusinessPartner"});
             this.kcmbEntityBizCodeType.Location = new System.Drawing.Point(126, 220);
             this.kcmbEntityBizCodeType.Name = "kcmbEntityBizCodeType";
             this.kcmbEntityBizCodeType.Size = new System.Drawing.Size(200, 21);
@@ -525,7 +453,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // kryptonGroupBoxForeignType.Panel
             // 
             this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.chkIsSelfReference);
-            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.lblMaping);
             this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kcmbForeignDbSourceColumn);
             this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kryptonLabel11);
             this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kcmbForeignExcelSourceColumn);
@@ -537,14 +464,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxForeignType.Size = new System.Drawing.Size(723, 396);
             this.kryptonGroupBoxForeignType.TabIndex = 0;
             this.kryptonGroupBoxForeignType.Values.Heading = "数据库表关联引用配置";
-            // 
-            // lblMaping
-            // 
-            this.lblMaping.Location = new System.Drawing.Point(71, 29);
-            this.lblMaping.Name = "lblMaping";
-            this.lblMaping.Size = new System.Drawing.Size(62, 20);
-            this.lblMaping.TabIndex = 8;
-            this.lblMaping.Values.Text = "关联配置";
             // 
             // chkIsSelfReference
             // 
@@ -939,8 +858,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.tabExcel.PerformLayout();
             this.tabDefaultValue.ResumeLayout(false);
             this.tabDefaultValue.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbDynamicDefaultList)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbDynamicDefaultEnum)).EndInit();
             this.tabSystemGenerated.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxSystemGenerated.Panel)).EndInit();
             this.kryptonGroupBoxSystemGenerated.Panel.ResumeLayout(false);
@@ -949,13 +866,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxSystemGenerated.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kcmbBusinessCodeRule)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbSystemGeneratedType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbEntityBizCodeType)).EndInit();
             this.tabForeignKey.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxForeignType.Panel)).EndInit();
             this.kryptonGroupBoxForeignType.Panel.ResumeLayout(false);
             this.kryptonGroupBoxForeignType.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxForeignType)).EndInit();
             this.kryptonGroupBoxForeignType.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.chkIsSelfReference)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignDbSourceColumn)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignExcelSourceColumn)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbRelatedTable)).EndInit();
@@ -1006,10 +923,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         // 默认值配置
         private Krypton.Toolkit.KryptonLabel kryptonLabelDefault;
         private Krypton.Toolkit.KryptonTextBox ktxtDefaultValue;
-        private Krypton.Toolkit.KryptonCheckBox chkDynamicDefaultBool;
-        private Krypton.Toolkit.KryptonDateTimePicker dtpDynamicDefaultDateTime;
-        private Krypton.Toolkit.KryptonComboBox cmbDynamicDefaultEnum;
-        private Krypton.Toolkit.KryptonComboBox cmbDynamicDefaultList;
 
         // 系统生成配置
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxSystemGenerated;
@@ -1040,7 +953,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonComboBox kcmbForeignExcelSourceColumn;
         private Krypton.Toolkit.KryptonLabel kryptonLabel11;
         private Krypton.Toolkit.KryptonComboBox kcmbForeignDbSourceColumn;
-        private Krypton.Toolkit.KryptonLabel lblMaping;
         private Krypton.Toolkit.KryptonCheckBox chkIsSelfReference;
 
         // 列拼接配置

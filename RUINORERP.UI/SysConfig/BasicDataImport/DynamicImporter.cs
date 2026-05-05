@@ -1,5 +1,6 @@
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Repository.UnitOfWorks;  // ✅ 新增：IUnitOfWorkManage
 using RUINORERP.UI.SysConfig.BasicDataImport;
@@ -2317,30 +2318,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private async Task<string> GenerateEntityBizCodeAsync(SystemGeneratedConfig config)
         {
-            if (string.IsNullOrEmpty(config.EntityBizCodeType))
-            {
-                System.Diagnostics.Debug.WriteLine("[EntityBizCode] 未配置实体业务编号类型");
-                return "[待生成]";
-            }
-
             try
             {
-                // 解析 BaseInfoType 枚举
-                if (Enum.TryParse<BaseInfoType>(config.EntityBizCodeType, out BaseInfoType bizType))
+                // 将 int 类型的枚举值转换为 BaseInfoType 枚举
+                BaseInfoType bizType = (BaseInfoType)config.EntityBizCodeType;
+
+                var bizCodeService = Startup.GetFromFac<Network.Services.ClientBizCodeService>();
+                if (bizCodeService == null)
                 {
-                    var bizCodeService = Startup.GetFromFac<Network.Services.ClientBizCodeService>();
-                    if (bizCodeService == null)
-                    {
-                        System.Diagnostics.Debug.WriteLine("[EntityBizCode] 无法获取 ClientBizCodeService 实例");
-                        return "[待生成]";
-                    }
-                    return await bizCodeService.GenerateBaseInfoNoAsync(bizType);
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"[EntityBizCode] 无效的 BaseInfoType: {config.EntityBizCodeType}");
+                    System.Diagnostics.Debug.WriteLine("[EntityBizCode] 无法获取 ClientBizCodeService 实例");
                     return "[待生成]";
                 }
+                return await bizCodeService.GenerateBaseInfoNoAsync(bizType);
             }
             catch (Exception ex)
             {

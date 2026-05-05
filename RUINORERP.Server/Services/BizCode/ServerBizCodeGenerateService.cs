@@ -754,8 +754,8 @@ namespace RUINORERP.Server.Services.BizCode
                     return "{S:SHOP}{DB:{S:StoreCode}/000}";
                 case BaseInfoType.ProCategories: // 产品分类编号
                     return "{S:C}{DB:{S:ProCategories}/000}";
-                case BaseInfoType.BusinessPartner: // 业务伙伴编号
-                    return "{S:BP}{DB:{S:BusinessPartner}/0000}";
+                //case BaseInfoType.BusinessPartner: // 业务伙伴编号
+                //    return "{S:BP}{DB:{S:BusinessPartner}/0000}";
                 case BaseInfoType.ShortCode: // 简码
                     if (!string.IsNullOrEmpty(paraConst))
                     {

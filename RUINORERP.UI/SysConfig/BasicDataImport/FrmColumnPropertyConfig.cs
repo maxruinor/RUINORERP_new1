@@ -408,8 +408,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 BindDataType4TextBox.Text,
                 false);
 
-            // ✅ 绑定实体业务编号类型（ComboBox SelectedItem 绑定）
-            BindComboBoxSelectedItem(config, nameof(SystemGeneratedConfig.EntityBizCodeType), kcmbEntityBizCodeType);
+            // ✅ 绑定实体业务编号类型（使用枚举绑定方式 - 字符串版本）
+            DataBindingHelper.BindData4CmbByEnum<SystemGeneratedConfig, BaseInfoType>(
+                config,
+                nameof(SystemGeneratedConfig.EntityBizCodeType),
+                kcmbEntityBizCodeType,
+                false);
         }
 
         /// <summary>
@@ -435,7 +439,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 config.ForeignTableName = TargetEntityType?.Name;
                 config.ForeignTableDisplayName = GetTargetTableDisplayName();
-                kcmbRelatedTable.Enabled = false;
             }
 
             // 4. 选中对应的关联表
@@ -474,11 +477,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (TargetEntityType == null) return string.Empty;
             
             // 从 FieldNameList 中查找目标表的中文名
-            foreach (var kvp in _fieldInfoDict)
+            if (_fieldInfoDict != null)
             {
-                if (kvp.Key == TargetEntityType.Name)
+                foreach (var kvp in _fieldInfoDict)
                 {
-                    return kvp.Value;
+                    if (kvp.Key == TargetEntityType.Name)
+                    {
+                        return kvp.Value;
+                    }
                 }
             }
             
@@ -605,30 +611,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             DataSourceType dataSourceType = (DataSourceType)kcmbDataSourceType.SelectedIndex;
 
             // 根据数据来源类型控制控件状态
-            kcmbRelatedTable.Enabled = (dataSourceType == DataSourceType.ForeignKey);
-            ktxtRelatedField.Enabled = (dataSourceType == DataSourceType.ForeignKey);
-            kcmbForeignExcelSourceColumn.Enabled = (dataSourceType == DataSourceType.ForeignKey);
+            bool isForeignKey = (dataSourceType == DataSourceType.ForeignKey);
+            kcmbRelatedTable.Enabled = isForeignKey;
+            ktxtRelatedField.Enabled = isForeignKey;
+            kcmbForeignExcelSourceColumn.Enabled = isForeignKey;
          
-
-            // 根据数据来源类型设置相关标志（不再需要，直接使用 DataSourceType 判断）
-            // IsForeignKey = (dataSourceType == DataSourceType.ForeignKey);
-            // IsSystemGenerated = (dataSourceType == DataSourceType.SystemGenerated);
-
-            // 控制GroupBox的显示和隐藏
-            kryptonGroupBoxForeignType.Visible = (dataSourceType == DataSourceType.ForeignKey);
-            kryptonGroupBoxConcat.Visible = (dataSourceType == DataSourceType.ColumnConcat);
-
-            // ✅ 控制图片配置GroupBox的显示和隐藏（选择ExcelImage类型时自动显示）
-            kryptonGroupBoxImageType.Visible = (dataSourceType == DataSourceType.ExcelImage);
-
-            // 控制系统生成配置GroupBox的显示和隐藏
-            kryptonGroupBoxSystemGenerated.Visible = (dataSourceType == DataSourceType.SystemGenerated);
+            // ✅ 如果是自身表引用，禁用关联表下拉框
+            if (isForeignKey && CurrentMapping?.DataSourceConfig is DatabaseReferenceConfig dbConfig)
+            {
+                kcmbRelatedTable.Enabled = isForeignKey && !dbConfig.IsSelfReference;
+            }
 
             // 更新系统生成配置控件的可用性
             UpdateSystemGeneratedControlStates();
-
-            // 处理默认固定值控件：始终显示文本框，不需要动态生成
-            // 用户只需在文本框中输入字符串值，后台会根据目标列类型自动转换
         }
 
         /// <summary>

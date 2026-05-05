@@ -232,8 +232,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 对应 BaseInfoType 枚举值，如：ProductNo、SKU_No、ProCategories、Customer、Supplier 等
         /// </summary>
         [XmlElement("EntityBizCodeType")]
-        public string EntityBizCodeType { get; set; } = string.Empty;
-
+        public int EntityBizCodeType { get; set; } = 0;
         /// <summary>
         /// 获取业务编码生成规则的显示名称
         /// </summary>

@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualBasic;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -545,6 +546,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 性能优化：使用按需读取列的方法，只读取配置中映射的Excel列
                 // 这样可以大幅减少内存占用和解析时间，特别是当Excel文件包含大量无关列时
+                
+                // 调试：检查配置加载后的 SystemField.Key 值
+                System.Diagnostics.Debug.WriteLine($"[解析前检查] 配置映射数量: {_currentConfig.ColumnMappings.Count}");
+                foreach (var m in _currentConfig.ColumnMappings)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[解析前检查] SystemField.Key='{m.SystemField?.Key}', SystemField.Value='{m.SystemField?.Value}'");
+                }
+                
                 DataTable fullData = _dynamicExcelParser.ParseExcelWithColumns(
                     ktxtDynamicFilePath.Text,
                     kcmbDynamicSheetName.SelectedIndex,
@@ -748,10 +757,66 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
                 
                 _currentConfig = _columnMappingManager.LoadConfiguration(mappingName, _selectedEntityType);
+                
+                // 调试：检查加载后的配置
+                System.Diagnostics.Debug.WriteLine($"[配置加载] 映射数量: {_currentConfig?.ColumnMappings?.Count ?? 0}");
+                if (_currentConfig?.ColumnMappings != null)
+                {
+                    foreach (var m in _currentConfig.ColumnMappings)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[配置加载] SystemField.Key='{m.SystemField?.Key}', SystemField.Value='{m.SystemField?.Value}'");
+                    }
+                }
+                 
+                // 迁移旧配置：修复 SystemField.Key 存储为中文的问题
+                MigrateConfiguration(_currentConfig);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"加载映射配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 迁移旧配置：修复 SystemField.Key 存储为中文的问题
+        /// 规则：Key 应该是英文数据库列名，Value 应该是中文显示名
+        /// </summary>
+        private void MigrateConfiguration(ImportConfiguration config)
+        {
+            if (config?.ColumnMappings == null || _selectedEntityType == null)
+                return;
+
+            // 获取实体的字段映射（Key=英文名，Value=中文名）
+            var fieldNameList = UIHelper.GetFieldNameList(false, _selectedEntityType);
+
+            foreach (var mapping in config.ColumnMappings)
+            {
+                if (mapping.SystemField == null)
+                    continue;
+
+                string currentKey = mapping.SystemField.Key;
+                string currentValue = mapping.SystemField.Value;
+
+                if (string.IsNullOrEmpty(currentKey) || string.IsNullOrEmpty(currentValue))
+                    continue;
+
+                // 检查 Key 是否是中文（如果 Key 在 fieldNameList 的 Value 中，说明 Key 存的是中文）
+                bool keyIsChinese = fieldNameList.Any(x => x.Value == currentKey) && !fieldNameList.ContainsKey(currentKey);
+                if (keyIsChinese)
+                {
+                    // Key 是中文，需要交换
+                    string englishKey = fieldNameList.FirstOrDefault(x => x.Value == currentKey).Key;
+                    if (!string.IsNullOrEmpty(englishKey))
+                    {
+                        // 交换 Key 和 Value
+                        mapping.SystemField = new RUINORERP.Global.SerializableKeyValuePair<string>(englishKey, currentKey);
+                    }
+                }
+                // 如果 Key 是英文但 Value 不是中文，也修复 Value
+                else if (fieldNameList.ContainsKey(currentKey) && fieldNameList[currentKey] != currentValue)
+                {
+                    mapping.SystemField = new RUINORERP.Global.SerializableKeyValuePair<string>(currentKey, fieldNameList[currentKey]);
+                }
             }
         }
 
@@ -1317,8 +1382,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 
                 _finalPreviewData = await _dynamicImporter.PreprocessDataAsync(_parsedImportData, mappings, _selectedEntityType);
 
-                // 3. 显示预览
+                // 调试信息:检查生成的数据
+                System.Diagnostics.Debug.WriteLine($"[调试] _finalPreviewData 行数: {_finalPreviewData.Rows.Count}");
+                System.Diagnostics.Debug.WriteLine($"[调试] _finalPreviewData 列数: {_finalPreviewData.Columns.Count}");
+                if (_finalPreviewData.Rows.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[调试] 列名列表: {string.Join(", ", _finalPreviewData.Columns.Cast<DataColumn>().Select(c => c.ColumnName))}");
+                    System.Diagnostics.Debug.WriteLine($"[调试] 第一行数据示例:");
+                    foreach (DataColumn col in _finalPreviewData.Columns)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"  {col.ColumnName} = {_finalPreviewData.Rows[0][col]}");
+                    }
+                }
+
+                // 3. 显示预览 - 先关闭自定义列显示,避免列被隐藏
+                dgvFinalPreview.UseCustomColumnDisplay = false;
+                dgvFinalPreview.AutoGenerateColumns = true;
+                dgvFinalPreview.DataSource = null; // 先清空数据源
                 dgvFinalPreview.DataSource = _finalPreviewData;
+                dgvFinalPreview.Refresh();
 
                 // 4. 切换到最终预览页面
                 kryptonNavigatorDynamic.SelectedIndex = 2;
@@ -1509,7 +1591,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void DgvParsedImportData_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            FormatImageCell(e, dgvParsedImportData, mapping => mapping.SystemField?.Value);
+            FormatImageCell(e, dgvParsedImportData, mapping => mapping.SystemField?.Key);
         }
 
         /// <summary>

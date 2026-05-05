@@ -1002,6 +1002,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 将工作表转换为DataTable（只读取配置的列）
                 dataTable = SheetToDataTableWithColumns(sheet, columnMappings, maxPreviewRows, images);
+               dataTable.TableName= sheet.SheetName;
             }
 
             return dataTable;
@@ -1112,12 +1113,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 System.Diagnostics.Debug.WriteLine($"[ExcelParser] 警告：以下配置的列在Excel中未找到: {string.Join(", ", missingColumns)}");
             }
 
-            // 创建结果表的列（使用SystemField.Value作为列名）
+            // 创建结果表的列（使用SystemField.Key英文字段名作为列名，与实体属性匹配）
             // 数据库列名与Excel列名的对应关系通过ColumnMapping配置管理
             var addedColumns = new HashSet<string>();
             foreach (var mapping in columnMappings)
             {
-                string columnName = mapping.SystemField?.Value;
+                string columnName = mapping.SystemField?.Key; // 使用Key(英文)作为DataTable列名
+                
+                // 调试：输出列名信息
+                System.Diagnostics.Debug.WriteLine($"[ExcelParser] 创建列: Key='{mapping.SystemField?.Key}', Value='{mapping.SystemField?.Value}', 最终列名='{columnName}'");
+                
                 if (!string.IsNullOrEmpty(columnName) && !addedColumns.Contains(columnName))
                 {
                     dataTable.Columns.Add(columnName, typeof(string));
@@ -1169,7 +1174,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     // 遍历每个映射配置，按需读取对应的Excel列
                     foreach (var mapping in columnMappings)
                     {
-                        string targetColumnName = mapping.SystemField?.Value;
+                        string targetColumnName = mapping.SystemField?.Key; // 使用Key(英文)作为DataTable列名
                         if (string.IsNullOrEmpty(targetColumnName))
                             continue;
 
@@ -1204,7 +1209,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     // 添加调试信息：列名未找到
                                     if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn))
                                     {
-                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到Excel列'{mapping.OriginalExcelColumn}'，映射到字段'{mapping.SystemField?.Value}'");
+                                        System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到Excel列'{mapping.OriginalExcelColumn}'，映射到字段'{mapping.SystemField?.Value}({mapping.SystemField?.Key})'");
                                     }
                                 }
                                 break;
@@ -1235,7 +1240,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                         // 添加调试信息：外键来源列名未找到
                                         if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
                                         {
-                                            System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到外键来源列'{fkConfig.ForeignKeySourceColumn.Key}'，映射到字段'{mapping.SystemField?.Value}'");
+                                            System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到外键来源列'{fkConfig.ForeignKeySourceColumn.Key}'，映射到字段'{mapping.SystemField?.Value}({mapping.SystemField?.Key})'");
                                         }
                                     }
                                 }

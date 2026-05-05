@@ -117,17 +117,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            // 获取选中的系统字段
-            string systemFieldDisplay = listBoxSystemFields.SelectedItem.ToString();
-            string systemField = systemFieldDisplay.StartsWith("* ")
-                ? systemFieldDisplay.Substring(2)
-                : systemFieldDisplay;
+            // 获取选中的系统字段（从KeyValuePair中获取Key和Value）
+            if (!(listBoxSystemFields.SelectedItem is KeyValuePair<string, string> selectedItem))
+            {
+                return;
+            }
+            string systemField = selectedItem.Key; // 英文字段名
+            string systemFieldDisplay = selectedItem.Value; // 中文显示名
 
             // 检查是否已存在该系统字段的映射
             var existingMapping = ImportConfig.ColumnMappings.GetMappingBySystemField(systemField);
             if (existingMapping != null)
             {
-                MessageBox.Show($"系统字段 \"{systemField}\" 已被映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"系统字段 \"{systemFieldDisplay}\" 已被映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -549,8 +551,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 获取该实体类型的预设字段（在导入时会自动填充默认值的字段）
                 var predefinedFields = EntityImportHelper.GetPredefinedFields(TargetEntityType);
 
-                // 清空并添加字段到列表框
+                // 清空并添加字段到列表框（使用KeyValuePair存储Key和Value）
                 listBoxSystemFields.Items.Clear();
+                listBoxSystemFields.DisplayMember = "Value";
+                listBoxSystemFields.ValueMember = "Key";
                 foreach (var field in FieldNameList)
                 {
                     // 跳过预设字段，这些字段在导入时会自动填充
@@ -562,7 +566,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     // 检查是否为必填字段
                     bool isRequired = IsFieldRequired(field.Key);
                     string displayText = isRequired ? $"* {field.Value}" : field.Value;
-                    listBoxSystemFields.Items.Add(displayText);
+                    listBoxSystemFields.Items.Add(new KeyValuePair<string, string>(field.Key, displayText));
                 }
             }
             catch (Exception ex)
@@ -964,19 +968,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            string systemFieldDisplay = listBoxSystemFields.SelectedItem.ToString();
+            // 从KeyValuePair中获取Key和Value
+            if (!(listBoxSystemFields.SelectedItem is KeyValuePair<string, string> selectedItem))
+            {
+                MessageBox.Show("必须选择系统字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            string systemField = selectedItem.Key; // 英文字段名
+            string systemFieldDisplay = selectedItem.Value; // 中文显示名
 
-            // 去掉必填标识，获取实际显示字段名
-            systemFieldDisplay = systemFieldDisplay.StartsWith("* ")
-               ? systemFieldDisplay.Substring(2)
-               : systemFieldDisplay;
-
-            // 获取实际显示字段名
-            string systemField = FieldNameList.FirstOrDefault(c => c.Value == systemFieldDisplay).Key;
             // 检查是否已存在该系统字段的映射
             if (ImportConfig.ColumnMappings.GetMappingBySystemField(systemField) != null)
             {
-                MessageBox.Show($"系统字段 \"{systemField}\" 已被映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"系统字段 \"{systemFieldDisplay}\" 已被映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -1311,15 +1315,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 根据匹配结果创建映射
                 foreach (var result in matchResults)
                 {
-                    // 查找系统字段显示名称
+                    // 查找系统字段显示名称（从KeyValuePair中获取）
                     string systemFieldDisplay = null;
                     foreach (var item in listBoxSystemFields.Items)
                     {
-                        string display = item.ToString();
-                        string field = display.StartsWith("* ") ? display.Substring(2) : display;
-                        if (field == result.DbColumn)
+                        if (item is KeyValuePair<string, string> kvp && kvp.Key == result.DbColumn)
                         {
-                            systemFieldDisplay = display;
+                            systemFieldDisplay = kvp.Value;
                             break;
                         }
                     }
@@ -1395,17 +1397,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 string excelCol = kvp.Key;
                 var suggestion = kvp.Value;
 
-                // 查找对应的系统字段显示名
+                // 查找对应的系统字段显示名（从KeyValuePair中获取）
                 string systemFieldDisplay = null;
                 string systemFieldKey = suggestion.TargetField;
 
                 foreach (var item in listBoxSystemFields.Items)
                 {
-                    string display = item.ToString();
-                    string field = display.StartsWith("* ") ? display.Substring(2) : display;
-                    if (field == systemFieldKey)
+                    if (item is KeyValuePair<string, string> fieldKvp && fieldKvp.Key == systemFieldKey)
                     {
-                        systemFieldDisplay = display;
+                        systemFieldDisplay = fieldKvp.Value;
                         break;
                     }
                 }
@@ -1555,27 +1555,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 从系统字段列表中移除指定的字段
         /// </summary>
         /// <param name="systemField">要移除的系统字段名(英文Key)</param>
-        private void RemoveFromSystemFields(string systemField)
+        private void RemoveFromSystemFields(string systemFieldKey)
         {
-            if (string.IsNullOrEmpty(systemField))
+            if (string.IsNullOrEmpty(systemFieldKey))
             {
                 return;
             }
 
-            // ✅ 查找并移除对应的项(考虑是否有必填标识)
-            // 注意:listBoxSystemFields中存储的是显示名称(中文),需要通过FieldNameList映射找到对应的Key
+            // 查找并移除对应的项（现在存储的是KeyValuePair）
             for (int i = 0; i < listBoxSystemFields.Items.Count; i++)
             {
-                string displayText = listBoxSystemFields.Items[i].ToString();
-                // 去掉必填标识"* "
-                string fieldDisplayValue = displayText.StartsWith("* ")
-                    ? displayText.Substring(2)
-                    : displayText;
-
-                // ✅ 通过显示值查找对应的Key,然后与传入的systemField比较
-                string fieldKey = FieldNameList.FirstOrDefault(c => c.Value == fieldDisplayValue).Key;
-
-                if (fieldKey == systemField)
+                if (listBoxSystemFields.Items[i] is KeyValuePair<string, string> item && item.Key == systemFieldKey)
                 {
                     listBoxSystemFields.Items.RemoveAt(i);
                     break;
@@ -1638,20 +1628,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            // ✅ 检查字段是否已经在列表中
+            // 检查字段是否已经在列表中（现在存储的是KeyValuePair）
             bool alreadyExists = false;
             foreach (var item in listBoxSystemFields.Items)
             {
-                string displayText = item.ToString();
-                // 去掉必填标识"* "
-                string fieldDisplayValue = displayText.StartsWith("* ")
-                    ? displayText.Substring(2)
-                    : displayText;
-
-                // ✅ 通过显示值查找对应的Key,然后与mapping.SystemField.Key比较
-                string fieldKey = FieldNameList.FirstOrDefault(c => c.Value == fieldDisplayValue).Key;
-
-                if (fieldKey == mapping.SystemField?.Key)
+                if (item is KeyValuePair<string, string> kvp && kvp.Key == mapping.SystemField?.Key)
                 {
                     alreadyExists = true;
                     break;
@@ -1663,7 +1644,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 bool isRequired = IsFieldRequired(mapping.SystemField?.Key);
                 string displayText = isRequired ? $"* {mapping.SystemField?.Value}" : mapping.SystemField?.Value;
-                listBoxSystemFields.Items.Add(displayText);
+                listBoxSystemFields.Items.Add(new KeyValuePair<string, string>(mapping.SystemField.Key, displayText));
             }
         }
 

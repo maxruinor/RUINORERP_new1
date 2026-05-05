@@ -82,14 +82,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     continue;
                 }
 
-                // 检查映射后的数据表是否包含SystemField列
-                if (!dataTable.Columns.Contains(mapping.SystemField?.Value))
+                // 检查映射后的数据表是否包含SystemField列（使用Key英文列名）
+                if (!dataTable.Columns.Contains(mapping.SystemField?.Key))
                 {
                     errors.Add(new ValidationError
                     {
                         RowNumber = -1,
                         FieldName = mapping.SystemField?.Key,
-                        ErrorMessage = $"映射后的数据表中不存在列 '{mapping.SystemField?.Value}'",
+                        ErrorMessage = $"映射后的数据表中不存在列 '{mapping.SystemField?.Value}({mapping.SystemField?.Key})'",
                         ErrorType = ErrorType.ColumnNotFound
                     });
                 }
@@ -123,9 +123,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 foreach (var mapping in mappings)
                 {
                     if (IsSystemGeneratedOrDefaultValueMapping(mapping)) continue;
-                    if (!dataTable.Columns.Contains(mapping.SystemField?.Value)) continue;
+                    if (!dataTable.Columns.Contains(mapping.SystemField?.Key)) continue;
 
-                    object cellValue = row[mapping.SystemField?.Value];
+                    object cellValue = row[mapping.SystemField?.Key];
                     if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString())) continue;
 
                     PropertyInfo property = entityType.GetProperty(mapping.SystemField?.Key);

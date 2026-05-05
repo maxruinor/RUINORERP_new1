@@ -80,9 +80,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 _dataBindingHelper = new DataBindingHelper();
                 _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
 
-                // 手动绑定事件
-                kcmbDataSourceType.SelectedIndexChanged += kcmbDataSourceType_SelectedIndexChanged;
-                chkIsSelfReference.CheckedChanged += chkIsSelfReference_CheckedChanged;
+                // ✅ 事件绑定已在 Designer.cs 中完成,不需要在此处重复绑定
                 this.FormClosing += FrmColumnPropertyConfig_FormClosing;
             }
             catch (Exception ex)
@@ -409,6 +407,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ktxtCustomDefaultValue,
                 BindDataType4TextBox.Text,
                 false);
+
+            // ✅ 绑定实体业务编号类型（ComboBox SelectedItem 绑定）
+            BindComboBoxSelectedItem(config, nameof(SystemGeneratedConfig.EntityBizCodeType), kcmbEntityBizCodeType);
         }
 
         /// <summary>
@@ -425,11 +426,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 c => c.IsSelfReference,
                 chkIsSelfReference,
                 false);
- 
-            // 3. 加载关联表列表
+
+            // 2. 加载关联表列表
             LoadRelatedTables();
 
-            // 4. 如果是自身表引用，自动选中目标表
+            // 3. 如果是自身表引用，自动选中目标表
             if (config.IsSelfReference)
             {
                 config.ForeignTableName = TargetEntityType?.Name;
@@ -437,7 +438,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kcmbRelatedTable.Enabled = false;
             }
 
-            // 5. 选中对应的关联表
+            // 4. 选中对应的关联表
             if (!string.IsNullOrEmpty(config.ForeignTableName))
             {
                 for (int i = 0; i < kcmbRelatedTable.Items.Count; i++)
@@ -454,13 +455,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 LoadTableFields(config.ForeignTableName);
             }
 
-            // 6. 绑定关联字段显示名称
+            // 5. 绑定关联字段显示名称
             if (!string.IsNullOrEmpty(config.ForeignFieldDisplayName))
             {
                 ktxtRelatedField.SelectedItem = config.ForeignFieldDisplayName;
             }
 
-            // 7. 加载外键来源列并选中已配置的值
+            // 6. 加载外键来源列并选中已配置的值
             string foreignKeySourceColumn = config.ForeignKeySourceColumn?.Key;
             LoadForeignKeySourceColumns(foreignKeySourceColumn);
         }
@@ -617,20 +618,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kryptonGroupBoxForeignType.Visible = (dataSourceType == DataSourceType.ForeignKey);
             kryptonGroupBoxConcat.Visible = (dataSourceType == DataSourceType.ColumnConcat);
 
-            // 控制图片配置GroupBox的显示和隐藏
-            kryptonGroupBoxImageType.Visible = (dataSourceType == DataSourceType.ExcelImage) || (kchkIsImageColumn != null && kchkIsImageColumn.Checked);
+            // ✅ 控制图片配置GroupBox的显示和隐藏（选择ExcelImage类型时自动显示）
+            kryptonGroupBoxImageType.Visible = (dataSourceType == DataSourceType.ExcelImage);
 
             // 控制系统生成配置GroupBox的显示和隐藏
             kryptonGroupBoxSystemGenerated.Visible = (dataSourceType == DataSourceType.SystemGenerated);
 
             // 更新系统生成配置控件的可用性
             UpdateSystemGeneratedControlStates();
-
-            // 如果选择了Excel图片类型，自动勾选图片列
-            if (dataSourceType == DataSourceType.ExcelImage && kchkIsImageColumn != null)
-            {
-                kchkIsImageColumn.Checked = true;
-            }
 
             // 处理默认固定值控件：始终显示文本框，不需要动态生成
             // 用户只需在文本框中输入字符串值，后台会根据目标列类型自动转换
@@ -875,9 +870,27 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void kbtnOK_Click(object sender, EventArgs e)
         {
+            // ✅ 确保配置对象存在
+            EnsureDataSourceConfigExists();
+
             DataSourceType dataSourceType = (DataSourceType)kcmbDataSourceType.SelectedIndex;
 
-            // 2. 使用验证适配器进行配置验证
+            // ✅ 同步ListBox选择状态到配置（列拼接）
+            if (dataSourceType == DataSourceType.ColumnConcat && CurrentMapping.DataSourceConfig is ColumnConcatConfig concatConfig)
+            {
+                concatConfig.ConcatColumns.Clear();
+                foreach (int index in klstSourceColumns.SelectedIndices)
+                {
+                    string columnName = klstSourceColumns.Items[index].ToString();
+                    concatConfig.ConcatColumns.Add(new SerializableKeyValuePair<string>
+                    {
+                        Key = columnName,
+                        Value = columnName
+                    });
+                }
+            }
+
+            // ✅ 使用验证适配器进行配置验证
             var validator = new ImportValidationAdapter();
             if (!validator.ValidateColumnMapping(CurrentMapping, out List<string> validationErrors, TargetEntityType))
             {
@@ -886,7 +899,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            // 3. 直接使用配置对象（双向绑定已自动同步控件值到配置对象）
+            // ✅ 直接使用配置对象（双向绑定已自动同步控件值到配置对象）
             DataSourceConfig = CurrentMapping.DataSourceConfig;
 
             this.DialogResult = DialogResult.OK;
@@ -1236,15 +1249,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 图片列复选框变更事件
+        /// 图片列复选框变更事件（已废弃，保留以防Designer引用）
+        /// ✅ 当数据源类型为ExcelImage时，自动显示图片配置GroupBox
         /// </summary>
         private void kchkIsImageColumn_CheckedChanged(object sender, EventArgs e)
         {
-            // 更新GroupBox的可见性
-            kryptonGroupBoxImageType.Visible = kchkIsImageColumn.Checked;
-
-            // 启用或禁用图片类型下拉框
-            kcmbImageColumnType.Enabled = kchkIsImageColumn.Checked;
+            // ✅ 此方法已废弃，图片配置的显示由数据源类型控制
+            // UpdateControlStates();
         }
     }
 }

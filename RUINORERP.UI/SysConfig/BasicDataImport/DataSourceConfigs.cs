@@ -145,7 +145,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         Sequence = 10,
 
         [System.ComponentModel.Description("自定义表达式")]
-        CustomExpression = 11
+        CustomExpression = 11,
+
+        [System.ComponentModel.Description("系统编号生成")]
+        EntityBizCode = 12
     }
 
     /// <summary>
@@ -223,6 +226,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         [XmlElement("CustomDefaultValue")]
         public string CustomDefaultValue { get; set; } = "1";
+
+        /// <summary>
+        /// 实体业务编号类型（当GeneratedType为EntityBizCode时使用）
+        /// 对应 BaseInfoType 枚举值，如：ProductNo、SKU_No、ProCategories、Customer、Supplier 等
+        /// </summary>
+        [XmlElement("EntityBizCodeType")]
+        public string EntityBizCodeType { get; set; } = string.Empty;
 
         /// <summary>
         /// 获取业务编码生成规则的显示名称

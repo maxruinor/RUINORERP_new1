@@ -58,6 +58,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel22 = new Krypton.Toolkit.KryptonLabel();
             this.kcmbSystemGeneratedType = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel21 = new Krypton.Toolkit.KryptonLabel();
+            this.kcmbEntityBizCodeType = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel28 = new Krypton.Toolkit.KryptonLabel();
             this.tabForeignKey = new System.Windows.Forms.TabPage();
             this.kryptonGroupBoxForeignType = new Krypton.Toolkit.KryptonGroupBox();
             this.chkIsSelfReference = new Krypton.Toolkit.KryptonCheckBox();
@@ -327,6 +329,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxSystemGenerated.Panel.Controls.Add(this.kryptonLabel22);
             this.kryptonGroupBoxSystemGenerated.Panel.Controls.Add(this.kcmbSystemGeneratedType);
             this.kryptonGroupBoxSystemGenerated.Panel.Controls.Add(this.kryptonLabel21);
+            this.kryptonGroupBoxSystemGenerated.Panel.Controls.Add(this.kcmbEntityBizCodeType);
+            this.kryptonGroupBoxSystemGenerated.Panel.Controls.Add(this.kryptonLabel28);
             this.kryptonGroupBoxSystemGenerated.Size = new System.Drawing.Size(723, 396);
             this.kryptonGroupBoxSystemGenerated.TabIndex = 0;
             this.kryptonGroupBoxSystemGenerated.Values.Heading = "系统生成配置";
@@ -409,7 +413,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbBusinessCodeRule.Name = "kcmbBusinessCodeRule";
             this.kcmbBusinessCodeRule.Size = new System.Drawing.Size(200, 21);
             this.kcmbBusinessCodeRule.TabIndex = 4;
-            this.kcmbBusinessCodeRule.SelectedIndex = -1;
             // 
             // kryptonLabel23
             // 
@@ -457,7 +460,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbSystemGeneratedType.Name = "kcmbSystemGeneratedType";
             this.kcmbSystemGeneratedType.Size = new System.Drawing.Size(200, 21);
             this.kcmbSystemGeneratedType.TabIndex = 0;
-            this.kcmbSystemGeneratedType.SelectedIndex = -1;
             this.kcmbSystemGeneratedType.SelectedIndexChanged += new System.EventHandler(this.kcmbSystemGeneratedType_SelectedIndexChanged);
             // 
             // kryptonLabel21
@@ -467,6 +469,43 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel21.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel21.TabIndex = 0;
             this.kryptonLabel21.Values.Text = "生成类型:";
+            // 
+            // kcmbEntityBizCodeType
+            // 
+            this.kcmbEntityBizCodeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbEntityBizCodeType.DropDownWidth = 200;
+            this.kcmbEntityBizCodeType.IntegralHeight = false;
+            this.kcmbEntityBizCodeType.Items.AddRange(new object[] {
+            "ProductNo",
+            "FMSubject",
+            "ShortCode",
+            "ModuleDefinition",
+            "ProCategories",
+            "Employee",
+            "Department",
+            "Storehouse",
+            "Supplier",
+            "Customer",
+            "CVOther",
+            "Location",
+            "SKU_No",
+            "Update_SKU_No",
+            "StoreCode",
+            "ProjectGroupCode",
+            "CRM_RegionCode",
+            "BusinessPartner"});
+            this.kcmbEntityBizCodeType.Location = new System.Drawing.Point(126, 220);
+            this.kcmbEntityBizCodeType.Name = "kcmbEntityBizCodeType";
+            this.kcmbEntityBizCodeType.Size = new System.Drawing.Size(200, 21);
+            this.kcmbEntityBizCodeType.TabIndex = 14;
+            // 
+            // kryptonLabel28
+            // 
+            this.kryptonLabel28.Location = new System.Drawing.Point(30, 220);
+            this.kryptonLabel28.Name = "kryptonLabel28";
+            this.kryptonLabel28.Size = new System.Drawing.Size(91, 20);
+            this.kryptonLabel28.TabIndex = 13;
+            this.kryptonLabel28.Values.Text = "实体编号类型:";
             // 
             // tabForeignKey
             // 
@@ -514,6 +553,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.chkIsSelfReference.Size = new System.Drawing.Size(88, 20);
             this.chkIsSelfReference.TabIndex = 9;
             this.chkIsSelfReference.Values.Text = "自身表引用";
+            this.chkIsSelfReference.CheckedChanged += new System.EventHandler(this.chkIsSelfReference_CheckedChanged);
             // 
             // kcmbForeignDbSourceColumn
             // 
@@ -524,6 +564,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbForeignDbSourceColumn.Name = "kcmbForeignDbSourceColumn";
             this.kcmbForeignDbSourceColumn.Size = new System.Drawing.Size(250, 21);
             this.kcmbForeignDbSourceColumn.TabIndex = 7;
+            this.kcmbForeignDbSourceColumn.SelectedIndexChanged += new System.EventHandler(this.kcmbForeignDbSourceColumn_SelectedIndexChanged);
             // 
             // kryptonLabel11
             // 
@@ -568,7 +609,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbRelatedTable.Name = "kcmbRelatedTable";
             this.kcmbRelatedTable.Size = new System.Drawing.Size(250, 21);
             this.kcmbRelatedTable.TabIndex = 2;
-            this.kcmbRelatedTable.SelectedIndex = -1;
             this.kcmbRelatedTable.SelectedIndexChanged += new System.EventHandler(this.kcmbRelatedTable_SelectedIndexChanged);
             // 
             // ktxtRelatedField
@@ -580,6 +620,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.ktxtRelatedField.Name = "ktxtRelatedField";
             this.ktxtRelatedField.Size = new System.Drawing.Size(250, 21);
             this.ktxtRelatedField.TabIndex = 1;
+            this.ktxtRelatedField.SelectedIndexChanged += new System.EventHandler(this.ktxtRelatedField_SelectedIndexChanged);
             // 
             // kryptonLabel10
             // 
@@ -796,6 +837,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kchkIsImageColumn.Size = new System.Drawing.Size(62, 20);
             this.kchkIsImageColumn.TabIndex = 2;
             this.kchkIsImageColumn.Values.Text = "图片列";
+            this.kchkIsImageColumn.CheckedChanged += new System.EventHandler(this.kchkIsImageColumn_CheckedChanged);
             // 
             // kcmbImageColumnType
             // 
@@ -985,6 +1027,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonTextBox ktxtCustomDefaultValue;
         private Krypton.Toolkit.KryptonLabel kryptonLabel27;
         private Krypton.Toolkit.KryptonTextBox ktxtCustomExpression;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel28;
+        private Krypton.Toolkit.KryptonComboBox kcmbEntityBizCodeType;
 
         // 外键关联配置
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxForeignType;

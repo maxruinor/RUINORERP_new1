@@ -1771,7 +1771,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                         case (int)DataSourceType.SystemGenerated:
                             // 系统生成字段：生成真实值（时间、用户等）
-                            ProcessSystemGeneratedField(targetRow, mapping);
+                            await ProcessSystemGeneratedFieldAsync(targetRow, mapping);
                             break;
 
                         case (int)DataSourceType.DefaultFixedValue:
@@ -2201,16 +2201,35 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 处理系统生成字段
         /// </summary>
+        private async Task ProcessSystemGeneratedFieldAsync(DataRow targetRow, ColumnMapping mapping)
+        {
+            string fieldName = mapping.SystemField?.Value;
+            if (string.IsNullOrEmpty(fieldName))
+                return;
+
+            var sysConfig = mapping.DataSourceConfig as SystemGeneratedConfig;
+            
+            if (sysConfig != null)
+            {
+                object generatedValue = await GenerateSystemValueAsync(sysConfig);
+                if (generatedValue != null)
+                {
+                    targetRow[fieldName] = generatedValue;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理系统生成字段（同步版本，向后兼容）
+        /// </summary>
         private void ProcessSystemGeneratedField(DataRow targetRow, ColumnMapping mapping)
         {
             string fieldName = mapping.SystemField?.Value;
             if (string.IsNullOrEmpty(fieldName))
                 return;
 
-            // 使用统一配置接口获取系统生成配置
             var sysConfig = mapping.DataSourceConfig as SystemGeneratedConfig;
             
-            // 如果有系统生成配置，使用配置生成值
             if (sysConfig != null)
             {
                 object generatedValue = GenerateSystemValue(sysConfig);
@@ -2226,7 +2245,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="config">系统生成配置</param>
         /// <returns>生成的值</returns>
-        private object GenerateSystemValue(SystemGeneratedConfig config)
+        private async Task<object> GenerateSystemValueAsync(SystemGeneratedConfig config)
         {
             switch (config.GeneratedType)
             {
@@ -2268,9 +2287,65 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 
                 case SystemGeneratedType.CustomExpression:
                     return EvaluateCustomExpression(config.CustomExpression);
+
+                case SystemGeneratedType.EntityBizCode:
+                    return await GenerateEntityBizCodeAsync(config);
                 
                 default:
                     return null;
+            }
+        }
+
+        /// <summary>
+        /// 根据系统生成配置生成值（同步版本，向后兼容）
+        /// </summary>
+        /// <param name="config">系统生成配置</param>
+        /// <returns>生成的值</returns>
+        private object GenerateSystemValue(SystemGeneratedConfig config)
+        {
+            // 注意：EntityBizCode 类型需要使用异步版本
+            if (config.GeneratedType == SystemGeneratedType.EntityBizCode)
+            {
+                System.Diagnostics.Debug.WriteLine("[警告] EntityBizCode 需要使用异步版本 GenerateSystemValueAsync");
+                return "[待生成]";
+            }
+            return GenerateSystemValueAsync(config).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// 生成实体业务编号（使用 EntityImportHelper 中的编号生成逻辑）
+        /// </summary>
+        private async Task<string> GenerateEntityBizCodeAsync(SystemGeneratedConfig config)
+        {
+            if (string.IsNullOrEmpty(config.EntityBizCodeType))
+            {
+                System.Diagnostics.Debug.WriteLine("[EntityBizCode] 未配置实体业务编号类型");
+                return "[待生成]";
+            }
+
+            try
+            {
+                // 解析 BaseInfoType 枚举
+                if (Enum.TryParse<BaseInfoType>(config.EntityBizCodeType, out BaseInfoType bizType))
+                {
+                    var bizCodeService = Startup.GetFromFac<Network.Services.ClientBizCodeService>();
+                    if (bizCodeService == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine("[EntityBizCode] 无法获取 ClientBizCodeService 实例");
+                        return "[待生成]";
+                    }
+                    return await bizCodeService.GenerateBaseInfoNoAsync(bizType);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[EntityBizCode] 无效的 BaseInfoType: {config.EntityBizCodeType}");
+                    return "[待生成]";
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[EntityBizCode] 生成失败: {ex.Message}");
+                return "[待生成]";
             }
         }
 

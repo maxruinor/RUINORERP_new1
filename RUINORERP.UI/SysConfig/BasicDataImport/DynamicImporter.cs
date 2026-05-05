@@ -950,7 +950,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private object GetExcelCellValue(DataRow row, ColumnMapping mapping)
         {
             string columnName = mapping.SystemField?.Value;
-            if (string.IsNullOrEmpty(columnName) || !dataTableContainsColumn(row.Table, columnName))
+            if (string.IsNullOrEmpty(columnName) || !row.Table.ContainsColumn(columnName))
                 return null;
 
             object cellValue = row[columnName];
@@ -987,7 +987,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // ✅ 外键关联：如果数据已预处理，直接从DataTable中读取ID；否则查询数据库
             string columnName = mapping.SystemField?.Value;
             
-            if (isPreprocessed && dataTableContainsColumn(row.Table, columnName))
+            if (isPreprocessed && row.Table.ContainsColumn(columnName))
             {
                 // 从预处理的DataTable中直接读取外键ID
                 object cellValue = row[columnName];
@@ -1018,7 +1018,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // ✅ 系统生成的值：如果数据已预处理，直接从DataTable中读取
             string columnName = mapping.SystemField?.Value;
             
-            if (isPreprocessed && dataTableContainsColumn(row.Table, columnName))
+            if (isPreprocessed && row.Table.ContainsColumn(columnName))
             {
                 object cellValue = row[columnName];
 
@@ -1067,7 +1067,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 // 从当前行中读取被复制字段的值
                 string sourceColumn = copyFromMapping.SystemField.Value;
-                if (dataTableContainsColumn(row.Table, sourceColumn))
+                if (row.Table.ContainsColumn(sourceColumn))
                 {
                     return row[sourceColumn];
                 }
@@ -1083,7 +1083,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             // 列拼接在ApplyColumnMapping阶段已经处理，直接从数据表中读取
             string columnName = mapping.SystemField?.Value;
-            if (string.IsNullOrEmpty(columnName) || !dataTableContainsColumn(row.Table, columnName))
+            if (string.IsNullOrEmpty(columnName) || !row.Table.ContainsColumn(columnName))
                 return null;
 
             return row[columnName];
@@ -1097,7 +1097,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             var selfRefConfig = mapping.DataSourceConfig as SelfReferenceConfig;
             string columnName = mapping.SystemField?.Key;
             
-            if (string.IsNullOrEmpty(columnName) || !dataTableContainsColumn(row.Table, columnName))
+            if (string.IsNullOrEmpty(columnName) || !row.Table.ContainsColumn(columnName))
                 return null;
 
             string displayValue = row[columnName]?.ToString();
@@ -1136,16 +1136,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
 
 
-        /// <summary>
-        /// 检查DataTable是否包含指定列
-        /// </summary>
-        /// <param name="table">数据表</param>
-        /// <param name="columnName">列名</param>
-        /// <returns>是否包含</returns>
-        private bool dataTableContainsColumn(DataTable table, string columnName)
-        {
-            return table.Columns.Contains(columnName);
-        }
+
 
         /// <summary>
         /// 值类型转换

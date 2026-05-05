@@ -132,13 +132,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             set => SetProperty(ref _columnDataSourceType, value);
         }
 
-        private IDataSourceConfig _dataSourceConfig;
+        private DataSourceConfigBase _dataSourceConfig;
         /// <summary>
         /// 数据源配置（统一配置接口）
         /// 根据DataSourceType的不同，存储对应的配置对象
         /// </summary>
         [XmlElement("DataSourceConfig")]
-        public IDataSourceConfig DataSourceConfig
+        public DataSourceConfigBase DataSourceConfig
         {
             get => _dataSourceConfig;
             set => SetProperty(ref _dataSourceConfig, value);

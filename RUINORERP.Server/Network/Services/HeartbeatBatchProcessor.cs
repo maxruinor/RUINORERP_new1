@@ -219,7 +219,7 @@ namespace RUINORERP.Server.Network.Services
             sessionInfo.UserInfo.CurrentModule = userInfo.CurrentModule;
             sessionInfo.UserInfo.CurrentForm = userInfo.CurrentForm;
             sessionInfo.UserInfo.LoginTime = userInfo.LoginTime;
-            sessionInfo.UserInfo.HeartbeatCount = userInfo.HeartbeatCount;
+            sessionInfo.UserInfo.HeartbeatCount = userInfo.HeartbeatCount; // ✅ 同步客户端心跳计数
             sessionInfo.UserInfo.ClientVersion = userInfo.ClientVersion;
             sessionInfo.UserInfo.ClientIp = userInfo.ClientIp;
             sessionInfo.UserInfo.IdleTime = userInfo.IdleTime;

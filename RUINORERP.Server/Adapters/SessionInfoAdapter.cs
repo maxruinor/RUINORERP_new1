@@ -41,7 +41,7 @@ namespace RUINORERP.Server.Adapters
                 IsAuthorized = sessionInfo.IsAuthenticated,
                 IsOnline = sessionInfo.IsConnected,
                 LoginTime = sessionInfo.LoginTime ?? sessionInfo.ConnectedTime,
-                HeartbeatCount = sessionInfo.HeartbeatCount,
+                HeartbeatCount = sessionInfo.UserInfo?.HeartbeatCount ?? 0, // ✅ 从UserInfo读取
                 LastHeartbeatTime = sessionInfo.LastHeartbeat,
                 CurrentModule = baseUserInfo.CurrentModule,
                 CurrentForm = baseUserInfo.CurrentForm,
@@ -118,7 +118,7 @@ namespace RUINORERP.Server.Adapters
             sessionInfo.UserInfo.IsAuthorized = userInfo.IsAuthorized;
             sessionInfo.UserInfo.IsOnline = userInfo.IsOnline;
             sessionInfo.UserInfo.LoginTime = userInfo.LoginTime;
-            sessionInfo.UserInfo.HeartbeatCount = userInfo.HeartbeatCount;
+            sessionInfo.UserInfo.HeartbeatCount = userInfo.HeartbeatCount; // ✅ 同步客户端心跳计数
             sessionInfo.UserInfo.LastHeartbeatTime = userInfo.LastHeartbeatTime;
             sessionInfo.UserInfo.CurrentModule = userInfo.CurrentModule;
             sessionInfo.UserInfo.CurrentForm = userInfo.CurrentForm;
@@ -134,7 +134,8 @@ namespace RUINORERP.Server.Adapters
             sessionInfo.IsAdmin = userInfo.IsSuperUser;
             sessionInfo.IsAuthenticated = userInfo.IsAuthorized;
             sessionInfo.IsConnected = userInfo.IsOnline;
-            sessionInfo.HeartbeatCount = userInfo.HeartbeatCount;
+            // ⚠️ 不再需要同步HeartbeatCount到SessionInfo，UI直接读取UserInfo.HeartbeatCount
+            // sessionInfo.HeartbeatCount = userInfo.HeartbeatCount; // 已移除
             sessionInfo.LastHeartbeat = userInfo.LastHeartbeatTime;
 
             // 设置客户端IP

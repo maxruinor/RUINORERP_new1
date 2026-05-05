@@ -240,7 +240,7 @@ namespace RUINORERP.Server.Controls
                 lblTotalBytesReceived.Text = FormatBytes(stats.TotalBytesReceived);
 
                 // 心跳信息
-                lblHeartbeatCount.Text = _session.HeartbeatCount.ToString();
+                lblHeartbeatCount.Text = (_session.UserInfo?.HeartbeatCount ?? 0).ToString();
                 lblLastHeartbeat.Text = _session.LastActivityTime.ToString("yyyy-MM-dd HH:mm:ss");
 
                 // 计算实时吞吐量

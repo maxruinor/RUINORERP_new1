@@ -377,7 +377,7 @@ namespace RUINORERP.Server.Network.Services
                             // 当前操作
                             existingSession.UserInfo.CurrentModule = sessionInfo.UserInfo.CurrentModule;
                             existingSession.UserInfo.CurrentForm = sessionInfo.UserInfo.CurrentForm;
-                            existingSession.UserInfo.HeartbeatCount = sessionInfo.UserInfo.HeartbeatCount;
+                            existingSession.UserInfo.HeartbeatCount = sessionInfo.UserInfo.HeartbeatCount; // ✅ 同步客户端心跳计数
                             existingSession.UserInfo.IdleTime = sessionInfo.UserInfo.IdleTime;
                             
                             // 更新最后心跳时间

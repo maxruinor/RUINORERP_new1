@@ -100,7 +100,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             result.DeduplicateFields = displayFieldNames;
 
             // 根据去重策略执行去重
-            if (config.DeduplicateStrategy == DeduplicateStrategy.LastOccurrence)
+            if (config.DeduplicateStrategy == (int)DeduplicateStrategyType.LastOccurrence)
             {
                 result.DeduplicatedData = DeduplicateKeepLast(dataTable, displayFieldNames, config.IgnoreEmptyValuesInDeduplication);
             }

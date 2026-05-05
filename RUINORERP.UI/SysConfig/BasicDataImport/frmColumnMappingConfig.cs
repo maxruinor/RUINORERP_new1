@@ -69,6 +69,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public ImportConfiguration ImportConfig { get; set; }
 
         /// <summary>
+        /// 原始配置的深拷贝（用于取消时恢复）
+        /// </summary>
+        private ImportConfiguration _originalConfigSnapshot;
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public frmColumnMappingConfig()
@@ -317,6 +322,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
+                // ✅ 注册窗体关闭事件（处理用户点击X按钮的情况）
+                this.FormClosing += frmColumnMappingConfig_FormClosing;
+
                 // 绑定配置名称到 ImportConfig（双向绑定）
                 BindMappingName();
 
@@ -362,6 +370,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 窗体关闭事件（处理用户点击X按钮的情况）
+        /// </summary>
+        private void frmColumnMappingConfig_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // ✅ 如果是编辑模式且用户取消了操作，恢复原始配置状态
+            if (IsEditMode && _originalConfigSnapshot != null && this.DialogResult != DialogResult.OK)
+            {
+                RestoreOriginalConfiguration();
+            }
+        }
+
+        /// <summary>
         /// 重新初始化所有绑定和列表（当 ImportConfig 改变时调用）
         /// </summary>
         private void RebindAll()
@@ -387,9 +407,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void ResetToNewConfig()
         {
+            // ✅ 清空当前配置的列映射（因为双向绑定，需要清理）
             ImportConfig.ColumnMappings.Clear();
+            
+            // 创建新的配置对象
             ImportConfig = new ImportConfiguration();
             IsEditMode = false;
+            
+            // ✅ 清除原始配置快照（因为是新建模式）
+            _originalConfigSnapshot = null;
 
             RebindAll();
 
@@ -410,6 +436,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show("加载配置失败: 配置数据为空", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+
+            // ✅ 创建原始配置的深拷贝快照（用于取消时恢复）
+            _originalConfigSnapshot = CloneConfiguration(config);
 
             ImportConfig = config;
 
@@ -473,7 +502,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             DataBindingHelper.BindData4CmbByEnum<ImportConfiguration>(
                 ImportConfig,
                 nameof(ImportConfig.DeduplicateStrategy),
-                typeof(DeduplicateStrategy),
+                typeof(DeduplicateStrategyType),
                 kcmbDeduplicateStrategy,
                 false);
         }
@@ -1133,6 +1162,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     comboBoxSavedMappings.SelectedIndex = newIndex;
                 }
 
+                // ✅ 保存成功后，清除原始配置快照（因为已保存）
+                _originalConfigSnapshot = null;
+
                 // 关闭窗体
                 this.DialogResult = DialogResult.OK;
                 this.Close();
@@ -1186,6 +1218,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void kbtnCancel_Click(object sender, EventArgs e)
         {
+            // ✅ 如果是编辑模式且用户取消了操作，恢复原始配置状态
+            if (IsEditMode && _originalConfigSnapshot != null)
+            {
+                RestoreOriginalConfiguration();
+            }
+
             this.Close();
         }
 
@@ -1596,6 +1634,221 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (index >= 0 && index < listBoxMappings.Items.Count)
             {
                 listBoxMappings.SelectedIndex = index;
+            }
+        }
+
+        /// <summary>
+        /// 深拷贝配置对象（用于创建快照）
+        /// </summary>
+        /// <param name="config">要拷贝的配置对象</param>
+        /// <returns>深拷贝后的配置对象</returns>
+        private ImportConfiguration CloneConfiguration(ImportConfiguration config)
+        {
+            if (config == null)
+            {
+                return null;
+            }
+
+            var clone = new ImportConfiguration
+            {
+                MappingName = config.MappingName,
+                EntityType = config.EntityType,
+                ImportType = config.ImportType,
+                TargetTable = config.TargetTable != null ? new SerializableKeyValuePair<string>(config.TargetTable.Key, config.TargetTable.Value) : null,
+                ExistenceStrategy = config.ExistenceStrategy,
+                EnableDeduplication = config.EnableDeduplication,
+                DeduplicateFields = config.DeduplicateFields != null ? new List<string>(config.DeduplicateFields) : new List<string>(),
+                DeduplicateStrategy = config.DeduplicateStrategy,
+                IgnoreEmptyValuesInDeduplication = config.IgnoreEmptyValuesInDeduplication,
+                CreateTime = config.CreateTime,
+                UpdateTime = config.UpdateTime,
+                Description = config.Description,
+                Version = config.Version,
+                DependentTables = config.DependentTables != null ? new List<string>(config.DependentTables) : new List<string>(),
+                ColumnMappings = new List<ColumnMapping>()
+            };
+
+            // 深拷贝列映射集合
+            if (config.ColumnMappings != null)
+            {
+                foreach (var mapping in config.ColumnMappings)
+                {
+                    clone.ColumnMappings.Add(CloneColumnMapping(mapping));
+                }
+            }
+
+            return clone;
+        }
+
+        /// <summary>
+        /// 深拷贝列映射对象
+        /// </summary>
+        /// <param name="mapping">要拷贝的映射对象</param>
+        /// <returns>深拷贝后的映射对象</returns>
+        private ColumnMapping CloneColumnMapping(ColumnMapping mapping)
+        {
+            if (mapping == null)
+            {
+                return null;
+            }
+
+            var clone = new ColumnMapping
+            {
+                MappingId = mapping.MappingId,
+                OriginalExcelColumn = mapping.OriginalExcelColumn,
+                SystemField = mapping.SystemField != null 
+                    ? new SerializableKeyValuePair<string>(mapping.SystemField.Key, mapping.SystemField.Value) 
+                    : null,
+                IsUniqueValue = mapping.IsUniqueValue,
+                IsBusinessKey = mapping.IsBusinessKey,
+                ColumnDataSourceType = mapping.ColumnDataSourceType,
+                DataSourceConfig = CloneDataSourceConfig(mapping.DataSourceConfig)
+            };
+
+            return clone;
+        }
+
+        /// <summary>
+        /// 深拷贝数据源配置对象
+        /// </summary>
+        /// <param name="config">要拷贝的配置对象</param>
+        /// <returns>深拷贝后的配置对象</returns>
+        private DataSourceConfigBase CloneDataSourceConfig(DataSourceConfigBase config)
+        {
+            if (config == null)
+            {
+                return null;
+            }
+
+            // 根据具体类型进行深拷贝
+            switch (config)
+            {
+                case ExcelConfig excelConfig:
+                    return new ExcelConfig
+                    {
+                        ExcelColumn = excelConfig.ExcelColumn
+                    };
+
+                case DefaultValueConfig defaultConfig:
+                    return new DefaultValueConfig
+                    {
+                        Value = defaultConfig.Value
+                    };
+
+                case SystemGeneratedConfig sysConfig:
+                    return new SystemGeneratedConfig
+                    {
+                        GeneratedType = sysConfig.GeneratedType,
+                        DateTimeFormat = sysConfig.DateTimeFormat,
+                        BusinessCodePrefix = sysConfig.BusinessCodePrefix,
+                        BusinessCodeRule = sysConfig.BusinessCodeRule,
+                        SequenceDigits = sysConfig.SequenceDigits,
+                        CustomExpression = sysConfig.CustomExpression
+                    };
+
+                case ForeignKeyConfig foreignConfig:
+                    return new ForeignKeyConfig
+                    {
+                        ForeignTableName = foreignConfig.ForeignTableName,
+                        ForeignTableDisplayName = foreignConfig.ForeignTableDisplayName,
+                        ForeignFieldName = foreignConfig.ForeignFieldName,
+                        ForeignFieldDisplayName = foreignConfig.ForeignFieldDisplayName,
+                        DisplayFieldName = foreignConfig.DisplayFieldName,
+                        DisplayFieldDisplayName = foreignConfig.DisplayFieldDisplayName,
+                        ForeignKeySourceColumn = foreignConfig.ForeignKeySourceColumn != null
+                            ? new SerializableKeyValuePair<string>(foreignConfig.ForeignKeySourceColumn.Key, foreignConfig.ForeignKeySourceColumn.Value)
+                            : null
+                    };
+
+                case SelfReferenceConfig selfConfig:
+                    return new SelfReferenceConfig
+                    {
+                        ReferenceFieldName = selfConfig.ReferenceFieldName,
+                        ReferenceFieldDisplayName = selfConfig.ReferenceFieldDisplayName
+                    };
+
+                case FieldCopyConfig copyConfig:
+                    return new FieldCopyConfig
+                    {
+                        SourceFieldName = copyConfig.SourceFieldName,
+                        SourceFieldDisplayName = copyConfig.SourceFieldDisplayName
+                    };
+
+                case ColumnConcatConfig concatConfig:
+                    return new ColumnConcatConfig
+                    {
+                        SourceColumns = concatConfig.SourceColumns != null 
+                            ? new List<string>(concatConfig.SourceColumns) 
+                            : new List<string>(),
+                        Separator = concatConfig.Separator
+                    };
+
+                case ExcelImageConfig imageConfig:
+                    return new ExcelImageConfig
+                    {
+                        StorageType = imageConfig.StorageType,
+                        NamingRule = imageConfig.NamingRule,
+                        OutputDirectory = imageConfig.OutputDirectory,
+                        NamingReferenceColumn = imageConfig.NamingReferenceColumn,
+                        PreserveExtension = imageConfig.PreserveExtension,
+                        ConvertType = imageConfig.ConvertType,
+                        Quality = imageConfig.Quality
+                    };
+
+                default:
+                    // 未知类型，返回原对象（浅拷贝）
+                    return config;
+            }
+        }
+
+        /// <summary>
+        /// 恢复原始配置状态（取消编辑时调用）
+        /// </summary>
+        private void RestoreOriginalConfiguration()
+        {
+            if (_originalConfigSnapshot == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // ✅ 将原始配置的属性复制回当前配置
+                ImportConfig.MappingName = _originalConfigSnapshot.MappingName;
+                ImportConfig.EntityType = _originalConfigSnapshot.EntityType;
+                ImportConfig.ImportType = _originalConfigSnapshot.ImportType;
+                ImportConfig.TargetTable = _originalConfigSnapshot.TargetTable;
+                ImportConfig.ExistenceStrategy = _originalConfigSnapshot.ExistenceStrategy;
+                ImportConfig.EnableDeduplication = _originalConfigSnapshot.EnableDeduplication;
+                ImportConfig.DeduplicateFields = _originalConfigSnapshot.DeduplicateFields != null 
+                    ? new List<string>(_originalConfigSnapshot.DeduplicateFields) 
+                    : new List<string>();
+                ImportConfig.DeduplicateStrategy = _originalConfigSnapshot.DeduplicateStrategy;
+                ImportConfig.IgnoreEmptyValuesInDeduplication = _originalConfigSnapshot.IgnoreEmptyValuesInDeduplication;
+                ImportConfig.Description = _originalConfigSnapshot.Description;
+                ImportConfig.Version = _originalConfigSnapshot.Version;
+                ImportConfig.DependentTables = _originalConfigSnapshot.DependentTables != null
+                    ? new List<string>(_originalConfigSnapshot.DependentTables)
+                    : new List<string>();
+
+                // ✅ 清空并恢复列映射集合
+                ImportConfig.ColumnMappings.Clear();
+                if (_originalConfigSnapshot.ColumnMappings != null)
+                {
+                    foreach (var mapping in _originalConfigSnapshot.ColumnMappings)
+                    {
+                        ImportConfig.ColumnMappings.Add(CloneColumnMapping(mapping));
+                    }
+                }
+
+                // ✅ 重新绑定UI
+                RebindAll();
+
+                MainForm.Instance.PrintInfoLog($"已取消编辑，恢复到原始配置: {_originalConfigSnapshot.MappingName}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"恢复原始配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

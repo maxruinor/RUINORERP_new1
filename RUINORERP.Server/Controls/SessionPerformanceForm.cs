@@ -102,7 +102,7 @@ namespace RUINORERP.Server.Controls
                 lblTotalBytesReceived.Text = FormatBytes(stats.TotalBytesReceived);
 
                 // 心跳信息
-                lblHeartbeatCount.Text = _session.HeartbeatCount.ToString("N0");
+                lblHeartbeatCount.Text = (_session.UserInfo?.HeartbeatCount ?? 0).ToString("N0");
 
                 // 更新心跳性能监控信息
                 UpdateHeartbeatPerformanceInfo();

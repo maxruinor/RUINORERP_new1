@@ -234,7 +234,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             string sourceColumnName = DetermineSourceColumnName(mapping, out sourceColumnDisplayName);
 
             // 从Excel数据行中获取值
-            if (!string.IsNullOrEmpty(sourceColumnName) && dataTableContainsColumn(row.Table, sourceColumnName))
+            if (!string.IsNullOrEmpty(sourceColumnName) && row.Table.ContainsColumn(sourceColumnName))
             {
                 return row[sourceColumnName]?.ToString()?.Trim();
             }
@@ -400,15 +400,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             return string.IsNullOrEmpty(errorMessage);
         }
 
-        /// <summary>
-        /// 检查DataTable是否包含指定列
-        /// </summary>
-        /// <param name="table">数据表</param>
-        /// <param name="columnName">列名</param>
-        /// <returns>是否包含</returns>
-        private bool dataTableContainsColumn(DataTable table, string columnName)
-        {
-            return table?.Columns.Contains(columnName) ?? false;
-        }
+
     }
 }

@@ -43,6 +43,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// </remarks>
     [Serializable]
     [XmlRoot("ImportConfiguration")]
+    [XmlInclude(typeof(ExcelConfig))]
+    [XmlInclude(typeof(DefaultValueConfig))]
+    [XmlInclude(typeof(SystemGeneratedConfig))]
+    [XmlInclude(typeof(ForeignKeyConfig))]
+    [XmlInclude(typeof(SelfReferenceConfig))]
+    [XmlInclude(typeof(FieldCopyConfig))]
+    [XmlInclude(typeof(ColumnConcatConfig))]
+    [XmlInclude(typeof(ExcelImageConfig))]
     public class ImportConfiguration
     {
         /// <summary>
@@ -109,7 +117,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// LastOccurrence: 保留最后一条记录
         /// </remarks>
         [XmlElement("DeduplicateStrategy")]
-        public DeduplicateStrategy DeduplicateStrategy { get; set; } = DeduplicateStrategy.FirstOccurrence;
+        public int DeduplicateStrategy { get; set; } = (int)DeduplicateStrategyType.FirstOccurrence;
 
         /// <summary>
         /// 是否在去重时忽略空值
@@ -296,7 +304,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// <summary>
     /// 去重策略枚举
     /// </summary>
-    public enum DeduplicateStrategy
+    public enum DeduplicateStrategyType
     {
         /// <summary>
         /// 保留第一条记录（默认）

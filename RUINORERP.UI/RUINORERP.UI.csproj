@@ -2480,6 +2480,7 @@
     <Compile Include="SysConfig\BasicDataCleanup\UCBasicDataCleanup.Designer.cs">
       <DependentUpon>UCBasicDataCleanup.cs</DependentUpon>
     </Compile>
+    <Compile Include="SysConfig\BasicDataImport\BasicDataImportExtensions.cs" />
     <Compile Include="SysConfig\BasicDataImport\ColumnMapping.cs" />
     <Compile Include="SysConfig\BasicDataImport\ColumnMappingConstants.cs" />
     <Compile Include="SysConfig\BasicDataImport\ColumnMappingExtensions.cs" />

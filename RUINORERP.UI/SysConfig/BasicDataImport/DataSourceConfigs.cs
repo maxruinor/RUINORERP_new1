@@ -80,10 +80,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
     #endregion
 
-    #region 默认值配置
+    #region 默认值配置 
 
     /// <summary>
-    /// 默认值配置
+    /// 是用户配置Excel导入时可以将某一些没有Excelgo源的数据的目标列的值设置为一个固定的值。用户配置中直接输入指定
     /// 数据来源于配置的默认值
     /// </summary>
     [Serializable]
@@ -467,7 +467,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     #region 自身字段引用配置
 
     /// <summary>
-    /// 自身字段引用配置
+    /// 产品类目表导入时 固定指定一个自身表的字段 如父类ID，后端业务代码通过这个列名去找到对应的值生成。最后保存
     /// 数据来源于当前表自身的其他字段（如树结构中的父类ID）
     /// </summary>
     [Serializable]

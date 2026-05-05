@@ -174,10 +174,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonTabControl.Controls.Add(this.tabFieldCopy);
             this.kryptonTabControl.Controls.Add(this.tabColumnConcat);
             this.kryptonTabControl.Controls.Add(this.tabImage);
-            this.kryptonTabControl.Location = new System.Drawing.Point(30, 152);
+            this.kryptonTabControl.Location = new System.Drawing.Point(30, 80);
             this.kryptonTabControl.Name = "kryptonTabControl";
             this.kryptonTabControl.SelectedIndex = 0;
-            this.kryptonTabControl.Size = new System.Drawing.Size(731, 362);
+            this.kryptonTabControl.Size = new System.Drawing.Size(731, 422);
             this.kryptonTabControl.TabIndex = 41;
             // 
             // tabExcel
@@ -189,7 +189,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.tabExcel.Controls.Add(this.kryptonLabelExcelIgnore);
             this.tabExcel.Location = new System.Drawing.Point(4, 22);
             this.tabExcel.Name = "tabExcel";
-            this.tabExcel.Size = new System.Drawing.Size(723, 336);
+            this.tabExcel.Size = new System.Drawing.Size(723, 396);
             this.tabExcel.TabIndex = 0;
             this.tabExcel.Text = "Excel列";
             // 
@@ -521,7 +521,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbForeignDbSourceColumn.IntegralHeight = false;
             this.kcmbForeignDbSourceColumn.Location = new System.Drawing.Point(170, 214);
             this.kcmbForeignDbSourceColumn.Name = "kcmbForeignDbSourceColumn";
-            this.kcmbForeignDbSourceColumn.Size = new System.Drawing.Size(200, 21);
+            this.kcmbForeignDbSourceColumn.Size = new System.Drawing.Size(250, 21);
             this.kcmbForeignDbSourceColumn.TabIndex = 7;
             // 
             // kryptonLabel11
@@ -537,14 +537,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbForeignExcelSourceColumn.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbForeignExcelSourceColumn.DropDownWidth = 200;
             this.kcmbForeignExcelSourceColumn.IntegralHeight = false;
-            this.kcmbForeignExcelSourceColumn.Location = new System.Drawing.Point(170, 182);
+            this.kcmbForeignExcelSourceColumn.Location = new System.Drawing.Point(170, 167);
             this.kcmbForeignExcelSourceColumn.Name = "kcmbForeignExcelSourceColumn";
-            this.kcmbForeignExcelSourceColumn.Size = new System.Drawing.Size(200, 21);
+            this.kcmbForeignExcelSourceColumn.Size = new System.Drawing.Size(250, 21);
             this.kcmbForeignExcelSourceColumn.TabIndex = 5;
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(68, 182);
+            this.kryptonLabel2.Location = new System.Drawing.Point(68, 167);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(79, 20);
             this.kryptonLabel2.TabIndex = 4;
@@ -552,7 +552,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(68, 127);
+            this.kryptonLabel3.Location = new System.Drawing.Point(68, 113);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel3.TabIndex = 3;
@@ -563,7 +563,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbRelatedTable.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbRelatedTable.DropDownWidth = 200;
             this.kcmbRelatedTable.IntegralHeight = false;
-            this.kcmbRelatedTable.Location = new System.Drawing.Point(170, 94);
+            this.kcmbRelatedTable.Location = new System.Drawing.Point(170, 80);
             this.kcmbRelatedTable.Name = "kcmbRelatedTable";
             this.kcmbRelatedTable.Size = new System.Drawing.Size(250, 21);
             this.kcmbRelatedTable.TabIndex = 2;
@@ -574,14 +574,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.ktxtRelatedField.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ktxtRelatedField.DropDownWidth = 200;
             this.ktxtRelatedField.IntegralHeight = false;
-            this.ktxtRelatedField.Location = new System.Drawing.Point(170, 127);
+            this.ktxtRelatedField.Location = new System.Drawing.Point(170, 113);
             this.ktxtRelatedField.Name = "ktxtRelatedField";
-            this.ktxtRelatedField.Size = new System.Drawing.Size(200, 21);
+            this.ktxtRelatedField.Size = new System.Drawing.Size(250, 21);
             this.ktxtRelatedField.TabIndex = 1;
             // 
             // kryptonLabel10
             // 
-            this.kryptonLabel10.Location = new System.Drawing.Point(68, 94);
+            this.kryptonLabel10.Location = new System.Drawing.Point(68, 80);
             this.kryptonLabel10.Name = "kryptonLabel10";
             this.kryptonLabel10.Size = new System.Drawing.Size(52, 20);
             this.kryptonLabel10.TabIndex = 0;
@@ -875,7 +875,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // kbtnCancel
             // 
             this.kbtnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.kbtnCancel.Location = new System.Drawing.Point(597, 520);
+            this.kbtnCancel.Location = new System.Drawing.Point(597, 528);
             this.kbtnCancel.Name = "kbtnCancel";
             this.kbtnCancel.Size = new System.Drawing.Size(100, 28);
             this.kbtnCancel.TabIndex = 40;
@@ -884,7 +884,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kbtnOK
             // 
-            this.kbtnOK.Location = new System.Drawing.Point(477, 520);
+            this.kbtnOK.Location = new System.Drawing.Point(477, 528);
             this.kbtnOK.Name = "kbtnOK";
             this.kbtnOK.Size = new System.Drawing.Size(100, 28);
             this.kbtnOK.TabIndex = 39;
@@ -893,7 +893,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kchkIsUniqueValue
             // 
-            this.kchkIsUniqueValue.Location = new System.Drawing.Point(30, 94);
+            this.kchkIsUniqueValue.Location = new System.Drawing.Point(656, 38);
             this.kchkIsUniqueValue.Name = "kchkIsUniqueValue";
             this.kchkIsUniqueValue.Size = new System.Drawing.Size(88, 20);
             this.kchkIsUniqueValue.TabIndex = 15;
@@ -901,7 +901,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kchkIsBusinessKey
             // 
-            this.kchkIsBusinessKey.Location = new System.Drawing.Point(30, 65);
+            this.kchkIsBusinessKey.Location = new System.Drawing.Point(546, 38);
             this.kchkIsBusinessKey.Name = "kchkIsBusinessKey";
             this.kchkIsBusinessKey.Size = new System.Drawing.Size(88, 20);
             this.kchkIsBusinessKey.TabIndex = 14;
@@ -922,7 +922,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbDataSourceType.IntegralHeight = false;
             this.kcmbDataSourceType.Location = new System.Drawing.Point(120, 37);
             this.kcmbDataSourceType.Name = "kcmbDataSourceType";
-            this.kcmbDataSourceType.Size = new System.Drawing.Size(200, 21);
+            this.kcmbDataSourceType.Size = new System.Drawing.Size(346, 21);
             this.kcmbDataSourceType.TabIndex = 1;
             // 
             // kryptonLabel1

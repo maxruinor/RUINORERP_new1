@@ -37,7 +37,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 数据源配置（返回值）
         /// </summary>
-        public IDataSourceConfig DataSourceConfig { get; set; }
+        public DataSourceConfigBase DataSourceConfig { get; set; }
 
         /// <summary>
         /// Excel列名列表
@@ -168,7 +168,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 1. 绑定业务键相关控件
             DataBindingHelper.BindData4CheckBox<ColumnMapping>(CurrentMapping, m => m.IsBusinessKey, kchkIsBusinessKey, false);
-
+            DataBindingHelper.BindData4CheckBox<ColumnMapping>(CurrentMapping, m => m.IsUniqueValue, kchkIsUniqueValue, false);
             // 2. 绑定数据来源类型
             DataBindingHelper.BindData4CmbByEnum<ColumnMapping>(CurrentMapping, m => (int)m.ColumnDataSourceType, typeof(DataSourceType), kcmbDataSourceType, false);
 

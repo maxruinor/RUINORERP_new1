@@ -215,7 +215,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     var currentTime = DateTime.Now;
                     sessionInfo.LastActivityTime = currentTime;
                     sessionInfo.LastHeartbeat = currentTime;
-                    sessionInfo.HeartbeatFailedCount = 0; // 重置失败计数
+                    // ⚠️ 已移除 HeartbeatFailedCount 重置，因为不再使用服务器端计数
 
                     // 快速创建响应（不等待异步操作）
                     var nextIntervalMs = CalculateNextHeartbeatInterval(sessionInfo);
@@ -316,7 +316,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             sessionInfo.UserInfo.CurrentModule = userInfo.CurrentModule;
             sessionInfo.UserInfo.CurrentForm = userInfo.CurrentForm;
             sessionInfo.UserInfo.LoginTime = userInfo.LoginTime;
-            sessionInfo.UserInfo.HeartbeatCount = userInfo.HeartbeatCount;
+            sessionInfo.UserInfo.HeartbeatCount = userInfo.HeartbeatCount; // ✅ 同步客户端心跳计数
             sessionInfo.UserInfo.ClientVersion = userInfo.ClientVersion;
             sessionInfo.UserInfo.ClientIp = userInfo.ClientIp;
             

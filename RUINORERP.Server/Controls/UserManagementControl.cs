@@ -536,7 +536,7 @@ namespace RUINORERP.Server.Controls
             item.SubItems.Add(GetDisplayName(userInfo?.CurrentModule)); // 当前模块
             item.SubItems.Add(GetDisplayName(userInfo?.CurrentForm)); // 当前窗体
             item.SubItems.Add((sessionInfo.ConnectTime ?? DateTime.Now).ToString("yy-MM-dd HH:mm:ss")); // 连接时间
-            item.SubItems.Add(sessionInfo.HeartbeatCount.ToString()); // 心跳数
+            item.SubItems.Add((sessionInfo.UserInfo?.HeartbeatCount ?? 0).ToString()); // 心跳数
             item.SubItems.Add(sessionInfo.LastHeartbeat.ToString("yy-MM-dd HH:mm:ss")); // 最后心跳时间
             item.SubItems.Add(GetDisplayName(sessionInfo.UserInfo.ClientVersion)); // 客户端版本
             item.SubItems.Add(sessionInfo.ClientIp); // 客户端IP
@@ -571,7 +571,7 @@ namespace RUINORERP.Server.Controls
             item.SubItems[3].Text = GetDisplayName(userInfo?.CurrentModule);
             item.SubItems[4].Text = GetDisplayName(userInfo?.CurrentForm);
             item.SubItems[5].Text = (sessionInfo.ConnectTime ?? DateTime.Now).ToString("yy-MM-dd HH:mm:ss");
-            item.SubItems[6].Text = sessionInfo.HeartbeatCount.ToString();
+            item.SubItems[6].Text = (sessionInfo.UserInfo?.HeartbeatCount ?? 0).ToString();
             item.SubItems[7].Text = sessionInfo.LastHeartbeat.ToString("yy-MM-dd HH:mm:ss");
             item.SubItems[8].Text = GetDisplayName(sessionInfo.UserInfo.ClientVersion);
             item.SubItems[9].Text = sessionInfo.ClientIp ?? sessionInfo.RemoteEndPoint.ToString();
@@ -851,7 +851,7 @@ namespace RUINORERP.Server.Controls
                         }
 
                         // 更新心跳数
-                        string heartbeatCount = sessionInfo.HeartbeatCount.ToString();
+                        string heartbeatCount = (sessionInfo.UserInfo?.HeartbeatCount ?? 0).ToString();
                         if (item.SubItems.Count > 6 && item.SubItems[6].Text != heartbeatCount)
                         {
                             item.SubItems[6].Text = heartbeatCount;

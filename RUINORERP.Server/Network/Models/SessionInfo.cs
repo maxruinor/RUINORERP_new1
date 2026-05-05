@@ -178,20 +178,15 @@ namespace RUINORERP.Server.Network.Models
 
         #endregion
 
-        #region 心跳管理 (Heartbeat Management) - 集中管理
+        #region 心跳管理 (Heartbeat Management)
 
         /// <summary>
-        /// 心跳计数器
-        /// </summary>
-        public int HeartbeatCount { get; set; }
-
-        /// <summary>
-        /// 心跳失败计数器
+        /// 心跳失败计数器（预留，用于未来心跳健康检测）
         /// </summary>
         public int HeartbeatFailedCount { get; set; }
 
         /// <summary>
-        /// 最后心跳序号（用于检测心跳丢失）
+        /// 最后心跳序号（预留，用于未来心跳丢失检测）
         /// </summary>
         public long LastHeartbeatSequence { get; set; }
 
@@ -200,24 +195,10 @@ namespace RUINORERP.Server.Network.Models
         /// </summary>
         public int TimeoutMinutes { get; set; } = 30;
 
-        /// <summary>
-        /// 记录一次心跳成功
-        /// </summary>
-        public void RecordHeartbeat()
-        {
-            HeartbeatCount++;
-            HeartbeatFailedCount = 0;
-            LastHeartbeatSequence++;
-            UpdateActivity();
-        }
-
-        /// <summary>
-        /// 记录一次心跳失败
-        /// </summary>
-        public void RecordHeartbeatFailure()
-        {
-            HeartbeatFailedCount++;
-        }
+        // ⚠️ 已移除以下冗余字段和方法：
+        // - HeartbeatCount: UI直接使用 UserInfo.HeartbeatCount
+        // - RecordHeartbeat(): 服务器不自己计数，只透传客户端数据
+        // - RecordHeartbeatFailure(): 未使用
 
         #endregion
 
@@ -557,10 +538,9 @@ namespace RUINORERP.Server.Network.Models
             _totalBytesSent = 0;
             _totalBytesReceived = 0;
             
-            // 重置心跳相关
-            HeartbeatCount = 0;
-            HeartbeatFailedCount = 0;
-            LastHeartbeatSequence = 0;
+            // ⚠️ 已移除 HeartbeatCount 重置，因为该字段已删除
+            // HeartbeatCount = 0; // 已删除
+            // HeartbeatFailedCount 和 LastHeartbeatSequence 保留用于未来扩展
             
             // 标记为已断开
             IsConnected = false;

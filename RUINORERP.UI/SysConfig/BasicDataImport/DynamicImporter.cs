@@ -1395,7 +1395,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         return;
                     }
 
-                    var storage = await dbClient.Storageable<T>(typedList).ToStorageAsync();
+                    // ✅ 使用 DefaultAddElseUpdate：主键=0 时插入，主键≠0 时更新
+                    // 原理：id=0 插入，id≠0 更新（比查询数据库判断存在性性能更好）
+                    var storage = await dbClient.Storageable<T>(typedList)
+                        .DefaultAddElseUpdate()
+                        .ToStorageAsync();
+                    
                     var insertIds = await storage.AsInsertable.ExecuteReturnPkListAsync<long>();
                     var updateCount = await storage.AsUpdateable.ExecuteCommandAsync();
 
@@ -1842,29 +1847,55 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             var entities = new List<BaseEntity>();
             var properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
+            // 过滤掉非数据库字段属性
+            var validProperties = properties.Where(p =>
+            {
+                // 排除 List<> 类型的导航属性
+                if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
+                    return false;
+
+                // 排除 IEnumerable<> 类型
+                if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    return false;
+
+                // 排除 ConcurrentDictionary<> 类型
+                if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(ConcurrentDictionary<,>))
+                    return false;
+
+                // 排除接口类型
+                if (p.PropertyType.IsInterface)
+                    return false;
+
+                return true;
+            }).ToArray();
+
             foreach (DataRow row in dataTable.Rows)
             {
                 var entity = Activator.CreateInstance(entityType) as BaseEntity;
                 if (entity == null) continue;
 
-                foreach (var prop in properties)
+                foreach (var prop in validProperties)
                 {
                     try
                     {
-                        // 使用数据库字段名（大写）来匹配DataTable列
                         string columnName = prop.Name;
                         if (dataTable.Columns.Contains(columnName))
                         {
                             object value = row[columnName];
                             if (value != DBNull.Value && value != null)
                             {
-                                prop.SetValue(entity, Convert.ChangeType(value, prop.PropertyType));
+                                // 将字符串值转换为属性类型
+                                object convertedValue = ConvertValue(value.ToString(), prop.PropertyType);
+                                if (convertedValue != null)
+                                {
+                                    prop.SetValue(entity, convertedValue);
+                                }
                             }
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // 类型转换失败时跳过该属性
+                        System.Diagnostics.Debug.WriteLine($"[ConvertDataTableToEntities] 属性 {prop.Name} 转换失败: {ex.Message}");
                     }
                 }
 
@@ -1872,6 +1903,75 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             return entities;
+        }
+
+        /// <summary>
+        /// 将字符串值转换为目标类型
+        /// </summary>
+        private object ConvertValue(string value, Type targetType)
+        {
+            if (string.IsNullOrEmpty(value))
+                return null;
+
+            // 处理可空类型
+            Type underlyingType = Nullable.GetUnderlyingType(targetType);
+            Type actualType = underlyingType ?? targetType;
+
+            try
+            {
+                // 布尔类型转换
+                if (actualType == typeof(bool))
+                {
+                    return value.ToLower() switch
+                    {
+                        "true" or "1" or "yes" or "y" => true,
+                        "false" or "0" or "no" or "n" => false,
+                        _ => bool.Parse(value)
+                    };
+                }
+
+                // 整数类型转换
+                if (actualType == typeof(int))
+                    return int.Parse(value);
+
+                if (actualType == typeof(long))
+                    return long.Parse(value);
+
+                if (actualType == typeof(short))
+                    return short.Parse(value);
+
+                if (actualType == typeof(byte))
+                    return byte.Parse(value);
+
+                // 浮点类型转换
+                if (actualType == typeof(decimal))
+                    return decimal.Parse(value);
+
+                if (actualType == typeof(double))
+                    return double.Parse(value);
+
+                if (actualType == typeof(float))
+                    return float.Parse(value);
+
+                // 枚举类型转换（数据库中一般存储为int）
+                if (actualType.IsEnum)
+                {
+                    // 尝试按数值解析
+                    if (int.TryParse(value, out int intValue))
+                        return Enum.ToObject(actualType, intValue);
+
+                    // 尝试按名称解析
+                    return Enum.Parse(actualType, value, true);
+                }
+
+                // 默认转换
+                return Convert.ChangeType(value, actualType);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ConvertValue] 转换失败: '{value}' -> {actualType.Name}, 错误: {ex.Message}");
+                return null;
+            }
         }
 
         /// <summary>

@@ -37,9 +37,9 @@ namespace RUINORERP.UI.BI
         public override async void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_ProdCategories;
-            if (_EditEntity.Category_ID == 0)
+            if (_EditEntity.Category_ID == 0 && string.IsNullOrEmpty(_EditEntity.CategoryCode))
             {
-                _EditEntity.CategoryCode =await clientBizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProCategories);
+                _EditEntity.CategoryCode = await clientBizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProCategories);
             }
             DataBindingHelper.BindData4TextBox<tb_ProdCategories>(entity, t => t.Category_name, txtcategory_name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ProdCategories>(entity, t => t.CategoryCode, txtcategoryCode, BindDataType4TextBox.Text, false);

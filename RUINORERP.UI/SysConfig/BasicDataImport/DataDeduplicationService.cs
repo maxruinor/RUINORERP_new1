@@ -84,11 +84,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return result;
             }
 
-            // 将数据库字段名转换为数据表显示名称
-            var displayFieldNames = ConvertToDisplayNames(deduplicateFields, config);
-
-            // 验证去重字段是否存在
-            foreach (var field in displayFieldNames)
+            // 验证去重字段是否存在（DataTable列名是英文的SystemField.Key）
+            foreach (var field in deduplicateFields)
             {
                 if (!dataTable.Columns.Contains(field))
                 {
@@ -96,17 +93,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
             }
 
-            result.DeduplicateFields = displayFieldNames;
+            result.DeduplicateFields = deduplicateFields;
 
             // 根据去重策略执行去重
             if (config.DeduplicateStrategy == (int)DeduplicateStrategyType.LastOccurrence)
             {
-                result.DeduplicatedData = DeduplicateKeepLast(dataTable, displayFieldNames, config.IgnoreEmptyValuesInDeduplication);
+                result.DeduplicatedData = DeduplicateKeepLast(dataTable, deduplicateFields, config.IgnoreEmptyValuesInDeduplication);
             }
             else
             {
                 // 默认保留第一条
-                result.DeduplicatedData = DeduplicateKeepFirst(dataTable, displayFieldNames, config.IgnoreEmptyValuesInDeduplication);
+                result.DeduplicatedData = DeduplicateKeepFirst(dataTable, deduplicateFields, config.IgnoreEmptyValuesInDeduplication);
             }
 
             result.DuplicateCount = result.OriginalCount - result.DeduplicatedData.Rows.Count;

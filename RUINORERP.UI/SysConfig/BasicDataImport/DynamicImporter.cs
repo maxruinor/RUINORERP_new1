@@ -6,6 +6,7 @@ using RUINORERP.Repository.UnitOfWorks;  // ✅ 新增：IUnitOfWorkManage
 using RUINORERP.UI.SysConfig.BasicDataImport;
 using SqlSugar;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -1892,14 +1893,36 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return result;
             }
             
-            System.Diagnostics.Debug.WriteLine($"[ConvertEntitiesToDataTable] 实体属性数: {properties.Length}");
-            System.Diagnostics.Debug.WriteLine($"[ConvertEntitiesToDataTable] 实体属性名: {string.Join(", ", properties.Select(p => p.Name))}");
+            // 过滤掉非数据库字段属性
+            var validProperties = properties.Where(p => 
+            {
+                // 排除 List<> 类型的导航属性
+                if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
+                    return false;
+                
+                // 排除 IEnumerable<> 类型
+                if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    return false;
+                
+                // 排除 ConcurrentDictionary<> 类型
+                if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(ConcurrentDictionary<,>))
+                    return false;
+                
+                // 排除接口类型（如 IUnifiedStateManager）
+                if (p.PropertyType.IsInterface)
+                    return false;
+                
+                return true;
+            }).ToArray();
+            
+            System.Diagnostics.Debug.WriteLine($"[ConvertEntitiesToDataTable] 实体属性数: {properties.Length}, 有效属性数: {validProperties.Length}");
+            System.Diagnostics.Debug.WriteLine($"[ConvertEntitiesToDataTable] 有效属性名: {string.Join(", ", validProperties.Select(p => p.Name))}");
 
             foreach (var entity in entities)
             {
                 DataRow row = result.NewRow();
 
-                foreach (var prop in properties)
+                foreach (var prop in validProperties)
                 {
                     try
                     {
@@ -1985,6 +2008,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             }
                         }
                     }
+
+                    // 对于列拼接类型，需要额外添加拼接源列到解析结果中（使用Excel列名作为临时列名）
+                    if (mapping.ColumnDataSourceType == (int)DataSourceType.ColumnConcat)
+                    {
+                        var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
+                        if (concatConfig != null && concatConfig.ConcatColumns != null)
+                        {
+                            foreach (var sourceCol in concatConfig.ConcatColumns)
+                            {
+                                // ConcatColumns.Key 存储的是 Excel 列名
+                                if (!string.IsNullOrEmpty(sourceCol?.Key) && 
+                                    sourceData.Columns.Contains(sourceCol.Key) && 
+                                    !addedColumns.Contains(sourceCol.Key))
+                                {
+                                    result.Columns.Add(sourceCol.Key, typeof(string));
+                                    addedColumns.Add(sourceCol.Key);
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // 步骤2：转换数据行
@@ -1997,12 +2040,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         switch (mapping.ColumnDataSourceType)
                         {
                             case (int)DataSourceType.Excel:
-                                // Excel数据源：从原始Excel列读取数据
+                                // Excel数据源：sourceData 已经是 ParseExcelWithColumns 处理后的 DataTable
+                                // 列名是英文的 SystemField.Key，直接从对应列读取数据
                                 var excelCfg = mapping.DataSourceConfig as ExcelConfig;
-                                string sourceExcelCol = excelCfg?.ExcelColumn ?? mapping.OriginalExcelColumn;
-                                if (!string.IsNullOrEmpty(sourceExcelCol) && sourceData.Columns.Contains(sourceExcelCol))
+                                string sourceColumnName = mapping.SystemField?.Key;
+                                
+                                if (!string.IsNullOrEmpty(sourceColumnName) && sourceData.Columns.Contains(sourceColumnName))
                                 {
-                                    object cellValue = sourceRow[sourceExcelCol];
+                                    object cellValue = sourceRow[sourceColumnName];
                                     bool isEmpty = cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString());
 
                                     if (excelCfg != null && isEmpty)
@@ -2105,7 +2150,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 {
                                     // 外键关联：保留源值用于后续处理
                                     string foreignKeySourceValue = "";
-                                    string sourceColumn = fkConfig?.ForeignKeySourceColumn?.Key ?? mapping.OriginalExcelColumn;
+                                    // ForeignKeySourceColumn.Key 现在是英文字段名，用于匹配 DataTable 列名
+                                    string sourceColumn = fkConfig?.ForeignKeySourceColumn?.Key;
 
                                     if (!string.IsNullOrEmpty(sourceColumn) &&
                                         !sourceColumn.StartsWith("[") &&
@@ -2206,7 +2252,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void ProcessForeignKeyField(DataRow sourceRow, DataRow targetRow, ColumnMapping mapping)
         {
             var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
-            string sourceColumn = fkConfig?.ForeignKeySourceColumn?.Key ?? mapping.OriginalExcelColumn;
+            // ForeignKeySourceColumn.Key 现在是英文字段名，用于匹配 DataTable 列名
+            string sourceColumn = fkConfig?.ForeignKeySourceColumn?.Key;
             string targetTable = fkConfig?.ForeignTableName;
             string targetField = fkConfig?.ForeignFieldName;
             string fieldName = mapping.SystemField?.Key; // 使用Key(英文)作为DataTable列名

@@ -1044,9 +1044,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
                 {
                     var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
-                    if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
+                    if (fkConfig != null)
                     {
-                        requiredExcelColumns.Add(fkConfig.ForeignKeySourceColumn.Key);
+                        // 优先使用 OriginalExcelColumn（Excel列名）
+                        if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn))
+                        {
+                            requiredExcelColumns.Add(mapping.OriginalExcelColumn);
+                        }
+                        // 其次使用 ForeignKeySourceColumn.Value（可能是Excel列名或显示名）
+                        else if (!string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Value))
+                        {
+                            requiredExcelColumns.Add(fkConfig.ForeignKeySourceColumn.Value);
+                        }
                     }
                 }
 
@@ -1058,6 +1067,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     {
                         foreach (var sourceCol in concatConfig.ConcatColumns)
                         {
+                            // ConcatColumns.Key 存储的是 Excel 列名
                             if (!string.IsNullOrEmpty(sourceCol?.Key))
                             {
                                 requiredExcelColumns.Add(sourceCol.Key);
@@ -1143,6 +1153,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         }
                     }
                 }
+
+                // 对于列拼接类型，额外添加拼接源列到结果表中（使用Excel列名作为临时列名）
+                if (mapping.ColumnDataSourceType == (int)DataSourceType.ColumnConcat)
+                {
+                    var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
+                    if (concatConfig != null && concatConfig.ConcatColumns != null)
+                    {
+                        foreach (var sourceCol in concatConfig.ConcatColumns)
+                        {
+                            // ConcatColumns.Key 存储的是 Excel 列名
+                            if (!string.IsNullOrEmpty(sourceCol?.Key) && !addedColumns.Contains(sourceCol.Key))
+                            {
+                                dataTable.Columns.Add(sourceCol.Key, typeof(string));
+                                addedColumns.Add(sourceCol.Key);
+                            }
+                        }
+                    }
+                }
             }
 
             // 创建图片字典，按行号和列号索引
@@ -1225,9 +1253,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 else
                                 {
                                     // 外键关联：读取外键来源列的值
+                                    // 优先使用 OriginalExcelColumn（Excel列名）
+                                    string excelColumnName = mapping.OriginalExcelColumn ?? fkConfig.ForeignKeySourceColumn?.Value;
+                                    
                                     if (fkConfig != null &&
-                                        !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key) &&
-                                        columnIndexMap.TryGetValue(fkConfig.ForeignKeySourceColumn.Key, out int fkColIndex))
+                                        !string.IsNullOrEmpty(excelColumnName) &&
+                                        columnIndexMap.TryGetValue(excelColumnName, out int fkColIndex))
                                     {
                                         ICell cell = row.GetCell(fkColIndex);
                                         if (cell != null)
@@ -1238,15 +1269,38 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     else
                                     {
                                         // 添加调试信息：外键来源列名未找到
-                                        if (fkConfig != null && !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key))
+                                        if (fkConfig != null && !string.IsNullOrEmpty(excelColumnName))
                                         {
-                                            System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到外键来源列'{fkConfig.ForeignKeySourceColumn.Key}'，映射到字段'{mapping.SystemField?.Value}({mapping.SystemField?.Key})'");
+                                            System.Diagnostics.Debug.WriteLine($"[ExcelParser] 第{i}行：未找到外键来源列'{excelColumnName}'，映射到字段'{mapping.SystemField?.Value}({mapping.SystemField?.Key})'");
                                         }
                                     }
                                 }
                                 break;
 
                             case (int)DataSourceType.ColumnConcat:
+                                // 列拼接：读取所有拼接源列的值到临时列中
+                                var concatConfig = mapping.DataSourceConfig as ColumnConcatConfig;
+                                if (concatConfig != null && concatConfig.ConcatColumns != null)
+                                {
+                                    foreach (var sourceCol in concatConfig.ConcatColumns)
+                                    {
+                                        if (!string.IsNullOrEmpty(sourceCol?.Key) &&
+                                            columnIndexMap.TryGetValue(sourceCol.Key, out int concatColIndex))
+                                        {
+                                            ICell cell = row.GetCell(concatColIndex);
+                                            if (cell != null)
+                                            {
+                                                // 将拼接源列的值存储到临时列中（使用Excel列名作为列名）
+                                                if (dataTable.Columns.Contains(sourceCol.Key))
+                                                {
+                                                    dataRow[sourceCol.Key] = GetCellValue(cell);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                cellValue = ""; // 拼接操作在ApplyColumnMapping中处理
+                                break;
 
                             default:
                                 // 其他类型（系统生成、默认值等）在ApplyColumnMapping中处理

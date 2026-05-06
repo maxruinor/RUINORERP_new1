@@ -1091,6 +1091,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         if (newConfig is DatabaseReferenceConfig fkConfig && 
                             !string.IsNullOrEmpty(excelConfig.ExcelColumn))
                         {
+                            // Key 应该是英文字段名，但此时还不知道，先使用 Excel 列名作为占位
+                            // Value 是中文显示名
                             fkConfig.ForeignKeySourceColumn = new SerializableKeyValuePair<string>
                             {
                                 Key = excelConfig.ExcelColumn,
@@ -1277,10 +1279,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
             if (field.Value != null && CurrentMapping?.DataSourceConfig is DatabaseReferenceConfig config)
             {
+                // Key = 英文字段名（用于 DataTable 列名匹配）
+                // Value = 中文显示名（用于 UI 显示）
                 config.ForeignKeySourceColumn = new SerializableKeyValuePair<string>
                 {
-                    Key = config.ForeignKeySourceColumn?.Key ?? string.Empty,
-                    Value = field.Key
+                    Key = field.Key,
+                    Value = displayName
                 };
             }
         }

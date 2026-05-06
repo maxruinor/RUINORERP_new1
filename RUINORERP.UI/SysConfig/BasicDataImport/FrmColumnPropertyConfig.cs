@@ -634,11 +634,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kcmbRelatedTable.Enabled = isForeignKey;
             ktxtRelatedField.Enabled = isForeignKey;
             kcmbForeignExcelSourceColumn.Enabled = isForeignKey;
+            kcmbForeignDbSourceColumn.Enabled = isForeignKey;
          
             // ✅ 如果是自身表引用，禁用关联表下拉框
             if (isForeignKey && CurrentMapping?.DataSourceConfig is DatabaseReferenceConfig dbConfig)
             {
                 kcmbRelatedTable.Enabled = isForeignKey && !dbConfig.IsSelfReference;
+                kcmbForeignExcelSourceColumn.Enabled = isForeignKey && !dbConfig.IsSelfReference;
+                kcmbForeignDbSourceColumn.Enabled = isForeignKey && !dbConfig.IsSelfReference;
             }
 
             // 更新系统生成配置控件的可用性
@@ -672,6 +675,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 加载表的字段列表
             LoadTableFields(tableName);
+
+            // ✅ 同步关联表名到配置对象
+            if (CurrentMapping?.DataSourceConfig is DatabaseReferenceConfig dbRefConfig)
+            {
+                dbRefConfig.ForeignTableName = tableName;
+            }
         }
 
         /// <summary>
@@ -910,6 +919,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         Value = columnName
                     });
                 }
+            }
+
+            // ✅ 自身表引用保护：确保 ForeignTableName 已正确填充
+            if (CurrentMapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey &&
+                CurrentMapping.DataSourceConfig is DatabaseReferenceConfig dbRefConfig &&
+                dbRefConfig.IsSelfReference &&
+                string.IsNullOrEmpty(dbRefConfig.ForeignTableName) &&
+                TargetEntityType != null)
+            {
+                dbRefConfig.ForeignTableName = TargetEntityType.Name;
             }
 
             // ✅ 使用验证适配器进行配置验证

@@ -1,3 +1,4 @@
+using RUINORERP.Business.Cache;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using SqlSugar;
@@ -18,6 +19,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class ForeignKeyService : IForeignKeyService
     {
         private readonly ISqlSugarClient _db;
+        private readonly ITableSchemaManager _tableSchemaManager;
 
         /// <summary>
         /// 外键数据缓存
@@ -29,9 +31,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 构造函数
         /// </summary>
         /// <param name="db">数据库客户端</param>
-        public ForeignKeyService(ISqlSugarClient db)
+        /// <param name="tableSchemaManager">表结构管理器</param>
+        public ForeignKeyService(ISqlSugarClient db, ITableSchemaManager tableSchemaManager = null)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
+            _tableSchemaManager = tableSchemaManager;
             _foreignKeyCache = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
         }
 
@@ -76,8 +80,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 预加载指定表的外键数据
         /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <param name="fieldName">字段名</param>
+        /// <param name="mapping">列映射配置</param>
         public void PreloadForeignKeyData(ColumnMapping mapping)
         {
             var fkConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
@@ -95,22 +98,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return; // 已经缓存过
                 }
 
-                // 构建查询SQL - 需要外键来源列配置
-                if (fkConfig.ForeignKeySourceColumn == null || string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn.Key))
+                // ✅ 获取关联表的主键字段名（用于查询ID）
+                string primaryKeyField = GetPrimaryKeyFieldName(fkConfig.ForeignTableName);
+                if (string.IsNullOrEmpty(primaryKeyField))
                 {
-                    Debug.WriteLine($"预加载外键数据失败: {fkConfig.ForeignTableName}.{fkConfig.ForeignFieldName}, 缺少外键来源列配置");
+                    Debug.WriteLine($"预加载外键数据失败: 无法获取表 {fkConfig.ForeignTableName} 的主键字段名");
                     return;
                 }
 
-                string sql = $"SELECT {fkConfig.ForeignFieldName}, {mapping.SystemField.Key}, {fkConfig.ForeignKeySourceColumn.Key} FROM {fkConfig.ForeignTableName}";
+                // ✅ 正确SQL：只查询关联表的（业务字段，主键ID）
+                // 例如：SELECT CategoryCode, Category_ID FROM tb_ProdCategories
+                string sql = $"SELECT {fkConfig.ForeignFieldName}, {primaryKeyField} FROM {fkConfig.ForeignTableName}";
                 var data = _db.Ado.GetDataTable(sql);
 
-                // 构建缓存
+                // 构建缓存：业务字段值 -> 主键ID 的映射
                 var fieldValueToIdMap = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
                 foreach (DataRow row in data.Rows)
                 {
-                    object id = row[fkConfig.ForeignFieldName];
-                    object fieldValue = row[fkConfig.ForeignKeySourceColumn.Key];
+                    object id = row[primaryKeyField];
+                    object fieldValue = row[fkConfig.ForeignFieldName];
                     if (fieldValue != DBNull.Value && fieldValue != null)
                     {
                         string key = fieldValue.ToString().Trim();
@@ -119,10 +125,49 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 _foreignKeyCache.TryAdd(cacheKey, fieldValueToIdMap);
+                Debug.WriteLine($"预加载外键数据成功: {fkConfig.ForeignTableName}.{fkConfig.ForeignFieldName} -> {primaryKeyField}, 共 {fieldValueToIdMap.Count} 条记录");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"预加载外键数据失败: {fkConfig.ForeignTableName}.{fkConfig.ForeignFieldName}, 错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取表的主键字段名
+        /// </summary>
+        private string GetPrimaryKeyFieldName(string tableName)
+        {
+            try
+            {
+                // 使用 TableSchemaManager 获取表的主键信息
+                var tableSchema = _tableSchemaManager.GetSchemaInfo(tableName);
+                if (tableSchema.PrimaryKeyField != null)
+                {
+                    return tableSchema.PrimaryKeyField;
+                }
+
+                // 回退：常见主键字段名
+                var commonPkNames = new[] { "ID", "Category_ID", "Vendor_ID", "Prod_ID" };
+                foreach (var name in commonPkNames)
+                {
+                    try
+                    {
+                        var testSql = $"SELECT TOP 1 {name} FROM {tableName}";
+                        _db.Ado.GetDataTable(testSql);
+                        return name;
+                    }
+                    catch
+                    {
+                        // 字段不存在，继续尝试
+                    }
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -301,11 +346,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                 }
 
-                // 缓存未命中，查询数据库
-                // 构建查询SQL，通过代码字段查询主键ID
-                // 例如：SELECT ID FROM tb_ProdCategories WHERE CategoryCode = 'CATEGORY001'
-                // 例如：SELECT ID FROM tb_CustomerVendor WHERE VendorName = '供应商A'
-                string sql = $"SELECT ID FROM {relatedTableName} WHERE {relatedTableField} = @value";
+                // ✅ 缓存未命中，查询数据库 - 使用正确的主键字段名
+                string primaryKeyField = GetPrimaryKeyFieldName(relatedTableName);
+                if (string.IsNullOrEmpty(primaryKeyField))
+                {
+                    Debug.WriteLine($"查询外键ID失败: 无法获取表 {relatedTableName} 的主键字段名");
+                    return null;
+                }
+
+                // 例如：SELECT Category_ID FROM tb_ProdCategories WHERE CategoryCode = 'BG'
+                string sql = $"SELECT {primaryKeyField} FROM {relatedTableName} WHERE {relatedTableField} = @value";
 
                 // 使用参数化查询防止SQL注入
                 var parameters = new { value = trimmedValue };
@@ -321,7 +371,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             $"警告：外键查询返回多个结果。表：{relatedTableName}，字段：{relatedTableField}，值：{foreignKeyValue}，匹配数：{result.Rows.Count}");
                     }
 
-                    object id = result.Rows[0]["ID"];
+                    object id = result.Rows[0][primaryKeyField];
                     AddToCache(cacheKey, trimmedValue, id);
                     return id;
                 }

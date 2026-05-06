@@ -831,6 +831,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbDataSourceType.Name = "kcmbDataSourceType";
             this.kcmbDataSourceType.Size = new System.Drawing.Size(346, 21);
             this.kcmbDataSourceType.TabIndex = 1;
+            this.kcmbDataSourceType.SelectedIndexChanged += new System.EventHandler(this.kcmbDataSourceType_SelectedIndexChanged);
             // 
             // kryptonLabel1
             // 

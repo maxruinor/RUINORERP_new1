@@ -1,160 +1,136 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Krypton.Toolkit;
-using RUINORERP.Common;
-using RUINORERP.Global;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     /// <summary>
+    /// 去重字段项（支持双类别：系统字段 / Excel源列）
+    /// </summary>
+    public class DeduplicateFieldItem
+    {
+        public string Key { get; set; }
+        public string DisplayName { get; set; }
+        public string Category { get; set; }
+    }
+
+    /// <summary>
     /// 去重字段配置对话框
     /// 用于配置数据导入时的去重字段和策略
+    /// 支持同时选择系统字段和Excel源列作为去重依据
     /// </summary>
     public partial class frmDeduplicateFieldConfig : KryptonForm
     {
-        /// <summary>
-        /// 可用的字段列表
-        /// </summary>
-        public List<SerializableKeyValuePair<string>> AvailableFields { get; set; }
+        private List<DeduplicateFieldItem> _allFields = new List<DeduplicateFieldItem>();
 
-        /// <summary>
-        /// 已选择的去重字段列表
-        /// </summary>
-        public List<string> SelectedFields { get; set; }
+        private const string CAT_SYSTEM = "系统字段";
+        private const string CAT_EXCEL = "Excel源列";
 
-        /// <summary>
-        /// 是否忽略空值
-        /// </summary>
-        public bool IgnoreEmptyValues { get; set; }
+        public List<DeduplicateFieldItem> AvailableFields
+        {
+            get => _allFields;
+            set => _allFields = value ?? new List<DeduplicateFieldItem>();
+        }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
+        public List<string> SelectedFields { get; set; } = new List<string>();
+        public bool IgnoreEmptyValues { get; set; } = true;
+
         public frmDeduplicateFieldConfig()
         {
             InitializeComponent();
-            AvailableFields = new List<SerializableKeyValuePair<string>>();
-            SelectedFields = new List<string>();
-            IgnoreEmptyValues = true;
         }
 
-        /// <summary>
-        /// 窗体加载事件
-        /// </summary>
         private void frmDeduplicateFieldConfig_Load(object sender, EventArgs e)
         {
-            try
+            chkListAvailableFields.Items.Clear();
+            listBoxSelectedFields.Items.Clear();
+
+            var systemFields = _allFields.Where(f => f.Category == CAT_SYSTEM).ToList();
+            var excelFields = _allFields.Where(f => f.Category == CAT_EXCEL).ToList();
+
+            if (systemFields.Any())
+                AddCategoryHeader(CAT_SYSTEM);
+
+            foreach (var field in systemFields)
             {
-                // 清空列表
-                chkListAvailableFields.Items.Clear();
-                listBoxSelectedFields.Items.Clear();
-
-                // 加载可用字段
-                foreach (var field in AvailableFields)
-                {
-                    if (field != null && !string.IsNullOrEmpty(field.Key))
-                    {
-                        // 检查是否已选中
-                        bool isSelected = SelectedFields.Contains(field.Key);
-                        chkListAvailableFields.Items.Add(field.Value, isSelected);
-                    }
-                }
-
-                // 加载已选字段
-                RefreshSelectedFieldsList();
-
-                // 初始化忽略空值复选框
-                chkIgnoreEmptyValues.Checked = IgnoreEmptyValues;
+                if (!string.IsNullOrEmpty(field?.Key))
+                    chkListAvailableFields.Items.Add(field, SelectedFields.Contains(field.Key));
             }
-            catch (Exception ex)
+
+            if (excelFields.Any())
+                AddCategoryHeader(CAT_EXCEL);
+
+            foreach (var field in excelFields)
             {
-                MessageBox.Show($"初始化窗体失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!string.IsNullOrEmpty(field?.Key))
+                    chkListAvailableFields.Items.Add(field, SelectedFields.Contains(field.Key));
             }
+
+            RefreshSelectedFieldsList();
+            chkIgnoreEmptyValues.Checked = IgnoreEmptyValues;
         }
 
-        /// <summary>
-        /// 刷新已选字段列表
-        /// </summary>
+        private void AddCategoryHeader(string categoryText)
+        {
+            chkListAvailableFields.Items.Add(new CategoryHeaderItem(categoryText));
+        }
+
         private void RefreshSelectedFieldsList()
         {
             listBoxSelectedFields.Items.Clear();
-            foreach (var field in AvailableFields)
+            foreach (var item in _allFields)
             {
-                if (field != null && SelectedFields.Contains(field.Key))
-                {
-                    listBoxSelectedFields.Items.Add(field.Value);
-                }
+                if (item != null && SelectedFields.Contains(item.Key))
+                    listBoxSelectedFields.Items.Add($"{item.DisplayName} [{item.Category}]");
             }
         }
 
-        /// <summary>
-        /// 全选按钮点击事件
-        /// </summary>
         private void kbtnSelectAll_Click(object sender, EventArgs e)
         {
             for (int i = 0; i < chkListAvailableFields.Items.Count; i++)
             {
-                chkListAvailableFields.SetItemCheckState(i, CheckState.Checked);
+                if (!(chkListAvailableFields.Items[i] is CategoryHeaderItem))
+                    chkListAvailableFields.SetItemCheckState(i, CheckState.Checked);
             }
             UpdateSelectedFields();
         }
 
-        /// <summary>
-        /// 全不选按钮点击事件
-        /// </summary>
         private void kbtnSelectNone_Click(object sender, EventArgs e)
         {
             for (int i = 0; i < chkListAvailableFields.Items.Count; i++)
             {
-                chkListAvailableFields.SetItemCheckState(i, CheckState.Unchecked);
+                if (!(chkListAvailableFields.Items[i] is CategoryHeaderItem))
+                    chkListAvailableFields.SetItemCheckState(i, CheckState.Unchecked);
             }
             UpdateSelectedFields();
         }
 
-        /// <summary>
-        /// 可用字段复选框改变事件
-        /// </summary>
         private void chkListAvailableFields_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            // 使用BeginInvoke确保在事件处理完成后执行
-            this.BeginInvoke(new Action(() =>
+            if (chkListAvailableFields.Items[e.Index] is CategoryHeaderItem)
             {
-                UpdateSelectedFields();
-            }));
+                e.NewValue = CheckState.Unchecked;
+                return;
+            }
+            this.BeginInvoke(new Action(() => UpdateSelectedFields()));
         }
 
-        /// <summary>
-        /// 更新已选字段列表
-        /// </summary>
         private void UpdateSelectedFields()
         {
             SelectedFields.Clear();
-
             for (int i = 0; i < chkListAvailableFields.Items.Count; i++)
             {
-                if (chkListAvailableFields.GetItemCheckState(i) == CheckState.Checked)
-                {
-                    string displayText = chkListAvailableFields.Items[i].ToString();
-                    // 找到对应的Key
-                    var field = AvailableFields.FirstOrDefault(f => f.Value == displayText);
-                    if (field != null)
-                    {
-                        SelectedFields.Add(field.Key);
-                    }
-                }
+                if (chkListAvailableFields.GetItemCheckState(i) == CheckState.Checked &&
+                    chkListAvailableFields.Items[i] is DeduplicateFieldItem field)
+                    SelectedFields.Add(field.Key);
             }
-
             RefreshSelectedFieldsList();
-
-            // 更新状态标签
             klblFieldCount.Text = $"已选择 {SelectedFields.Count} 个去重字段";
         }
 
-        /// <summary>
-        /// 确定按钮点击事件
-        /// </summary>
         private void kbtnOK_Click(object sender, EventArgs e)
         {
             if (SelectedFields.Count == 0)
@@ -162,28 +138,27 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show("请至少选择一个去重字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
             IgnoreEmptyValues = chkIgnoreEmptyValues.Checked;
-
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
-        /// <summary>
-        /// 取消按钮点击事件
-        /// </summary>
         private void kbtnCancel_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
 
-        /// <summary>
-        /// 忽略空值复选框改变事件
-        /// </summary>
         private void chkIgnoreEmptyValues_CheckedChanged(object sender, EventArgs e)
         {
             IgnoreEmptyValues = chkIgnoreEmptyValues.Checked;
         }
+    }
+
+    internal class CategoryHeaderItem
+    {
+        public string Text { get; }
+        public CategoryHeaderItem(string text) => Text = text;
+        public override string ToString() => $"【{Text}】";
     }
 }

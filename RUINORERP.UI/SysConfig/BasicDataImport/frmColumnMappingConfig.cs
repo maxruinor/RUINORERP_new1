@@ -1448,20 +1448,69 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void kbtnConfigDeduplicateFields_Click(object sender, EventArgs e)
         {
-            // 创建去重字段配置对话框
             using (var deduplicateConfigDialog = new frmDeduplicateFieldConfig())
             {
-                // 设置可用字段
-                deduplicateConfigDialog.AvailableFields = ImportConfig.ColumnMappings.Select(m => m.SystemField).ToList();
+                var allFields = new List<DeduplicateFieldItem>();
+                var addedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                // 设置已选字段
+                foreach (var mapping in ImportConfig.ColumnMappings)
+                {
+                    if (mapping.SystemField != null && !string.IsNullOrEmpty(mapping.SystemField.Key) &&
+                        addedKeys.Add(mapping.SystemField.Key))
+                    {
+                        string displayName = mapping.SystemField.Value ?? mapping.SystemField.Key;
+                        if (!string.IsNullOrEmpty(mapping.OriginalExcelColumn) &&
+                            mapping.ColumnDataSourceType == (int)DataSourceType.Excel)
+                        {
+                            displayName = $"{displayName} (← {mapping.OriginalExcelColumn})";
+                        }
+
+                        allFields.Add(new DeduplicateFieldItem
+                        {
+                            Key = mapping.SystemField.Key,
+                            DisplayName = displayName,
+                            Category = "系统字段"
+                        });
+                    }
+
+                    if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey &&
+                        mapping.DataSourceConfig is DatabaseReferenceConfig fkConfig &&
+                        !string.IsNullOrEmpty(fkConfig.ForeignKeySourceColumn?.Key) &&
+                        addedKeys.Add(fkConfig.ForeignKeySourceColumn.Key))
+                    {
+                        allFields.Add(new DeduplicateFieldItem
+                        {
+                            Key = fkConfig.ForeignKeySourceColumn.Key,
+                            DisplayName = fkConfig.ForeignKeySourceColumn.Value ?? fkConfig.ForeignKeySourceColumn.Key,
+                            Category = "Excel源列"
+                        });
+                    }
+
+                    if (mapping.ColumnDataSourceType == (int)DataSourceType.ColumnConcat &&
+                        mapping.DataSourceConfig is ColumnConcatConfig concatConfig &&
+                        concatConfig.ConcatColumns != null)
+                    {
+                        foreach (var srcCol in concatConfig.ConcatColumns)
+                        {
+                            if (!string.IsNullOrEmpty(srcCol?.Key) && addedKeys.Add(srcCol.Key))
+                            {
+                                allFields.Add(new DeduplicateFieldItem
+                                {
+                                    Key = srcCol.Key,
+                                    DisplayName = srcCol.Value ?? srcCol.Key,
+                                    Category = "Excel源列"
+                                });
+                            }
+                        }
+                    }
+                }
+
+                deduplicateConfigDialog.AvailableFields = allFields;
                 deduplicateConfigDialog.SelectedFields = ImportConfig.DeduplicateFields?.ToList() ?? new List<string>();
-
-                // 设置是否忽略空值                deduplicateConfigDialog.IgnoreEmptyValues = ImportConfig.IgnoreEmptyValuesInDeduplication;
+                deduplicateConfigDialog.IgnoreEmptyValues = ImportConfig.IgnoreEmptyValuesInDeduplication;
 
                 if (deduplicateConfigDialog.ShowDialog() == DialogResult.OK)
                 {
-                    // 保存去重字段配置
                     ImportConfig.DeduplicateFields = deduplicateConfigDialog.SelectedFields;
                     ImportConfig.IgnoreEmptyValuesInDeduplication = deduplicateConfigDialog.IgnoreEmptyValues;
 

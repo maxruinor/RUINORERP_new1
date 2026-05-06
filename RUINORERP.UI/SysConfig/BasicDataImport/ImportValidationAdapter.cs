@@ -58,8 +58,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 if (string.IsNullOrEmpty(foreignConfig.ForeignTableName))
                 {
-                    errors.Add($"字段【{mapping.SystemField.Value}】的外键表未配置");
-                    return false;
+                    if (foreignConfig.IsSelfReference && targetEntityType != null)
+                    {
+                        foreignConfig.ForeignTableName = targetEntityType.Name;
+                    }
+                    else
+                    {
+                        errors.Add($"字段【{mapping.SystemField.Value}】的外键表未配置");
+                        return false;
+                    }
                 }
 
                 if (string.IsNullOrEmpty(foreignConfig.ForeignFieldName))

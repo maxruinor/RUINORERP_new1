@@ -1,4 +1,5 @@
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Cache;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
@@ -124,7 +125,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _unitOfWorkManage = unitOfWorkManage;
-            _foreignKeyService = foreignKeyService ?? new ForeignKeyService(db);
+            var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+            _foreignKeyService = foreignKeyService ?? new ForeignKeyService(db, tableSchemaManager);
             _excelParser = new DynamicExcelParser();
             _imageProcessor = imageProcessor ?? new ImageProcessor(imageOutputDirectory);
             _imageOutputDirectory = imageOutputDirectory;

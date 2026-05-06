@@ -182,14 +182,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             var resultFields = new List<string>();
 
-            // 1. 获取配置的去重字段
             if (DeduplicateFields != null && DeduplicateFields.Count > 0)
             {
                 resultFields.AddRange(DeduplicateFields);
             }
             else
             {
-                // 如果未指定去重字段，则使用配置了唯一性的字段
                 if (ColumnMappings != null)
                 {
                     foreach (var mapping in ColumnMappings)
@@ -200,36 +198,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         }
                     }
                 }
-            }
 
-            // 2. 自动添加外键来源列到去重字段中
-            // 这样可以确保去重时考虑外键参考值，避免因外键值不同而被误判为重复
-            if (ColumnMappings != null)
-            {
-                var foreignSourceColumns = new HashSet<string>();
-                foreach (var mapping in ColumnMappings)
+                if (ColumnMappings != null)
                 {
-                    // 检查是否为外键关联类型
-                    if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
+                    var foreignSourceColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var mapping in ColumnMappings)
                     {
-                        var foreignConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
-                        if (foreignConfig != null &&
-                            foreignConfig.ForeignKeySourceColumn != null &&
-                            !string.IsNullOrEmpty(foreignConfig.ForeignKeySourceColumn.Key))
+                        if (mapping.ColumnDataSourceType == (int)DataSourceType.ForeignKey)
                         {
-                            // 添加外键来源列的Excel列名
-                            string sourceColumnName = foreignConfig.ForeignKeySourceColumn.Key;
-                            if (!foreignSourceColumns.Contains(sourceColumnName))
+                            var foreignConfig = mapping.DataSourceConfig as DatabaseReferenceConfig;
+                            if (foreignConfig != null &&
+                                foreignConfig.ForeignKeySourceColumn != null &&
+                                !string.IsNullOrEmpty(foreignConfig.ForeignKeySourceColumn.Key) &&
+                                foreignSourceColumns.Add(foreignConfig.ForeignKeySourceColumn.Key))
                             {
-                                resultFields.Add(sourceColumnName);
-                                foreignSourceColumns.Add(sourceColumnName);
+                                resultFields.Add(foreignConfig.ForeignKeySourceColumn.Key);
                             }
                         }
                     }
                 }
             }
 
-            return resultFields;
+            return resultFields.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         }
 
         /// <summary>

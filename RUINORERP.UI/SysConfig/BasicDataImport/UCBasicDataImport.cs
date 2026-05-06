@@ -21,6 +21,7 @@ using System.Windows.Forms;
 using Microsoft.VisualBasic;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Global;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -182,7 +183,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 初始化外键服务（单例模式，整个导入流程共享）
-            _foreignKeyService = new ForeignKeyService(_db);
+            var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+            _foreignKeyService = new ForeignKeyService(_db, tableSchemaManager);
 
             // 初始化动态导入组件
             _dynamicExcelParser = new DynamicExcelParser();
